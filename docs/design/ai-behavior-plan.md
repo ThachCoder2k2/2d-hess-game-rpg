@@ -442,7 +442,7 @@ Acceptance:
 - Token releases during recovery.
 - Threat map combines overlapping cells.
 - Fairness validator finds at least one response cell.
-- Knight generates all valid L-shaped destinations.
+- Knight generates all valid L-shaped unarmed attack cells.
 - Knight free movement rejects blocked and occupied cardinal cells.
 - AI pauses during defeat and room completion.
 

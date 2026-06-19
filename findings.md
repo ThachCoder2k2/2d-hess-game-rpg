@@ -49,3 +49,12 @@
 - An equipped weapon replaces the chess-shaped attack until dropped or changed.
 - Encounters support both pre-armed enemies and weapons collected during combat.
 - The first mixed encounter includes free-moving Pawns and a Knight.
+
+## Enemy Behavior Research
+
+- Enemy roles should force distinct player behaviors and target-priority decisions.
+- Clear tells are essential in avoidance combat; stronger attacks need stronger tells.
+- Group AI should regulate attack frequency, near/far pressure, and off-screen attacks.
+- Regular enemies need reusable AI that works in varied rooms; bosses should be authored for a specific arena.
+- Weapons can replace attack geometry while piece identity continues to shape positioning and pickup preference.
+- Bosses should test learned mechanics through structured escalation rather than inflated health.

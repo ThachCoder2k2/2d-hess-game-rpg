@@ -26,6 +26,8 @@ Build the first playable Godot 4 vertical slice. Current milestone: free-moving 
 | 16. Encounter coordination | complete | Shared attack token and AI pause flow |
 | 17. Knight enemy | complete | Free movement and L-shaped unarmed attack |
 | 18. Mixed encounter verification | complete | Tests, rendered capture, commit, push |
+| 19. Enemy behavior research | complete | Archetypes, tells, groups, bosses, data-driven AI |
+| 20. Enemy behavior bible | complete | Pawn through King, weapons, encounters, tests |
 
 ## Decisions
 
@@ -46,6 +48,8 @@ Build the first playable Godot 4 vertical slice. Current milestone: free-moving 
 - Unarmed attacks retain chess-piece geometry relative to facing.
 - Equipping a toy weapon replaces the piece's chess-shaped attack.
 - Enemies may spawn armed or collect a weapon during combat.
+- Each chess piece has a distinct tactical role and positioning personality.
+- Bosses use authored maneuver phases rather than unrestricted common-enemy utility.
 
 ## Errors Encountered
 

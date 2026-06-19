@@ -51,3 +51,5 @@
 - Completed a clean 20-second headless mixed-encounter simulation.
 - Rendered and inspected free movement, pre-armed enemies, dynamic Pawn and Knight pickups, and mixed weapon visuals.
 - Final verification passes 36 tests and a 20-second runtime simulation with no script errors.
+- Researched enemy archetypes, telegraphing, group coordination, modular tactics, and boss phase structure.
+- Wrote `docs/design/enemy-behavior-bible.md` covering Pawn, Knight, Bishop, Rook, Queen, King, weapon behavior, encounter composition, implementation order, and testing.
