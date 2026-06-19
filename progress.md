@@ -43,3 +43,11 @@
 - Visual capture confirms readable movement, diagonal warning, strike impact, Courage loss, and invulnerability feedback.
 - Researched telegraphed grid combat, handcrafted room design, utility AI, and multi-enemy coordination.
 - Wrote the complete AI behavior and implementation plan in `docs/design/ai-behavior-plan.md`.
+- Approved enemy freedom revision: cardinal movement, chess-shaped unarmed attacks, and weapon replacement attacks.
+- Updated AI architecture for spawned and dynamically collected weapons plus Knight behavior.
+- Implemented item-layer weapon pickups, enemy weapon resources, encounter attack token, shared free-enemy brain, free-moving Pawn, and Knight.
+- First parser pass required explicit `Vector2i` types in cardinal move generation.
+- Expanded the suite to 36 passing behavior checks.
+- Completed a clean 20-second headless mixed-encounter simulation.
+- Rendered and inspected free movement, pre-armed enemies, dynamic Pawn and Knight pickups, and mixed weapon visuals.
+- Final verification passes 36 tests and a 20-second runtime simulation with no script errors.

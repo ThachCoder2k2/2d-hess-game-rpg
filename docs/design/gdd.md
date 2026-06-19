@@ -168,17 +168,29 @@ Enemies follow recognizable chess identities, adapted for real time.
 
 ### Black Pawn
 
-- Advances one cell toward White territory.
-- Attacks the two forward diagonals.
-- Briefly pauses after advancing.
+- Moves one cell in any cardinal direction.
+- Faces the direction of its most recent movement.
+- Attacks the two forward diagonals relative to facing while unarmed.
+- Replaces its diagonal attack after equipping a toy weapon.
+- May spawn armed or collect a loose weapon during combat.
 - Collapsed or exhausted pawns introduce the idea that Black's army also suffers under the rules.
 
 ### Knight
 
-- Marks an L-shaped destination, crouches, then jumps.
-- Can cross obstacles and other units.
-- The landing cell and adjacent impact cells are dangerous.
+- Repositions one cardinal cell at a time.
+- Threatens L-shaped cells while unarmed.
+- Locks and telegraphs the L-shaped target before its leap strike.
+- Replaces its leap strike after equipping a toy weapon.
 - Vulnerable briefly after landing.
+
+### Enemy Equipment
+
+- Enemy movement is always one free cardinal grid step.
+- Chess identity defines the unarmed attack, not basic locomotion.
+- An equipped toy weapon replaces the chess-shaped attack rather than adding to it.
+- Pencil Spear attacks two straight cells.
+- Ruler Blade attacks the front cell and both forward diagonals.
+- Weapons exist physically on the playground and can be assigned at spawn or collected during combat.
 
 ### Bishop
 

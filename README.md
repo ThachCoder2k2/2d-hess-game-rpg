@@ -13,6 +13,11 @@ The first playable foundation includes:
 - One-cell Wooden Sword attacks.
 - Two-cell Pencil Thrust skill on `Q`.
 - Black Pawn AI with diagonal attack telegraphs.
+- Free cardinal enemy movement.
+- Knight enemy with L-shaped unarmed attacks.
+- Enemy weapon pickups and pre-armed variants.
+- Pencil Spear and Ruler Blade replacement attack patterns.
+- Encounter attack token preventing simultaneous strikes.
 - Player damage, invulnerability, defeat, and room reset.
 - A styled Pawn Ambush playground room.
 - Headless grid-logic tests.

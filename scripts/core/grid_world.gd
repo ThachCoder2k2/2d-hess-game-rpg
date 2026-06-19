@@ -9,6 +9,7 @@ var blocked_cells: Dictionary = {}
 var occupied_cells: Dictionary = {}
 var actor_cells: Dictionary = {}
 var reservations: Dictionary = {}
+var item_cells: Dictionary = {}
 
 
 func cell_to_world(cell: Vector2i) -> Vector2:
@@ -87,3 +88,36 @@ func add_block(cell: Vector2i) -> bool:
 func remove_block(cell: Vector2i) -> void:
 	blocked_cells.erase(cell)
 
+
+func register_item(item: Node, cell: Vector2i) -> bool:
+	if not is_inside(cell) or item_cells.has(cell):
+		return false
+	item_cells[cell] = item
+	return true
+
+
+func unregister_item(item: Node) -> void:
+	for cell in item_cells.keys():
+		if item_cells[cell] == item:
+			item_cells.erase(cell)
+			return
+
+
+func item_at(cell: Vector2i) -> Node:
+	return item_cells.get(cell)
+
+
+func get_item_cells() -> Array[Vector2i]:
+	var cells: Array[Vector2i] = []
+	for cell: Vector2i in item_cells:
+		cells.append(cell)
+	return cells
+
+
+func get_cardinal_destinations(actor: Node, origin: Vector2i) -> Array[Vector2i]:
+	var destinations: Array[Vector2i] = []
+	for direction: Vector2i in [Vector2i.UP, Vector2i.DOWN, Vector2i.LEFT, Vector2i.RIGHT]:
+		var destination: Vector2i = origin + direction
+		if can_begin_move(actor, destination):
+			destinations.append(destination)
+	return destinations

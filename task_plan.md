@@ -2,7 +2,7 @@
 
 ## Goal
 
-Build the first playable Godot 4 vertical slice. Current milestone: turn-in-place, flexible attack profiles, Pencil Thrust, Black Pawn AI, telegraphs, player damage, and room reset.
+Build the first playable Godot 4 vertical slice. Current milestone: free-moving enemies, weapon pickups, armed attack replacement, coordinated attacks, and Knight AI.
 
 ## Phases
 
@@ -21,6 +21,11 @@ Build the first playable Godot 4 vertical slice. Current milestone: turn-in-plac
 | 11. Milestone verification | complete | Tests, runtime capture, commit, push |
 | 12. AI architecture research | complete | Pattern, utility, intent states, coordination research |
 | 13. AI implementation planning | complete | Phased Godot component and test plan |
+| 14. Free-movement redesign | complete | Cardinal enemy navigation and facing-aware attacks |
+| 15. Enemy weapon framework | complete | Spawned equipment, pickups, replacement attacks |
+| 16. Encounter coordination | complete | Shared attack token and AI pause flow |
+| 17. Knight enemy | complete | Free movement and L-shaped unarmed attack |
+| 18. Mixed encounter verification | complete | Tests, rendered capture, commit, push |
 
 ## Decisions
 
@@ -37,6 +42,10 @@ Build the first playable Godot 4 vertical slice. Current milestone: turn-in-plac
 - Enemy AI will use chess patterns plus utility scoring, executed by a shared intent state machine.
 - Encounter coordination will use room-level attack tokens and a threat map.
 - AI reads only the hero's current or visibly reserved destination cell.
+- All common enemies move one cell in four cardinal directions.
+- Unarmed attacks retain chess-piece geometry relative to facing.
+- Equipping a toy weapon replaces the piece's chess-shaped attack.
+- Enemies may spawn armed or collect a weapon during combat.
 
 ## Errors Encountered
 
@@ -48,3 +57,4 @@ Build the first playable Godot 4 vertical slice. Current milestone: turn-in-plac
 | Initial push authenticated as GitHub user `fishtechainer` and was denied | 1 | Switched this repository remote to existing `github.com-work` SSH alias, authenticated as `ThachCoder2k2` |
 | Pencil Thrust used an async attack return value inside `if` | 1 | Added synchronous `can_start_attack()` guard and launched the coroutine separately |
 | Turn action accidentally included Ctrl due to keycode assumption | 1 | Inspected `InputEvent.as_text()`, removed Ctrl, and added a binding test |
+| Cardinal move helper inferred inline directions as `Variant` | 1 | Added explicit `Vector2i` loop and destination types |

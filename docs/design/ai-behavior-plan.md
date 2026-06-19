@@ -1,6 +1,6 @@
 # The Unbound Pawn - Enemy AI Behavior Plan
 
-**Status:** Proposed implementation plan  
+**Status:** First mixed-enemy implementation complete
 **Engine:** Godot 4.6.3  
 **Scope:** Common enemies and encounter coordination for the vertical slice
 
@@ -10,7 +10,9 @@ Create enemies that feel intelligent without becoming unpredictable or unfair.
 
 Each chess piece must remain understandable:
 
-- Its legal movement and attack geometry come from chess.
+- Its movement is one free cardinal cell at a time.
+- Its unarmed attack geometry comes from chess.
+- Its equipped toy weapon replaces the chess-shaped attack.
 - Its current intention is visible before damage occurs.
 - It reacts to the pawn's current committed cell, not hidden buffered input.
 - Groups coordinate so the player solves a spatial problem instead of receiving overlapping unavoidable attacks.
@@ -51,13 +53,22 @@ Use a hybrid of four layers.
 
 ### Layer 1: Chess Pattern
 
-Pure functions define legal cells:
+Pure functions define unarmed attack cells:
 
-- `get_move_options(context)`
 - `get_attack_options(context)`
 - `get_threatened_cells(context)`
 
-These functions contain no timing, animation, or target selection.
+Cardinal movement candidates are shared by all common enemies. Chess-pattern functions contain no timing, animation, or target selection.
+
+### Equipment Override
+
+An equipped `EnemyWeapon` replaces the pattern's attack options:
+
+```text
+attack_pattern = equipped_weapon if equipped_weapon else chess_pattern
+```
+
+Enemies may receive equipment at spawn or score reachable pickups as utility actions during combat.
 
 ### Layer 2: Utility Decision
 
@@ -79,8 +90,13 @@ attack =
 advance =
   30
   + distance_reduction * 8
-  + formation_bonus
+  + flanking_bonus
   - danger_at_destination * 20
+
+pickup_weapon =
+  55 if an unarmed enemy can reach a weapon soon
+  + weapon_value
+  - pickup_distance * 10
 
 wait =
   15 if no attack token is available
@@ -194,9 +210,11 @@ Purpose: teach diagonal attacks and committed forward motion.
 
 Actions:
 
-- Strike both forward diagonals when the hero occupies either.
-- Advance one cell.
-- Hold formation if another Pawn is directly adjacent.
+- Move one cardinal cell toward a useful attack position.
+- Face the direction of its latest movement.
+- Strike both forward diagonals relative to facing while unarmed.
+- Replace diagonal strikes with the equipped weapon pattern while armed.
+- Pursue a nearby weapon when its pickup score beats immediate positioning.
 - Wait when an attack token is unavailable.
 
 Personality:
@@ -204,7 +222,7 @@ Personality:
 - Patient.
 - Predictable.
 - Stronger in formation.
-- Unable to retreat.
+- Free to retreat or flank when utility favors it.
 
 ### Knight - The Hunter
 
@@ -212,8 +230,11 @@ Purpose: teach destination prediction and punish stationary play.
 
 Actions:
 
-- Jump to an L-shaped landing cell.
-- Prefer cells that threaten the hero after landing.
+- Move one cardinal cell while repositioning.
+- Threaten L-shaped cells while unarmed.
+- Leap-strike a locked L-shaped target cell during commit.
+- Replace the leap strike with an equipped weapon attack while armed.
+- Prefer movement cells that create an L-shaped threat on the next decision.
 - Avoid repeating the same landing direction.
 - Reposition when no useful attack landing exists.
 
@@ -289,6 +310,29 @@ Base resource with piece-specific implementations:
 - `KnightPattern`
 - Future Bishop and Rook patterns.
 
+### `EnemyWeapon`
+
+Resource defining:
+
+- Display name and visual color.
+- Relative threatened cells.
+- Damage, telegraph, and recovery timing.
+- Desired engagement distance.
+
+Initial weapons:
+
+- Pencil Spear: two-cell straight thrust.
+- Ruler Blade: front cell plus two forward diagonals.
+
+### `WeaponPickup`
+
+Grid item that:
+
+- Occupies an item layer without blocking movement.
+- Can be assigned to an enemy at spawn.
+- Can be collected by an unarmed enemy entering its cell.
+- Disappears from the room after collection.
+
 ### `EnemyBrain`
 
 Shared state machine:
@@ -324,7 +368,8 @@ Room-level service:
 - Extract target-cell calculation.
 - Add the shared intent states.
 - Add `EnemyContext` and `EnemyAction`.
-- Move Black Pawn decisions into a `PawnPattern`.
+- Add shared cardinal move generation and deterministic utility scoring.
+- Move Black Pawn attacks into a facing-aware `PawnPattern`.
 - Preserve current timings and visuals.
 
 Acceptance:
@@ -359,8 +404,9 @@ Acceptance:
 
 ### Phase 4: Knight AI
 
-- Implement L-shaped candidate generation.
-- Score landing safety, post-landing threat, repetition, and distance.
+- Implement L-shaped unarmed attack generation.
+- Use shared cardinal movement to seek a useful attack position.
+- Score target alignment, post-move threat, repetition, and distance.
 - Add landing telegraph and recovery vulnerability.
 - Integrate attack tokens.
 
@@ -384,7 +430,11 @@ Acceptance:
 ## 11. Automated Tests
 
 - Black Pawn legal move and attack generation.
-- Black Pawn cannot move backward.
+- Common enemies generate four cardinal movement candidates.
+- Black Pawn diagonal attacks rotate with facing.
+- Unarmed enemies score reachable weapons.
+- Armed attacks replace, rather than combine with, chess attacks.
+- Weapon pickups disappear after collection.
 - Utility chooses attack when the hero is diagonal.
 - Utility chooses advance when no attack exists.
 - Telegraph targets remain locked after hero movement.
@@ -393,7 +443,7 @@ Acceptance:
 - Threat map combines overlapping cells.
 - Fairness validator finds at least one response cell.
 - Knight generates all valid L-shaped destinations.
-- Knight rejects blocked and occupied landing cells.
+- Knight free movement rejects blocked and occupied cardinal cells.
 - AI pauses during defeat and room completion.
 
 ## 12. Debug Tools

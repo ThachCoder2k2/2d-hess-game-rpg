@@ -45,6 +45,41 @@ func _init() -> void:
 	root.add_child(black_pawn)
 	black_pawn.current_cell = Vector2i(6, 3)
 	_expect(black_pawn.get_attack_cells() == [Vector2i(5, 4), Vector2i(7, 4)], "black pawn attacks both forward diagonals")
+	black_pawn.facing = Vector2i.RIGHT
+	_expect(black_pawn.get_attack_cells() == [Vector2i(7, 4), Vector2i(7, 2)], "black pawn diagonal attack rotates with facing")
+
+	var spear := EnemyWeapon.pencil_spear()
+	black_pawn.equip(spear)
+	_expect(black_pawn.get_attack_cells() == [Vector2i(7, 3), Vector2i(8, 3)], "armed pawn replaces diagonals with weapon cells")
+	_expect(not Vector2i(7, 4) in black_pawn.get_attack_cells(), "armed attack does not combine with chess attack")
+
+	var knight := KnightEnemy.new()
+	root.add_child(knight)
+	knight.current_cell = Vector2i(8, 4)
+	_expect(knight.get_unarmed_attack_cells().size() == 8, "unarmed knight threatens eight L-shaped cells")
+	_expect(Vector2i(10, 5) in knight.get_unarmed_attack_cells(), "knight includes a legal L-shaped target")
+
+	var director := EncounterDirector.new()
+	root.add_child(director)
+	_expect(director.request_attack(black_pawn), "first enemy receives attack token")
+	_expect(not director.request_attack(knight), "second enemy cannot attack while token is owned")
+	director.release_attack(black_pawn)
+	_expect(director.request_attack(knight), "token transfers after release")
+
+	var pickup := WeaponPickup.new()
+	root.add_child(pickup)
+	_expect(pickup.setup(world, Vector2i(9, 5), EnemyWeapon.ruler_blade()), "weapon pickup registers on item layer")
+	_expect(world.item_at(Vector2i(9, 5)) == pickup, "item layer returns registered weapon")
+	var taken_weapon := pickup.take(knight)
+	_expect(taken_weapon.display_name == "Ruler Blade", "enemy receives collected weapon data")
+	_expect(world.item_at(Vector2i(9, 5)) == null, "collected weapon leaves item layer")
+
+	var free_mover := BlackPawn.new()
+	root.add_child(free_mover)
+	_expect(free_mover.setup(world, Vector2i(12, 5)), "free-moving enemy registers")
+	var move_options := free_mover.get_cardinal_move_options()
+	_expect(move_options.size() == 4, "free-moving enemy generates four cardinal destinations")
+	_expect(Vector2i(12, 4) in move_options and Vector2i(13, 5) in move_options, "cardinal movement includes vertical and horizontal cells")
 	var turn_events := InputMap.action_get_events("turn_mode")
 	_expect(turn_events.size() == 1 and turn_events[0].as_text() == "Shift", "turn modifier is bound only to Shift")
 

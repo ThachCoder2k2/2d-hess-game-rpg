@@ -41,3 +41,11 @@
 - A room-level attack-token system is needed because independent enemy brains can accidentally create unfair simultaneous attacks.
 - Enemies should react to the hero's committed or reserved cell, never buffered input.
 - Machine learning and NavMesh pathfinding do not fit this deterministic grid game.
+
+## Enemy Freedom Revision
+
+- All common enemies move freely in four cardinal directions.
+- Chess identity moves from locomotion into the unarmed attack pattern.
+- An equipped weapon replaces the chess-shaped attack until dropped or changed.
+- Encounters support both pre-armed enemies and weapons collected during combat.
+- The first mixed encounter includes free-moving Pawns and a Knight.

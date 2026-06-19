@@ -191,11 +191,29 @@ This contract prevents actors from colliding midway through a step and prevents 
 
 ### Black Pawn
 
-1. Face toward White territory.
-2. If the hero occupies an attack diagonal, telegraph both diagonals.
-3. Commit the strike after the warning.
-4. Otherwise advance one legal forward cell.
-5. Recover before choosing again.
+1. Generate legal cardinal destinations.
+2. Face toward the selected destination.
+3. If unarmed, threaten both forward diagonals relative to facing.
+4. If armed, replace diagonals with the equipped weapon pattern.
+5. Score attacking, repositioning, pursuing a weapon, and waiting.
+6. Lock and telegraph attack cells after receiving the room attack token.
+7. Recover before choosing again.
+
+### Knight
+
+1. Reposition through legal cardinal destinations.
+2. Prefer cells that create an L-shaped threat on the hero.
+3. Telegraph all legal L-shaped targets while unarmed.
+4. Replace the L-shaped attack with an equipped weapon pattern while armed.
+5. Share the room attack token with Pawns.
+
+### Enemy Weapons
+
+- Pencil Spear: two-cell straight attack.
+- Ruler Blade: front cell plus forward diagonals.
+- Pickups use a non-blocking item layer.
+- An unarmed enemy may prioritize a reachable weapon.
+- Enemies can also receive a weapon when spawned.
 
 ### Knight
 
