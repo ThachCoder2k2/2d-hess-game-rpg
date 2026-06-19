@@ -53,3 +53,4 @@
 - Final verification passes 36 tests and a 20-second runtime simulation with no script errors.
 - Researched enemy archetypes, telegraphing, group coordination, modular tactics, and boss phase structure.
 - Wrote `docs/design/enemy-behavior-bible.md` covering Pawn, Knight, Bishop, Rook, Queen, King, weapon behavior, encounter composition, implementation order, and testing.
+- Expanded the enemy bible with exact timing targets, utility evaluation, Godot data contracts, state transition tables, weapon compatibility, boss maneuver data, encounter recipes, debug telemetry, and production acceptance gates.

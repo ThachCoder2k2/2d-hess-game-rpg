@@ -28,6 +28,7 @@ Build the first playable Godot 4 vertical slice. Current milestone: free-moving 
 | 18. Mixed encounter verification | complete | Tests, rendered capture, commit, push |
 | 19. Enemy behavior research | complete | Archetypes, tells, groups, bosses, data-driven AI |
 | 20. Enemy behavior bible | complete | Pawn through King, weapons, encounters, tests |
+| 21. Detailed enemy production spec | complete | Timing, data contracts, state tables, maneuvers, recipes, telemetry |
 
 ## Decisions
 

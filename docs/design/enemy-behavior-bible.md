@@ -1,6 +1,6 @@
 # The Unbound Pawn - Enemy Behavior Bible
 
-**Status:** Research-backed design proposal
+**Status:** Implementation-ready design proposal
 **Engine:** Godot 4.6.3
 **Combat model:** Real-time, one-cell grid movement with locked telegraphs
 
@@ -521,3 +521,464 @@ shared free movement
 
 This preserves recognizable chess identity while supporting the child's playground fantasy, dynamic weapon stories, fair group combat, and practical Godot implementation.
 
+## 17. Shared Timing Specification
+
+All values are starting targets for playtesting at the current 0.18-second player step.
+
+| Event | Recruit | Standard | Elite | Notes |
+|---|---:|---:|---:|---|
+| Observe delay | 0.60 s | 0.42 s | 0.28 s | Time before choosing another action |
+| Basic move | 0.22 s | 0.20 s | 0.18 s | Player remains slightly faster than most enemies |
+| Short telegraph | 0.75 s | 0.60 s | 0.48 s | One-cell or simple shape |
+| Long telegraph | 1.00 s | 0.82 s | 0.68 s | Lane, leap, or area attack |
+| Basic recovery | 0.70 s | 0.52 s | 0.42 s | Guaranteed punish opportunity |
+| Heavy recovery | 1.00 s | 0.82 s | 0.65 s | Charge, leap, or terrain interaction |
+| Hit stagger | 0.28 s | 0.22 s | 0.16 s | Elites remain responsive but not immune |
+
+Timing rules:
+
+- A telegraph must last at least two player step durations for a new attack pattern.
+- Familiar late-game patterns may approach 0.48 seconds but never resolve instantly.
+- Recovery begins after damage resolution and token release.
+- Hit stagger does not cancel a locked attack after its final 0.12-second commit window begins.
+- Slow motion, accessibility settings, and difficulty modifiers scale telegraph timers consistently.
+
+## 18. Utility Evaluation Contract
+
+### Normalized Inputs
+
+Each consideration returns a value from `0.0` to `1.0`:
+
+- `can_hit_now`
+- `creates_threat_next`
+- `distance_fit`
+- `weapon_value`
+- `pickup_reachability`
+- `ally_spacing`
+- `destination_safety`
+- `token_available`
+- `role_fit`
+- `repetition_penalty`
+
+### Score Formula
+
+```text
+score = base_score
+      + sum(weight * consideration)
+      - hard_penalties
+```
+
+Hard penalties reject an action rather than merely lowering preference:
+
+- Destination is blocked or reserved.
+- Attack token is required but unavailable.
+- Attack target is off-screen.
+- Pickup is reserved by another enemy.
+- Action would create a validated no-response state.
+
+### Tie-Breaking
+
+When scores are within five points:
+
+1. Prefer the action not used last time.
+2. Prefer the action with shorter commitment.
+3. Prefer the action that improves ally spacing.
+4. Use deterministic seeded variation only after the first three rules tie.
+
+The seed comes from room seed plus enemy spawn index. Reloading a checkpoint therefore produces learnable behavior while still allowing authored room variation.
+
+### Decision Memory
+
+Each enemy stores:
+
+- Last three chosen actions.
+- Last two movement axes.
+- Last threatened cells.
+- Last pursued weapon.
+- Time since last successful attack.
+- Time spent in near and far groups.
+
+Memory prevents mechanical loops without giving enemies hidden knowledge.
+
+## 19. Godot Data Contracts
+
+### `EnemyArchetype` Resource
+
+```gdscript
+class_name EnemyArchetype
+extends Resource
+
+@export var id: StringName
+@export var role: StringName
+@export var max_health: int
+@export var move_duration: float
+@export var observe_delay: float
+@export var telegraph_duration: float
+@export var recovery_duration: float
+@export var preferred_distance: Vector2i
+@export var utility_weights: Dictionary
+@export var unarmed_pattern: AttackPattern
+@export var allowed_weapons: Array[StringName]
+```
+
+### `AttackPattern` Resource
+
+```gdscript
+class_name AttackPattern
+extends Resource
+
+@export var id: StringName
+@export var relative_cells: Array[Vector2i]
+@export var damage: int
+@export var telegraph_style: StringName
+@export var locks_facing: bool
+@export var stops_at_obstacle: bool
+@export var requires_attack_token: bool
+```
+
+Ray and charge patterns use a generator strategy instead of storing every cell.
+
+### `EnemyContext` Snapshot
+
+```gdscript
+class_name EnemyContext
+extends RefCounted
+
+var self_cell: Vector2i
+var facing: Vector2i
+var hero_cell: Vector2i
+var hero_reserved_cell: Vector2i
+var legal_moves: Array[Vector2i]
+var nearby_allies: Array[Node]
+var reachable_weapons: Array[Node]
+var threatened_cells: Dictionary
+var token_available: bool
+var near_group_open: bool
+```
+
+The context is rebuilt at `OBSERVE`. It remains immutable while scoring so every candidate sees the same world state.
+
+### `EnemyIntent`
+
+```gdscript
+class_name EnemyIntent
+extends RefCounted
+
+var action_id: StringName
+var score: float
+var destination: Vector2i
+var target_cells: Array[Vector2i]
+var reserved_pickup: Node
+var required_token: StringName
+```
+
+The selected intent is locked before `TELEGRAPH`. Presentation reads the intent; it does not recompute gameplay cells.
+
+## 20. Piece State Tables
+
+### Pawn State Table
+
+| Current state | Condition | Next state | Action |
+|---|---|---|---|
+| Observe | Hero in unarmed diagonals and token granted | Telegraph | Lock both diagonal cells |
+| Observe | Armed and hero in weapon pattern | Telegraph | Lock weapon cells |
+| Observe | Valuable weapon reachable | Reposition | Reserve pickup and step toward it |
+| Observe | Move creates next-turn diagonal | Reposition | Step and rotate facing |
+| Observe | No useful action | Wait | Face hero without moving |
+| Telegraph | Timer finishes | Commit | Resolve locked cells |
+| Commit | Damage resolved | Recover | Release attack token |
+| Recover | Timer finishes | Observe | Rebuild context |
+
+Pawn-specific safety:
+
+- Two Pawns cannot reserve the same pincer destination.
+- A Pawn does not rotate after its telegraph locks.
+- A Pawn standing on a weapon collects it before evaluating attacks.
+
+### Knight State Table
+
+| Current state | Condition | Next state | Action |
+|---|---|---|---|
+| Observe | Hero in L cell and token granted | Telegraph | Lock target and L path cue |
+| Observe | Cardinal move creates L threat | Reposition | Step toward best attack geometry |
+| Observe | Repeated axis detected | Reposition | Prefer alternate axis |
+| Observe | Weapon improves immediate score | Reposition | Reserve and pursue pickup |
+| Telegraph | First 55% elapsed | Telegraph | Move shadow along L cue |
+| Telegraph | Timer finishes | Commit | Perform leap-strike presentation |
+| Commit | Impact finishes | Recover | Enter vulnerable crouch |
+| Recover | Timer finishes | Observe | Rebuild context |
+
+Knight-specific safety:
+
+- Common Knight logical occupancy does not change during the attack.
+- Knight Captain landing cells must be empty at lock time and commit time.
+- If a boss landing becomes invalid, use the authored fallback cell rather than retargeting the player.
+
+### Bishop State Table
+
+| Current state | Condition | Next state | Action |
+|---|---|---|---|
+| Observe | Diagonal ray reaches hero | Telegraph | Lock shortest useful ray |
+| Observe | Ray blocks escape route | Telegraph | Lock control ray if budget allows |
+| Observe | Hero adjacent | Reposition | Retreat to a long diagonal |
+| Observe | No useful ray | Reposition | Maximize diagonal visibility |
+| Telegraph | Channel grows | Telegraph | Reveal cells from near to far |
+| Telegraph | Timer finishes | Commit | Resolve entire locked ray |
+| Commit | Ray fades | Recover | Expose Bishop to attack |
+
+Bishop-specific safety:
+
+- Ray cells stop at the first solid obstacle.
+- Reflected rays preview both original and reflected segments before commit.
+- A Bishop control ray cannot combine with another controller to remove every cardinal exit.
+
+### Rook State Table
+
+| Current state | Condition | Next state | Action |
+|---|---|---|---|
+| Observe | Hero aligned with charge space | Telegraph | Lock charge line |
+| Observe | Useful destructible object aligned | Telegraph | Lock demolition line |
+| Observe | Too close for charge | Reposition | Create at least three-cell spacing |
+| Observe | Not aligned | Reposition | Seek row or column alignment |
+| Telegraph | Timer finishes | Commit | Travel through locked cells |
+| Commit | Hits hero | Recover | Stop one cell beyond impact if valid |
+| Commit | Hits block | Stunned | Damage block and stop before it |
+| Stunned | Timer finishes | Observe | Rebuild context with reduced defense |
+
+Rook-specific safety:
+
+- Charge never turns after commit.
+- Dynamic obstacles added after lock stop the charge safely.
+- The final stop cell is reserved for the entire commit.
+
+## 21. Weapon Compatibility Matrix
+
+Scores express preference, not permission.
+
+| Piece | Pencil Spear | Ruler Blade | Marble Launcher | Wind-Up Hammer |
+|---|---:|---:|---:|---:|
+| Pawn | 90 | 80 | 55 | 60 |
+| Knight | 70 | 85 | 60 | 75 |
+| Bishop | 45 | 35 | 95 | 30 |
+| Rook | 50 | 65 | 40 | 90 |
+
+Preference modifies `weapon_value`:
+
+```text
+weapon_value = compatibility / 100
+```
+
+Behavior after pickup:
+
+- Pawn with Spear holds two-cell spacing and circles for straight alignment.
+- Pawn with Ruler closes distance and attempts side approaches.
+- Knight with Ruler seeks unusual adjacent angles instead of L geometry.
+- Knight with Spear maintains middle distance and changes axes frequently.
+- Bishop with Launcher preserves long distance and uses obstacles as cover.
+- Rook with Hammer approaches slowly and creates impact-cross pressure.
+
+An enemy keeps a weapon until defeated or an authored disarm event occurs. Common enemies do not constantly swap equipment because repeated pattern changes reduce readability.
+
+## 22. Boss Maneuver Data
+
+Bosses use modular maneuvers with explicit telegraph, commit, and recovery segments.
+
+### Knight Captain
+
+| Maneuver | Telegraph | Commit | Recovery | Phase |
+|---|---:|---:|---:|---|
+| Single Landing | 0.85 s | 0.18 s | 0.75 s | 1-3 |
+| Twin Landing | 0.75 s each | 0.18 s each | 0.90 s | 2-3 |
+| Track Feint | 0.95 s | 0.20 s | 0.65 s | 2-3 |
+| Train Crossing | 1.10 s | 0.80 s hazard | 0.60 s | 2-3 |
+
+Phase rules:
+
+- Phase 1 teaches one locked landing.
+- Phase 2 adds a second landing only after the first resolves.
+- Phase 3 combines one landing with one train row, never two overlapping train rows.
+- Place Block always creates at least one meaningful response.
+
+### Bishop of Order
+
+| Maneuver | Telegraph | Commit | Recovery | Phase |
+|---|---:|---:|---:|---|
+| Single Sermon | 0.90 s | 0.25 s | 0.70 s | 1-3 |
+| Mirror Verse | 1.15 s | 0.30 s | 0.85 s | 2-3 |
+| Fold the Page | 1.00 s | Arena change | 0.65 s | 2-3 |
+| Torn Passage | 1.20 s | Gap opens | 0.80 s | 3 |
+
+### Iron Rook
+
+| Maneuver | Telegraph | Commit | Recovery | Phase |
+|---|---:|---:|---:|---|
+| Straight Decree | 0.90 s | Variable charge | 0.85 s | 1-3 |
+| Breach Wall | 1.05 s | Variable charge | 1.10 s stun | 1-3 |
+| Cross Corridor | 1.20 s | Two sequential charges | 0.95 s | 2-3 |
+| Rotate Fortress | 1.30 s | Arena rotation | 0.70 s | 3 |
+
+### Queen
+
+| Maneuver | Telegraph | Commit | Recovery | Phase |
+|---|---:|---:|---:|---|
+| Royal Line | 0.75 s | 0.25 s | 0.60 s | 1-3 |
+| Royal Diagonal | 0.90 s | 0.25 s | 0.70 s | 1-3 |
+| Command Mark | 1.00 s | Ally repositions | 0.55 s | 2-3 |
+| Seize Toy | 1.10 s | Pull or destroy | 0.80 s | 2-3 |
+| Tear Drawing | 1.30 s | Disable intervention | 1.00 s | 3 |
+
+Queen selection rules:
+
+- Never repeat the same lane family three times.
+- Command Mark cannot order an ally into a resolving danger cell.
+- Seize Toy targets only visible, unreserved toys.
+- Phase 3 combinations pass response-cell validation before telegraphing.
+
+### Black King
+
+| Maneuver | Telegraph | Commit | Recovery | Phase |
+|---|---:|---:|---:|---|
+| King's Reach | 0.70 s | 0.22 s | 0.55 s | 1-3 |
+| Lock Direction | 1.20 s | Rule duration 4 s | 0.75 s | 2-3 |
+| Restore Formation | 1.30 s | Spawn blockers | 0.90 s | 2 |
+| Reverse Color | 1.80 s | Rule duration 6 s | 1.00 s | 2, once |
+| Close the Box | Story beat | Persistent phase rule | N/A | 3 |
+
+King selection rules:
+
+- Only one global rule modifier may be active at a time.
+- Rule cards appear before affected input is disabled.
+- King's Reach cannot begin until the player has at least one legal exit.
+- The final diagonal step is authored and cannot trigger accidentally earlier.
+
+## 23. Encounter Recipes
+
+### Recipe A - Facing Lesson
+
+Room: open 10x7 grid.
+
+- Two Recruit Pawns.
+- No weapons.
+- One attack token.
+- Pawns start on opposite horizontal sides.
+
+Expected learning:
+
+- Pawn facing changes diagonal geometry.
+- Directly forward cells are safe while unarmed.
+
+### Recipe B - Toy Race
+
+Room: 12x7 grid with a central block cluster.
+
+- One Veteran Pawn.
+- One Pencil Spear equidistant from hero and Pawn, but reachable by different routes.
+- One attack token.
+
+Expected learning:
+
+- A loose weapon is an objective.
+- The player's route choice changes the enemy's future attack.
+
+### Recipe C - Crooked Threat
+
+Room: 12x8 grid with two low block islands.
+
+- One Tracker Knight.
+- No weapon.
+- Long first telegraph.
+
+Expected learning:
+
+- L cells remain dangerous despite adjacent blockers.
+- Moving adjacent breaks immediate Knight geometry.
+
+### Recipe D - Mixed Angles
+
+Room: 14x8 grid with one central corridor.
+
+- One Veteran Pawn.
+- One Tracker Knight.
+- One Ruler Blade near the far group.
+- One attack token and two movement permissions.
+
+Expected learning:
+
+- Prioritize the currently armed or aligned threat.
+- Use attack-token rhythm to find punish windows.
+
+### Recipe E - Controller Introduction
+
+Room: storybook spread with two diagonal folds.
+
+- One Bishop.
+- One Recruit Pawn already familiar to the player.
+- Bishop receives a separate control budget but cannot resolve with the Pawn.
+
+Expected learning:
+
+- Bishop shapes routes while Pawn pressures locally.
+- Obstacles shorten diagonal rays.
+
+## 24. Debug and Telemetry Specification
+
+### Enemy Overlay
+
+Development toggle displays:
+
+- State.
+- Role group: near or far.
+- Facing.
+- Equipped weapon.
+- Selected action and final score.
+- Reserved destination or pickup.
+- Token ownership.
+
+### Decision Log
+
+Store the last 100 decisions:
+
+```text
+timestamp
+enemy_id
+context_hash
+candidate_actions
+selected_action
+selected_score
+rejection_reason
+```
+
+### Playtest Metrics
+
+Track per encounter:
+
+- Hits received by attack type.
+- Percentage of attacks avoided after telegraph.
+- Average enemy recovery punished.
+- Weapons collected by player versus enemies.
+- Time each enemy spends in near and far groups.
+- Repeated-action frequency.
+- Deaths with zero legal response cells.
+
+Target thresholds:
+
+- At least 80% of received hits are understood by the player immediately afterward.
+- Zero deaths occur from validated no-response combinations.
+- A new enemy's core pattern is correctly described after two encounters.
+- Common enemies repeat one action no more than twice when a viable alternative exists.
+- Players notice weapon replacement before the armed enemy's second attack.
+
+## 25. Production Acceptance Gates
+
+An enemy type is ready for content production only when:
+
+1. Its unarmed role is recognizable without UI text.
+2. All four facing rotations produce correct cells.
+3. Weapon replacement works with every allowed weapon.
+4. Telegraph targets remain locked through player movement.
+5. It respects attack and pickup reservations.
+6. It exposes a reliable punish window.
+7. Its debug overlay explains every chosen action.
+8. Tests cover room edges, obstacles, defeat, and retry.
+9. At least three authored encounters demonstrate different combinations.
+10. A five-minute playtest produces no unexplained damage.
