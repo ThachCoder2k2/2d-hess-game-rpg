@@ -33,6 +33,20 @@ func _init() -> void:
 	hero.current_cell = Vector2i(8, 5)
 	hero.facing = Vector2i.LEFT
 	_expect(hero.get_attack_cell() == Vector2i(7, 5), "sword targets one adjacent facing cell")
+	_expect(hero.try_turn(Vector2i.UP), "turn-in-place accepts a cardinal direction")
+	_expect(hero.current_cell == Vector2i(8, 5), "turn-in-place does not move the pawn")
+	_expect(hero.facing == Vector2i.UP, "turn-in-place updates facing")
+
+	var thrust := AttackProfile.new()
+	thrust.range_cells = 2
+	_expect(thrust.get_target_cells(Vector2i(4, 4), Vector2i.RIGHT) == [Vector2i(5, 4), Vector2i(6, 4)], "attack profile produces ordered range cells")
+
+	var black_pawn := BlackPawn.new()
+	root.add_child(black_pawn)
+	black_pawn.current_cell = Vector2i(6, 3)
+	_expect(black_pawn.get_attack_cells() == [Vector2i(5, 4), Vector2i(7, 4)], "black pawn attacks both forward diagonals")
+	var turn_events := InputMap.action_get_events("turn_mode")
+	_expect(turn_events.size() == 1 and turn_events[0].as_text() == "Shift", "turn modifier is bound only to Shift")
 
 	print("TESTS COMPLETE: %d failure(s)" % failures)
 	quit(1 if failures > 0 else 0)

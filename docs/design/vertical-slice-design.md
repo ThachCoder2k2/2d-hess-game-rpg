@@ -76,8 +76,10 @@ Base behavior for the hero and enemies.
 
 - Reads player input.
 - Buffers one movement direction.
+- Turns in place when Shift modifies a directional press.
 - Requests movement from `GridActor`.
-- Starts sword attacks.
+- Starts attacks through reusable attack profiles.
+- Activates Pencil Thrust from the first skill slot.
 - Requests child intervention targeting.
 - Locks conflicting actions during commitment windows.
 
@@ -167,13 +169,23 @@ This contract prevents actors from colliding midway through a step and prevents 
 
 ## 7. Combat Contract
 
-- Sword attacks target one adjacent cell based on facing.
-- The target cell is captured when the attack begins.
+- An attack profile defines range, recovery, impact delay, damage, and presentation color.
+- Wooden Sword targets one adjacent cell based on facing.
+- Pencil Thrust targets the first and second cells in a straight line.
+- All target cells are captured when the attack begins.
 - Damage resolves on the impact frame, not continuously.
 - The hero cannot move during the initial attack commitment.
 - Common enemies stagger briefly on hit.
 - Repeated overlaps cannot deal duplicate damage during one attack.
 - The hero has three Courage points and short post-hit invulnerability.
+
+### Slice Loadout
+
+- Wooden Sword: range 1, damage 1, 0.30-second recovery.
+- Pencil Thrust: range 2, damage 1, 0.52-second recovery, 1.25-second skill cooldown.
+- `Shift + direction`: turn in place.
+- `Q`: Pencil Thrust.
+- The skill cooldown is a slice-only balancing choice; final progression resources remain outside this milestone.
 
 ## 8. Enemy Behaviors
 

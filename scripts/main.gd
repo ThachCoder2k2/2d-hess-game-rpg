@@ -5,8 +5,10 @@ var board: PrototypeBoard
 var hero: PawnHero
 var status_label: Label
 var courage_label: Label
+var skill_label: Label
 var objective_label: Label
-var remaining_dummies := 0
+var remaining_enemies := 0
+var room_ending := false
 
 
 func _ready() -> void:
@@ -25,44 +27,61 @@ func _ready() -> void:
 	hero = PawnHero.new()
 	hero.z_index = 2
 	add_child(hero)
-	hero.setup(grid_world, Vector2i(3, 4))
-	hero.attack_landed.connect(board.show_attack)
+	hero.setup(grid_world, Vector2i(3, 7))
+	hero.attack_landed.connect(board.show_player_attack)
 	hero.courage_changed.connect(_update_courage)
+	hero.skill_cooldown_changed.connect(_update_skill_cooldown)
+	hero.defeated.connect(_on_hero_defeated)
 
-	for cell in [Vector2i(5, 4), Vector2i(10, 2), Vector2i(11, 6)]:
-		_spawn_dummy(cell)
+	for cell in [Vector2i(4, 1), Vector2i(10, 1), Vector2i(13, 2)]:
+		_spawn_black_pawn(cell)
 
 	_build_hud()
-	_update_status("Break formation. Reach and defeat all three black pawns.")
+	_update_status("Read the red diagonals. Break all three black pawns.")
 
 
 func _process(_delta: float) -> void:
 	if Input.is_action_just_pressed("restart_room"):
 		get_tree().reload_current_scene()
 	if hero != null and status_label != null:
-		status_label.text = "CELL %02d,%02d   FACING %s   TARGETS %d" % [
+		status_label.text = "CELL %02d,%02d   FACING %s   ENEMIES %d" % [
 			hero.current_cell.x,
 			hero.current_cell.y,
 			_facing_name(hero.facing),
-			remaining_dummies,
+			remaining_enemies,
 		]
 
 
-func _spawn_dummy(cell: Vector2i) -> void:
-	var dummy := TrainingDummy.new()
-	dummy.z_index = 1
-	add_child(dummy)
-	if dummy.setup(grid_world, cell):
-		remaining_dummies += 1
-		dummy.defeated.connect(_on_dummy_defeated)
+func _spawn_black_pawn(cell: Vector2i) -> void:
+	var pawn := BlackPawn.new()
+	pawn.z_index = 1
+	add_child(pawn)
+	if pawn.setup(grid_world, cell):
+		remaining_enemies += 1
+		pawn.telegraph_started.connect(board.set_telegraph)
+		pawn.telegraph_finished.connect(board.clear_telegraph)
+		pawn.attack_resolved.connect(board.show_enemy_attack)
+		pawn.defeated.connect(_on_enemy_defeated)
+		pawn.activate(hero)
 	else:
-		dummy.queue_free()
+		pawn.queue_free()
 
 
-func _on_dummy_defeated(_dummy: TrainingDummy) -> void:
-	remaining_dummies -= 1
-	if remaining_dummies <= 0:
-		_update_status("THE PAWN IS UNBOUND. First combat foundation complete.")
+func _on_enemy_defeated(_pawn: BlackPawn) -> void:
+	remaining_enemies -= 1
+	if remaining_enemies <= 0 and not room_ending:
+		room_ending = true
+		hero.control_enabled = false
+		_update_status("THE PAWN IS UNBOUND. Pawn Ambush complete.")
+
+
+func _on_hero_defeated() -> void:
+	if room_ending:
+		return
+	room_ending = true
+	_update_status("The pawn falls. The child resets the board...")
+	await get_tree().create_timer(0.85).timeout
+	get_tree().reload_current_scene()
 
 
 func _build_hud() -> void:
@@ -83,17 +102,25 @@ func _build_hud() -> void:
 	layer.add_child(courage_label)
 	_update_courage(hero.courage)
 
+	skill_label = Label.new()
+	skill_label.position = Vector2(278, 7)
+	skill_label.size = Vector2(115, 16)
+	skill_label.add_theme_font_size_override("font_size", 8)
+	skill_label.add_theme_color_override("font_color", Color("#8ec8e8"))
+	layer.add_child(skill_label)
+	_update_skill_cooldown(0.0)
+
 	status_label = Label.new()
-	status_label.position = Vector2(350, 7)
-	status_label.size = Vector2(276, 20)
+	status_label.position = Vector2(392, 7)
+	status_label.size = Vector2(234, 20)
 	status_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-	status_label.add_theme_font_size_override("font_size", 9)
+	status_label.add_theme_font_size_override("font_size", 8)
 	status_label.add_theme_color_override("font_color", Color("#fff4d6"))
 	layer.add_child(status_label)
 
 	var help := Label.new()
 	help.position = Vector2(14, 338)
-	help.text = "WASD / ARROWS  STEP     SPACE / K  STRIKE     R  RESET"
+	help.text = "MOVE WASD   TURN SHIFT+DIR   SWORD SPACE   THRUST Q   RESET R"
 	help.add_theme_font_size_override("font_size", 8)
 	help.add_theme_color_override("font_color", Color("#fff4d6"))
 	layer.add_child(help)
@@ -110,6 +137,12 @@ func _build_hud() -> void:
 func _update_courage(value: int) -> void:
 	if courage_label != null:
 		courage_label.text = "COURAGE  " + "◆".repeat(value) + "◇".repeat(3 - value)
+
+
+func _update_skill_cooldown(time_left: float) -> void:
+	if skill_label == null:
+		return
+	skill_label.text = "Q THRUST  READY" if time_left <= 0.0 else "Q THRUST  %.1f" % time_left
 
 
 func _update_status(text: String) -> void:

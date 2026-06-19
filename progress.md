@@ -27,3 +27,17 @@
 - Add reusable attack telegraph cells.
 - Implement damage, invulnerability, and room reset flow.
 - Build the first authored Pawn Ambush room.
+
+## Combat Revision
+
+- Recorded approved playtest feedback.
+- Locked `Shift + direction` turning.
+- Locked Wooden Sword plus Pencil Thrust for the slice.
+- Chose cooldown-only Pencil Thrust for initial playtesting.
+- Implemented reusable attack profiles, turn-in-place, Pencil Thrust, Black Pawn AI, telegraphs, damage, invulnerability, and room reset.
+- First parser pass found an async return-value misuse in the skill guard; split readiness from execution.
+- Verified the full Black Pawn movement, telegraph, strike, damage, and invulnerability loop in an eight-second rendered capture.
+- Found and removed an accidental Ctrl binding from the turn action.
+- Final suite passes 21 checks.
+- Final headless room run completes without script or runtime errors.
+- Visual capture confirms readable movement, diagonal warning, strike impact, Courage loss, and invulnerability feedback.

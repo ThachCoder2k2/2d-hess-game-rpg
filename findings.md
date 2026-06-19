@@ -23,3 +23,11 @@
 - Combat captures a target cell and resolves once on the impact frame.
 - Presentation can change independently from cell logic.
 
+## Playtest Feedback
+
+- Current 0.18-second stepping feels right.
+- Held directional movement should remain enabled.
+- Sword response feels right.
+- The player needs `Shift + direction` turning without movement.
+- Basic attack range can remain one cell, while weapons and skills provide future range variation.
+- Approved slice loadout: Wooden Sword plus Pencil Thrust.

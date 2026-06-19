@@ -9,10 +9,12 @@ The first playable foundation includes:
 - 640x360 pixel-perfect 2D presentation.
 - One-cell cardinal movement.
 - Buffered and held movement.
-- Four-direction facing.
-- One-cell sword attacks.
-- Damageable training enemies.
-- A styled playground test board.
+- `Shift + direction` turning without movement.
+- One-cell Wooden Sword attacks.
+- Two-cell Pencil Thrust skill on `Q`.
+- Black Pawn AI with diagonal attack telegraphs.
+- Player damage, invulnerability, defeat, and room reset.
+- A styled Pawn Ambush playground room.
 - Headless grid-logic tests.
 
 ## Run
@@ -29,7 +31,14 @@ Open `project.godot` in Godot 4.6 or run:
 ../Godot.app/Contents/MacOS/Godot --headless --path . -s tests/run_tests.gd
 ```
 
+## Controls
+
+- `WASD` or arrows: move one cell.
+- `Shift + direction`: turn without moving.
+- `Space` or `K`: Wooden Sword.
+- `Q`: Pencil Thrust.
+- `R`: reset the room.
+
 ## Design
 
 The approved GDD, pixel-art bible, and vertical-slice design live in `docs/design/`.
-

@@ -2,9 +2,10 @@ class_name PrototypeBoard
 extends Node2D
 
 var grid_world: GridWorld
-var highlighted_cell := Vector2i(-1, -1)
-var hit_flash_time := 0.0
-var hit_success := false
+var telegraphs: Dictionary = {}
+var impact_cells: Array[Vector2i] = []
+var impact_time := 0.0
+var impact_color := Color("#fff2a8")
 
 
 func setup(world: GridWorld) -> void:
@@ -12,16 +13,33 @@ func setup(world: GridWorld) -> void:
 	queue_redraw()
 
 
-func show_attack(cell: Vector2i, hit: bool) -> void:
-	highlighted_cell = cell
-	hit_success = hit
-	hit_flash_time = 0.14
+func show_player_attack(cells: Array[Vector2i], hit_count: int, profile: AttackProfile) -> void:
+	impact_cells = cells
+	impact_color = profile.color if hit_count > 0 else Color("#d84a3a")
+	impact_time = 0.14
+	queue_redraw()
+
+
+func show_enemy_attack(cells: Array[Vector2i]) -> void:
+	impact_cells = cells
+	impact_color = Color("#ff9a75")
+	impact_time = 0.16
+	queue_redraw()
+
+
+func set_telegraph(source: Node, cells: Array[Vector2i]) -> void:
+	telegraphs[source] = cells
+	queue_redraw()
+
+
+func clear_telegraph(source: Node) -> void:
+	telegraphs.erase(source)
 	queue_redraw()
 
 
 func _process(delta: float) -> void:
-	if hit_flash_time > 0.0:
-		hit_flash_time = maxf(0.0, hit_flash_time - delta)
+	if impact_time > 0.0:
+		impact_time = maxf(0.0, impact_time - delta)
 		queue_redraw()
 
 
@@ -43,9 +61,20 @@ func _draw() -> void:
 		draw_rect(Rect2(top_left + Vector2(3, 3), Vector2(size - 6, size - 6)), Color("#e8b83f"))
 		draw_rect(Rect2(top_left + Vector2(7, 7), Vector2(size - 14, size - 14)), Color("#f5d56d"), false, 2.0)
 
-	if hit_flash_time > 0.0 and grid_world.is_inside(highlighted_cell):
-		var flash_color := Color("#fff2a8", 0.72) if hit_success else Color("#d84a3a", 0.62)
-		draw_rect(Rect2(origin + Vector2(highlighted_cell * size), Vector2.ONE * size), flash_color)
+	for source in telegraphs:
+		if not is_instance_valid(source):
+			continue
+		for cell: Vector2i in telegraphs[source]:
+			if grid_world.is_inside(cell):
+				var rect := Rect2(origin + Vector2(cell * size), Vector2.ONE * size)
+				draw_rect(rect, Color("#d84a3a", 0.48))
+				draw_line(rect.position + Vector2(5, 5), rect.end - Vector2(5, 5), Color("#ff9a75"), 2.0)
+				draw_line(rect.position + Vector2(size - 5, 5), rect.position + Vector2(5, size - 5), Color("#ff9a75"), 2.0)
+
+	if impact_time > 0.0:
+		for cell in impact_cells:
+			if grid_world.is_inside(cell):
+				draw_rect(Rect2(origin + Vector2(cell * size), Vector2.ONE * size), Color(impact_color, 0.68))
 
 	_draw_playground_border(origin, size)
 

@@ -95,6 +95,8 @@ Sprites may extend beyond their logical cell. Their feet, base, or shadow remain
 - Idle: 4 frames per direction.
 - Step: 4 frames per direction.
 - Sword attack: 5 frames per direction.
+- Turn: 1 anticipation frame plus the new directional idle.
+- Pencil Thrust: 6 frames per direction with a two-cell straight effect.
 - Hurt: 3 frames.
 - Defeat: 6 frames.
 - Victory or resolve: 6 frames.
@@ -160,6 +162,7 @@ The base of the pawn tilts, compresses, and hops slightly. The piece does not ne
 ## 10. Effects
 
 - Sword swing: pale yellow arc with two or three pixel fragments.
+- Pencil Thrust: graphite-gray shaft, pale blue speed line, and a sharp two-cell impact.
 - Successful hit: white flash, four-direction chips, 50-80 ms hit stop.
 - Child help: blue crayon stroke, paper dust, and a soft room-light shift.
 - Enemy magic: red cracks and dark smoke used sparingly.

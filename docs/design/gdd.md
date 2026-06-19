@@ -108,7 +108,23 @@ These values are starting targets and require playtesting.
 - A successful hit briefly staggers common enemies.
 - The pawn cannot move during the first portion of the swing.
 - Attacking an armored face causes recoil but no damage.
-- There are no combo strings or equippable weapons.
+- There are no combo strings.
+- The pawn equips one physical toy weapon and up to two Imagination skills.
+- Loadouts change only at playground safe zones.
+- Weapons change basic attack range, timing, and rhythm without changing movement rules.
+- Imagination skills provide authored tactical actions rather than statistical upgrades.
+
+### Turning
+
+- Holding Shift and pressing a cardinal direction changes facing without moving.
+- Turning is immediate and does not reserve a destination cell.
+- Turning cannot interrupt an attack impact window or an active movement step.
+
+### Vertical Slice Loadout
+
+- Wooden Sword: fast one-cell basic attack.
+- Pencil Thrust: two-cell line skill with longer recovery, activated with `Q`.
+- Pencil Thrust uses a short cooldown in the vertical slice. Its final resource cost will be chosen after combat playtesting.
 
 ### Health and Failure
 
@@ -135,6 +151,8 @@ These values are starting targets and require playtesting.
 |---|---|
 | Step | Move one cell in a cardinal direction |
 | Strike | Attack the adjacent cell in the facing direction |
+| Turn | Hold Shift and press a direction to face without stepping |
+| Skill 1 | Use the equipped Pencil Thrust |
 | Interact | Speak, activate shortcuts, or inspect playground objects |
 | Call | Request the currently selected child intervention |
 | Select Help | Cycle between unlocked child interventions |
@@ -521,7 +539,7 @@ The final fight removes the child's voice and most room ambience until the pawn 
 - Online or local multiplayer.
 - Traditional playable chess mode after the prologue.
 - Procedural generation.
-- Inventory, crafting, shops, equipment, or weapon upgrades.
+- Inventory grids, crafting, shops, loot tiers, or statistical weapon upgrades.
 - Branching campaigns or multiple major endings.
 - Open-world traversal.
 - Voice acting requirement.
