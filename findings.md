@@ -31,3 +31,13 @@
 - The player needs `Shift + direction` turning without movement.
 - Basic attack range can remain one cell, while weapons and skills provide future range variation.
 - Approved slice loadout: Wooden Sword plus Pencil Thrust.
+
+## AI Research
+
+- Into the Breach demonstrates that visible enemy intentions turn combat into response planning and can increase battle pace.
+- Enter the Gungeon's developers handcrafted and individually playtested rooms, treating layout and environmental interaction as part of combat design.
+- Utility AI is appropriate for scoring a small number of legal chess actions.
+- A finite-state machine should execute the chosen action so timing and telegraphs remain deterministic.
+- A room-level attack-token system is needed because independent enemy brains can accidentally create unfair simultaneous attacks.
+- Enemies should react to the hero's committed or reserved cell, never buffered input.
+- Machine learning and NavMesh pathfinding do not fit this deterministic grid game.

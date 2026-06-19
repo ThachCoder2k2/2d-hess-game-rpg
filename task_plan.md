@@ -19,6 +19,8 @@ Build the first playable Godot 4 vertical slice. Current milestone: turn-in-plac
 | 9. Black Pawn AI | complete | Advance, diagonal telegraph, strike, recovery |
 | 10. Damage and reset | complete | Invulnerability, defeat, room restart |
 | 11. Milestone verification | complete | Tests, runtime capture, commit, push |
+| 12. AI architecture research | complete | Pattern, utility, intent states, coordination research |
+| 13. AI implementation planning | complete | Phased Godot component and test plan |
 
 ## Decisions
 
@@ -27,11 +29,14 @@ Build the first playable Godot 4 vertical slice. Current milestone: turn-in-plac
 - Logical tile size: 32 pixels.
 - Game logic is cell-based; sprites and animation are presentation.
 - Placeholder art will be intentionally styled and project-native, then replaced using the art bible.
-- First milestone stops before enemy AI and the Knight boss.
+- The first foundation milestone stopped before enemy AI and the Knight boss; Black Pawn AI was added in the following milestone.
 - `Shift + direction` turns the pawn without moving.
 - The slice loadout is one Wooden Sword plus Pencil Thrust on `Q`.
 - Pencil Thrust reaches two cells and has longer recovery.
 - Pencil Thrust uses cooldown only during the slice; resource cost waits for playtesting.
+- Enemy AI will use chess patterns plus utility scoring, executed by a shared intent state machine.
+- Encounter coordination will use room-level attack tokens and a threat map.
+- AI reads only the hero's current or visibly reserved destination cell.
 
 ## Errors Encountered
 

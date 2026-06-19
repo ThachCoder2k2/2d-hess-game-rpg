@@ -41,3 +41,5 @@
 - Final suite passes 21 checks.
 - Final headless room run completes without script or runtime errors.
 - Visual capture confirms readable movement, diagonal warning, strike impact, Courage loss, and invulnerability feedback.
+- Researched telegraphed grid combat, handcrafted room design, utility AI, and multi-enemy coordination.
+- Wrote the complete AI behavior and implementation plan in `docs/design/ai-behavior-plan.md`.
