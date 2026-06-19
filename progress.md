@@ -19,6 +19,7 @@
 - Captured and visually inspected the corrected 1280x720 frame rendered from the 640x360 canvas.
 - `git diff --check` reports no whitespace errors.
 - Committed the first playable foundation to `main`.
+- Pushed `main` to `ThachCoder2k2/2d-hess-game-rpg` using the existing `github.com-work` SSH identity.
 
 ## Next Milestone
 
