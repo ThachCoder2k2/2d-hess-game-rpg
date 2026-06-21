@@ -300,7 +300,7 @@ func _find_attack_setup_goal(context: EnemyContext) -> Vector2i:
 func _resolve_attack() -> void:
 	state = State.COMMIT
 	emit_signal("telegraph_finished", self)
-	if target.current_cell in locked_attack_cells:
+	if target != null and is_instance_valid(target) and target.current_cell in locked_attack_cells:
 		target.take_damage(weapon.damage if weapon != null else 1, facing)
 	emit_signal("attack_resolved", locked_attack_cells)
 	locked_attack_cells.clear()

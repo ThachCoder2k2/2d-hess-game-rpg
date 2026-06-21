@@ -33,6 +33,7 @@ Build the first playable Godot 4 vertical slice. Current milestone: free-moving 
 | 23. Intent foundation implementation | complete | Pawn and Knight use context, scored intents, patterns, archetypes, memory, and active pursuit |
 | 24. Enemy debug visualization | complete | F3 boundaries, intent paths, and live behavior labels |
 | 25. AI pursuit stability | complete | A* routing, goal commitment, loop prevention, occupied-goal rejection, and crash verification |
+| 26. Attack lifecycle crash fix | complete | Safe invulnerability timer plus forced headless and real-renderer attack regression tests |
 
 ## Decisions
 

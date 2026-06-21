@@ -95,3 +95,13 @@
 - Debug labels flip below enemies near the top board edge.
 - Expanded the suite to 56 passing checks.
 - Completed two 60-second headless simulations and one 20-second real-renderer capture without a crash.
+
+## Attack Lifecycle Crash Fix
+
+- Forced attack selection, telegraph, damage, recovery, token cleanup, and attacker defeat while telegraphing.
+- Reproduced a scene-tree lifecycle error when damage attempted to create an invulnerability timer without a valid tree.
+- Hardened hero invulnerability startup and post-timer completion for startup, reload, and teardown windows.
+- Applied the same scene-tree guards to player attack timing and delayed room reset.
+- Added six direct attack-lifecycle checks; the main suite now passes 64 checks.
+- Added `tests/attack_runtime_test.gd` for complete timed attack rendering.
+- Forced-attack runtime test passes in both headless mode and the real Metal/OpenGL renderer.

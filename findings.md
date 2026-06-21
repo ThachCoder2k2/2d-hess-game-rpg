@@ -75,3 +75,6 @@
 - A player standing on a weapon made that pickup unreachable while it remained the enemy's highest-priority goal.
 - Stable pursuit needs reachable goals, path-distance progress, short goal commitment, and recent-cell loop detection together.
 - No gameplay crash reproduced across two 60-second logic runs and a 20-second real-renderer run; the only native crash observed remains Godot's unsupported headless movie capture path.
+- A damage event can occur during startup, reload, or teardown when the actor still exists but `get_tree()` is unavailable.
+- Async damage timers must capture a validated tree before awaiting and re-check tree membership after resuming.
+- The forced attack renderer test is the reliable regression path for attack-only crashes that normal idle captures may never reach.

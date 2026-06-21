@@ -130,8 +130,12 @@ func _on_hero_defeated() -> void:
 	room_ending = true
 	director.set_paused(true)
 	_update_status("The pawn falls. The child resets the board...")
-	await get_tree().create_timer(0.85).timeout
-	get_tree().reload_current_scene()
+	var tree := get_tree()
+	if tree == null:
+		return
+	await tree.create_timer(0.85).timeout
+	if is_inside_tree():
+		tree.reload_current_scene()
 
 
 func _build_hud() -> void:

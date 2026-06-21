@@ -154,6 +154,38 @@ func _init() -> void:
 	ai_director.request_attack(thinking_pawn)
 	_expect(not ai_director.can_request_attack(knight), "director exposes token denial to other enemy decisions")
 
+	var attack_world := GridWorld.new()
+	root.add_child(attack_world)
+	var attack_board := PrototypeBoard.new()
+	root.add_child(attack_board)
+	attack_board.setup(attack_world)
+	var attack_hero := PawnHero.new()
+	root.add_child(attack_hero)
+	_expect(attack_hero.setup(attack_world, Vector2i(5, 5)), "attack lifecycle hero registers")
+	var attacking_pawn := BlackPawn.new()
+	root.add_child(attacking_pawn)
+	_expect(attacking_pawn.setup(attack_world, Vector2i(4, 4)), "attack lifecycle enemy registers")
+	attacking_pawn.facing = Vector2i.DOWN
+	var attack_director := EncounterDirector.new()
+	root.add_child(attack_director)
+	attacking_pawn.telegraph_started.connect(attack_board.set_telegraph)
+	attacking_pawn.telegraph_finished.connect(attack_board.clear_telegraph)
+	attacking_pawn.attack_resolved.connect(attack_board.show_enemy_attack)
+	attacking_pawn.intent_changed.connect(attack_board.set_enemy_intent)
+	attacking_pawn.activate(attack_hero, attack_director)
+	attacking_pawn._choose_action()
+	_expect(attacking_pawn.state == FreeEnemy.State.TELEGRAPH and attack_board.telegraphs.has(attacking_pawn), "enemy attack enters telegraph with board signals connected")
+	attacking_pawn._resolve_attack()
+	_expect(attack_hero.courage == 2, "enemy attack resolves damage once")
+	_expect(not attack_board.telegraphs.has(attacking_pawn) and attack_director.attack_owner == null, "attack resolution clears telegraph and token")
+
+	attacking_pawn.state = FreeEnemy.State.OBSERVE
+	attacking_pawn.action_memory.clear()
+	attacking_pawn._choose_action()
+	_expect(attack_board.telegraphs.has(attacking_pawn), "second attack telegraph begins")
+	attacking_pawn.take_damage(2)
+	_expect(not attack_board.telegraphs.has(attacking_pawn) and attack_director.attack_owner == null, "defeat during attack safely clears telegraph and token")
+
 	print("TESTS COMPLETE: %d failure(s)" % failures)
 	quit(1 if failures > 0 else 0)
 

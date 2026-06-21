@@ -157,7 +157,14 @@ func try_attack(profile: AttackProfile = null) -> bool:
 	attack_visual_time = profile.impact_delay + 0.10
 	queue_redraw()
 	var target_cells := profile.get_target_cells(current_cell, facing)
-	await get_tree().create_timer(profile.impact_delay).timeout
+	var tree := get_tree()
+	if tree == null:
+		attack_on_cooldown = false
+		active_attack = null
+		return false
+	await tree.create_timer(profile.impact_delay).timeout
+	if not is_inside_tree():
+		return false
 	var hit_count := 0
 	var hit_actors: Dictionary = {}
 	for target_cell in target_cells:
@@ -167,7 +174,9 @@ func try_attack(profile: AttackProfile = null) -> bool:
 			hit_actors[target] = true
 			hit_count += 1
 	emit_signal("attack_landed", target_cells, hit_count, profile)
-	await get_tree().create_timer(maxf(0.0, profile.recovery - profile.impact_delay)).timeout
+	await tree.create_timer(maxf(0.0, profile.recovery - profile.impact_delay)).timeout
+	if not is_inside_tree():
+		return false
 	attack_on_cooldown = false
 	active_attack = null
 	if buffered_direction != Vector2i.ZERO and control_enabled:
@@ -208,7 +217,16 @@ func take_damage(amount: int, _direction := Vector2i.ZERO) -> bool:
 
 func _start_invulnerability() -> void:
 	is_invulnerable = true
-	await get_tree().create_timer(invulnerability_duration).timeout
+	if not is_inside_tree():
+		is_invulnerable = false
+		return
+	var tree := get_tree()
+	if tree == null:
+		is_invulnerable = false
+		return
+	await tree.create_timer(invulnerability_duration).timeout
+	if not is_inside_tree():
+		return
 	is_invulnerable = false
 	queue_redraw()
 
