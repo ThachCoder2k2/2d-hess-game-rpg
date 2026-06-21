@@ -121,6 +121,20 @@ func get_reserved_cell(actor: Node) -> Vector2i:
 	return actor_cells.get(actor, Vector2i(-999, -999))
 
 
+func get_reservation_cells() -> Array[Vector2i]:
+	var cells: Array[Vector2i] = []
+	for cell: Vector2i in reservations:
+		cells.append(cell)
+	return cells
+
+
+func get_occupied_cells() -> Array[Vector2i]:
+	var cells: Array[Vector2i] = []
+	for cell: Vector2i in occupied_cells:
+		cells.append(cell)
+	return cells
+
+
 func get_cardinal_destinations(actor: Node, origin: Vector2i) -> Array[Vector2i]:
 	var destinations: Array[Vector2i] = []
 	for direction: Vector2i in [Vector2i.UP, Vector2i.DOWN, Vector2i.LEFT, Vector2i.RIGHT]:

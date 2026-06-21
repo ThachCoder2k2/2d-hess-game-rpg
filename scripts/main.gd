@@ -11,6 +11,8 @@ var objective_label: Label
 var token_label: Label
 var remaining_enemies := 0
 var room_ending := false
+var debug_enabled := true
+var enemies: Array[FreeEnemy] = []
 
 
 func _ready() -> void:
@@ -52,6 +54,9 @@ func _ready() -> void:
 func _process(_delta: float) -> void:
 	if Input.is_action_just_pressed("restart_room"):
 		get_tree().reload_current_scene()
+	if Input.is_key_pressed(KEY_F3) and not _debug_key_was_pressed:
+		_set_debug_enabled(not debug_enabled)
+	_debug_key_was_pressed = Input.is_key_pressed(KEY_F3)
 	if hero != null and status_label != null:
 		status_label.text = "CELL %02d,%02d  FACE %s  ENEMIES %d" % [
 			hero.current_cell.x,
@@ -76,14 +81,17 @@ func _spawn_enemy(enemy: FreeEnemy, cell: Vector2i, starting_weapon: EnemyWeapon
 		enemy.queue_free()
 		return
 	remaining_enemies += 1
+	enemies.append(enemy)
 	enemy.telegraph_started.connect(board.set_telegraph)
 	enemy.telegraph_finished.connect(board.clear_telegraph)
 	enemy.attack_resolved.connect(board.show_enemy_attack)
 	enemy.weapon_changed.connect(_on_enemy_weapon_changed)
 	enemy.defeated.connect(_on_enemy_defeated)
+	enemy.intent_changed.connect(board.set_enemy_intent)
 	if starting_weapon != null:
 		enemy.equip(starting_weapon)
 	enemy.activate(hero, director)
+	enemy.set_debug_enabled(debug_enabled)
 
 
 func _on_enemy_weapon_changed(enemy: FreeEnemy, weapon: EnemyWeapon) -> void:
@@ -93,13 +101,27 @@ func _on_enemy_weapon_changed(enemy: FreeEnemy, weapon: EnemyWeapon) -> void:
 	_update_status("%s picked up %s. Its chess attack has been replaced." % [piece_name, weapon.display_name])
 
 
-func _on_enemy_defeated(_enemy: FreeEnemy) -> void:
+func _on_enemy_defeated(enemy: FreeEnemy) -> void:
+	enemies.erase(enemy)
+	board.clear_enemy_debug(enemy)
 	remaining_enemies -= 1
 	if remaining_enemies <= 0 and not room_ending:
 		room_ending = true
 		director.set_paused(true)
 		hero.control_enabled = false
 		_update_status("THE PAWN IS UNBOUND. Mixed encounter complete.")
+
+
+var _debug_key_was_pressed := false
+
+
+func _set_debug_enabled(value: bool) -> void:
+	debug_enabled = value
+	board.set_debug_enabled(value)
+	for enemy in enemies:
+		if is_instance_valid(enemy):
+			enemy.set_debug_enabled(value)
+	_update_status("DEBUG VIEW ON: boundaries, paths, and behavior labels." if value else "DEBUG VIEW OFF.")
 
 
 func _on_hero_defeated() -> void:
@@ -148,7 +170,7 @@ func _build_hud() -> void:
 
 	var help := Label.new()
 	help.position = Vector2(14, 338)
-	help.text = "MOVE WASD   TURN SHIFT+DIR   SWORD SPACE   THRUST Q   RESET R"
+	help.text = "MOVE WASD  TURN SHIFT+DIR  SWORD SPACE  THRUST Q  RESET R  DEBUG F3"
 	help.add_theme_font_size_override("font_size", 8)
 	help.add_theme_color_override("font_color", Color("#fff4d6"))
 	layer.add_child(help)

@@ -31,6 +31,7 @@ Build the first playable Godot 4 vertical slice. Current milestone: free-moving 
 | 21. Detailed enemy production spec | complete | Timing, data contracts, state tables, maneuvers, recipes, telemetry |
 | 22. Enemy AI implementation roadmap | complete | Six incremental milestones with file scope, tests, and acceptance gates |
 | 23. Intent foundation implementation | complete | Pawn and Knight use context, scored intents, patterns, archetypes, memory, and active pursuit |
+| 24. Enemy debug visualization | complete | F3 boundaries, intent paths, and live behavior labels |
 
 ## Decisions
 

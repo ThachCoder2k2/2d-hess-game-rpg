@@ -6,6 +6,8 @@ var telegraphs: Dictionary = {}
 var impact_cells: Array[Vector2i] = []
 var impact_time := 0.0
 var impact_color := Color("#fff2a8")
+var debug_enabled := true
+var enemy_intents: Dictionary = {}
 
 
 func setup(world: GridWorld) -> void:
@@ -37,9 +39,26 @@ func clear_telegraph(source: Node) -> void:
 	queue_redraw()
 
 
+func set_debug_enabled(value: bool) -> void:
+	debug_enabled = value
+	queue_redraw()
+
+
+func set_enemy_intent(enemy: FreeEnemy, intent: EnemyIntent) -> void:
+	enemy_intents[enemy] = intent
+	queue_redraw()
+
+
+func clear_enemy_debug(enemy: FreeEnemy) -> void:
+	enemy_intents.erase(enemy)
+	queue_redraw()
+
+
 func _process(delta: float) -> void:
 	if impact_time > 0.0:
 		impact_time = maxf(0.0, impact_time - delta)
+		queue_redraw()
+	if debug_enabled and not enemy_intents.is_empty():
 		queue_redraw()
 
 
@@ -76,7 +95,79 @@ func _draw() -> void:
 			if grid_world.is_inside(cell):
 				draw_rect(Rect2(origin + Vector2(cell * size), Vector2.ONE * size), Color(impact_color, 0.68))
 
+	if debug_enabled:
+		_draw_debug_layer(origin, size)
 	_draw_playground_border(origin, size)
+
+
+func _draw_debug_layer(origin: Vector2, size: int) -> void:
+	var board_rect := Rect2(origin, Vector2(grid_world.bounds.size * size))
+	draw_rect(board_rect, Color("#6ee7f2", 0.9), false, 2.0)
+
+	for cell in grid_world.get_occupied_cells():
+		_draw_debug_cell(cell, Color("#fff4d6", 0.8), 1.5)
+	for cell in grid_world.blocked_cells:
+		_draw_debug_cell(cell, Color("#ffd34e", 0.95), 2.0)
+	for cell in grid_world.get_reservation_cells():
+		_draw_debug_cell(cell, Color("#4da3ff", 0.95), 2.0)
+	for cell in grid_world.get_item_cells():
+		_draw_debug_cell(cell, Color("#63d68b", 0.95), 2.0)
+
+	var stale: Array[Node] = []
+	for enemy: Node in enemy_intents:
+		if not is_instance_valid(enemy) or not enemy is FreeEnemy:
+			stale.append(enemy)
+			continue
+		_draw_intent_path(enemy, enemy_intents[enemy])
+	for enemy in stale:
+		enemy_intents.erase(enemy)
+
+
+func _draw_debug_cell(cell: Vector2i, color: Color, width: float) -> void:
+	if not grid_world.is_inside(cell):
+		return
+	var rect := Rect2(
+		grid_world.grid_origin + Vector2(cell * grid_world.cell_size) + Vector2.ONE * 2.0,
+		Vector2.ONE * float(grid_world.cell_size - 4)
+	)
+	draw_rect(rect, color, false, width)
+
+
+func _draw_intent_path(enemy: FreeEnemy, intent: EnemyIntent) -> void:
+	var start := enemy.position
+	var color := _intent_color(intent.type)
+	var targets: Array[Vector2i] = []
+	match intent.type:
+		EnemyIntent.Type.ATTACK:
+			targets = intent.target_cells
+		EnemyIntent.Type.MOVE:
+			targets = [intent.destination]
+		EnemyIntent.Type.TURN:
+			var turn_target := enemy.current_cell + intent.direction
+			targets = [turn_target]
+		_:
+			targets = [enemy.current_cell]
+
+	for target_cell in targets:
+		if not grid_world.is_inside(target_cell):
+			continue
+		var finish := grid_world.cell_to_world(target_cell)
+		draw_dashed_line(start, finish, color, 2.0, 6.0)
+		draw_circle(finish, 4.0, color)
+
+
+func _intent_color(type: EnemyIntent.Type) -> Color:
+	match type:
+		EnemyIntent.Type.ATTACK:
+			return Color("#ff665e")
+		EnemyIntent.Type.MOVE:
+			return Color("#57d9f2")
+		EnemyIntent.Type.PICKUP:
+			return Color("#63d68b")
+		EnemyIntent.Type.TURN:
+			return Color("#ffd34e")
+		_:
+			return Color("#aeb5bd")
 
 
 func _draw_playground_border(origin: Vector2, size: int) -> void:

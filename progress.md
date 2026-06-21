@@ -73,3 +73,14 @@
 - Final suite passes 47 checks.
 - Final 1,200-frame runtime simulation completes without script errors.
 - Real-renderer capture confirms active pursuit, facing changes, weapon pressure, and Knight angle changes.
+
+## Enemy Debug Visualization
+
+- Added an `F3` toggle for the complete enemy debug view.
+- Added room, occupied-cell, blocked-cell, reservation, and item boundaries.
+- Added color-coded intent paths for attack, move, pickup, turn, and wait decisions.
+- Added live role, state, action score, and weapon labels above every enemy.
+- Kept debug rendering observational so it cannot affect AI scoring or execution.
+- Added continuous redraw so intent paths stay attached during tweened movement.
+- Added five automated debug-data and visibility checks; the suite now passes 52 checks.
+- Completed a clean 1,200-frame runtime simulation and real-renderer visual inspection.

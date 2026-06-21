@@ -29,10 +29,13 @@ var state_time := 0.0
 var flash_time := 0.0
 var recoil := Vector2.ZERO
 var locked_attack_cells: Array[Vector2i] = []
+var debug_enabled := true
+var debug_label: Label
 
 
 func _ready() -> void:
 	_ensure_ai_data()
+	_create_debug_label()
 
 
 func create_attack_pattern() -> AttackPattern:
@@ -50,6 +53,14 @@ func activate(hero: PawnHero, encounter_director: EncounterDirector) -> void:
 	state = State.OBSERVE
 	state_time = think_time
 	queue_redraw()
+	_update_debug_label()
+
+
+func set_debug_enabled(value: bool) -> void:
+	_create_debug_label()
+	debug_enabled = value
+	if debug_label != null:
+		debug_label.visible = value
 
 
 func equip(item: EnemyWeapon) -> void:
@@ -63,6 +74,7 @@ func _process(delta: float) -> void:
 	recoil = recoil.move_toward(Vector2.ZERO, delta * 70.0)
 	if flash_time > 0.0:
 		queue_redraw()
+	_update_debug_label()
 	if target == null or not is_instance_valid(target) or state == State.DEFEATED or is_moving:
 		return
 	if director != null and director.paused:
@@ -270,3 +282,41 @@ func _ensure_ai_data() -> void:
 		attack_pattern = create_attack_pattern()
 	if archetype == null:
 		archetype = create_archetype()
+
+
+func _create_debug_label() -> void:
+	if debug_label != null:
+		return
+	debug_label = Label.new()
+	debug_label.position = Vector2(-48, -39)
+	debug_label.size = Vector2(96, 25)
+	debug_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	debug_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	debug_label.add_theme_font_size_override("font_size", 7)
+	debug_label.add_theme_color_override("font_color", Color("#fff4d6"))
+	debug_label.add_theme_color_override("font_shadow_color", Color(0.04, 0.03, 0.04, 0.95))
+	debug_label.add_theme_constant_override("shadow_offset_x", 1)
+	debug_label.add_theme_constant_override("shadow_offset_y", 1)
+	debug_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(debug_label)
+	debug_label.visible = debug_enabled
+	_update_debug_label()
+
+
+func _update_debug_label() -> void:
+	if debug_label == null or not debug_enabled:
+		return
+	_ensure_ai_data()
+	var action := "NONE"
+	var score := 0.0
+	if current_intent != null:
+		action = String(current_intent.action_id).to_upper()
+		score = current_intent.score
+	var equipment := "UNARMED" if weapon == null else weapon.display_name.to_upper()
+	debug_label.text = "%s  %s\n%s %.0f  %s" % [
+		String(archetype.role).to_upper(),
+		State.keys()[state],
+		action,
+		score,
+		equipment,
+	]
