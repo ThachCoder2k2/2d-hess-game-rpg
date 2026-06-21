@@ -60,3 +60,16 @@
 - Audited the current `FreeEnemy`, Pawn, Knight, encounter director, grid, weapons, board rendering, and automated tests.
 - Chose an incremental extraction strategy that preserves the playable encounter before adding new pieces.
 - Wrote a six-milestone AI implementation roadmap covering intent data, group fairness, Pawn/Knight polish, Bishop, Rook, and authored Queen/King bosses.
+- Began the intent-foundation milestone after approval of the Tactical Predator behavior direction.
+- Added enemy context, intent, archetype, and Pawn/Knight attack-pattern data.
+- Refactored common enemies to score attacks, movement, pickups, turns, and waits with short-term action memory.
+- Added awareness of the hero's visibly reserved destination while preserving locked telegraphs.
+- Expanded the automated suite from 36 to 46 passing checks.
+- Completed a clean 1,200-frame headless encounter simulation.
+- Godot's dummy renderer crashed when asked to record a headless movie; visual capture must use the real renderer.
+- Refined memory to track repeated directions instead of suppressing all movement.
+- Shortened movement recovery so enemies maintain pressure without shortening attack telegraphs.
+- Fixed context capture so enemies continue evaluating legal moves while the hero stands still.
+- Final suite passes 47 checks.
+- Final 1,200-frame runtime simulation completes without script errors.
+- Real-renderer capture confirms active pursuit, facing changes, weapon pressure, and Knight angle changes.

@@ -2,9 +2,18 @@ class_name BlackPawn
 extends FreeEnemy
 
 
-func get_unarmed_attack_cells(origin := current_cell, direction := facing) -> Array[Vector2i]:
-	var side := Vector2i(-direction.y, direction.x)
-	return [origin + direction + side, origin + direction - side]
+func create_attack_pattern() -> AttackPattern:
+	return PawnPattern.new()
+
+
+func create_archetype() -> EnemyArchetype:
+	var data := EnemyArchetype.new()
+	data.role = &"skirmisher"
+	data.future_threat_score = 36.0
+	data.pickup_score = 72.0
+	data.turn_threat_score = 52.0
+	data.preferred_distance = 2
+	return data
 
 
 func _draw() -> void:

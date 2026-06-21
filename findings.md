@@ -66,3 +66,6 @@
 - `EncounterDirector` currently manages one attack owner but does not track commitment spacing, role groups, destination reservations, pickup reservations, or threat validation.
 - `PrototypeBoard` already renders source-keyed telegraphs and can become the presentation consumer for a shared threat map.
 - The current test suite is lightweight and deterministic, making it suitable for protecting behavior during the first refactor.
+- Direction-specific action memory creates variation without making enemies abandon sustained pursuit.
+- Movement recovery must be shorter than attack recovery; sharing one recovery value made enemies feel passive at room scale.
+- Legal movement options must be captured regardless of whether the hero is moving, while only the target cell changes to the visible reservation.

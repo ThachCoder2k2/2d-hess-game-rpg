@@ -114,6 +114,13 @@ func get_item_cells() -> Array[Vector2i]:
 	return cells
 
 
+func get_reserved_cell(actor: Node) -> Vector2i:
+	for cell: Vector2i in reservations:
+		if reservations[cell] == actor:
+			return cell
+	return actor_cells.get(actor, Vector2i(-999, -999))
+
+
 func get_cardinal_destinations(actor: Node, origin: Vector2i) -> Array[Vector2i]:
 	var destinations: Array[Vector2i] = []
 	for direction: Vector2i in [Vector2i.UP, Vector2i.DOWN, Vector2i.LEFT, Vector2i.RIGHT]:

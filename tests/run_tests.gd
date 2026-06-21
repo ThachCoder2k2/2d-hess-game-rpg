@@ -83,6 +83,49 @@ func _init() -> void:
 	var turn_events := InputMap.action_get_events("turn_mode")
 	_expect(turn_events.size() == 1 and turn_events[0].as_text() == "Shift", "turn modifier is bound only to Shift")
 
+	var intent_cells: Array[Vector2i] = [Vector2i(3, 3)]
+	var locked_intent := EnemyIntent.attack(intent_cells, 100.0)
+	intent_cells[0] = Vector2i(9, 9)
+	_expect(locked_intent.target_cells == [Vector2i(3, 3)], "attack intent locks a copy of telegraphed cells")
+
+	var ai_world := GridWorld.new()
+	root.add_child(ai_world)
+	var ai_hero := PawnHero.new()
+	root.add_child(ai_hero)
+	_expect(ai_hero.setup(ai_world, Vector2i(5, 5)), "AI test hero registers")
+	var thinking_pawn := BlackPawn.new()
+	root.add_child(thinking_pawn)
+	_expect(thinking_pawn.setup(ai_world, Vector2i(3, 4)), "AI test pawn registers")
+	var ai_director := EncounterDirector.new()
+	root.add_child(ai_director)
+	thinking_pawn.activate(ai_hero, ai_director)
+
+	_expect(ai_world.begin_move(ai_hero, Vector2i(5, 4)), "hero visible step reserves its destination")
+	var reserved_context := EnemyContext.capture(thinking_pawn)
+	_expect(reserved_context.hero_cell == Vector2i(5, 4), "enemy observes the hero's visibly reserved destination")
+
+	ai_world.finish_move(ai_hero, Vector2i(5, 4))
+	ai_hero.current_cell = Vector2i(5, 4)
+	var decision_context := EnemyContext.capture(thinking_pawn)
+	_expect(not decision_context.legal_moves.is_empty(), "enemy keeps hunting while the hero stands still")
+	var first_choice := thinking_pawn._select_intent(thinking_pawn._build_intents(decision_context))
+	var second_choice := thinking_pawn._select_intent(thinking_pawn._build_intents(decision_context))
+	_expect(first_choice.type == second_choice.type and first_choice.destination == second_choice.destination, "identical contexts produce deterministic choices")
+
+	thinking_pawn.facing = Vector2i.DOWN
+	ai_hero.current_cell = Vector2i(2, 3)
+	ai_world.finish_move(ai_hero, Vector2i(2, 3))
+	var turn_context := EnemyContext.capture(thinking_pawn)
+	var found_threatening_turn := false
+	for intent in thinking_pawn._build_intents(turn_context):
+		if intent.type == EnemyIntent.Type.TURN and intent.direction == Vector2i.UP and intent.score > 40.0:
+			found_threatening_turn = true
+	_expect(found_threatening_turn, "pawn recognizes a turn that creates diagonal pressure")
+
+	_expect(ai_director.can_request_attack(thinking_pawn), "director reports an available attack token")
+	ai_director.request_attack(thinking_pawn)
+	_expect(not ai_director.can_request_attack(knight), "director exposes token denial to other enemy decisions")
+
 	print("TESTS COMPLETE: %d failure(s)" % failures)
 	quit(1 if failures > 0 else 0)
 

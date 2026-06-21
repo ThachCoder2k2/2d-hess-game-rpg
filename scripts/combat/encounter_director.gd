@@ -7,10 +7,12 @@ var attack_owner: Node
 var paused := false
 
 
+func can_request_attack(enemy: Node) -> bool:
+	return not paused and (attack_owner == null or not is_instance_valid(attack_owner) or attack_owner == enemy)
+
+
 func request_attack(enemy: Node) -> bool:
-	if paused:
-		return false
-	if attack_owner != null and is_instance_valid(attack_owner) and attack_owner != enemy:
+	if not can_request_attack(enemy):
 		return false
 	attack_owner = enemy
 	emit_signal("token_changed", attack_owner)

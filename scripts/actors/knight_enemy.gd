@@ -1,25 +1,31 @@
 class_name KnightEnemy
 extends FreeEnemy
 
-const KNIGHT_OFFSETS: Array[Vector2i] = [
-	Vector2i(-2, -1), Vector2i(-2, 1), Vector2i(2, -1), Vector2i(2, 1),
-	Vector2i(-1, -2), Vector2i(1, -2), Vector2i(-1, 2), Vector2i(1, 2),
-]
+
+func create_attack_pattern() -> AttackPattern:
+	return KnightPattern.new()
 
 
-func get_unarmed_attack_cells(origin := current_cell, _direction := facing) -> Array[Vector2i]:
-	var cells: Array[Vector2i] = []
-	for offset in KNIGHT_OFFSETS:
-		var cell := origin + offset
-		if grid_world == null or grid_world.is_inside(cell):
-			cells.append(cell)
-	return cells
+func create_archetype() -> EnemyArchetype:
+	var data := EnemyArchetype.new()
+	data.role = &"flanker"
+	data.future_threat_score = 58.0
+	data.distance_score = 7.0
+	data.pickup_score = 50.0
+	data.preferred_distance = 3
+	return data
 
 
-func get_positioning_bonus(destination: Vector2i, direction: Vector2i) -> float:
-	if weapon == null and target.current_cell in get_unarmed_attack_cells(destination, direction):
-		return 42.0
-	return 0.0
+func get_positioning_bonus(destination: Vector2i, direction: Vector2i, context: EnemyContext) -> float:
+	var bonus := super(destination, direction, context)
+	if weapon == null and context.hero_cell in get_unarmed_attack_cells(destination, direction):
+		bonus += 30.0
+	if last_move_direction != Vector2i.ZERO:
+		var previous_axis := last_move_direction.abs()
+		var next_axis := direction.abs()
+		if previous_axis != next_axis:
+			bonus += 12.0
+	return bonus
 
 
 func _draw() -> void:

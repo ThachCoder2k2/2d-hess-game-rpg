@@ -30,7 +30,7 @@ Build the first playable Godot 4 vertical slice. Current milestone: free-moving 
 | 20. Enemy behavior bible | complete | Pawn through King, weapons, encounters, tests |
 | 21. Detailed enemy production spec | complete | Timing, data contracts, state tables, maneuvers, recipes, telemetry |
 | 22. Enemy AI implementation roadmap | complete | Six incremental milestones with file scope, tests, and acceptance gates |
-| 23. Intent foundation implementation | pending | Refactor Pawn and Knight onto context, intent, pattern, and archetype data |
+| 23. Intent foundation implementation | complete | Pawn and Knight use context, scored intents, patterns, archetypes, memory, and active pursuit |
 
 ## Decisions
 
@@ -65,3 +65,4 @@ Build the first playable Godot 4 vertical slice. Current milestone: free-moving 
 | Pencil Thrust used an async attack return value inside `if` | 1 | Added synchronous `can_start_attack()` guard and launched the coroutine separately |
 | Turn action accidentally included Ctrl due to keycode assumption | 1 | Inspected `InputEvent.as_text()`, removed Ctrl, and added a binding test |
 | Cardinal move helper inferred inline directions as `Variant` | 1 | Added explicit `Vector2i` loop and destination types |
+| Godot headless movie capture crashed in the dummy texture renderer | 1 | Keep headless mode for logic/runtime checks and use the real renderer for visual capture |
