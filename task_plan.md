@@ -34,6 +34,8 @@ Build the first playable Godot 4 vertical slice. Current milestone: free-moving 
 | 24. Enemy debug visualization | complete | F3 boundaries, intent paths, and live behavior labels |
 | 25. AI pursuit stability | complete | A* routing, goal commitment, loop prevention, occupied-goal rejection, and crash verification |
 | 26. Attack lifecycle crash fix | complete | Safe invulnerability timer plus forced headless and real-renderer attack regression tests |
+| 27. Editor-first architecture plan | complete | Scene/component/Resource ownership and six-phase migration roadmap |
+| 28. Typed data foundation | pending | Create Resource contracts and editable Pawn, Knight, weapon, and difficulty assets |
 
 ## Decisions
 

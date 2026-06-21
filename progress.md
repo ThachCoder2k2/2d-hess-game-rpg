@@ -105,3 +105,11 @@
 - Added six direct attack-lifecycle checks; the main suite now passes 64 checks.
 - Added `tests/attack_runtime_test.gd` for complete timed attack rendering.
 - Forced-attack runtime test passes in both headless mode and the real Metal/OpenGL renderer.
+
+## Editor-First Architecture Planning
+
+- Audited runtime construction, enemy inheritance, AI Resources, scenes, tests, and existing migration plans.
+- Selected Godot-native entity scenes, child-node components, and typed Resources instead of strict ECS.
+- Defined component responsibilities, Resource contracts, editor workflows, encounter ownership, and extension rules.
+- Wrote a six-phase migration that keeps the current encounter playable after every phase.
+- Limited the first execution batch to typed data and `.tres` assets with no behavior extraction.

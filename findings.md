@@ -78,3 +78,11 @@
 - A damage event can occur during startup, reload, or teardown when the actor still exists but `get_tree()` is unavailable.
 - Async damage timers must capture a validated tree before awaiting and re-check tree membership after resuming.
 - The forced attack renderer test is the reliable regression path for attack-only crashes that normal idle captures may never reach.
+
+## Editor-First Architecture
+
+- The current `main.gd` constructs the room, hero, enemies, weapons, and blockers at runtime, so most composition is not editable before play.
+- Current Pawn and Knight differences are split between subclass scripts and partially configurable Resources.
+- Godot scene composition plus typed Resources fits the desired workflow better than a strict ECS framework.
+- A compatibility adapter allows scene ownership to migrate before behavior responsibilities are extracted.
+- The safest first batch is data-only: expose current values in `.tres` assets without changing runtime behavior.
