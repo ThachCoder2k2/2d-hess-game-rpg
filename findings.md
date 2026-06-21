@@ -71,3 +71,7 @@
 - Legal movement options must be captured regardless of whether the hero is moving, while only the target cell changes to the visible reservation.
 - Debug intent paths must redraw while actors tween; drawing only when an intent changes leaves the path visually detached.
 - Enemy-local labels are the simplest way to keep behavior text anchored through movement without duplicating world-to-screen tracking.
+- Direction penalties alone create orbiting because they reward changing direction without measuring progress.
+- A player standing on a weapon made that pickup unreachable while it remained the enemy's highest-priority goal.
+- Stable pursuit needs reachable goals, path-distance progress, short goal commitment, and recent-cell loop detection together.
+- No gameplay crash reproduced across two 60-second logic runs and a 20-second real-renderer run; the only native crash observed remains Godot's unsupported headless movie capture path.

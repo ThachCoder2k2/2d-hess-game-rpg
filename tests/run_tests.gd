@@ -30,6 +30,16 @@ func _init() -> void:
 	_expect(not world.can_begin_move(actor_a, Vector2i(6, 4)), "blocked cell rejects movement")
 	_expect(not world.add_block(Vector2i(4, 2)), "occupied cell rejects a block")
 
+	var path_world := GridWorld.new()
+	root.add_child(path_world)
+	var path_actor := Node.new()
+	root.add_child(path_actor)
+	_expect(path_world.register_actor(path_actor, Vector2i(1, 1)), "pathfinding actor registers")
+	path_world.add_block(Vector2i(2, 1))
+	var routed_path := path_world.get_grid_path(path_actor, Vector2i(1, 1), Vector2i(3, 1))
+	_expect(routed_path.size() > 3 and Vector2i(2, 1) not in routed_path, "A* path routes around blocked cells")
+	_expect(path_world.get_next_path_cell(path_actor, Vector2i(1, 1), Vector2i(3, 1)) != Vector2i(2, 1), "next path cell never enters a blocker")
+
 	var hero := PawnHero.new()
 	root.add_child(hero)
 	hero.current_cell = Vector2i(8, 5)
@@ -132,6 +142,13 @@ func _init() -> void:
 		if intent.type == EnemyIntent.Type.TURN and intent.direction == Vector2i.UP and intent.score > 40.0:
 			found_threatening_turn = true
 	_expect(found_threatening_turn, "pawn recognizes a turn that creates diagonal pressure")
+
+	var occupied_pickup := WeaponPickup.new()
+	root.add_child(occupied_pickup)
+	_expect(occupied_pickup.setup(ai_world, ai_hero.current_cell, EnemyWeapon.pencil_spear()), "occupied weapon objective registers")
+	_expect(thinking_pawn._nearest_item_cell([ai_hero.current_cell]) == Vector2i(-999, -999), "enemy rejects an occupied weapon as a movement goal")
+	var setup_goal := thinking_pawn._find_attack_setup_goal(turn_context)
+	_expect(setup_goal != ai_hero.current_cell and ai_world.is_plannable_cell(thinking_pawn, setup_goal), "enemy chooses a reachable attack-setup cell around the player")
 
 	_expect(ai_director.can_request_attack(thinking_pawn), "director reports an available attack token")
 	ai_director.request_attack(thinking_pawn)

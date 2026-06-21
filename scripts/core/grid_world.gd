@@ -135,6 +135,49 @@ func get_occupied_cells() -> Array[Vector2i]:
 	return cells
 
 
+func get_grid_path(actor: Node, origin: Vector2i, goal: Vector2i) -> Array[Vector2i]:
+	if not is_inside(origin) or not is_inside(goal):
+		return []
+	var pathfinder := AStarGrid2D.new()
+	pathfinder.region = bounds
+	pathfinder.cell_size = Vector2.ONE
+	pathfinder.diagonal_mode = AStarGrid2D.DIAGONAL_MODE_NEVER
+	pathfinder.update()
+	for cell: Vector2i in blocked_cells:
+		pathfinder.set_point_solid(cell)
+	for cell: Vector2i in occupied_cells:
+		if occupied_cells[cell] != actor and cell != goal:
+			pathfinder.set_point_solid(cell)
+	for cell: Vector2i in reservations:
+		if reservations[cell] != actor and cell != goal:
+			pathfinder.set_point_solid(cell)
+	var packed_path := pathfinder.get_id_path(origin, goal)
+	var path: Array[Vector2i] = []
+	for cell in packed_path:
+		path.append(cell)
+	return path
+
+
+func get_path_distance(actor: Node, origin: Vector2i, goal: Vector2i) -> int:
+	var path := get_grid_path(actor, origin, goal)
+	return path.size() - 1 if not path.is_empty() else 999999
+
+
+func get_next_path_cell(actor: Node, origin: Vector2i, goal: Vector2i) -> Vector2i:
+	var path := get_grid_path(actor, origin, goal)
+	return path[1] if path.size() > 1 else origin
+
+
+func is_plannable_cell(actor: Node, cell: Vector2i) -> bool:
+	if not is_walkable(cell):
+		return false
+	if occupied_cells.has(cell) and occupied_cells[cell] != actor:
+		return false
+	if reservations.has(cell) and reservations[cell] != actor:
+		return false
+	return true
+
+
 func get_cardinal_destinations(actor: Node, origin: Vector2i) -> Array[Vector2i]:
 	var destinations: Array[Vector2i] = []
 	for direction: Vector2i in [Vector2i.UP, Vector2i.DOWN, Vector2i.LEFT, Vector2i.RIGHT]:

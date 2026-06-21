@@ -136,12 +136,22 @@ func _draw_debug_cell(cell: Vector2i, color: Color, width: float) -> void:
 func _draw_intent_path(enemy: FreeEnemy, intent: EnemyIntent) -> void:
 	var start := enemy.position
 	var color := _intent_color(intent.type)
+	if intent.type == EnemyIntent.Type.MOVE:
+		var goal := enemy.committed_goal if grid_world.is_inside(enemy.committed_goal) else intent.destination
+		var route := grid_world.get_grid_path(enemy, enemy.current_cell, goal)
+		var segment_start := start
+		if route.size() <= 1:
+			route = [enemy.current_cell, intent.destination]
+		for index in range(1, route.size()):
+			var segment_end := grid_world.cell_to_world(route[index])
+			draw_dashed_line(segment_start, segment_end, color, 2.0, 6.0)
+			draw_circle(segment_end, 3.0, color)
+			segment_start = segment_end
+		return
 	var targets: Array[Vector2i] = []
 	match intent.type:
 		EnemyIntent.Type.ATTACK:
 			targets = intent.target_cells
-		EnemyIntent.Type.MOVE:
-			targets = [intent.destination]
 		EnemyIntent.Type.TURN:
 			var turn_target := enemy.current_cell + intent.direction
 			targets = [turn_target]

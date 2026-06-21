@@ -23,7 +23,12 @@ var attack_pattern: AttackPattern
 var archetype: EnemyArchetype
 var current_intent: EnemyIntent
 var action_memory: Array[StringName] = []
+var recent_cells: Array[Vector2i] = []
 var last_move_direction := Vector2i.ZERO
+var committed_goal := Vector2i(-999, -999)
+var committed_goal_kind: StringName = &"none"
+var committed_target_snapshot := Vector2i(-999, -999)
+var goal_decisions_left := 0
 var state := State.OBSERVE
 var state_time := 0.0
 var flash_time := 0.0
@@ -36,6 +41,7 @@ var debug_label: Label
 func _ready() -> void:
 	_ensure_ai_data()
 	_create_debug_label()
+	_ensure_step_tracking()
 
 
 func create_attack_pattern() -> AttackPattern:
@@ -48,10 +54,12 @@ func create_archetype() -> EnemyArchetype:
 
 func activate(hero: PawnHero, encounter_director: EncounterDirector) -> void:
 	_ensure_ai_data()
+	_ensure_step_tracking()
 	target = hero
 	director = encounter_director
 	state = State.OBSERVE
 	state_time = think_time
+	recent_cells = [current_cell]
 	queue_redraw()
 	_update_debug_label()
 
@@ -129,15 +137,17 @@ func _build_intents(context: EnemyContext) -> Array[EnemyIntent]:
 	if weapon == null and grid_world.item_at(context.self_cell) is WeaponPickup:
 		intents.append(EnemyIntent.pickup(archetype.pickup_score + 50.0))
 
-	var pursuit_cell := context.hero_cell
-	if weapon == null:
-		var nearest_item := _nearest_item_cell(context.item_cells)
-		if nearest_item != Vector2i(-999, -999):
-			pursuit_cell = nearest_item
+	var pursuit_cell := _get_pursuit_goal(context)
+	var next_path_cell := grid_world.get_next_path_cell(self, context.self_cell, pursuit_cell)
+	var has_fresh_move := false
+	for destination in context.legal_moves:
+		if destination not in recent_cells:
+			has_fresh_move = true
+			break
 
 	for destination in context.legal_moves:
 		var direction := destination - context.self_cell
-		var score := _score_destination(destination, direction, pursuit_cell, context)
+		var score := _score_destination(destination, direction, pursuit_cell, next_path_cell, has_fresh_move, context)
 		intents.append(EnemyIntent.move(destination, direction, score))
 
 	if attack_pattern.uses_facing or weapon != null:
@@ -155,7 +165,8 @@ func _build_intents(context: EnemyContext) -> Array[EnemyIntent]:
 
 	intents.append(EnemyIntent.wait(archetype.wait_score))
 	for intent in intents:
-		intent.score -= float(action_memory.count(intent.action_id)) * archetype.repetition_penalty
+		if not String(intent.action_id).begins_with("move_"):
+			intent.score -= float(action_memory.count(intent.action_id)) * archetype.repetition_penalty
 	return intents
 
 
@@ -201,10 +212,17 @@ func _execute_intent(intent: EnemyIntent) -> void:
 			state_time = think_time * 0.65
 
 
-func _score_destination(destination: Vector2i, direction: Vector2i, pursuit_cell: Vector2i, context: EnemyContext) -> float:
-	var old_distance := _manhattan(context.self_cell, pursuit_cell)
-	var new_distance := _manhattan(destination, pursuit_cell)
+func _score_destination(destination: Vector2i, direction: Vector2i, pursuit_cell: Vector2i, next_path_cell: Vector2i, penalize_recent: bool, context: EnemyContext) -> float:
+	var old_distance := grid_world.get_path_distance(self, context.self_cell, pursuit_cell)
+	var new_distance := grid_world.get_path_distance(self, destination, pursuit_cell)
+	if old_distance >= 999999 or new_distance >= 999999:
+		old_distance = _manhattan(context.self_cell, pursuit_cell)
+		new_distance = _manhattan(destination, pursuit_cell)
 	var score := float(old_distance - new_distance) * archetype.distance_score
+	if destination == next_path_cell:
+		score += 18.0
+	if penalize_recent and destination in recent_cells:
+		score -= 30.0
 	if weapon == null and grid_world.item_at(destination) is WeaponPickup:
 		score += archetype.pickup_score
 	if context.hero_cell in get_attack_cells(destination, direction):
@@ -222,11 +240,61 @@ func _nearest_item_cell(item_cells: Array[Vector2i]) -> Vector2i:
 	var result := Vector2i(-999, -999)
 	var best_distance := 999999
 	for cell in item_cells:
-		var distance := _manhattan(current_cell, cell)
+		if not grid_world.is_plannable_cell(self, cell):
+			continue
+		var distance := grid_world.get_path_distance(self, current_cell, cell)
 		if distance < best_distance:
 			best_distance = distance
 			result = cell
 	return result
+
+
+func _get_pursuit_goal(context: EnemyContext) -> Vector2i:
+	if _goal_is_valid(context) and goal_decisions_left > 0:
+		goal_decisions_left -= 1
+		return committed_goal
+	var item_goal := Vector2i(-999, -999)
+	if weapon == null:
+		item_goal = _nearest_item_cell(context.item_cells)
+	if item_goal != Vector2i(-999, -999):
+		committed_goal = item_goal
+		committed_goal_kind = &"weapon"
+	else:
+		committed_goal = _find_attack_setup_goal(context)
+		committed_goal_kind = &"attack_setup"
+		committed_target_snapshot = context.hero_cell
+	goal_decisions_left = 2
+	return committed_goal
+
+
+func _goal_is_valid(context: EnemyContext) -> bool:
+	if committed_goal_kind == &"weapon":
+		return weapon == null and committed_goal in context.item_cells and current_cell != committed_goal
+	if committed_goal_kind == &"attack_setup":
+		return committed_target_snapshot == context.hero_cell and grid_world.is_plannable_cell(self, committed_goal)
+	return false
+
+
+func _find_attack_setup_goal(context: EnemyContext) -> Vector2i:
+	var best_cell := context.hero_cell
+	var best_distance := 999999
+	for y in range(grid_world.bounds.position.y, grid_world.bounds.end.y):
+		for x in range(grid_world.bounds.position.x, grid_world.bounds.end.x):
+			var candidate := Vector2i(x, y)
+			if not grid_world.is_plannable_cell(self, candidate):
+				continue
+			var can_attack_from_cell := false
+			for direction: Vector2i in [Vector2i.UP, Vector2i.DOWN, Vector2i.LEFT, Vector2i.RIGHT]:
+				if context.hero_cell in get_attack_cells(candidate, direction):
+					can_attack_from_cell = true
+					break
+			if not can_attack_from_cell:
+				continue
+			var distance := grid_world.get_path_distance(self, context.self_cell, candidate)
+			if distance < best_distance:
+				best_distance = distance
+				best_cell = candidate
+	return best_cell if best_distance < 999999 else context.hero_cell
 
 
 func _resolve_attack() -> void:
@@ -277,11 +345,22 @@ func _remember_action(action_id: StringName) -> void:
 		action_memory.pop_front()
 
 
+func _on_enemy_step_finished(destination: Vector2i) -> void:
+	recent_cells.append(destination)
+	if recent_cells.size() > 6:
+		recent_cells.pop_front()
+
+
 func _ensure_ai_data() -> void:
 	if attack_pattern == null:
 		attack_pattern = create_attack_pattern()
 	if archetype == null:
 		archetype = create_archetype()
+
+
+func _ensure_step_tracking() -> void:
+	if not step_finished.is_connected(_on_enemy_step_finished):
+		step_finished.connect(_on_enemy_step_finished)
 
 
 func _create_debug_label() -> void:
@@ -313,6 +392,7 @@ func _update_debug_label() -> void:
 		action = String(current_intent.action_id).to_upper()
 		score = current_intent.score
 	var equipment := "UNARMED" if weapon == null else weapon.display_name.to_upper()
+	debug_label.position.y = 16.0 if position.y < 92.0 else -39.0
 	debug_label.text = "%s  %s\n%s %.0f  %s" % [
 		String(archetype.role).to_upper(),
 		State.keys()[state],

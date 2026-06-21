@@ -84,3 +84,14 @@
 - Added continuous redraw so intent paths stay attached during tweened movement.
 - Added five automated debug-data and visibility checks; the suite now passes 52 checks.
 - Completed a clean 1,200-frame runtime simulation and real-renderer visual inspection.
+
+## AI Pursuit Stability
+
+- Replaced greedy Manhattan pursuit with cardinal `AStarGrid2D` routing around blocks, actors, and reservations.
+- Added short goal commitment and six-cell movement history to prevent decision thrashing and repeated loops.
+- Removed generic movement repetition penalties; recent-cell penalties now apply only when a fresh exit exists.
+- Rejects occupied weapon cells as movement goals and chooses a reachable chess-attack setup cell around the holder.
+- Debug movement paths now display the complete A* route.
+- Debug labels flip below enemies near the top board edge.
+- Expanded the suite to 56 passing checks.
+- Completed two 60-second headless simulations and one 20-second real-renderer capture without a crash.

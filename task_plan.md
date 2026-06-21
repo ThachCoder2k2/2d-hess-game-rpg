@@ -32,6 +32,7 @@ Build the first playable Godot 4 vertical slice. Current milestone: free-moving 
 | 22. Enemy AI implementation roadmap | complete | Six incremental milestones with file scope, tests, and acceptance gates |
 | 23. Intent foundation implementation | complete | Pawn and Knight use context, scored intents, patterns, archetypes, memory, and active pursuit |
 | 24. Enemy debug visualization | complete | F3 boundaries, intent paths, and live behavior labels |
+| 25. AI pursuit stability | complete | A* routing, goal commitment, loop prevention, occupied-goal rejection, and crash verification |
 
 ## Decisions
 
@@ -67,3 +68,4 @@ Build the first playable Godot 4 vertical slice. Current milestone: free-moving 
 | Turn action accidentally included Ctrl due to keycode assumption | 1 | Inspected `InputEvent.as_text()`, removed Ctrl, and added a binding test |
 | Cardinal move helper inferred inline directions as `Variant` | 1 | Added explicit `Vector2i` loop and destination types |
 | Godot headless movie capture crashed in the dummy texture renderer | 1 | Keep headless mode for logic/runtime checks and use the real renderer for visual capture |
+| Grid path helper collided with native `Node.get_path()` | 1 | Renamed the helper to `get_grid_path()` |
