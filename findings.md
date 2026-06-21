@@ -89,3 +89,6 @@
 - `FreeEnemy` can consume typed definitions through a compatibility layer while legacy Pawn/Knight visuals remain unchanged.
 - Shared `.tres` assets should be treated as immutable at runtime; weapon factories return deep duplicates for per-instance safety.
 - Validation methods on nested Resources catch missing movement, decision, attack, visual, and difficulty references before component extraction.
+- A thin `EnemyActor` host can expose real component nodes now while delegating to `FreeEnemy` until each responsibility is safely extracted.
+- Component adapters need explicit host injection; relying on broad Scene Tree searches would make them difficult to reuse and test.
+- Resolving child references inside `_configure_components()` keeps scene instances testable before and after normal `_ready()` dispatch.

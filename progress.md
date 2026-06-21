@@ -123,3 +123,12 @@
 - Armed Pawn equipment now comes from `pawn_armed.tres`; weapon factory methods clone `.tres` assets.
 - Added Resource validation and runtime parity checks; the main suite now passes 74 checks.
 - Forced attack runtime test, 1,200-frame simulation, editor import, and real-renderer capture all pass.
+
+## Base Enemy Scene Shell
+
+- Added `enemy_base.tscn` with visible VisualRoot, movement, brain, attack, health, equipment, and debug child nodes.
+- Added reusable `.tscn` scenes and typed scripts for all six components.
+- Added `EnemyActor` as a compatibility host that injects itself into components while retaining `FreeEnemy` behavior.
+- Verified the same base scene loads Pawn and Knight definitions and attack geometry.
+- Verified removing the optional debug component does not affect combat data.
+- Main suite now passes 81 checks; live encounter, forced attack test, and editor import remain clean.

@@ -83,6 +83,29 @@ func _init() -> void:
 	_expect(armed_definition.validate().is_empty(), "armed Pawn definition has no missing configuration")
 	_expect(armed_definition.default_weapon != null and armed_definition.default_weapon.display_name == "Pencil Spear", "armed Pawn default weapon is Inspector-configured")
 
+	var enemy_base_scene := load("res://scenes/actors/enemy_base.tscn") as PackedScene
+	var pawn_shell := enemy_base_scene.instantiate() as EnemyActor
+	root.add_child(pawn_shell)
+	pawn_shell._ensure_ai_data()
+	pawn_shell._configure_components()
+	_expect(pawn_shell.definition.id == &"pawn_recruit", "base enemy scene exposes its default Pawn definition")
+	_expect(pawn_shell._get_configuration_warnings().is_empty(), "complete base enemy scene has no editor configuration warnings")
+	_expect(pawn_shell.movement_component.actor == pawn_shell and pawn_shell.brain_component.actor == pawn_shell, "movement and brain component nodes bind to the host")
+	_expect(pawn_shell.attack_component.actor == pawn_shell and pawn_shell.health_component.actor == pawn_shell, "attack and health component nodes bind to the host")
+	_expect(pawn_shell.equipment_component.actor == pawn_shell and pawn_shell.enemy_debug_component.actor == pawn_shell, "equipment and debug component nodes bind to the host")
+
+	var knight_shell := enemy_base_scene.instantiate() as EnemyActor
+	knight_shell.definition = load("res://resources/enemies/knight_tracker.tres") as EnemyDefinition
+	root.add_child(knight_shell)
+	knight_shell._ensure_ai_data()
+	knight_shell._configure_components()
+	_expect(knight_shell.get_unarmed_attack_cells(Vector2i(8, 4)).size() == 8, "same base scene loads Knight attack configuration")
+	var optional_debug := knight_shell.get_node("DebugComponent")
+	knight_shell.remove_child(optional_debug)
+	optional_debug.queue_free()
+	knight_shell._configure_components()
+	_expect(knight_shell.enemy_debug_component == null and knight_shell.get_unarmed_attack_cells(Vector2i(8, 4)).size() == 8, "removing optional debug component does not affect combat data")
+
 	var director := EncounterDirector.new()
 	root.add_child(director)
 	_expect(director.request_attack(black_pawn), "first enemy receives attack token")

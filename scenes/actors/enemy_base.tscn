@@ -1,0 +1,28 @@
+[gd_scene load_steps=9 format=3]
+
+[ext_resource type="Script" path="res://scripts/entities/enemy_actor.gd" id="1"]
+[ext_resource type="Resource" path="res://resources/enemies/pawn_recruit.tres" id="2"]
+[ext_resource type="PackedScene" path="res://scenes/components/grid_movement_component.tscn" id="3"]
+[ext_resource type="PackedScene" path="res://scenes/components/enemy_brain_component.tscn" id="4"]
+[ext_resource type="PackedScene" path="res://scenes/components/attack_component.tscn" id="5"]
+[ext_resource type="PackedScene" path="res://scenes/components/health_component.tscn" id="6"]
+[ext_resource type="PackedScene" path="res://scenes/components/equipment_component.tscn" id="7"]
+[ext_resource type="PackedScene" path="res://scenes/components/debug_component.tscn" id="8"]
+
+[node name="EnemyActor" type="Node2D"]
+script = ExtResource("1")
+definition = ExtResource("2")
+
+[node name="VisualRoot" type="Node2D" parent="."]
+
+[node name="GridMovementComponent" parent="." instance=ExtResource("3")]
+
+[node name="EnemyBrainComponent" parent="." instance=ExtResource("4")]
+
+[node name="AttackComponent" parent="." instance=ExtResource("5")]
+
+[node name="HealthComponent" parent="." instance=ExtResource("6")]
+
+[node name="EquipmentComponent" parent="." instance=ExtResource("7")]
+
+[node name="DebugComponent" parent="." instance=ExtResource("8")]
