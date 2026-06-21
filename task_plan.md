@@ -29,6 +29,8 @@ Build the first playable Godot 4 vertical slice. Current milestone: free-moving 
 | 19. Enemy behavior research | complete | Archetypes, tells, groups, bosses, data-driven AI |
 | 20. Enemy behavior bible | complete | Pawn through King, weapons, encounters, tests |
 | 21. Detailed enemy production spec | complete | Timing, data contracts, state tables, maneuvers, recipes, telemetry |
+| 22. Enemy AI implementation roadmap | complete | Six incremental milestones with file scope, tests, and acceptance gates |
+| 23. Intent foundation implementation | pending | Refactor Pawn and Knight onto context, intent, pattern, and archetype data |
 
 ## Decisions
 

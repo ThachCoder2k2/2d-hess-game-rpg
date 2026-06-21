@@ -54,3 +54,9 @@
 - Researched enemy archetypes, telegraphing, group coordination, modular tactics, and boss phase structure.
 - Wrote `docs/design/enemy-behavior-bible.md` covering Pawn, Knight, Bishop, Rook, Queen, King, weapon behavior, encounter composition, implementation order, and testing.
 - Expanded the enemy bible with exact timing targets, utility evaluation, Godot data contracts, state transition tables, weapon compatibility, boss maneuver data, encounter recipes, debug telemetry, and production acceptance gates.
+
+## 2026-06-21
+
+- Audited the current `FreeEnemy`, Pawn, Knight, encounter director, grid, weapons, board rendering, and automated tests.
+- Chose an incremental extraction strategy that preserves the playable encounter before adding new pieces.
+- Wrote a six-milestone AI implementation roadmap covering intent data, group fairness, Pawn/Knight polish, Bishop, Rook, and authored Queen/King bosses.

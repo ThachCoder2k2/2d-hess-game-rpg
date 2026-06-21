@@ -58,3 +58,11 @@
 - Regular enemies need reusable AI that works in varied rooms; bosses should be authored for a specific arena.
 - Weapons can replace attack geometry while piece identity continues to shape positioning and pickup preference.
 - Bosses should test learned mechanics through structured escalation rather than inflated health.
+
+## Implementation Roadmap Audit
+
+- `FreeEnemy` currently owns sensing, utility scoring, movement, equipment, telegraph timing, attack resolution, and damage response.
+- Pawn and Knight already share enough behavior to support an incremental extraction into context, intent, pattern, and archetype data.
+- `EncounterDirector` currently manages one attack owner but does not track commitment spacing, role groups, destination reservations, pickup reservations, or threat validation.
+- `PrototypeBoard` already renders source-keyed telegraphs and can become the presentation consumer for a shared threat map.
+- The current test suite is lightweight and deterministic, making it suitable for protecting behavior during the first refactor.
