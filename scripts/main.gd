@@ -44,7 +44,9 @@ func _ready() -> void:
 	_spawn_weapon(Vector2i(5, 5), EnemyWeapon.pencil_spear())
 	_spawn_weapon(Vector2i(11, 6), EnemyWeapon.ruler_blade())
 	_spawn_enemy(BlackPawn.new(), Vector2i(4, 1))
-	_spawn_enemy(BlackPawn.new(), Vector2i(10, 1), EnemyWeapon.pencil_spear())
+	var armed_pawn := BlackPawn.new()
+	armed_pawn.definition = load("res://resources/enemies/pawn_armed.tres") as EnemyDefinition
+	_spawn_enemy(armed_pawn, Vector2i(10, 1))
 	_spawn_enemy(KnightEnemy.new(), Vector2i(13, 2))
 
 	_build_hud()
@@ -90,6 +92,8 @@ func _spawn_enemy(enemy: FreeEnemy, cell: Vector2i, starting_weapon: EnemyWeapon
 	enemy.intent_changed.connect(board.set_enemy_intent)
 	if starting_weapon != null:
 		enemy.equip(starting_weapon)
+	elif enemy.definition != null and enemy.definition.default_weapon != null:
+		enemy.equip(enemy.definition.default_weapon.duplicate(true))
 	enemy.activate(hero, director)
 	enemy.set_debug_enabled(debug_enabled)
 

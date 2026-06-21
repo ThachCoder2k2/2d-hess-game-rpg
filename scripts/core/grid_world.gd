@@ -179,8 +179,12 @@ func is_plannable_cell(actor: Node, cell: Vector2i) -> bool:
 
 
 func get_cardinal_destinations(actor: Node, origin: Vector2i) -> Array[Vector2i]:
+	return get_destinations(actor, origin, [Vector2i.UP, Vector2i.DOWN, Vector2i.LEFT, Vector2i.RIGHT])
+
+
+func get_destinations(actor: Node, origin: Vector2i, directions: Array[Vector2i]) -> Array[Vector2i]:
 	var destinations: Array[Vector2i] = []
-	for direction: Vector2i in [Vector2i.UP, Vector2i.DOWN, Vector2i.LEFT, Vector2i.RIGHT]:
+	for direction in directions:
 		var destination: Vector2i = origin + direction
 		if can_begin_move(actor, destination):
 			destinations.append(destination)

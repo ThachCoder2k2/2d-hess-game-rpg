@@ -2,6 +2,10 @@ class_name KnightEnemy
 extends FreeEnemy
 
 
+func create_enemy_definition() -> EnemyDefinition:
+	return load("res://resources/enemies/knight_tracker.tres") as EnemyDefinition
+
+
 func create_attack_pattern() -> AttackPattern:
 	return KnightPattern.new()
 

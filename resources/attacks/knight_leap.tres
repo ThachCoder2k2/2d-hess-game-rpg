@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="KnightPattern" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/ai/patterns/knight_pattern.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"knight_leap"
+uses_facing = false
+damage = 1
+telegraph_duration = 0.58
+recovery_duration = 0.48
+telegraph_style = &"knight_l"
+requires_attack_token = true
+locks_facing = false

@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="EnemyWeapon" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/combat/enemy_weapon.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+display_name = "Ruler Blade"
+shape = 1
+range_cells = 1
+damage = 1
+telegraph_time = 0.56
+recovery_time = 0.62
+color = Color(0.909804, 0.721569, 0.247059, 1)

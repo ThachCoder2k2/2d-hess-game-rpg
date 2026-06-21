@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="PawnPattern" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/ai/patterns/pawn_pattern.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"pawn_diagonal"
+uses_facing = true
+damage = 1
+telegraph_duration = 0.58
+recovery_duration = 0.48
+telegraph_style = &"diagonal_slashes"
+requires_attack_token = true
+locks_facing = true

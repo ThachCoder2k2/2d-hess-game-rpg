@@ -35,7 +35,8 @@ Build the first playable Godot 4 vertical slice. Current milestone: free-moving 
 | 25. AI pursuit stability | complete | A* routing, goal commitment, loop prevention, occupied-goal rejection, and crash verification |
 | 26. Attack lifecycle crash fix | complete | Safe invulnerability timer plus forced headless and real-renderer attack regression tests |
 | 27. Editor-first architecture plan | complete | Scene/component/Resource ownership and six-phase migration roadmap |
-| 28. Typed data foundation | pending | Create Resource contracts and editable Pawn, Knight, weapon, and difficulty assets |
+| 28. Typed data foundation | complete | Inspector-editable enemy, movement, decision, attack, weapon, difficulty, and visual Resources |
+| 29. Base enemy scene shell | pending | Create `enemy_base.tscn` and visible child component nodes using a compatibility adapter |
 
 ## Decisions
 

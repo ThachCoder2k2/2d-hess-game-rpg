@@ -2,6 +2,10 @@ class_name BlackPawn
 extends FreeEnemy
 
 
+func create_enemy_definition() -> EnemyDefinition:
+	return load("res://resources/enemies/pawn_recruit.tres") as EnemyDefinition
+
+
 func create_attack_pattern() -> AttackPattern:
 	return PawnPattern.new()
 

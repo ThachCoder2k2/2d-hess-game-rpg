@@ -113,3 +113,13 @@
 - Defined component responsibilities, Resource contracts, editor workflows, encounter ownership, and extension rules.
 - Wrote a six-phase migration that keeps the current encounter playable after every phase.
 - Limited the first execution batch to typed data and `.tres` assets with no behavior extraction.
+
+## Typed Data Foundation
+
+- Added typed `EnemyDefinition`, `MovementConfig`, `DecisionConfig`, `DifficultyProfile`, and `VisualDefinition` Resources.
+- Expanded `AttackPattern` with editable damage, timing, presentation, token, and facing metadata.
+- Created Inspector assets for Pawn Recruit, armed Pawn, Tracker Knight, Pawn diagonal, Knight leap, Pencil Spear, Ruler Blade, movement, decisions, visuals, and standard difficulty.
+- Wired existing Pawn and Knight actors through a compatibility layer without extracting components or changing visuals.
+- Armed Pawn equipment now comes from `pawn_armed.tres`; weapon factory methods clone `.tres` assets.
+- Added Resource validation and runtime parity checks; the main suite now passes 74 checks.
+- Forced attack runtime test, 1,200-frame simulation, editor import, and real-renderer capture all pass.

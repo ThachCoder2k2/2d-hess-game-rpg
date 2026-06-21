@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="VisualDefinition" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/visual_definition.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"pawn_compatibility"
+legacy_draw_kind = &"black_pawn"
+telegraph_color = Color(0.352941, 0.12549, 0.145098, 1)
+impact_color = Color(1, 0.603922, 0.458824, 1)
+weapon_anchor = Vector2(5, 0)

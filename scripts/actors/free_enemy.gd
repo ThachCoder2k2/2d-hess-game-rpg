@@ -15,6 +15,7 @@ enum State { OBSERVE, TELEGRAPH, COMMIT, RECOVER, DEFEATED }
 @export var move_recovery_time := 0.18
 @export var unarmed_telegraph_time := 0.58
 @export var unarmed_recovery_time := 0.48
+@export var definition: EnemyDefinition
 
 var target: PawnHero
 var director: EncounterDirector
@@ -36,6 +37,7 @@ var recoil := Vector2.ZERO
 var locked_attack_cells: Array[Vector2i] = []
 var debug_enabled := true
 var debug_label: Label
+var definition_applied := false
 
 
 func _ready() -> void:
@@ -50,6 +52,10 @@ func create_attack_pattern() -> AttackPattern:
 
 func create_archetype() -> EnemyArchetype:
 	return EnemyArchetype.new()
+
+
+func create_enemy_definition() -> EnemyDefinition:
+	return null
 
 
 func activate(hero: PawnHero, encounter_director: EncounterDirector) -> void:
@@ -116,6 +122,8 @@ func get_attack_cells(origin := current_cell, direction := facing) -> Array[Vect
 func get_cardinal_move_options() -> Array[Vector2i]:
 	if grid_world == null:
 		return []
+	if definition != null and definition.movement != null:
+		return grid_world.get_destinations(self, current_cell, definition.movement.allowed_directions)
 	return grid_world.get_cardinal_destinations(self, current_cell)
 
 
@@ -220,9 +228,9 @@ func _score_destination(destination: Vector2i, direction: Vector2i, pursuit_cell
 		new_distance = _manhattan(destination, pursuit_cell)
 	var score := float(old_distance - new_distance) * archetype.distance_score
 	if destination == next_path_cell:
-		score += 18.0
+		score += _path_step_bonus()
 	if penalize_recent and destination in recent_cells:
-		score -= 30.0
+		score -= _recent_cell_penalty()
 	if weapon == null and grid_world.item_at(destination) is WeaponPickup:
 		score += archetype.pickup_score
 	if context.hero_cell in get_attack_cells(destination, direction):
@@ -263,7 +271,7 @@ func _get_pursuit_goal(context: EnemyContext) -> Vector2i:
 		committed_goal = _find_attack_setup_goal(context)
 		committed_goal_kind = &"attack_setup"
 		committed_target_snapshot = context.hero_cell
-	goal_decisions_left = 2
+	goal_decisions_left = _goal_commitment_decisions()
 	return committed_goal
 
 
@@ -301,7 +309,7 @@ func _resolve_attack() -> void:
 	state = State.COMMIT
 	emit_signal("telegraph_finished", self)
 	if target != null and is_instance_valid(target) and target.current_cell in locked_attack_cells:
-		target.take_damage(weapon.damage if weapon != null else 1, facing)
+		target.take_damage(weapon.damage if weapon != null else attack_pattern.damage, facing)
 	emit_signal("attack_resolved", locked_attack_cells)
 	locked_attack_cells.clear()
 	if director != null:
@@ -347,15 +355,69 @@ func _remember_action(action_id: StringName) -> void:
 
 func _on_enemy_step_finished(destination: Vector2i) -> void:
 	recent_cells.append(destination)
-	if recent_cells.size() > 6:
+	if recent_cells.size() > _path_memory_size():
 		recent_cells.pop_front()
 
 
 func _ensure_ai_data() -> void:
+	if definition == null:
+		definition = create_enemy_definition()
+	if definition != null and not definition_applied:
+		_apply_definition()
 	if attack_pattern == null:
 		attack_pattern = create_attack_pattern()
 	if archetype == null:
 		archetype = create_archetype()
+
+
+func _apply_definition() -> void:
+	var warnings := definition.validate()
+	for warning in warnings:
+		push_warning("%s: %s" % [definition.resource_path, warning])
+	health = definition.max_health
+	if definition.movement != null:
+		step_duration = definition.movement.step_duration
+		move_recovery_time = definition.movement.move_recovery
+	if definition.decision != null:
+		think_time = definition.decision.observe_delay
+		var preferred_distance := definition.movement.preferred_distance if definition.movement != null else 2
+		archetype = definition.decision.create_archetype(preferred_distance)
+		archetype.role = definition.role
+	if definition.unarmed_attack != null:
+		attack_pattern = definition.unarmed_attack
+		unarmed_telegraph_time = attack_pattern.telegraph_duration
+		unarmed_recovery_time = attack_pattern.recovery_duration
+	if definition.difficulty != null:
+		think_time *= definition.difficulty.observe_time_multiplier
+		step_duration *= definition.difficulty.movement_time_multiplier
+		move_recovery_time *= definition.difficulty.recovery_time_multiplier
+		unarmed_telegraph_time *= definition.difficulty.telegraph_time_multiplier
+		unarmed_recovery_time *= definition.difficulty.recovery_time_multiplier
+	definition_applied = true
+
+
+func _path_memory_size() -> int:
+	if definition != null and definition.movement != null:
+		return definition.movement.path_memory_size
+	return 6
+
+
+func _goal_commitment_decisions() -> int:
+	if definition != null and definition.movement != null:
+		return definition.movement.goal_commitment_decisions
+	return 2
+
+
+func _recent_cell_penalty() -> float:
+	if definition != null and definition.decision != null:
+		return definition.decision.recent_cell_penalty
+	return 30.0
+
+
+func _path_step_bonus() -> float:
+	if definition != null and definition.decision != null:
+		return definition.decision.path_step_bonus
+	return 18.0
 
 
 func _ensure_step_tracking() -> void:

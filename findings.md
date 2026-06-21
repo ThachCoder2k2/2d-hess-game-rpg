@@ -86,3 +86,6 @@
 - Godot scene composition plus typed Resources fits the desired workflow better than a strict ECS framework.
 - A compatibility adapter allows scene ownership to migrate before behavior responsibilities are extracted.
 - The safest first batch is data-only: expose current values in `.tres` assets without changing runtime behavior.
+- `FreeEnemy` can consume typed definitions through a compatibility layer while legacy Pawn/Knight visuals remain unchanged.
+- Shared `.tres` assets should be treated as immutable at runtime; weapon factories return deep duplicates for per-instance safety.
+- Validation methods on nested Resources catch missing movement, decision, attack, visual, and difficulty references before component extraction.

@@ -57,10 +57,16 @@ func _init() -> void:
 	root.add_child(black_pawn)
 	black_pawn.current_cell = Vector2i(6, 3)
 	_expect(black_pawn.get_attack_cells() == [Vector2i(5, 4), Vector2i(7, 4)], "black pawn attacks both forward diagonals")
+	_expect(black_pawn.definition != null and black_pawn.definition.id == &"pawn_recruit", "black pawn loads its editor definition")
+	_expect(black_pawn.definition.validate().is_empty(), "pawn definition has no missing configuration")
+	_expect(black_pawn.think_time == 0.42 and black_pawn.move_recovery_time == 0.18, "pawn runtime timing comes from Resources")
 	black_pawn.facing = Vector2i.RIGHT
 	_expect(black_pawn.get_attack_cells() == [Vector2i(7, 4), Vector2i(7, 2)], "black pawn diagonal attack rotates with facing")
 
 	var spear := EnemyWeapon.pencil_spear()
+	var second_spear := EnemyWeapon.pencil_spear()
+	_expect(spear.resource_path.is_empty() and spear != second_spear, "weapon factory returns independent instances from the editor asset")
+	_expect(spear.range_cells == 2 and spear.telegraph_time == 0.62, "Pencil Spear values load from its Resource")
 	black_pawn.equip(spear)
 	_expect(black_pawn.get_attack_cells() == [Vector2i(7, 3), Vector2i(8, 3)], "armed pawn replaces diagonals with weapon cells")
 	_expect(not Vector2i(7, 4) in black_pawn.get_attack_cells(), "armed attack does not combine with chess attack")
@@ -70,6 +76,12 @@ func _init() -> void:
 	knight.current_cell = Vector2i(8, 4)
 	_expect(knight.get_unarmed_attack_cells().size() == 8, "unarmed knight threatens eight L-shaped cells")
 	_expect(Vector2i(10, 5) in knight.get_unarmed_attack_cells(), "knight includes a legal L-shaped target")
+	_expect(knight.definition != null and knight.definition.id == &"knight_tracker", "knight loads its editor definition")
+	_expect(knight.definition.validate().is_empty() and knight.archetype.role == &"flanker", "knight definition configures a valid flanker")
+
+	var armed_definition := load("res://resources/enemies/pawn_armed.tres") as EnemyDefinition
+	_expect(armed_definition.validate().is_empty(), "armed Pawn definition has no missing configuration")
+	_expect(armed_definition.default_weapon != null and armed_definition.default_weapon.display_name == "Pencil Spear", "armed Pawn default weapon is Inspector-configured")
 
 	var director := EncounterDirector.new()
 	root.add_child(director)

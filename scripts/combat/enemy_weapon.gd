@@ -27,22 +27,8 @@ func get_attack_cells(origin: Vector2i, facing: Vector2i) -> Array[Vector2i]:
 
 
 static func pencil_spear() -> EnemyWeapon:
-	var weapon := EnemyWeapon.new()
-	weapon.display_name = "Pencil Spear"
-	weapon.shape = Shape.LINE
-	weapon.range_cells = 2
-	weapon.telegraph_time = 0.62
-	weapon.recovery_time = 0.68
-	weapon.color = Color("#8ec8e8")
-	return weapon
+	return (load("res://resources/weapons/pencil_spear.tres") as EnemyWeapon).duplicate(true)
 
 
 static func ruler_blade() -> EnemyWeapon:
-	var weapon := EnemyWeapon.new()
-	weapon.display_name = "Ruler Blade"
-	weapon.shape = Shape.FAN
-	weapon.range_cells = 1
-	weapon.telegraph_time = 0.56
-	weapon.recovery_time = 0.62
-	weapon.color = Color("#e8b83f")
-	return weapon
+	return (load("res://resources/weapons/ruler_blade.tres") as EnemyWeapon).duplicate(true)
