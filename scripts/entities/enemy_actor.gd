@@ -14,6 +14,28 @@ func _ready() -> void:
 	_configure_components()
 
 
+func setup(world: GridWorld, start_cell: Vector2i) -> bool:
+	_ensure_ai_data()
+	_configure_components()
+	if movement_component != null:
+		return movement_component.setup(world, start_cell)
+	return super(world, start_cell)
+
+
+func try_step(direction: Vector2i) -> bool:
+	_configure_components()
+	if movement_component != null:
+		return movement_component.request_step(direction)
+	return super(direction)
+
+
+func get_cardinal_move_options() -> Array[Vector2i]:
+	_configure_components()
+	if movement_component != null:
+		return movement_component.get_legal_moves()
+	return super()
+
+
 func _configure_components() -> void:
 	movement_component = get_node_or_null("GridMovementComponent")
 	brain_component = get_node_or_null("EnemyBrainComponent")

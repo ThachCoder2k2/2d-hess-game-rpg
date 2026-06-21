@@ -37,7 +37,8 @@ Build the first playable Godot 4 vertical slice. Current milestone: free-moving 
 | 27. Editor-first architecture plan | complete | Scene/component/Resource ownership and six-phase migration roadmap |
 | 28. Typed data foundation | complete | Inspector-editable enemy, movement, decision, attack, weapon, difficulty, and visual Resources |
 | 29. Base enemy scene shell | complete | `enemy_base.tscn`, six visible component scenes, and compatibility host |
-| 30. Component responsibility extraction | pending | Move runtime ownership one component at a time while preserving behavior |
+| 30. Grid movement extraction | complete | Base enemy registration, legal moves, reservations, tween, and completion owned by component |
+| 31. Equipment extraction | pending | Move weapon state, validation, pickup, and active attack supply into component |
 
 ## Decisions
 

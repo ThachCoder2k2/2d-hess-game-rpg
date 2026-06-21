@@ -92,3 +92,6 @@
 - A thin `EnemyActor` host can expose real component nodes now while delegating to `FreeEnemy` until each responsibility is safely extracted.
 - Component adapters need explicit host injection; relying on broad Scene Tree searches would make them difficult to reuse and test.
 - Resolving child references inside `_configure_components()` keeps scene instances testable before and after normal `_ready()` dispatch.
+- Movement can be extracted safely by overriding only `EnemyActor` entry points while legacy Pawn/Knight continue using `GridActor` directly.
+- During migration, the movement component mirrors cell, facing, and moving state onto the host because the legacy brain still consumes those fields.
+- A timed Scene Tree test is necessary for tween ownership; immediate unit checks cannot prove completion, occupancy transfer, or reservation cleanup.

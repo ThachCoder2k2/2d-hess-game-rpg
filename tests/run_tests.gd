@@ -93,6 +93,12 @@ func _init() -> void:
 	_expect(pawn_shell.movement_component.actor == pawn_shell and pawn_shell.brain_component.actor == pawn_shell, "movement and brain component nodes bind to the host")
 	_expect(pawn_shell.attack_component.actor == pawn_shell and pawn_shell.health_component.actor == pawn_shell, "attack and health component nodes bind to the host")
 	_expect(pawn_shell.equipment_component.actor == pawn_shell and pawn_shell.enemy_debug_component.actor == pawn_shell, "equipment and debug component nodes bind to the host")
+	var component_world := GridWorld.new()
+	root.add_child(component_world)
+	_expect(pawn_shell.setup(component_world, Vector2i(2, 2)), "movement component registers the base enemy")
+	_expect(pawn_shell.get_cardinal_move_options().size() == 4, "base enemy legal moves come from movement component")
+	_expect(pawn_shell.try_step(Vector2i.RIGHT), "base enemy step delegates to movement component")
+	_expect(component_world.get_reserved_cell(pawn_shell) == Vector2i(3, 2) and pawn_shell.is_moving, "movement component owns reservation and moving state")
 
 	var knight_shell := enemy_base_scene.instantiate() as EnemyActor
 	knight_shell.definition = load("res://resources/enemies/knight_tracker.tres") as EnemyDefinition
