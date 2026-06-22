@@ -83,6 +83,17 @@ func equip(item: EnemyWeapon) -> void:
 	queue_redraw()
 
 
+func can_collect_weapon(pickup: WeaponPickup) -> bool:
+	return weapon == null and pickup != null and pickup.weapon != null
+
+
+func collect_weapon_pickup(pickup: WeaponPickup) -> bool:
+	if not can_collect_weapon(pickup):
+		return false
+	equip(pickup.take(self))
+	return weapon != null
+
+
 func _process(delta: float) -> void:
 	flash_time = maxf(0.0, flash_time - delta)
 	recoil = recoil.move_toward(Vector2.ZERO, delta * 70.0)
@@ -119,6 +130,18 @@ func get_attack_cells(origin := current_cell, direction := facing) -> Array[Vect
 	return get_unarmed_attack_cells(origin, direction)
 
 
+func get_attack_damage() -> int:
+	return weapon.damage if weapon != null else attack_pattern.damage
+
+
+func get_attack_telegraph_time() -> float:
+	return weapon.telegraph_time if weapon != null else unarmed_telegraph_time
+
+
+func get_attack_recovery_time() -> float:
+	return weapon.recovery_time if weapon != null else unarmed_recovery_time
+
+
 func get_cardinal_move_options() -> Array[Vector2i]:
 	if grid_world == null:
 		return []
@@ -142,7 +165,8 @@ func _build_intents(context: EnemyContext) -> Array[EnemyIntent]:
 	if context.attack_available and context.hero_cell in attack_cells:
 		intents.append(EnemyIntent.attack(attack_cells, archetype.attack_score))
 
-	if weapon == null and grid_world.item_at(context.self_cell) is WeaponPickup:
+	var local_item := grid_world.item_at(context.self_cell)
+	if local_item is WeaponPickup and can_collect_weapon(local_item):
 		intents.append(EnemyIntent.pickup(archetype.pickup_score + 50.0))
 
 	var pursuit_cell := _get_pursuit_goal(context)
@@ -196,7 +220,7 @@ func _execute_intent(intent: EnemyIntent) -> void:
 				return
 			locked_attack_cells = intent.target_cells.duplicate()
 			state = State.TELEGRAPH
-			state_time = weapon.telegraph_time if weapon != null else unarmed_telegraph_time
+			state_time = get_attack_telegraph_time()
 			emit_signal("telegraph_started", self, locked_attack_cells)
 			queue_redraw()
 		EnemyIntent.Type.MOVE:
@@ -207,7 +231,7 @@ func _execute_intent(intent: EnemyIntent) -> void:
 		EnemyIntent.Type.PICKUP:
 			var pickup := grid_world.item_at(current_cell)
 			if pickup is WeaponPickup:
-				equip(pickup.take(self))
+				collect_weapon_pickup(pickup)
 			state = State.RECOVER
 			state_time = 0.10
 		EnemyIntent.Type.TURN:
@@ -309,13 +333,13 @@ func _resolve_attack() -> void:
 	state = State.COMMIT
 	emit_signal("telegraph_finished", self)
 	if target != null and is_instance_valid(target) and target.current_cell in locked_attack_cells:
-		target.take_damage(weapon.damage if weapon != null else attack_pattern.damage, facing)
+		target.take_damage(get_attack_damage(), facing)
 	emit_signal("attack_resolved", locked_attack_cells)
 	locked_attack_cells.clear()
 	if director != null:
 		director.release_attack(self)
 	state = State.RECOVER
-	state_time = weapon.recovery_time if weapon != null else unarmed_recovery_time
+	state_time = get_attack_recovery_time()
 	queue_redraw()
 
 

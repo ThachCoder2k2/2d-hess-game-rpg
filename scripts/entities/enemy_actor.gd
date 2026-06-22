@@ -36,6 +36,46 @@ func get_cardinal_move_options() -> Array[Vector2i]:
 	return super()
 
 
+func equip(item: EnemyWeapon) -> void:
+	_configure_components()
+	if equipment_component != null:
+		equipment_component.try_equip(item)
+		return
+	super(item)
+
+
+func can_collect_weapon(pickup: WeaponPickup) -> bool:
+	_configure_components()
+	return equipment_component != null and not equipment_component.is_armed() and pickup != null and equipment_component.can_equip(pickup.weapon)
+
+
+func collect_weapon_pickup(pickup: WeaponPickup) -> bool:
+	_configure_components()
+	return equipment_component != null and equipment_component.collect_from(pickup)
+
+
+func get_attack_cells(origin := current_cell, direction := facing) -> Array[Vector2i]:
+	_configure_components()
+	if equipment_component != null:
+		return equipment_component.get_attack_cells(origin, direction)
+	return super(origin, direction)
+
+
+func get_attack_damage() -> int:
+	_configure_components()
+	return equipment_component.get_damage() if equipment_component != null else super()
+
+
+func get_attack_telegraph_time() -> float:
+	_configure_components()
+	return equipment_component.get_telegraph_time() if equipment_component != null else super()
+
+
+func get_attack_recovery_time() -> float:
+	_configure_components()
+	return equipment_component.get_recovery_time() if equipment_component != null else super()
+
+
 func _configure_components() -> void:
 	movement_component = get_node_or_null("GridMovementComponent")
 	brain_component = get_node_or_null("EnemyBrainComponent")

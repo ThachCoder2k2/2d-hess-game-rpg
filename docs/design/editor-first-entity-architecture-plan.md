@@ -1,6 +1,6 @@
 # The Unbound Pawn - Editor-First Entity Architecture Plan
 
-**Status:** Phases 1-2 complete; Phase 3 movement extraction complete
+**Status:** Phases 1-2 complete; Phase 3 movement and equipment extraction complete
 **Date:** 2026-06-21
 **Engine:** Godot 4.6.3
 

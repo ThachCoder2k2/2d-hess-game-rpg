@@ -4,7 +4,9 @@
 
 [resource]
 script = ExtResource("1")
+id = &"ruler_blade"
 display_name = "Ruler Blade"
+tags = Array[StringName]([&"melee"])
 shape = 1
 range_cells = 1
 damage = 1

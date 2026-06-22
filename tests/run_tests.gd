@@ -99,6 +99,44 @@ func _init() -> void:
 	_expect(pawn_shell.get_cardinal_move_options().size() == 4, "base enemy legal moves come from movement component")
 	_expect(pawn_shell.try_step(Vector2i.RIGHT), "base enemy step delegates to movement component")
 	_expect(component_world.get_reserved_cell(pawn_shell) == Vector2i(3, 2) and pawn_shell.is_moving, "movement component owns reservation and moving state")
+	var incompatible_weapon := EnemyWeapon.new()
+	incompatible_weapon.id = &"marble_launcher"
+	incompatible_weapon.tags = [&"projectile"]
+	_expect(not pawn_shell.equipment_component.can_equip(incompatible_weapon), "equipment component rejects disallowed weapon tags")
+	_expect(not pawn_shell.equipment_component.try_equip(incompatible_weapon) and pawn_shell.weapon == null, "rejected equipment does not change host weapon state")
+	var shell_ruler := EnemyWeapon.ruler_blade()
+	_expect(pawn_shell.equipment_component.try_equip(shell_ruler), "equipment component accepts a compatible weapon")
+	_expect(pawn_shell.equipment_component.get_weapon() == shell_ruler and pawn_shell.weapon == shell_ruler, "equipment component mirrors weapon state for compatibility")
+	_expect(pawn_shell.get_attack_cells(Vector2i(4, 4), Vector2i.RIGHT).size() == 3, "equipment component supplies replacement attack geometry")
+	_expect(pawn_shell.get_attack_telegraph_time() == 0.56 and pawn_shell.get_attack_recovery_time() == 0.62, "equipment component supplies weapon attack timing")
+
+	var armed_shell := enemy_base_scene.instantiate() as EnemyActor
+	armed_shell.definition = armed_definition
+	root.add_child(armed_shell)
+	armed_shell._ensure_ai_data()
+	armed_shell._configure_components()
+	_expect(armed_shell.equipment_component.is_armed() and armed_shell.weapon.display_name == "Pencil Spear", "armed definition equips its default weapon through component")
+
+	var pickup_shell := enemy_base_scene.instantiate() as EnemyActor
+	root.add_child(pickup_shell)
+	var equipment_world := GridWorld.new()
+	root.add_child(equipment_world)
+	_expect(pickup_shell.setup(equipment_world, Vector2i(6, 6)), "equipment test enemy registers")
+	var component_pickup := WeaponPickup.new()
+	root.add_child(component_pickup)
+	_expect(component_pickup.setup(equipment_world, Vector2i(6, 6), EnemyWeapon.pencil_spear()), "component weapon pickup registers")
+	_expect(pickup_shell.collect_weapon_pickup(component_pickup), "equipment component collects a compatible pickup")
+	_expect(pickup_shell.equipment_component.is_armed() and equipment_world.item_at(Vector2i(6, 6)) == null, "component owns collected weapon and clears item layer")
+	var rejection_shell := enemy_base_scene.instantiate() as EnemyActor
+	root.add_child(rejection_shell)
+	var rejection_world := GridWorld.new()
+	root.add_child(rejection_world)
+	_expect(rejection_shell.setup(rejection_world, Vector2i(7, 7)), "equipment rejection enemy registers")
+	var rejected_pickup := WeaponPickup.new()
+	root.add_child(rejected_pickup)
+	_expect(rejected_pickup.setup(rejection_world, Vector2i(7, 7), incompatible_weapon), "incompatible pickup registers")
+	_expect(not rejection_shell.collect_weapon_pickup(rejected_pickup), "equipment component rejects incompatible pickup")
+	_expect(rejection_world.item_at(Vector2i(7, 7)) == rejected_pickup and rejected_pickup.weapon == incompatible_weapon, "rejected pickup remains available on item layer")
 
 	var knight_shell := enemy_base_scene.instantiate() as EnemyActor
 	knight_shell.definition = load("res://resources/enemies/knight_tracker.tres") as EnemyDefinition

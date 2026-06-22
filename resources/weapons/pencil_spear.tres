@@ -4,7 +4,9 @@
 
 [resource]
 script = ExtResource("1")
+id = &"pencil_spear"
 display_name = "Pencil Spear"
+tags = Array[StringName]([&"melee", &"reach"])
 shape = 0
 range_cells = 2
 damage = 1

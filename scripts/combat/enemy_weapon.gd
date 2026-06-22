@@ -3,7 +3,9 @@ extends Resource
 
 enum Shape { LINE, FAN }
 
+@export var id: StringName = &"toy_weapon"
 @export var display_name := "Toy Weapon"
+@export var tags: Array[StringName] = []
 @export var shape := Shape.LINE
 @export_range(1, 4) var range_cells := 1
 @export_range(1, 5) var damage := 1

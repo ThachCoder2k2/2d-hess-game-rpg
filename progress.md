@@ -141,3 +141,13 @@
 - Added four movement ownership checks; the main suite now passes 85 checks.
 - Added a timed component movement regression covering occupancy transfer, reservation cleanup, and final positioning.
 - Component movement test, forced attack test, live encounter simulation, and parser checks all pass.
+
+## Equipment Component Extraction
+
+- Added weapon ids and compatibility tags to Inspector Resources.
+- Moved base-enemy weapon ownership, tag validation, default equipment, pickup collection, replacement geometry, damage, and timing into `EquipmentComponent`.
+- Added host compatibility methods while preserving legacy Pawn/Knight equipment behavior.
+- Prevented incompatible pickups from being removed before validation.
+- Added fifteen equipment ownership checks; the main suite now passes 100 checks.
+- Added a timed equipment regression covering signals, item cleanup, mirrored state, and active attack supply.
+- Equipment, movement, forced attack, live encounter, and editor import tests all pass.

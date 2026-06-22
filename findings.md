@@ -95,3 +95,6 @@
 - Movement can be extracted safely by overriding only `EnemyActor` entry points while legacy Pawn/Knight continue using `GridActor` directly.
 - During migration, the movement component mirrors cell, facing, and moving state onto the host because the legacy brain still consumes those fields.
 - A timed Scene Tree test is necessary for tween ownership; immediate unit checks cannot prove completion, occupancy transfer, or reservation cleanup.
+- Equipment validation must happen before `WeaponPickup.take()` or an incompatible item disappears even though it was rejected.
+- Runtime weapon Resources must be duplicated per actor while the source `.tres` assets remain immutable.
+- During migration, `EquipmentComponent` mirrors its weapon onto the host because legacy drawing and decision code still read `weapon` directly.
