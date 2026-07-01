@@ -25,6 +25,7 @@ func _draw() -> void:
 	if state == State.TELEGRAPH:
 		fill = Color("#5a2025")
 	_draw_pixel_ellipse(Vector2(0, 9) + recoil, Vector2(10, 4), Color(0.05, 0.04, 0.05, 0.35))
+	_draw_attack_warning_aura()
 	draw_circle(Vector2(0, -9) + recoil, 6.0, fill)
 	draw_colored_polygon(PackedVector2Array([
 		Vector2(-5, -3) + recoil, Vector2(5, -3) + recoil,

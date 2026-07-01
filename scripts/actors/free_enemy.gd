@@ -105,6 +105,8 @@ func _process(delta: float) -> void:
 	recoil = recoil.move_toward(Vector2.ZERO, delta * 70.0)
 	if flash_time > 0.0:
 		queue_redraw()
+	if state == State.TELEGRAPH:
+		queue_redraw()
 	_update_debug_label()
 	if target == null or not is_instance_valid(target) or state == State.DEFEATED or is_moving:
 		return
@@ -146,6 +148,35 @@ func get_attack_telegraph_time() -> float:
 
 func get_attack_recovery_time() -> float:
 	return weapon.recovery_time if weapon != null else unarmed_recovery_time
+
+
+func get_telegraph_progress() -> float:
+	if state != State.TELEGRAPH:
+		return 0.0
+	var duration := maxf(get_attack_telegraph_time(), 0.001)
+	return clampf(1.0 - state_time / duration, 0.0, 1.0)
+
+
+func _draw_attack_warning_aura() -> void:
+	if state != State.TELEGRAPH:
+		return
+	var progress := get_telegraph_progress()
+	var pulse := 0.5 + 0.5 * sin(Time.get_ticks_msec() / 1000.0 * TAU * 5.0)
+	var warning_color := Color("#ff665e", 0.20 + progress * 0.26 + pulse * 0.08)
+	var ring_color := Color("#fff2a8", 0.62 + progress * 0.30)
+	var radius := lerpf(15.0, 22.0, pulse)
+	draw_circle(recoil, radius, warning_color)
+	draw_arc(recoil, radius + 2.0, -PI / 2.0, -PI / 2.0 + TAU * progress, 24, ring_color, 2.4)
+
+	var aim := Vector2(facing)
+	if aim.length() <= 0.01:
+		return
+	aim = aim.normalized()
+	var side := Vector2(-aim.y, aim.x)
+	var tip := recoil + aim * (17.0 + progress * 5.0)
+	var base := recoil + aim * 6.0
+	draw_line(base, tip, Color("#fff4d6", 0.82), 2.0)
+	draw_polyline(PackedVector2Array([tip - aim * 5.0 + side * 4.0, tip, tip - aim * 5.0 - side * 4.0]), Color("#fff4d6", 0.9), 2.0)
 
 
 func get_cardinal_move_options() -> Array[Vector2i]:

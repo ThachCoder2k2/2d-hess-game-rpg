@@ -8,6 +8,7 @@ var impact_time := 0.0
 var impact_color := Color("#fff2a8")
 var debug_enabled := true
 var enemy_intents: Dictionary = {}
+var effect_time := 0.0
 
 
 func setup(world: GridWorld) -> void:
@@ -55,8 +56,11 @@ func clear_enemy_debug(enemy: FreeEnemy) -> void:
 
 
 func _process(delta: float) -> void:
+	effect_time += delta
 	if impact_time > 0.0:
 		impact_time = maxf(0.0, impact_time - delta)
+		queue_redraw()
+	if not telegraphs.is_empty():
 		queue_redraw()
 	if debug_enabled and not enemy_intents.is_empty():
 		queue_redraw()
@@ -83,12 +87,12 @@ func _draw() -> void:
 	for source in telegraphs:
 		if not is_instance_valid(source):
 			continue
+		var progress := 0.0
+		if source.has_method("get_telegraph_progress"):
+			progress = source.get_telegraph_progress()
 		for cell: Vector2i in telegraphs[source]:
 			if grid_world.is_inside(cell):
-				var rect := Rect2(origin + Vector2(cell * size), Vector2.ONE * size)
-				draw_rect(rect, Color("#d84a3a", 0.48))
-				draw_line(rect.position + Vector2(5, 5), rect.end - Vector2(5, 5), Color("#ff9a75"), 2.0)
-				draw_line(rect.position + Vector2(size - 5, 5), rect.position + Vector2(5, size - 5), Color("#ff9a75"), 2.0)
+				_draw_danger_cell(origin, size, cell, progress)
 
 	if impact_time > 0.0:
 		for cell in impact_cells:
@@ -98,6 +102,24 @@ func _draw() -> void:
 	if debug_enabled:
 		_draw_debug_layer(origin, size)
 	_draw_playground_border(origin, size)
+
+
+func _draw_danger_cell(origin: Vector2, size: int, cell: Vector2i, progress: float) -> void:
+	var rect := Rect2(origin + Vector2(cell * size), Vector2.ONE * size)
+	var pulse := 0.5 + 0.5 * sin(effect_time * TAU * 4.0)
+	var warning_alpha := lerpf(0.30, 0.68, progress) + pulse * 0.08
+	draw_rect(rect, Color("#d84a3a", warning_alpha))
+
+	var inset := lerpf(8.0, 2.0, progress) + pulse * 1.5
+	var inner := rect.grow(-inset)
+	draw_rect(inner, Color("#ffefe0", 0.14 + progress * 0.14))
+	draw_rect(inner, Color("#fff2a8", 0.72 + progress * 0.24), false, 2.0)
+
+	var center := rect.get_center()
+	var slash_color := Color("#ff9a75", 0.74 + progress * 0.22)
+	draw_line(rect.position + Vector2(6, 6), rect.end - Vector2(6, 6), slash_color, 2.0 + progress)
+	draw_line(rect.position + Vector2(size - 6, 6), rect.position + Vector2(6, size - 6), slash_color, 2.0 + progress)
+	draw_circle(center, 2.0 + progress * 3.0 + pulse * 1.5, Color("#fff4d6", 0.55 + progress * 0.32))
 
 
 func _draw_debug_layer(origin: Vector2, size: int) -> void:

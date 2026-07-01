@@ -37,6 +37,7 @@ func _draw() -> void:
 	if state == State.TELEGRAPH:
 		fill = Color("#623146")
 	_draw_shadow()
+	_draw_attack_warning_aura()
 	var path := PackedVector2Array([
 		Vector2(-10, 10) + recoil,
 		Vector2(-7, -2) + recoil,
