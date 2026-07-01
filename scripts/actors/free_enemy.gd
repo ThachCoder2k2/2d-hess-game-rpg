@@ -70,6 +70,12 @@ func activate(hero: PawnHero, encounter_director: EncounterDirector) -> void:
 	_update_debug_label()
 
 
+func setup(world: GridWorld, start_cell: Vector2i) -> bool:
+	_ensure_ai_data()
+	_ensure_step_tracking()
+	return super(world, start_cell)
+
+
 func set_debug_enabled(value: bool) -> void:
 	_create_debug_label()
 	debug_enabled = value

@@ -9,3 +9,4 @@ move_recovery = 0.18
 preferred_distance = 3
 path_memory_size = 6
 goal_commitment_decisions = 2
+allowed_directions = Array[Vector2i]([Vector2i(-2, -1), Vector2i(-2, 1), Vector2i(2, -1), Vector2i(2, 1), Vector2i(-1, -2), Vector2i(-1, 2), Vector2i(1, -2), Vector2i(1, 2)])

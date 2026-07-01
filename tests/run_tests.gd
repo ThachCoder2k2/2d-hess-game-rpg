@@ -78,6 +78,8 @@ func _init() -> void:
 	_expect(Vector2i(10, 5) in knight.get_unarmed_attack_cells(), "knight includes a legal L-shaped target")
 	_expect(knight.definition != null and knight.definition.id == &"knight_tracker", "knight loads its editor definition")
 	_expect(knight.definition.validate().is_empty() and knight.archetype.role == &"flanker", "knight definition configures a valid flanker")
+	_expect(knight.definition.movement.allowed_directions.size() == 8, "knight movement config exposes eight L-shaped offsets")
+	_expect(Vector2i(2, 1) in knight.definition.movement.allowed_directions and Vector2i.RIGHT not in knight.definition.movement.allowed_directions, "knight movement config does not fall back to one-cell cardinal steps")
 
 	var armed_definition := load("res://resources/enemies/pawn_armed.tres") as EnemyDefinition
 	_expect(armed_definition.validate().is_empty(), "armed Pawn definition has no missing configuration")
@@ -171,6 +173,13 @@ func _init() -> void:
 	var move_options := free_mover.get_cardinal_move_options()
 	_expect(move_options.size() == 4, "free-moving enemy generates four cardinal destinations")
 	_expect(Vector2i(12, 4) in move_options and Vector2i(13, 5) in move_options, "cardinal movement includes vertical and horizontal cells")
+	var knight_move_world := GridWorld.new()
+	root.add_child(knight_move_world)
+	var knight_mover := KnightEnemy.new()
+	root.add_child(knight_mover)
+	_expect(knight_mover.setup(knight_move_world, Vector2i(8, 4)), "knight mover registers")
+	var knight_move_options := knight_mover.get_cardinal_move_options()
+	_expect(Vector2i(10, 5) in knight_move_options and Vector2i(9, 4) not in knight_move_options, "knight legal moves use L-shaped destinations instead of pawn steps")
 	var turn_events := InputMap.action_get_events("turn_mode")
 	_expect(turn_events.size() == 1 and turn_events[0].as_text() == "Shift", "turn modifier is bound only to Shift")
 
