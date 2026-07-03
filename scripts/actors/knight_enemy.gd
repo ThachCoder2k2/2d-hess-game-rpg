@@ -51,6 +51,7 @@ func _draw() -> void:
 	draw_circle(Vector2(3, -7) + recoil, 1.2, Color("#ff7665"))
 	draw_rect(Rect2(Vector2(-11, 7) + recoil, Vector2(22, 5)), fill)
 	_draw_weapon()
+	_draw_health_pips()
 
 
 func _draw_weapon() -> void:

@@ -35,6 +35,7 @@ func _draw() -> void:
 	draw_line(Vector2(-11, 11) + recoil, Vector2(11, 11) + recoil, Color("#d84a3a"), 2.0)
 	_draw_facing_mark()
 	_draw_weapon()
+	_draw_health_pips()
 
 
 func _draw_facing_mark() -> void:

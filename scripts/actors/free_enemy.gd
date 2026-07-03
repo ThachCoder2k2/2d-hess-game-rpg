@@ -157,6 +157,26 @@ func get_telegraph_progress() -> float:
 	return clampf(1.0 - state_time / duration, 0.0, 1.0)
 
 
+func get_max_health() -> int:
+	if definition != null:
+		return definition.max_health
+	return maxi(health, 1)
+
+
+func _draw_health_pips() -> void:
+	if state == State.DEFEATED:
+		return
+	var max_health := get_max_health()
+	var start_x := -float(max_health * 6 - 2) / 2.0
+	for index in max_health:
+		var filled := index < health
+		var color := Color("#ff9a75") if filled else Color("#493f3a", 0.88)
+		var outline := Color("#fff4d6", 0.80) if filled else Color("#241b22", 0.86)
+		var rect := Rect2(Vector2(start_x + index * 6.0, -25.0), Vector2(4.0, 4.0))
+		draw_rect(rect, color)
+		draw_rect(rect, outline, false, 1.0)
+
+
 func _draw_attack_warning_aura() -> void:
 	if state != State.TELEGRAPH:
 		return
