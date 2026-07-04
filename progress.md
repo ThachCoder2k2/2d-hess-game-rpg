@@ -151,3 +151,12 @@
 - Added fifteen equipment ownership checks; the main suite now passes 100 checks.
 - Added a timed equipment regression covering signals, item cleanup, mirrored state, and active attack supply.
 - Equipment, movement, forced attack, live encounter, and editor import tests all pass.
+
+## Editor-First Full Game Roadmap - 2026-07-04
+
+- Added a long-range editor-first roadmap to `task_plan.md` covering the full game from editor foundation through release polish.
+- Preserved the existing prototype milestone history and added a separate `Editor-First Full Game Roadmap` section.
+- Marked `E2. Editor-first encounter system` as the next recommended phase.
+- Added immediate E2 deliverables for room scene, room encounter scene, enemy spawn points, pickup spawn points, and supporting scripts.
+- Added acceptance criteria requiring the current first encounter to remain playable while enemy/pickup/blocker/message/win-condition content becomes Inspector-editable.
+- Recorded the editor-first planning findings in `findings.md`.

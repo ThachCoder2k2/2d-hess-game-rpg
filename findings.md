@@ -98,3 +98,11 @@
 - Equipment validation must happen before `WeaponPickup.take()` or an incompatible item disappears even though it was rejected.
 - Runtime weapon Resources must be duplicated per actor while the source `.tres` assets remain immutable.
 - During migration, `EquipmentComponent` mirrors its weapon onto the host because legacy drawing and decision code still read `weapon` directly.
+
+## Editor-First Full Game Planning
+
+- The production direction is now editor-first rather than script-first: code should define reusable behaviors, while actual game content should be authored as Godot scenes, child nodes, Resources, AnimationPlayers, VFX, and SFX.
+- The existing prototype history remains useful, but the long-range roadmap now needs a second track for full game production from Godot Editor.
+- The best next implementation phase is an editor-first encounter system that moves the current hardcoded first room into a room scene with spawn point nodes and Inspector-configured enemy/pickup data.
+- The planned full game phases are: editor foundation, encounter system, player combat core, enemy system, combat feedback, room/world structure, narrative layer, art direction pass, boss production, vertical slice, full short game, and polish/release.
+- The immediate editor-first acceptance gate is preserving the current playable encounter while making enemy spawns, pickup spawns, blockers, room messages, and win conditions editable from Godot.

@@ -2,7 +2,7 @@
 
 ## Goal
 
-Build the first playable Godot 4 vertical slice. Current milestone: free-moving enemies, weapon pickups, armed attack replacement, coordinated attacks, and Knight AI.
+Build the first playable Godot 4 vertical slice, then grow it into a short editor-first Godot game. Current direction: move away from hardcoded room scripting and toward Godot scenes, child-node components, Inspector-configured Resources, authored rooms, and AnimationPlayer/VFX/SFX assets that can be tuned in the editor.
 
 ## Phases
 
@@ -41,6 +41,45 @@ Build the first playable Godot 4 vertical slice. Current milestone: free-moving 
 | 31. Equipment extraction | complete | Weapon state, tag validation, defaults, pickup, geometry, damage, and timing owned by component |
 | 32. Health extraction | pending | Move health, hit response, and defeat state into component |
 
+## Editor-First Full Game Roadmap
+
+This roadmap is the long-range production plan for making the whole game in Godot Editor first. Scripts should provide reusable behavior, but rooms, enemies, pickups, UI, animations, VFX, SFX, and narrative beats should be authored through scenes, child nodes, Resources, and Inspector fields whenever practical.
+
+| Phase | Status | Deliverable |
+|---|---|---|
+| E1. Editor foundation | pending | `Main.tscn`, `GameWorld.tscn`, `RoomEncounter.tscn`, `Player.tscn`, `EnemyBase.tscn`, `WeaponPickup.tscn`, and `HUD.tscn` replace direct runtime composition where possible |
+| E2. Editor-first encounter system | next | `RoomEncounter`, `EnemySpawnPoint`, `PickupSpawnPoint`, authored blockers, room messages, win conditions, and spawn configuration are editable in Godot Inspector |
+| E3. Player combat core | pending | Player movement, turn mode, sword, Pencil Thrust, invulnerability, cooldown, and timing become Inspector-tunable through scene exports and attack profile Resources |
+| E4. Enemy system | pending | Pawn, Knight, Bishop, Rook, Queen, and King use configurable enemy scenes and typed Resources for movement, attacks, decisions, visuals, weapons, and difficulty |
+| E5. Combat feedback | pending | Telegraphs, hit flash, damage shake, pickup glow, defeat effects, and sound cues move toward reusable AnimationPlayer/VFX/SFX scenes |
+| E6. Room and world structure | pending | Tutorial, first battlefield, weapon playground, Knight boss, Bishop/Rook challenge rooms, Queen arena, and King final room are connected as authored `.tscn` rooms |
+| E7. Narrative layer | pending | Child imagination/fourth-wall story uses dialogue Resources, trigger zones, player-hand interventions, and AnimationPlayer cutscene beats |
+| E8. Art direction pass | pending | Replace shape placeholders with Enter-the-Gungeon-readable pixel sprites, toy weapons, playground tiles, crayon UI, and childlike props |
+| E9. Boss production | pending | Knight, Bishop, Rook, Queen, and King boss scenes use authored phases, arena-specific patterns, telegraphs, and Resource-driven attack timelines |
+| E10. Vertical slice | pending | 10-15 minute demo with tutorial, one normal encounter, one weapon encounter, one Knight boss, win/lose/restart, story framing, UI, and sound |
+| E11. Full short game | pending | Roughly 2-hour game with 5-7 room groups, 5 bosses, 6-10 weapons/skills, simple progression, final King duel, and ending |
+| E12. Polish and release | pending | Save/checkpoint system, settings, controller support, audio mix, builds, store page assets, trailer capture, QA, and release packaging |
+
+## Immediate Editor-First Next Phase
+
+Start with **E2. Editor-first encounter system** before adding more one-off scripted content.
+
+Target deliverables:
+- `scenes/rooms/first_encounter.tscn`
+- `scenes/world/room_encounter.tscn`
+- `scenes/markers/enemy_spawn_point.tscn`
+- `scenes/markers/pickup_spawn_point.tscn`
+- `scripts/world/room_encounter.gd`
+- `scripts/world/enemy_spawn_point.gd`
+- `scripts/world/pickup_spawn_point.gd`
+
+Acceptance criteria:
+- The current first encounter can be opened in Godot Editor as a room scene.
+- Enemy type/definition, starting cell, optional starting weapon, and active state are configurable from Inspector.
+- Pickup cell and weapon Resource are configurable from Inspector.
+- The main scene loads or owns the room scene instead of hardcoding every enemy, pickup, and blocker directly in `main.gd`.
+- Existing gameplay behavior, HUD, debug view, tests, and restart flow still work after migration.
+
 ## Decisions
 
 - Godot version: 4.6.3.
@@ -62,6 +101,8 @@ Build the first playable Godot 4 vertical slice. Current milestone: free-moving 
 - Enemies may spawn armed or collect a weapon during combat.
 - Each chess piece has a distinct tactical role and positioning personality.
 - Bosses use authored maneuver phases rather than unrestricted common-enemy utility.
+- Project direction is editor-first: content should be placed and tuned in Godot scenes/resources before adding more hardcoded gameplay content.
+- The next recommended implementation phase is the editor-first encounter system, not more scripted room composition.
 
 ## Errors Encountered
 
