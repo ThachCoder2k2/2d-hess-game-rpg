@@ -106,3 +106,9 @@
 - The best next implementation phase is an editor-first encounter system that moves the current hardcoded first room into a room scene with spawn point nodes and Inspector-configured enemy/pickup data.
 - The planned full game phases are: editor foundation, encounter system, player combat core, enemy system, combat feedback, room/world structure, narrative layer, art direction pass, boss production, vertical slice, full short game, and polish/release.
 - The immediate editor-first acceptance gate is preserving the current playable encounter while making enemy spawns, pickup spawns, blockers, room messages, and win conditions editable from Godot.
+
+## AI Workflow Rules
+
+- `AGENTS.md` now exists at the project root as the first-read guide for future AI sessions.
+- It records the editor-first direction, current E2 priority, planning-file workflow, Godot-native implementation rules, combat readability rules, verification commands, and git boundaries.
+- Keeping these rules in the repo should reduce future drift back into script-only work and make handoffs after context compaction safer.

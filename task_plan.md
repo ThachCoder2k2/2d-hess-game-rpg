@@ -40,6 +40,7 @@ Build the first playable Godot 4 vertical slice, then grow it into a short edito
 | 30. Grid movement extraction | complete | Base enemy registration, legal moves, reservations, tween, and completion owned by component |
 | 31. Equipment extraction | complete | Weapon state, tag validation, defaults, pickup, geometry, damage, and timing owned by component |
 | 32. Health extraction | pending | Move health, hit response, and defeat state into component |
+| 33. AI workflow rules | complete | `AGENTS.md` defines editor-first rules, planning workflow, verification commands, and next-phase guidance for future AI agents |
 
 ## Editor-First Full Game Roadmap
 
@@ -103,6 +104,7 @@ Acceptance criteria:
 - Bosses use authored maneuver phases rather than unrestricted common-enemy utility.
 - Project direction is editor-first: content should be placed and tuned in Godot scenes/resources before adding more hardcoded gameplay content.
 - The next recommended implementation phase is the editor-first encounter system, not more scripted room composition.
+- Future AI sessions should read `AGENTS.md` first for editor-first workflow rules, verification expectations, and current priorities.
 
 ## Errors Encountered
 

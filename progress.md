@@ -160,3 +160,10 @@
 - Added immediate E2 deliverables for room scene, room encounter scene, enemy spawn points, pickup spawn points, and supporting scripts.
 - Added acceptance criteria requiring the current first encounter to remain playable while enemy/pickup/blocker/message/win-condition content becomes Inspector-editable.
 - Recorded the editor-first planning findings in `findings.md`.
+
+## AI Workflow Rules - 2026-07-04
+
+- Added `AGENTS.md` at the project root.
+- Captured the editor-first project direction, E2 current priority, planning-file rules, implementation rules, combat readability rules, verification commands, and git rules.
+- Updated `task_plan.md` with Phase 33 complete and a decision that future AI sessions should read `AGENTS.md` first.
+- Updated `findings.md` with the purpose of the AI workflow rules file.
