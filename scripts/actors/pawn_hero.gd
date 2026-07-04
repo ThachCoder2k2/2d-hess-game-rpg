@@ -2,6 +2,7 @@ class_name PawnHero
 extends GridActor
 
 signal courage_changed(value: int)
+signal damaged(amount: int, remaining: int)
 signal attack_landed(target_cells: Array[Vector2i], hit_count: int, profile: AttackProfile)
 signal skill_cooldown_changed(time_left: float)
 signal defeated
@@ -206,6 +207,7 @@ func take_damage(amount: int, _direction := Vector2i.ZERO) -> bool:
 	courage = maxi(0, courage - amount)
 	hurt_visual_time = 0.18
 	emit_signal("courage_changed", courage)
+	emit_signal("damaged", amount, courage)
 	queue_redraw()
 	if courage <= 0:
 		control_enabled = false

@@ -263,8 +263,11 @@ func _init() -> void:
 	attacking_pawn.activate(attack_hero, attack_director)
 	attacking_pawn._choose_action()
 	_expect(attacking_pawn.state == FreeEnemy.State.TELEGRAPH and attack_board.telegraphs.has(attacking_pawn), "enemy attack enters telegraph with board signals connected")
+	var damage_events := {"count": 0}
+	attack_hero.damaged.connect(func(_amount: int, _remaining: int) -> void: damage_events["count"] += 1)
 	attacking_pawn._resolve_attack()
 	_expect(attack_hero.courage == 2, "enemy attack resolves damage once")
+	_expect(damage_events["count"] == 1, "hero damage emits one feedback event")
 	_expect(not attack_board.telegraphs.has(attacking_pawn) and attack_director.attack_owner == null, "attack resolution clears telegraph and token")
 
 	attacking_pawn.state = FreeEnemy.State.OBSERVE

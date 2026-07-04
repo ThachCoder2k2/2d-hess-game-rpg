@@ -11,6 +11,7 @@ var skill_fill: ColorRect
 var encounter_label: Label
 var objective_label: Label
 var token_label: Label
+var damage_flash: ColorRect
 var result_panel: ColorRect
 var result_label: Label
 var remaining_enemies := 0
@@ -18,6 +19,10 @@ var total_enemies := 0
 var room_ending := false
 var debug_enabled := true
 var enemies: Array[FreeEnemy] = []
+var shake_time := 0.0
+var shake_duration := 0.0
+var shake_strength := 0.0
+var damage_flash_time := 0.0
 
 
 func _ready() -> void:
@@ -41,8 +46,9 @@ func _ready() -> void:
 	hero.z_index = 3
 	add_child(hero)
 	hero.setup(grid_world, Vector2i(3, 7))
-	hero.attack_landed.connect(board.show_player_attack)
+	hero.attack_landed.connect(_on_player_attack_landed)
 	hero.courage_changed.connect(_update_courage)
+	hero.damaged.connect(_on_hero_damaged)
 	hero.skill_cooldown_changed.connect(_update_skill_cooldown)
 	hero.defeated.connect(_on_hero_defeated)
 
@@ -58,7 +64,7 @@ func _ready() -> void:
 	_update_status("First clash: read the warning cells, deny the weapons, break the black line.")
 
 
-func _process(_delta: float) -> void:
+func _process(delta: float) -> void:
 	if Input.is_action_just_pressed("restart_room"):
 		get_tree().reload_current_scene()
 	if Input.is_key_pressed(KEY_F3) and not _debug_key_was_pressed:
@@ -70,6 +76,8 @@ func _process(_delta: float) -> void:
 			hero.current_cell.y,
 			_facing_name(hero.facing),
 		]
+	_update_shake(delta)
+	_update_damage_flash(delta)
 
 
 func _spawn_weapon(cell: Vector2i, weapon: EnemyWeapon) -> void:
@@ -110,6 +118,13 @@ func _on_enemy_weapon_changed(enemy: FreeEnemy, weapon: EnemyWeapon) -> void:
 	_update_status("%s picked up %s. Its chess attack has been replaced." % [piece_name, weapon.display_name])
 
 
+func _on_player_attack_landed(cells: Array[Vector2i], hit_count: int, profile: AttackProfile) -> void:
+	board.show_player_attack(cells, hit_count, profile)
+	if hit_count > 0:
+		_start_screen_shake(0.10, 2.6)
+		_update_status("%s connects. Keep pressing the broken line." % profile.display_name)
+
+
 func _on_enemy_defeated(enemy: FreeEnemy) -> void:
 	enemies.erase(enemy)
 	board.clear_enemy_debug(enemy)
@@ -148,6 +163,17 @@ func _on_hero_defeated() -> void:
 	await tree.create_timer(0.85).timeout
 	if is_inside_tree():
 		tree.reload_current_scene()
+
+
+func _on_hero_damaged(amount: int, remaining: int) -> void:
+	_start_screen_shake(0.16, 4.2 + float(amount))
+	damage_flash_time = 0.22
+	if damage_flash != null:
+		damage_flash.visible = true
+	if remaining == 1:
+		_update_status("One courage left. Wait for the warning, then cut through.")
+	elif remaining > 1:
+		_update_status("The pawn is hit. Move out before the next strike.")
 
 
 func _build_hud() -> void:
@@ -254,6 +280,14 @@ func _build_hud() -> void:
 	layer.add_child(token_label)
 	_update_token_owner(null)
 
+	damage_flash = ColorRect.new()
+	damage_flash.position = Vector2.ZERO
+	damage_flash.size = Vector2(640, 360)
+	damage_flash.color = Color("#d84a3a", 0.0)
+	damage_flash.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	damage_flash.visible = false
+	layer.add_child(damage_flash)
+
 	result_panel = ColorRect.new()
 	result_panel.position = Vector2(170, 146)
 	result_panel.size = Vector2(300, 68)
@@ -278,6 +312,8 @@ func _build_hud() -> void:
 func _update_courage(value: int) -> void:
 	if courage_label != null:
 		courage_label.text = "COURAGE " + "◆".repeat(value) + "◇".repeat(3 - value)
+		var color := Color("#d84a3a") if value <= 1 else Color("#ff9a75")
+		courage_label.add_theme_color_override("font_color", color)
 
 
 func _update_skill_cooldown(time_left: float) -> void:
@@ -316,6 +352,35 @@ func _show_result(title: String, subtitle: String) -> void:
 		result_panel.visible = true
 	result_label.text = title + "\n" + subtitle
 	result_label.visible = true
+
+
+func _start_screen_shake(duration: float, strength: float) -> void:
+	shake_duration = maxf(shake_duration, duration)
+	shake_time = maxf(shake_time, duration)
+	shake_strength = maxf(shake_strength, strength)
+
+
+func _update_shake(delta: float) -> void:
+	if shake_time <= 0.0:
+		position = Vector2.ZERO
+		shake_strength = 0.0
+		return
+	shake_time = maxf(0.0, shake_time - delta)
+	var progress := shake_time / maxf(shake_duration, 0.001)
+	var amount := shake_strength * progress
+	var tick := Time.get_ticks_msec() / 1000.0
+	position = Vector2(sin(tick * 91.0), cos(tick * 77.0)) * amount
+
+
+func _update_damage_flash(delta: float) -> void:
+	if damage_flash_time <= 0.0:
+		if damage_flash != null:
+			damage_flash.visible = false
+		return
+	damage_flash_time = maxf(0.0, damage_flash_time - delta)
+	if damage_flash != null:
+		var alpha := 0.20 * damage_flash_time / 0.22
+		damage_flash.color = Color("#d84a3a", alpha)
 
 
 func _facing_name(direction: Vector2i) -> String:
