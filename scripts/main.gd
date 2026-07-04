@@ -1,9 +1,12 @@
 extends Node2D
 
+const FIRST_ENCOUNTER_SCENE := preload("res://scenes/rooms/first_encounter.tscn")
+
 var grid_world: GridWorld
 var director: EncounterDirector
 var board: PrototypeBoard
 var hero: PawnHero
+var current_room: Node
 var status_label: Label
 var courage_label: Label
 var skill_label: Label
@@ -28,10 +31,6 @@ var damage_flash_time := 0.0
 func _ready() -> void:
 	grid_world = GridWorld.new()
 	add_child(grid_world)
-	grid_world.add_block(Vector2i(7, 2))
-	grid_world.add_block(Vector2i(7, 3))
-	grid_world.add_block(Vector2i(7, 5))
-	grid_world.add_block(Vector2i(7, 6))
 
 	director = EncounterDirector.new()
 	add_child(director)
@@ -52,16 +51,13 @@ func _ready() -> void:
 	hero.skill_cooldown_changed.connect(_update_skill_cooldown)
 	hero.defeated.connect(_on_hero_defeated)
 
-	_spawn_weapon(Vector2i(5, 5), EnemyWeapon.pencil_spear())
-	_spawn_weapon(Vector2i(11, 6), EnemyWeapon.ruler_blade())
-	_spawn_enemy(BlackPawn.new(), Vector2i(4, 1))
-	var armed_pawn := BlackPawn.new()
-	armed_pawn.definition = load("res://resources/enemies/pawn_armed.tres") as EnemyDefinition
-	_spawn_enemy(armed_pawn, Vector2i(10, 1))
-	_spawn_enemy(KnightEnemy.new(), Vector2i(13, 2))
+	_load_room(FIRST_ENCOUNTER_SCENE)
 
 	_build_hud()
-	_update_status("First clash: read the warning cells, deny the weapons, break the black line.")
+	var room_message := ""
+	if current_room != null:
+		room_message = String(current_room.get("room_message"))
+	_update_status(room_message if not room_message.is_empty() else "Break the black line.")
 
 
 func _process(delta: float) -> void:
@@ -80,35 +76,23 @@ func _process(delta: float) -> void:
 	_update_damage_flash(delta)
 
 
-func _spawn_weapon(cell: Vector2i, weapon: EnemyWeapon) -> void:
-	var pickup := WeaponPickup.new()
-	pickup.z_index = 1
-	add_child(pickup)
-	if not pickup.setup(grid_world, cell, weapon):
-		pickup.queue_free()
-
-
-func _spawn_enemy(enemy: FreeEnemy, cell: Vector2i, starting_weapon: EnemyWeapon = null) -> void:
-	enemy.z_index = 2
-	add_child(enemy)
-	if not enemy.setup(grid_world, cell):
-		enemy.queue_free()
+func _load_room(room_scene: PackedScene) -> void:
+	current_room = room_scene.instantiate()
+	if current_room == null or not current_room.has_method("setup"):
+		push_error("Room scene must instantiate a RoomEncounter.")
 		return
+	add_child(current_room)
+	current_room.connect("enemy_spawned", Callable(self, "_on_room_enemy_spawned"))
+	current_room.connect("enemy_defeated", Callable(self, "_on_enemy_defeated"))
+	current_room.connect("enemy_weapon_changed", Callable(self, "_on_enemy_weapon_changed"))
+	current_room.call("setup", grid_world, hero, director, board, debug_enabled)
+
+
+func _on_room_enemy_spawned(enemy: FreeEnemy) -> void:
 	remaining_enemies += 1
 	total_enemies += 1
 	enemies.append(enemy)
-	enemy.telegraph_started.connect(board.set_telegraph)
-	enemy.telegraph_finished.connect(board.clear_telegraph)
-	enemy.attack_resolved.connect(board.show_enemy_attack)
-	enemy.weapon_changed.connect(_on_enemy_weapon_changed)
-	enemy.defeated.connect(_on_enemy_defeated)
-	enemy.intent_changed.connect(board.set_enemy_intent)
-	if starting_weapon != null:
-		enemy.equip(starting_weapon)
-	elif enemy.definition != null and enemy.definition.default_weapon != null:
-		enemy.equip(enemy.definition.default_weapon.duplicate(true))
-	enemy.activate(hero, director)
-	enemy.set_debug_enabled(debug_enabled)
+	_update_encounter_count()
 
 
 func _on_enemy_weapon_changed(enemy: FreeEnemy, weapon: EnemyWeapon) -> void:
@@ -126,9 +110,11 @@ func _on_player_attack_landed(cells: Array[Vector2i], hit_count: int, profile: A
 
 
 func _on_enemy_defeated(enemy: FreeEnemy) -> void:
+	if enemy not in enemies:
+		return
 	enemies.erase(enemy)
 	board.clear_enemy_debug(enemy)
-	remaining_enemies -= 1
+	remaining_enemies = maxi(0, remaining_enemies - 1)
 	_update_encounter_count()
 	if remaining_enemies <= 0 and not room_ending:
 		room_ending = true
@@ -144,9 +130,12 @@ var _debug_key_was_pressed := false
 func _set_debug_enabled(value: bool) -> void:
 	debug_enabled = value
 	board.set_debug_enabled(value)
-	for enemy in enemies:
-		if is_instance_valid(enemy):
-			enemy.set_debug_enabled(value)
+	if current_room != null and current_room.has_method("set_debug_enabled"):
+		current_room.call("set_debug_enabled", value)
+	else:
+		for enemy in enemies:
+			if is_instance_valid(enemy):
+				enemy.set_debug_enabled(value)
 	_update_status("DEBUG VIEW ON: boundaries, paths, and behavior labels." if value else "DEBUG VIEW OFF.")
 
 

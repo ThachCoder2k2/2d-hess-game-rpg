@@ -176,3 +176,12 @@
 - Added full game completion gates from editor foundation through release polish.
 - Updated `task_plan.md` with Phase 34 complete and recorded the human editor handoff decision.
 - Updated `findings.md` with the new AI/human ownership and completion-gate findings.
+
+## Editor-First Encounter Scaffolding - 2026-07-04
+
+- Added `RoomEncounter`, `EnemySpawnPoint`, and `PickupSpawnPoint` scripts and scenes.
+- Added `scenes/rooms/first_encounter.tscn` with editable blockers, two pickup markers, two Pawn spawn markers, and one Knight spawn marker.
+- Updated `main.gd` to load the room scene and receive room enemy events instead of hardcoding blockers, pickups, and enemy spawns directly.
+- Added `tests/room_encounter_runtime_test.gd` to verify room blockers, pickups, enemy classes, armed Pawn default equipment, and room message.
+- Verified `run_tests.gd`, `attack_runtime_test.gd`, component movement/equipment/Knight tests, room encounter runtime, encounter HUD runtime, headless launch, editor import, and `git diff --check`.
+- Marked E2 as in progress and Phase 35 as complete in `task_plan.md`.

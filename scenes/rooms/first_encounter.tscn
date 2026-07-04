@@ -1,0 +1,35 @@
+[gd_scene load_steps=9 format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/world/room_encounter.tscn" id="1"]
+[ext_resource type="PackedScene" path="res://scenes/markers/pickup_spawn_point.tscn" id="2"]
+[ext_resource type="PackedScene" path="res://scenes/markers/enemy_spawn_point.tscn" id="3"]
+[ext_resource type="Resource" path="res://resources/weapons/pencil_spear.tres" id="4"]
+[ext_resource type="Resource" path="res://resources/weapons/ruler_blade.tres" id="5"]
+[ext_resource type="Resource" path="res://resources/enemies/pawn_recruit.tres" id="6"]
+[ext_resource type="Resource" path="res://resources/enemies/pawn_armed.tres" id="7"]
+[ext_resource type="Resource" path="res://resources/enemies/knight_tracker.tres" id="8"]
+
+[node name="FirstEncounter" instance=ExtResource("1")]
+room_message = "First clash: read the warning cells, deny the weapons, break the black line."
+blocked_cells = Array[Vector2i]([Vector2i(7, 2), Vector2i(7, 3), Vector2i(7, 5), Vector2i(7, 6)])
+
+[node name="PencilSpearPickup" parent="." instance=ExtResource("2")]
+grid_cell = Vector2i(5, 5)
+weapon = ExtResource("4")
+
+[node name="RulerBladePickup" parent="." instance=ExtResource("2")]
+grid_cell = Vector2i(11, 6)
+weapon = ExtResource("5")
+
+[node name="PawnRecruitSpawn" parent="." instance=ExtResource("3")]
+grid_cell = Vector2i(4, 1)
+definition = ExtResource("6")
+
+[node name="ArmedPawnSpawn" parent="." instance=ExtResource("3")]
+grid_cell = Vector2i(10, 1)
+definition = ExtResource("7")
+
+[node name="KnightTrackerSpawn" parent="." instance=ExtResource("3")]
+enemy_kind = 1
+grid_cell = Vector2i(13, 2)
+definition = ExtResource("8")

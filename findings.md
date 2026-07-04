@@ -114,3 +114,11 @@
 - Keeping these rules in the repo should reduce future drift back into script-only work and make handoffs after context compaction safer.
 - The workflow now explicitly separates AI-owned implementation from human-owned editor review: room layout, play feel, enemy threat feel, art/audio taste, narrative tone, and exported-build approval.
 - Full game completion is tracked through gates from editor foundation through release polish, and every gate should end with an editor-reviewable playable scene or build.
+
+## Editor-First Encounter System
+
+- `RoomEncounter` can own blockers, pickup spawn markers, enemy spawn markers, room messages, and enemy signal wiring while `main.gd` remains the compatibility host for world, hero, board, director, HUD, restart, and result flow.
+- `EnemySpawnPoint` and `PickupSpawnPoint` expose grid cell and data Resources in the Inspector, making the first encounter editable without changing scripts.
+- The first room now exists as `scenes/rooms/first_encounter.tscn`, with the previous hardcoded blockers, two weapons, two Pawns, and one Knight represented as scene data.
+- New scripts may not be available as global classes during headless script loading before editor import; cross-file references to brand-new scene classes should use dynamic `Node` calls or run editor import before strict type references.
+- E2 is not finished until room win conditions and more main-scene/HUD composition are also editor-owned, but the first encounter content is now out of hardcoded setup.
