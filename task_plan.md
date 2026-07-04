@@ -41,6 +41,7 @@ Build the first playable Godot 4 vertical slice, then grow it into a short edito
 | 31. Equipment extraction | complete | Weapon state, tag validation, defaults, pickup, geometry, damage, and timing owned by component |
 | 32. Health extraction | pending | Move health, hit response, and defeat state into component |
 | 33. AI workflow rules | complete | `AGENTS.md` defines editor-first rules, planning workflow, verification commands, and next-phase guidance for future AI agents |
+| 34. Human editor workflow | complete | `AGENTS.md` defines AI/human ownership, editor handoff format, in-editor review checklists, and full game completion gates |
 
 ## Editor-First Full Game Roadmap
 
@@ -105,6 +106,7 @@ Acceptance criteria:
 - Project direction is editor-first: content should be placed and tuned in Godot scenes/resources before adding more hardcoded gameplay content.
 - The next recommended implementation phase is the editor-first encounter system, not more scripted room composition.
 - Future AI sessions should read `AGENTS.md` first for editor-first workflow rules, verification expectations, and current priorities.
+- AI should hand off room feel, player feel, enemy feel, art/audio taste, narrative tone, and release review tasks to the human owner inside Godot Editor when the relevant phase reaches a tuning gate.
 
 ## Errors Encountered
 

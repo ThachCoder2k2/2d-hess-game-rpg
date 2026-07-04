@@ -167,3 +167,12 @@
 - Captured the editor-first project direction, E2 current priority, planning-file rules, implementation rules, combat readability rules, verification commands, and git rules.
 - Updated `task_plan.md` with Phase 33 complete and a decision that future AI sessions should read `AGENTS.md` first.
 - Updated `findings.md` with the purpose of the AI workflow rules file.
+
+## Human Editor Workflow - 2026-07-04
+
+- Expanded `AGENTS.md` with a collaboration model that separates AI implementation ownership from human editor/taste ownership.
+- Added human editor checklists for room encounters, player feel, enemy feel, art/audio, narrative, and release review.
+- Added a phase-gate workflow for future AI work and a standard handoff format for editor tasks.
+- Added full game completion gates from editor foundation through release polish.
+- Updated `task_plan.md` with Phase 34 complete and recorded the human editor handoff decision.
+- Updated `findings.md` with the new AI/human ownership and completion-gate findings.

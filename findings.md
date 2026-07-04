@@ -112,3 +112,5 @@
 - `AGENTS.md` now exists at the project root as the first-read guide for future AI sessions.
 - It records the editor-first direction, current E2 priority, planning-file workflow, Godot-native implementation rules, combat readability rules, verification commands, and git boundaries.
 - Keeping these rules in the repo should reduce future drift back into script-only work and make handoffs after context compaction safer.
+- The workflow now explicitly separates AI-owned implementation from human-owned editor review: room layout, play feel, enemy threat feel, art/audio taste, narrative tone, and exported-build approval.
+- Full game completion is tracked through gates from editor foundation through release polish, and every gate should end with an editor-reviewable playable scene or build.
