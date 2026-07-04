@@ -185,3 +185,14 @@
 - Added `tests/room_encounter_runtime_test.gd` to verify room blockers, pickups, enemy classes, armed Pawn default equipment, and room message.
 - Verified `run_tests.gd`, `attack_runtime_test.gd`, component movement/equipment/Knight tests, room encounter runtime, encounter HUD runtime, headless launch, editor import, and `git diff --check`.
 - Marked E2 as in progress and Phase 35 as complete in `task_plan.md`.
+
+## Editor-Owned Room Objectives - 2026-07-04
+
+- Added `RoomObjective` as an Inspector-editable Resource for room start text, clear result text, defeat text, and win-condition mode.
+- Added `resources/objectives/first_encounter_clear_all.tres` and assigned it to `scenes/rooms/first_encounter.tscn`.
+- Updated `RoomEncounter` to track defeated enemies, evaluate the objective, and emit `room_completed`.
+- Updated `main.gd` so room clear and defeat copy come from the current room rather than hardcoded `main.gd` strings.
+- Expanded tests for objective Resource logic and first-encounter completion signaling.
+- Hit one GDScript parse issue when inferring the type of a script-loaded Resource; fixed it with explicit `Resource` typing and dynamic `call()`.
+- Verified `run_tests.gd`, `attack_runtime_test.gd`, component movement/equipment/Knight tests, room encounter runtime, encounter HUD runtime, 1,200-frame headless launch, editor import, and `git diff --check`.
+- Marked Phase 36 complete and moved E2 to human editor review in `task_plan.md`.

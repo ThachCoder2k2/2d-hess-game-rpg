@@ -43,6 +43,7 @@ Build the first playable Godot 4 vertical slice, then grow it into a short edito
 | 33. AI workflow rules | complete | `AGENTS.md` defines editor-first rules, planning workflow, verification commands, and next-phase guidance for future AI agents |
 | 34. Human editor workflow | complete | `AGENTS.md` defines AI/human ownership, editor handoff format, in-editor review checklists, and full game completion gates |
 | 35. Editor-first encounter scaffolding | complete | `RoomEncounter`, enemy/pickup spawn point scenes, and `first_encounter.tscn` now own the first room's blockers, pickups, enemies, and message |
+| 36. Editor-owned room objectives | complete | `RoomObjective` Resources now own room objective text, defeat text, and win-condition logic while `RoomEncounter` emits room completion |
 
 ## Editor-First Full Game Roadmap
 
@@ -51,7 +52,7 @@ This roadmap is the long-range production plan for making the whole game in Godo
 | Phase | Status | Deliverable |
 |---|---|---|
 | E1. Editor foundation | pending | `Main.tscn`, `GameWorld.tscn`, `RoomEncounter.tscn`, `Player.tscn`, `EnemyBase.tscn`, `WeaponPickup.tscn`, and `HUD.tscn` replace direct runtime composition where possible |
-| E2. Editor-first encounter system | in_progress | `RoomEncounter`, `EnemySpawnPoint`, `PickupSpawnPoint`, authored blockers, room messages, win conditions, and spawn configuration are editable in Godot Inspector |
+| E2. Editor-first encounter system | human_review | `RoomEncounter`, `EnemySpawnPoint`, `PickupSpawnPoint`, authored blockers, room messages, win conditions, and spawn configuration are editable in Godot Inspector; awaiting in-editor room-feel approval |
 | E3. Player combat core | pending | Player movement, turn mode, sword, Pencil Thrust, invulnerability, cooldown, and timing become Inspector-tunable through scene exports and attack profile Resources |
 | E4. Enemy system | pending | Pawn, Knight, Bishop, Rook, Queen, and King use configurable enemy scenes and typed Resources for movement, attacks, decisions, visuals, weapons, and difficulty |
 | E5. Combat feedback | pending | Telegraphs, hit flash, damage shake, pickup glow, defeat effects, and sound cues move toward reusable AnimationPlayer/VFX/SFX scenes |
@@ -65,7 +66,7 @@ This roadmap is the long-range production plan for making the whole game in Godo
 
 ## Immediate Editor-First Next Phase
 
-Start with **E2. Editor-first encounter system** before adding more one-off scripted content.
+The technical slice for **E2. Editor-first encounter system** is ready for human review before broad new phase work.
 
 Target deliverables:
 - `scenes/rooms/first_encounter.tscn`
@@ -81,7 +82,9 @@ Acceptance criteria:
 - Enemy type/definition, starting cell, optional starting weapon, and active state are configurable from Inspector.
 - Pickup cell and weapon Resource are configurable from Inspector.
 - The main scene loads or owns the room scene instead of hardcoding every enemy, pickup, and blocker directly in `main.gd`.
+- Room start text, clear text, defeat text, and win condition are configurable through a `RoomObjective` Resource.
 - Existing gameplay behavior, HUD, debug view, tests, and restart flow still work after migration.
+- The human owner should approve or tune first-room feel in Godot Editor before E2 is marked fully accepted.
 
 ## Decisions
 
@@ -108,6 +111,7 @@ Acceptance criteria:
 - The next recommended implementation phase is the editor-first encounter system, not more scripted room composition.
 - Future AI sessions should read `AGENTS.md` first for editor-first workflow rules, verification expectations, and current priorities.
 - AI should hand off room feel, player feel, enemy feel, art/audio taste, narrative tone, and release review tasks to the human owner inside Godot Editor when the relevant phase reaches a tuning gate.
+- `RoomObjective` Resources own room start/clear/defeat copy and win-condition checks; `RoomEncounter` emits `room_completed`, while `main.gd` only reacts with HUD/result flow.
 
 ## Errors Encountered
 
@@ -122,3 +126,4 @@ Acceptance criteria:
 | Cardinal move helper inferred inline directions as `Variant` | 1 | Added explicit `Vector2i` loop and destination types |
 | Godot headless movie capture crashed in the dummy texture renderer | 1 | Keep headless mode for logic/runtime checks and use the real renderer for visual capture |
 | Grid path helper collided with native `Node.get_path()` | 1 | Renamed the helper to `get_grid_path()` |
+| GDScript could not infer the type of a new Resource loaded from script in `run_tests.gd` | 1 | Typed the instances as `Resource` and called objective methods dynamically, matching the pre-editor-import bridge style |

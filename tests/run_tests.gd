@@ -53,6 +53,16 @@ func _init() -> void:
 	thrust.range_cells = 2
 	_expect(thrust.get_target_cells(Vector2i(4, 4), Vector2i.RIGHT) == [Vector2i(5, 4), Vector2i(6, 4)], "attack profile produces ordered range cells")
 
+	var objective_script := load("res://scripts/data/room_objective.gd")
+	var clear_objective: Resource = objective_script.new()
+	_expect(not bool(clear_objective.call("is_complete", 1, 3, 2)), "clear-all objective waits while enemies remain")
+	_expect(bool(clear_objective.call("is_complete", 3, 3, 0)), "clear-all objective completes when all enemies fall")
+	var count_objective: Resource = objective_script.new()
+	count_objective.win_condition = 1
+	count_objective.required_defeats = 2
+	_expect(not bool(count_objective.call("is_complete", 1, 3, 2)), "defeat-count objective waits for its configured count")
+	_expect(bool(count_objective.call("is_complete", 2, 3, 1)), "defeat-count objective can complete before all enemies fall")
+
 	var black_pawn := BlackPawn.new()
 	root.add_child(black_pawn)
 	black_pawn.current_cell = Vector2i(6, 3)

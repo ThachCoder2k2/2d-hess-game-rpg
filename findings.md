@@ -122,3 +122,7 @@
 - The first room now exists as `scenes/rooms/first_encounter.tscn`, with the previous hardcoded blockers, two weapons, two Pawns, and one Knight represented as scene data.
 - New scripts may not be available as global classes during headless script loading before editor import; cross-file references to brand-new scene classes should use dynamic `Node` calls or run editor import before strict type references.
 - E2 is not finished until room win conditions and more main-scene/HUD composition are also editor-owned, but the first encounter content is now out of hardcoded setup.
+- `RoomObjective` Resources now own start text, clear text, defeat text, and win-condition checks; this keeps narrative/objective tuning in the Inspector instead of `main.gd`.
+- `RoomEncounter` emits `room_completed` after the objective succeeds, so the main scene only handles compatibility UI/result flow and no longer decides whether the room has been cleared.
+- Directly inferring the type of a fresh script-loaded Resource can fail in headless tests before editor import; dynamic `Resource.call()` matches the current migration-safe pattern.
+- E2 technical wiring is ready for human editor review: enemy spawns, pickups, blockers, objective text, defeat text, and win condition are all editable, but room feel still needs in-editor approval.

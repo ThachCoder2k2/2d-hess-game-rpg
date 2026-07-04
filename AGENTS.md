@@ -11,10 +11,10 @@ This file is the operating guide for AI assistants working on this Godot project
 
 ## Current Priority
 
-The next major phase is **E2. Editor-first encounter system**.
+The current phase gate is **E2. Editor-first encounter system - human editor review**.
 
 Primary goal:
-- Move the first encounter from hardcoded runtime setup into editable Godot room/spawn scenes.
+- Have the human owner review the first encounter in Godot Editor now that the room/spawn/objective data is editable.
 
 Target files/scenes:
 - `scenes/rooms/first_encounter.tscn`
@@ -28,6 +28,7 @@ Target files/scenes:
 Acceptance gate:
 - Enemy type/definition, starting cell, optional weapon, pickup weapon, room message, blockers, and win condition must be editable from Godot Inspector.
 - Existing gameplay, HUD, debug view, restart flow, and tests must still pass.
+- The human owner must approve or request tuning for room layout, pickup risk, opening readability, and encounter difficulty before E2 is fully accepted.
 
 ## Collaboration Model
 

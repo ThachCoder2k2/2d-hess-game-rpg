@@ -54,10 +54,10 @@ func _ready() -> void:
 	_load_room(FIRST_ENCOUNTER_SCENE)
 
 	_build_hud()
-	var room_message := ""
+	var room_message := "Break the black line."
 	if current_room != null:
-		room_message = String(current_room.get("room_message"))
-	_update_status(room_message if not room_message.is_empty() else "Break the black line.")
+		room_message = String(current_room.call("get_start_message"))
+	_update_status(room_message)
 
 
 func _process(delta: float) -> void:
@@ -85,6 +85,7 @@ func _load_room(room_scene: PackedScene) -> void:
 	current_room.connect("enemy_spawned", Callable(self, "_on_room_enemy_spawned"))
 	current_room.connect("enemy_defeated", Callable(self, "_on_enemy_defeated"))
 	current_room.connect("enemy_weapon_changed", Callable(self, "_on_enemy_weapon_changed"))
+	current_room.connect("room_completed", Callable(self, "_on_room_completed"))
 	current_room.call("setup", grid_world, hero, director, board, debug_enabled)
 
 
@@ -116,12 +117,21 @@ func _on_enemy_defeated(enemy: FreeEnemy) -> void:
 	board.clear_enemy_debug(enemy)
 	remaining_enemies = maxi(0, remaining_enemies - 1)
 	_update_encounter_count()
-	if remaining_enemies <= 0 and not room_ending:
-		room_ending = true
-		director.set_paused(true)
-		hero.control_enabled = false
-		_update_status("THE PAWN IS UNBOUND. The first clash is clear.")
-		_show_result("ROOM CLEARED", "PRESS R TO RESET")
+
+
+func _on_room_completed(room: Node) -> void:
+	if room_ending:
+		return
+	room_ending = true
+	director.set_paused(true)
+	hero.control_enabled = false
+	var clear_message := "ROOM CLEARED"
+	var clear_subtitle := "PRESS R TO RESET"
+	if room != null:
+		clear_message = String(room.call("get_clear_message"))
+		clear_subtitle = String(room.call("get_clear_subtitle"))
+	_update_status(clear_message)
+	_show_result(clear_message, clear_subtitle)
 
 
 var _debug_key_was_pressed := false
@@ -144,8 +154,13 @@ func _on_hero_defeated() -> void:
 		return
 	room_ending = true
 	director.set_paused(true)
-	_update_status("The pawn falls. The child resets the board...")
-	_show_result("THE PAWN FALLS", "THE CHILD RESETS THE BOARD")
+	var defeat_message := "THE PAWN FALLS"
+	var defeat_subtitle := "THE CHILD RESETS THE BOARD"
+	if current_room != null:
+		defeat_message = String(current_room.call("get_defeat_message"))
+		defeat_subtitle = String(current_room.call("get_defeat_subtitle"))
+	_update_status(defeat_message)
+	_show_result(defeat_message, defeat_subtitle)
 	var tree := get_tree()
 	if tree == null:
 		return

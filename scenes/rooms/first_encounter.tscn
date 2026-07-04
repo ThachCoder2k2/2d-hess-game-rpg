@@ -1,4 +1,4 @@
-[gd_scene load_steps=9 format=3]
+[gd_scene load_steps=10 format=3]
 
 [ext_resource type="PackedScene" path="res://scenes/world/room_encounter.tscn" id="1"]
 [ext_resource type="PackedScene" path="res://scenes/markers/pickup_spawn_point.tscn" id="2"]
@@ -8,9 +8,11 @@
 [ext_resource type="Resource" path="res://resources/enemies/pawn_recruit.tres" id="6"]
 [ext_resource type="Resource" path="res://resources/enemies/pawn_armed.tres" id="7"]
 [ext_resource type="Resource" path="res://resources/enemies/knight_tracker.tres" id="8"]
+[ext_resource type="Resource" path="res://resources/objectives/first_encounter_clear_all.tres" id="9"]
 
 [node name="FirstEncounter" instance=ExtResource("1")]
 room_message = "First clash: read the warning cells, deny the weapons, break the black line."
+objective = ExtResource("9")
 blocked_cells = Array[Vector2i]([Vector2i(7, 2), Vector2i(7, 3), Vector2i(7, 5), Vector2i(7, 6)])
 
 [node name="PencilSpearPickup" parent="." instance=ExtResource("2")]

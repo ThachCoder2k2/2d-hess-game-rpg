@@ -4,8 +4,10 @@ extends Node2D
 signal enemy_spawned(enemy: FreeEnemy)
 signal enemy_defeated(enemy: FreeEnemy)
 signal enemy_weapon_changed(enemy: FreeEnemy, weapon: EnemyWeapon)
+signal room_completed(room: Node)
 
 @export var room_message := ""
+@export var objective: Resource
 @export var blocked_cells: Array[Vector2i] = []
 @export var auto_activate_enemies := true
 
@@ -16,6 +18,8 @@ var board: PrototypeBoard
 var debug_enabled := true
 var spawned_enemies: Array[FreeEnemy] = []
 var spawned_pickups: Array[WeaponPickup] = []
+var defeated_enemies := 0
+var completed := false
 
 
 func setup(world: GridWorld, player: PawnHero, encounter_director: EncounterDirector, board_view: PrototypeBoard, debug_view_enabled := true) -> void:
@@ -46,6 +50,28 @@ func get_remaining_enemy_count() -> int:
 
 func get_total_enemy_count() -> int:
 	return spawned_enemies.size()
+
+
+func get_start_message() -> String:
+	if objective != null and not String(objective.get("start_message")).is_empty():
+		return String(objective.get("start_message"))
+	return room_message
+
+
+func get_clear_message() -> String:
+	return _objective_text("clear_message", "ROOM CLEARED")
+
+
+func get_clear_subtitle() -> String:
+	return _objective_text("clear_subtitle", "PRESS R TO RESET")
+
+
+func get_defeat_message() -> String:
+	return _objective_text("defeat_message", "THE PAWN FALLS")
+
+
+func get_defeat_subtitle() -> String:
+	return _objective_text("defeat_subtitle", "THE CHILD RESETS THE BOARD")
 
 
 func _apply_blockers() -> void:
@@ -115,7 +141,30 @@ func _on_enemy_weapon_changed(enemy: FreeEnemy, weapon: EnemyWeapon) -> void:
 func _on_enemy_defeated(enemy: FreeEnemy) -> void:
 	if board != null:
 		board.clear_enemy_debug(enemy)
+	defeated_enemies += 1
 	emit_signal("enemy_defeated", enemy)
+	_check_completion()
+
+
+func _check_completion() -> void:
+	if completed:
+		return
+	var total := get_total_enemy_count()
+	var remaining := get_remaining_enemy_count()
+	var complete := total > 0 and remaining <= 0
+	if objective != null and objective.has_method("is_complete"):
+		complete = objective.call("is_complete", defeated_enemies, total, remaining)
+	if not complete:
+		return
+	completed = true
+	emit_signal("room_completed", self)
+
+
+func _objective_text(property: StringName, fallback: String) -> String:
+	if objective == null:
+		return fallback
+	var value := String(objective.get(property))
+	return value if not value.is_empty() else fallback
 
 
 func _enemy_markers() -> Array[Node]:

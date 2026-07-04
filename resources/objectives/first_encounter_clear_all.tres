@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="RoomObjective" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/room_objective.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"first_encounter_clear_all"
+start_message = "First clash: read the warning cells, deny the weapons, break the black line."
+clear_message = "ROOM CLEARED"
+clear_subtitle = "PRESS R TO RESET"
+defeat_message = "THE PAWN FALLS"
+defeat_subtitle = "THE CHILD RESETS THE BOARD"
+win_condition = 0
+required_defeats = 3
