@@ -1,10 +1,10 @@
 [gd_scene load_steps=8 format=3]
 
 [ext_resource type="Script" path="res://scripts/main.gd" id="1"]
-[ext_resource type="PackedScene" path="res://scenes/world/grid_world.tscn" id="2"]
-[ext_resource type="PackedScene" path="res://scenes/combat/encounter_director.tscn" id="3"]
-[ext_resource type="PackedScene" path="res://scenes/world/prototype_board.tscn" id="4"]
-[ext_resource type="PackedScene" path="res://scenes/actors/player.tscn" id="5"]
+[ext_resource type="PackedScene" path="res://objects/world/grid_world.tscn" id="2"]
+[ext_resource type="PackedScene" path="res://objects/combat/encounter_director.tscn" id="3"]
+[ext_resource type="PackedScene" path="res://objects/world/prototype_board.tscn" id="4"]
+[ext_resource type="PackedScene" path="res://objects/actors/player.tscn" id="5"]
 [ext_resource type="PackedScene" path="res://scenes/rooms/first_encounter.tscn" id="6"]
 [ext_resource type="PackedScene" path="res://scenes/ui/hud.tscn" id="7"]
 

@@ -1,10 +1,10 @@
 extends Node2D
 
 const FIRST_ENCOUNTER_SCENE := preload("res://scenes/rooms/first_encounter.tscn")
-const GRID_WORLD_SCENE := preload("res://scenes/world/grid_world.tscn")
-const DIRECTOR_SCENE := preload("res://scenes/combat/encounter_director.tscn")
-const BOARD_SCENE := preload("res://scenes/world/prototype_board.tscn")
-const PLAYER_SCENE := preload("res://scenes/actors/player.tscn")
+const GRID_WORLD_SCENE := preload("res://objects/world/grid_world.tscn")
+const DIRECTOR_SCENE := preload("res://objects/combat/encounter_director.tscn")
+const BOARD_SCENE := preload("res://objects/world/prototype_board.tscn")
+const PLAYER_SCENE := preload("res://objects/actors/player.tscn")
 const HUD_SCENE := preload("res://scenes/ui/hud.tscn")
 
 @export var grid_world_path: NodePath = ^"GridWorld"

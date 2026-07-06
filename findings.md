@@ -145,7 +145,7 @@
 - Runtime UI should label enemies from definition data (`display_name`, `id`, or role) instead of checking for `BlackPawn`/`KnightEnemy` classes, because scene variants can share one generic script.
 - Knight flanker positioning logic can live on `EnemyActor` by reading the archetype role, preserving the threat behavior without a Knight-specific gameplay script.
 - `HealthComponent` now owns `EnemyActor` damage, hurt feedback values, attack-token cleanup, grid unregistering, defeat signal emission, and queue-free timing.
-- `scenes/components/health_component.tscn` owns an `AnimationPlayer` with `hurt` and `defeat` animations targeting the actor root, so hit/defeat timing can be tuned in the editor.
+- `objects/components/health_component.tscn` owns an `AnimationPlayer` with `hurt` and `defeat` animations targeting the actor root, so hit/defeat timing can be tuned in the editor.
 - `FreeEnemy.take_damage()` remains as a legacy fallback for direct subclass tests until those compatibility classes are retired.
 
 ## Editor-Owned Room Art
@@ -159,3 +159,10 @@
 - Blocker collision now comes from `BlockerMarker` nodes when present; `RoomEncounter.blocked_cells` remains only as a fallback for older rooms.
 - `docs/design/room-authoring-guide.md` is the human-facing guide for editing the first encounter without touching scripts.
 - The first encounter floor is now `RoomArt/TileMap`, a `TileMapLayer` backed by `resources/tiles/playground_tileset.tres` and `assets/tiles/playground_tiles.svg`. This keeps terrain editing in Godot's TileMap tools instead of a large list of Polygon2D tile nodes.
+
+## Scene/Object Folder Ownership
+
+- Keeping every editable template under `scenes/` made the project feel like it had too many playable scenes, even though many files were actor, component, marker, visual, or helper prefabs.
+- The cleaner Godot workflow is `scenes/` for entry scenes, authored rooms, and UI, with reusable `.tscn` object templates under `objects/`.
+- Enemies, pickups, markers, components, visuals, the combat director, the board overlay, and the TileMap floor template remain editor-owned `.tscn` files; they are now treated as objects instead of main scenes.
+- This split preserves the current editor-first workflow while making it easier for the human owner to find the room scene and modify gameplay objects deliberately.

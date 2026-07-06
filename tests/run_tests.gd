@@ -53,7 +53,7 @@ func _init() -> void:
 	thrust.range_cells = 2
 	_expect(thrust.get_target_cells(Vector2i(4, 4), Vector2i.RIGHT) == [Vector2i(5, 4), Vector2i(6, 4)], "attack profile produces ordered range cells")
 
-	var player_scene := load("res://scenes/actors/player.tscn") as PackedScene
+	var player_scene := load("res://objects/actors/player.tscn") as PackedScene
 	var scene_hero := player_scene.instantiate() as PawnHero
 	root.add_child(scene_hero)
 	scene_hero._ensure_attack_profiles()
@@ -104,7 +104,7 @@ func _init() -> void:
 	_expect(armed_definition.validate().is_empty(), "armed Pawn definition has no missing configuration")
 	_expect(armed_definition.default_weapon != null and armed_definition.default_weapon.display_name == "Pencil Spear", "armed Pawn default weapon is Inspector-configured")
 
-	var pawn_variant_scene := load("res://scenes/actors/black_pawn.tscn") as PackedScene
+	var pawn_variant_scene := load("res://objects/actors/black_pawn.tscn") as PackedScene
 	var pawn_variant := pawn_variant_scene.instantiate() as EnemyActor
 	root.add_child(pawn_variant)
 	pawn_variant._ensure_ai_data()
@@ -113,7 +113,7 @@ func _init() -> void:
 	_expect(pawn_variant.get_node_or_null("Visual") != null and pawn_variant.movement_component != null and pawn_variant.equipment_component != null, "Pawn scene variant owns visual and components")
 	_expect(pawn_variant.get_piece_display_name() == "Pawn", "Pawn scene variant names itself from definition data")
 
-	var knight_variant_scene := load("res://scenes/actors/knight_enemy.tscn") as PackedScene
+	var knight_variant_scene := load("res://objects/actors/knight_enemy.tscn") as PackedScene
 	var knight_variant := knight_variant_scene.instantiate() as EnemyActor
 	root.add_child(knight_variant)
 	knight_variant._ensure_ai_data()
@@ -122,7 +122,7 @@ func _init() -> void:
 	_expect(knight_variant.get_node_or_null("Visual") != null and knight_variant.movement_component != null and knight_variant.equipment_component != null, "Knight scene variant owns visual and components")
 	_expect(knight_variant.get_piece_display_name() == "Knight", "Knight scene variant names itself from definition data")
 
-	var enemy_base_scene := load("res://scenes/actors/enemy_base.tscn") as PackedScene
+	var enemy_base_scene := load("res://objects/actors/enemy_base.tscn") as PackedScene
 	var pawn_shell := enemy_base_scene.instantiate() as EnemyActor
 	root.add_child(pawn_shell)
 	pawn_shell._ensure_ai_data()

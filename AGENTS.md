@@ -9,6 +9,14 @@ This file is the operating guide for AI assistants working on this Godot project
 - Avoid adding more hardcoded room content to `scripts/main.gd` unless it is a temporary migration bridge.
 - Preserve the current playable slice after every change.
 
+## Folder Ownership
+
+- `scenes/` is reserved for top-level playable scenes, authored rooms, and UI scenes that the human owner opens directly.
+- `objects/` holds reusable editor-owned templates: actors, pickups, components, markers, visuals, combat helpers, and world helper nodes.
+- `resources/` holds Inspector-tunable data; prefer `.tres` Resources for enemy, attack, weapon, objective, tile, and visual tuning.
+- `scripts/` holds reusable behavior and compatibility bridges. Do not move authored room layout or gameplay placement back into scripts.
+- If a new `.tscn` is a reusable prefab/object rather than a room, UI, or entry scene, put it under `objects/`, not `scenes/`.
+
 ## Current Priority
 
 The current implementation phase is **E1. Editor foundation**, while **E2. Editor-first encounter system** remains in human room-feel review.
@@ -18,17 +26,17 @@ Primary goal:
 
 Target files/scenes:
 - `scenes/main.tscn`
-- `scenes/actors/player.tscn`
-- `scenes/actors/black_pawn.tscn`
-- `scenes/actors/knight_enemy.tscn`
-- `scenes/visuals/pawn_hero_visual.tscn`
-- `scenes/visuals/black_pawn_visual.tscn`
-- `scenes/visuals/knight_enemy_visual.tscn`
-- `scenes/visuals/weapon_pickup_visual.tscn`
-- `scenes/world/grid_world.tscn`
-- `scenes/world/prototype_board.tscn`
-- `scenes/world/weapon_pickup.tscn`
-- `scenes/combat/encounter_director.tscn`
+- `objects/actors/player.tscn`
+- `objects/actors/black_pawn.tscn`
+- `objects/actors/knight_enemy.tscn`
+- `objects/visuals/pawn_hero_visual.tscn`
+- `objects/visuals/black_pawn_visual.tscn`
+- `objects/visuals/knight_enemy_visual.tscn`
+- `objects/visuals/weapon_pickup_visual.tscn`
+- `objects/world/grid_world.tscn`
+- `objects/world/prototype_board.tscn`
+- `objects/world/weapon_pickup.tscn`
+- `objects/combat/encounter_director.tscn`
 - `scenes/ui/hud.tscn`
 - `resources/attacks/wooden_sword.tres`
 - `resources/attacks/pencil_thrust.tres`

@@ -1,7 +1,7 @@
 [gd_resource type="Resource" script_class="VisualDefinition" load_steps=3 format=3]
 
 [ext_resource type="Script" path="res://scripts/data/visual_definition.gd" id="1"]
-[ext_resource type="PackedScene" path="res://scenes/visuals/black_pawn_visual.tscn" id="2"]
+[ext_resource type="PackedScene" path="res://objects/visuals/black_pawn_visual.tscn" id="2"]
 
 [resource]
 script = ExtResource("1")

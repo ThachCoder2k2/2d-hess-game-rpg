@@ -210,7 +210,7 @@
 
 ## Scene-Backed Spawn Templates - 2026-07-06
 
-- Added gameplay templates `scenes/actors/black_pawn.tscn`, `scenes/actors/knight_enemy.tscn`, and `scenes/world/weapon_pickup.tscn`.
+- Added gameplay templates `objects/actors/black_pawn.tscn`, `objects/actors/knight_enemy.tscn`, and `objects/world/weapon_pickup.tscn`.
 - Updated `EnemySpawnPoint` and `PickupSpawnPoint` to instantiate editor-assigned PackedScenes first, with script constructors kept only as compatibility fallbacks.
 - Updated `first_encounter.tscn` so its enemy and pickup markers reference those PackedScene templates.
 - Added `resources/attacks/wooden_sword.tres` and `resources/attacks/pencil_thrust.tres`, then assigned them to `player.tscn`.
@@ -231,7 +231,7 @@
 
 ## Generic Enemy Scene Variants - 2026-07-06
 
-- Changed `scenes/actors/black_pawn.tscn` and `scenes/actors/knight_enemy.tscn` so both use `EnemyActor` as the root script.
+- Changed `objects/actors/black_pawn.tscn` and `objects/actors/knight_enemy.tscn` so both use `EnemyActor` as the root script.
 - Added movement, brain, attack, health, equipment, and debug component children directly to those gameplay enemy templates.
 - Kept old `BlackPawn` and `KnightEnemy` scripts only as temporary legacy/test compatibility paths.
 - Moved Knight flanker positioning behavior into `EnemyActor` when its archetype role is `flanker`.
@@ -243,7 +243,7 @@
 
 - Updated `EnemyActor.take_damage()` to delegate damage and defeat handling to `HealthComponent`.
 - Expanded `HealthComponent` so it owns health reduction, hurt flash/recoil values, attack-token release, grid unregistering, defeat signal emission, and delayed cleanup.
-- Added an editor-visible `AnimationPlayer` inside `scenes/components/health_component.tscn` with `hurt` and `defeat` animations targeting the enemy actor root.
+- Added an editor-visible `AnimationPlayer` inside `objects/components/health_component.tscn` with `hurt` and `defeat` animations targeting the enemy actor root.
 - Kept `FreeEnemy.take_damage()` as the legacy direct-test fallback while scene-spawned enemies use the component path.
 - Added tests proving the health component owns feedback animations, hurt feedback state, and defeat cleanup.
 - Verified `run_tests.gd`, `attack_runtime_test.gd`, component movement/equipment/Knight tests, `room_encounter_runtime_test.gd`, `encounter_hud_runtime_test.gd`, 1,200-frame headless launch, editor import, and `git diff --check`.
@@ -274,8 +274,16 @@
 
 - Converted the first encounter floor from many individual `Polygon2D` tile nodes to a real `TileMapLayer`.
 - Added `assets/tiles/playground_tiles.svg` as the small board tile atlas.
-- Added `resources/tiles/playground_tileset.tres` and `scenes/world/playground_tilemap.tscn`.
+- Added `resources/tiles/playground_tileset.tres` and `objects/world/playground_tilemap.tscn`.
 - Replaced `RoomArt/Tiles/*` in `first_encounter.tscn` with `RoomArt/TileMap`.
 - Kept grid lines, boundaries, set dressing, and gameplay markers separate so tile editing and gameplay placement stay clean in the editor.
 - Updated tests and the room authoring guide to point at the TileMapLayer workflow.
+- Verified `run_tests.gd`, `attack_runtime_test.gd`, component movement/equipment/Knight tests, `room_encounter_runtime_test.gd`, `encounter_hud_runtime_test.gd`, 1,200-frame headless launch, editor import, and `git diff --check`.
+
+## Scene/Object Folder Cleanup - 2026-07-06
+
+- Moved reusable object templates out of `scenes/` and into `objects/`.
+- `scenes/` now contains only `main.tscn`, authored room scenes, and UI scenes, so the Godot editor tree reads like actual game screens instead of a prefab dump.
+- Actor, enemy, pickup, marker, component, visual, combat helper, and world helper `.tscn` files remain editable Godot scenes under `objects/`.
+- Updated scene, script, resource, test, tool, README, planning, and workflow references to the new object paths.
 - Verified `run_tests.gd`, `attack_runtime_test.gd`, component movement/equipment/Knight tests, `room_encounter_runtime_test.gd`, `encounter_hud_runtime_test.gd`, 1,200-frame headless launch, editor import, and `git diff --check`.

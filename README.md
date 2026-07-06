@@ -51,3 +51,10 @@ Open `project.godot` in Godot 4.6 or run:
 
 The approved GDD, pixel-art bible, and vertical-slice design live in `docs/design/`.
 For editing the current room in Godot, use `docs/design/room-authoring-guide.md`.
+
+## Project Structure
+
+- `scenes/`: main playable scenes, authored rooms, and UI scenes.
+- `objects/`: reusable editable object templates such as actors, pickups, markers, components, visuals, and helper world nodes.
+- `scripts/`: reusable behavior only; avoid putting room content directly in scripts.
+- `resources/`: Inspector-tunable data for attacks, enemies, movement, weapons, objectives, visuals, and tiles.

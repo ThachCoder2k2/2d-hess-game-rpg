@@ -10,7 +10,7 @@ func _init() -> void:
 func _run() -> void:
 	var world := GridWorld.new()
 	root.add_child(world)
-	var scene := load("res://scenes/actors/enemy_base.tscn") as PackedScene
+	var scene := load("res://objects/actors/enemy_base.tscn") as PackedScene
 	var enemy := scene.instantiate() as EnemyActor
 	enemy.weapon_changed.connect(func(_actor: FreeEnemy, _weapon: EnemyWeapon): weapon_change_count += 1)
 	root.add_child(enemy)

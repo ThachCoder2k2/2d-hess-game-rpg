@@ -3,7 +3,7 @@
 [ext_resource type="Script" path="res://scripts/actors/pawn_hero.gd" id="1"]
 [ext_resource type="Resource" path="res://resources/attacks/wooden_sword.tres" id="2"]
 [ext_resource type="Resource" path="res://resources/attacks/pencil_thrust.tres" id="3"]
-[ext_resource type="PackedScene" path="res://scenes/visuals/pawn_hero_visual.tscn" id="4"]
+[ext_resource type="PackedScene" path="res://objects/visuals/pawn_hero_visual.tscn" id="4"]
 
 [node name="PawnHero" type="Node2D"]
 z_index = 3

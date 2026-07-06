@@ -51,10 +51,17 @@ Build the first playable Godot 4 vertical slice, then grow it into a short edito
 | 41. Editor-owned room art | complete | `first_encounter.tscn` now owns visible `RoomArt` floor, grid, boundary, set-dressing, enemy preview, and pickup preview nodes; `PrototypeBoard` is the overlay in `main.tscn` |
 | 42. Room authoring markers | complete | Hero start, blockers, pickups, and enemy spawns are draggable grid-snapping marker nodes that drive runtime placement; room editing guide added |
 | 43. TileMap room floor | complete | First encounter floor uses `TileMapLayer` plus `TileSet` resources instead of one Polygon2D node per board tile |
+| 44. Scene/object folder cleanup | complete | `scenes/` now contains only main playable scenes, rooms, and UI; reusable editable templates live under `objects/` |
 
 ## Editor-First Full Game Roadmap
 
 This roadmap is the long-range production plan for making the whole game in Godot Editor first. Scripts should provide reusable behavior, but rooms, enemies, pickups, UI, animations, VFX, SFX, and narrative beats should be authored through scenes, child nodes, Resources, and Inspector fields whenever practical.
+
+Folder ownership:
+- `scenes/` is for entry scenes, authored rooms, and UI scenes that should be opened directly in Godot Editor.
+- `objects/` is for reusable object templates and prefabs: actors, components, markers, visuals, pickups, combat helpers, and world helper nodes.
+- `resources/` is for Inspector-tunable data; use `.tres` files when a value should be shared, swapped, or balanced.
+- `scripts/` is for reusable behavior and migration fallbacks, not authored room content.
 
 | Phase | Status | Deliverable |
 |---|---|---|
@@ -77,18 +84,18 @@ Continue **E1. Editor foundation** while E2 waits for human room-feel review. Th
 
 Target deliverables:
 - `scenes/main.tscn`
-- `scenes/actors/player.tscn`
-- `scenes/actors/black_pawn.tscn`
-- `scenes/actors/knight_enemy.tscn`
-- `scenes/actors/enemy_base.tscn`
-- `scenes/world/weapon_pickup.tscn`
-- `scenes/visuals/pawn_hero_visual.tscn`
-- `scenes/visuals/black_pawn_visual.tscn`
-- `scenes/visuals/knight_enemy_visual.tscn`
-- `scenes/visuals/weapon_pickup_visual.tscn`
-- `scenes/world/grid_world.tscn`
-- `scenes/world/prototype_board.tscn`
-- `scenes/combat/encounter_director.tscn`
+- `objects/actors/player.tscn`
+- `objects/actors/black_pawn.tscn`
+- `objects/actors/knight_enemy.tscn`
+- `objects/actors/enemy_base.tscn`
+- `objects/world/weapon_pickup.tscn`
+- `objects/visuals/pawn_hero_visual.tscn`
+- `objects/visuals/black_pawn_visual.tscn`
+- `objects/visuals/knight_enemy_visual.tscn`
+- `objects/visuals/weapon_pickup_visual.tscn`
+- `objects/world/grid_world.tscn`
+- `objects/world/prototype_board.tscn`
+- `objects/combat/encounter_director.tscn`
 - `scenes/ui/hud.tscn`
 - Next: convert the remaining combat feedback overlays into reusable VFX/AnimationPlayer scenes, then begin editor-authored tutorial room structure.
 
@@ -141,6 +148,7 @@ Acceptance criteria:
 - Room floor, grid-line, boundary, and set-dressing presentation should live in the room scene under `RoomArt`; `PrototypeBoard` should stay responsible for telegraph cells, hit flashes, and debug path overlays.
 - Gameplay placement should be represented by marker nodes, not parallel art plus hidden arrays. `RoomEncounter` should read markers first and keep exported arrays only as compatibility fallbacks.
 - Board floor art should use TileMapLayer and TileSet assets. Avoid adding one Polygon2D node per floor tile.
+- Keep reusable object `.tscn` templates under `objects/`; keep `scenes/` limited to playable/editor entry scenes, rooms, and UI.
 
 ## Errors Encountered
 

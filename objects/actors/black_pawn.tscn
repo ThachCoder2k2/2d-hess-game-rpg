@@ -2,13 +2,13 @@
 
 [ext_resource type="Script" path="res://scripts/entities/enemy_actor.gd" id="1"]
 [ext_resource type="Resource" path="res://resources/enemies/pawn_recruit.tres" id="2"]
-[ext_resource type="PackedScene" path="res://scenes/visuals/black_pawn_visual.tscn" id="3"]
-[ext_resource type="PackedScene" path="res://scenes/components/grid_movement_component.tscn" id="4"]
-[ext_resource type="PackedScene" path="res://scenes/components/enemy_brain_component.tscn" id="5"]
-[ext_resource type="PackedScene" path="res://scenes/components/attack_component.tscn" id="6"]
-[ext_resource type="PackedScene" path="res://scenes/components/health_component.tscn" id="7"]
-[ext_resource type="PackedScene" path="res://scenes/components/equipment_component.tscn" id="8"]
-[ext_resource type="PackedScene" path="res://scenes/components/debug_component.tscn" id="9"]
+[ext_resource type="PackedScene" path="res://objects/visuals/black_pawn_visual.tscn" id="3"]
+[ext_resource type="PackedScene" path="res://objects/components/grid_movement_component.tscn" id="4"]
+[ext_resource type="PackedScene" path="res://objects/components/enemy_brain_component.tscn" id="5"]
+[ext_resource type="PackedScene" path="res://objects/components/attack_component.tscn" id="6"]
+[ext_resource type="PackedScene" path="res://objects/components/health_component.tscn" id="7"]
+[ext_resource type="PackedScene" path="res://objects/components/equipment_component.tscn" id="8"]
+[ext_resource type="PackedScene" path="res://objects/components/debug_component.tscn" id="9"]
 
 [node name="BlackPawn" type="Node2D"]
 z_index = 2

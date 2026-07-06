@@ -2,7 +2,7 @@
 extends SceneTree
 
 const TILESET_PATH := "res://resources/tiles/playground_tileset.tres"
-const TILEMAP_SCENE_PATH := "res://scenes/world/playground_tilemap.tscn"
+const TILEMAP_SCENE_PATH := "res://objects/world/playground_tilemap.tscn"
 const TILE_ATLAS_PATH := "res://assets/tiles/playground_tiles.svg"
 const BOARD_SIZE := Vector2i(16, 9)
 const CELL_SIZE := Vector2i(32, 32)

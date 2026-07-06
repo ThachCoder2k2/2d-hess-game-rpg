@@ -8,7 +8,7 @@ func _init() -> void:
 func _run() -> void:
 	var world := GridWorld.new()
 	root.add_child(world)
-	var scene := load("res://scenes/actors/enemy_base.tscn") as PackedScene
+	var scene := load("res://objects/actors/enemy_base.tscn") as PackedScene
 	var enemy := scene.instantiate() as EnemyActor
 	root.add_child(enemy)
 	var setup_ok := enemy.setup(world, Vector2i(2, 2))
