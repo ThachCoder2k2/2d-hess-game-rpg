@@ -228,3 +228,13 @@
 - Added tests proving player, base enemy, and room-spawned enemies/pickups own visual children.
 - Fixed one Godot import-order issue by using dynamic visual child calls from older gameplay scripts.
 - Verified `run_tests.gd`, `attack_runtime_test.gd`, component movement/equipment/Knight tests, `room_encounter_runtime_test.gd`, `encounter_hud_runtime_test.gd`, 1,200-frame headless launch, editor import, and `git diff --check`.
+
+## Generic Enemy Scene Variants - 2026-07-06
+
+- Changed `scenes/actors/black_pawn.tscn` and `scenes/actors/knight_enemy.tscn` so both use `EnemyActor` as the root script.
+- Added movement, brain, attack, health, equipment, and debug component children directly to those gameplay enemy templates.
+- Kept old `BlackPawn` and `KnightEnemy` scripts only as temporary legacy/test compatibility paths.
+- Moved Knight flanker positioning behavior into `EnemyActor` when its archetype role is `flanker`.
+- Updated HUD and main-scene status copy to read enemy display names from `EnemyDefinition` data instead of class checks.
+- Updated room and main tests to verify scene-spawned enemies are generic `EnemyActor` variants with Pawn/Knight definitions.
+- Verified `run_tests.gd`, `attack_runtime_test.gd`, component movement/equipment/Knight tests, `room_encounter_runtime_test.gd`, `encounter_hud_runtime_test.gd`, 1,200-frame headless launch, editor import, and `git diff --check`.

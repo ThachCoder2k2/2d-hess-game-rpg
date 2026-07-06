@@ -76,6 +76,21 @@ func get_attack_recovery_time() -> float:
 	return equipment_component.get_recovery_time() if equipment_component != null else super()
 
 
+func get_positioning_bonus(destination: Vector2i, direction: Vector2i, context: EnemyContext) -> float:
+	var bonus := super(destination, direction, context)
+	_ensure_ai_data()
+	if archetype == null or archetype.role != &"flanker":
+		return bonus
+	if weapon == null and context.hero_cell in get_unarmed_attack_cells(destination, direction):
+		bonus += 30.0
+	if last_move_direction != Vector2i.ZERO:
+		var previous_axis := last_move_direction.abs()
+		var next_axis := direction.abs()
+		if previous_axis != next_axis:
+			bonus += 12.0
+	return bonus
+
+
 func _configure_components() -> void:
 	movement_component = get_node_or_null("GridMovementComponent")
 	brain_component = get_node_or_null("EnemyBrainComponent")

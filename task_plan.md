@@ -47,6 +47,7 @@ Build the first playable Godot 4 vertical slice, then grow it into a short edito
 | 37. Editor-owned main scene foundation | complete | `Main.tscn` now owns editor-visible world, director, board, player, room, and HUD scene children while `main.gd` binds to scene nodes with test fallbacks |
 | 38. Scene-backed spawn templates | complete | Enemy and pickup spawn markers now instantiate editor-assigned PackedScenes, player attacks use `.tres` profiles, and board theme colors are Inspector-editable |
 | 39. Editor-owned actor visuals | complete | Player, Pawn, Knight, base enemy, and weapon pickup presentation now live in scene-owned `Visual` children instead of actor/pickup `_draw()` methods |
+| 40. Generic enemy scene variants | complete | `black_pawn.tscn` and `knight_enemy.tscn` now use generic `EnemyActor` roots with component children and definition-driven identity |
 
 ## Editor-First Full Game Roadmap
 
@@ -86,13 +87,14 @@ Target deliverables:
 - `scenes/world/prototype_board.tscn`
 - `scenes/combat/encounter_director.tscn`
 - `scenes/ui/hud.tscn`
-- Next: extract enemy health into `HealthComponent`, then move board/debug presentation and hit/telegraph feedback toward reusable VFX/SFX/AnimationPlayer scenes.
+- Next: extract enemy health and defeat flow into `HealthComponent`, then move board/debug presentation and hit/telegraph feedback toward reusable VFX/SFX/AnimationPlayer scenes.
 
 Acceptance criteria:
 - `scenes/main.tscn` opens with visible child nodes for world, combat director, board, player, room, and HUD.
 - `main.gd` coordinates already-authored child scenes instead of constructing the full scene tree directly.
 - Direct script instantiation in tests still works through scene fallback creation.
 - Enemy and pickup spawn markers instantiate editor-assigned PackedScenes for live gameplay nodes.
+- Pawn and Knight gameplay templates use the generic `EnemyActor` script plus scene-owned components, not Pawn/Knight-specific root scripts.
 - Player attack profiles and board theme values are configurable through `.tres` Resources or Inspector exports.
 - Player, enemies, base enemy, and weapon pickups own editable `Visual` scene children for placeholder presentation.
 - Existing gameplay behavior, HUD, debug view, tests, restart flow, and editor import still pass.
@@ -127,6 +129,7 @@ Acceptance criteria:
 - `Main.tscn` now owns editor-visible child scene instances for GridWorld, EncounterDirector, PrototypeBoard, PawnHero, FirstEncounter, and HUD; `main.gd` resolves those child nodes first and uses scene fallbacks only for tests.
 - Spawn markers should prefer `PackedScene` templates (`black_pawn.tscn`, `knight_enemy.tscn`, `weapon_pickup.tscn`) and keep direct constructors only as compatibility fallbacks.
 - Gameplay actors and pickups should not own production `_draw()` methods directly; presentation belongs in visible `Visual` child scenes such as `pawn_hero_visual.tscn`, `black_pawn_visual.tscn`, `knight_enemy_visual.tscn`, and `weapon_pickup_visual.tscn`.
+- Enemy identity in runtime UI/status should come from `EnemyDefinition` data rather than class checks. Legacy `BlackPawn` and `KnightEnemy` classes remain only as direct-test compatibility until they are deleted.
 
 ## Errors Encountered
 

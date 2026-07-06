@@ -104,6 +104,24 @@ func _init() -> void:
 	_expect(armed_definition.validate().is_empty(), "armed Pawn definition has no missing configuration")
 	_expect(armed_definition.default_weapon != null and armed_definition.default_weapon.display_name == "Pencil Spear", "armed Pawn default weapon is Inspector-configured")
 
+	var pawn_variant_scene := load("res://scenes/actors/black_pawn.tscn") as PackedScene
+	var pawn_variant := pawn_variant_scene.instantiate() as EnemyActor
+	root.add_child(pawn_variant)
+	pawn_variant._ensure_ai_data()
+	pawn_variant._configure_components()
+	_expect(pawn_variant != null and pawn_variant.definition.id == &"pawn_recruit", "Pawn scene variant uses generic EnemyActor with Pawn definition")
+	_expect(pawn_variant.get_node_or_null("Visual") != null and pawn_variant.movement_component != null and pawn_variant.equipment_component != null, "Pawn scene variant owns visual and components")
+	_expect(pawn_variant.get_piece_display_name() == "Pawn", "Pawn scene variant names itself from definition data")
+
+	var knight_variant_scene := load("res://scenes/actors/knight_enemy.tscn") as PackedScene
+	var knight_variant := knight_variant_scene.instantiate() as EnemyActor
+	root.add_child(knight_variant)
+	knight_variant._ensure_ai_data()
+	knight_variant._configure_components()
+	_expect(knight_variant != null and knight_variant.definition.id == &"knight_tracker", "Knight scene variant uses generic EnemyActor with Knight definition")
+	_expect(knight_variant.get_node_or_null("Visual") != null and knight_variant.movement_component != null and knight_variant.equipment_component != null, "Knight scene variant owns visual and components")
+	_expect(knight_variant.get_piece_display_name() == "Knight", "Knight scene variant names itself from definition data")
+
 	var enemy_base_scene := load("res://scenes/actors/enemy_base.tscn") as PackedScene
 	var pawn_shell := enemy_base_scene.instantiate() as EnemyActor
 	root.add_child(pawn_shell)

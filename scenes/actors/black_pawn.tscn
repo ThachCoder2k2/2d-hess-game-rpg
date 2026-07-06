@@ -1,8 +1,14 @@
-[gd_scene load_steps=4 format=3]
+[gd_scene load_steps=10 format=3]
 
-[ext_resource type="Script" path="res://scripts/actors/black_pawn.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/entities/enemy_actor.gd" id="1"]
 [ext_resource type="Resource" path="res://resources/enemies/pawn_recruit.tres" id="2"]
 [ext_resource type="PackedScene" path="res://scenes/visuals/black_pawn_visual.tscn" id="3"]
+[ext_resource type="PackedScene" path="res://scenes/components/grid_movement_component.tscn" id="4"]
+[ext_resource type="PackedScene" path="res://scenes/components/enemy_brain_component.tscn" id="5"]
+[ext_resource type="PackedScene" path="res://scenes/components/attack_component.tscn" id="6"]
+[ext_resource type="PackedScene" path="res://scenes/components/health_component.tscn" id="7"]
+[ext_resource type="PackedScene" path="res://scenes/components/equipment_component.tscn" id="8"]
+[ext_resource type="PackedScene" path="res://scenes/components/debug_component.tscn" id="9"]
 
 [node name="BlackPawn" type="Node2D"]
 z_index = 2
@@ -10,3 +16,15 @@ script = ExtResource("1")
 definition = ExtResource("2")
 
 [node name="Visual" parent="." instance=ExtResource("3")]
+
+[node name="GridMovementComponent" parent="." instance=ExtResource("4")]
+
+[node name="EnemyBrainComponent" parent="." instance=ExtResource("5")]
+
+[node name="AttackComponent" parent="." instance=ExtResource("6")]
+
+[node name="HealthComponent" parent="." instance=ExtResource("7")]
+
+[node name="EquipmentComponent" parent="." instance=ExtResource("8")]
+
+[node name="DebugComponent" parent="." instance=ExtResource("9")]

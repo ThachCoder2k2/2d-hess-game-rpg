@@ -166,6 +166,17 @@ func get_max_health() -> int:
 	return maxi(health, 1)
 
 
+func get_piece_display_name() -> String:
+	if definition != null:
+		var id_text := String(definition.id).to_lower()
+		var name_text := definition.display_name.to_lower()
+		if "knight" in id_text or "knight" in name_text or definition.role == &"flanker":
+			return "Knight"
+		if "pawn" in id_text or "pawn" in name_text or definition.role == &"skirmisher":
+			return "Pawn"
+	return "Enemy"
+
+
 func _draw_health_pips() -> void:
 	if state == State.DEFEATED:
 		return

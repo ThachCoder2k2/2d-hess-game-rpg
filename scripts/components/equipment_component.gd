@@ -22,7 +22,8 @@ func try_equip(weapon: EnemyWeapon) -> bool:
 	equipped_weapon = weapon
 	actor.weapon = weapon
 	actor.emit_signal("weapon_changed", actor, weapon)
-	actor.queue_redraw()
+	if actor.has_method("_sync_visual"):
+		actor.call("_sync_visual")
 	return true
 
 

@@ -171,7 +171,7 @@ func _on_room_enemy_spawned(enemy: FreeEnemy) -> void:
 func _on_enemy_weapon_changed(enemy: FreeEnemy, weapon: EnemyWeapon) -> void:
 	if objective_label == null or weapon == null:
 		return
-	var piece_name := "Knight" if enemy is KnightEnemy else "Pawn"
+	var piece_name := _enemy_piece_name(enemy)
 	_update_status("%s picked up %s. Its chess attack has been replaced." % [piece_name, weapon.display_name])
 
 
@@ -286,7 +286,7 @@ func _update_token_owner(token_owner: Node) -> void:
 	if token_owner == null:
 		token_label.text = "ENEMY STRIKE READY"
 	else:
-		token_label.text = "STRIKE: " + ("KNIGHT" if token_owner is KnightEnemy else "PAWN")
+		token_label.text = "STRIKE: " + _enemy_piece_name(token_owner).to_upper()
 
 
 func _update_encounter_count() -> void:
@@ -315,6 +315,12 @@ func _show_result(title: String, subtitle: String) -> void:
 		result_panel.visible = true
 	result_label.text = title + "\n" + subtitle
 	result_label.visible = true
+
+
+func _enemy_piece_name(enemy: Node) -> String:
+	if enemy != null and enemy.has_method("get_piece_display_name"):
+		return String(enemy.call("get_piece_display_name"))
+	return "Enemy"
 
 
 func _start_screen_shake(duration: float, strength: float) -> void:

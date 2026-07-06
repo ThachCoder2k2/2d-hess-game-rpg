@@ -41,6 +41,7 @@ Acceptance gate:
 - Main game scene should open with editor-visible child nodes for world, combat director, board, player, room, and HUD.
 - `main.gd` should coordinate scene-owned children and keep runtime factories only as compatibility fallbacks.
 - Spawn markers should instantiate editor-assigned PackedScene templates for enemies and pickups.
+- Pawn and Knight gameplay scenes should use the generic `EnemyActor` root plus component child nodes and `EnemyDefinition` Resources; do not add new enemy subclasses for normal content.
 - Player attacks, board theme values, enemy definitions, room objective text, and weapon data should be configurable through `.tres` Resources or Inspector exports.
 - Player, enemy, and pickup presentation should be owned by visible `Visual` child scene instances, with gameplay scripts only syncing state into them.
 - Existing gameplay, HUD, debug view, restart flow, and tests must still pass.
@@ -237,6 +238,7 @@ Gate 12: Release polish
 - Enemy AI should read the hero's current or visibly reserved destination cell, not buffered input.
 - Weapon attacks replace the enemy's chess-shaped attack while equipped.
 - Existing legacy Pawn/Knight paths must keep working until fully migrated to editor-first components.
+- Runtime labels, HUD text, and encounter logic should identify enemies from `EnemyDefinition` data instead of `BlackPawn`/`KnightEnemy` class checks.
 
 ## Visual And Feedback Rules
 

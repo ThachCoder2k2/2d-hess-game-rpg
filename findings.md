@@ -141,3 +141,6 @@
 - Remaining editor ownership work is mostly presentation: replace `_draw()` placeholder actor/weapon/board visuals with child nodes, Sprite2D/AnimationPlayer, VFX scenes, and eventually audio nodes.
 - Player, Black Pawn, Knight, base enemy, and weapon pickup presentation now route through scene-owned `Visual` child instances; gameplay scripts sync state into those nodes instead of drawing actor/pickup bodies directly.
 - During editor-first migration, old scripts should call newly added scene/visual classes dynamically until a headless editor import has registered their global class names.
+- The playable Pawn and Knight scene templates now use `EnemyActor` with component children and assigned `EnemyDefinition` Resources; their old subclass scripts are no longer the room-spawn path.
+- Runtime UI should label enemies from definition data (`display_name`, `id`, or role) instead of checking for `BlackPawn`/`KnightEnemy` classes, because scene variants can share one generic script.
+- Knight flanker positioning logic can live on `EnemyActor` by reading the archetype role, preserving the threat behavior without a Knight-specific gameplay script.

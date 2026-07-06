@@ -55,7 +55,7 @@ func set_token_owner(token_owner: Node) -> void:
 	if token_owner == null:
 		token_label.text = "ENEMY STRIKE READY"
 	else:
-		token_label.text = "STRIKE: " + ("KNIGHT" if token_owner is KnightEnemy else "PAWN")
+		token_label.text = "STRIKE: " + _enemy_piece_name(token_owner).to_upper()
 
 
 func set_encounter_count(remaining: int, total: int) -> void:
@@ -95,3 +95,9 @@ func show_result(title: String, subtitle: String) -> void:
 		return
 	result_label.text = title + "\n" + subtitle
 	result_label.visible = true
+
+
+func _enemy_piece_name(enemy: Node) -> String:
+	if enemy != null and enemy.has_method("get_piece_display_name"):
+		return String(enemy.call("get_piece_display_name"))
+	return "Enemy"
