@@ -6,8 +6,8 @@ func _init() -> void:
 
 
 func _run() -> void:
-	var main_script := load("res://scripts/main.gd")
-	var game: Node = main_script.new()
+	var main_scene := load("res://scenes/main.tscn") as PackedScene
+	var game: Node = main_scene.instantiate()
 	root.add_child(game)
 	await process_frame
 	var director := game.get("director") as EncounterDirector
@@ -16,8 +16,17 @@ func _run() -> void:
 	var skill_fill := game.get("skill_fill") as ColorRect
 	var damage_flash := game.get("damage_flash") as ColorRect
 	var result_label := game.get("result_label") as Label
+	var editor_binding_ok: bool = (
+		game.get("grid_world") == game.get_node_or_null("GridWorld")
+		and game.get("director") == game.get_node_or_null("EncounterDirector")
+		and game.get("board") == game.get_node_or_null("PrototypeBoard")
+		and game.get("hero") == game.get_node_or_null("PawnHero")
+		and game.get("hud") == game.get_node_or_null("HUD")
+	)
 	var initial_ok: bool = (
-		game.get("remaining_enemies") == 3
+		editor_binding_ok
+		and game.get_node_or_null("FirstEncounter") != null
+		and game.get("remaining_enemies") == 3
 		and game.get("total_enemies") == 3
 		and encounter_label != null
 		and encounter_label.text == "ENEMIES 3/3"
@@ -38,5 +47,8 @@ func _run() -> void:
 		and encounter_label.text == "ENEMIES 2/3"
 		and not result_label.visible
 	)
-	print("ENCOUNTER HUD TEST: %s" % ["PASS" if initial_ok and damage_feedback_ok and defeat_update_ok else "FAIL"])
-	quit(0 if initial_ok and damage_feedback_ok and defeat_update_ok else 1)
+	var succeeded := initial_ok and damage_feedback_ok and defeat_update_ok
+	game.free()
+	await process_frame
+	print("ENCOUNTER HUD TEST: %s" % ["PASS" if succeeded else "FAIL"])
+	quit(0 if succeeded else 1)

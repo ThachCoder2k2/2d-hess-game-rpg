@@ -162,6 +162,20 @@ func _init() -> void:
 	knight_shell._configure_components()
 	_expect(knight_shell.enemy_debug_component == null and knight_shell.get_unarmed_attack_cells(Vector2i(8, 4)).size() == 8, "removing optional debug component does not affect combat data")
 
+	var main_scene := load("res://scenes/main.tscn") as PackedScene
+	var main_game := main_scene.instantiate()
+	root.add_child(main_game)
+	var main_children_ok: bool = (
+		main_game.get_node_or_null("GridWorld") is GridWorld
+		and main_game.get_node_or_null("EncounterDirector") is EncounterDirector
+		and main_game.get_node_or_null("PrototypeBoard") is PrototypeBoard
+		and main_game.get_node_or_null("PawnHero") is PawnHero
+		and main_game.get_node_or_null("FirstEncounter") != null
+		and main_game.get_node_or_null("HUD") != null
+	)
+	_expect(main_children_ok, "main scene owns editor-visible world, combat, board, player, room, and HUD nodes")
+	main_game.free()
+
 	var director := EncounterDirector.new()
 	root.add_child(director)
 	_expect(director.request_attack(black_pawn), "first enemy receives attack token")

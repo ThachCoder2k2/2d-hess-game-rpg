@@ -196,3 +196,14 @@
 - Hit one GDScript parse issue when inferring the type of a script-loaded Resource; fixed it with explicit `Resource` typing and dynamic `call()`.
 - Verified `run_tests.gd`, `attack_runtime_test.gd`, component movement/equipment/Knight tests, room encounter runtime, encounter HUD runtime, 1,200-frame headless launch, editor import, and `git diff --check`.
 - Marked Phase 36 complete and moved E2 to human editor review in `task_plan.md`.
+
+## Editor-Owned Main Scene Foundation - 2026-07-06
+
+- Connected Godot MCP and used it to create first-pass scene files for Player, PrototypeBoard, GridWorld, EncounterDirector, and HUD.
+- Reworked `scenes/main.tscn` so the main playable scene now shows GridWorld, EncounterDirector, PrototypeBoard, PawnHero, FirstEncounter, and HUD as editor-visible children.
+- Added `scripts/ui/hud.gd` and `scenes/ui/hud.tscn`, moving HUD node composition out of `main.gd`.
+- Updated `main.gd` to resolve exported child NodePaths first and only instantiate scene fallbacks when tests create the script directly.
+- Fixed Godot warnings for integer division and shadowed parameter names in `PawnHero`, `PrototypeBoard`, `EnemyIntent`, and `main.gd`.
+- Added tests proving `Main.tscn` owns editor-visible child nodes and that ready-time HUD/runtime bindings work from the scene.
+- Verified `run_tests.gd`, `attack_runtime_test.gd`, component movement/equipment/Knight tests, room encounter runtime, encounter HUD runtime, 1,200-frame headless launch, editor import, and `git diff --check`.
+- The 1,200-frame headless launch exits successfully but currently prints CanvasLayer teardown RID warnings after the scene-owned HUD migration.

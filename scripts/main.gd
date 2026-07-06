@@ -1,12 +1,26 @@
 extends Node2D
 
 const FIRST_ENCOUNTER_SCENE := preload("res://scenes/rooms/first_encounter.tscn")
+const GRID_WORLD_SCENE := preload("res://scenes/world/grid_world.tscn")
+const DIRECTOR_SCENE := preload("res://scenes/combat/encounter_director.tscn")
+const BOARD_SCENE := preload("res://scenes/world/prototype_board.tscn")
+const PLAYER_SCENE := preload("res://scenes/actors/player.tscn")
+const HUD_SCENE := preload("res://scenes/ui/hud.tscn")
+
+@export var grid_world_path: NodePath = ^"GridWorld"
+@export var director_path: NodePath = ^"EncounterDirector"
+@export var board_path: NodePath = ^"PrototypeBoard"
+@export var hero_path: NodePath = ^"PawnHero"
+@export var room_path: NodePath = ^"FirstEncounter"
+@export var hud_path: NodePath = ^"HUD"
+@export var hero_start_cell := Vector2i(3, 7)
 
 var grid_world: GridWorld
 var director: EncounterDirector
 var board: PrototypeBoard
 var hero: PawnHero
 var current_room: Node
+var hud: Node
 var status_label: Label
 var courage_label: Label
 var skill_label: Label
@@ -29,31 +43,7 @@ var damage_flash_time := 0.0
 
 
 func _ready() -> void:
-	grid_world = GridWorld.new()
-	add_child(grid_world)
-
-	director = EncounterDirector.new()
-	add_child(director)
-	director.token_changed.connect(_update_token_owner)
-
-	board = PrototypeBoard.new()
-	board.z_index = -5
-	add_child(board)
-	board.setup(grid_world)
-
-	hero = PawnHero.new()
-	hero.z_index = 3
-	add_child(hero)
-	hero.setup(grid_world, Vector2i(3, 7))
-	hero.attack_landed.connect(_on_player_attack_landed)
-	hero.courage_changed.connect(_update_courage)
-	hero.damaged.connect(_on_hero_damaged)
-	hero.skill_cooldown_changed.connect(_update_skill_cooldown)
-	hero.defeated.connect(_on_hero_defeated)
-
-	_load_room(FIRST_ENCOUNTER_SCENE)
-
-	_build_hud()
+	_setup_scene_nodes()
 	var room_message := "Break the black line."
 	if current_room != null:
 		room_message = String(current_room.call("get_start_message"))
@@ -66,27 +56,109 @@ func _process(delta: float) -> void:
 	if Input.is_key_pressed(KEY_F3) and not _debug_key_was_pressed:
 		_set_debug_enabled(not debug_enabled)
 	_debug_key_was_pressed = Input.is_key_pressed(KEY_F3)
-	if hero != null and status_label != null:
-		status_label.text = "CELL %02d,%02d  FACE %s" % [
-			hero.current_cell.x,
-			hero.current_cell.y,
-			_facing_name(hero.facing),
-		]
+	if hero != null:
+		if hud != null and hud.has_method("set_cell_status"):
+			hud.call("set_cell_status", hero.current_cell, _facing_name(hero.facing))
+		elif status_label != null:
+			status_label.text = "CELL %02d,%02d  FACE %s" % [
+				hero.current_cell.x,
+				hero.current_cell.y,
+				_facing_name(hero.facing),
+			]
 	_update_shake(delta)
 	_update_damage_flash(delta)
 
 
+func _setup_scene_nodes() -> void:
+	grid_world = _resolve_scene_node(grid_world_path, GRID_WORLD_SCENE, GridWorld.new(), "GridWorld") as GridWorld
+	director = _resolve_scene_node(director_path, DIRECTOR_SCENE, EncounterDirector.new(), "EncounterDirector") as EncounterDirector
+	board = _resolve_scene_node(board_path, BOARD_SCENE, PrototypeBoard.new(), "PrototypeBoard") as PrototypeBoard
+	hero = _resolve_scene_node(hero_path, PLAYER_SCENE, PawnHero.new(), "PawnHero") as PawnHero
+
+	if director != null:
+		_connect_signal_once(director, &"token_changed", Callable(self, "_update_token_owner"))
+	if board != null:
+		board.z_index = -5
+		board.setup(grid_world)
+	if hero != null:
+		hero.z_index = 3
+		if hero.grid_world == null and not hero.setup(grid_world, hero_start_cell):
+			push_error("PawnHero could not register on the GridWorld.")
+		_connect_signal_once(hero, &"attack_landed", Callable(self, "_on_player_attack_landed"))
+		_connect_signal_once(hero, &"courage_changed", Callable(self, "_update_courage"))
+		_connect_signal_once(hero, &"damaged", Callable(self, "_on_hero_damaged"))
+		_connect_signal_once(hero, &"skill_cooldown_changed", Callable(self, "_update_skill_cooldown"))
+		_connect_signal_once(hero, &"defeated", Callable(self, "_on_hero_defeated"))
+
+	var existing_room := get_node_or_null(room_path)
+	if existing_room != null:
+		_setup_room_instance(existing_room)
+	else:
+		_load_room(FIRST_ENCOUNTER_SCENE)
+	_setup_hud()
+
+
+func _resolve_scene_node(node_path: NodePath, scene: PackedScene, fallback: Node, node_name: String) -> Node:
+	var existing := get_node_or_null(node_path)
+	if existing != null:
+		return existing
+	var created: Node = scene.instantiate() if scene != null else fallback
+	created.name = node_name
+	add_child(created)
+	return created
+
+
+func _connect_signal_once(source: Object, signal_name: StringName, target: Callable) -> void:
+	if source != null and not source.is_connected(signal_name, target):
+		source.connect(signal_name, target)
+
+
 func _load_room(room_scene: PackedScene) -> void:
-	current_room = room_scene.instantiate()
+	var room := room_scene.instantiate()
+	if room != null:
+		room.name = "FirstEncounter"
+		add_child(room)
+	_setup_room_instance(room)
+
+
+func _setup_room_instance(room: Node) -> void:
+	current_room = room
 	if current_room == null or not current_room.has_method("setup"):
 		push_error("Room scene must instantiate a RoomEncounter.")
 		return
-	add_child(current_room)
-	current_room.connect("enemy_spawned", Callable(self, "_on_room_enemy_spawned"))
-	current_room.connect("enemy_defeated", Callable(self, "_on_enemy_defeated"))
-	current_room.connect("enemy_weapon_changed", Callable(self, "_on_enemy_weapon_changed"))
-	current_room.connect("room_completed", Callable(self, "_on_room_completed"))
+	_connect_signal_once(current_room, &"enemy_spawned", Callable(self, "_on_room_enemy_spawned"))
+	_connect_signal_once(current_room, &"enemy_defeated", Callable(self, "_on_enemy_defeated"))
+	_connect_signal_once(current_room, &"enemy_weapon_changed", Callable(self, "_on_enemy_weapon_changed"))
+	_connect_signal_once(current_room, &"room_completed", Callable(self, "_on_room_completed"))
 	current_room.call("setup", grid_world, hero, director, board, debug_enabled)
+
+
+func _setup_hud() -> void:
+	hud = _resolve_scene_node(hud_path, HUD_SCENE, CanvasLayer.new(), "HUD")
+	_bind_hud_references()
+	if hud != null and hud.has_method("setup"):
+		hud.call("setup", hero.courage if hero != null else 3)
+	_bind_hud_references()
+	if hero != null:
+		_update_courage(hero.courage)
+		_update_skill_cooldown(hero.skill_cooldown_left)
+	_update_encounter_count()
+	_update_token_owner(null)
+
+
+func _bind_hud_references() -> void:
+	if hud == null:
+		return
+	courage_label = hud.get_node_or_null("CourageLabel") as Label
+	skill_label = hud.get_node_or_null("SkillLabel") as Label
+	skill_fill = hud.get_node_or_null("SkillFill") as ColorRect
+	status_label = hud.get_node_or_null("StatusLabel") as Label
+	encounter_label = hud.get_node_or_null("EncounterLabel") as Label
+	objective_label = hud.get_node_or_null("ObjectiveLabel") as Label
+	token_label = hud.get_node_or_null("TokenLabel") as Label
+	damage_flash = hud.get_node_or_null("DamageFlash") as ColorRect
+	result_panel = hud.get_node_or_null("ResultPanel") as ColorRect
+	result_label = hud.get_node_or_null("ResultLabel") as Label
 
 
 func _on_room_enemy_spawned(enemy: FreeEnemy) -> void:
@@ -172,7 +244,9 @@ func _on_hero_defeated() -> void:
 func _on_hero_damaged(amount: int, remaining: int) -> void:
 	_start_screen_shake(0.16, 4.2 + float(amount))
 	damage_flash_time = 0.22
-	if damage_flash != null:
+	if hud != null and hud.has_method("show_damage_flash"):
+		hud.call("show_damage_flash")
+	elif damage_flash != null:
 		damage_flash.visible = true
 	if remaining == 1:
 		_update_status("One courage left. Wait for the warning, then cut through.")
@@ -180,140 +254,10 @@ func _on_hero_damaged(amount: int, remaining: int) -> void:
 		_update_status("The pawn is hit. Move out before the next strike.")
 
 
-func _build_hud() -> void:
-	var layer := CanvasLayer.new()
-	add_child(layer)
-
-	var top_panel := ColorRect.new()
-	top_panel.position = Vector2(8, 4)
-	top_panel.size = Vector2(624, 42)
-	top_panel.color = Color("#241b22", 0.82)
-	layer.add_child(top_panel)
-
-	var title_strip := ColorRect.new()
-	title_strip.position = Vector2(12, 8)
-	title_strip.size = Vector2(150, 18)
-	title_strip.color = Color("#493f3a", 0.72)
-	layer.add_child(title_strip)
-
-	var title := Label.new()
-	title.position = Vector2(18, 9)
-	title.text = "THE UNBOUND PAWN"
-	title.add_theme_font_size_override("font_size", 13)
-	title.add_theme_color_override("font_color", Color("#fff4d6"))
-	layer.add_child(title)
-
-	courage_label = Label.new()
-	courage_label.position = Vector2(176, 8)
-	courage_label.size = Vector2(112, 16)
-	courage_label.add_theme_font_size_override("font_size", 9)
-	courage_label.add_theme_color_override("font_color", Color("#d84a3a"))
-	layer.add_child(courage_label)
-	_update_courage(hero.courage)
-
-	var skill_back := ColorRect.new()
-	skill_back.position = Vector2(300, 13)
-	skill_back.size = Vector2(92, 7)
-	skill_back.color = Color("#1a2730", 0.95)
-	layer.add_child(skill_back)
-
-	skill_fill = ColorRect.new()
-	skill_fill.position = skill_back.position
-	skill_fill.size = skill_back.size
-	skill_fill.color = Color("#8ec8e8", 0.90)
-	layer.add_child(skill_fill)
-
-	skill_label = Label.new()
-	skill_label.position = Vector2(300, 23)
-	skill_label.size = Vector2(112, 12)
-	skill_label.add_theme_font_size_override("font_size", 8)
-	skill_label.add_theme_color_override("font_color", Color("#8ec8e8"))
-	layer.add_child(skill_label)
-	_update_skill_cooldown(0.0)
-
-	status_label = Label.new()
-	status_label.position = Vector2(438, 8)
-	status_label.size = Vector2(184, 15)
-	status_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-	status_label.add_theme_font_size_override("font_size", 8)
-	status_label.add_theme_color_override("font_color", Color("#fff4d6"))
-	layer.add_child(status_label)
-
-	encounter_label = Label.new()
-	encounter_label.position = Vector2(438, 22)
-	encounter_label.size = Vector2(184, 12)
-	encounter_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-	encounter_label.add_theme_font_size_override("font_size", 8)
-	encounter_label.add_theme_color_override("font_color", Color("#ff9a75"))
-	layer.add_child(encounter_label)
-	_update_encounter_count()
-
-	var objective_panel := ColorRect.new()
-	objective_panel.position = Vector2(130, 28)
-	objective_panel.size = Vector2(494, 14)
-	objective_panel.color = Color("#30242a", 0.74)
-	layer.add_child(objective_panel)
-
-	var help := Label.new()
-	var help_panel := ColorRect.new()
-	help_panel.position = Vector2(8, 331)
-	help_panel.size = Vector2(624, 22)
-	help_panel.color = Color("#241b22", 0.74)
-	layer.add_child(help_panel)
-
-	help.position = Vector2(14, 338)
-	help.text = "MOVE WASD  TURN SHIFT+DIR  SWORD SPACE  THRUST Q  RESET R  DEBUG F3"
-	help.add_theme_font_size_override("font_size", 8)
-	help.add_theme_color_override("font_color", Color("#fff4d6"))
-	layer.add_child(help)
-
-	objective_label = Label.new()
-	objective_label.position = Vector2(136, 25)
-	objective_label.size = Vector2(490, 16)
-	objective_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-	objective_label.add_theme_font_size_override("font_size", 8)
-	objective_label.add_theme_color_override("font_color", Color("#e8b83f"))
-	layer.add_child(objective_label)
-
-	token_label = Label.new()
-	token_label.position = Vector2(490, 326)
-	token_label.size = Vector2(136, 14)
-	token_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-	token_label.add_theme_font_size_override("font_size", 7)
-	token_label.add_theme_color_override("font_color", Color("#ff9a75"))
-	layer.add_child(token_label)
-	_update_token_owner(null)
-
-	damage_flash = ColorRect.new()
-	damage_flash.position = Vector2.ZERO
-	damage_flash.size = Vector2(640, 360)
-	damage_flash.color = Color("#d84a3a", 0.0)
-	damage_flash.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	damage_flash.visible = false
-	layer.add_child(damage_flash)
-
-	result_panel = ColorRect.new()
-	result_panel.position = Vector2(170, 146)
-	result_panel.size = Vector2(300, 68)
-	result_panel.color = Color("#241b22", 0.84)
-	result_panel.visible = false
-	layer.add_child(result_panel)
-
-	result_label = Label.new()
-	result_label.position = Vector2(0, 151)
-	result_label.size = Vector2(640, 58)
-	result_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	result_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	result_label.add_theme_font_size_override("font_size", 16)
-	result_label.add_theme_color_override("font_color", Color("#fff4d6"))
-	result_label.add_theme_color_override("font_shadow_color", Color(0.04, 0.03, 0.04, 0.95))
-	result_label.add_theme_constant_override("shadow_offset_x", 2)
-	result_label.add_theme_constant_override("shadow_offset_y", 2)
-	result_label.visible = false
-	layer.add_child(result_label)
-
-
 func _update_courage(value: int) -> void:
+	if hud != null and hud.has_method("set_courage"):
+		hud.call("set_courage", value)
+		return
 	if courage_label != null:
 		courage_label.text = "COURAGE " + "◆".repeat(value) + "◇".repeat(3 - value)
 		var color := Color("#d84a3a") if value <= 1 else Color("#ff9a75")
@@ -321,6 +265,9 @@ func _update_courage(value: int) -> void:
 
 
 func _update_skill_cooldown(time_left: float) -> void:
+	if hud != null and hud.has_method("set_skill_cooldown"):
+		hud.call("set_skill_cooldown", time_left, hero.pencil_thrust_cooldown if hero != null else 1.0)
+		return
 	if skill_label == null:
 		return
 	skill_label.text = "Q THRUST READY" if time_left <= 0.0 else "Q THRUST %.1f" % time_left
@@ -330,26 +277,38 @@ func _update_skill_cooldown(time_left: float) -> void:
 		skill_fill.color = Color("#8ec8e8", 0.9) if time_left <= 0.0 else Color("#e8b83f", 0.82)
 
 
-func _update_token_owner(owner: Node) -> void:
+func _update_token_owner(token_owner: Node) -> void:
+	if hud != null and hud.has_method("set_token_owner"):
+		hud.call("set_token_owner", token_owner)
+		return
 	if token_label == null:
 		return
-	if owner == null:
+	if token_owner == null:
 		token_label.text = "ENEMY STRIKE READY"
 	else:
-		token_label.text = "STRIKE: " + ("KNIGHT" if owner is KnightEnemy else "PAWN")
+		token_label.text = "STRIKE: " + ("KNIGHT" if token_owner is KnightEnemy else "PAWN")
 
 
 func _update_encounter_count() -> void:
+	if hud != null and hud.has_method("set_encounter_count"):
+		hud.call("set_encounter_count", remaining_enemies, total_enemies)
+		return
 	if encounter_label != null:
 		encounter_label.text = "ENEMIES %d/%d" % [remaining_enemies, total_enemies]
 
 
 func _update_status(text: String) -> void:
+	if hud != null and hud.has_method("set_status"):
+		hud.call("set_status", text)
+		return
 	if objective_label != null:
 		objective_label.text = text
 
 
 func _show_result(title: String, subtitle: String) -> void:
+	if hud != null and hud.has_method("show_result"):
+		hud.call("show_result", title, subtitle)
+		return
 	if result_label == null:
 		return
 	if result_panel != null:
@@ -378,11 +337,15 @@ func _update_shake(delta: float) -> void:
 
 func _update_damage_flash(delta: float) -> void:
 	if damage_flash_time <= 0.0:
-		if damage_flash != null:
+		if hud != null and hud.has_method("update_damage_flash"):
+			hud.call("update_damage_flash", 0.0, 0.22)
+		elif damage_flash != null:
 			damage_flash.visible = false
 		return
 	damage_flash_time = maxf(0.0, damage_flash_time - delta)
-	if damage_flash != null:
+	if hud != null and hud.has_method("update_damage_flash"):
+		hud.call("update_damage_flash", damage_flash_time, 0.22)
+	elif damage_flash != null:
 		var alpha := 0.20 * damage_flash_time / 0.22
 		damage_flash.color = Color("#d84a3a", alpha)
 

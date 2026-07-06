@@ -1,0 +1,146 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/ui/hud.gd" id="1"]
+
+[node name="HUD" type="CanvasLayer"]
+script = ExtResource("1")
+
+[node name="TopPanel" type="ColorRect" parent="."]
+offset_left = 8.0
+offset_top = 4.0
+offset_right = 632.0
+offset_bottom = 46.0
+color = Color(0.141176, 0.105882, 0.133333, 0.82)
+
+[node name="TitleStrip" type="ColorRect" parent="."]
+offset_left = 12.0
+offset_top = 8.0
+offset_right = 162.0
+offset_bottom = 26.0
+color = Color(0.286275, 0.247059, 0.227451, 0.72)
+
+[node name="TitleLabel" type="Label" parent="."]
+offset_left = 18.0
+offset_top = 9.0
+offset_right = 168.0
+offset_bottom = 25.0
+theme_override_colors/font_color = Color(1, 0.956863, 0.839216, 1)
+theme_override_font_sizes/font_size = 13
+text = "THE UNBOUND PAWN"
+
+[node name="CourageLabel" type="Label" parent="."]
+offset_left = 176.0
+offset_top = 8.0
+offset_right = 288.0
+offset_bottom = 24.0
+theme_override_colors/font_color = Color(0.847059, 0.290196, 0.227451, 1)
+theme_override_font_sizes/font_size = 9
+
+[node name="SkillBack" type="ColorRect" parent="."]
+offset_left = 300.0
+offset_top = 13.0
+offset_right = 392.0
+offset_bottom = 20.0
+color = Color(0.101961, 0.152941, 0.188235, 0.95)
+
+[node name="SkillFill" type="ColorRect" parent="."]
+offset_left = 300.0
+offset_top = 13.0
+offset_right = 392.0
+offset_bottom = 20.0
+color = Color(0.556863, 0.784314, 0.909804, 0.9)
+
+[node name="SkillLabel" type="Label" parent="."]
+offset_left = 300.0
+offset_top = 23.0
+offset_right = 412.0
+offset_bottom = 35.0
+theme_override_colors/font_color = Color(0.556863, 0.784314, 0.909804, 1)
+theme_override_font_sizes/font_size = 8
+
+[node name="StatusLabel" type="Label" parent="."]
+offset_left = 438.0
+offset_top = 8.0
+offset_right = 622.0
+offset_bottom = 23.0
+theme_override_colors/font_color = Color(1, 0.956863, 0.839216, 1)
+theme_override_font_sizes/font_size = 8
+horizontal_alignment = 2
+
+[node name="EncounterLabel" type="Label" parent="."]
+offset_left = 438.0
+offset_top = 22.0
+offset_right = 622.0
+offset_bottom = 34.0
+theme_override_colors/font_color = Color(1, 0.603922, 0.458824, 1)
+theme_override_font_sizes/font_size = 8
+horizontal_alignment = 2
+
+[node name="ObjectivePanel" type="ColorRect" parent="."]
+offset_left = 130.0
+offset_top = 28.0
+offset_right = 624.0
+offset_bottom = 42.0
+color = Color(0.188235, 0.141176, 0.164706, 0.74)
+
+[node name="HelpPanel" type="ColorRect" parent="."]
+offset_left = 8.0
+offset_top = 331.0
+offset_right = 632.0
+offset_bottom = 353.0
+color = Color(0.141176, 0.105882, 0.133333, 0.74)
+
+[node name="HelpLabel" type="Label" parent="."]
+offset_left = 14.0
+offset_top = 338.0
+offset_right = 626.0
+offset_bottom = 350.0
+theme_override_colors/font_color = Color(1, 0.956863, 0.839216, 1)
+theme_override_font_sizes/font_size = 8
+text = "MOVE WASD  TURN SHIFT+DIR  SWORD SPACE  THRUST Q  RESET R  DEBUG F3"
+
+[node name="ObjectiveLabel" type="Label" parent="."]
+offset_left = 136.0
+offset_top = 25.0
+offset_right = 626.0
+offset_bottom = 41.0
+theme_override_colors/font_color = Color(0.909804, 0.721569, 0.247059, 1)
+theme_override_font_sizes/font_size = 8
+horizontal_alignment = 2
+
+[node name="TokenLabel" type="Label" parent="."]
+offset_left = 490.0
+offset_top = 326.0
+offset_right = 626.0
+offset_bottom = 340.0
+theme_override_colors/font_color = Color(1, 0.603922, 0.458824, 1)
+theme_override_font_sizes/font_size = 7
+horizontal_alignment = 2
+
+[node name="DamageFlash" type="ColorRect" parent="."]
+visible = false
+mouse_filter = 2
+offset_right = 640.0
+offset_bottom = 360.0
+color = Color(0.847059, 0.290196, 0.227451, 0)
+
+[node name="ResultPanel" type="ColorRect" parent="."]
+visible = false
+offset_left = 170.0
+offset_top = 146.0
+offset_right = 470.0
+offset_bottom = 214.0
+color = Color(0.141176, 0.105882, 0.133333, 0.84)
+
+[node name="ResultLabel" type="Label" parent="."]
+visible = false
+offset_top = 151.0
+offset_right = 640.0
+offset_bottom = 209.0
+theme_override_colors/font_color = Color(1, 0.956863, 0.839216, 1)
+theme_override_colors/font_shadow_color = Color(0.04, 0.03, 0.04, 0.95)
+theme_override_constants/shadow_offset_x = 2
+theme_override_constants/shadow_offset_y = 2
+theme_override_font_sizes/font_size = 16
+horizontal_alignment = 1
+vertical_alignment = 1

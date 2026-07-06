@@ -11,24 +11,26 @@ This file is the operating guide for AI assistants working on this Godot project
 
 ## Current Priority
 
-The current phase gate is **E2. Editor-first encounter system - human editor review**.
+The current implementation phase is **E1. Editor foundation**, while **E2. Editor-first encounter system** remains in human room-feel review.
 
 Primary goal:
-- Have the human owner review the first encounter in Godot Editor now that the room/spawn/objective data is editable.
+- Continue moving playable composition into Godot scenes so the human owner can inspect and tune the game through the editor instead of only seeing scripts.
 
 Target files/scenes:
-- `scenes/rooms/first_encounter.tscn`
-- `scenes/world/room_encounter.tscn`
-- `scenes/markers/enemy_spawn_point.tscn`
-- `scenes/markers/pickup_spawn_point.tscn`
-- `scripts/world/room_encounter.gd`
-- `scripts/world/enemy_spawn_point.gd`
-- `scripts/world/pickup_spawn_point.gd`
+- `scenes/main.tscn`
+- `scenes/actors/player.tscn`
+- `scenes/world/grid_world.tscn`
+- `scenes/world/prototype_board.tscn`
+- `scenes/combat/encounter_director.tscn`
+- `scenes/ui/hud.tscn`
+- `scripts/main.gd`
+- `scripts/ui/hud.gd`
 
 Acceptance gate:
-- Enemy type/definition, starting cell, optional weapon, pickup weapon, room message, blockers, and win condition must be editable from Godot Inspector.
+- Main game scene should open with editor-visible child nodes for world, combat director, board, player, room, and HUD.
+- `main.gd` should coordinate scene-owned children and keep runtime factories only as compatibility fallbacks.
 - Existing gameplay, HUD, debug view, restart flow, and tests must still pass.
-- The human owner must approve or request tuning for room layout, pickup risk, opening readability, and encounter difficulty before E2 is fully accepted.
+- The human owner must still approve or request tuning for room layout, pickup risk, opening readability, and encounter difficulty before E2 is fully accepted.
 
 ## Collaboration Model
 

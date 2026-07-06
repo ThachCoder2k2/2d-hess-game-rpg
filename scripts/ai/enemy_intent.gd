@@ -53,12 +53,12 @@ static func wait(value: float) -> EnemyIntent:
 	return intent
 
 
-static func _directional_id(prefix: StringName, direction: Vector2i) -> StringName:
+static func _directional_id(prefix: StringName, intent_direction: Vector2i) -> StringName:
 	var suffix := "north"
-	if direction == Vector2i.DOWN:
+	if intent_direction == Vector2i.DOWN:
 		suffix = "south"
-	elif direction == Vector2i.LEFT:
+	elif intent_direction == Vector2i.LEFT:
 		suffix = "west"
-	elif direction == Vector2i.RIGHT:
+	elif intent_direction == Vector2i.RIGHT:
 		suffix = "east"
 	return StringName("%s_%s" % [prefix, suffix])

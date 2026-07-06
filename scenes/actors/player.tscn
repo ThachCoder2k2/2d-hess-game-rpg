@@ -1,0 +1,8 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/actors/pawn_hero.gd" id="1"]
+
+[node name="PawnHero" type="Node2D"]
+z_index = 3
+script = ExtResource("1")
+current_cell = Vector2i(3, 7)

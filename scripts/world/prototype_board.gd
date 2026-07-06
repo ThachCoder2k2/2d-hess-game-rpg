@@ -206,6 +206,6 @@ func _draw_playground_border(origin: Vector2, size: int) -> void:
 	var board_width := grid_world.bounds.size.x * size
 	var board_height := grid_world.bounds.size.y * size
 	for y in range(0, board_height, 64):
-		var color := Color("#2c78c4") if int(y / 64) % 2 == 0 else Color("#4e8a66")
+		var color := Color("#2c78c4") if int(y / 64.0) % 2 == 0 else Color("#4e8a66")
 		draw_rect(Rect2(origin + Vector2(-10, y + 9), Vector2(7, 18)), color)
 		draw_rect(Rect2(origin + Vector2(board_width + 3, y + 37), Vector2(7, 18)), color)

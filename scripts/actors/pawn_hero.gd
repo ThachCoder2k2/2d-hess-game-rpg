@@ -234,7 +234,7 @@ func _start_invulnerability() -> void:
 
 
 func _draw() -> void:
-	if is_invulnerable and int(Time.get_ticks_msec() / 70) % 2 == 0:
+	if is_invulnerable and int(Time.get_ticks_msec() / 70.0) % 2 == 0:
 		return
 	var bob := -2.0 if is_moving else 0.0
 	if bump_visual_time > 0.0:

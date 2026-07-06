@@ -126,3 +126,11 @@
 - `RoomEncounter` emits `room_completed` after the objective succeeds, so the main scene only handles compatibility UI/result flow and no longer decides whether the room has been cleared.
 - Directly inferring the type of a fresh script-loaded Resource can fail in headless tests before editor import; dynamic `Resource.call()` matches the current migration-safe pattern.
 - E2 technical wiring is ready for human editor review: enemy spawns, pickups, blockers, objective text, defeat text, and win condition are all editable, but room feel still needs in-editor approval.
+
+## Editor-Owned Main Scene Foundation
+
+- `scenes/main.tscn` now exposes the main playable composition in the Godot editor: GridWorld, EncounterDirector, PrototypeBoard, PawnHero, FirstEncounter, and HUD are scene children.
+- `main.gd` should act as a coordinator: resolve exported NodePath children, connect signals, call setup, and only instantiate scene fallbacks when tests create the script directly.
+- `scenes/ui/hud.tscn` owns the HUD controls, while `GameHud` owns HUD formatting and presentation updates.
+- Moving HUD into a `CanvasLayer` scene makes the editor tree clearer, but Godot headless `--quit-after` currently reports CanvasLayer teardown RID warnings even though the run exits successfully.
+- Tests that need `_ready()` bindings must wait at least one frame; immediate `SceneTree._init` checks can only prove scene ownership, not ready-time binding.
