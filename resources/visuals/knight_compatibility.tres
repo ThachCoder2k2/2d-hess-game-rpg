@@ -1,10 +1,12 @@
-[gd_resource type="Resource" script_class="VisualDefinition" load_steps=2 format=3]
+[gd_resource type="Resource" script_class="VisualDefinition" load_steps=3 format=3]
 
 [ext_resource type="Script" path="res://scripts/data/visual_definition.gd" id="1"]
+[ext_resource type="PackedScene" path="res://scenes/visuals/knight_enemy_visual.tscn" id="2"]
 
 [resource]
 script = ExtResource("1")
 id = &"knight_compatibility"
+visual_scene = ExtResource("2")
 legacy_draw_kind = &"black_knight"
 telegraph_color = Color(0.384314, 0.192157, 0.27451, 1)
 impact_color = Color(1, 0.603922, 0.458824, 1)

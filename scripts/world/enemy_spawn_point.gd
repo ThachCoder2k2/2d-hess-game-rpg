@@ -9,6 +9,7 @@ const PREVIEW_CELL_SIZE := 32
 
 @export var active := true
 @export var enemy_kind := EnemyKind.PAWN
+@export var enemy_scene: PackedScene
 @export var grid_cell := Vector2i.ZERO:
 	set(value):
 		grid_cell = value
@@ -32,11 +33,17 @@ func create_enemy() -> FreeEnemy:
 	if not active:
 		return null
 	var enemy: FreeEnemy
-	match enemy_kind:
-		EnemyKind.KNIGHT:
-			enemy = KnightEnemy.new()
-		_:
-			enemy = BlackPawn.new()
+	if enemy_scene != null:
+		enemy = enemy_scene.instantiate() as FreeEnemy
+	else:
+		match enemy_kind:
+			EnemyKind.KNIGHT:
+				enemy = KnightEnemy.new()
+			_:
+				enemy = BlackPawn.new()
+	if enemy == null:
+		push_warning("EnemySpawnPoint '%s' needs a FreeEnemy-compatible scene." % name)
+		return null
 	if definition != null:
 		enemy.definition = definition
 	return enemy

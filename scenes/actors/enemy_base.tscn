@@ -1,4 +1,4 @@
-[gd_scene load_steps=9 format=3]
+[gd_scene load_steps=10 format=3]
 
 [ext_resource type="Script" path="res://scripts/entities/enemy_actor.gd" id="1"]
 [ext_resource type="Resource" path="res://resources/enemies/pawn_recruit.tres" id="2"]
@@ -8,12 +8,13 @@
 [ext_resource type="PackedScene" path="res://scenes/components/health_component.tscn" id="6"]
 [ext_resource type="PackedScene" path="res://scenes/components/equipment_component.tscn" id="7"]
 [ext_resource type="PackedScene" path="res://scenes/components/debug_component.tscn" id="8"]
+[ext_resource type="PackedScene" path="res://scenes/visuals/black_pawn_visual.tscn" id="9"]
 
 [node name="EnemyActor" type="Node2D"]
 script = ExtResource("1")
 definition = ExtResource("2")
 
-[node name="VisualRoot" type="Node2D" parent="."]
+[node name="Visual" parent="." instance=ExtResource("9")]
 
 [node name="GridMovementComponent" parent="." instance=ExtResource("3")]
 

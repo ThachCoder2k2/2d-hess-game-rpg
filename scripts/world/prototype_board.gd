@@ -1,6 +1,35 @@
 class_name PrototypeBoard
 extends Node2D
 
+@export_group("Board Theme")
+@export var frame_color := Color("#30242a")
+@export var light_tile_color := Color("#c9a77d")
+@export var dark_tile_color := Color("#7f5f51")
+@export var tile_line_color := Color(0.18, 0.12, 0.14, 0.25)
+@export var blocker_fill_color := Color("#e8b83f")
+@export var blocker_line_color := Color("#f5d56d")
+@export var player_miss_color := Color("#d84a3a")
+@export var enemy_impact_color := Color("#ff9a75")
+
+@export_group("Telegraph Theme")
+@export var danger_cell_color := Color("#d84a3a")
+@export var danger_inner_color := Color("#ffefe0")
+@export var danger_outline_color := Color("#fff2a8")
+@export var danger_slash_color := Color("#ff9a75")
+@export var danger_center_color := Color("#fff4d6")
+
+@export_group("Debug Theme")
+@export var debug_board_color := Color("#6ee7f2")
+@export var debug_occupied_color := Color("#fff4d6")
+@export var debug_blocked_color := Color("#ffd34e")
+@export var debug_reserved_color := Color("#4da3ff")
+@export var debug_item_color := Color("#63d68b")
+@export var debug_attack_path_color := Color("#ff665e")
+@export var debug_move_path_color := Color("#57d9f2")
+@export var debug_pickup_path_color := Color("#63d68b")
+@export var debug_turn_path_color := Color("#ffd34e")
+@export var debug_wait_path_color := Color("#aeb5bd")
+
 var grid_world: GridWorld
 var telegraphs: Dictionary = {}
 var impact_cells: Array[Vector2i] = []
@@ -18,14 +47,14 @@ func setup(world: GridWorld) -> void:
 
 func show_player_attack(cells: Array[Vector2i], hit_count: int, profile: AttackProfile) -> void:
 	impact_cells = cells
-	impact_color = profile.color if hit_count > 0 else Color("#d84a3a")
+	impact_color = profile.color if hit_count > 0 else player_miss_color
 	impact_time = 0.14
 	queue_redraw()
 
 
 func show_enemy_attack(cells: Array[Vector2i]) -> void:
 	impact_cells = cells
-	impact_color = Color("#ff9a75")
+	impact_color = enemy_impact_color
 	impact_time = 0.16
 	queue_redraw()
 
@@ -71,18 +100,18 @@ func _draw() -> void:
 		return
 	var origin := grid_world.grid_origin
 	var size := grid_world.cell_size
-	draw_rect(Rect2(origin - Vector2(12, 12), Vector2(grid_world.bounds.size * size) + Vector2(24, 24)), Color("#30242a"))
+	draw_rect(Rect2(origin - Vector2(12, 12), Vector2(grid_world.bounds.size * size) + Vector2(24, 24)), frame_color)
 	for y in grid_world.bounds.size.y:
 		for x in grid_world.bounds.size.x:
 			var cell := Vector2i(x, y)
-			var color := Color("#c9a77d") if (x + y) % 2 == 0 else Color("#7f5f51")
+			var color := light_tile_color if (x + y) % 2 == 0 else dark_tile_color
 			draw_rect(Rect2(origin + Vector2(cell * size), Vector2.ONE * size), color)
-			draw_rect(Rect2(origin + Vector2(cell * size), Vector2.ONE * size), Color(0.18, 0.12, 0.14, 0.25), false, 1.0)
+			draw_rect(Rect2(origin + Vector2(cell * size), Vector2.ONE * size), tile_line_color, false, 1.0)
 
 	for cell in grid_world.blocked_cells:
 		var top_left := origin + Vector2(cell * size)
-		draw_rect(Rect2(top_left + Vector2(3, 3), Vector2(size - 6, size - 6)), Color("#e8b83f"))
-		draw_rect(Rect2(top_left + Vector2(7, 7), Vector2(size - 14, size - 14)), Color("#f5d56d"), false, 2.0)
+		draw_rect(Rect2(top_left + Vector2(3, 3), Vector2(size - 6, size - 6)), blocker_fill_color)
+		draw_rect(Rect2(top_left + Vector2(7, 7), Vector2(size - 14, size - 14)), blocker_line_color, false, 2.0)
 
 	for source in telegraphs:
 		if not is_instance_valid(source):
@@ -108,32 +137,32 @@ func _draw_danger_cell(origin: Vector2, size: int, cell: Vector2i, progress: flo
 	var rect := Rect2(origin + Vector2(cell * size), Vector2.ONE * size)
 	var pulse := 0.5 + 0.5 * sin(effect_time * TAU * 4.0)
 	var warning_alpha := lerpf(0.30, 0.68, progress) + pulse * 0.08
-	draw_rect(rect, Color("#d84a3a", warning_alpha))
+	draw_rect(rect, Color(danger_cell_color, warning_alpha))
 
 	var inset := lerpf(8.0, 2.0, progress) + pulse * 1.5
 	var inner := rect.grow(-inset)
-	draw_rect(inner, Color("#ffefe0", 0.14 + progress * 0.14))
-	draw_rect(inner, Color("#fff2a8", 0.72 + progress * 0.24), false, 2.0)
+	draw_rect(inner, Color(danger_inner_color, 0.14 + progress * 0.14))
+	draw_rect(inner, Color(danger_outline_color, 0.72 + progress * 0.24), false, 2.0)
 
 	var center := rect.get_center()
-	var slash_color := Color("#ff9a75", 0.74 + progress * 0.22)
+	var slash_color := Color(danger_slash_color, 0.74 + progress * 0.22)
 	draw_line(rect.position + Vector2(6, 6), rect.end - Vector2(6, 6), slash_color, 2.0 + progress)
 	draw_line(rect.position + Vector2(size - 6, 6), rect.position + Vector2(6, size - 6), slash_color, 2.0 + progress)
-	draw_circle(center, 2.0 + progress * 3.0 + pulse * 1.5, Color("#fff4d6", 0.55 + progress * 0.32))
+	draw_circle(center, 2.0 + progress * 3.0 + pulse * 1.5, Color(danger_center_color, 0.55 + progress * 0.32))
 
 
 func _draw_debug_layer(origin: Vector2, size: int) -> void:
 	var board_rect := Rect2(origin, Vector2(grid_world.bounds.size * size))
-	draw_rect(board_rect, Color("#6ee7f2", 0.9), false, 2.0)
+	draw_rect(board_rect, Color(debug_board_color, 0.9), false, 2.0)
 
 	for cell in grid_world.get_occupied_cells():
-		_draw_debug_cell(cell, Color("#fff4d6", 0.8), 1.5)
+		_draw_debug_cell(cell, Color(debug_occupied_color, 0.8), 1.5)
 	for cell in grid_world.blocked_cells:
-		_draw_debug_cell(cell, Color("#ffd34e", 0.95), 2.0)
+		_draw_debug_cell(cell, Color(debug_blocked_color, 0.95), 2.0)
 	for cell in grid_world.get_reservation_cells():
-		_draw_debug_cell(cell, Color("#4da3ff", 0.95), 2.0)
+		_draw_debug_cell(cell, Color(debug_reserved_color, 0.95), 2.0)
 	for cell in grid_world.get_item_cells():
-		_draw_debug_cell(cell, Color("#63d68b", 0.95), 2.0)
+		_draw_debug_cell(cell, Color(debug_item_color, 0.95), 2.0)
 
 	var stale: Array[Node] = []
 	for enemy: Node in enemy_intents:
@@ -191,15 +220,15 @@ func _draw_intent_path(enemy: FreeEnemy, intent: EnemyIntent) -> void:
 func _intent_color(type: EnemyIntent.Type) -> Color:
 	match type:
 		EnemyIntent.Type.ATTACK:
-			return Color("#ff665e")
+			return debug_attack_path_color
 		EnemyIntent.Type.MOVE:
-			return Color("#57d9f2")
+			return debug_move_path_color
 		EnemyIntent.Type.PICKUP:
-			return Color("#63d68b")
+			return debug_pickup_path_color
 		EnemyIntent.Type.TURN:
-			return Color("#ffd34e")
+			return debug_turn_path_color
 		_:
-			return Color("#aeb5bd")
+			return debug_wait_path_color
 
 
 func _draw_playground_border(origin: Vector2, size: int) -> void:

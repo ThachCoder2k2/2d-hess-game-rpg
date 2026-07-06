@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="AttackProfile" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/combat/attack_profile.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+display_name = "Pencil Thrust"
+range_cells = 2
+damage = 1
+impact_delay = 0.11
+recovery = 0.52
+color = Color(0.556863, 0.784314, 0.909804, 1)

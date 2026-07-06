@@ -6,6 +6,7 @@ const PREVIEW_GRID_ORIGIN := Vector2(64, 36)
 const PREVIEW_CELL_SIZE := 32
 
 @export var active := true
+@export var pickup_scene: PackedScene
 @export var grid_cell := Vector2i.ZERO:
 	set(value):
 		grid_cell = value
@@ -26,6 +27,17 @@ func _ready() -> void:
 
 func create_weapon() -> EnemyWeapon:
 	return weapon.duplicate(true) if active and weapon != null else null
+
+
+func create_pickup() -> WeaponPickup:
+	if not active:
+		return null
+	if pickup_scene == null:
+		return WeaponPickup.new()
+	var pickup := pickup_scene.instantiate() as WeaponPickup
+	if pickup == null:
+		push_warning("PickupSpawnPoint '%s' needs a WeaponPickup-compatible scene." % name)
+	return pickup
 
 
 func _sync_position_to_grid() -> void:

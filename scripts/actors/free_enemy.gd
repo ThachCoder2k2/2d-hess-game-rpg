@@ -16,6 +16,7 @@ enum State { OBSERVE, TELEGRAPH, COMMIT, RECOVER, DEFEATED }
 @export var unarmed_telegraph_time := 0.58
 @export var unarmed_recovery_time := 0.48
 @export var definition: EnemyDefinition
+@export var visual_path: NodePath = ^"Visual"
 
 var target: PawnHero
 var director: EncounterDirector
@@ -38,12 +39,15 @@ var locked_attack_cells: Array[Vector2i] = []
 var debug_enabled := true
 var debug_label: Label
 var definition_applied := false
+var visual: Node
 
 
 func _ready() -> void:
 	_ensure_ai_data()
+	_resolve_visual()
 	_create_debug_label()
 	_ensure_step_tracking()
+	_sync_visual()
 
 
 func create_attack_pattern() -> AttackPattern:
@@ -66,14 +70,16 @@ func activate(hero: PawnHero, encounter_director: EncounterDirector) -> void:
 	state = State.OBSERVE
 	state_time = think_time
 	recent_cells = [current_cell]
-	queue_redraw()
+	_sync_visual()
 	_update_debug_label()
 
 
 func setup(world: GridWorld, start_cell: Vector2i) -> bool:
 	_ensure_ai_data()
 	_ensure_step_tracking()
-	return super(world, start_cell)
+	var succeeded := super(world, start_cell)
+	_sync_visual()
+	return succeeded
 
 
 func set_debug_enabled(value: bool) -> void:
@@ -86,7 +92,7 @@ func set_debug_enabled(value: bool) -> void:
 func equip(item: EnemyWeapon) -> void:
 	weapon = item
 	emit_signal("weapon_changed", self, weapon)
-	queue_redraw()
+	_sync_visual()
 
 
 func can_collect_weapon(pickup: WeaponPickup) -> bool:
@@ -103,10 +109,7 @@ func collect_weapon_pickup(pickup: WeaponPickup) -> bool:
 func _process(delta: float) -> void:
 	flash_time = maxf(0.0, flash_time - delta)
 	recoil = recoil.move_toward(Vector2.ZERO, delta * 70.0)
-	if flash_time > 0.0:
-		queue_redraw()
-	if state == State.TELEGRAPH:
-		queue_redraw()
+	_sync_visual()
 	_update_debug_label()
 	if target == null or not is_instance_valid(target) or state == State.DEFEATED or is_moving:
 		return
@@ -279,7 +282,7 @@ func _execute_intent(intent: EnemyIntent) -> void:
 			state = State.TELEGRAPH
 			state_time = get_attack_telegraph_time()
 			emit_signal("telegraph_started", self, locked_attack_cells)
-			queue_redraw()
+			_sync_visual()
 		EnemyIntent.Type.MOVE:
 			last_move_direction = intent.direction
 			try_step(intent.direction)
@@ -293,7 +296,7 @@ func _execute_intent(intent: EnemyIntent) -> void:
 			state_time = 0.10
 		EnemyIntent.Type.TURN:
 			facing = intent.direction
-			queue_redraw()
+			_sync_visual()
 			state = State.RECOVER
 			state_time = 0.12
 		EnemyIntent.Type.WAIT:
@@ -397,7 +400,7 @@ func _resolve_attack() -> void:
 		director.release_attack(self)
 	state = State.RECOVER
 	state_time = get_attack_recovery_time()
-	queue_redraw()
+	_sync_visual()
 
 
 func take_damage(amount: int, direction := Vector2i.ZERO) -> void:
@@ -406,7 +409,7 @@ func take_damage(amount: int, direction := Vector2i.ZERO) -> void:
 	health -= amount
 	flash_time = 0.12
 	recoil = Vector2(direction) * 4.0
-	queue_redraw()
+	_sync_visual()
 	if health <= 0:
 		state = State.DEFEATED
 		emit_signal("telegraph_finished", self)
@@ -504,6 +507,17 @@ func _path_step_bonus() -> float:
 func _ensure_step_tracking() -> void:
 	if not step_finished.is_connected(_on_enemy_step_finished):
 		step_finished.connect(_on_enemy_step_finished)
+
+
+func _resolve_visual() -> void:
+	if visual == null:
+		visual = get_node_or_null(visual_path)
+
+
+func _sync_visual() -> void:
+	_resolve_visual()
+	if visual != null and visual.has_method("sync_from_enemy"):
+		visual.call("sync_from_enemy", self)
 
 
 func _create_debug_label() -> void:

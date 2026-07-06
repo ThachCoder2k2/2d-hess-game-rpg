@@ -53,6 +53,15 @@ func _init() -> void:
 	thrust.range_cells = 2
 	_expect(thrust.get_target_cells(Vector2i(4, 4), Vector2i.RIGHT) == [Vector2i(5, 4), Vector2i(6, 4)], "attack profile produces ordered range cells")
 
+	var player_scene := load("res://scenes/actors/player.tscn") as PackedScene
+	var scene_hero := player_scene.instantiate() as PawnHero
+	root.add_child(scene_hero)
+	scene_hero._ensure_attack_profiles()
+	_expect(scene_hero.wooden_sword != null and scene_hero.wooden_sword.resource_path.ends_with("wooden_sword.tres"), "player scene owns Wooden Sword attack Resource")
+	_expect(scene_hero.pencil_thrust != null and scene_hero.pencil_thrust.resource_path.ends_with("pencil_thrust.tres"), "player scene owns Pencil Thrust attack Resource")
+	_expect(scene_hero.get_node_or_null("Visual") != null and scene_hero.get_node("Visual").has_method("sync_from_hero"), "player scene owns an editable visual child")
+	scene_hero.free()
+
 	var objective_script := load("res://scripts/data/room_objective.gd")
 	var clear_objective: Resource = objective_script.new()
 	_expect(not bool(clear_objective.call("is_complete", 1, 3, 2)), "clear-all objective waits while enemies remain")
@@ -102,6 +111,7 @@ func _init() -> void:
 	pawn_shell._configure_components()
 	_expect(pawn_shell.definition.id == &"pawn_recruit", "base enemy scene exposes its default Pawn definition")
 	_expect(pawn_shell._get_configuration_warnings().is_empty(), "complete base enemy scene has no editor configuration warnings")
+	_expect(pawn_shell.get_node_or_null("Visual") != null and pawn_shell.get_node("Visual").has_method("sync_from_enemy"), "base enemy scene owns an editable visual child")
 	_expect(pawn_shell.movement_component.actor == pawn_shell and pawn_shell.brain_component.actor == pawn_shell, "movement and brain component nodes bind to the host")
 	_expect(pawn_shell.attack_component.actor == pawn_shell and pawn_shell.health_component.actor == pawn_shell, "attack and health component nodes bind to the host")
 	_expect(pawn_shell.equipment_component.actor == pawn_shell and pawn_shell.enemy_debug_component.actor == pawn_shell, "equipment and debug component nodes bind to the host")

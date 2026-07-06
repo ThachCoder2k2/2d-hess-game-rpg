@@ -207,3 +207,24 @@
 - Added tests proving `Main.tscn` owns editor-visible child nodes and that ready-time HUD/runtime bindings work from the scene.
 - Verified `run_tests.gd`, `attack_runtime_test.gd`, component movement/equipment/Knight tests, room encounter runtime, encounter HUD runtime, 1,200-frame headless launch, editor import, and `git diff --check`.
 - The 1,200-frame headless launch exits successfully but currently prints CanvasLayer teardown RID warnings after the scene-owned HUD migration.
+
+## Scene-Backed Spawn Templates - 2026-07-06
+
+- Added gameplay templates `scenes/actors/black_pawn.tscn`, `scenes/actors/knight_enemy.tscn`, and `scenes/world/weapon_pickup.tscn`.
+- Updated `EnemySpawnPoint` and `PickupSpawnPoint` to instantiate editor-assigned PackedScenes first, with script constructors kept only as compatibility fallbacks.
+- Updated `first_encounter.tscn` so its enemy and pickup markers reference those PackedScene templates.
+- Added `resources/attacks/wooden_sword.tres` and `resources/attacks/pencil_thrust.tres`, then assigned them to `player.tscn`.
+- Updated `PawnHero` to use exported attack profiles from the scene while preserving default profiles for bare script tests.
+- Exposed `PrototypeBoard` board, telegraph, impact, and debug colors as Inspector-editable theme fields.
+- Expanded tests to verify player attack Resource ownership and scene-backed room spawns.
+- Verified `run_tests.gd`, `attack_runtime_test.gd`, component movement/equipment/Knight tests, room encounter runtime, encounter HUD runtime, 1,200-frame headless launch, editor import, MCP project info, and `git diff --check`.
+
+## Editor-Owned Actor Visuals - 2026-07-06
+
+- Added reusable visual scenes for the hero pawn, black pawn, knight, and weapon pickup.
+- Updated player, enemy, base enemy, and pickup scenes so each owns an editable `Visual` child instance.
+- Moved actor and pickup body/weapon/health/telegraph drawing out of `PawnHero`, `BlackPawn`, `KnightEnemy`, and `WeaponPickup`; gameplay scripts now sync state into visual child nodes.
+- Linked `VisualDefinition` Resources to the new pawn and knight visual scenes.
+- Added tests proving player, base enemy, and room-spawned enemies/pickups own visual children.
+- Fixed one Godot import-order issue by using dynamic visual child calls from older gameplay scripts.
+- Verified `run_tests.gd`, `attack_runtime_test.gd`, component movement/equipment/Knight tests, `room_encounter_runtime_test.gd`, `encounter_hud_runtime_test.gd`, 1,200-frame headless launch, editor import, and `git diff --check`.

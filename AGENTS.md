@@ -19,16 +19,30 @@ Primary goal:
 Target files/scenes:
 - `scenes/main.tscn`
 - `scenes/actors/player.tscn`
+- `scenes/actors/black_pawn.tscn`
+- `scenes/actors/knight_enemy.tscn`
+- `scenes/visuals/pawn_hero_visual.tscn`
+- `scenes/visuals/black_pawn_visual.tscn`
+- `scenes/visuals/knight_enemy_visual.tscn`
+- `scenes/visuals/weapon_pickup_visual.tscn`
 - `scenes/world/grid_world.tscn`
 - `scenes/world/prototype_board.tscn`
+- `scenes/world/weapon_pickup.tscn`
 - `scenes/combat/encounter_director.tscn`
 - `scenes/ui/hud.tscn`
+- `resources/attacks/wooden_sword.tres`
+- `resources/attacks/pencil_thrust.tres`
+- `scripts/visuals/piece_visual.gd`
+- `scripts/visuals/pickup_visual.gd`
 - `scripts/main.gd`
 - `scripts/ui/hud.gd`
 
 Acceptance gate:
 - Main game scene should open with editor-visible child nodes for world, combat director, board, player, room, and HUD.
 - `main.gd` should coordinate scene-owned children and keep runtime factories only as compatibility fallbacks.
+- Spawn markers should instantiate editor-assigned PackedScene templates for enemies and pickups.
+- Player attacks, board theme values, enemy definitions, room objective text, and weapon data should be configurable through `.tres` Resources or Inspector exports.
+- Player, enemy, and pickup presentation should be owned by visible `Visual` child scene instances, with gameplay scripts only syncing state into them.
 - Existing gameplay, HUD, debug view, restart flow, and tests must still pass.
 - The human owner must still approve or request tuning for room layout, pickup risk, opening readability, and encounter difficulty before E2 is fully accepted.
 
@@ -148,6 +162,7 @@ Do not start a broad new phase while the current phase has a broken playable sli
 - Keep runtime factories as bridges only when converting old scripted systems.
 - Do not introduce a strict ECS framework. Use Godot-native scenes, nodes, Resources, and signals.
 - Shared Resource assets should be treated as immutable at runtime; duplicate per-instance mutable weapon or profile data.
+- Do not add new actor or pickup `_draw()` methods for production behavior. Add or update a `Visual` child scene and sync state from gameplay scripts instead.
 
 ## Full Game Completion Workflow
 
@@ -230,7 +245,8 @@ Gate 12: Release polish
 - Hits should have clear feedback: flash, shake, impact color, sound later.
 - Pickups should remain easy to notice on the board.
 - Debug overlays must remain optional and toggled with `F3`.
-- Placeholder visuals may be code-drawn, but new production content should move toward sprites, AnimationPlayers, and effect scenes.
+- Placeholder visuals may be drawn by dedicated visual child nodes, but gameplay actor and pickup scripts should not own presentation drawing directly.
+- New production visuals should move toward sprites, AnimationPlayers, VFX scenes, and audio nodes attached in `.tscn` files.
 
 ## Testing And Verification
 

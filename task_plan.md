@@ -45,6 +45,8 @@ Build the first playable Godot 4 vertical slice, then grow it into a short edito
 | 35. Editor-first encounter scaffolding | complete | `RoomEncounter`, enemy/pickup spawn point scenes, and `first_encounter.tscn` now own the first room's blockers, pickups, enemies, and message |
 | 36. Editor-owned room objectives | complete | `RoomObjective` Resources now own room objective text, defeat text, and win-condition logic while `RoomEncounter` emits room completion |
 | 37. Editor-owned main scene foundation | complete | `Main.tscn` now owns editor-visible world, director, board, player, room, and HUD scene children while `main.gd` binds to scene nodes with test fallbacks |
+| 38. Scene-backed spawn templates | complete | Enemy and pickup spawn markers now instantiate editor-assigned PackedScenes, player attacks use `.tres` profiles, and board theme colors are Inspector-editable |
+| 39. Editor-owned actor visuals | complete | Player, Pawn, Knight, base enemy, and weapon pickup presentation now live in scene-owned `Visual` children instead of actor/pickup `_draw()` methods |
 
 ## Editor-First Full Game Roadmap
 
@@ -72,16 +74,27 @@ Continue **E1. Editor foundation** while E2 waits for human room-feel review. Th
 Target deliverables:
 - `scenes/main.tscn`
 - `scenes/actors/player.tscn`
+- `scenes/actors/black_pawn.tscn`
+- `scenes/actors/knight_enemy.tscn`
+- `scenes/actors/enemy_base.tscn`
+- `scenes/world/weapon_pickup.tscn`
+- `scenes/visuals/pawn_hero_visual.tscn`
+- `scenes/visuals/black_pawn_visual.tscn`
+- `scenes/visuals/knight_enemy_visual.tscn`
+- `scenes/visuals/weapon_pickup_visual.tscn`
 - `scenes/world/grid_world.tscn`
 - `scenes/world/prototype_board.tscn`
 - `scenes/combat/encounter_director.tscn`
 - `scenes/ui/hud.tscn`
-- Next: turn runtime-created `WeaponPickup` instances and remaining player tuning values into editor-owned scene/Resource data.
+- Next: extract enemy health into `HealthComponent`, then move board/debug presentation and hit/telegraph feedback toward reusable VFX/SFX/AnimationPlayer scenes.
 
 Acceptance criteria:
 - `scenes/main.tscn` opens with visible child nodes for world, combat director, board, player, room, and HUD.
 - `main.gd` coordinates already-authored child scenes instead of constructing the full scene tree directly.
 - Direct script instantiation in tests still works through scene fallback creation.
+- Enemy and pickup spawn markers instantiate editor-assigned PackedScenes for live gameplay nodes.
+- Player attack profiles and board theme values are configurable through `.tres` Resources or Inspector exports.
+- Player, enemies, base enemy, and weapon pickups own editable `Visual` scene children for placeholder presentation.
 - Existing gameplay behavior, HUD, debug view, tests, restart flow, and editor import still pass.
 - The human owner can now inspect the main scene tree in Godot Editor before deeper composition migration.
 
@@ -112,6 +125,8 @@ Acceptance criteria:
 - AI should hand off room feel, player feel, enemy feel, art/audio taste, narrative tone, and release review tasks to the human owner inside Godot Editor when the relevant phase reaches a tuning gate.
 - `RoomObjective` Resources own room start/clear/defeat copy and win-condition checks; `RoomEncounter` emits `room_completed`, while `main.gd` only reacts with HUD/result flow.
 - `Main.tscn` now owns editor-visible child scene instances for GridWorld, EncounterDirector, PrototypeBoard, PawnHero, FirstEncounter, and HUD; `main.gd` resolves those child nodes first and uses scene fallbacks only for tests.
+- Spawn markers should prefer `PackedScene` templates (`black_pawn.tscn`, `knight_enemy.tscn`, `weapon_pickup.tscn`) and keep direct constructors only as compatibility fallbacks.
+- Gameplay actors and pickups should not own production `_draw()` methods directly; presentation belongs in visible `Visual` child scenes such as `pawn_hero_visual.tscn`, `black_pawn_visual.tscn`, `knight_enemy_visual.tscn`, and `weapon_pickup_visual.tscn`.
 
 ## Errors Encountered
 
@@ -128,3 +143,4 @@ Acceptance criteria:
 | Grid path helper collided with native `Node.get_path()` | 1 | Renamed the helper to `get_grid_path()` |
 | GDScript could not infer the type of a new Resource loaded from script in `run_tests.gd` | 1 | Typed the instances as `Resource` and called objective methods dynamically, matching the pre-editor-import bridge style |
 | `SceneTree._init` tests checked `Main._ready()` bindings too early | 1 | Kept ownership checks in the main suite and moved ready-time binding checks into the deferred HUD runtime test |
+| Newly added global visual classes were not available during early headless script loading | 1 | Older gameplay scripts reference visual children dynamically through `Node` and `has_method()` until editor import registers the classes |

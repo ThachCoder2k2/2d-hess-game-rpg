@@ -18,9 +18,9 @@ const DIRECTIONS := {
 @export var held_repeat_delay := 0.22
 @export var invulnerability_duration := 0.70
 @export var pencil_thrust_cooldown := 1.25
-
-var wooden_sword: AttackProfile
-var pencil_thrust: AttackProfile
+@export var wooden_sword: AttackProfile
+@export var pencil_thrust: AttackProfile
+@export var visual_path: NodePath = ^"Visual"
 var buffered_direction := Vector2i.ZERO
 var attack_on_cooldown := false
 var active_attack: AttackProfile
@@ -32,28 +32,35 @@ var skill_cooldown_left := 0.0
 var last_held_direction := Vector2i.ZERO
 var is_invulnerable := false
 var control_enabled := true
+var visual: Node
 
 
 func _ready() -> void:
-	wooden_sword = AttackProfile.new()
-	wooden_sword.display_name = "Wooden Sword"
-	wooden_sword.range_cells = 1
-	wooden_sword.damage = 1
-	wooden_sword.impact_delay = 0.07
-	wooden_sword.recovery = 0.30
-	wooden_sword.color = Color("#fff2a8")
+	_ensure_attack_profiles()
+	_resolve_visual()
 
-	pencil_thrust = AttackProfile.new()
-	pencil_thrust.display_name = "Pencil Thrust"
-	pencil_thrust.range_cells = 2
-	pencil_thrust.damage = 1
-	pencil_thrust.impact_delay = 0.11
-	pencil_thrust.recovery = 0.52
-	pencil_thrust.color = Color("#8ec8e8")
-
-	step_started.connect(func(_origin: Vector2i, _destination: Vector2i): queue_redraw())
+	step_started.connect(func(_origin: Vector2i, _destination: Vector2i): _sync_visual())
 	step_finished.connect(_on_step_finished)
-	queue_redraw()
+	_sync_visual()
+
+
+func _ensure_attack_profiles() -> void:
+	if wooden_sword == null:
+		wooden_sword = AttackProfile.new()
+		wooden_sword.display_name = "Wooden Sword"
+		wooden_sword.range_cells = 1
+		wooden_sword.damage = 1
+		wooden_sword.impact_delay = 0.07
+		wooden_sword.recovery = 0.30
+		wooden_sword.color = Color("#fff2a8")
+	if pencil_thrust == null:
+		pencil_thrust = AttackProfile.new()
+		pencil_thrust.display_name = "Pencil Thrust"
+		pencil_thrust.range_cells = 2
+		pencil_thrust.damage = 1
+		pencil_thrust.impact_delay = 0.11
+		pencil_thrust.recovery = 0.52
+		pencil_thrust.color = Color("#8ec8e8")
 
 
 func _process(delta: float) -> void:
@@ -63,8 +70,7 @@ func _process(delta: float) -> void:
 	if skill_cooldown_left > 0.0:
 		skill_cooldown_left = maxf(0.0, skill_cooldown_left - delta)
 		emit_signal("skill_cooldown_changed", skill_cooldown_left)
-	if attack_visual_time > 0.0 or bump_visual_time > 0.0 or hurt_visual_time > 0.0:
-		queue_redraw()
+	_sync_visual()
 
 	if not control_enabled:
 		return
@@ -116,7 +122,7 @@ func try_turn(direction: Vector2i) -> bool:
 		return false
 	facing = direction
 	buffered_direction = Vector2i.ZERO
-	queue_redraw()
+	_sync_visual()
 	return true
 
 
@@ -137,11 +143,11 @@ func _held_direction() -> Vector2i:
 func _attempt_step(direction: Vector2i) -> void:
 	if not try_step(direction):
 		bump_visual_time = 0.10
-		queue_redraw()
+		_sync_visual()
 
 
 func _on_step_finished(_destination: Vector2i) -> void:
-	queue_redraw()
+	_sync_visual()
 	if buffered_direction != Vector2i.ZERO and not attack_on_cooldown and control_enabled:
 		var direction := buffered_direction
 		buffered_direction = Vector2i.ZERO
@@ -149,6 +155,7 @@ func _on_step_finished(_destination: Vector2i) -> void:
 
 
 func try_attack(profile: AttackProfile = null) -> bool:
+	_ensure_attack_profiles()
 	if profile == null:
 		profile = wooden_sword
 	if not can_start_attack():
@@ -156,7 +163,7 @@ func try_attack(profile: AttackProfile = null) -> bool:
 	attack_on_cooldown = true
 	active_attack = profile
 	attack_visual_time = profile.impact_delay + 0.10
-	queue_redraw()
+	_sync_visual()
 	var target_cells := profile.get_target_cells(current_cell, facing)
 	var tree := get_tree()
 	if tree == null:
@@ -192,6 +199,7 @@ func can_start_attack() -> bool:
 
 
 func get_attack_cells(profile: AttackProfile = null) -> Array[Vector2i]:
+	_ensure_attack_profiles()
 	if profile == null:
 		profile = wooden_sword
 	return profile.get_target_cells(current_cell, facing)
@@ -208,7 +216,7 @@ func take_damage(amount: int, _direction := Vector2i.ZERO) -> bool:
 	hurt_visual_time = 0.18
 	emit_signal("courage_changed", courage)
 	emit_signal("damaged", amount, courage)
-	queue_redraw()
+	_sync_visual()
 	if courage <= 0:
 		control_enabled = false
 		emit_signal("defeated")
@@ -230,45 +238,15 @@ func _start_invulnerability() -> void:
 	if not is_inside_tree():
 		return
 	is_invulnerable = false
-	queue_redraw()
+	_sync_visual()
 
 
-func _draw() -> void:
-	if is_invulnerable and int(Time.get_ticks_msec() / 70.0) % 2 == 0:
-		return
-	var bob := -2.0 if is_moving else 0.0
-	if bump_visual_time > 0.0:
-		bob += sin(bump_visual_time * 80.0) * 2.0
-	var body_color := Color("#ff8170") if hurt_visual_time > 0.0 else Color("#fff4d6")
-	_draw_pixel_ellipse(Vector2(0, 9), Vector2(11, 4), Color(0.08, 0.06, 0.08, 0.38))
-	draw_circle(Vector2(0, -10 + bob), 6.0, body_color)
-	draw_colored_polygon(PackedVector2Array([
-		Vector2(-5, -4 + bob), Vector2(5, -4 + bob), Vector2(9, 7 + bob), Vector2(-9, 7 + bob)
-	]), body_color.darkened(0.08))
-	draw_rect(Rect2(-11, 6 + bob, 22, 5), body_color)
-	draw_line(Vector2(-11, 11 + bob), Vector2(11, 11 + bob), Color("#493f3a"), 2.0)
-	draw_circle(Vector2(-2, -11 + bob), 1.0, Color("#493f3a"))
-
-	var visual_range := active_attack.range_cells if active_attack != null else 1
-	var weapon_color := active_attack.color if active_attack != null else Color("#f5c542")
-	var sword_start := Vector2(facing) * 6.0 + Vector2(0, bob)
-	var rest_length := 15.0
-	var active_length := float(visual_range * grid_world.cell_size) - 7.0 if grid_world != null else 25.0
-	var sword_end := Vector2(facing) * (active_length if attack_visual_time > 0.0 else rest_length) + Vector2(0, bob)
-	draw_line(sword_start, sword_end, weapon_color, 3.0)
-	draw_line(sword_start + Vector2(-facing.y, facing.x) * 4.0, sword_start - Vector2(-facing.y, facing.x) * 4.0, Color("#7b4d2c"), 2.0)
-	if attack_visual_time > 0.0:
-		var side := Vector2(-facing.y, facing.x)
-		draw_polyline(PackedVector2Array([
-			sword_end - side * 8.0,
-			sword_end + Vector2(facing) * 5.0,
-			sword_end + side * 8.0,
-		]), weapon_color.lightened(0.25), 3.0)
+func _resolve_visual() -> void:
+	if visual == null:
+		visual = get_node_or_null(visual_path)
 
 
-func _draw_pixel_ellipse(center: Vector2, radius: Vector2, color: Color) -> void:
-	var points := PackedVector2Array()
-	for index in 16:
-		var angle := TAU * float(index) / 16.0
-		points.append(center + Vector2(cos(angle) * radius.x, sin(angle) * radius.y))
-	draw_colored_polygon(points, color)
+func _sync_visual() -> void:
+	_resolve_visual()
+	if visual != null and visual.has_method("sync_from_hero"):
+		visual.call("sync_from_hero", self)

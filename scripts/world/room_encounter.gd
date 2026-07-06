@@ -89,7 +89,13 @@ func _spawn_pickups() -> void:
 		if weapon == null:
 			continue
 		var cell: Vector2i = marker.get("grid_cell")
-		var pickup := WeaponPickup.new()
+		var pickup: WeaponPickup = null
+		if marker.has_method("create_pickup"):
+			pickup = marker.call("create_pickup") as WeaponPickup
+		else:
+			pickup = WeaponPickup.new()
+		if pickup == null:
+			continue
 		pickup.z_index = 1
 		add_child(pickup)
 		if not pickup.setup(grid_world, cell, weapon):

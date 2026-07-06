@@ -134,3 +134,10 @@
 - `scenes/ui/hud.tscn` owns the HUD controls, while `GameHud` owns HUD formatting and presentation updates.
 - Moving HUD into a `CanvasLayer` scene makes the editor tree clearer, but Godot headless `--quit-after` currently reports CanvasLayer teardown RID warnings even though the run exits successfully.
 - Tests that need `_ready()` bindings must wait at least one frame; immediate `SceneTree._init` checks can only prove scene ownership, not ready-time binding.
+- Enemy and pickup spawns can now be made editor-owned by assigning PackedScene templates on the spawn marker instead of branching on script classes.
+- `black_pawn.tscn`, `knight_enemy.tscn`, and `weapon_pickup.tscn` are the current gameplay templates for the first encounter.
+- `PawnHero` still has safe code defaults, but the playable `player.tscn` now owns Wooden Sword and Pencil Thrust as `.tres` attack Resources.
+- `PrototypeBoard` remains procedurally drawn for speed, but its colors are now exported Inspector values so board theme tuning no longer requires code edits.
+- Remaining editor ownership work is mostly presentation: replace `_draw()` placeholder actor/weapon/board visuals with child nodes, Sprite2D/AnimationPlayer, VFX scenes, and eventually audio nodes.
+- Player, Black Pawn, Knight, base enemy, and weapon pickup presentation now route through scene-owned `Visual` child instances; gameplay scripts sync state into those nodes instead of drawing actor/pickup bodies directly.
+- During editor-first migration, old scripts should call newly added scene/visual classes dynamically until a headless editor import has registered their global class names.
