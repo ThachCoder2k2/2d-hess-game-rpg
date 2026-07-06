@@ -76,6 +76,14 @@ func get_attack_recovery_time() -> float:
 	return equipment_component.get_recovery_time() if equipment_component != null else super()
 
 
+func take_damage(amount: int, direction := Vector2i.ZERO) -> void:
+	_configure_components()
+	if health_component != null:
+		health_component.apply_damage(amount, direction)
+		return
+	super(amount, direction)
+
+
 func get_positioning_bonus(destination: Vector2i, direction: Vector2i, context: EnemyContext) -> float:
 	var bonus := super(destination, direction, context)
 	_ensure_ai_data()

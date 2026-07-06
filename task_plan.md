@@ -39,7 +39,7 @@ Build the first playable Godot 4 vertical slice, then grow it into a short edito
 | 29. Base enemy scene shell | complete | `enemy_base.tscn`, six visible component scenes, and compatibility host |
 | 30. Grid movement extraction | complete | Base enemy registration, legal moves, reservations, tween, and completion owned by component |
 | 31. Equipment extraction | complete | Weapon state, tag validation, defaults, pickup, geometry, damage, and timing owned by component |
-| 32. Health extraction | pending | Move health, hit response, and defeat state into component |
+| 32. Health extraction | complete | `HealthComponent` owns `EnemyActor` damage, hit feedback, defeat cleanup, and editor-owned AnimationPlayer hooks |
 | 33. AI workflow rules | complete | `AGENTS.md` defines editor-first rules, planning workflow, verification commands, and next-phase guidance for future AI agents |
 | 34. Human editor workflow | complete | `AGENTS.md` defines AI/human ownership, editor handoff format, in-editor review checklists, and full game completion gates |
 | 35. Editor-first encounter scaffolding | complete | `RoomEncounter`, enemy/pickup spawn point scenes, and `first_encounter.tscn` now own the first room's blockers, pickups, enemies, and message |
@@ -87,7 +87,7 @@ Target deliverables:
 - `scenes/world/prototype_board.tscn`
 - `scenes/combat/encounter_director.tscn`
 - `scenes/ui/hud.tscn`
-- Next: extract enemy health and defeat flow into `HealthComponent`, then move board/debug presentation and hit/telegraph feedback toward reusable VFX/SFX/AnimationPlayer scenes.
+- Next: move board/debug presentation and enemy telegraph/hit effects toward reusable VFX/SFX/AnimationPlayer scenes, then begin editor-authored tutorial room structure.
 
 Acceptance criteria:
 - `scenes/main.tscn` opens with visible child nodes for world, combat director, board, player, room, and HUD.
@@ -95,6 +95,7 @@ Acceptance criteria:
 - Direct script instantiation in tests still works through scene fallback creation.
 - Enemy and pickup spawn markers instantiate editor-assigned PackedScenes for live gameplay nodes.
 - Pawn and Knight gameplay templates use the generic `EnemyActor` script plus scene-owned components, not Pawn/Knight-specific root scripts.
+- `EnemyActor` damage and defeat flow goes through `HealthComponent`, which owns hurt/defeat feedback animations through an editor-visible `AnimationPlayer`.
 - Player attack profiles and board theme values are configurable through `.tres` Resources or Inspector exports.
 - Player, enemies, base enemy, and weapon pickups own editable `Visual` scene children for placeholder presentation.
 - Existing gameplay behavior, HUD, debug view, tests, restart flow, and editor import still pass.
@@ -130,6 +131,7 @@ Acceptance criteria:
 - Spawn markers should prefer `PackedScene` templates (`black_pawn.tscn`, `knight_enemy.tscn`, `weapon_pickup.tscn`) and keep direct constructors only as compatibility fallbacks.
 - Gameplay actors and pickups should not own production `_draw()` methods directly; presentation belongs in visible `Visual` child scenes such as `pawn_hero_visual.tscn`, `black_pawn_visual.tscn`, `knight_enemy_visual.tscn`, and `weapon_pickup_visual.tscn`.
 - Enemy identity in runtime UI/status should come from `EnemyDefinition` data rather than class checks. Legacy `BlackPawn` and `KnightEnemy` classes remain only as direct-test compatibility until they are deleted.
+- `EnemyActor.take_damage()` delegates to `HealthComponent`; legacy `FreeEnemy.take_damage()` remains only for old direct-test compatibility.
 
 ## Errors Encountered
 

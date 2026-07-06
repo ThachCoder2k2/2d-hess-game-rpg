@@ -238,3 +238,12 @@
 - Updated HUD and main-scene status copy to read enemy display names from `EnemyDefinition` data instead of class checks.
 - Updated room and main tests to verify scene-spawned enemies are generic `EnemyActor` variants with Pawn/Knight definitions.
 - Verified `run_tests.gd`, `attack_runtime_test.gd`, component movement/equipment/Knight tests, `room_encounter_runtime_test.gd`, `encounter_hud_runtime_test.gd`, 1,200-frame headless launch, editor import, and `git diff --check`.
+
+## Health Component Extraction - 2026-07-06
+
+- Updated `EnemyActor.take_damage()` to delegate damage and defeat handling to `HealthComponent`.
+- Expanded `HealthComponent` so it owns health reduction, hurt flash/recoil values, attack-token release, grid unregistering, defeat signal emission, and delayed cleanup.
+- Added an editor-visible `AnimationPlayer` inside `scenes/components/health_component.tscn` with `hurt` and `defeat` animations targeting the enemy actor root.
+- Kept `FreeEnemy.take_damage()` as the legacy direct-test fallback while scene-spawned enemies use the component path.
+- Added tests proving the health component owns feedback animations, hurt feedback state, and defeat cleanup.
+- Verified `run_tests.gd`, `attack_runtime_test.gd`, component movement/equipment/Knight tests, `room_encounter_runtime_test.gd`, `encounter_hud_runtime_test.gd`, 1,200-frame headless launch, editor import, and `git diff --check`.

@@ -44,6 +44,7 @@ Acceptance gate:
 - Pawn and Knight gameplay scenes should use the generic `EnemyActor` root plus component child nodes and `EnemyDefinition` Resources; do not add new enemy subclasses for normal content.
 - Player attacks, board theme values, enemy definitions, room objective text, and weapon data should be configurable through `.tres` Resources or Inspector exports.
 - Player, enemy, and pickup presentation should be owned by visible `Visual` child scene instances, with gameplay scripts only syncing state into them.
+- Enemy hurt and defeat feedback should be owned by `HealthComponent` and its `AnimationPlayer`; do not put new damage/defeat logic on enemy subclasses.
 - Existing gameplay, HUD, debug view, restart flow, and tests must still pass.
 - The human owner must still approve or request tuning for room layout, pickup risk, opening readability, and encounter difficulty before E2 is fully accepted.
 
@@ -239,6 +240,7 @@ Gate 12: Release polish
 - Weapon attacks replace the enemy's chess-shaped attack while equipped.
 - Existing legacy Pawn/Knight paths must keep working until fully migrated to editor-first components.
 - Runtime labels, HUD text, and encounter logic should identify enemies from `EnemyDefinition` data instead of `BlackPawn`/`KnightEnemy` class checks.
+- `EnemyActor.take_damage()` should delegate to `HealthComponent`; legacy `FreeEnemy.take_damage()` is a compatibility fallback, not the pattern for new enemies.
 
 ## Visual And Feedback Rules
 

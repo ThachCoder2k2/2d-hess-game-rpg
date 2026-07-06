@@ -144,3 +144,6 @@
 - The playable Pawn and Knight scene templates now use `EnemyActor` with component children and assigned `EnemyDefinition` Resources; their old subclass scripts are no longer the room-spawn path.
 - Runtime UI should label enemies from definition data (`display_name`, `id`, or role) instead of checking for `BlackPawn`/`KnightEnemy` classes, because scene variants can share one generic script.
 - Knight flanker positioning logic can live on `EnemyActor` by reading the archetype role, preserving the threat behavior without a Knight-specific gameplay script.
+- `HealthComponent` now owns `EnemyActor` damage, hurt feedback values, attack-token cleanup, grid unregistering, defeat signal emission, and queue-free timing.
+- `scenes/components/health_component.tscn` owns an `AnimationPlayer` with `hurt` and `defeat` animations targeting the actor root, so hit/defeat timing can be tuned in the editor.
+- `FreeEnemy.take_damage()` remains as a legacy fallback for direct subclass tests until those compatibility classes are retired.

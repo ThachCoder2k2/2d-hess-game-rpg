@@ -133,6 +133,8 @@ func _init() -> void:
 	_expect(pawn_shell.movement_component.actor == pawn_shell and pawn_shell.brain_component.actor == pawn_shell, "movement and brain component nodes bind to the host")
 	_expect(pawn_shell.attack_component.actor == pawn_shell and pawn_shell.health_component.actor == pawn_shell, "attack and health component nodes bind to the host")
 	_expect(pawn_shell.equipment_component.actor == pawn_shell and pawn_shell.enemy_debug_component.actor == pawn_shell, "equipment and debug component nodes bind to the host")
+	var health_feedback_player := pawn_shell.health_component.get_node_or_null("AnimationPlayer") as AnimationPlayer
+	_expect(health_feedback_player != null and health_feedback_player.has_animation("hurt") and health_feedback_player.has_animation("defeat"), "health component owns editor feedback animations")
 	var component_world := GridWorld.new()
 	root.add_child(component_world)
 	_expect(pawn_shell.setup(component_world, Vector2i(2, 2)), "movement component registers the base enemy")
@@ -149,6 +151,22 @@ func _init() -> void:
 	_expect(pawn_shell.equipment_component.get_weapon() == shell_ruler and pawn_shell.weapon == shell_ruler, "equipment component mirrors weapon state for compatibility")
 	_expect(pawn_shell.get_attack_cells(Vector2i(4, 4), Vector2i.RIGHT).size() == 3, "equipment component supplies replacement attack geometry")
 	_expect(pawn_shell.get_attack_telegraph_time() == 0.56 and pawn_shell.get_attack_recovery_time() == 0.62, "equipment component supplies weapon attack timing")
+
+	var health_world := GridWorld.new()
+	root.add_child(health_world)
+	var health_director := EncounterDirector.new()
+	root.add_child(health_director)
+	var health_shell := enemy_base_scene.instantiate() as EnemyActor
+	root.add_child(health_shell)
+	var health_defeats := {"count": 0}
+	health_shell.defeated.connect(func(_enemy: FreeEnemy) -> void: health_defeats["count"] += 1)
+	_expect(health_shell.setup(health_world, Vector2i(1, 1)), "health component test enemy registers")
+	health_shell.director = health_director
+	_expect(health_director.request_attack(health_shell), "health component test enemy receives attack token")
+	health_shell.take_damage(1, Vector2i.RIGHT)
+	_expect(health_shell.health == health_shell.get_max_health() - 1 and health_shell.flash_time > 0.0 and health_shell.recoil == Vector2(4, 0), "health component applies hurt feedback")
+	health_shell.take_damage(99, Vector2i.RIGHT)
+	_expect(health_shell.state == FreeEnemy.State.DEFEATED and health_defeats["count"] == 1 and health_world.actor_at(Vector2i(1, 1)) == null and health_director.attack_owner == null, "health component owns defeat cleanup")
 
 	var armed_shell := enemy_base_scene.instantiate() as EnemyActor
 	armed_shell.definition = armed_definition
