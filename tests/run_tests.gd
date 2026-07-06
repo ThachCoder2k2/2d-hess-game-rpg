@@ -59,7 +59,11 @@ func _init() -> void:
 	scene_hero._ensure_attack_profiles()
 	_expect(scene_hero.wooden_sword != null and scene_hero.wooden_sword.resource_path.ends_with("wooden_sword.tres"), "player scene owns Wooden Sword attack Resource")
 	_expect(scene_hero.pencil_thrust != null and scene_hero.pencil_thrust.resource_path.ends_with("pencil_thrust.tres"), "player scene owns Pencil Thrust attack Resource")
-	_expect(scene_hero.get_node_or_null("Visual") != null and scene_hero.get_node("Visual").has_method("sync_from_hero"), "player scene owns an editable visual child")
+	_expect(_piece_visual_is_sprite_animated(scene_hero.get_node_or_null("Visual"), "sync_from_hero"), "player scene owns a sprite-based animated visual child")
+	var piece_visual_source := FileAccess.get_file_as_string("res://scripts/visuals/piece_visual.gd")
+	var pickup_visual_source := FileAccess.get_file_as_string("res://scripts/visuals/pickup_visual.gd")
+	_expect(not piece_visual_source.contains("func _draw") and not piece_visual_source.contains("draw_"), "piece visuals use Sprite2D nodes instead of script drawing")
+	_expect(not pickup_visual_source.contains("func _draw") and not pickup_visual_source.contains("draw_"), "pickup visuals use Sprite2D nodes instead of script drawing")
 	scene_hero.free()
 
 	var objective_script := load("res://scripts/data/room_objective.gd")
@@ -110,7 +114,7 @@ func _init() -> void:
 	pawn_variant._ensure_ai_data()
 	pawn_variant._configure_components()
 	_expect(pawn_variant != null and pawn_variant.definition.id == &"pawn_recruit", "Pawn scene variant uses generic EnemyActor with Pawn definition")
-	_expect(pawn_variant.get_node_or_null("Visual") != null and pawn_variant.movement_component != null and pawn_variant.equipment_component != null, "Pawn scene variant owns visual and components")
+	_expect(_piece_visual_is_sprite_animated(pawn_variant.get_node_or_null("Visual"), "sync_from_enemy") and pawn_variant.movement_component != null and pawn_variant.equipment_component != null, "Pawn scene variant owns sprite visual and components")
 	_expect(pawn_variant.get_piece_display_name() == "Pawn", "Pawn scene variant names itself from definition data")
 
 	var knight_variant_scene := load("res://objects/actors/knight_enemy.tscn") as PackedScene
@@ -119,7 +123,7 @@ func _init() -> void:
 	knight_variant._ensure_ai_data()
 	knight_variant._configure_components()
 	_expect(knight_variant != null and knight_variant.definition.id == &"knight_tracker", "Knight scene variant uses generic EnemyActor with Knight definition")
-	_expect(knight_variant.get_node_or_null("Visual") != null and knight_variant.movement_component != null and knight_variant.equipment_component != null, "Knight scene variant owns visual and components")
+	_expect(_piece_visual_is_sprite_animated(knight_variant.get_node_or_null("Visual"), "sync_from_enemy") and knight_variant.movement_component != null and knight_variant.equipment_component != null, "Knight scene variant owns sprite visual and components")
 	_expect(knight_variant.get_piece_display_name() == "Knight", "Knight scene variant names itself from definition data")
 
 	var enemy_base_scene := load("res://objects/actors/enemy_base.tscn") as PackedScene
@@ -129,7 +133,7 @@ func _init() -> void:
 	pawn_shell._configure_components()
 	_expect(pawn_shell.definition.id == &"pawn_recruit", "base enemy scene exposes its default Pawn definition")
 	_expect(pawn_shell._get_configuration_warnings().is_empty(), "complete base enemy scene has no editor configuration warnings")
-	_expect(pawn_shell.get_node_or_null("Visual") != null and pawn_shell.get_node("Visual").has_method("sync_from_enemy"), "base enemy scene owns an editable visual child")
+	_expect(_piece_visual_is_sprite_animated(pawn_shell.get_node_or_null("Visual"), "sync_from_enemy"), "base enemy scene owns a sprite-based animated visual child")
 	_expect(pawn_shell.movement_component.actor == pawn_shell and pawn_shell.brain_component.actor == pawn_shell, "movement and brain component nodes bind to the host")
 	_expect(pawn_shell.attack_component.actor == pawn_shell and pawn_shell.health_component.actor == pawn_shell, "attack and health component nodes bind to the host")
 	_expect(pawn_shell.equipment_component.actor == pawn_shell and pawn_shell.enemy_debug_component.actor == pawn_shell, "equipment and debug component nodes bind to the host")
@@ -215,6 +219,10 @@ func _init() -> void:
 	var main_room_art := main_game.get_node_or_null("FirstEncounter/RoomArt")
 	var main_room := main_game.get_node_or_null("FirstEncounter")
 	var main_hero := main_game.get_node_or_null("PawnHero") as PawnHero
+	var main_hero_start_marker := main_game.get_node_or_null("FirstEncounter/HeroStart")
+	var main_hero_start_cell := Vector2i.ZERO
+	if main_room != null and main_room.has_method("get_hero_start_cell"):
+		main_hero_start_cell = main_room.call("get_hero_start_cell")
 	var main_children_ok: bool = (
 		main_game.get_node_or_null("GridWorld") is GridWorld
 		and main_game.get_node_or_null("EncounterDirector") is EncounterDirector
@@ -229,8 +237,7 @@ func _init() -> void:
 	_expect(main_board != null and not main_board.draw_base_layer, "main board leaves floor art to the editor-authored room")
 	_expect(main_room_art != null and main_room_art.get_node_or_null("TileMap") is TileMapLayer and main_room_art.get_node_or_null("GridLines/Vertical_00") != null, "first room owns editable TileMap board art nodes")
 	_expect(main_room != null and main_room.get_node_or_null("Blocker_07_02") != null and main_room.get_node("Blocker_07_02").has_method("get_blocked_cell"), "first room owns draggable blocker markers")
-	_expect(main_room != null and main_room.has_method("get_hero_start_cell") and main_room.call("get_hero_start_cell") == Vector2i(3, 7), "first room owns an editable hero start marker")
-	_expect(main_hero != null and main_hero.current_cell == Vector2i(3, 7), "main scene places the hero from the room marker")
+	_expect(main_hero_start_marker != null and main_hero_start_marker.get("grid_cell") == main_hero_start_cell, "first room owns an editable hero start marker")
 	main_game.free()
 
 	var director := EncounterDirector.new()
@@ -360,6 +367,13 @@ func _init() -> void:
 
 	print("TESTS COMPLETE: %d failure(s)" % failures)
 	quit(1 if failures > 0 else 0)
+
+
+func _piece_visual_is_sprite_animated(visual: Node, sync_method: StringName) -> bool:
+	if visual == null or not visual.has_method(sync_method):
+		return false
+	return visual.get_node_or_null("MotionRoot/SpriteRoot/BodySprite") is Sprite2D \
+		and visual.get_node_or_null("AnimationPlayer") is AnimationPlayer
 
 
 func _expect(condition: bool, message: String) -> void:

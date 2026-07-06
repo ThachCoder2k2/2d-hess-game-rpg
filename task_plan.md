@@ -52,6 +52,7 @@ Build the first playable Godot 4 vertical slice, then grow it into a short edito
 | 42. Room authoring markers | complete | Hero start, blockers, pickups, and enemy spawns are draggable grid-snapping marker nodes that drive runtime placement; room editing guide added |
 | 43. TileMap room floor | complete | First encounter floor uses `TileMapLayer` plus `TileSet` resources instead of one Polygon2D node per board tile |
 | 44. Scene/object folder cleanup | complete | `scenes/` now contains only main playable scenes, rooms, and UI; reusable editable templates live under `objects/` |
+| 45. Sprite-based visual objects | complete | Hero, Pawn, Knight, and weapon pickup visuals now use real PNG sprites, `Sprite2D` children, and `AnimationPlayer` motion instead of script-drawn bodies |
 
 ## Editor-First Full Game Roadmap
 
@@ -149,6 +150,7 @@ Acceptance criteria:
 - Gameplay placement should be represented by marker nodes, not parallel art plus hidden arrays. `RoomEncounter` should read markers first and keep exported arrays only as compatibility fallbacks.
 - Board floor art should use TileMapLayer and TileSet assets. Avoid adding one Polygon2D node per floor tile.
 - Keep reusable object `.tscn` templates under `objects/`; keep `scenes/` limited to playable/editor entry scenes, rooms, and UI.
+- Actor and pickup bodies should be real sprite/animation scene nodes. Do not reintroduce `_draw()` body rendering in `scripts/visuals/piece_visual.gd` or `scripts/visuals/pickup_visual.gd`.
 
 ## Errors Encountered
 

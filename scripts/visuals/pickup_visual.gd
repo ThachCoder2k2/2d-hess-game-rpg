@@ -1,53 +1,76 @@
 class_name PickupVisual
 extends Node2D
 
-@export var shadow_color := Color(0.05, 0.04, 0.05, 0.35)
-@export var glow_ring_color := Color("#fff2a8")
-@export var handle_color := Color("#6b4f3c")
-@export var sparkle_color := Color("#fff4d6")
 @export var preview_weapon: EnemyWeapon
+@export var pickup_sprite_path: NodePath = ^"MotionRoot/SpriteRoot/PickupSprite"
+@export var glow_sprite_path: NodePath = ^"GlowSprite"
+@export var animation_player_path: NodePath = ^"AnimationPlayer"
+@export var combined_pickup_texture: Texture2D
+@export var spear_texture: Texture2D
+@export var ruler_blade_texture: Texture2D
 
 var weapon: EnemyWeapon
 var visual_time := 0.0
 
+var _pickup_sprite: Sprite2D
+var _glow_sprite: Sprite2D
+var _animation_player: AnimationPlayer
+
+
+func _ready() -> void:
+	_resolve_nodes()
+	_play_animation(&"idle")
+	_apply_texture()
+
 
 func sync_from_pickup(pickup: Node) -> void:
+	_resolve_nodes()
 	weapon = pickup.get("weapon")
 	visual_time = pickup.get("visual_time")
-	queue_redraw()
+	_apply_texture()
+	_apply_glow()
+	_play_animation(&"idle")
 
 
-func _draw() -> void:
+func _resolve_nodes() -> void:
+	if _pickup_sprite == null:
+		_pickup_sprite = get_node_or_null(pickup_sprite_path) as Sprite2D
+	if _glow_sprite == null:
+		_glow_sprite = get_node_or_null(glow_sprite_path) as Sprite2D
+	if _animation_player == null:
+		_animation_player = get_node_or_null(animation_player_path) as AnimationPlayer
+
+
+func _apply_texture() -> void:
+	if _pickup_sprite == null:
+		return
 	var display_weapon := weapon if weapon != null else preview_weapon
-	if display_weapon == null:
+	_pickup_sprite.texture = _texture_for_weapon(display_weapon)
+
+
+func _apply_glow() -> void:
+	if _glow_sprite == null:
 		return
 	var pulse := 0.5 + 0.5 * sin(visual_time * TAU * 2.0)
-	var bob := Vector2(0.0, -1.5 - pulse * 2.0)
-	_draw_shadow()
-	_draw_glow(pulse, display_weapon)
-	if display_weapon.shape == EnemyWeapon.Shape.LINE:
-		draw_line(Vector2(-10, 8) + bob, Vector2(10, -8) + bob, display_weapon.color, 4.0)
-		draw_line(Vector2(-12, 5) + bob, Vector2(-7, 10) + bob, handle_color, 3.0)
-	else:
-		draw_rect(Rect2(Vector2(-11, -3) + bob, Vector2(22, 7)), display_weapon.color)
-		for x in range(-8, 10, 4):
-			draw_line(Vector2(x, -3) + bob, Vector2(x, 1) + bob, handle_color, 1.0)
-
-	var sparkle := Color(sparkle_color, 0.70 + pulse * 0.25)
-	draw_line(Vector2(13, -12) + bob, Vector2(13, -5) + bob, sparkle, 1.2)
-	draw_line(Vector2(9, -8) + bob, Vector2(17, -8) + bob, sparkle, 1.2)
+	_glow_sprite.scale = Vector2.ONE * (0.60 + pulse * 0.08)
+	_glow_sprite.modulate.a = 0.34 + pulse * 0.22
 
 
-func _draw_glow(pulse: float, display_weapon: EnemyWeapon) -> void:
-	var glow := display_weapon.color
-	glow.a = 0.18 + pulse * 0.10
-	draw_circle(Vector2(0, 1), 15.0 + pulse * 3.0, glow)
-	draw_arc(Vector2(0, 1), 16.0 + pulse * 2.0, 0.0, TAU, 24, Color(glow_ring_color, 0.28 + pulse * 0.18), 1.5)
+func _texture_for_weapon(display_weapon: EnemyWeapon) -> Texture2D:
+	if display_weapon == null:
+		return combined_pickup_texture
+	if display_weapon.id == &"ruler_blade":
+		return ruler_blade_texture if ruler_blade_texture != null else combined_pickup_texture
+	if display_weapon.id == &"pencil_spear":
+		return spear_texture if spear_texture != null else combined_pickup_texture
+	if display_weapon.shape == EnemyWeapon.Shape.FAN:
+		return ruler_blade_texture if ruler_blade_texture != null else combined_pickup_texture
+	return spear_texture if spear_texture != null else combined_pickup_texture
 
 
-func _draw_shadow() -> void:
-	var points := PackedVector2Array()
-	for index in 16:
-		var angle := TAU * float(index) / 16.0
-		points.append(Vector2(cos(angle) * 13.0, 8.0 + sin(angle) * 4.0))
-	draw_colored_polygon(points, shadow_color)
+func _play_animation(animation_name: StringName) -> void:
+	if _animation_player == null or not _animation_player.has_animation(animation_name):
+		return
+	if _animation_player.current_animation == animation_name and _animation_player.is_playing():
+		return
+	_animation_player.play(animation_name)

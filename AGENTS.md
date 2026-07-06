@@ -52,6 +52,7 @@ Acceptance gate:
 - Pawn and Knight gameplay scenes should use the generic `EnemyActor` root plus component child nodes and `EnemyDefinition` Resources; do not add new enemy subclasses for normal content.
 - Player attacks, board theme values, enemy definitions, room objective text, and weapon data should be configurable through `.tres` Resources or Inspector exports.
 - Player, enemy, and pickup presentation should be owned by visible `Visual` child scene instances, with gameplay scripts only syncing state into them.
+- Actor and pickup bodies should be real `Sprite2D` or animation scene nodes; do not draw them with `_draw()` in visual scripts.
 - Encounter rooms should own visible `RoomArt` child nodes for the board floor, blockers, boundaries, and key set dressing; a script-only board overlay is not enough for editor review.
 - Encounter gameplay placement should be managed through draggable marker nodes (`HeroStart`, `Blocker_*`, pickup spawns, enemy spawns) whose `grid_cell` values are used at runtime.
 - Enemy hurt and defeat feedback should be owned by `HealthComponent` and its `AnimationPlayer`; do not put new damage/defeat logic on enemy subclasses.

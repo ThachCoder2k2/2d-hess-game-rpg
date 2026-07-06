@@ -23,6 +23,7 @@ The first playable foundation includes:
 - TileMapLayer-based board floor with reusable TileSet assets.
 - Editor-authored first encounter art, blockers, spawn previews, and pickup previews.
 - Draggable room authoring markers for hero start, blockers, enemy spawns, and pickups.
+- Real PNG sprite placeholders and AnimationPlayer clips for the hero, Pawns, Knight, pickups, and toy weapons.
 - Headless grid-logic tests.
 
 ## Run

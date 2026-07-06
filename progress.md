@@ -287,3 +287,12 @@
 - Actor, enemy, pickup, marker, component, visual, combat helper, and world helper `.tscn` files remain editable Godot scenes under `objects/`.
 - Updated scene, script, resource, test, tool, README, planning, and workflow references to the new object paths.
 - Verified `run_tests.gd`, `attack_runtime_test.gd`, component movement/equipment/Knight tests, `room_encounter_runtime_test.gd`, `encounter_hud_runtime_test.gd`, 1,200-frame headless launch, editor import, and `git diff --check`.
+
+## Sprite-Based Visual Objects - 2026-07-06
+
+- Generated first-pass PNG sprites for the hero pawn, black pawn, black knight, weapon pickup, toy sword, pencil spear, ruler blade, warning aura, facing arrow, and health pips under `assets/sprites/generated/`.
+- Converted `objects/visuals/pawn_hero_visual.tscn`, `black_pawn_visual.tscn`, `knight_enemy_visual.tscn`, and `weapon_pickup_visual.tscn` to real `Sprite2D` child nodes with editor-visible `AnimationPlayer` clips.
+- Reworked `PieceVisual` and `PickupVisual` so scripts sync sprite state, weapon textures, health pips, facing arrows, and telegraph visibility without drawing actor bodies through `_draw()`.
+- Restored scene-backed enemy/pickup template bindings in `scenes/main.tscn` while preserving the edited marker positions, so the live room uses sprite object scenes instead of fallback constructors.
+- Added tests that require sprite-based animated visuals and guard against reintroducing script-drawn piece/pickup bodies.
+- Verified `run_tests.gd`, `attack_runtime_test.gd`, component movement/equipment/Knight tests, `room_encounter_runtime_test.gd`, `encounter_hud_runtime_test.gd`, 1,200-frame headless launch, editor import, `git diff --check`, and a real-renderer capture at `/tmp/unbound-pawn-sprite-pass.avi`.

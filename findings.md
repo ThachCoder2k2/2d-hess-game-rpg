@@ -166,3 +166,11 @@
 - The cleaner Godot workflow is `scenes/` for entry scenes, authored rooms, and UI, with reusable `.tscn` object templates under `objects/`.
 - Enemies, pickups, markers, components, visuals, the combat director, the board overlay, and the TileMap floor template remain editor-owned `.tscn` files; they are now treated as objects instead of main scenes.
 - This split preserves the current editor-first workflow while making it easier for the human owner to find the room scene and modify gameplay objects deliberately.
+
+## Sprite-Based Visual Objects
+
+- The old visual scripts made objects feel empty in the editor because actor and pickup bodies were painted through `_draw()` at runtime.
+- Hero, Pawn, Knight, and weapon pickup visuals are now actual `Sprite2D` nodes backed by PNG assets, so opening object visual scenes in Godot shows real editable sprites.
+- Animation belongs in each visual scene's `AnimationPlayer`; scripts should only choose state, texture, modulate, facing, and visibility.
+- The first generated sprites are placeholder-quality production scaffolds, not final art. They are good enough to prove the editor workflow and can be replaced later without rewriting gameplay logic.
+- Main-scene marker positions can be edited independently, but enemy and pickup spawn markers must keep their `PackedScene` template references so runtime uses sprite object scenes instead of fallback constructors.

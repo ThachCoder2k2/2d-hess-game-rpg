@@ -12,6 +12,11 @@ func _run() -> void:
 	await process_frame
 	var director := game.get("director") as EncounterDirector
 	director.set_paused(true)
+	var room := game.get_node_or_null("FirstEncounter")
+	var hero := game.get("hero") as PawnHero
+	var hero_start_cell := Vector2i.ZERO
+	if room != null and room.has_method("get_hero_start_cell"):
+		hero_start_cell = room.call("get_hero_start_cell")
 	var encounter_label := game.get("encounter_label") as Label
 	var skill_fill := game.get("skill_fill") as ColorRect
 	var damage_flash := game.get("damage_flash") as ColorRect
@@ -26,6 +31,8 @@ func _run() -> void:
 	var initial_ok: bool = (
 		editor_binding_ok
 		and game.get_node_or_null("FirstEncounter") != null
+		and hero != null
+		and hero.current_cell == hero_start_cell
 		and game.get("remaining_enemies") == 3
 		and game.get("total_enemies") == 3
 		and encounter_label != null

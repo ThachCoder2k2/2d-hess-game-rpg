@@ -1,17 +1,188 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene load_steps=15 format=3]
 
 [ext_resource type="Script" path="res://scripts/visuals/piece_visual.gd" id="1"]
+[ext_resource type="Texture2D" path="res://assets/sprites/generated/black_pawn.png" id="2"]
+[ext_resource type="Texture2D" path="res://assets/sprites/generated/toy_sword.png" id="3"]
+[ext_resource type="Texture2D" path="res://assets/sprites/generated/pencil_spear.png" id="4"]
+[ext_resource type="Texture2D" path="res://assets/sprites/generated/ruler_blade.png" id="5"]
+[ext_resource type="Texture2D" path="res://assets/sprites/generated/warning_aura.png" id="6"]
+[ext_resource type="Texture2D" path="res://assets/sprites/generated/facing_arrow.png" id="7"]
+[ext_resource type="Texture2D" path="res://assets/sprites/generated/health_pip_full.png" id="8"]
+[ext_resource type="Texture2D" path="res://assets/sprites/generated/health_pip_empty.png" id="9"]
+
+[sub_resource type="Animation" id="Animation_reset"]
+length = 0.001
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("MotionRoot/SpriteRoot:position")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 0,
+"values": [Vector2(0, 0)]
+}
+tracks/1/type = "value"
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/path = NodePath("MotionRoot/SpriteRoot:scale")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 0,
+"values": [Vector2(1, 1)]
+}
+tracks/2/type = "value"
+tracks/2/imported = false
+tracks/2/enabled = true
+tracks/2/path = NodePath("MotionRoot/SpriteRoot/WeaponPivot/WeaponSprite:rotation")
+tracks/2/interp = 1
+tracks/2/loop_wrap = true
+tracks/2/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 0,
+"values": [0.0]
+}
+
+[sub_resource type="Animation" id="Animation_idle"]
+resource_name = "idle"
+length = 0.9
+loop_mode = 1
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("MotionRoot/SpriteRoot:position")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 0.45, 0.9),
+"transitions": PackedFloat32Array(1, 1, 1),
+"update": 0,
+"values": [Vector2(0, 0), Vector2(0, -1.0), Vector2(0, 0)]
+}
+
+[sub_resource type="Animation" id="Animation_hurt"]
+resource_name = "hurt"
+length = 0.16
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("MotionRoot/SpriteRoot:scale")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 0.08, 0.16),
+"transitions": PackedFloat32Array(1, 1, 1),
+"update": 0,
+"values": [Vector2(1, 1), Vector2(1.12, 0.88), Vector2(1, 1)]
+}
+
+[sub_resource type="Animation" id="Animation_attack"]
+resource_name = "attack"
+length = 0.2
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("MotionRoot/SpriteRoot/WeaponPivot/WeaponSprite:rotation")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 0.1, 0.2),
+"transitions": PackedFloat32Array(1, 1, 1),
+"update": 0,
+"values": [-0.35, 0.35, 0.0]
+}
+
+[sub_resource type="Animation" id="Animation_telegraph"]
+resource_name = "telegraph"
+length = 0.42
+loop_mode = 1
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("TelegraphAura:scale")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 0.21, 0.42),
+"transitions": PackedFloat32Array(1, 1, 1),
+"update": 0,
+"values": [Vector2(0.68, 0.68), Vector2(0.86, 0.86), Vector2(0.68, 0.68)]
+}
+
+[sub_resource type="AnimationLibrary" id="AnimationLibrary_visual"]
+_data = {
+&"RESET": SubResource("Animation_reset"),
+&"attack": SubResource("Animation_attack"),
+&"hurt": SubResource("Animation_hurt"),
+&"idle": SubResource("Animation_idle"),
+&"telegraph": SubResource("Animation_telegraph")
+}
 
 [node name="Visual" type="Node2D"]
 script = ExtResource("1")
 piece_kind = 1
-body_color = Color(0.0901961, 0.0980392, 0.121569, 1)
-flash_color = Color(1, 1, 1, 1)
-telegraph_color = Color(0.352941, 0.12549, 0.145098, 1)
-accent_color = Color(0.847059, 0.290196, 0.227451, 1)
-eye_color = Color(0.286275, 0.247059, 0.227451, 1)
-warning_color = Color(1, 0.4, 0.368627, 1)
-default_weapon_color = Color(0.960784, 0.772549, 0.258824, 1)
 show_health = true
+show_facing_mark = true
+default_weapon_texture = ExtResource("3")
+spear_texture = ExtResource("4")
+ruler_blade_texture = ExtResource("5")
+full_health_texture = ExtResource("8")
+empty_health_texture = ExtResource("9")
+hurt_modulate = Color(1, 1, 1, 1)
+telegraph_modulate = Color(0.85, 0.31, 0.35, 1)
 weapon_anchor = Vector2(5, 0)
 weapon_rest_length = 18.0
+
+[node name="TelegraphAura" type="Sprite2D" parent="."]
+visible = false
+z_index = -1
+texture = ExtResource("6")
+scale = Vector2(0.68, 0.68)
+
+[node name="MotionRoot" type="Node2D" parent="."]
+
+[node name="SpriteRoot" type="Node2D" parent="MotionRoot"]
+
+[node name="BodySprite" type="Sprite2D" parent="MotionRoot/SpriteRoot"]
+texture = ExtResource("2")
+scale = Vector2(0.42, 0.42)
+
+[node name="FacingArrow" type="Sprite2D" parent="MotionRoot/SpriteRoot"]
+position = Vector2(0, -19)
+texture = ExtResource("7")
+scale = Vector2(0.40, 0.40)
+
+[node name="WeaponPivot" type="Node2D" parent="MotionRoot/SpriteRoot"]
+visible = false
+
+[node name="WeaponSprite" type="Sprite2D" parent="MotionRoot/SpriteRoot/WeaponPivot"]
+position = Vector2(0, -18)
+texture = ExtResource("3")
+scale = Vector2(0.46, 0.46)
+
+[node name="HealthPips" type="Node2D" parent="MotionRoot/SpriteRoot"]
+visible = false
+position = Vector2(-8, -24)
+
+[node name="Pip0" type="Sprite2D" parent="MotionRoot/SpriteRoot/HealthPips"]
+texture = ExtResource("8")
+
+[node name="Pip1" type="Sprite2D" parent="MotionRoot/SpriteRoot/HealthPips"]
+position = Vector2(8, 0)
+texture = ExtResource("8")
+
+[node name="Pip2" type="Sprite2D" parent="MotionRoot/SpriteRoot/HealthPips"]
+position = Vector2(16, 0)
+texture = ExtResource("8")
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="."]
+root_node = NodePath("..")
+libraries = {
+&"": SubResource("AnimationLibrary_visual")
+}

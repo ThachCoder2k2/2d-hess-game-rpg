@@ -5,222 +5,236 @@ enum PieceKind { HERO_PAWN, BLACK_PAWN, BLACK_KNIGHT }
 const ENEMY_STATE_TELEGRAPH := 1
 
 @export var piece_kind := PieceKind.HERO_PAWN
-@export var body_color := Color("#fff4d6")
-@export var hurt_color := Color("#ff8170")
-@export var flash_color := Color.WHITE
-@export var telegraph_color := Color("#5a2025")
-@export var accent_color := Color("#d84a3a")
-@export var eye_color := Color("#493f3a")
-@export var shadow_color := Color(0.05, 0.04, 0.05, 0.35)
-@export var warning_color := Color("#ff665e")
-@export var warning_ring_color := Color("#fff2a8")
-@export var default_weapon_color := Color("#f5c542")
-@export var handle_color := Color("#7b4d2c")
 @export var show_health := false
 @export var show_facing_mark := true
-@export var weapon_anchor := Vector2(5, -2)
-@export_range(1.0, 32.0, 0.5) var weapon_rest_length := 18.0
+@export var motion_root_path: NodePath = ^"MotionRoot"
+@export var sprite_root_path: NodePath = ^"MotionRoot/SpriteRoot"
+@export var body_sprite_path: NodePath = ^"MotionRoot/SpriteRoot/BodySprite"
+@export var weapon_pivot_path: NodePath = ^"MotionRoot/SpriteRoot/WeaponPivot"
+@export var weapon_sprite_path: NodePath = ^"MotionRoot/SpriteRoot/WeaponPivot/WeaponSprite"
+@export var telegraph_aura_path: NodePath = ^"TelegraphAura"
+@export var facing_arrow_path: NodePath = ^"MotionRoot/SpriteRoot/FacingArrow"
+@export var health_pips_path: NodePath = ^"MotionRoot/SpriteRoot/HealthPips"
+@export var animation_player_path: NodePath = ^"AnimationPlayer"
+@export var default_weapon_texture: Texture2D
+@export var spear_texture: Texture2D
+@export var ruler_blade_texture: Texture2D
+@export var full_health_texture: Texture2D
+@export var empty_health_texture: Texture2D
+@export var normal_modulate := Color.WHITE
+@export var hurt_modulate := Color("#ff8170")
+@export var flash_modulate := Color.WHITE
+@export var telegraph_modulate := Color("#d14a52")
+@export var weapon_anchor := Vector2(8, -4)
+@export_range(1.0, 64.0, 0.5) var weapon_rest_length := 18.0
 
 var facing := Vector2i.UP
-var cell_size := 32
-var is_moving := false
-var is_invulnerable := false
-var bump_time := 0.0
-var hurt_time := 0.0
-var flash_time := 0.0
-var recoil := Vector2.ZERO
-var attack_visual_time := 0.0
-var attack_range := 1
-var active_weapon_color := Color("#f5c542")
-var weapon_visible := false
-var telegraph_active := false
-var telegraph_progress := 0.0
 var health := 1
 var max_health := 1
 
+var _motion_root: Node2D
+var _sprite_root: Node2D
+var _body_sprite: Sprite2D
+var _weapon_pivot: Node2D
+var _weapon_sprite: Sprite2D
+var _telegraph_aura: Sprite2D
+var _facing_arrow: Sprite2D
+var _health_pips: Node2D
+var _animation_player: AnimationPlayer
+var _was_hurt := false
+var _was_attacking := false
+var _was_telegraphing := false
+
+
+func _ready() -> void:
+	_resolve_nodes()
+	_play_animation(&"idle")
+
 
 func sync_from_hero(hero: Node) -> void:
+	_resolve_nodes()
 	facing = hero.get("facing")
-	var world = hero.get("grid_world")
-	cell_size = world.cell_size if world != null else cell_size
-	is_moving = hero.get("is_moving")
-	is_invulnerable = hero.get("is_invulnerable")
-	bump_time = hero.get("bump_visual_time")
-	hurt_time = hero.get("hurt_visual_time")
-	attack_visual_time = hero.get("attack_visual_time")
+	var is_moving: bool = hero.get("is_moving")
+	var is_invulnerable: bool = hero.get("is_invulnerable")
+	var bump_time: float = hero.get("bump_visual_time")
+	var hurt_time: float = hero.get("hurt_visual_time")
+	var attack_visual_time: float = hero.get("attack_visual_time")
 	var active_attack = hero.get("active_attack")
-	attack_range = active_attack.get("range_cells") if active_attack != null else 1
-	active_weapon_color = active_attack.get("color") if active_attack != null else default_weapon_color
-	weapon_visible = true
-	telegraph_active = false
-	recoil = Vector2.ZERO
-	queue_redraw()
+	var attack_range := 1
+	if active_attack != null:
+		attack_range = int(active_attack.get("range_cells"))
+	var attacking := attack_visual_time > 0.0
+
+	_apply_body_state(hurt_time > 0.0, false, is_invulnerable)
+	_apply_recoil(Vector2.ZERO, is_moving, bump_time)
+	_apply_facing_mark(false)
+	_apply_telegraph(false, 0.0)
+	_apply_weapon(attacking, _texture_for_attack(active_attack), attack_range, attacking)
+	_apply_health(0, 0)
+
+	if hurt_time > 0.0 and not _was_hurt:
+		_play_animation(&"hurt")
+	elif attacking and not _was_attacking:
+		_play_animation(&"attack")
+	elif not attacking and not _was_hurt:
+		_play_animation(&"idle")
+	_was_hurt = hurt_time > 0.0
+	_was_attacking = attacking
+	_was_telegraphing = false
 
 
 func sync_from_enemy(enemy: Node) -> void:
+	_resolve_nodes()
 	facing = enemy.get("facing")
-	var world = enemy.get("grid_world")
-	cell_size = world.cell_size if world != null else cell_size
-	recoil = enemy.get("recoil")
-	flash_time = enemy.get("flash_time")
-	telegraph_active = enemy.get("state") == ENEMY_STATE_TELEGRAPH
-	telegraph_progress = enemy.call("get_telegraph_progress") if enemy.has_method("get_telegraph_progress") else 0.0
+	var recoil: Vector2 = enemy.get("recoil")
+	var flash_time: float = enemy.get("flash_time")
+	var telegraphing := int(enemy.get("state")) == ENEMY_STATE_TELEGRAPH
+	var telegraph_progress: float = enemy.call("get_telegraph_progress") if enemy.has_method("get_telegraph_progress") else 0.0
 	var enemy_weapon = enemy.get("weapon")
-	weapon_visible = enemy_weapon != null
-	active_weapon_color = enemy_weapon.get("color") if enemy_weapon != null else default_weapon_color
-	health = enemy.get("health")
-	max_health = enemy.call("get_max_health") if enemy.has_method("get_max_health") else maxi(health, 1)
-	queue_redraw()
+	var weapon_visible := enemy_weapon != null
+	health = int(enemy.get("health"))
+	max_health = int(enemy.call("get_max_health")) if enemy.has_method("get_max_health") else maxi(health, 1)
+
+	_apply_body_state(flash_time > 0.0, telegraphing, false)
+	_apply_recoil(recoil, false, 0.0)
+	_apply_facing_mark(show_facing_mark)
+	_apply_telegraph(telegraphing, telegraph_progress)
+	_apply_weapon(weapon_visible, _texture_for_weapon(enemy_weapon), 1, false)
+	_apply_health(health, max_health)
+
+	if flash_time > 0.0 and not _was_hurt:
+		_play_animation(&"hurt")
+	elif telegraphing and not _was_telegraphing:
+		_play_animation(&"telegraph")
+	elif not telegraphing and not _was_hurt:
+		_play_animation(&"idle")
+	_was_hurt = flash_time > 0.0
+	_was_attacking = false
+	_was_telegraphing = telegraphing
 
 
-func _draw() -> void:
-	if is_invulnerable and int(Time.get_ticks_msec() / 70.0) % 2 == 0:
+func _resolve_nodes() -> void:
+	if _motion_root == null:
+		_motion_root = get_node_or_null(motion_root_path) as Node2D
+	if _sprite_root == null:
+		_sprite_root = get_node_or_null(sprite_root_path) as Node2D
+	if _body_sprite == null:
+		_body_sprite = get_node_or_null(body_sprite_path) as Sprite2D
+	if _weapon_pivot == null:
+		_weapon_pivot = get_node_or_null(weapon_pivot_path) as Node2D
+	if _weapon_sprite == null:
+		_weapon_sprite = get_node_or_null(weapon_sprite_path) as Sprite2D
+	if _telegraph_aura == null:
+		_telegraph_aura = get_node_or_null(telegraph_aura_path) as Sprite2D
+	if _facing_arrow == null:
+		_facing_arrow = get_node_or_null(facing_arrow_path) as Sprite2D
+	if _health_pips == null:
+		_health_pips = get_node_or_null(health_pips_path) as Node2D
+	if _animation_player == null:
+		_animation_player = get_node_or_null(animation_player_path) as AnimationPlayer
+
+
+func _apply_body_state(hurt_or_flash: bool, telegraphing: bool, invulnerable: bool) -> void:
+	if _body_sprite == null:
 		return
-	match piece_kind:
-		PieceKind.BLACK_KNIGHT:
-			_draw_knight()
-		PieceKind.BLACK_PAWN:
-			_draw_enemy_pawn()
-		_:
-			_draw_hero_pawn()
+	var tint := normal_modulate
+	if telegraphing:
+		tint = telegraph_modulate
+	elif hurt_or_flash:
+		tint = hurt_modulate if piece_kind == PieceKind.HERO_PAWN else flash_modulate
+	if invulnerable and int(Time.get_ticks_msec() / 70.0) % 2 == 0:
+		tint.a = 0.35
+	_body_sprite.modulate = tint
 
 
-func _current_body_color() -> Color:
-	if flash_time > 0.0:
-		return flash_color
-	if hurt_time > 0.0:
-		return hurt_color
-	if telegraph_active:
-		return telegraph_color
-	return body_color
-
-
-func _draw_hero_pawn() -> void:
-	var bob := -2.0 if is_moving else 0.0
+func _apply_recoil(recoil: Vector2, is_moving: bool, bump_time: float) -> void:
+	if _motion_root == null:
+		return
+	var bob := -1.0 if is_moving else 0.0
 	if bump_time > 0.0:
 		bob += sin(bump_time * 80.0) * 2.0
-	var fill := _current_body_color()
-	_draw_pixel_ellipse(Vector2(0, 9), Vector2(11, 4), Color(0.08, 0.06, 0.08, 0.38))
-	draw_circle(Vector2(0, -10 + bob), 6.0, fill)
-	draw_colored_polygon(PackedVector2Array([
-		Vector2(-5, -4 + bob), Vector2(5, -4 + bob), Vector2(9, 7 + bob), Vector2(-9, 7 + bob)
-	]), fill.darkened(0.08))
-	draw_rect(Rect2(-11, 6 + bob, 22, 5), fill)
-	draw_line(Vector2(-11, 11 + bob), Vector2(11, 11 + bob), eye_color, 2.0)
-	draw_circle(Vector2(-2, -11 + bob), 1.0, eye_color)
-	_draw_hero_weapon(bob)
+	_motion_root.position = recoil + Vector2(0.0, bob)
 
 
-func _draw_enemy_pawn() -> void:
-	var fill := _current_body_color()
-	_draw_pixel_ellipse(Vector2(0, 9) + recoil, Vector2(10, 4), shadow_color)
-	_draw_attack_warning_aura()
-	draw_circle(Vector2(0, -9) + recoil, 6.0, fill)
-	draw_colored_polygon(PackedVector2Array([
-		Vector2(-5, -3) + recoil, Vector2(5, -3) + recoil,
-		Vector2(9, 7) + recoil, Vector2(-9, 7) + recoil
-	]), fill)
-	draw_rect(Rect2(Vector2(-11, 6) + recoil, Vector2(22, 5)), fill)
-	draw_line(Vector2(-11, 11) + recoil, Vector2(11, 11) + recoil, accent_color, 2.0)
-	_draw_facing_mark()
-	_draw_enemy_weapon()
-	_draw_health_pips()
-
-
-func _draw_knight() -> void:
-	var fill := _current_body_color()
-	_draw_pixel_ellipse(Vector2(0, 10) + recoil, Vector2(11, 4), shadow_color)
-	_draw_attack_warning_aura()
-	var path := PackedVector2Array([
-		Vector2(-10, 10) + recoil,
-		Vector2(-7, -2) + recoil,
-		Vector2(-3, -12) + recoil,
-		Vector2(7, -8) + recoil,
-		Vector2(11, 0) + recoil,
-		Vector2(5, -2) + recoil,
-		Vector2(8, 10) + recoil,
-	])
-	draw_colored_polygon(path, fill)
-	draw_circle(Vector2(3, -7) + recoil, 1.2, accent_color)
-	draw_rect(Rect2(Vector2(-11, 7) + recoil, Vector2(22, 5)), fill)
-	_draw_enemy_weapon()
-	_draw_health_pips()
-
-
-func _draw_hero_weapon(bob: float) -> void:
-	if not weapon_visible:
+func _apply_facing_mark(visible: bool) -> void:
+	if _facing_arrow == null:
 		return
-	var visual_range: int = maxi(int(attack_range), 1)
-	var sword_start := Vector2(facing) * 6.0 + Vector2(0, bob)
-	var active_length := float(visual_range * cell_size) - 7.0
-	var sword_end := Vector2(facing) * (active_length if attack_visual_time > 0.0 else weapon_rest_length) + Vector2(0, bob)
-	draw_line(sword_start, sword_end, active_weapon_color, 3.0)
-	draw_line(sword_start + Vector2(-facing.y, facing.x) * 4.0, sword_start - Vector2(-facing.y, facing.x) * 4.0, handle_color, 2.0)
-	if attack_visual_time > 0.0:
-		var side := Vector2(-facing.y, facing.x)
-		draw_polyline(PackedVector2Array([
-			sword_end - side * 8.0,
-			sword_end + Vector2(facing) * 5.0,
-			sword_end + side * 8.0,
-		]), active_weapon_color.lightened(0.25), 3.0)
+	_facing_arrow.visible = visible and facing != Vector2i.ZERO
+	if _facing_arrow.visible:
+		_facing_arrow.rotation = _rotation_for_facing(facing)
 
 
-func _draw_enemy_weapon() -> void:
-	if not weapon_visible:
+func _apply_telegraph(active: bool, progress: float) -> void:
+	if _telegraph_aura == null:
 		return
-	var start := recoil + weapon_anchor
-	var finish := recoil + Vector2(facing) * weapon_rest_length
-	draw_line(start, finish, active_weapon_color, 3.0)
+	_telegraph_aura.visible = active
+	if active:
+		var pulse := 0.92 + progress * 0.25
+		_telegraph_aura.scale = Vector2.ONE * pulse
+		_telegraph_aura.modulate.a = 0.55 + progress * 0.35
 
 
-func _draw_facing_mark() -> void:
-	if not show_facing_mark:
+func _apply_weapon(visible: bool, texture: Texture2D, range_cells: int, attacking: bool) -> void:
+	if _weapon_pivot == null or _weapon_sprite == null:
 		return
-	var side := Vector2(-facing.y, facing.x)
-	var tip := recoil + Vector2(facing) * 13.0
-	draw_polyline(PackedVector2Array([
-		tip - Vector2(facing) * 4.0 + side * 3.0,
-		tip,
-		tip - Vector2(facing) * 4.0 - side * 3.0,
-	]), accent_color.lightened(0.16), 2.0)
-
-
-func _draw_health_pips() -> void:
-	if not show_health:
+	_weapon_pivot.visible = visible and texture != null and facing != Vector2i.ZERO
+	if not _weapon_pivot.visible:
 		return
-	var pip_count := maxi(max_health, 1)
-	var start_x := -float(pip_count * 6 - 2) / 2.0
-	for index in pip_count:
-		var filled := index < health
-		var pip_color := Color("#ff9a75") if filled else Color("#493f3a", 0.88)
-		var outline := Color("#fff4d6", 0.80) if filled else Color("#241b22", 0.86)
-		var rect := Rect2(Vector2(start_x + index * 6.0, -25.0), Vector2(4.0, 4.0))
-		draw_rect(rect, pip_color)
-		draw_rect(rect, outline, false, 1.0)
+	_weapon_sprite.texture = texture
+	_weapon_pivot.position = weapon_anchor + Vector2(facing) * 4.0
+	_weapon_pivot.rotation = _rotation_for_facing(facing)
+	var reach := maxf(1.0, float(range_cells))
+	_weapon_sprite.position = Vector2(0.0, -weapon_rest_length * (1.0 + (reach - 1.0) * 0.28))
+	_weapon_sprite.scale = Vector2.ONE * (1.12 if attacking else 1.0)
 
 
-func _draw_attack_warning_aura() -> void:
-	if not telegraph_active:
+func _apply_health(current: int, maximum: int) -> void:
+	if _health_pips == null:
 		return
-	var pulse := 0.5 + 0.5 * sin(Time.get_ticks_msec() / 1000.0 * TAU * 5.0)
-	var fill := Color(warning_color, 0.20 + telegraph_progress * 0.26 + pulse * 0.08)
-	var ring := Color(warning_ring_color, 0.62 + telegraph_progress * 0.30)
-	var radius := lerpf(15.0, 22.0, pulse)
-	draw_circle(recoil, radius, fill)
-	draw_arc(recoil, radius + 2.0, -PI / 2.0, -PI / 2.0 + TAU * telegraph_progress, 24, ring, 2.4)
-	if facing == Vector2i.ZERO:
+	_health_pips.visible = show_health and maximum > 1
+	if not _health_pips.visible:
 		return
-	var aim := Vector2(facing).normalized()
-	var side := Vector2(-aim.y, aim.x)
-	var tip := recoil + aim * (17.0 + telegraph_progress * 5.0)
-	var base := recoil + aim * 6.0
-	draw_line(base, tip, Color("#fff4d6", 0.82), 2.0)
-	draw_polyline(PackedVector2Array([tip - aim * 5.0 + side * 4.0, tip, tip - aim * 5.0 - side * 4.0]), Color("#fff4d6", 0.9), 2.0)
+	var children := _health_pips.get_children()
+	for index in children.size():
+		var pip := children[index] as Sprite2D
+		if pip == null:
+			continue
+		pip.visible = index < maximum
+		pip.texture = full_health_texture if index < current else empty_health_texture
 
 
-func _draw_pixel_ellipse(center: Vector2, radius: Vector2, color: Color) -> void:
-	var points := PackedVector2Array()
-	for index in 16:
-		var angle := TAU * float(index) / 16.0
-		points.append(center + Vector2(cos(angle) * radius.x, sin(angle) * radius.y))
-	draw_colored_polygon(points, color)
+func _texture_for_attack(attack_profile) -> Texture2D:
+	if attack_profile == null:
+		return default_weapon_texture
+	var display_name := String(attack_profile.get("display_name")).to_lower()
+	if display_name.contains("pencil") or int(attack_profile.get("range_cells")) > 1:
+		return spear_texture if spear_texture != null else default_weapon_texture
+	return default_weapon_texture
+
+
+func _texture_for_weapon(enemy_weapon) -> Texture2D:
+	if enemy_weapon == null:
+		return default_weapon_texture
+	var id := String(enemy_weapon.get("id"))
+	if id == "ruler_blade":
+		return ruler_blade_texture if ruler_blade_texture != null else default_weapon_texture
+	if id == "pencil_spear":
+		return spear_texture if spear_texture != null else default_weapon_texture
+	var shape := int(enemy_weapon.get("shape"))
+	if shape == EnemyWeapon.Shape.FAN:
+		return ruler_blade_texture if ruler_blade_texture != null else default_weapon_texture
+	return spear_texture if spear_texture != null else default_weapon_texture
+
+
+func _rotation_for_facing(direction: Vector2i) -> float:
+	if direction == Vector2i.ZERO:
+		return 0.0
+	return Vector2(direction).angle() + PI / 2.0
+
+
+func _play_animation(animation_name: StringName) -> void:
+	if _animation_player == null or not _animation_player.has_animation(animation_name):
+		return
+	if _animation_player.current_animation == animation_name and _animation_player.is_playing():
+		return
+	_animation_player.play(animation_name)
