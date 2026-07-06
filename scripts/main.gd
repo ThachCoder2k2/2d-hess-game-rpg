@@ -74,6 +74,8 @@ func _setup_scene_nodes() -> void:
 	director = _resolve_scene_node(director_path, DIRECTOR_SCENE, EncounterDirector.new(), "EncounterDirector") as EncounterDirector
 	board = _resolve_scene_node(board_path, BOARD_SCENE, PrototypeBoard.new(), "PrototypeBoard") as PrototypeBoard
 	hero = _resolve_scene_node(hero_path, PLAYER_SCENE, PawnHero.new(), "PawnHero") as PawnHero
+	var existing_room := get_node_or_null(room_path)
+	var resolved_hero_start := _get_room_hero_start_cell(existing_room)
 
 	if director != null:
 		_connect_signal_once(director, &"token_changed", Callable(self, "_update_token_owner"))
@@ -82,7 +84,8 @@ func _setup_scene_nodes() -> void:
 		board.setup(grid_world)
 	if hero != null:
 		hero.z_index = 3
-		if hero.grid_world == null and not hero.setup(grid_world, hero_start_cell):
+		hero.current_cell = resolved_hero_start
+		if hero.grid_world == null and not hero.setup(grid_world, resolved_hero_start):
 			push_error("PawnHero could not register on the GridWorld.")
 		_connect_signal_once(hero, &"attack_landed", Callable(self, "_on_player_attack_landed"))
 		_connect_signal_once(hero, &"courage_changed", Callable(self, "_update_courage"))
@@ -90,7 +93,6 @@ func _setup_scene_nodes() -> void:
 		_connect_signal_once(hero, &"skill_cooldown_changed", Callable(self, "_update_skill_cooldown"))
 		_connect_signal_once(hero, &"defeated", Callable(self, "_on_hero_defeated"))
 
-	var existing_room := get_node_or_null(room_path)
 	if existing_room != null:
 		_setup_room_instance(existing_room)
 	else:
@@ -111,6 +113,12 @@ func _resolve_scene_node(node_path: NodePath, scene: PackedScene, fallback: Node
 func _connect_signal_once(source: Object, signal_name: StringName, target: Callable) -> void:
 	if source != null and not source.is_connected(signal_name, target):
 		source.connect(signal_name, target)
+
+
+func _get_room_hero_start_cell(room: Node) -> Vector2i:
+	if room != null and room.has_method("get_hero_start_cell"):
+		return room.call("get_hero_start_cell")
+	return hero_start_cell
 
 
 func _load_room(room_scene: PackedScene) -> void:

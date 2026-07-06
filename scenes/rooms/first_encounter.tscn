@@ -1,4 +1,4 @@
-[gd_scene load_steps=16 format=3]
+[gd_scene load_steps=18 format=3]
 
 [ext_resource type="PackedScene" path="res://scenes/world/room_encounter.tscn" id="1"]
 [ext_resource type="PackedScene" path="res://scenes/markers/pickup_spawn_point.tscn" id="2"]
@@ -15,10 +15,13 @@
 [ext_resource type="PackedScene" path="res://scenes/visuals/black_pawn_visual.tscn" id="13"]
 [ext_resource type="PackedScene" path="res://scenes/visuals/knight_enemy_visual.tscn" id="14"]
 [ext_resource type="PackedScene" path="res://scenes/visuals/weapon_pickup_visual.tscn" id="15"]
+[ext_resource type="PackedScene" path="res://scenes/markers/hero_start_marker.tscn" id="16"]
+[ext_resource type="PackedScene" path="res://scenes/markers/blocker_marker.tscn" id="17"]
 
 [node name="FirstEncounter" instance=ExtResource("1")]
 room_message = "First clash: read the warning cells, deny the weapons, break the black line."
 objective = ExtResource("9")
+hero_start_cell = Vector2i(3, 7)
 blocked_cells = Array[Vector2i]([Vector2i(7, 2), Vector2i(7, 3), Vector2i(7, 5), Vector2i(7, 6)])
 
 [node name="RoomArt" type="Node2D" parent="."]
@@ -396,27 +399,142 @@ position = Vector2(512, 292)
 color = Color(0.788235, 0.654902, 0.490196, 1)
 polygon = PackedVector2Array(0, 0, 32, 0, 32, 32, 0, 32)
 
-[node name="Blockers" type="Node2D" parent="RoomArt"]
+[node name="GridLines" type="Node2D" parent="RoomArt"]
 
-[node name="Blocker_07_02" type="Polygon2D" parent="RoomArt/Blockers"]
-position = Vector2(292, 104)
-color = Color(0.909804, 0.721569, 0.247059, 1)
-polygon = PackedVector2Array(0, 0, 24, 0, 24, 24, 0, 24)
+[node name="Vertical_00" type="Line2D" parent="RoomArt/GridLines"]
+points = PackedVector2Array(64, 36, 64, 324)
+width = 1.0
+default_color = Color(0.0941176, 0.0627451, 0.0705882, 0.42)
 
-[node name="Blocker_07_03" type="Polygon2D" parent="RoomArt/Blockers"]
-position = Vector2(292, 136)
-color = Color(0.909804, 0.721569, 0.247059, 1)
-polygon = PackedVector2Array(0, 0, 24, 0, 24, 24, 0, 24)
+[node name="Vertical_01" type="Line2D" parent="RoomArt/GridLines"]
+points = PackedVector2Array(96, 36, 96, 324)
+width = 1.0
+default_color = Color(0.0941176, 0.0627451, 0.0705882, 0.42)
 
-[node name="Blocker_07_05" type="Polygon2D" parent="RoomArt/Blockers"]
-position = Vector2(292, 200)
-color = Color(0.909804, 0.721569, 0.247059, 1)
-polygon = PackedVector2Array(0, 0, 24, 0, 24, 24, 0, 24)
+[node name="Vertical_02" type="Line2D" parent="RoomArt/GridLines"]
+points = PackedVector2Array(128, 36, 128, 324)
+width = 1.0
+default_color = Color(0.0941176, 0.0627451, 0.0705882, 0.42)
 
-[node name="Blocker_07_06" type="Polygon2D" parent="RoomArt/Blockers"]
-position = Vector2(292, 232)
-color = Color(0.909804, 0.721569, 0.247059, 1)
-polygon = PackedVector2Array(0, 0, 24, 0, 24, 24, 0, 24)
+[node name="Vertical_03" type="Line2D" parent="RoomArt/GridLines"]
+points = PackedVector2Array(160, 36, 160, 324)
+width = 1.0
+default_color = Color(0.0941176, 0.0627451, 0.0705882, 0.42)
+
+[node name="Vertical_04" type="Line2D" parent="RoomArt/GridLines"]
+points = PackedVector2Array(192, 36, 192, 324)
+width = 1.0
+default_color = Color(0.0941176, 0.0627451, 0.0705882, 0.42)
+
+[node name="Vertical_05" type="Line2D" parent="RoomArt/GridLines"]
+points = PackedVector2Array(224, 36, 224, 324)
+width = 1.0
+default_color = Color(0.0941176, 0.0627451, 0.0705882, 0.42)
+
+[node name="Vertical_06" type="Line2D" parent="RoomArt/GridLines"]
+points = PackedVector2Array(256, 36, 256, 324)
+width = 1.0
+default_color = Color(0.0941176, 0.0627451, 0.0705882, 0.42)
+
+[node name="Vertical_07" type="Line2D" parent="RoomArt/GridLines"]
+points = PackedVector2Array(288, 36, 288, 324)
+width = 1.0
+default_color = Color(0.0941176, 0.0627451, 0.0705882, 0.42)
+
+[node name="Vertical_08" type="Line2D" parent="RoomArt/GridLines"]
+points = PackedVector2Array(320, 36, 320, 324)
+width = 1.0
+default_color = Color(0.0941176, 0.0627451, 0.0705882, 0.42)
+
+[node name="Vertical_09" type="Line2D" parent="RoomArt/GridLines"]
+points = PackedVector2Array(352, 36, 352, 324)
+width = 1.0
+default_color = Color(0.0941176, 0.0627451, 0.0705882, 0.42)
+
+[node name="Vertical_10" type="Line2D" parent="RoomArt/GridLines"]
+points = PackedVector2Array(384, 36, 384, 324)
+width = 1.0
+default_color = Color(0.0941176, 0.0627451, 0.0705882, 0.42)
+
+[node name="Vertical_11" type="Line2D" parent="RoomArt/GridLines"]
+points = PackedVector2Array(416, 36, 416, 324)
+width = 1.0
+default_color = Color(0.0941176, 0.0627451, 0.0705882, 0.42)
+
+[node name="Vertical_12" type="Line2D" parent="RoomArt/GridLines"]
+points = PackedVector2Array(448, 36, 448, 324)
+width = 1.0
+default_color = Color(0.0941176, 0.0627451, 0.0705882, 0.42)
+
+[node name="Vertical_13" type="Line2D" parent="RoomArt/GridLines"]
+points = PackedVector2Array(480, 36, 480, 324)
+width = 1.0
+default_color = Color(0.0941176, 0.0627451, 0.0705882, 0.42)
+
+[node name="Vertical_14" type="Line2D" parent="RoomArt/GridLines"]
+points = PackedVector2Array(512, 36, 512, 324)
+width = 1.0
+default_color = Color(0.0941176, 0.0627451, 0.0705882, 0.42)
+
+[node name="Vertical_15" type="Line2D" parent="RoomArt/GridLines"]
+points = PackedVector2Array(544, 36, 544, 324)
+width = 1.0
+default_color = Color(0.0941176, 0.0627451, 0.0705882, 0.42)
+
+[node name="Vertical_16" type="Line2D" parent="RoomArt/GridLines"]
+points = PackedVector2Array(576, 36, 576, 324)
+width = 1.0
+default_color = Color(0.0941176, 0.0627451, 0.0705882, 0.42)
+
+[node name="Horizontal_00" type="Line2D" parent="RoomArt/GridLines"]
+points = PackedVector2Array(64, 36, 576, 36)
+width = 1.0
+default_color = Color(0.0941176, 0.0627451, 0.0705882, 0.42)
+
+[node name="Horizontal_01" type="Line2D" parent="RoomArt/GridLines"]
+points = PackedVector2Array(64, 68, 576, 68)
+width = 1.0
+default_color = Color(0.0941176, 0.0627451, 0.0705882, 0.42)
+
+[node name="Horizontal_02" type="Line2D" parent="RoomArt/GridLines"]
+points = PackedVector2Array(64, 100, 576, 100)
+width = 1.0
+default_color = Color(0.0941176, 0.0627451, 0.0705882, 0.42)
+
+[node name="Horizontal_03" type="Line2D" parent="RoomArt/GridLines"]
+points = PackedVector2Array(64, 132, 576, 132)
+width = 1.0
+default_color = Color(0.0941176, 0.0627451, 0.0705882, 0.42)
+
+[node name="Horizontal_04" type="Line2D" parent="RoomArt/GridLines"]
+points = PackedVector2Array(64, 164, 576, 164)
+width = 1.0
+default_color = Color(0.0941176, 0.0627451, 0.0705882, 0.42)
+
+[node name="Horizontal_05" type="Line2D" parent="RoomArt/GridLines"]
+points = PackedVector2Array(64, 196, 576, 196)
+width = 1.0
+default_color = Color(0.0941176, 0.0627451, 0.0705882, 0.42)
+
+[node name="Horizontal_06" type="Line2D" parent="RoomArt/GridLines"]
+points = PackedVector2Array(64, 228, 576, 228)
+width = 1.0
+default_color = Color(0.0941176, 0.0627451, 0.0705882, 0.42)
+
+[node name="Horizontal_07" type="Line2D" parent="RoomArt/GridLines"]
+points = PackedVector2Array(64, 260, 576, 260)
+width = 1.0
+default_color = Color(0.0941176, 0.0627451, 0.0705882, 0.42)
+
+[node name="Horizontal_08" type="Line2D" parent="RoomArt/GridLines"]
+points = PackedVector2Array(64, 292, 576, 292)
+width = 1.0
+default_color = Color(0.0941176, 0.0627451, 0.0705882, 0.42)
+
+[node name="Horizontal_09" type="Line2D" parent="RoomArt/GridLines"]
+points = PackedVector2Array(64, 324, 576, 324)
+width = 1.0
+default_color = Color(0.0941176, 0.0627451, 0.0705882, 0.42)
 
 [node name="Boundary" type="Node2D" parent="RoomArt"]
 
@@ -477,6 +595,20 @@ position = Vector2(456, 324)
 color = Color(1, 0.956863, 0.839216, 0.42)
 polygon = PackedVector2Array(0, 0, 120, 0, 120, 20, 18, 20)
 
+[node name="HeroStart" parent="." instance=ExtResource("16")]
+
+[node name="Blocker_07_02" parent="." instance=ExtResource("17")]
+grid_cell = Vector2i(7, 2)
+
+[node name="Blocker_07_03" parent="." instance=ExtResource("17")]
+grid_cell = Vector2i(7, 3)
+
+[node name="Blocker_07_05" parent="." instance=ExtResource("17")]
+grid_cell = Vector2i(7, 5)
+
+[node name="Blocker_07_06" parent="." instance=ExtResource("17")]
+grid_cell = Vector2i(7, 6)
+
 [node name="PencilSpearPickup" parent="." instance=ExtResource("2")]
 pickup_scene = ExtResource("10")
 grid_cell = Vector2i(5, 5)
@@ -484,6 +616,12 @@ weapon = ExtResource("4")
 
 [node name="Preview" parent="PencilSpearPickup" instance=ExtResource("15")]
 preview_weapon = ExtResource("4")
+
+[node name="EditorLabel" type="Label" parent="PencilSpearPickup/Preview"]
+position = Vector2(-34, 14)
+theme_override_colors/font_color = Color(1, 0.956863, 0.839216, 0.86)
+theme_override_font_sizes/font_size = 8
+text = "PENCIL"
 
 [node name="RulerBladePickup" parent="." instance=ExtResource("2")]
 pickup_scene = ExtResource("10")
@@ -493,12 +631,24 @@ weapon = ExtResource("5")
 [node name="Preview" parent="RulerBladePickup" instance=ExtResource("15")]
 preview_weapon = ExtResource("5")
 
+[node name="EditorLabel" type="Label" parent="RulerBladePickup/Preview"]
+position = Vector2(-28, 14)
+theme_override_colors/font_color = Color(1, 0.956863, 0.839216, 0.86)
+theme_override_font_sizes/font_size = 8
+text = "RULER"
+
 [node name="PawnRecruitSpawn" parent="." instance=ExtResource("3")]
 enemy_scene = ExtResource("11")
 grid_cell = Vector2i(4, 1)
 definition = ExtResource("6")
 
 [node name="Preview" parent="PawnRecruitSpawn" instance=ExtResource("13")]
+
+[node name="EditorLabel" type="Label" parent="PawnRecruitSpawn/Preview"]
+position = Vector2(-24, 14)
+theme_override_colors/font_color = Color(1, 0.956863, 0.839216, 0.86)
+theme_override_font_sizes/font_size = 8
+text = "PAWN"
 
 [node name="ArmedPawnSpawn" parent="." instance=ExtResource("3")]
 enemy_scene = ExtResource("11")
@@ -507,6 +657,12 @@ definition = ExtResource("7")
 
 [node name="Preview" parent="ArmedPawnSpawn" instance=ExtResource("13")]
 
+[node name="EditorLabel" type="Label" parent="ArmedPawnSpawn/Preview"]
+position = Vector2(-32, 14)
+theme_override_colors/font_color = Color(1, 0.956863, 0.839216, 0.86)
+theme_override_font_sizes/font_size = 8
+text = "ARMED"
+
 [node name="KnightTrackerSpawn" parent="." instance=ExtResource("3")]
 enemy_kind = 1
 enemy_scene = ExtResource("12")
@@ -514,3 +670,9 @@ grid_cell = Vector2i(13, 2)
 definition = ExtResource("8")
 
 [node name="Preview" parent="KnightTrackerSpawn" instance=ExtResource("14")]
+
+[node name="EditorLabel" type="Label" parent="KnightTrackerSpawn/Preview"]
+position = Vector2(-30, 14)
+theme_override_colors/font_color = Color(1, 0.956863, 0.839216, 0.86)
+theme_override_font_sizes/font_size = 8
+text = "KNIGHT"

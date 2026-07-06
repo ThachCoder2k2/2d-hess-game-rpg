@@ -8,6 +8,7 @@ signal room_completed(room: Node)
 
 @export var room_message := ""
 @export var objective: Resource
+@export var hero_start_cell := Vector2i(3, 7)
 @export var blocked_cells: Array[Vector2i] = []
 @export var auto_activate_enemies := true
 
@@ -58,6 +59,13 @@ func get_start_message() -> String:
 	return room_message
 
 
+func get_hero_start_cell() -> Vector2i:
+	var marker := get_node_or_null("HeroStart")
+	if marker != null and marker.has_method("get_hero_start_cell"):
+		return marker.call("get_hero_start_cell")
+	return hero_start_cell
+
+
 func get_clear_message() -> String:
 	return _objective_text("clear_message", "ROOM CLEARED")
 
@@ -77,7 +85,9 @@ func get_defeat_subtitle() -> String:
 func _apply_blockers() -> void:
 	if grid_world == null:
 		return
-	for cell in blocked_cells:
+	var marker_cells := _blocker_cells()
+	var cells := marker_cells if not marker_cells.is_empty() else blocked_cells
+	for cell in cells:
 		grid_world.add_block(cell)
 
 
@@ -187,3 +197,11 @@ func _pickup_markers() -> Array[Node]:
 		if child.has_method("create_weapon"):
 			markers.append(child)
 	return markers
+
+
+func _blocker_cells() -> Array[Vector2i]:
+	var cells: Array[Vector2i] = []
+	for child in get_children():
+		if child.has_method("get_blocked_cell"):
+			cells.append(child.call("get_blocked_cell"))
+	return cells

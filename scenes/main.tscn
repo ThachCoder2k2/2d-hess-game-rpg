@@ -23,3 +23,6 @@ draw_base_layer = false
 [node name="FirstEncounter" parent="." instance=ExtResource("6")]
 
 [node name="HUD" parent="." instance=ExtResource("7")]
+
+[editable path="PawnHero"]
+[editable path="FirstEncounter"]

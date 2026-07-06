@@ -1,14 +1,12 @@
 @tool
-class_name PickupSpawnPoint
+class_name HeroStartMarker
 extends Node2D
 
 const PREVIEW_GRID_ORIGIN := Vector2(64, 36)
 const PREVIEW_CELL_SIZE := 32
 const PREVIEW_BOUNDS := Rect2i(0, 0, 16, 9)
 
-@export var active := true
-@export var pickup_scene: PackedScene
-@export var grid_cell := Vector2i.ZERO:
+@export var grid_cell := Vector2i(3, 7):
 	set(value):
 		grid_cell = value
 		if sync_position_to_grid:
@@ -18,7 +16,6 @@ const PREVIEW_BOUNDS := Rect2i(0, 0, 16, 9)
 		sync_position_to_grid = value
 		if sync_position_to_grid:
 			_sync_position_to_grid()
-@export var weapon: EnemyWeapon
 @export var show_editor_preview := true:
 	set(value):
 		show_editor_preview = value
@@ -42,19 +39,8 @@ func _process(_delta: float) -> void:
 		grid_cell = snapped_cell
 
 
-func create_weapon() -> EnemyWeapon:
-	return weapon.duplicate(true) if active and weapon != null else null
-
-
-func create_pickup() -> WeaponPickup:
-	if not active:
-		return null
-	if pickup_scene == null:
-		return WeaponPickup.new()
-	var pickup := pickup_scene.instantiate() as WeaponPickup
-	if pickup == null:
-		push_warning("PickupSpawnPoint '%s' needs a WeaponPickup-compatible scene." % name)
-	return pickup
+func get_hero_start_cell() -> Vector2i:
+	return grid_cell
 
 
 func _sync_position_to_grid() -> void:
@@ -81,11 +67,6 @@ func _sync_preview_visibility() -> void:
 func _draw() -> void:
 	if not Engine.is_editor_hint():
 		return
-	var color := Color("#e8b83f", 0.85)
-	if weapon != null:
-		color = weapon.color
-	var fill := color
-	fill.a = 0.22
-	draw_rect(Rect2(Vector2(-8, -8), Vector2(16, 16)), fill)
-	draw_rect(Rect2(Vector2(-8, -8), Vector2(16, 16)), Color("#fff4d6", 0.75), false, 1.5)
-	draw_line(Vector2(-7, 5), Vector2(7, -5), color, 2.5)
+	draw_circle(Vector2.ZERO, 11.0, Color("#fff4d6", 0.18))
+	draw_circle(Vector2.ZERO, 7.0, Color("#fff4d6", 0.78))
+	draw_rect(Rect2(Vector2(-9, -9), Vector2(18, 18)), Color("#493f3a", 0.75), false, 1.5)

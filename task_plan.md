@@ -48,7 +48,8 @@ Build the first playable Godot 4 vertical slice, then grow it into a short edito
 | 38. Scene-backed spawn templates | complete | Enemy and pickup spawn markers now instantiate editor-assigned PackedScenes, player attacks use `.tres` profiles, and board theme colors are Inspector-editable |
 | 39. Editor-owned actor visuals | complete | Player, Pawn, Knight, base enemy, and weapon pickup presentation now live in scene-owned `Visual` children instead of actor/pickup `_draw()` methods |
 | 40. Generic enemy scene variants | complete | `black_pawn.tscn` and `knight_enemy.tscn` now use generic `EnemyActor` roots with component children and definition-driven identity |
-| 41. Editor-owned room art | complete | `first_encounter.tscn` now owns visible `RoomArt` floor, tile, blocker, boundary, set-dressing, enemy preview, and pickup preview nodes; `PrototypeBoard` is the overlay in `main.tscn` |
+| 41. Editor-owned room art | complete | `first_encounter.tscn` now owns visible `RoomArt` floor, tile, grid, boundary, set-dressing, enemy preview, and pickup preview nodes; `PrototypeBoard` is the overlay in `main.tscn` |
+| 42. Room authoring markers | complete | Hero start, blockers, pickups, and enemy spawns are draggable grid-snapping marker nodes that drive runtime placement; room editing guide added |
 
 ## Editor-First Full Game Roadmap
 
@@ -99,7 +100,9 @@ Acceptance criteria:
 - `EnemyActor` damage and defeat flow goes through `HealthComponent`, which owns hurt/defeat feedback animations through an editor-visible `AnimationPlayer`.
 - Player attack profiles and board theme values are configurable through `.tres` Resources or Inspector exports.
 - Player, enemies, base enemy, and weapon pickups own editable `Visual` scene children for placeholder presentation.
-- `first_encounter.tscn` owns visible `RoomArt` children for board tiles, blockers, boundaries, and playground set dressing; marker preview children show enemies and pickups in editor and hide at runtime.
+- `first_encounter.tscn` owns visible `RoomArt` children for board tiles, grid lines, boundaries, and playground set dressing.
+- Hero start, blocker cells, weapon pickups, and enemy spawns are draggable marker nodes with `grid_cell` fields that runtime setup reads.
+- Marker preview children show enemies and pickups in editor and hide at runtime.
 - Existing gameplay behavior, HUD, debug view, tests, restart flow, and editor import still pass.
 - The human owner can now inspect the main scene tree in Godot Editor before deeper composition migration.
 
@@ -134,7 +137,8 @@ Acceptance criteria:
 - Gameplay actors and pickups should not own production `_draw()` methods directly; presentation belongs in visible `Visual` child scenes such as `pawn_hero_visual.tscn`, `black_pawn_visual.tscn`, `knight_enemy_visual.tscn`, and `weapon_pickup_visual.tscn`.
 - Enemy identity in runtime UI/status should come from `EnemyDefinition` data rather than class checks. Legacy `BlackPawn` and `KnightEnemy` classes remain only as direct-test compatibility until they are deleted.
 - `EnemyActor.take_damage()` delegates to `HealthComponent`; legacy `FreeEnemy.take_damage()` remains only for old direct-test compatibility.
-- Room floor, blocker, boundary, and set-dressing presentation should live in the room scene under `RoomArt`; `PrototypeBoard` should stay responsible for telegraph cells, hit flashes, and debug path overlays.
+- Room floor, grid-line, boundary, and set-dressing presentation should live in the room scene under `RoomArt`; `PrototypeBoard` should stay responsible for telegraph cells, hit flashes, and debug path overlays.
+- Gameplay placement should be represented by marker nodes, not parallel art plus hidden arrays. `RoomEncounter` should read markers first and keep exported arrays only as compatibility fallbacks.
 
 ## Errors Encountered
 

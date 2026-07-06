@@ -251,10 +251,21 @@
 ## Editor-Owned Room Art - 2026-07-06
 
 - Responded to editor review that `main.tscn` still looked like a script-generated debug scene rather than an authored room.
-- Added a visible `RoomArt` subtree directly inside `scenes/rooms/first_encounter.tscn`, including floor frame, board surface, checker tiles, blockers, boundary tape, and simple playground/castle set dressing.
+- Added a visible `RoomArt` subtree directly inside `scenes/rooms/first_encounter.tscn`, including floor frame, board surface, checker tiles, boundary tape, and simple playground/castle set dressing.
 - Added editor-visible preview child instances under pickup and enemy spawn markers so weapons, Pawns, and the Knight are visible in the room before pressing Play.
 - Updated spawn marker scripts to hide those preview children at runtime.
 - Added `draw_base_layer` to `PrototypeBoard` and disabled it in `main.tscn`, making the room art own the floor while `PrototypeBoard` keeps telegraphs, hit flashes, and debug paths.
 - Updated tests to assert the main scene and first room own editable board-art and marker-preview nodes.
 - Verified `run_tests.gd`, `attack_runtime_test.gd`, component movement/equipment/Knight tests, `room_encounter_runtime_test.gd`, `encounter_hud_runtime_test.gd`, 1,200-frame headless launch, editor import, and `git diff --check`.
 - Remaining human editor review: reopen `scenes/main.tscn` or `scenes/rooms/first_encounter.tscn`, confirm the room now reads as an actual authored battlefield, and tune/replace the placeholder `Polygon2D` art when ready.
+
+## Room Authoring Markers - 2026-07-06
+
+- Responded to follow-up that the editor scene should show a grid and manageable character/gameplay nodes.
+- Added `HeroStartMarker` and `BlockerMarker` scenes with draggable/snap-to-grid `grid_cell` authoring behavior.
+- Updated enemy and pickup spawn markers so dragging them in editor updates `grid_cell`.
+- Updated `RoomEncounter` so hero start and blockers are read from marker nodes, with old exported blocked cell arrays kept as fallbacks.
+- Added visible `RoomArt/GridLines` nodes to the first encounter and editor labels for hero, blockers, pickups, Pawns, armed Pawn, and Knight.
+- Enabled editable children for `PawnHero` and `FirstEncounter` in `main.tscn`.
+- Added `docs/design/room-authoring-guide.md` explaining which nodes to move and which nodes are visual only.
+- Verified `run_tests.gd`, `attack_runtime_test.gd`, component movement/equipment/Knight tests, `room_encounter_runtime_test.gd`, `encounter_hud_runtime_test.gd`, 1,200-frame headless launch, editor import, and `git diff --check`.

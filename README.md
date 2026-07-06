@@ -21,6 +21,7 @@ The first playable foundation includes:
 - Player damage, invulnerability, defeat, and room reset.
 - A styled Pawn Ambush playground room.
 - Editor-authored first encounter art, blockers, spawn previews, and pickup previews.
+- Draggable room authoring markers for hero start, blockers, enemy spawns, and pickups.
 - Headless grid-logic tests.
 
 ## Run
@@ -48,3 +49,4 @@ Open `project.godot` in Godot 4.6 or run:
 ## Design
 
 The approved GDD, pixel-art bible, and vertical-slice design live in `docs/design/`.
+For editing the current room in Godot, use `docs/design/room-authoring-guide.md`.

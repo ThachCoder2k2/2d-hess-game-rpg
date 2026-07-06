@@ -1,13 +1,11 @@
 @tool
-class_name PickupSpawnPoint
+class_name BlockerMarker
 extends Node2D
 
 const PREVIEW_GRID_ORIGIN := Vector2(64, 36)
 const PREVIEW_CELL_SIZE := 32
 const PREVIEW_BOUNDS := Rect2i(0, 0, 16, 9)
 
-@export var active := true
-@export var pickup_scene: PackedScene
 @export var grid_cell := Vector2i.ZERO:
 	set(value):
 		grid_cell = value
@@ -18,11 +16,10 @@ const PREVIEW_BOUNDS := Rect2i(0, 0, 16, 9)
 		sync_position_to_grid = value
 		if sync_position_to_grid:
 			_sync_position_to_grid()
-@export var weapon: EnemyWeapon
-@export var show_editor_preview := true:
+@export var show_editor_label := true:
 	set(value):
-		show_editor_preview = value
-		_sync_preview_visibility()
+		show_editor_label = value
+		_sync_editor_label()
 
 var _syncing_position := false
 
@@ -30,7 +27,7 @@ var _syncing_position := false
 func _ready() -> void:
 	if sync_position_to_grid:
 		_sync_position_to_grid()
-	_sync_preview_visibility()
+	_sync_editor_label()
 	set_process(Engine.is_editor_hint())
 
 
@@ -42,19 +39,8 @@ func _process(_delta: float) -> void:
 		grid_cell = snapped_cell
 
 
-func create_weapon() -> EnemyWeapon:
-	return weapon.duplicate(true) if active and weapon != null else null
-
-
-func create_pickup() -> WeaponPickup:
-	if not active:
-		return null
-	if pickup_scene == null:
-		return WeaponPickup.new()
-	var pickup := pickup_scene.instantiate() as WeaponPickup
-	if pickup == null:
-		push_warning("PickupSpawnPoint '%s' needs a WeaponPickup-compatible scene." % name)
-	return pickup
+func get_blocked_cell() -> Vector2i:
+	return grid_cell
 
 
 func _sync_position_to_grid() -> void:
@@ -72,20 +58,13 @@ func _position_to_grid_cell(world_position: Vector2) -> Vector2i:
 	)
 
 
-func _sync_preview_visibility() -> void:
-	var preview := get_node_or_null("Preview") as CanvasItem
-	if preview != null:
-		preview.visible = Engine.is_editor_hint() and show_editor_preview
+func _sync_editor_label() -> void:
+	var label := get_node_or_null("EditorLabel") as CanvasItem
+	if label != null:
+		label.visible = Engine.is_editor_hint() and show_editor_label
 
 
 func _draw() -> void:
 	if not Engine.is_editor_hint():
 		return
-	var color := Color("#e8b83f", 0.85)
-	if weapon != null:
-		color = weapon.color
-	var fill := color
-	fill.a = 0.22
-	draw_rect(Rect2(Vector2(-8, -8), Vector2(16, 16)), fill)
-	draw_rect(Rect2(Vector2(-8, -8), Vector2(16, 16)), Color("#fff4d6", 0.75), false, 1.5)
-	draw_line(Vector2(-7, 5), Vector2(7, -5), color, 2.5)
+	draw_rect(Rect2(Vector2(-14, -14), Vector2(28, 28)), Color("#fff4d6", 0.55), false, 1.0)

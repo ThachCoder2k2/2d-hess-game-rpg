@@ -22,15 +22,22 @@ func _run() -> void:
 	var room_art_ok: bool = (
 		room.get_node_or_null("RoomArt") is Node2D
 		and room.get_node_or_null("RoomArt/Tiles/Tile_00_00") is Polygon2D
-		and room.get_node_or_null("RoomArt/Blockers/Blocker_07_02") is Polygon2D
+		and room.get_node_or_null("RoomArt/GridLines/Vertical_00") is Line2D
 		and room.get_node_or_null("RoomArt/Boundary/OuterCrayonLine") is Line2D
 	)
+	var blocker_markers_ok: bool = (
+		room.get_node_or_null("Blocker_07_02") != null
+		and room.get_node("Blocker_07_02").has_method("get_blocked_cell")
+		and room.get_node("Blocker_07_02").call("get_blocked_cell") == Vector2i(7, 2)
+	)
 	var marker_previews_ok: bool = (
-		room.get_node_or_null("PencilSpearPickup/Preview") != null
+		room.get_node_or_null("HeroStart/Preview") != null
+		and room.get_node_or_null("PencilSpearPickup/Preview") != null
 		and room.get_node_or_null("RulerBladePickup/Preview") != null
 		and room.get_node_or_null("PawnRecruitSpawn/Preview") != null
 		and room.get_node_or_null("ArmedPawnSpawn/Preview") != null
 		and room.get_node_or_null("KnightTrackerSpawn/Preview") != null
+		and not (room.get_node("HeroStart/Preview") as CanvasItem).visible
 		and not (room.get_node("PencilSpearPickup/Preview") as CanvasItem).visible
 		and not (room.get_node("PawnRecruitSpawn/Preview") as CanvasItem).visible
 	)
@@ -89,10 +96,11 @@ func _run() -> void:
 	var armed_ok := armed_pawn != null and armed_pawn.weapon != null and armed_pawn.weapon.display_name == "Pencil Spear"
 	var message := String(room.call("get_start_message"))
 	var message_ok: bool = message.begins_with("First clash")
+	var hero_start_ok: bool = room.has_method("get_hero_start_cell") and room.call("get_hero_start_cell") == Vector2i(3, 7)
 	for enemy in spawned:
 		enemy.state = FreeEnemy.State.DEFEATED
 		room.call("_on_enemy_defeated", enemy)
 	var completion_ok: bool = completed_count["value"] == 1 and String(room.call("get_clear_message")) == "ROOM CLEARED"
-	var succeeded: bool = blockers_ok and pickups_ok and enemies_ok and scene_spawn_ok and definitions_ok and visuals_ok and room_art_ok and marker_previews_ok and armed_ok and message_ok and completion_ok
+	var succeeded: bool = blockers_ok and blocker_markers_ok and pickups_ok and enemies_ok and scene_spawn_ok and definitions_ok and visuals_ok and room_art_ok and marker_previews_ok and armed_ok and message_ok and hero_start_ok and completion_ok
 	print("ROOM ENCOUNTER TEST: %s" % ["PASS" if succeeded else "FAIL"])
 	quit(0 if succeeded else 1)
