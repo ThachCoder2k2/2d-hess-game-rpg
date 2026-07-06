@@ -147,3 +147,11 @@
 - `HealthComponent` now owns `EnemyActor` damage, hurt feedback values, attack-token cleanup, grid unregistering, defeat signal emission, and queue-free timing.
 - `scenes/components/health_component.tscn` owns an `AnimationPlayer` with `hurt` and `defeat` animations targeting the actor root, so hit/defeat timing can be tuned in the editor.
 - `FreeEnemy.take_damage()` remains as a legacy fallback for direct subclass tests until those compatibility classes are retired.
+
+## Editor-Owned Room Art
+
+- A room can be technically editable while still looking script-generated if its visible battlefield is drawn only by a runtime overlay.
+- `first_encounter.tscn` now needs to be judged by its actual scene tree: `RoomArt/Tiles`, `RoomArt/Blockers`, `RoomArt/Boundary`, `RoomArt/SetDressing`, spawn marker previews, and pickup previews should be visible before pressing Play.
+- `PrototypeBoard` is better treated as a combat overlay for danger cells, hit flashes, and debug paths. When a room owns visible art, `main.tscn` should disable the board base layer so the authored room surface is what the player and editor see.
+- Spawn marker preview children solve the editor readability problem for enemies and pickups, but they must hide at runtime so the real gameplay instances remain the only active actors/items.
+- The next art migration should replace current `Polygon2D` room-art placeholders with proper pixel sprites or TileMap-style assets, while keeping the same editor-owned room structure.

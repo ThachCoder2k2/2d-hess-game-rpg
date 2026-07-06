@@ -18,11 +18,16 @@ const PREVIEW_CELL_SIZE := 32
 		if sync_position_to_grid:
 			_sync_position_to_grid()
 @export var weapon: EnemyWeapon
+@export var show_editor_preview := true:
+	set(value):
+		show_editor_preview = value
+		_sync_preview_visibility()
 
 
 func _ready() -> void:
 	if sync_position_to_grid:
 		_sync_position_to_grid()
+	_sync_preview_visibility()
 
 
 func create_weapon() -> EnemyWeapon:
@@ -42,6 +47,12 @@ func create_pickup() -> WeaponPickup:
 
 func _sync_position_to_grid() -> void:
 	position = PREVIEW_GRID_ORIGIN + Vector2(grid_cell * PREVIEW_CELL_SIZE) + Vector2.ONE * PREVIEW_CELL_SIZE * 0.5
+
+
+func _sync_preview_visibility() -> void:
+	var preview := get_node_or_null("Preview") as CanvasItem
+	if preview != null:
+		preview.visible = Engine.is_editor_hint() and show_editor_preview
 
 
 func _draw() -> void:

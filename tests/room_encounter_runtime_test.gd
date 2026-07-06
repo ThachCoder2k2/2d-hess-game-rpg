@@ -19,6 +19,21 @@ func _run() -> void:
 	var room_scene := load("res://scenes/rooms/first_encounter.tscn") as PackedScene
 	var room := room_scene.instantiate()
 	root.add_child(room)
+	var room_art_ok: bool = (
+		room.get_node_or_null("RoomArt") is Node2D
+		and room.get_node_or_null("RoomArt/Tiles/Tile_00_00") is Polygon2D
+		and room.get_node_or_null("RoomArt/Blockers/Blocker_07_02") is Polygon2D
+		and room.get_node_or_null("RoomArt/Boundary/OuterCrayonLine") is Line2D
+	)
+	var marker_previews_ok: bool = (
+		room.get_node_or_null("PencilSpearPickup/Preview") != null
+		and room.get_node_or_null("RulerBladePickup/Preview") != null
+		and room.get_node_or_null("PawnRecruitSpawn/Preview") != null
+		and room.get_node_or_null("ArmedPawnSpawn/Preview") != null
+		and room.get_node_or_null("KnightTrackerSpawn/Preview") != null
+		and not (room.get_node("PencilSpearPickup/Preview") as CanvasItem).visible
+		and not (room.get_node("PawnRecruitSpawn/Preview") as CanvasItem).visible
+	)
 	var spawned: Array[FreeEnemy] = []
 	var completed_count := {"value": 0}
 	room.connect("enemy_spawned", func(enemy: FreeEnemy) -> void: spawned.append(enemy))
@@ -78,6 +93,6 @@ func _run() -> void:
 		enemy.state = FreeEnemy.State.DEFEATED
 		room.call("_on_enemy_defeated", enemy)
 	var completion_ok: bool = completed_count["value"] == 1 and String(room.call("get_clear_message")) == "ROOM CLEARED"
-	var succeeded: bool = blockers_ok and pickups_ok and enemies_ok and scene_spawn_ok and definitions_ok and visuals_ok and armed_ok and message_ok and completion_ok
+	var succeeded: bool = blockers_ok and pickups_ok and enemies_ok and scene_spawn_ok and definitions_ok and visuals_ok and room_art_ok and marker_previews_ok and armed_ok and message_ok and completion_ok
 	print("ROOM ENCOUNTER TEST: %s" % ["PASS" if succeeded else "FAIL"])
 	quit(0 if succeeded else 1)

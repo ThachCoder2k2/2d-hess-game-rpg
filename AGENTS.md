@@ -44,6 +44,7 @@ Acceptance gate:
 - Pawn and Knight gameplay scenes should use the generic `EnemyActor` root plus component child nodes and `EnemyDefinition` Resources; do not add new enemy subclasses for normal content.
 - Player attacks, board theme values, enemy definitions, room objective text, and weapon data should be configurable through `.tres` Resources or Inspector exports.
 - Player, enemy, and pickup presentation should be owned by visible `Visual` child scene instances, with gameplay scripts only syncing state into them.
+- Encounter rooms should own visible `RoomArt` child nodes for the board floor, blockers, boundaries, and key set dressing; a script-only board overlay is not enough for editor review.
 - Enemy hurt and defeat feedback should be owned by `HealthComponent` and its `AnimationPlayer`; do not put new damage/defeat logic on enemy subclasses.
 - Existing gameplay, HUD, debug view, restart flow, and tests must still pass.
 - The human owner must still approve or request tuning for room layout, pickup risk, opening readability, and encounter difficulty before E2 is fully accepted.
@@ -161,6 +162,8 @@ Do not start a broad new phase while the current phase has a broken playable sli
 - Prefer typed `.tres` Resources for configurable data: enemy definitions, movement, attacks, decisions, weapons, difficulty, room objectives, and dialogue.
 - Prefer exported variables for values designers should tune in Inspector.
 - Prefer child-node components when behavior belongs to an entity but should remain visible/editable in the scene tree.
+- Prefer direct room-art nodes for first-pass room readability. Use `RoomArt/Tiles`, `RoomArt/Blockers`, `RoomArt/Boundary`, and `RoomArt/SetDressing` before falling back to runtime-only drawing.
+- Keep runtime overlays separate from authored art. `PrototypeBoard` should draw telegraphs, hit flashes, and debug paths; room floors and props should live in the room scene when they are part of level design.
 - Keep runtime factories as bridges only when converting old scripted systems.
 - Do not introduce a strict ECS framework. Use Godot-native scenes, nodes, Resources, and signals.
 - Shared Resource assets should be treated as immutable at runtime; duplicate per-instance mutable weapon or profile data.

@@ -247,3 +247,14 @@
 - Kept `FreeEnemy.take_damage()` as the legacy direct-test fallback while scene-spawned enemies use the component path.
 - Added tests proving the health component owns feedback animations, hurt feedback state, and defeat cleanup.
 - Verified `run_tests.gd`, `attack_runtime_test.gd`, component movement/equipment/Knight tests, `room_encounter_runtime_test.gd`, `encounter_hud_runtime_test.gd`, 1,200-frame headless launch, editor import, and `git diff --check`.
+
+## Editor-Owned Room Art - 2026-07-06
+
+- Responded to editor review that `main.tscn` still looked like a script-generated debug scene rather than an authored room.
+- Added a visible `RoomArt` subtree directly inside `scenes/rooms/first_encounter.tscn`, including floor frame, board surface, checker tiles, blockers, boundary tape, and simple playground/castle set dressing.
+- Added editor-visible preview child instances under pickup and enemy spawn markers so weapons, Pawns, and the Knight are visible in the room before pressing Play.
+- Updated spawn marker scripts to hide those preview children at runtime.
+- Added `draw_base_layer` to `PrototypeBoard` and disabled it in `main.tscn`, making the room art own the floor while `PrototypeBoard` keeps telegraphs, hit flashes, and debug paths.
+- Updated tests to assert the main scene and first room own editable board-art and marker-preview nodes.
+- Verified `run_tests.gd`, `attack_runtime_test.gd`, component movement/equipment/Knight tests, `room_encounter_runtime_test.gd`, `encounter_hud_runtime_test.gd`, 1,200-frame headless launch, editor import, and `git diff --check`.
+- Remaining human editor review: reopen `scenes/main.tscn` or `scenes/rooms/first_encounter.tscn`, confirm the room now reads as an actual authored battlefield, and tune/replace the placeholder `Polygon2D` art when ready.
