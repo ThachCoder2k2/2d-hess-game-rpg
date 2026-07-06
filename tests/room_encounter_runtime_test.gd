@@ -21,7 +21,7 @@ func _run() -> void:
 	root.add_child(room)
 	var room_art_ok: bool = (
 		room.get_node_or_null("RoomArt") is Node2D
-		and room.get_node_or_null("RoomArt/Tiles/Tile_00_00") is Polygon2D
+		and room.get_node_or_null("RoomArt/TileMap") is TileMapLayer
 		and room.get_node_or_null("RoomArt/GridLines/Vertical_00") is Line2D
 		and room.get_node_or_null("RoomArt/Boundary/OuterCrayonLine") is Line2D
 	)

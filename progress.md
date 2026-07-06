@@ -269,3 +269,13 @@
 - Enabled editable children for `PawnHero` and `FirstEncounter` in `main.tscn`.
 - Added `docs/design/room-authoring-guide.md` explaining which nodes to move and which nodes are visual only.
 - Verified `run_tests.gd`, `attack_runtime_test.gd`, component movement/equipment/Knight tests, `room_encounter_runtime_test.gd`, `encounter_hud_runtime_test.gd`, 1,200-frame headless launch, editor import, and `git diff --check`.
+
+## TileMap Room Floor - 2026-07-06
+
+- Converted the first encounter floor from many individual `Polygon2D` tile nodes to a real `TileMapLayer`.
+- Added `assets/tiles/playground_tiles.svg` as the small board tile atlas.
+- Added `resources/tiles/playground_tileset.tres` and `scenes/world/playground_tilemap.tscn`.
+- Replaced `RoomArt/Tiles/*` in `first_encounter.tscn` with `RoomArt/TileMap`.
+- Kept grid lines, boundaries, set dressing, and gameplay markers separate so tile editing and gameplay placement stay clean in the editor.
+- Updated tests and the room authoring guide to point at the TileMapLayer workflow.
+- Verified `run_tests.gd`, `attack_runtime_test.gd`, component movement/equipment/Knight tests, `room_encounter_runtime_test.gd`, `encounter_hud_runtime_test.gd`, 1,200-frame headless launch, editor import, and `git diff --check`.

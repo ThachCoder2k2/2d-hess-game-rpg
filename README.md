@@ -20,6 +20,7 @@ The first playable foundation includes:
 - Encounter attack token preventing simultaneous strikes.
 - Player damage, invulnerability, defeat, and room reset.
 - A styled Pawn Ambush playground room.
+- TileMapLayer-based board floor with reusable TileSet assets.
 - Editor-authored first encounter art, blockers, spawn previews, and pickup previews.
 - Draggable room authoring markers for hero start, blockers, enemy spawns, and pickups.
 - Headless grid-logic tests.

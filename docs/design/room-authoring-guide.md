@@ -23,7 +23,7 @@ The markers snap to the 32px grid in editor.
 
 ## Nodes That Are Visual Only
 
-- `RoomArt/Tiles`: board color tiles.
+- `RoomArt/TileMap`: TileMapLayer for board floor tiles.
 - `RoomArt/GridLines`: visible grid lines.
 - `RoomArt/Boundary`: crayon/tape boundary art.
 - `RoomArt/SetDressing`: background props.
@@ -41,5 +41,6 @@ Move these for presentation only. They do not change gameplay unless paired with
 
 1. Open `scenes/rooms/first_encounter.tscn`.
 2. Drag `HeroStart`, enemy markers, pickup markers, or blocker markers.
-3. Press Play from `scenes/main.tscn`.
-4. If the first 10 seconds feel messy, move fewer things at once and retest.
+3. Use Godot's TileMap tools on `RoomArt/TileMap` when changing board floor tiles.
+4. Press Play from `scenes/main.tscn`.
+5. If the first 10 seconds feel messy, move fewer things at once and retest.

@@ -151,10 +151,11 @@
 ## Editor-Owned Room Art
 
 - A room can be technically editable while still looking script-generated if its visible battlefield is drawn only by a runtime overlay.
-- `first_encounter.tscn` now needs to be judged by its actual scene tree: `RoomArt/Tiles`, `RoomArt/Blockers`, `RoomArt/Boundary`, `RoomArt/SetDressing`, spawn marker previews, and pickup previews should be visible before pressing Play.
+- `first_encounter.tscn` now needs to be judged by its actual scene tree: `RoomArt/TileMap`, `RoomArt/GridLines`, `RoomArt/Boundary`, `RoomArt/SetDressing`, gameplay markers, spawn marker previews, and pickup previews should be visible before pressing Play.
 - `PrototypeBoard` is better treated as a combat overlay for danger cells, hit flashes, and debug paths. When a room owns visible art, `main.tscn` should disable the board base layer so the authored room surface is what the player and editor see.
 - Spawn marker preview children solve the editor readability problem for enemies and pickups, but they must hide at runtime so the real gameplay instances remain the only active actors/items.
-- The next art migration should replace current `Polygon2D` room-art placeholders with proper pixel sprites or TileMap-style assets, while keeping the same editor-owned room structure.
+- The next art migration should replace remaining `Polygon2D` set dressing with proper pixel sprites while keeping the same editor-owned room structure.
 - Gameplay-affecting editor objects need to be marker nodes, not parallel visual art plus hidden arrays. `HeroStart`, `Blocker_*`, pickup markers, and enemy markers now expose draggable/snap-to-grid `grid_cell` fields that runtime setup reads.
 - Blocker collision now comes from `BlockerMarker` nodes when present; `RoomEncounter.blocked_cells` remains only as a fallback for older rooms.
 - `docs/design/room-authoring-guide.md` is the human-facing guide for editing the first encounter without touching scripts.
+- The first encounter floor is now `RoomArt/TileMap`, a `TileMapLayer` backed by `resources/tiles/playground_tileset.tres` and `assets/tiles/playground_tiles.svg`. This keeps terrain editing in Godot's TileMap tools instead of a large list of Polygon2D tile nodes.
