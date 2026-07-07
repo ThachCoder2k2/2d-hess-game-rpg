@@ -17,10 +17,11 @@ func _run() -> void:
 	var hero_start_cell := Vector2i.ZERO
 	if room != null and room.has_method("get_hero_start_cell"):
 		hero_start_cell = room.call("get_hero_start_cell")
-	var encounter_label := game.get("encounter_label") as Label
-	var skill_fill := game.get("skill_fill") as ColorRect
-	var damage_flash := game.get("damage_flash") as ColorRect
-	var result_label := game.get("result_label") as Label
+	var hud := game.get("hud") as Node
+	var encounter_label := hud.get_node_or_null("EncounterLabel") as Label
+	var skill_fill := hud.get_node_or_null("SkillFill") as ColorRect
+	var damage_flash := hud.get_node_or_null("DamageFlash") as ColorRect
+	var result_label := hud.get_node_or_null("ResultLabel") as Label
 	var editor_binding_ok: bool = (
 		game.get("grid_world") == game.get_node_or_null("GridWorld")
 		and game.get("director") == game.get_node_or_null("EncounterDirector")

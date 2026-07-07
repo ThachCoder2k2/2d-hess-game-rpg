@@ -21,16 +21,6 @@ var board: PrototypeBoard
 var hero: PawnHero
 var current_room: Node
 var hud: Node
-var status_label: Label
-var courage_label: Label
-var skill_label: Label
-var skill_fill: ColorRect
-var encounter_label: Label
-var objective_label: Label
-var token_label: Label
-var damage_flash: ColorRect
-var result_panel: ColorRect
-var result_label: Label
 var remaining_enemies := 0
 var total_enemies := 0
 var room_ending := false
@@ -56,15 +46,8 @@ func _process(delta: float) -> void:
 	if Input.is_key_pressed(KEY_F3) and not _debug_key_was_pressed:
 		_set_debug_enabled(not debug_enabled)
 	_debug_key_was_pressed = Input.is_key_pressed(KEY_F3)
-	if hero != null:
-		if hud != null and hud.has_method("set_cell_status"):
-			hud.call("set_cell_status", hero.current_cell, _facing_name(hero.facing))
-		elif status_label != null:
-			status_label.text = "CELL %02d,%02d  FACE %s" % [
-				hero.current_cell.x,
-				hero.current_cell.y,
-				_facing_name(hero.facing),
-			]
+	if hero != null and hud != null and hud.has_method("set_cell_status"):
+		hud.call("set_cell_status", hero.current_cell, _facing_name(hero.facing))
 	_update_shake(delta)
 	_update_damage_flash(delta)
 
@@ -143,30 +126,13 @@ func _setup_room_instance(room: Node) -> void:
 
 func _setup_hud() -> void:
 	hud = _resolve_scene_node(hud_path, HUD_SCENE, CanvasLayer.new(), "HUD")
-	_bind_hud_references()
 	if hud != null and hud.has_method("setup"):
 		hud.call("setup", hero.courage if hero != null else 3)
-	_bind_hud_references()
 	if hero != null:
 		_update_courage(hero.courage)
 		_update_skill_cooldown(hero.skill_cooldown_left)
 	_update_encounter_count()
 	_update_token_owner(null)
-
-
-func _bind_hud_references() -> void:
-	if hud == null:
-		return
-	courage_label = hud.get_node_or_null("CourageLabel") as Label
-	skill_label = hud.get_node_or_null("SkillLabel") as Label
-	skill_fill = hud.get_node_or_null("SkillFill") as ColorRect
-	status_label = hud.get_node_or_null("StatusLabel") as Label
-	encounter_label = hud.get_node_or_null("EncounterLabel") as Label
-	objective_label = hud.get_node_or_null("ObjectiveLabel") as Label
-	token_label = hud.get_node_or_null("TokenLabel") as Label
-	damage_flash = hud.get_node_or_null("DamageFlash") as ColorRect
-	result_panel = hud.get_node_or_null("ResultPanel") as ColorRect
-	result_label = hud.get_node_or_null("ResultLabel") as Label
 
 
 func _on_room_enemy_spawned(enemy: FreeEnemy) -> void:
@@ -177,7 +143,7 @@ func _on_room_enemy_spawned(enemy: FreeEnemy) -> void:
 
 
 func _on_enemy_weapon_changed(enemy: FreeEnemy, weapon: EnemyWeapon) -> void:
-	if objective_label == null or weapon == null:
+	if hud == null or weapon == null:
 		return
 	var piece_name := _enemy_piece_name(enemy)
 	_update_status("%s picked up %s. Its chess attack has been replaced." % [piece_name, weapon.display_name])
@@ -254,8 +220,6 @@ func _on_hero_damaged(amount: int, remaining: int) -> void:
 	damage_flash_time = 0.22
 	if hud != null and hud.has_method("show_damage_flash"):
 		hud.call("show_damage_flash")
-	elif damage_flash != null:
-		damage_flash.visible = true
 	if remaining == 1:
 		_update_status("One courage left. Wait for the warning, then cut through.")
 	elif remaining > 1:
@@ -265,64 +229,31 @@ func _on_hero_damaged(amount: int, remaining: int) -> void:
 func _update_courage(value: int) -> void:
 	if hud != null and hud.has_method("set_courage"):
 		hud.call("set_courage", value)
-		return
-	if courage_label != null:
-		courage_label.text = "COURAGE " + "◆".repeat(value) + "◇".repeat(3 - value)
-		var color := Color("#d84a3a") if value <= 1 else Color("#ff9a75")
-		courage_label.add_theme_color_override("font_color", color)
 
 
 func _update_skill_cooldown(time_left: float) -> void:
 	if hud != null and hud.has_method("set_skill_cooldown"):
 		hud.call("set_skill_cooldown", time_left, hero.pencil_thrust_cooldown if hero != null else 1.0)
-		return
-	if skill_label == null:
-		return
-	skill_label.text = "Q THRUST READY" if time_left <= 0.0 else "Q THRUST %.1f" % time_left
-	if skill_fill != null:
-		var ratio := 1.0 if time_left <= 0.0 else clampf(1.0 - time_left / hero.pencil_thrust_cooldown, 0.0, 1.0)
-		skill_fill.size.x = 92.0 * ratio
-		skill_fill.color = Color("#8ec8e8", 0.9) if time_left <= 0.0 else Color("#e8b83f", 0.82)
 
 
 func _update_token_owner(token_owner: Node) -> void:
 	if hud != null and hud.has_method("set_token_owner"):
 		hud.call("set_token_owner", token_owner)
-		return
-	if token_label == null:
-		return
-	if token_owner == null:
-		token_label.text = "ENEMY STRIKE READY"
-	else:
-		token_label.text = "STRIKE: " + _enemy_piece_name(token_owner).to_upper()
 
 
 func _update_encounter_count() -> void:
 	if hud != null and hud.has_method("set_encounter_count"):
 		hud.call("set_encounter_count", remaining_enemies, total_enemies)
-		return
-	if encounter_label != null:
-		encounter_label.text = "ENEMIES %d/%d" % [remaining_enemies, total_enemies]
 
 
 func _update_status(text: String) -> void:
 	if hud != null and hud.has_method("set_status"):
 		hud.call("set_status", text)
-		return
-	if objective_label != null:
-		objective_label.text = text
 
 
 func _show_result(title: String, subtitle: String) -> void:
 	if hud != null and hud.has_method("show_result"):
 		hud.call("show_result", title, subtitle)
-		return
-	if result_label == null:
-		return
-	if result_panel != null:
-		result_panel.visible = true
-	result_label.text = title + "\n" + subtitle
-	result_label.visible = true
 
 
 func _enemy_piece_name(enemy: Node) -> String:
@@ -353,15 +284,10 @@ func _update_damage_flash(delta: float) -> void:
 	if damage_flash_time <= 0.0:
 		if hud != null and hud.has_method("update_damage_flash"):
 			hud.call("update_damage_flash", 0.0, 0.22)
-		elif damage_flash != null:
-			damage_flash.visible = false
 		return
 	damage_flash_time = maxf(0.0, damage_flash_time - delta)
 	if hud != null and hud.has_method("update_damage_flash"):
 		hud.call("update_damage_flash", damage_flash_time, 0.22)
-	elif damage_flash != null:
-		var alpha := 0.20 * damage_flash_time / 0.22
-		damage_flash.color = Color("#d84a3a", alpha)
 
 
 func _facing_name(direction: Vector2i) -> String:
