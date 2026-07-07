@@ -1,0 +1,32 @@
+[gd_scene load_steps=10 format=3]
+
+[ext_resource type="Script" path="res://scripts/entities/enemy_actor.gd" id="1"]
+[ext_resource type="Resource" path="res://resources/enemies/bishop_zoner.tres" id="2"]
+[ext_resource type="PackedScene" path="res://objects/visuals/knight_enemy_visual.tscn" id="3"]
+[ext_resource type="PackedScene" path="res://objects/components/grid_movement_component.tscn" id="4"]
+[ext_resource type="PackedScene" path="res://objects/components/enemy_brain_component.tscn" id="5"]
+[ext_resource type="PackedScene" path="res://objects/components/attack_component.tscn" id="6"]
+[ext_resource type="PackedScene" path="res://objects/components/health_component.tscn" id="7"]
+[ext_resource type="PackedScene" path="res://objects/components/equipment_component.tscn" id="8"]
+[ext_resource type="PackedScene" path="res://objects/components/debug_component.tscn" id="9"]
+
+[node name="BishopEnemy" type="Node2D"]
+z_index = 2
+script = ExtResource("1")
+definition = ExtResource("2")
+
+[node name="Visual" parent="." instance=ExtResource("3")]
+
+[node name="GridMovementComponent" parent="." instance=ExtResource("4")]
+
+[node name="EnemyBrainComponent" parent="." instance=ExtResource("5")]
+
+[node name="AttackComponent" parent="." instance=ExtResource("6")]
+
+[node name="HealthComponent" parent="." instance=ExtResource("7")]
+
+[node name="EquipmentComponent" parent="." instance=ExtResource("8")]
+
+[node name="DebugComponent" parent="." instance=ExtResource("9")]
+
+[editable path="Visual"]

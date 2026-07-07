@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="VisualDefinition" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/visual_definition.gd" id="1"]
+[ext_resource type="PackedScene" path="res://objects/visuals/knight_enemy_visual.tscn" id="2"]
+
+[resource]
+script = ExtResource("1")
+id = &"bishop"
+visual_scene = ExtResource("2")
+telegraph_color = Color(0.68, 0.42, 0.95, 1)
+impact_color = Color(0.78, 0.55, 1, 1)
+weapon_anchor = Vector2(5, -2)
+hurt_animation = &"hurt"
+defeat_animation = &"defeat"

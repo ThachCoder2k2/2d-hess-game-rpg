@@ -127,6 +127,17 @@ func _init() -> void:
 	_expect(_visual_has_clip(knight_variant.get_node_or_null("Visual"), &"step"), "Knight visual owns a walk/step animation clip")
 	_expect(knight_variant.get_piece_display_name() == "Knight", "Knight scene variant names itself from definition data")
 
+	# Bishop: a whole new enemy authored purely from editor data (no bishop-specific script).
+	var bishop := _spawn_enemy_variant("res://objects/actors/bishop_enemy.tscn")
+	bishop.current_cell = Vector2i(8, 4)
+	_expect(bishop.get_script().resource_path.ends_with("enemy_actor.gd"), "Bishop uses the generic EnemyActor script, no bishop-specific code")
+	_expect(bishop.definition.id == &"bishop_zoner" and bishop.definition.validate().is_empty(), "Bishop definition is valid and editor-authored")
+	_expect(bishop.get_piece_display_name() == "Bishop", "Bishop names itself from definition data")
+	_expect(bishop.definition.movement.allowed_directions.has(Vector2i(1, 1)) and not bishop.definition.movement.allowed_directions.has(Vector2i.RIGHT), "Bishop moves diagonally, not cardinally, from its MovementConfig")
+	var bishop_cells := bishop.get_unarmed_attack_cells()
+	_expect(bishop_cells.size() == 8 and Vector2i(10, 6) in bishop_cells and Vector2i(9, 5) in bishop_cells, "Bishop unarmed attack threatens diagonal beams from its AttackPattern data")
+	_expect(bishop.archetype.role_policy == &"sniper" and bishop.archetype.preferred_distance == 3 and is_equal_approx(bishop.archetype.flank_bonus, 24.0), "Bishop AI personality is a pure DecisionConfig .tres")
+
 	var enemy_base_scene := load("res://objects/actors/enemy_base.tscn") as PackedScene
 	var pawn_shell := enemy_base_scene.instantiate() as EnemyActor
 	root.add_child(pawn_shell)

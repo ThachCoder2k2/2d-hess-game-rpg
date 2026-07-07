@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="MovementConfig" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/movement_config.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+step_duration = 0.2
+move_recovery = 0.2
+preferred_distance = 3
+path_memory_size = 6
+goal_commitment_decisions = 2
+allowed_directions = Array[Vector2i]([Vector2i(1, 1), Vector2i(1, -1), Vector2i(-1, 1), Vector2i(-1, -1)])

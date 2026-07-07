@@ -1,0 +1,23 @@
+[gd_resource type="Resource" script_class="DecisionConfig" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/decision_config.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+observe_delay = 0.5
+attack_score = 100.0
+future_threat_score = 64.0
+distance_score = 8.0
+pickup_score = 46.0
+turn_threat_score = 40.0
+wait_score = 10.0
+repetition_penalty = 16.0
+recent_cell_penalty = 30.0
+path_step_bonus = 18.0
+local_pickup_bonus = 50.0
+preferred_distance_weight = 3.0
+turn_progress_weight = 3.0
+role_policy = &"sniper"
+preferred_distance = 3
+flank_bonus = 24.0
+axis_change_bonus = 0.0
