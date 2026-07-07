@@ -22,7 +22,7 @@ var target: PawnHero
 var director: EncounterDirector
 var weapon: EnemyWeapon
 var attack_pattern: AttackPattern
-var archetype: EnemyArchetype
+var archetype: DecisionConfig  # resolved AI profile (EnemyDefinition.decision or brain override)
 var current_intent: EnemyIntent
 var action_memory: Array[StringName] = []
 var recent_cells: Array[Vector2i] = []
@@ -52,10 +52,6 @@ func _ready() -> void:
 
 func create_attack_pattern() -> AttackPattern:
 	return AttackPattern.new()
-
-
-func create_archetype() -> EnemyArchetype:
-	return EnemyArchetype.new()
 
 
 func create_enemy_definition() -> EnemyDefinition:
@@ -195,7 +191,7 @@ func _build_intents(context: EnemyContext) -> Array[EnemyIntent]:
 
 	var local_item := grid_world.item_at(context.self_cell)
 	if local_item is WeaponPickup and can_collect_weapon(local_item):
-		intents.append(EnemyIntent.pickup(archetype.pickup_score + 50.0))
+		intents.append(EnemyIntent.pickup(archetype.pickup_score + archetype.local_pickup_bonus))
 
 	var pursuit_cell := _get_pursuit_goal(context)
 	var next_path_cell := grid_world.get_next_path_cell(self, context.self_cell, pursuit_cell)
@@ -220,7 +216,7 @@ func _build_intents(context: EnemyContext) -> Array[EnemyIntent]:
 			else:
 				var old_distance := _facing_distance(context.self_cell, context.hero_cell, context.facing)
 				var new_distance := _facing_distance(context.self_cell, context.hero_cell, direction)
-				turn_score += float(old_distance - new_distance) * 3.0
+				turn_score += float(old_distance - new_distance) * archetype.turn_progress_weight
 			intents.append(EnemyIntent.turn(direction, turn_score))
 
 	intents.append(EnemyIntent.wait(archetype.wait_score))
@@ -288,12 +284,23 @@ func _score_destination(destination: Vector2i, direction: Vector2i, pursuit_cell
 	if context.hero_cell in get_attack_cells(destination, direction):
 		score += archetype.future_threat_score
 	var hero_distance := _manhattan(destination, context.hero_cell)
-	score -= absf(float(hero_distance - archetype.preferred_distance)) * 2.0
+	score -= absf(float(hero_distance - archetype.preferred_distance)) * archetype.preferred_distance_weight
 	return score + get_positioning_bonus(destination, direction, context)
 
 
-func get_positioning_bonus(_destination: Vector2i, _direction: Vector2i, _context: EnemyContext) -> float:
-	return 0.0
+func get_positioning_bonus(destination: Vector2i, direction: Vector2i, context: EnemyContext) -> float:
+	# Data-driven flanking pressure. A skirmisher leaves these at 0; a flanker
+	# (or any future role) sets flank_bonus / axis_change_bonus in its DecisionConfig.
+	if archetype == null:
+		return 0.0
+	var bonus := 0.0
+	if archetype.flank_bonus != 0.0 and weapon == null \
+			and context.hero_cell in get_unarmed_attack_cells(destination, direction):
+		bonus += archetype.flank_bonus
+	if archetype.axis_change_bonus != 0.0 and last_move_direction != Vector2i.ZERO \
+			and last_move_direction.abs() != direction.abs():
+		bonus += archetype.axis_change_bonus
+	return bonus
 
 
 func _nearest_item_cell(item_cells: Array[Vector2i]) -> Vector2i:
@@ -419,7 +426,7 @@ func _ensure_ai_data() -> void:
 	if attack_pattern == null:
 		attack_pattern = create_attack_pattern()
 	if archetype == null:
-		archetype = create_archetype()
+		archetype = _resolve_decision()
 
 
 func _apply_definition() -> void:
@@ -430,11 +437,9 @@ func _apply_definition() -> void:
 	if definition.movement != null:
 		step_duration = definition.movement.step_duration
 		move_recovery_time = definition.movement.move_recovery
-	if definition.decision != null:
-		think_time = definition.decision.observe_delay
-		var preferred_distance := definition.movement.preferred_distance if definition.movement != null else 2
-		archetype = definition.decision.create_archetype(preferred_distance)
-		archetype.role = definition.role
+	archetype = _resolve_decision()
+	if archetype != null:
+		think_time = archetype.observe_delay
 	if definition.unarmed_attack != null:
 		attack_pattern = definition.unarmed_attack
 		unarmed_telegraph_time = attack_pattern.telegraph_duration
@@ -460,16 +465,18 @@ func _goal_commitment_decisions() -> int:
 	return 2
 
 
+func _resolve_decision() -> DecisionConfig:
+	# Base enemies use the definition's decision profile. EnemyActor overrides this
+	# to let a per-enemy DecisionConfig on the EnemyBrainComponent take priority.
+	return definition.decision if definition != null else null
+
+
 func _recent_cell_penalty() -> float:
-	if definition != null and definition.decision != null:
-		return definition.decision.recent_cell_penalty
-	return 30.0
+	return archetype.recent_cell_penalty if archetype != null else 30.0
 
 
 func _path_step_bonus() -> float:
-	if definition != null and definition.decision != null:
-		return definition.decision.path_step_bonus
-	return 18.0
+	return archetype.path_step_bonus if archetype != null else 18.0
 
 
 func _ensure_step_tracking() -> void:
@@ -519,7 +526,7 @@ func _update_debug_label() -> void:
 	var equipment := "UNARMED" if weapon == null else weapon.display_name.to_upper()
 	debug_label.position.y = 16.0 if position.y < 92.0 else -39.0
 	debug_label.text = "%s  %s\n%s %.0f  %s" % [
-		String(archetype.role).to_upper(),
+		String(archetype.role_policy).to_upper(),
 		State.keys()[state],
 		action,
 		score,

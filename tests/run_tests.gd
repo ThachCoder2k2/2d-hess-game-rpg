@@ -99,7 +99,7 @@ func _init() -> void:
 	_expect(knight.get_unarmed_attack_cells().size() == 8, "unarmed knight threatens eight L-shaped cells")
 	_expect(Vector2i(10, 5) in knight.get_unarmed_attack_cells(), "knight includes a legal L-shaped target")
 	_expect(knight.definition != null and knight.definition.id == &"knight_tracker", "knight loads its editor definition")
-	_expect(knight.definition.validate().is_empty() and knight.archetype.role == &"flanker", "knight definition configures a valid flanker")
+	_expect(knight.definition.validate().is_empty() and knight.archetype.role_policy == &"flanker", "knight definition configures a valid flanker")
 	_expect(knight.definition.movement.allowed_directions.size() == 8, "knight movement config exposes eight L-shaped offsets")
 	_expect(Vector2i(2, 1) in knight.definition.movement.allowed_directions and Vector2i.RIGHT not in knight.definition.movement.allowed_directions, "knight movement config does not fall back to one-cell cardinal steps")
 

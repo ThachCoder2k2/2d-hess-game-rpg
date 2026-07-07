@@ -84,19 +84,13 @@ func take_damage(amount: int, direction := Vector2i.ZERO) -> void:
 	super(amount, direction)
 
 
-func get_positioning_bonus(destination: Vector2i, direction: Vector2i, context: EnemyContext) -> float:
-	var bonus := super(destination, direction, context)
-	_ensure_ai_data()
-	if archetype == null or archetype.role != &"flanker":
-		return bonus
-	if weapon == null and context.hero_cell in get_unarmed_attack_cells(destination, direction):
-		bonus += 30.0
-	if last_move_direction != Vector2i.ZERO:
-		var previous_axis := last_move_direction.abs()
-		var next_axis := direction.abs()
-		if previous_axis != next_axis:
-			bonus += 12.0
-	return bonus
+func _resolve_decision() -> DecisionConfig:
+	# Let a per-enemy DecisionConfig assigned on the EnemyBrainComponent node
+	# override the shared EnemyDefinition.decision profile.
+	_configure_components()
+	if brain_component != null and brain_component.decision != null:
+		return brain_component.decision
+	return super()
 
 
 func _configure_components() -> void:

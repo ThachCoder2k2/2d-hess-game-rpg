@@ -15,3 +15,4 @@ repetition_penalty = 16.0
 recent_cell_penalty = 30.0
 path_step_bonus = 18.0
 role_policy = &"skirmisher"
+preferred_distance = 2
