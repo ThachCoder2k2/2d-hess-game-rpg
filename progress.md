@@ -328,3 +328,15 @@ Researched the AI-focused editor surface at the owner's request. Found `EnemyBra
 - The hardcoded flanker branch in `EnemyActor` is gone; positioning bonus is now data (`flank_bonus`/`axis_change_bonus`) in the base scoring, so a Bishop/Rook/Queen personality is a pure `.tres`.
 - Behavior preserved: Knight keeps flank 30 / axis 12 / preferred distance 3, Pawn keeps distance 2. Verified against the deterministic AI unit tests (identical intent scores/choices) + a clean 1200-frame headless encounter + editor import.
 - Deferred (unchanged recommendation): relocating the scoring *code* from `FreeEnemy` into `EnemyBrainComponent` — churn with behavior risk and no editor gain now that the AI *data* is fully editor-owned.
+
+## Data-Only Bishop Enemy - 2026-07-07 (`6831b6a`)
+
+- Validated the data-driven pipeline by adding a whole new enemy with zero new GDScript: `bishop_diagonal.tres` (MovementConfig, 4 diagonal steps), `bishop_diagonal.tres` (AttackPattern, absolute diagonal beams + `clip_to_board`), `bishop_sniper.tres` (DecisionConfig, sniper role + `flank_bonus 24`), `bishop_compatibility.tres` (VisualDefinition, reuses the knight visual as placeholder), `bishop_zoner.tres` (EnemyDefinition), and `bishop_enemy.tscn` (generic `EnemyActor` + components).
+- Added tests asserting the Bishop uses `enemy_actor.gd`, moves/attacks diagonally from data, and carries a pure `DecisionConfig` AI. Own sprite is a later art-pass item.
+
+## Redundant Component Removal - 2026-07-07 (`09b39b3`)
+
+- Audited every script/component for redundancy. Found `AttackComponent` and `EnemyDebugComponent` were hollow scaffolds — their methods had no callers because the attack lifecycle and debug view live in `FreeEnemy` — so every enemy carried two inert nodes.
+- Deleted both scripts + scenes, removed them from `enemy_base`/`black_pawn`/`knight_enemy`/`bishop_enemy`, and stripped their vars/wiring/config-warnings from `EnemyActor`. Slimmed `EnemyBrainComponent` to just its used `decision` export (its 3 accessor methods had no callers).
+- Enemies now carry four functional components: `GridMovementComponent`, `EnemyBrainComponent` (AI data), `HealthComponent`, `EquipmentComponent`. Behavior unchanged; verified against the full test suite, editor import, and a 600-frame headless sim.
+- Remaining minor vestige (left intentionally): `FreeEnemy.create_enemy_definition`/`create_attack_pattern` base virtuals are now only null-safety fallbacks since the subclasses are gone; harmless.
