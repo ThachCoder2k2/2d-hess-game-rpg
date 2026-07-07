@@ -61,6 +61,7 @@ Build the first playable Godot 4 vertical slice, then grow it into a short edito
 | 51. AI editor surface (DecisionConfig) | complete | `EnemyBrainComponent` gains an optional `DecisionConfig` export (AI knobs now on the AI node); `DecisionConfig` absorbs `EnemyArchetype` (deleted) plus `preferred_distance`, the previously hardcoded weights, and data-driven `flank_bonus`/`axis_change_bonus`; the `role=="flanker"` branch is gone so new personalities are pure `.tres`. Behavior preserved (verified against AI unit tests + 1200-frame sim) |
 | 52. Data-only Bishop enemy | complete | New Bishop (diagonal move, diagonal-beam attack, sniper AI) authored entirely from `.tres` + a scene wiring the generic `EnemyActor`; no new GDScript. Test proves the data-driven pipeline end to end |
 | 53. Redundant component removal | complete | Deleted hollow `AttackComponent` + `EnemyDebugComponent` (methods never called; logic lives in `FreeEnemy`); slimmed `EnemyBrainComponent` to its used `decision` export. Enemies now carry 4 functional components (GridMovement, EnemyBrain, Health, Equipment). Behavior unchanged (tests + import + sim clean) |
+| 54. Shared GridMarker base | complete | Extracted the grid-snap logic duplicated across the 4 room markers (`EnemySpawnPoint`, `PickupSpawnPoint`, `HeroStartMarker`, `BlockerMarker`) into a `GridMarker` base; subclasses keep only their data/preview/`_draw`. ~110 duplicated lines removed, one source for cell-snapping. Behavior unchanged (full suite + import clean) |
 
 ## Editor-First Full Game Roadmap
 

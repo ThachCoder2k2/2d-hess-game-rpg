@@ -340,3 +340,10 @@ Researched the AI-focused editor surface at the owner's request. Found `EnemyBra
 - Deleted both scripts + scenes, removed them from `enemy_base`/`black_pawn`/`knight_enemy`/`bishop_enemy`, and stripped their vars/wiring/config-warnings from `EnemyActor`. Slimmed `EnemyBrainComponent` to just its used `decision` export (its 3 accessor methods had no callers).
 - Enemies now carry four functional components: `GridMovementComponent`, `EnemyBrainComponent` (AI data), `HealthComponent`, `EquipmentComponent`. Behavior unchanged; verified against the full test suite, editor import, and a 600-frame headless sim.
 - Remaining minor vestige (left intentionally): `FreeEnemy.create_enemy_definition`/`create_attack_pattern` base virtuals are now only null-safety fallbacks since the subclasses are gone; harmless.
+
+## Shared GridMarker Base - 2026-07-07
+
+- Continued the redundancy audit into `scripts/world/`. All four room markers (`EnemySpawnPoint`, `PickupSpawnPoint`, `HeroStartMarker`, `BlockerMarker`) copy-pasted the same grid-snap block: the preview constants, the `grid_cell`/`sync_position_to_grid` exports with setters, `_process` editor snapping, `_sync_position_to_grid`, and `_position_to_grid_cell` (~30 lines each).
+- Extracted a `@tool class_name GridMarker extends Node2D` base holding that logic plus a `_ready_marker()` hook. Each marker now `extends GridMarker` and keeps only its own data, preview/label visibility, and `_draw`. ~110 lines of duplication removed; cell-snapping has one source.
+- Registering a brand-new global class (`GridMarker`) needs one headless editor import before the strict-typed subclasses parse — expected, same as prior global-class additions.
+- Verified: `run_tests` 0 failures + all runtime tests + editor import + `git diff --check` clean. Marker behavior (drag-to-snap, previews, hero start (3,7)) unchanged.
