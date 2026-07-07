@@ -207,6 +207,9 @@ func _apply_health(current: int, maximum: int) -> void:
 func _texture_for_attack(attack_profile) -> Texture2D:
 	if attack_profile == null:
 		return default_weapon_texture
+	var profile_texture := attack_profile.get("texture") as Texture2D
+	if profile_texture != null:
+		return profile_texture
 	var display_name := String(attack_profile.get("display_name")).to_lower()
 	if display_name.contains("pencil") or int(attack_profile.get("range_cells")) > 1:
 		return spear_texture if spear_texture != null else default_weapon_texture
@@ -216,6 +219,9 @@ func _texture_for_attack(attack_profile) -> Texture2D:
 func _texture_for_weapon(enemy_weapon) -> Texture2D:
 	if enemy_weapon == null:
 		return default_weapon_texture
+	var weapon_texture := enemy_weapon.get("texture") as Texture2D
+	if weapon_texture != null:
+		return weapon_texture
 	var id := String(enemy_weapon.get("id"))
 	if id == "ruler_blade":
 		return ruler_blade_texture if ruler_blade_texture != null else default_weapon_texture

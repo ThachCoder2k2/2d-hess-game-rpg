@@ -12,6 +12,9 @@ enum Shape { LINE, FAN }
 @export_range(0.1, 2.0) var telegraph_time := 0.55
 @export_range(0.1, 2.0) var recovery_time := 0.55
 @export var color := Color("#8ec8e8")
+## Optional sprite for this weapon. When set, visuals use it directly, so a new
+## weapon only needs its own .tres + texture instead of a code lookup by id.
+@export var texture: Texture2D
 
 
 func get_attack_cells(origin: Vector2i, facing: Vector2i) -> Array[Vector2i]:

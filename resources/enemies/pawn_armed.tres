@@ -12,6 +12,7 @@
 script = ExtResource("1")
 id = &"pawn_armed"
 display_name = "Pencil Pawn"
+piece_name = "Pawn"
 role = &"skirmisher"
 max_health = 2
 movement = ExtResource("2")

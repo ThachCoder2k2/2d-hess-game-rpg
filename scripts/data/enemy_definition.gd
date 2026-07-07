@@ -3,6 +3,9 @@ extends Resource
 
 @export var id: StringName
 @export var display_name := "Enemy"
+## Short label shown in HUD/status text (e.g. "Pawn", "Knight"). Authored per
+## definition instead of guessed from the display name in code.
+@export var piece_name := "Enemy"
 @export var role: StringName = &"skirmisher"
 @export_range(1, 100) var max_health := 2
 @export var movement: MovementConfig

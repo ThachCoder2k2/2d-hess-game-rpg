@@ -7,6 +7,9 @@ extends Resource
 @export_range(0.01, 2.0) var impact_delay := 0.07
 @export_range(0.01, 3.0) var recovery := 0.30
 @export var color := Color("#fff2a8")
+## Optional weapon sprite. When set, the hero visual uses it directly instead of
+## inferring a texture from the attack name.
+@export var texture: Texture2D
 
 
 func get_target_cells(origin: Vector2i, facing: Vector2i) -> Array[Vector2i]:

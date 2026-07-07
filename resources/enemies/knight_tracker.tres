@@ -11,6 +11,7 @@
 script = ExtResource("1")
 id = &"knight_tracker"
 display_name = "Tracker Knight"
+piece_name = "Knight"
 role = &"flanker"
 max_health = 2
 movement = ExtResource("2")

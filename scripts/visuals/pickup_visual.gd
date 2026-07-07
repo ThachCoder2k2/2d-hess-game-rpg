@@ -59,6 +59,8 @@ func _apply_glow() -> void:
 func _texture_for_weapon(display_weapon: EnemyWeapon) -> Texture2D:
 	if display_weapon == null:
 		return combined_pickup_texture
+	if display_weapon.texture != null:
+		return display_weapon.texture
 	if display_weapon.id == &"ruler_blade":
 		return ruler_blade_texture if ruler_blade_texture != null else combined_pickup_texture
 	if display_weapon.id == &"pencil_spear":
