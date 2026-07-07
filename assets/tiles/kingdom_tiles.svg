@@ -1,4 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="128" height="32" viewBox="0 0 128 32" shape-rendering="crispEdges">
+<svg xmlns="http://www.w3.org/2000/svg" width="224" height="32" viewBox="0 0 224 32" shape-rendering="crispEdges">
   <!-- 0: light marble (checker light cell) -->
   <rect x="0" y="0" width="32" height="32" fill="#d9d3c6"/>
   <rect x="0" y="0" width="32" height="32" fill="none" stroke="#b7ae9c" stroke-width="1"/>
@@ -23,4 +23,26 @@
   <rect x="96" y="0" width="4" height="32" fill="#c9a24b"/>
   <rect x="124" y="0" width="4" height="32" fill="#c9a24b"/>
   <path d="M108 6 L116 6 M108 16 L116 16 M108 26 L116 26" stroke="#b23a43" stroke-width="1" stroke-opacity="0.6"/>
+
+  <!-- 4: stone-brick wall (castle border) -->
+  <rect x="128" y="0" width="32" height="32" fill="#8a8172"/>
+  <rect x="128" y="0" width="32" height="32" fill="none" stroke="#5f584c" stroke-width="1"/>
+  <path d="M128 10 L160 10 M128 21 L160 21" stroke="#5f584c" stroke-width="1.5"/>
+  <path d="M144 0 L144 10 M136 10 L136 21 M152 10 L152 21 M144 21 L144 32" stroke="#5f584c" stroke-width="1.5"/>
+  <path d="M130 3 L141 3 M147 13 L157 13 M131 24 L141 24" stroke="#9c927f" stroke-width="1" stroke-opacity="0.7"/>
+
+  <!-- 5: throne (top of the carpet) -->
+  <rect x="160" y="0" width="32" height="32" fill="#8a8172"/>
+  <rect x="160" y="0" width="32" height="32" fill="none" stroke="#5f584c" stroke-width="1"/>
+  <rect x="170" y="6" width="12" height="20" fill="#c9a24b"/>
+  <rect x="170" y="6" width="12" height="20" fill="none" stroke="#9a7a30" stroke-width="1"/>
+  <rect x="172" y="12" width="8" height="10" fill="#9c2f37"/>
+  <path d="M170 6 L170 2 M176 6 L176 1 M182 6 L182 2" stroke="#c9a24b" stroke-width="2"/>
+
+  <!-- 6: banner (hung on the wall) -->
+  <rect x="192" y="0" width="32" height="32" fill="#8a8172"/>
+  <rect x="192" y="0" width="32" height="32" fill="none" stroke="#5f584c" stroke-width="1"/>
+  <path d="M200 4 L216 4" stroke="#6b4a2a" stroke-width="2"/>
+  <path d="M202 4 L202 24 L208 20 L214 24 L214 4 Z" fill="#3f6fae" stroke="#274c80" stroke-width="1"/>
+  <circle cx="208" cy="12" r="3" fill="#e8d089"/>
 </svg>

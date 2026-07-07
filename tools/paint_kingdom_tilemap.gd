@@ -8,10 +8,14 @@ extends SceneTree
 const COLUMNS := 16
 const ROWS := 9
 const CARPET_COLUMNS := [7, 8]
+const BANNER_ROWS := [2, 6]
 
 const TILE_LIGHT_MARBLE := Vector2i(0, 0)
 const TILE_DARK_MARBLE := Vector2i(1, 0)
 const TILE_CARPET := Vector2i(2, 0)
+const TILE_WALL := Vector2i(4, 0)
+const TILE_THRONE := Vector2i(5, 0)
+const TILE_BANNER := Vector2i(6, 0)
 
 
 func _init() -> void:
@@ -26,8 +30,15 @@ func _init() -> void:
 	layer.tile_set = tile_set
 	for y in ROWS:
 		for x in COLUMNS:
+			var on_border: bool = x == 0 or x == COLUMNS - 1 or y == 0 or y == ROWS - 1
 			var atlas: Vector2i
-			if x in CARPET_COLUMNS:
+			if y == 0 and x in CARPET_COLUMNS:
+				atlas = TILE_THRONE
+			elif (x == 0 or x == COLUMNS - 1) and y in BANNER_ROWS:
+				atlas = TILE_BANNER
+			elif on_border:
+				atlas = TILE_WALL
+			elif x in CARPET_COLUMNS:
 				atlas = TILE_CARPET
 			elif (x + y) % 2 == 0:
 				atlas = TILE_LIGHT_MARBLE
