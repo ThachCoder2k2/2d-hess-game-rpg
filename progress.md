@@ -318,3 +318,13 @@ Audited the script layer (largest offenders: `free_enemy.gd` 570 lines, `main.gd
 - Phase 4 (`16e83af`): optional `texture` on `EnemyWeapon`/`AttackProfile` — visuals use it directly, so a new weapon is just a `.tres` + texture (id lookups kept as fallback for current placeholders). Authored `piece_name` on `EnemyDefinition` (Pawn/Knight) replaces FreeEnemy's display-name string guessing.
 - Phase D (brain extraction) deferred: enemy AI is already Resource-driven through `DecisionConfig`/archetype `.tres`, so relocating the decision plumbing out of `FreeEnemy` into `EnemyBrainComponent` is behavior-risky churn with no expandability gain. Left for an explicit, isolated pass if desired.
 - Net: adding a new enemy or weapon is now editor/Resource work (definition + movement/decision/attack/visual `.tres` + a scene variant), no new GDScript required; HUD, dead code, and duplicated tuning are gone.
+
+## AI Editor Surface - 2026-07-07 (`473e5f3`)
+
+Researched the AI-focused editor surface at the owner's request. Found `EnemyBrainComponent` was a hollow node (zero Inspector fields) while the real AI knobs lived on a `DecisionConfig` `.tres` two hops away and were duplicated into a runtime `EnemyArchetype`; the Knight's flanker positioning was a hardcoded `role=="flanker"` branch. Fixed as one verified commit:
+
+- `EnemyBrainComponent` now exposes an optional `DecisionConfig` export, so AI tuning is editable directly on the AI node; an enemy can override the shared `EnemyDefinition.decision`.
+- `DecisionConfig` is the single AI profile: absorbed `EnemyArchetype`'s score fields (class deleted, no copy step), added `preferred_distance`, exposed the previously hardcoded weights (`preferred_distance_weight`, `turn_progress_weight`, `local_pickup_bonus`), and added `flank_bonus`/`axis_change_bonus`.
+- The hardcoded flanker branch in `EnemyActor` is gone; positioning bonus is now data (`flank_bonus`/`axis_change_bonus`) in the base scoring, so a Bishop/Rook/Queen personality is a pure `.tres`.
+- Behavior preserved: Knight keeps flank 30 / axis 12 / preferred distance 3, Pawn keeps distance 2. Verified against the deterministic AI unit tests (identical intent scores/choices) + a clean 1200-frame headless encounter + editor import.
+- Deferred (unchanged recommendation): relocating the scoring *code* from `FreeEnemy` into `EnemyBrainComponent` — churn with behavior risk and no editor gain now that the AI *data* is fully editor-owned.

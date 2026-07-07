@@ -57,7 +57,8 @@ Build the first playable Godot 4 vertical slice, then grow it into a short edito
 | 47. Editor-first refactor (cleanup + de-dup) | complete | Removed dead FreeEnemy `_draw_*`; hero attack profiles load from `.tres` instead of hardcoded stats; `main.gd` HUD updates route only through the HUD scene (removed mirror vars, `_bind_hud_references`, and elif fallbacks) |
 | 48. Data-driven attack patterns + legacy retirement | complete | `AttackPattern` computes cells from `cell_offsets` data; migrated pawn/knight patterns to `.tres`; deleted `PawnPattern`/`KnightPattern`/`BlackPawn`/`KnightEnemy`/`TrainingDummy`; spawns require an editor `enemy_scene`; fixed a latent debug-redraw crash on freed enemies |
 | 49. Resource-driven weapon art and piece names | complete | Optional `texture` on `EnemyWeapon`/`AttackProfile` (visuals prefer it over id lookups); authored `piece_name` on `EnemyDefinition` replaces display-name string guessing |
-| 50. Brain component extraction | deferred | AI scoring already data-driven via `DecisionConfig`/archetype `.tres`; relocating the decision plumbing from `FreeEnemy` into `EnemyBrainComponent` is behavior-risky churn with no expandability gain. Deferred pending explicit go-ahead |
+| 50. Brain code relocation | deferred | Moving the scoring *code* from `FreeEnemy` into `EnemyBrainComponent` is behavior-risky churn with no expandability gain; deferred. The AI *data* surface was fixed instead (phase 51) |
+| 51. AI editor surface (DecisionConfig) | complete | `EnemyBrainComponent` gains an optional `DecisionConfig` export (AI knobs now on the AI node); `DecisionConfig` absorbs `EnemyArchetype` (deleted) plus `preferred_distance`, the previously hardcoded weights, and data-driven `flank_bonus`/`axis_change_bonus`; the `role=="flanker"` branch is gone so new personalities are pure `.tres`. Behavior preserved (verified against AI unit tests + 1200-frame sim) |
 
 ## Editor-First Full Game Roadmap
 
