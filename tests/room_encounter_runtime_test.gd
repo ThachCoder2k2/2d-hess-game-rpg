@@ -22,7 +22,7 @@ func _run() -> void:
 	var room_art_ok: bool = (
 		room.get_node_or_null("RoomArt") is Node2D
 		and room.get_node_or_null("RoomArt/TileMap") is TileMapLayer
-		and room.get_node_or_null("RoomArt/GridLines/Vertical_00") is Line2D
+		and room.get_node_or_null("RoomArt/GridLines") is GridLinesOverlay
 		and room.get_node_or_null("RoomArt/Boundary/OuterCrayonLine") is Line2D
 	)
 	var blocker_markers_ok: bool = (

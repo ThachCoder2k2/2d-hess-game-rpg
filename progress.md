@@ -347,3 +347,10 @@ Researched the AI-focused editor surface at the owner's request. Found `EnemyBra
 - Extracted a `@tool class_name GridMarker extends Node2D` base holding that logic plus a `_ready_marker()` hook. Each marker now `extends GridMarker` and keeps only its own data, preview/label visibility, and `_draw`. ~110 lines of duplication removed; cell-snapping has one source.
 - Registering a brand-new global class (`GridMarker`) needs one headless editor import before the strict-typed subclasses parse — expected, same as prior global-class additions.
 - Verified: `run_tests` 0 failures + all runtime tests + editor import + `git diff --check` clean. Marker behavior (drag-to-snap, previews, hero start (3,7)) unchanged.
+
+## GridLines Overlay Node - 2026-07-07
+
+- The room dock's biggest clutter was `RoomArt/GridLines`: 27 hand-placed `Line2D` nodes (17 vertical + 10 horizontal) for the cell grid. Replaced them with one `GridLinesOverlay` (`@tool Node2D`) that draws the grid from exported dims (`grid_origin`, `cell_size`, `columns`, `rows`, colour, width). Decorative overlay, so `_draw` is allowed and runs in editor + game.
+- Two test assertions checked the removed `GridLines/Vertical_00` child; updated both to `GridLines is GridLinesOverlay`.
+- Verified: `run_tests` 0 failures + `room_encounter`/`encounter_hud`/`attack`/`movement` runtime tests + editor import + a real-renderer capture (grid renders identically) + `git diff --check` clean.
+- Room tree is now much lighter: RoomArt = Frame, TileMap, GridLines (1 node), Boundary, SetDressing.

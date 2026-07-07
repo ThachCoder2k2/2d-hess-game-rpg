@@ -1,6 +1,7 @@
 [gd_scene load_steps=19 format=3]
 
 [ext_resource type="PackedScene" path="res://objects/world/room_encounter.tscn" id="1"]
+[ext_resource type="Script" path="res://scripts/world/grid_lines_overlay.gd" id="19"]
 [ext_resource type="PackedScene" path="res://objects/markers/pickup_spawn_point.tscn" id="2"]
 [ext_resource type="PackedScene" path="res://objects/markers/enemy_spawn_point.tscn" id="3"]
 [ext_resource type="Resource" path="res://resources/weapons/pencil_spear.tres" id="4"]
@@ -36,141 +37,7 @@ polygon = PackedVector2Array(0, 0, 536, 0, 536, 312, 0, 312)
 [node name="TileMap" parent="RoomArt" instance=ExtResource("18")]
 
 [node name="GridLines" type="Node2D" parent="RoomArt"]
-
-[node name="Vertical_00" type="Line2D" parent="RoomArt/GridLines"]
-points = PackedVector2Array(64, 36, 64, 324)
-width = 1.0
-default_color = Color(0.0941176, 0.0627451, 0.0705882, 0.42)
-
-[node name="Vertical_01" type="Line2D" parent="RoomArt/GridLines"]
-points = PackedVector2Array(96, 36, 96, 324)
-width = 1.0
-default_color = Color(0.0941176, 0.0627451, 0.0705882, 0.42)
-
-[node name="Vertical_02" type="Line2D" parent="RoomArt/GridLines"]
-points = PackedVector2Array(128, 36, 128, 324)
-width = 1.0
-default_color = Color(0.0941176, 0.0627451, 0.0705882, 0.42)
-
-[node name="Vertical_03" type="Line2D" parent="RoomArt/GridLines"]
-points = PackedVector2Array(160, 36, 160, 324)
-width = 1.0
-default_color = Color(0.0941176, 0.0627451, 0.0705882, 0.42)
-
-[node name="Vertical_04" type="Line2D" parent="RoomArt/GridLines"]
-points = PackedVector2Array(192, 36, 192, 324)
-width = 1.0
-default_color = Color(0.0941176, 0.0627451, 0.0705882, 0.42)
-
-[node name="Vertical_05" type="Line2D" parent="RoomArt/GridLines"]
-points = PackedVector2Array(224, 36, 224, 324)
-width = 1.0
-default_color = Color(0.0941176, 0.0627451, 0.0705882, 0.42)
-
-[node name="Vertical_06" type="Line2D" parent="RoomArt/GridLines"]
-points = PackedVector2Array(256, 36, 256, 324)
-width = 1.0
-default_color = Color(0.0941176, 0.0627451, 0.0705882, 0.42)
-
-[node name="Vertical_07" type="Line2D" parent="RoomArt/GridLines"]
-points = PackedVector2Array(288, 36, 288, 324)
-width = 1.0
-default_color = Color(0.0941176, 0.0627451, 0.0705882, 0.42)
-
-[node name="Vertical_08" type="Line2D" parent="RoomArt/GridLines"]
-points = PackedVector2Array(320, 36, 320, 324)
-width = 1.0
-default_color = Color(0.0941176, 0.0627451, 0.0705882, 0.42)
-
-[node name="Vertical_09" type="Line2D" parent="RoomArt/GridLines"]
-points = PackedVector2Array(352, 36, 352, 324)
-width = 1.0
-default_color = Color(0.0941176, 0.0627451, 0.0705882, 0.42)
-
-[node name="Vertical_10" type="Line2D" parent="RoomArt/GridLines"]
-points = PackedVector2Array(384, 36, 384, 324)
-width = 1.0
-default_color = Color(0.0941176, 0.0627451, 0.0705882, 0.42)
-
-[node name="Vertical_11" type="Line2D" parent="RoomArt/GridLines"]
-points = PackedVector2Array(416, 36, 416, 324)
-width = 1.0
-default_color = Color(0.0941176, 0.0627451, 0.0705882, 0.42)
-
-[node name="Vertical_12" type="Line2D" parent="RoomArt/GridLines"]
-points = PackedVector2Array(448, 36, 448, 324)
-width = 1.0
-default_color = Color(0.0941176, 0.0627451, 0.0705882, 0.42)
-
-[node name="Vertical_13" type="Line2D" parent="RoomArt/GridLines"]
-points = PackedVector2Array(480, 36, 480, 324)
-width = 1.0
-default_color = Color(0.0941176, 0.0627451, 0.0705882, 0.42)
-
-[node name="Vertical_14" type="Line2D" parent="RoomArt/GridLines"]
-points = PackedVector2Array(512, 36, 512, 324)
-width = 1.0
-default_color = Color(0.0941176, 0.0627451, 0.0705882, 0.42)
-
-[node name="Vertical_15" type="Line2D" parent="RoomArt/GridLines"]
-points = PackedVector2Array(544, 36, 544, 324)
-width = 1.0
-default_color = Color(0.0941176, 0.0627451, 0.0705882, 0.42)
-
-[node name="Vertical_16" type="Line2D" parent="RoomArt/GridLines"]
-points = PackedVector2Array(576, 36, 576, 324)
-width = 1.0
-default_color = Color(0.0941176, 0.0627451, 0.0705882, 0.42)
-
-[node name="Horizontal_00" type="Line2D" parent="RoomArt/GridLines"]
-points = PackedVector2Array(64, 36, 576, 36)
-width = 1.0
-default_color = Color(0.0941176, 0.0627451, 0.0705882, 0.42)
-
-[node name="Horizontal_01" type="Line2D" parent="RoomArt/GridLines"]
-points = PackedVector2Array(64, 68, 576, 68)
-width = 1.0
-default_color = Color(0.0941176, 0.0627451, 0.0705882, 0.42)
-
-[node name="Horizontal_02" type="Line2D" parent="RoomArt/GridLines"]
-points = PackedVector2Array(64, 100, 576, 100)
-width = 1.0
-default_color = Color(0.0941176, 0.0627451, 0.0705882, 0.42)
-
-[node name="Horizontal_03" type="Line2D" parent="RoomArt/GridLines"]
-points = PackedVector2Array(64, 132, 576, 132)
-width = 1.0
-default_color = Color(0.0941176, 0.0627451, 0.0705882, 0.42)
-
-[node name="Horizontal_04" type="Line2D" parent="RoomArt/GridLines"]
-points = PackedVector2Array(64, 164, 576, 164)
-width = 1.0
-default_color = Color(0.0941176, 0.0627451, 0.0705882, 0.42)
-
-[node name="Horizontal_05" type="Line2D" parent="RoomArt/GridLines"]
-points = PackedVector2Array(64, 196, 576, 196)
-width = 1.0
-default_color = Color(0.0941176, 0.0627451, 0.0705882, 0.42)
-
-[node name="Horizontal_06" type="Line2D" parent="RoomArt/GridLines"]
-points = PackedVector2Array(64, 228, 576, 228)
-width = 1.0
-default_color = Color(0.0941176, 0.0627451, 0.0705882, 0.42)
-
-[node name="Horizontal_07" type="Line2D" parent="RoomArt/GridLines"]
-points = PackedVector2Array(64, 260, 576, 260)
-width = 1.0
-default_color = Color(0.0941176, 0.0627451, 0.0705882, 0.42)
-
-[node name="Horizontal_08" type="Line2D" parent="RoomArt/GridLines"]
-points = PackedVector2Array(64, 292, 576, 292)
-width = 1.0
-default_color = Color(0.0941176, 0.0627451, 0.0705882, 0.42)
-
-[node name="Horizontal_09" type="Line2D" parent="RoomArt/GridLines"]
-points = PackedVector2Array(64, 324, 576, 324)
-width = 1.0
-default_color = Color(0.0941176, 0.0627451, 0.0705882, 0.42)
+script = ExtResource("19")
 
 [node name="Boundary" type="Node2D" parent="RoomArt"]
 

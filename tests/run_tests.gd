@@ -241,7 +241,7 @@ func _init() -> void:
 	_expect(main_children_ok, "main scene owns editor-visible world, combat, board, player, room, and HUD nodes")
 	_expect(main_board != null and main_board.editor_preview_enabled and Vector2i(7, 2) in main_board.editor_blocked_cells, "main board owns an editor room preview")
 	_expect(main_board != null and not main_board.draw_base_layer, "main board leaves floor art to the editor-authored room")
-	_expect(main_room_art != null and main_room_art.get_node_or_null("TileMap") is TileMapLayer and main_room_art.get_node_or_null("GridLines/Vertical_00") != null, "first room owns editable TileMap board art nodes")
+	_expect(main_room_art != null and main_room_art.get_node_or_null("TileMap") is TileMapLayer and main_room_art.get_node_or_null("GridLines") is GridLinesOverlay, "first room owns editable TileMap board art nodes")
 	_expect(main_room != null and main_room.get_node_or_null("Blocker_07_02") != null and main_room.get_node("Blocker_07_02").has_method("get_blocked_cell"), "first room owns draggable blocker markers")
 	_expect(main_hero_start_marker != null and main_hero_start_marker.get("grid_cell") == main_hero_start_cell, "first room owns an editable hero start marker")
 	main_game.free()

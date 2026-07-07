@@ -62,6 +62,7 @@ Build the first playable Godot 4 vertical slice, then grow it into a short edito
 | 52. Data-only Bishop enemy | complete | New Bishop (diagonal move, diagonal-beam attack, sniper AI) authored entirely from `.tres` + a scene wiring the generic `EnemyActor`; no new GDScript. Test proves the data-driven pipeline end to end |
 | 53. Redundant component removal | complete | Deleted hollow `AttackComponent` + `EnemyDebugComponent` (methods never called; logic lives in `FreeEnemy`); slimmed `EnemyBrainComponent` to its used `decision` export. Enemies now carry 4 functional components (GridMovement, EnemyBrain, Health, Equipment). Behavior unchanged (tests + import + sim clean) |
 | 54. Shared GridMarker base | complete | Extracted the grid-snap logic duplicated across the 4 room markers (`EnemySpawnPoint`, `PickupSpawnPoint`, `HeroStartMarker`, `BlockerMarker`) into a `GridMarker` base; subclasses keep only their data/preview/`_draw`. ~110 duplicated lines removed, one source for cell-snapping. Behavior unchanged (full suite + import clean) |
+| 55. GridLines overlay node | complete | Collapsed `RoomArt/GridLines`' 27 hand-placed `Line2D` nodes into one `GridLinesOverlay` script node (exported dims/color, `_draw`). Same grid, far cleaner room dock. Verified via tests + real-renderer capture |
 
 ## Editor-First Full Game Roadmap
 
