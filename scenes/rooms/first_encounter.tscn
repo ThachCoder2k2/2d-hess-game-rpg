@@ -18,7 +18,7 @@
 [ext_resource type="PackedScene" path="res://objects/visuals/weapon_pickup_visual.tscn" id="15"]
 [ext_resource type="PackedScene" path="res://objects/markers/hero_start_marker.tscn" id="16"]
 [ext_resource type="PackedScene" path="res://objects/markers/blocker_marker.tscn" id="17"]
-[ext_resource type="PackedScene" path="res://objects/world/playground_tilemap.tscn" id="18"]
+[ext_resource type="PackedScene" path="res://objects/world/kingdom_tilemap.tscn" id="18"]
 
 [node name="FirstEncounter" instance=ExtResource("1")]
 room_message = "First clash: read the warning cells, deny the weapons, break the black line."
