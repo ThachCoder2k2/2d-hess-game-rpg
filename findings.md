@@ -174,3 +174,11 @@
 - Animation belongs in each visual scene's `AnimationPlayer`; scripts should only choose state, texture, modulate, facing, and visibility.
 - The first generated sprites are placeholder-quality production scaffolds, not final art. They are good enough to prove the editor workflow and can be replaced later without rewriting gameplay logic.
 - Main-scene marker positions can be edited independently, but enemy and pickup spawn markers must keep their `PackedScene` template references so runtime uses sprite object scenes instead of fallback constructors.
+
+## Richer Visual Animations
+
+- Locomotion belongs in its own `step` AnimationPlayer clip, chosen by the sync scripts, not in a procedural bob. `piece_visual.gd` plays `step` while `is_moving` and falls back to `idle` when a visual lacks the clip, so a missing clip degrades quietly instead of freezing on a stale animation.
+- Animation layers must not fight: `MotionRoot.position` is the procedural recoil/bump offset written every sync frame, while `MotionRoot/SpriteRoot` is the AnimationPlayer's home for bob, hop, squash, lunge, and shake. Keeping recoil on `MotionRoot` and clips on `SpriteRoot` lets both run without stomping each other.
+- When adding a scale track above a child sprite that is already scaled (pickup `SpriteRoot` over a `0.42` `PickupSprite`), animate the parent around `1.0`; keying it to the child's absolute scale compounds and shrinks the object.
+- `load_steps` in a `.tscn`/`.tres` header is a load-progress hint, not a correctness requirement in Godot 4.6; the editor recomputes it on save and even drops it, so hand-adding sub-resources without updating `load_steps` still imports correctly.
+- `[editable path="Visual"]` on an actor prefab turns on Editable Children for the instanced visual, exposing its `Sprite2D`/`AnimationPlayer` subtree in the actor's scene dock without duplicating nodes, which improves editor readability of what each prefab actually shows.

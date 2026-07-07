@@ -77,7 +77,7 @@ func sync_from_hero(hero: Node) -> void:
 	elif attacking and not _was_attacking:
 		_play_animation(&"attack")
 	elif not attacking and not _was_hurt:
-		_play_animation(&"idle")
+		_play_animation(_locomotion_anim(is_moving))
 	_was_hurt = hurt_time > 0.0
 	_was_attacking = attacking
 	_was_telegraphing = false
@@ -92,6 +92,7 @@ func sync_from_enemy(enemy: Node) -> void:
 	var telegraph_progress: float = enemy.call("get_telegraph_progress") if enemy.has_method("get_telegraph_progress") else 0.0
 	var enemy_weapon = enemy.get("weapon")
 	var weapon_visible := enemy_weapon != null
+	var is_moving := bool(enemy.get("is_moving"))
 	health = int(enemy.get("health"))
 	max_health = int(enemy.call("get_max_health")) if enemy.has_method("get_max_health") else maxi(health, 1)
 
@@ -107,7 +108,7 @@ func sync_from_enemy(enemy: Node) -> void:
 	elif telegraphing and not _was_telegraphing:
 		_play_animation(&"telegraph")
 	elif not telegraphing and not _was_hurt:
-		_play_animation(&"idle")
+		_play_animation(_locomotion_anim(is_moving))
 	_was_hurt = flash_time > 0.0
 	_was_attacking = false
 	_was_telegraphing = telegraphing
@@ -230,6 +231,12 @@ func _rotation_for_facing(direction: Vector2i) -> float:
 	if direction == Vector2i.ZERO:
 		return 0.0
 	return Vector2(direction).angle() + PI / 2.0
+
+
+func _locomotion_anim(is_moving: bool) -> StringName:
+	if is_moving and _animation_player != null and _animation_player.has_animation(&"step"):
+		return &"step"
+	return &"idle"
 
 
 func _play_animation(animation_name: StringName) -> void:

@@ -53,6 +53,7 @@ Build the first playable Godot 4 vertical slice, then grow it into a short edito
 | 43. TileMap room floor | complete | First encounter floor uses `TileMapLayer` plus `TileSet` resources instead of one Polygon2D node per board tile |
 | 44. Scene/object folder cleanup | complete | `scenes/` now contains only main playable scenes, rooms, and UI; reusable editable templates live under `objects/` |
 | 45. Sprite-based visual objects | complete | Hero, Pawn, Knight, and weapon pickup visuals now use real PNG sprites, `Sprite2D` children, and `AnimationPlayer` motion instead of script-drawn bodies |
+| 46. Richer visual animations | complete | Added `step` walk clips, enriched hero `hurt`/`attack` and enemy `telegraph` windups, pickup breathe, locomotion wiring in `piece_visual.gd`, and `[editable path="Visual"]` on actor prefabs; all AnimationPlayer-owned |
 
 ## Editor-First Full Game Roadmap
 

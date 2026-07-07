@@ -296,3 +296,14 @@
 - Restored scene-backed enemy/pickup template bindings in `scenes/main.tscn` while preserving the edited marker positions, so the live room uses sprite object scenes instead of fallback constructors.
 - Added tests that require sprite-based animated visuals and guard against reintroducing script-drawn piece/pickup bodies.
 - Verified `run_tests.gd`, `attack_runtime_test.gd`, component movement/equipment/Knight tests, `room_encounter_runtime_test.gd`, `encounter_hud_runtime_test.gd`, 1,200-frame headless launch, editor import, `git diff --check`, and a real-renderer capture at `/tmp/unbound-pawn-sprite-pass.avi`.
+
+## Richer Visual Animations - 2026-07-06
+
+- Added editor-owned `step` (walk) AnimationPlayer clips to `pawn_hero_visual.tscn`, `black_pawn_visual.tscn`, and `knight_enemy_visual.tscn`; the Knight step is heavier (bigger hop, stronger squash) than the Pawn step.
+- Enriched existing clips inside the AnimationPlayer (no `_draw()`): hero `hurt` now shakes, hero `attack` now adds a body lunge, and both enemy `telegraph` clips add a body squash windup so the attack tell is readable before the aura alone.
+- Added a scale-pulse track to the weapon pickup `idle` clip so pickups breathe and read as obvious on the board (fixed a compounding-scale mistake: `SpriteRoot` breathes around `1.0`, not the child sprite's `0.42`).
+- Wired locomotion in `scripts/visuals/piece_visual.gd`: `sync_from_hero` and `sync_from_enemy` now play `step` while the actor is moving (guarded fallback to `idle` when a visual has no `step` clip). Enemies read `is_moving` from the actor, which `GridMovementComponent` already maintains.
+- Enabled `[editable path="Visual"]` on `player.tscn`, `black_pawn.tscn`, `knight_enemy.tscn`, and `weapon_pickup.tscn` so the sprite/AnimationPlayer subtree is visible and tweakable directly from each actor prefab, not only inside the nested visual scene.
+- Added a `_visual_has_clip` test helper and assertions that the player, Pawn, and Knight visuals own a `step` clip.
+- Verified `run_tests.gd` (0 failures), `attack_runtime_test.gd`, component movement/equipment/Knight tests, `room_encounter_runtime_test.gd`, `encounter_hud_runtime_test.gd`, editor import, `git diff --check`, and a real-renderer capture at `/tmp/unbound-pawn-anim.avi`.
+- Preserved the human's uncommitted editor edits (resource UID rewrites and `main.tscn` marker moves); this milestone touched only visual/animation scenes, `piece_visual.gd`, actor prefabs, and tests.

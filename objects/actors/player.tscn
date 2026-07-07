@@ -13,3 +13,5 @@ wooden_sword = ExtResource("2")
 pencil_thrust = ExtResource("3")
 
 [node name="Visual" parent="." instance=ExtResource("4")]
+
+[editable path="Visual"]

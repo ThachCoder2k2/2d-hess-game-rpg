@@ -60,6 +60,7 @@ func _init() -> void:
 	_expect(scene_hero.wooden_sword != null and scene_hero.wooden_sword.resource_path.ends_with("wooden_sword.tres"), "player scene owns Wooden Sword attack Resource")
 	_expect(scene_hero.pencil_thrust != null and scene_hero.pencil_thrust.resource_path.ends_with("pencil_thrust.tres"), "player scene owns Pencil Thrust attack Resource")
 	_expect(_piece_visual_is_sprite_animated(scene_hero.get_node_or_null("Visual"), "sync_from_hero"), "player scene owns a sprite-based animated visual child")
+	_expect(_visual_has_clip(scene_hero.get_node_or_null("Visual"), &"step"), "player visual owns a walk/step animation clip")
 	var piece_visual_source := FileAccess.get_file_as_string("res://scripts/visuals/piece_visual.gd")
 	var pickup_visual_source := FileAccess.get_file_as_string("res://scripts/visuals/pickup_visual.gd")
 	_expect(not piece_visual_source.contains("func _draw") and not piece_visual_source.contains("draw_"), "piece visuals use Sprite2D nodes instead of script drawing")
@@ -115,6 +116,7 @@ func _init() -> void:
 	pawn_variant._configure_components()
 	_expect(pawn_variant != null and pawn_variant.definition.id == &"pawn_recruit", "Pawn scene variant uses generic EnemyActor with Pawn definition")
 	_expect(_piece_visual_is_sprite_animated(pawn_variant.get_node_or_null("Visual"), "sync_from_enemy") and pawn_variant.movement_component != null and pawn_variant.equipment_component != null, "Pawn scene variant owns sprite visual and components")
+	_expect(_visual_has_clip(pawn_variant.get_node_or_null("Visual"), &"step"), "Pawn visual owns a walk/step animation clip")
 	_expect(pawn_variant.get_piece_display_name() == "Pawn", "Pawn scene variant names itself from definition data")
 
 	var knight_variant_scene := load("res://objects/actors/knight_enemy.tscn") as PackedScene
@@ -124,6 +126,7 @@ func _init() -> void:
 	knight_variant._configure_components()
 	_expect(knight_variant != null and knight_variant.definition.id == &"knight_tracker", "Knight scene variant uses generic EnemyActor with Knight definition")
 	_expect(_piece_visual_is_sprite_animated(knight_variant.get_node_or_null("Visual"), "sync_from_enemy") and knight_variant.movement_component != null and knight_variant.equipment_component != null, "Knight scene variant owns sprite visual and components")
+	_expect(_visual_has_clip(knight_variant.get_node_or_null("Visual"), &"step"), "Knight visual owns a walk/step animation clip")
 	_expect(knight_variant.get_piece_display_name() == "Knight", "Knight scene variant names itself from definition data")
 
 	var enemy_base_scene := load("res://objects/actors/enemy_base.tscn") as PackedScene
@@ -374,6 +377,13 @@ func _piece_visual_is_sprite_animated(visual: Node, sync_method: StringName) -> 
 		return false
 	return visual.get_node_or_null("MotionRoot/SpriteRoot/BodySprite") is Sprite2D \
 		and visual.get_node_or_null("AnimationPlayer") is AnimationPlayer
+
+
+func _visual_has_clip(visual: Node, clip: StringName) -> bool:
+	if visual == null:
+		return false
+	var player := visual.get_node_or_null("AnimationPlayer") as AnimationPlayer
+	return player != null and player.has_animation(clip)
 
 
 func _expect(condition: bool, message: String) -> void:
