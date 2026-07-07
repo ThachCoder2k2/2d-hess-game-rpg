@@ -147,8 +147,7 @@ func _init() -> void:
 	_expect(pawn_shell._get_configuration_warnings().is_empty(), "complete base enemy scene has no editor configuration warnings")
 	_expect(_piece_visual_is_sprite_animated(pawn_shell.get_node_or_null("Visual"), "sync_from_enemy"), "base enemy scene owns a sprite-based animated visual child")
 	_expect(pawn_shell.movement_component.actor == pawn_shell and pawn_shell.brain_component.actor == pawn_shell, "movement and brain component nodes bind to the host")
-	_expect(pawn_shell.attack_component.actor == pawn_shell and pawn_shell.health_component.actor == pawn_shell, "attack and health component nodes bind to the host")
-	_expect(pawn_shell.equipment_component.actor == pawn_shell and pawn_shell.enemy_debug_component.actor == pawn_shell, "equipment and debug component nodes bind to the host")
+	_expect(pawn_shell.health_component.actor == pawn_shell and pawn_shell.equipment_component.actor == pawn_shell, "health and equipment component nodes bind to the host")
 	var health_feedback_player := pawn_shell.health_component.get_node_or_null("AnimationPlayer") as AnimationPlayer
 	_expect(health_feedback_player != null and health_feedback_player.has_animation("hurt") and health_feedback_player.has_animation("defeat"), "health component owns editor feedback animations")
 	var component_world := GridWorld.new()
@@ -218,11 +217,6 @@ func _init() -> void:
 	knight_shell._ensure_ai_data()
 	knight_shell._configure_components()
 	_expect(knight_shell.get_unarmed_attack_cells(Vector2i(8, 4)).size() == 8, "same base scene loads Knight attack configuration")
-	var optional_debug := knight_shell.get_node("DebugComponent")
-	knight_shell.remove_child(optional_debug)
-	optional_debug.queue_free()
-	knight_shell._configure_components()
-	_expect(knight_shell.enemy_debug_component == null and knight_shell.get_unarmed_attack_cells(Vector2i(8, 4)).size() == 8, "removing optional debug component does not affect combat data")
 
 	var main_scene := load("res://scenes/main.tscn") as PackedScene
 	var main_game := main_scene.instantiate()

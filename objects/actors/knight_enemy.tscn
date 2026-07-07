@@ -5,10 +5,8 @@
 [ext_resource type="PackedScene" path="res://objects/visuals/knight_enemy_visual.tscn" id="3"]
 [ext_resource type="PackedScene" path="res://objects/components/grid_movement_component.tscn" id="4"]
 [ext_resource type="PackedScene" path="res://objects/components/enemy_brain_component.tscn" id="5"]
-[ext_resource type="PackedScene" path="res://objects/components/attack_component.tscn" id="6"]
 [ext_resource type="PackedScene" path="res://objects/components/health_component.tscn" id="7"]
 [ext_resource type="PackedScene" path="res://objects/components/equipment_component.tscn" id="8"]
-[ext_resource type="PackedScene" path="res://objects/components/debug_component.tscn" id="9"]
 
 [node name="KnightEnemy" type="Node2D"]
 z_index = 2
@@ -21,12 +19,8 @@ definition = ExtResource("2")
 
 [node name="EnemyBrainComponent" parent="." instance=ExtResource("5")]
 
-[node name="AttackComponent" parent="." instance=ExtResource("6")]
-
 [node name="HealthComponent" parent="." instance=ExtResource("7")]
 
 [node name="EquipmentComponent" parent="." instance=ExtResource("8")]
-
-[node name="DebugComponent" parent="." instance=ExtResource("9")]
 
 [editable path="Visual"]
