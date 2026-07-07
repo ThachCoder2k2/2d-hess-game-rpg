@@ -1,11 +1,13 @@
-[gd_resource type="Resource" script_class="PawnPattern" load_steps=2 format=3]
+[gd_resource type="Resource" script_class="AttackPattern" load_steps=2 format=3]
 
-[ext_resource type="Script" path="res://scripts/ai/patterns/pawn_pattern.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/ai/attack_pattern.gd" id="1"]
 
 [resource]
 script = ExtResource("1")
 id = &"pawn_diagonal"
 uses_facing = true
+cell_offsets = Array[Vector2i]([Vector2i(1, 1), Vector2i(1, -1)])
+clip_to_board = false
 damage = 1
 telegraph_duration = 0.58
 recovery_duration = 0.48

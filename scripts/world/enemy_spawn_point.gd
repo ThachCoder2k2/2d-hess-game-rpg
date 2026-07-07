@@ -49,17 +49,12 @@ func _process(_delta: float) -> void:
 func create_enemy() -> FreeEnemy:
 	if not active:
 		return null
-	var enemy: FreeEnemy
-	if enemy_scene != null:
-		enemy = enemy_scene.instantiate() as FreeEnemy
-	else:
-		match enemy_kind:
-			EnemyKind.KNIGHT:
-				enemy = KnightEnemy.new()
-			_:
-				enemy = BlackPawn.new()
+	if enemy_scene == null:
+		push_warning("EnemySpawnPoint '%s' needs an enemy_scene (assign black_pawn.tscn or knight_enemy.tscn)." % name)
+		return null
+	var enemy := enemy_scene.instantiate() as FreeEnemy
 	if enemy == null:
-		push_warning("EnemySpawnPoint '%s' needs a FreeEnemy-compatible scene." % name)
+		push_warning("EnemySpawnPoint '%s' scene is not FreeEnemy-compatible." % name)
 		return null
 	if definition != null:
 		enemy.definition = definition

@@ -77,8 +77,7 @@ func _init() -> void:
 	_expect(not bool(count_objective.call("is_complete", 1, 3, 2)), "defeat-count objective waits for its configured count")
 	_expect(bool(count_objective.call("is_complete", 2, 3, 1)), "defeat-count objective can complete before all enemies fall")
 
-	var black_pawn := BlackPawn.new()
-	root.add_child(black_pawn)
+	var black_pawn := _spawn_pawn()
 	black_pawn.current_cell = Vector2i(6, 3)
 	_expect(black_pawn.get_attack_cells() == [Vector2i(5, 4), Vector2i(7, 4)], "black pawn attacks both forward diagonals")
 	_expect(black_pawn.definition != null and black_pawn.definition.id == &"pawn_recruit", "black pawn loads its editor definition")
@@ -95,8 +94,7 @@ func _init() -> void:
 	_expect(black_pawn.get_attack_cells() == [Vector2i(7, 3), Vector2i(8, 3)], "armed pawn replaces diagonals with weapon cells")
 	_expect(not Vector2i(7, 4) in black_pawn.get_attack_cells(), "armed attack does not combine with chess attack")
 
-	var knight := KnightEnemy.new()
-	root.add_child(knight)
+	var knight := _spawn_knight()
 	knight.current_cell = Vector2i(8, 4)
 	_expect(knight.get_unarmed_attack_cells().size() == 8, "unarmed knight threatens eight L-shaped cells")
 	_expect(Vector2i(10, 5) in knight.get_unarmed_attack_cells(), "knight includes a legal L-shaped target")
@@ -258,16 +256,14 @@ func _init() -> void:
 	_expect(taken_weapon.display_name == "Ruler Blade", "enemy receives collected weapon data")
 	_expect(world.item_at(Vector2i(9, 5)) == null, "collected weapon leaves item layer")
 
-	var free_mover := BlackPawn.new()
-	root.add_child(free_mover)
+	var free_mover := _spawn_pawn()
 	_expect(free_mover.setup(world, Vector2i(12, 5)), "free-moving enemy registers")
 	var move_options := free_mover.get_cardinal_move_options()
 	_expect(move_options.size() == 4, "free-moving enemy generates four cardinal destinations")
 	_expect(Vector2i(12, 4) in move_options and Vector2i(13, 5) in move_options, "cardinal movement includes vertical and horizontal cells")
 	var knight_move_world := GridWorld.new()
 	root.add_child(knight_move_world)
-	var knight_mover := KnightEnemy.new()
-	root.add_child(knight_mover)
+	var knight_mover := _spawn_knight()
 	_expect(knight_mover.setup(knight_move_world, Vector2i(8, 4)), "knight mover registers")
 	var knight_move_options := knight_mover.get_cardinal_move_options()
 	_expect(Vector2i(10, 5) in knight_move_options and Vector2i(9, 4) not in knight_move_options, "knight legal moves use L-shaped destinations instead of pawn steps")
@@ -291,8 +287,7 @@ func _init() -> void:
 	var ai_hero := PawnHero.new()
 	root.add_child(ai_hero)
 	_expect(ai_hero.setup(ai_world, Vector2i(5, 5)), "AI test hero registers")
-	var thinking_pawn := BlackPawn.new()
-	root.add_child(thinking_pawn)
+	var thinking_pawn := _spawn_pawn()
 	_expect(thinking_pawn.setup(ai_world, Vector2i(3, 4)), "AI test pawn registers")
 	var ai_director := EncounterDirector.new()
 	root.add_child(ai_director)
@@ -341,8 +336,7 @@ func _init() -> void:
 	var attack_hero := PawnHero.new()
 	root.add_child(attack_hero)
 	_expect(attack_hero.setup(attack_world, Vector2i(5, 5)), "attack lifecycle hero registers")
-	var attacking_pawn := BlackPawn.new()
-	root.add_child(attacking_pawn)
+	var attacking_pawn := _spawn_pawn()
 	_expect(attacking_pawn.setup(attack_world, Vector2i(4, 4)), "attack lifecycle enemy registers")
 	attacking_pawn.facing = Vector2i.DOWN
 	var attack_director := EncounterDirector.new()
@@ -384,6 +378,22 @@ func _visual_has_clip(visual: Node, clip: StringName) -> bool:
 		return false
 	var player := visual.get_node_or_null("AnimationPlayer") as AnimationPlayer
 	return player != null and player.has_animation(clip)
+
+
+func _spawn_pawn() -> EnemyActor:
+	return _spawn_enemy_variant("res://objects/actors/black_pawn.tscn")
+
+
+func _spawn_knight() -> EnemyActor:
+	return _spawn_enemy_variant("res://objects/actors/knight_enemy.tscn")
+
+
+func _spawn_enemy_variant(scene_path: String) -> EnemyActor:
+	var enemy := (load(scene_path) as PackedScene).instantiate() as EnemyActor
+	root.add_child(enemy)
+	enemy._ensure_ai_data()
+	enemy._configure_components()
+	return enemy
 
 
 func _expect(condition: bool, message: String) -> void:

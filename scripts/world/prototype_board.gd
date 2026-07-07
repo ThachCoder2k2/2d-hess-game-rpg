@@ -232,8 +232,8 @@ func _draw_debug_layer(origin: Vector2, size: int) -> void:
 	for cell in grid_world.get_item_cells():
 		_draw_debug_cell(cell, Color(debug_item_color, 0.95), 2.0)
 
-	var stale: Array[Node] = []
-	for enemy: Node in enemy_intents:
+	var stale: Array = []
+	for enemy in enemy_intents.keys():
 		if not is_instance_valid(enemy) or not enemy is FreeEnemy:
 			stale.append(enemy)
 			continue

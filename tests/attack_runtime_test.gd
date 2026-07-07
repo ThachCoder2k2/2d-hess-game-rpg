@@ -21,7 +21,7 @@ func _run() -> void:
 	stage.add_child(hero)
 	hero.setup(world, Vector2i(5, 5))
 	hero.control_enabled = false
-	var enemy := BlackPawn.new()
+	var enemy := (load("res://objects/actors/black_pawn.tscn") as PackedScene).instantiate() as EnemyActor
 	stage.add_child(enemy)
 	enemy.setup(world, Vector2i(4, 4))
 	enemy.facing = Vector2i.DOWN
