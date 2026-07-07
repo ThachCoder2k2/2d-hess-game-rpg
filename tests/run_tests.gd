@@ -22,6 +22,10 @@ func _init() -> void:
 	_expect(world.begin_move(actor_a, Vector2i(3, 2)), "valid destination reserves")
 	_expect(Vector2i(3, 2) in world.get_reservation_cells(), "debug reservation query exposes reserved cells")
 	_expect(not world.begin_move(actor_b, Vector2i(3, 2)), "reserved destination rejects another actor")
+	var actor_c := Node.new()
+	root.add_child(actor_c)
+	_expect(not world.register_actor(actor_c, Vector2i(3, 2)), "registering onto a reserved cell is rejected")
+	actor_c.free()
 	world.finish_move(actor_a, Vector2i(3, 2))
 	_expect(world.actor_at(Vector2i(3, 2)) == actor_a, "finish_move updates occupancy")
 	_expect(Vector2i(3, 2) in world.get_occupied_cells(), "debug occupancy query exposes occupied cells")
@@ -366,6 +370,29 @@ func _init() -> void:
 	_expect(attack_board.telegraphs.has(attacking_pawn), "second attack telegraph begins")
 	attacking_pawn.take_damage(2)
 	_expect(not attack_board.telegraphs.has(attacking_pawn) and attack_director.attack_owner == null, "defeat during attack safely clears telegraph and token")
+
+	# Core dodge mechanic: stepping out of a telegraphed cell before the strike
+	# resolves avoids all damage (isolated so it does not disturb the flow above).
+	var dodge_world := GridWorld.new()
+	root.add_child(dodge_world)
+	var dodge_hero := PawnHero.new()
+	root.add_child(dodge_hero)
+	dodge_hero.setup(dodge_world, Vector2i(5, 5))
+	var dodge_enemy := _spawn_pawn()
+	dodge_enemy.setup(dodge_world, Vector2i(4, 4))
+	dodge_enemy.facing = Vector2i.DOWN
+	var dodge_director := EncounterDirector.new()
+	root.add_child(dodge_director)
+	dodge_enemy.activate(dodge_hero, dodge_director)
+	dodge_enemy._choose_action()
+	var dodge_cells := dodge_enemy.locked_attack_cells.duplicate()
+	var telegraph_ok: bool = dodge_enemy.state == FreeEnemy.State.TELEGRAPH and dodge_hero.current_cell in dodge_cells
+	var courage_before := dodge_hero.courage
+	dodge_hero.current_cell = Vector2i(9, 9)
+	dodge_enemy._resolve_attack()
+	_expect(telegraph_ok, "enemy telegraphs the hero's current cell before striking")
+	_expect(dodge_hero.courage == courage_before and Vector2i(9, 9) not in dodge_cells, "hero dodges the telegraphed strike and takes no damage")
+	_expect(dodge_director.attack_owner == null, "a dodged strike still releases the attack token")
 
 	print("TESTS COMPLETE: %d failure(s)" % failures)
 	quit(1 if failures > 0 else 0)

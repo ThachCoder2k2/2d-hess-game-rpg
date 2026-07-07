@@ -29,7 +29,7 @@ func is_walkable(cell: Vector2i) -> bool:
 
 
 func register_actor(actor: Node, cell: Vector2i) -> bool:
-	if not is_walkable(cell) or occupied_cells.has(cell):
+	if not is_walkable(cell) or occupied_cells.has(cell) or reservations.has(cell):
 		return false
 	occupied_cells[cell] = actor
 	actor_cells[actor] = cell
