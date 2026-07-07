@@ -307,3 +307,14 @@
 - Added a `_visual_has_clip` test helper and assertions that the player, Pawn, and Knight visuals own a `step` clip.
 - Verified `run_tests.gd` (0 failures), `attack_runtime_test.gd`, component movement/equipment/Knight tests, `room_encounter_runtime_test.gd`, `encounter_hud_runtime_test.gd`, editor import, `git diff --check`, and a real-renderer capture at `/tmp/unbound-pawn-anim.avi`.
 - Preserved the human's uncommitted editor edits (resource UID rewrites and `main.tscn` marker moves); this milestone touched only visual/animation scenes, `piece_visual.gd`, actor prefabs, and tests.
+
+## Editor-First Refactor - 2026-07-07
+
+Audited the script layer (largest offenders: `free_enemy.gd` 570 lines, `main.gd`, `prototype_board.gd`) and refactored in four verified, separately committed phases. Each phase kept the playable slice green (`run_tests` 0 failures + all runtime tests + editor import + `git diff --check`).
+
+- Phase 1 (`0145106`): deleted FreeEnemy's dead `_draw_health_pips`/`_draw_attack_warning_aura` (no callers, no redraw); hero attack profiles now load `wooden_sword.tres`/`pencil_thrust.tres` as the null fallback instead of duplicating the stats in code.
+- Phase 2 (`c318199`): `main.gd` no longer mirrors HUD nodes or duplicates their formatting; removed the cached label vars, `_bind_hud_references`, and every `elif <label>` fallback so all HUD updates go through the editor-owned `GameHud` scene. Rewrote the HUD runtime test to read HUD state from the HUD scene nodes.
+- Phase 3 (`b32b132`): `AttackPattern` now builds cells from an editor-authored `cell_offsets` list (facing-relative or absolute + `clip_to_board`), so a new enemy's attack shape is a pure `.tres`. Migrated `pawn_diagonal.tres`/`knight_leap.tres` (identical geometry) and deleted `PawnPattern`/`KnightPattern`. Deleted the `BlackPawn`/`KnightEnemy`/`TrainingDummy` subclasses; spawns require an editor `enemy_scene`; tests spawn the scene variants. Fixed a latent `PrototypeBoard` debug-redraw crash (typed loop var errored on a freed enemy key).
+- Phase 4 (`16e83af`): optional `texture` on `EnemyWeapon`/`AttackProfile` — visuals use it directly, so a new weapon is just a `.tres` + texture (id lookups kept as fallback for current placeholders). Authored `piece_name` on `EnemyDefinition` (Pawn/Knight) replaces FreeEnemy's display-name string guessing.
+- Phase D (brain extraction) deferred: enemy AI is already Resource-driven through `DecisionConfig`/archetype `.tres`, so relocating the decision plumbing out of `FreeEnemy` into `EnemyBrainComponent` is behavior-risky churn with no expandability gain. Left for an explicit, isolated pass if desired.
+- Net: adding a new enemy or weapon is now editor/Resource work (definition + movement/decision/attack/visual `.tres` + a scene variant), no new GDScript required; HUD, dead code, and duplicated tuning are gone.

@@ -54,6 +54,10 @@ Build the first playable Godot 4 vertical slice, then grow it into a short edito
 | 44. Scene/object folder cleanup | complete | `scenes/` now contains only main playable scenes, rooms, and UI; reusable editable templates live under `objects/` |
 | 45. Sprite-based visual objects | complete | Hero, Pawn, Knight, and weapon pickup visuals now use real PNG sprites, `Sprite2D` children, and `AnimationPlayer` motion instead of script-drawn bodies |
 | 46. Richer visual animations | complete | Added `step` walk clips, enriched hero `hurt`/`attack` and enemy `telegraph` windups, pickup breathe, locomotion wiring in `piece_visual.gd`, and `[editable path="Visual"]` on actor prefabs; all AnimationPlayer-owned |
+| 47. Editor-first refactor (cleanup + de-dup) | complete | Removed dead FreeEnemy `_draw_*`; hero attack profiles load from `.tres` instead of hardcoded stats; `main.gd` HUD updates route only through the HUD scene (removed mirror vars, `_bind_hud_references`, and elif fallbacks) |
+| 48. Data-driven attack patterns + legacy retirement | complete | `AttackPattern` computes cells from `cell_offsets` data; migrated pawn/knight patterns to `.tres`; deleted `PawnPattern`/`KnightPattern`/`BlackPawn`/`KnightEnemy`/`TrainingDummy`; spawns require an editor `enemy_scene`; fixed a latent debug-redraw crash on freed enemies |
+| 49. Resource-driven weapon art and piece names | complete | Optional `texture` on `EnemyWeapon`/`AttackProfile` (visuals prefer it over id lookups); authored `piece_name` on `EnemyDefinition` replaces display-name string guessing |
+| 50. Brain component extraction | deferred | AI scoring already data-driven via `DecisionConfig`/archetype `.tres`; relocating the decision plumbing from `FreeEnemy` into `EnemyBrainComponent` is behavior-risky churn with no expandability gain. Deferred pending explicit go-ahead |
 
 ## Editor-First Full Game Roadmap
 
