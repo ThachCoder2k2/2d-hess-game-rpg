@@ -354,3 +354,12 @@ Researched the AI-focused editor surface at the owner's request. Found `EnemyBra
 - Two test assertions checked the removed `GridLines/Vertical_00` child; updated both to `GridLines is GridLinesOverlay`.
 - Verified: `run_tests` 0 failures + `room_encounter`/`encounter_hud`/`attack`/`movement` runtime tests + editor import + a real-renderer capture (grid renders identically) + `git diff --check` clean.
 - Room tree is now much lighter: RoomArt = Frame, TileMap, GridLines (1 node), Boundary, SetDressing.
+
+## Kingdom Floor Re-theme - 2026-07-07 (`e735890`)
+
+- Re-themed the first room floor from playground checker to a throne-room kingdom. New art `assets/tiles/kingdom_tiles.svg` (light marble, dark marble, red carpet, gold-trim carpet) + `resources/tiles/kingdom_tileset.tres`.
+- The `PackedByteArray` `tile_map_data` is not hand-editable, so painting is done by a build tool: `tools/paint_kingdom_tilemap.gd` runs headless, `set_cell`s the 16x9 layout (marble checkerboard with a red carpet runner down centre columns 7-8), packs, and saves `objects/world/kingdom_tilemap.tscn`. Rerun it after changing the layout/tileset.
+- Kept the light/dark checkerboard contrast on purpose: grid combat readability depends on it. The carpet reads as a throne aisle.
+- `first_encounter.tscn`'s TileMap now points at `kingdom_tilemap.tscn`; the old `playground_tilemap.tscn` is left as a swappable alternate theme (still valid, just unreferenced).
+- Verified: `run_tests` 0 failures + room/hud runtime tests + editor import + a real-renderer capture (throne-room floor renders, pieces/pickups/telegraphs read clearly over it) + `git diff --check` clean.
+- Art status: first-pass placeholder for in-editor owner approval (AGENTS: art direction is human-owned). This shifts the floor toward a castle/kingdom read while staying inside the child-imagination frame.
