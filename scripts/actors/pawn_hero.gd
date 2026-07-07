@@ -45,22 +45,13 @@ func _ready() -> void:
 
 
 func _ensure_attack_profiles() -> void:
+	# Scenes assign these in the Inspector; load the shared .tres only as a
+	# null-safety fallback for bare-script instances (tests). Tuning lives in
+	# the Resource, never duplicated here.
 	if wooden_sword == null:
-		wooden_sword = AttackProfile.new()
-		wooden_sword.display_name = "Wooden Sword"
-		wooden_sword.range_cells = 1
-		wooden_sword.damage = 1
-		wooden_sword.impact_delay = 0.07
-		wooden_sword.recovery = 0.30
-		wooden_sword.color = Color("#fff2a8")
+		wooden_sword = load("res://resources/attacks/wooden_sword.tres") as AttackProfile
 	if pencil_thrust == null:
-		pencil_thrust = AttackProfile.new()
-		pencil_thrust.display_name = "Pencil Thrust"
-		pencil_thrust.range_cells = 2
-		pencil_thrust.damage = 1
-		pencil_thrust.impact_delay = 0.11
-		pencil_thrust.recovery = 0.52
-		pencil_thrust.color = Color("#8ec8e8")
+		pencil_thrust = load("res://resources/attacks/pencil_thrust.tres") as AttackProfile
 
 
 func _process(delta: float) -> void:
