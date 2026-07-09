@@ -65,6 +65,7 @@ Build the first playable Godot 4 vertical slice, then grow it into a short edito
 | 55. GridLines overlay node | complete | Collapsed `RoomArt/GridLines`' 27 hand-placed `Line2D` nodes into one `GridLinesOverlay` script node (exported dims/color, `_draw`). Same grid, far cleaner room dock. Verified via tests + real-renderer capture |
 | 56. Kingdom floor re-theme | human_review | Added a kingdom tile set (marble checker + red carpet + gold trim) and a paint build tool; repainted the first room floor as a throne-room (marble checkerboard + centre carpet runner + castle-wall border, thrones, banners). Grid contrast kept for combat readability. First-pass placeholder art awaiting the owner's in-editor approval |
 | 57. Mechanic audit + hardening | complete | 1800-frame runtime sweep found zero errors. Added a dodge-mechanic test (step out of a telegraphed cell → no damage; passes). Fixed a latent `GridWorld.register_actor` gap (now rejects reserved cells so a spawn can't overwrite a mid-move actor) + test. Full suite green |
+| 58. Structure research + standards docs | complete | Researched Godot folder/code best practices (docs, GDQuest, abmarnie, SlayHorizon). Decision: keep the type-based layout (clean + consistent at this size; feature-based only pays off at scale). Added `docs/ARCHITECTURE.md` (folders, runtime tree, systems, reading order) and `docs/coding-standards.md` (naming, GDScript member order, typing, scene/content rules). Confirmed scripts already follow the official member order (no reorder needed) |
 
 ## Editor-First Full Game Roadmap
 

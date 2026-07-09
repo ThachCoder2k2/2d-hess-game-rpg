@@ -141,6 +141,8 @@ Use the persistent planning files as project memory:
 - `task_plan.md` tracks phases, statuses, decisions, and errors.
 - `findings.md` stores technical discoveries and design conclusions.
 - `progress.md` logs completed work and verification results.
+- `docs/ARCHITECTURE.md` maps folders, the runtime node tree, core systems, and a reading order.
+- `docs/coding-standards.md` defines naming, GDScript member order, typing, and scene/content rules.
 
 Rules:
 - Read `task_plan.md` before starting any multi-step work.
