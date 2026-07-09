@@ -89,6 +89,47 @@ before runtime methods.
 - Keep the playable slice green: run `tests/run_tests.gd` + the runtime tests +
   an editor import after meaningful changes.
 
+## Design patterns in use
+
+The codebase already follows idiomatic Godot patterns. Keep to them; don't
+introduce heavier architecture without a concrete need (YAGNI).
+
+- **Composition over inheritance.** An entity gains behavior from child component
+  nodes (`GridMovement`, `Health`, `Equipment`, `EnemyBrain`), configured by the
+  host. Add a capability = add a component/Resource, not a subclass. Avoid deep
+  class trees (this is why the `BlackPawn`/`KnightEnemy` subclasses were retired).
+- **Resources as data (type-object / flyweight).** Per-entity data lives in `@export`
+  Resources (`EnemyDefinition` → movement/decision/attack/visual). Shared `.tres`
+  are treated as immutable at runtime; duplicate (`duplicate(true)`) when an instance
+  needs to mutate (e.g. a picked-up weapon). Use `@export` for Resource refs,
+  `@onready`/`get_node` for child-node refs.
+- **Signals for decoupling ("call down, signal up").** A node calls its children
+  directly (down); it talks to parents/siblings by emitting a signal (up). Signal
+  names are past tense (`telegraph_started`, `attack_resolved`, `room_completed`,
+  `damaged`, `defeated`). Connect at the common parent (`Main` wires hero/room/HUD).
+- **Dependency injection.** Scenes are self-contained and receive their environment
+  via `setup(...)` or `@export`, never by reaching up the tree with `get_parent()`.
+  Components get their host via `configure(host)`.
+- **Factory via scene + definition.** Spawners instantiate an editor-assigned
+  `PackedScene` and stamp it with a definition (`EnemySpawnPoint.create_enemy`);
+  no scattered `new()` construction.
+- **State machine: enum + `match`.** `FreeEnemy` uses a 5-state enum
+  (`OBSERVE/TELEGRAPH/COMMIT/RECOVER/DEFEATED`) with a `match` in `_process`. This is
+  correct — a node-based state machine is over-engineering under ~6 states. Only
+  reach for one if states exceed ~6 and need reuse/independent editing.
+
+Deliberate non-choices (don't add these without a real need):
+- **No Event Bus / Autoload singleton.** `Main` mediates cross-node wiring; adding a
+  global signal bus is only worth it for distant nodes or runtime-instanced UI.
+- **No ECS.** Godot's node tree already gives composition; a parallel ECS would fight
+  the engine.
+
+Known accepted tradeoff:
+- `free_enemy.gd` (~530 lines) concentrates sensing, scoring, movement, attack
+  lifecycle, and damage. It stretches single-responsibility, but the AI is already
+  data-driven via `DecisionConfig`, so relocating the code buys churn, not
+  capability. Revisit only if the AI grows substantially.
+
 ## Git
 
 - One logical change per commit, scoped, with a why-focused message.
