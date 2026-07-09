@@ -36,7 +36,8 @@ Ownership rules (also in `AGENTS.md`):
 This is a *type-based* layout. The Godot community generally prefers
 *feature-based* ("screaming") folders for large projects, but at this size
 (~34 scripts, ~27 scenes) the type-based split is clean, consistent, and cheaper
-to keep than to migrate. Revisit if the project grows past ~100 scenes.
+to keep than to migrate. Revisit if the project grows past ~100 scenes — the
+migration blueprint is ready in `restructure-plan.md`.
 
 ## Runtime node tree (what runs on F5)
 
