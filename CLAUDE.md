@@ -13,6 +13,10 @@ session. Read `AGENTS.md` for the full workflow, and `docs/ARCHITECTURE.md` +
 ## Non-negotiable rules
 - **Editor-first.** Code is reusable behavior; content is scenes + `.tres`. To add a
   new enemy/weapon/attack/room, edit data — do not hardcode content in scripts.
+- **Built-in first.** If a Godot node type already provides the capability
+  (Timer, Tween, AnimationPlayer, Area2D signals, TileMapLayer, AStarGrid2D,
+  Camera2D shake/limits, CanvasLayer, containers...), use the node — do not
+  re-implement it in script. Check the class reference before writing a system.
 - **Never duplicate a value** in both code and a `.tres`. The Resource is the truth.
 - **No `_draw()` for actor/pickup bodies.** They are `Sprite2D` + `AnimationPlayer`.
   Overlays (board telegraphs, debug, grid lines) may use `_draw()`.

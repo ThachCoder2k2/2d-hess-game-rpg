@@ -179,6 +179,7 @@ Do not start a broad new phase while the current phase has a broken playable sli
 - Keep gameplay collision/placement tied to marker scenes. If a designer can move something that affects play, the moved node should be the source read by runtime setup.
 - Keep runtime factories as bridges only when converting old scripted systems.
 - Do not introduce a strict ECS framework. Use Godot-native scenes, nodes, Resources, and signals.
+- Prefer built-in node capabilities over custom code. If a node type already supports the function (Timer, Tween, AnimationPlayer, Area2D signals, TileMapLayer, AStarGrid2D, Camera2D, CanvasLayer, UI containers), use it — do not re-implement it in script. See `docs/coding-standards.md` "Built-in nodes first".
 - Shared Resource assets should be treated as immutable at runtime; duplicate per-instance mutable weapon or profile data.
 - Do not add new actor or pickup `_draw()` methods for production behavior. Add or update a `Visual` child scene and sync state from gameplay scripts instead.
 

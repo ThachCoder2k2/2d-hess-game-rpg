@@ -76,6 +76,27 @@ before runtime methods.
 - New reusable behavior → `scripts/<area>/`.
 - Raw art → `assets/`. Build/one-off scripts → `tools/`.
 
+## Built-in nodes first
+
+If Godot already ships a node or engine feature for a capability, use it instead of
+writing custom script logic. Check the class reference before building any "system".
+
+| Need | Use the built-in | Not |
+|---|---|---|
+| Delays / cooldowns | `Timer` node or `get_tree().create_timer()` | hand-decremented floats in `_process` (only OK when the value drives per-frame visuals, e.g. telegraph progress) |
+| Property animation over time | `Tween` (movement) / `AnimationPlayer` (authored clips) | manual lerp bookkeeping in `_process` |
+| Overlap / proximity detection | `Area2D` + `body_entered`/`area_entered` | distance checks every frame (grid-cell logic via `GridWorld` is the sanctioned exception — combat is cell-based, not physics-based) |
+| Pathfinding | `AStarGrid2D` (already used in `GridWorld`) | hand-rolled BFS/Dijkstra |
+| Tile floors | `TileMapLayer` + `TileSet` | per-cell Polygon2D/Sprite nodes |
+| UI layout | Containers (`HBox`/`VBox`/`Margin`...), anchors | manual position math on Controls |
+| Screen-fixed UI | `CanvasLayer` | moving UI to follow the camera |
+| Camera follow/limits/shake | `Camera2D` properties | scripted camera math |
+| Node lookup | scene-unique names (`%Node`), `@export` NodePath | brittle absolute paths |
+
+Existing compliance examples: movement uses `Tween`, visuals use `AnimationPlayer`,
+the floor is a `TileMapLayer`, pathfinding is `AStarGrid2D`, the HUD is a
+`CanvasLayer`. Keep new work at that bar.
+
 ## Components
 
 - Prefer composition: an entity gains behavior from child component nodes
