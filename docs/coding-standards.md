@@ -78,8 +78,17 @@ before runtime methods.
 
 ## Built-in nodes first
 
-If Godot already ships a node or engine feature for a capability, use it instead of
-writing custom script logic. Check the class reference before building any "system".
+**Mandatory research step before implementing any new mechanic:**
+
+1. **Built-in?** Search the Godot class reference / docs for a node or engine
+   feature that already provides the capability. If one fits, use it.
+2. **Addon?** If no built-in fits, look for a proven, maintained addon
+   (Godot Asset Library, GitHub — check license, Godot-4 support, recent commits).
+   Adding a dependency needs the human owner's approval first.
+3. **Custom script** only when neither fits. State in the commit message why the
+   built-in/addon route didn't work, so the decision is auditable.
+
+Never re-implement what a node already does.
 
 | Need | Use the built-in | Not |
 |---|---|---|

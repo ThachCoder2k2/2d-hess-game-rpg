@@ -15,9 +15,12 @@ current one has a broken slice.
    If it changes art direction, core controls, scope, or removes a mechanic — ask the
    human first (per AGENTS.md). Otherwise pick sensible defaults and proceed.
 
-3. **Build editor-first.** Prefer new/edited `.tscn` + `.tres` over new script. Scripts
-   only for reusable behavior. Never hardcode content, never duplicate a `.tres` value
-   in code, never `_draw()` an actor/pickup body.
+3. **Research, then build editor-first.** For any new mechanic, first check Godot's
+   built-in nodes/features for the capability; then a proven addon (ask the human
+   before adding a dependency); custom script only if neither fits — say why in the
+   commit. Prefer new/edited `.tscn` + `.tres` over new script. Scripts only for
+   reusable behavior. Never hardcode content, never duplicate a `.tres` value in
+   code, never `_draw()` an actor/pickup body.
 
 4. **Add or update tests** for behavior and scene ownership (assertion messages read as
    a spec).
