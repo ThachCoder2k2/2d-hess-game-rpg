@@ -54,7 +54,7 @@ func _start_step(destination: Vector2i) -> void:
 func _finish_step(destination: Vector2i) -> void:
 	if actor == null or not is_instance_valid(actor) or actor.grid_world == null:
 		return
-	if not actor.grid_world.actor_cells.has(actor):
+	if not actor.grid_world.cell_by_actor.has(actor):
 		actor.is_moving = false
 		return
 	actor.grid_world.finish_move(actor, destination)

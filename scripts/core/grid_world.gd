@@ -5,11 +5,20 @@ extends Node
 @export var grid_origin := Vector2(64, 36)
 @export var bounds := Rect2i(0, 0, 16, 9)
 
+## cell -> true. Walls/blockers: cells nothing may enter (from BlockerMarkers or solid tiles).
 var blocked_cells: Dictionary = {}
-var occupied_cells: Dictionary = {}
-var actor_cells: Dictionary = {}
-var reservations: Dictionary = {}
-var item_cells: Dictionary = {}
+## cell -> actor. Who is standing on each cell right now. Kept in sync with cell_by_actor.
+var actor_by_cell: Dictionary = {}
+## actor -> cell. Reverse lookup of actor_by_cell, so both directions are O(1).
+var cell_by_actor: Dictionary = {}
+## destination cell -> actor. A moving actor claims its destination BEFORE the step
+## tween plays (begin_move) and the claim clears when the step lands (finish_move).
+## While sliding, the actor protects both its origin (still occupied) and its
+## destination (reserved) — no one can race into either. Enemies target the hero's
+## reserved cell, which is what makes dodging telegraphs possible and fair.
+var move_reservations: Dictionary = {}
+## cell -> pickup. Weapons lying on the floor, one per cell.
+var item_by_cell: Dictionary = {}
 
 
 func cell_to_world(cell: Vector2i) -> Vector2:
@@ -29,57 +38,57 @@ func is_walkable(cell: Vector2i) -> bool:
 
 
 func register_actor(actor: Node, cell: Vector2i) -> bool:
-	if not is_walkable(cell) or occupied_cells.has(cell) or reservations.has(cell):
+	if not is_walkable(cell) or actor_by_cell.has(cell) or move_reservations.has(cell):
 		return false
-	occupied_cells[cell] = actor
-	actor_cells[actor] = cell
+	actor_by_cell[cell] = actor
+	cell_by_actor[actor] = cell
 	return true
 
 
 func unregister_actor(actor: Node) -> void:
-	if not actor_cells.has(actor):
+	if not cell_by_actor.has(actor):
 		return
-	var cell: Vector2i = actor_cells[actor]
-	occupied_cells.erase(cell)
-	actor_cells.erase(actor)
-	for reserved_cell in reservations.keys():
-		if reservations[reserved_cell] == actor:
-			reservations.erase(reserved_cell)
+	var cell: Vector2i = cell_by_actor[actor]
+	actor_by_cell.erase(cell)
+	cell_by_actor.erase(actor)
+	for reserved_cell in move_reservations.keys():
+		if move_reservations[reserved_cell] == actor:
+			move_reservations.erase(reserved_cell)
 
 
 func can_begin_move(actor: Node, destination: Vector2i) -> bool:
 	if not is_walkable(destination):
 		return false
-	if occupied_cells.has(destination) and occupied_cells[destination] != actor:
+	if actor_by_cell.has(destination) and actor_by_cell[destination] != actor:
 		return false
-	if reservations.has(destination) and reservations[destination] != actor:
+	if move_reservations.has(destination) and move_reservations[destination] != actor:
 		return false
-	return actor_cells.has(actor)
+	return cell_by_actor.has(actor)
 
 
 func begin_move(actor: Node, destination: Vector2i) -> bool:
 	if not can_begin_move(actor, destination):
 		return false
-	reservations[destination] = actor
+	move_reservations[destination] = actor
 	return true
 
 
 func finish_move(actor: Node, destination: Vector2i) -> void:
-	if not actor_cells.has(actor):
+	if not cell_by_actor.has(actor):
 		return
-	var origin: Vector2i = actor_cells[actor]
-	occupied_cells.erase(origin)
-	reservations.erase(destination)
-	occupied_cells[destination] = actor
-	actor_cells[actor] = destination
+	var origin: Vector2i = cell_by_actor[actor]
+	actor_by_cell.erase(origin)
+	move_reservations.erase(destination)
+	actor_by_cell[destination] = actor
+	cell_by_actor[actor] = destination
 
 
 func actor_at(cell: Vector2i) -> Node:
-	return occupied_cells.get(cell)
+	return actor_by_cell.get(cell)
 
 
 func add_block(cell: Vector2i) -> bool:
-	if not is_inside(cell) or occupied_cells.has(cell) or reservations.has(cell):
+	if not is_inside(cell) or actor_by_cell.has(cell) or move_reservations.has(cell):
 		return false
 	blocked_cells[cell] = true
 	return true
@@ -90,47 +99,47 @@ func remove_block(cell: Vector2i) -> void:
 
 
 func register_item(item: Node, cell: Vector2i) -> bool:
-	if not is_inside(cell) or item_cells.has(cell):
+	if not is_inside(cell) or item_by_cell.has(cell):
 		return false
-	item_cells[cell] = item
+	item_by_cell[cell] = item
 	return true
 
 
 func unregister_item(item: Node) -> void:
-	for cell in item_cells.keys():
-		if item_cells[cell] == item:
-			item_cells.erase(cell)
+	for cell in item_by_cell.keys():
+		if item_by_cell[cell] == item:
+			item_by_cell.erase(cell)
 			return
 
 
 func item_at(cell: Vector2i) -> Node:
-	return item_cells.get(cell)
+	return item_by_cell.get(cell)
 
 
 func get_item_cells() -> Array[Vector2i]:
 	var cells: Array[Vector2i] = []
-	for cell: Vector2i in item_cells:
+	for cell: Vector2i in item_by_cell:
 		cells.append(cell)
 	return cells
 
 
 func get_reserved_cell(actor: Node) -> Vector2i:
-	for cell: Vector2i in reservations:
-		if reservations[cell] == actor:
+	for cell: Vector2i in move_reservations:
+		if move_reservations[cell] == actor:
 			return cell
-	return actor_cells.get(actor, Vector2i(-999, -999))
+	return cell_by_actor.get(actor, Vector2i(-999, -999))
 
 
 func get_reservation_cells() -> Array[Vector2i]:
 	var cells: Array[Vector2i] = []
-	for cell: Vector2i in reservations:
+	for cell: Vector2i in move_reservations:
 		cells.append(cell)
 	return cells
 
 
 func get_occupied_cells() -> Array[Vector2i]:
 	var cells: Array[Vector2i] = []
-	for cell: Vector2i in occupied_cells:
+	for cell: Vector2i in actor_by_cell:
 		cells.append(cell)
 	return cells
 
@@ -145,11 +154,11 @@ func get_grid_path(actor: Node, origin: Vector2i, goal: Vector2i) -> Array[Vecto
 	pathfinder.update()
 	for cell: Vector2i in blocked_cells:
 		pathfinder.set_point_solid(cell)
-	for cell: Vector2i in occupied_cells:
-		if occupied_cells[cell] != actor and cell != goal:
+	for cell: Vector2i in actor_by_cell:
+		if actor_by_cell[cell] != actor and cell != goal:
 			pathfinder.set_point_solid(cell)
-	for cell: Vector2i in reservations:
-		if reservations[cell] != actor and cell != goal:
+	for cell: Vector2i in move_reservations:
+		if move_reservations[cell] != actor and cell != goal:
 			pathfinder.set_point_solid(cell)
 	var packed_path := pathfinder.get_id_path(origin, goal)
 	var path: Array[Vector2i] = []
@@ -171,9 +180,9 @@ func get_next_path_cell(actor: Node, origin: Vector2i, goal: Vector2i) -> Vector
 func is_plannable_cell(actor: Node, cell: Vector2i) -> bool:
 	if not is_walkable(cell):
 		return false
-	if occupied_cells.has(cell) and occupied_cells[cell] != actor:
+	if actor_by_cell.has(cell) and actor_by_cell[cell] != actor:
 		return false
-	if reservations.has(cell) and reservations[cell] != actor:
+	if move_reservations.has(cell) and move_reservations[cell] != actor:
 		return false
 	return true
 

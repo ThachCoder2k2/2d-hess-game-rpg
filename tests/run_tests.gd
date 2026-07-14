@@ -86,7 +86,7 @@ func _init() -> void:
 	_expect(black_pawn.get_attack_cells() == [Vector2i(5, 4), Vector2i(7, 4)], "black pawn attacks both forward diagonals")
 	_expect(black_pawn.definition != null and black_pawn.definition.id == &"pawn_recruit", "black pawn loads its editor definition")
 	_expect(black_pawn.definition.validate().is_empty(), "pawn definition has no missing configuration")
-	_expect(black_pawn.think_time == 0.42 and black_pawn.move_recovery_time == 0.18, "pawn runtime timing comes from Resources")
+	_expect(black_pawn.observe_delay == 0.42 and black_pawn.move_recovery_time == 0.18, "pawn runtime timing comes from Resources")
 	black_pawn.facing = Vector2i.RIGHT
 	_expect(black_pawn.get_attack_cells() == [Vector2i(7, 4), Vector2i(7, 2)], "black pawn diagonal attack rotates with facing")
 
@@ -103,7 +103,7 @@ func _init() -> void:
 	_expect(knight.get_unarmed_attack_cells().size() == 8, "unarmed knight threatens eight L-shaped cells")
 	_expect(Vector2i(10, 5) in knight.get_unarmed_attack_cells(), "knight includes a legal L-shaped target")
 	_expect(knight.definition != null and knight.definition.id == &"knight_tracker", "knight loads its editor definition")
-	_expect(knight.definition.validate().is_empty() and knight.archetype.role_policy == &"flanker", "knight definition configures a valid flanker")
+	_expect(knight.definition.validate().is_empty() and knight.decision_profile.role_policy == &"flanker", "knight definition configures a valid flanker")
 	_expect(knight.definition.movement.allowed_directions.size() == 8, "knight movement config exposes eight L-shaped offsets")
 	_expect(Vector2i(2, 1) in knight.definition.movement.allowed_directions and Vector2i.RIGHT not in knight.definition.movement.allowed_directions, "knight movement config does not fall back to one-cell cardinal steps")
 
@@ -140,7 +140,7 @@ func _init() -> void:
 	_expect(bishop.definition.movement.allowed_directions.has(Vector2i(1, 1)) and not bishop.definition.movement.allowed_directions.has(Vector2i.RIGHT), "Bishop moves diagonally, not cardinally, from its MovementConfig")
 	var bishop_cells := bishop.get_unarmed_attack_cells()
 	_expect(bishop_cells.size() == 8 and Vector2i(10, 6) in bishop_cells and Vector2i(9, 5) in bishop_cells, "Bishop unarmed attack threatens diagonal beams from its AttackPattern data")
-	_expect(bishop.archetype.role_policy == &"sniper" and bishop.archetype.preferred_distance == 3 and is_equal_approx(bishop.archetype.flank_bonus, 24.0), "Bishop AI personality is a pure DecisionConfig .tres")
+	_expect(bishop.decision_profile.role_policy == &"sniper" and bishop.decision_profile.preferred_distance == 3 and is_equal_approx(bishop.decision_profile.flank_bonus, 24.0), "Bishop AI personality is a pure DecisionConfig .tres")
 
 	var enemy_base_scene := load("res://objects/actors/enemy_base.tscn") as PackedScene
 	var pawn_shell := enemy_base_scene.instantiate() as EnemyActor

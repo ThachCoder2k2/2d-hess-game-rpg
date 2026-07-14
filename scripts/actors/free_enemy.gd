@@ -11,7 +11,7 @@ signal intent_changed(enemy: FreeEnemy, intent: EnemyIntent)
 enum State { OBSERVE, TELEGRAPH, COMMIT, RECOVER, DEFEATED }
 
 @export var health := 2
-@export var think_time := 0.42
+@export var observe_delay := 0.42
 @export var move_recovery_time := 0.18
 @export var unarmed_telegraph_time := 0.58
 @export var unarmed_recovery_time := 0.48
@@ -22,7 +22,7 @@ var target: PawnHero
 var director: EncounterDirector
 var weapon: EnemyWeapon
 var attack_pattern: AttackPattern
-var archetype: DecisionConfig  # resolved AI profile (EnemyDefinition.decision or brain override)
+var decision_profile: DecisionConfig  # resolved AI profile (EnemyDefinition.decision or brain override)
 var current_intent: EnemyIntent
 var action_memory: Array[StringName] = []
 var recent_cells: Array[Vector2i] = []
@@ -32,7 +32,7 @@ var committed_goal_kind: StringName = &"none"
 var committed_target_snapshot := Vector2i(-999, -999)
 var goal_decisions_left := 0
 var state := State.OBSERVE
-var state_time := 0.0
+var state_time_left := 0.0
 var flash_time := 0.0
 var recoil := Vector2.ZERO
 var locked_attack_cells: Array[Vector2i] = []
@@ -64,7 +64,7 @@ func activate(hero: PawnHero, encounter_director: EncounterDirector) -> void:
 	target = hero
 	director = encounter_director
 	state = State.OBSERVE
-	state_time = think_time
+	state_time_left = observe_delay
 	recent_cells = [current_cell]
 	_sync_visual()
 	_update_debug_label()
@@ -111,8 +111,8 @@ func _process(delta: float) -> void:
 		return
 	if director != null and director.paused:
 		return
-	state_time -= delta
-	if state_time > 0.0:
+	state_time_left -= delta
+	if state_time_left > 0.0:
 		return
 	match state:
 		State.OBSERVE:
@@ -123,7 +123,7 @@ func _process(delta: float) -> void:
 			_resolve_attack()
 		State.RECOVER:
 			state = State.OBSERVE
-			state_time = think_time
+			state_time_left = observe_delay
 
 
 func get_unarmed_attack_cells(origin := current_cell, direction := facing) -> Array[Vector2i]:
@@ -153,7 +153,7 @@ func get_telegraph_progress() -> float:
 	if state != State.TELEGRAPH:
 		return 0.0
 	var duration := maxf(get_attack_telegraph_time(), 0.001)
-	return clampf(1.0 - state_time / duration, 0.0, 1.0)
+	return clampf(1.0 - state_time_left / duration, 0.0, 1.0)
 
 
 func get_max_health() -> int:
@@ -187,11 +187,11 @@ func _build_intents(context: EnemyContext) -> Array[EnemyIntent]:
 	var intents: Array[EnemyIntent] = []
 	var attack_cells := get_attack_cells(context.self_cell, context.facing)
 	if context.attack_available and context.hero_cell in attack_cells:
-		intents.append(EnemyIntent.attack(attack_cells, archetype.attack_score))
+		intents.append(EnemyIntent.attack(attack_cells, decision_profile.attack_score))
 
 	var local_item := grid_world.item_at(context.self_cell)
 	if local_item is WeaponPickup and can_collect_weapon(local_item):
-		intents.append(EnemyIntent.pickup(archetype.pickup_score + archetype.local_pickup_bonus))
+		intents.append(EnemyIntent.pickup(decision_profile.pickup_score + decision_profile.local_pickup_bonus))
 
 	var pursuit_cell := _get_pursuit_goal(context)
 	var next_path_cell := grid_world.get_next_path_cell(self, context.self_cell, pursuit_cell)
@@ -212,17 +212,17 @@ func _build_intents(context: EnemyContext) -> Array[EnemyIntent]:
 				continue
 			var turn_score := 4.0
 			if context.hero_cell in get_attack_cells(context.self_cell, direction):
-				turn_score += archetype.turn_threat_score
+				turn_score += decision_profile.turn_threat_score
 			else:
 				var old_distance := _facing_distance(context.self_cell, context.hero_cell, context.facing)
 				var new_distance := _facing_distance(context.self_cell, context.hero_cell, direction)
-				turn_score += float(old_distance - new_distance) * archetype.turn_progress_weight
+				turn_score += float(old_distance - new_distance) * decision_profile.turn_progress_weight
 			intents.append(EnemyIntent.turn(direction, turn_score))
 
-	intents.append(EnemyIntent.wait(archetype.wait_score))
+	intents.append(EnemyIntent.wait(decision_profile.wait_score))
 	for intent in intents:
 		if not String(intent.action_id).begins_with("move_"):
-			intent.score -= float(action_memory.count(intent.action_id)) * archetype.repetition_penalty
+			intent.score -= float(action_memory.count(intent.action_id)) * decision_profile.repetition_penalty
 	return intents
 
 
@@ -240,32 +240,32 @@ func _execute_intent(intent: EnemyIntent) -> void:
 		EnemyIntent.Type.ATTACK:
 			if director != null and not director.request_attack(self):
 				state = State.RECOVER
-				state_time = 0.12
+				state_time_left = 0.12
 				return
 			locked_attack_cells = intent.target_cells.duplicate()
 			state = State.TELEGRAPH
-			state_time = get_attack_telegraph_time()
+			state_time_left = get_attack_telegraph_time()
 			emit_signal("telegraph_started", self, locked_attack_cells)
 			_sync_visual()
 		EnemyIntent.Type.MOVE:
 			last_move_direction = intent.direction
 			try_step(intent.direction)
 			state = State.RECOVER
-			state_time = move_recovery_time
+			state_time_left = move_recovery_time
 		EnemyIntent.Type.PICKUP:
 			var pickup := grid_world.item_at(current_cell)
 			if pickup is WeaponPickup:
 				collect_weapon_pickup(pickup)
 			state = State.RECOVER
-			state_time = 0.10
+			state_time_left = 0.10
 		EnemyIntent.Type.TURN:
 			facing = intent.direction
 			_sync_visual()
 			state = State.RECOVER
-			state_time = 0.12
+			state_time_left = 0.12
 		EnemyIntent.Type.WAIT:
 			state = State.RECOVER
-			state_time = think_time * 0.65
+			state_time_left = observe_delay * 0.65
 
 
 func _score_destination(destination: Vector2i, direction: Vector2i, pursuit_cell: Vector2i, next_path_cell: Vector2i, penalize_recent: bool, context: EnemyContext) -> float:
@@ -274,32 +274,32 @@ func _score_destination(destination: Vector2i, direction: Vector2i, pursuit_cell
 	if old_distance >= 999999 or new_distance >= 999999:
 		old_distance = _manhattan(context.self_cell, pursuit_cell)
 		new_distance = _manhattan(destination, pursuit_cell)
-	var score := float(old_distance - new_distance) * archetype.distance_score
+	var score := float(old_distance - new_distance) * decision_profile.distance_score
 	if destination == next_path_cell:
 		score += _path_step_bonus()
 	if penalize_recent and destination in recent_cells:
 		score -= _recent_cell_penalty()
 	if weapon == null and grid_world.item_at(destination) is WeaponPickup:
-		score += archetype.pickup_score
+		score += decision_profile.pickup_score
 	if context.hero_cell in get_attack_cells(destination, direction):
-		score += archetype.future_threat_score
+		score += decision_profile.future_threat_score
 	var hero_distance := _manhattan(destination, context.hero_cell)
-	score -= absf(float(hero_distance - archetype.preferred_distance)) * archetype.preferred_distance_weight
+	score -= absf(float(hero_distance - decision_profile.preferred_distance)) * decision_profile.preferred_distance_weight
 	return score + get_positioning_bonus(destination, direction, context)
 
 
 func get_positioning_bonus(destination: Vector2i, direction: Vector2i, context: EnemyContext) -> float:
 	# Data-driven flanking pressure. A skirmisher leaves these at 0; a flanker
 	# (or any future role) sets flank_bonus / axis_change_bonus in its DecisionConfig.
-	if archetype == null:
+	if decision_profile == null:
 		return 0.0
 	var bonus := 0.0
-	if archetype.flank_bonus != 0.0 and weapon == null \
+	if decision_profile.flank_bonus != 0.0 and weapon == null \
 			and context.hero_cell in get_unarmed_attack_cells(destination, direction):
-		bonus += archetype.flank_bonus
-	if archetype.axis_change_bonus != 0.0 and last_move_direction != Vector2i.ZERO \
+		bonus += decision_profile.flank_bonus
+	if decision_profile.axis_change_bonus != 0.0 and last_move_direction != Vector2i.ZERO \
 			and last_move_direction.abs() != direction.abs():
-		bonus += archetype.axis_change_bonus
+		bonus += decision_profile.axis_change_bonus
 	return bonus
 
 
@@ -374,7 +374,7 @@ func _resolve_attack() -> void:
 	if director != null:
 		director.release_attack(self)
 	state = State.RECOVER
-	state_time = get_attack_recovery_time()
+	state_time_left = get_attack_recovery_time()
 	_sync_visual()
 
 
@@ -425,8 +425,8 @@ func _ensure_ai_data() -> void:
 		_apply_definition()
 	if attack_pattern == null:
 		attack_pattern = create_attack_pattern()
-	if archetype == null:
-		archetype = _resolve_decision()
+	if decision_profile == null:
+		decision_profile = _resolve_decision()
 
 
 func _apply_definition() -> void:
@@ -437,15 +437,15 @@ func _apply_definition() -> void:
 	if definition.movement != null:
 		step_duration = definition.movement.step_duration
 		move_recovery_time = definition.movement.move_recovery
-	archetype = _resolve_decision()
-	if archetype != null:
-		think_time = archetype.observe_delay
+	decision_profile = _resolve_decision()
+	if decision_profile != null:
+		observe_delay = decision_profile.observe_delay
 	if definition.unarmed_attack != null:
 		attack_pattern = definition.unarmed_attack
 		unarmed_telegraph_time = attack_pattern.telegraph_duration
 		unarmed_recovery_time = attack_pattern.recovery_duration
 	if definition.difficulty != null:
-		think_time *= definition.difficulty.observe_time_multiplier
+		observe_delay *= definition.difficulty.observe_time_multiplier
 		step_duration *= definition.difficulty.movement_time_multiplier
 		move_recovery_time *= definition.difficulty.recovery_time_multiplier
 		unarmed_telegraph_time *= definition.difficulty.telegraph_time_multiplier
@@ -472,11 +472,11 @@ func _resolve_decision() -> DecisionConfig:
 
 
 func _recent_cell_penalty() -> float:
-	return archetype.recent_cell_penalty if archetype != null else 30.0
+	return decision_profile.recent_cell_penalty if decision_profile != null else 30.0
 
 
 func _path_step_bonus() -> float:
-	return archetype.path_step_bonus if archetype != null else 18.0
+	return decision_profile.path_step_bonus if decision_profile != null else 18.0
 
 
 func _ensure_step_tracking() -> void:
@@ -526,7 +526,7 @@ func _update_debug_label() -> void:
 	var equipment := "UNARMED" if weapon == null else weapon.display_name.to_upper()
 	debug_label.position.y = 16.0 if position.y < 92.0 else -39.0
 	debug_label.text = "%s  %s\n%s %.0f  %s" % [
-		String(archetype.role_policy).to_upper(),
+		String(decision_profile.role_policy).to_upper(),
 		State.keys()[state],
 		action,
 		score,
