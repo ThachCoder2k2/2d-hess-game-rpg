@@ -156,6 +156,7 @@ Acceptance criteria:
 - The next recommended implementation phase is the editor-first encounter system, not more scripted room composition.
 - Future AI sessions should read `AGENTS.md` first for editor-first workflow rules, verification expectations, and current priorities.
 - AI should hand off room feel, player feel, enemy feel, art/audio taste, narrative tone, and release review tasks to the human owner inside Godot Editor when the relevant phase reaches a tuning gate.
+- World shape (owner decision, 2026-07): **connected rooms**, not one big scrolling map. The world is a freely explorable set of bounded boards joined by door/exit transitions (Zelda-screen style); `GridWorld.bounds` stays per-room. Combat arenas remain tight and readable; exploration freedom comes from room connectivity (E6), not from removing bounds.
 - `RoomObjective` Resources own room start/clear/defeat copy and win-condition checks; `RoomEncounter` emits `room_completed`, while `main.gd` only reacts with HUD/result flow.
 - `Main.tscn` now owns editor-visible child scene instances for GridWorld, EncounterDirector, PrototypeBoard, PawnHero, FirstEncounter, and HUD; `main.gd` resolves those child nodes first and uses scene fallbacks only for tests.
 - Spawn markers should prefer `PackedScene` templates (`black_pawn.tscn`, `knight_enemy.tscn`, `weapon_pickup.tscn`) and keep direct constructors only as compatibility fallbacks.
