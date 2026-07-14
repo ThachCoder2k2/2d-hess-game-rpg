@@ -180,6 +180,7 @@ Do not start a broad new phase while the current phase has a broken playable sli
 - Keep runtime factories as bridges only when converting old scripted systems.
 - Do not introduce a strict ECS framework. Use Godot-native scenes, nodes, Resources, and signals.
 - Research before building any new mechanic, in this order: (1) a built-in node/engine feature that already supports it (Timer, Tween, AnimationPlayer, Area2D signals, TileMapLayer, AStarGrid2D, Camera2D, CanvasLayer, UI containers); (2) a proven maintained addon — ask the human owner before adding a dependency; (3) only then custom script, stating in the commit why neither fit. Never re-implement what a node already does. See `docs/coding-standards.md` "Built-in nodes first".
+- Use self-documenting names. A variable/function name must convey what it holds or does without reading the body: dictionaries state their direction (`actor_by_cell`, `cell_by_actor`), values state their semantics (`state_time_left`, `observe_delay`), and cryptic/abbreviated names are avoided. Add a `##` doc comment to every non-obvious data structure (key → value for dictionaries). Before renaming, survey `.tscn`/`.tres` for serialized `@export` names and `get("name")` string access — those break silently.
 - Shared Resource assets should be treated as immutable at runtime; duplicate per-instance mutable weapon or profile data.
 - Do not add new actor or pickup `_draw()` methods for production behavior. Add or update a `Visual` child scene and sync state from gameplay scripts instead.
 

@@ -15,13 +15,20 @@ session. Read `AGENTS.md` for the full workflow, and `docs/ARCHITECTURE.md` +
   new enemy/weapon/attack/room, edit data — do not hardcode content in scripts.
 - **Research before building any new mechanic.** Mandatory order:
   1. Search Godot's built-in nodes/engine features for the capability
-     (Timer, Tween, AnimationPlayer, Area2D signals, TileMapLayer, AStarGrid2D,
-     Camera2D shake/limits, CanvasLayer, containers...). If one fits, use it.
+	 (Timer, Tween, AnimationPlayer, Area2D signals, TileMapLayer, AStarGrid2D,
+	 Camera2D shake/limits, CanvasLayer, containers...). If one fits, use it.
   2. If no built-in fits, check for a proven, maintained addon/plugin
-     (Godot Asset Library / GitHub). Ask the human before adding a dependency.
+	 (Godot Asset Library / GitHub). Ask the human before adding a dependency.
   3. Only if neither fits, write it yourself in script — and say why in the
-     commit message. Never re-implement what a node already does.
+	 commit message. Never re-implement what a node already does.
 - **Never duplicate a value** in both code and a `.tres`. The Resource is the truth.
+- **Self-documenting names.** A name must say what it holds or does without opening
+  the code: dictionaries state their direction (`actor_by_cell`, `cell_by_actor`),
+  timers state their semantics (`state_time_left`, `observe_delay`), no cryptic or
+  abbreviated names (`reservations` → `move_reservations`). Every non-obvious data
+  structure gets a `##` doc comment (key → value for dictionaries). Before renaming
+  anything, survey first: grep `.tscn`/`.tres` for serialized `@export` names and
+  grep for `get("name")` string access — those break silently on rename.
 - **No `_draw()` for actor/pickup bodies.** They are `Sprite2D` + `AnimationPlayer`.
   Overlays (board telegraphs, debug, grid lines) may use `_draw()`.
 - **Folder ownership:** `scenes/` = entry/rooms/ui only · `objects/` = reusable prefabs
@@ -48,7 +55,7 @@ session. Read `AGENTS.md` for the full workflow, and `docs/ARCHITECTURE.md` +
 G="../Godot.app/Contents/MacOS/Godot"
 HOME=/tmp/unbound-pawn-godot "$G" --headless --path . -s tests/run_tests.gd
 for t in attack_runtime component_movement_runtime component_equipment_runtime \
-         component_knight_movement_runtime room_encounter_runtime encounter_hud_runtime; do
+		 component_knight_movement_runtime room_encounter_runtime encounter_hud_runtime; do
   HOME=/tmp/unbound-pawn-godot "$G" --headless --path . -s tests/${t}_test.gd
 done
 HOME=/tmp/unbound-pawn-godot "$G" --headless --path . --editor --quit   # import clean

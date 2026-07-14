@@ -14,6 +14,29 @@ best practices. Consistency matters more than any single rule.
   scene has one controller (e.g. `hud.tscn` → root `HUD` → `hud.gd`/`GameHud`).
 - No spaces in filenames; use underscores.
 
+### Self-documenting names
+
+A name must convey what it holds or does without opening the body. Favor clarity
+over brevity; there is no prize for short names.
+
+- **Dictionaries state their direction:** `actor_by_cell` (cell → actor),
+  `cell_by_actor` (actor → cell), `item_by_cell`. Not `actors`, `cells`.
+- **Values state their semantics:** `state_time_left` (counts down), `observe_delay`
+  (matches the data field it loads), `move_reservations`. Not `time`, `t`, `res`.
+- **No cryptic or abbreviated names.** `reservations` → `move_reservations`;
+  `archetype` (held a `DecisionConfig`) → `decision_profile`.
+- **Doc-comment every non-obvious data structure** with `##` — for dictionaries,
+  state key → value and why it exists (see `GridWorld`'s five dictionaries). These
+  also surface in the editor's help tooltip.
+
+**Before renaming anything, survey first** — GDScript renames break silently in two
+places the compiler will not catch:
+1. `@export` names serialized into `.tscn`/`.tres` — grep the scene/resource files.
+2. String property access `object.get("name")` / `object.set("name")` — grep for it.
+
+Rename the declaration only after confirming neither references the old name (or
+update those too in the same change), then run the full verify suite.
+
 ## GDScript member order
 
 Order every script's members this way (official order — the codebase already
