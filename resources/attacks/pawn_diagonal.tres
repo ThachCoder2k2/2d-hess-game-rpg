@@ -1,16 +1,9 @@
-[gd_resource type="Resource" script_class="AttackPattern" load_steps=2 format=3]
+[gd_resource type="Resource" script_class="AttackPattern" format=3 uid="uid://bm6n2c37cl4g1"]
 
-[ext_resource type="Script" path="res://scripts/ai/attack_pattern.gd" id="1"]
+[ext_resource type="Script" uid="uid://dia1hkly2tk2v" path="res://scripts/ai/attack_pattern.gd" id="1"]
 
 [resource]
 script = ExtResource("1")
 id = &"pawn_diagonal"
-uses_facing = true
 cell_offsets = Array[Vector2i]([Vector2i(1, 1), Vector2i(1, -1)])
-clip_to_board = false
-damage = 1
-telegraph_duration = 0.58
-recovery_duration = 0.48
 telegraph_style = &"diagonal_slashes"
-requires_attack_token = true
-locks_facing = true

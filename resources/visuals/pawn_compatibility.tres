@@ -1,6 +1,6 @@
-[gd_resource type="Resource" script_class="VisualDefinition" load_steps=3 format=3]
+[gd_resource type="Resource" script_class="VisualDefinition" format=3 uid="uid://c8p1h1f6xmjoq"]
 
-[ext_resource type="Script" path="res://scripts/data/visual_definition.gd" id="1"]
+[ext_resource type="Script" uid="uid://whbf5imveje" path="res://scripts/data/visual_definition.gd" id="1"]
 [ext_resource type="PackedScene" path="res://objects/visuals/black_pawn_visual.tscn" id="2"]
 
 [resource]

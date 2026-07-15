@@ -1,18 +1,9 @@
-[gd_resource type="Resource" script_class="DecisionConfig" load_steps=2 format=3]
+[gd_resource type="Resource" script_class="DecisionConfig" format=3 uid="uid://cq4qwwrl876l2"]
 
-[ext_resource type="Script" path="res://scripts/data/decision_config.gd" id="1"]
+[ext_resource type="Script" uid="uid://daw05sbsoxere" path="res://scripts/data/decision_config.gd" id="1"]
 
 [resource]
 script = ExtResource("1")
-observe_delay = 0.42
-attack_score = 100.0
 future_threat_score = 36.0
-distance_score = 10.0
 pickup_score = 72.0
 turn_threat_score = 52.0
-wait_score = 8.0
-repetition_penalty = 16.0
-recent_cell_penalty = 30.0
-path_step_bonus = 18.0
-role_policy = &"skirmisher"
-preferred_distance = 2
