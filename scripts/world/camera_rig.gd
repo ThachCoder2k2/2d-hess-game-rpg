@@ -45,6 +45,12 @@ var grid_world: GridWorld
 ## World point the camera holds while follow_enabled is false.
 var focus_world_position := Vector2.ZERO
 
+## Screen-shake state. start_shake() arms it; _process decays it and drives the
+## built-in Camera2D offset, so shake never touches any gameplay node's position.
+var shake_time_left := 0.0
+var shake_duration := 0.0
+var shake_strength := 0.0
+
 
 ## Binds the rig to a board and applies every current knob, then makes it the active
 ## camera. Call again after a room changes grid_world.bounds so the clamp stays right.
@@ -56,6 +62,27 @@ func setup(world: GridWorld) -> void:
 	_apply_bounds()
 	_apply_follow_mode()
 	make_current()
+
+
+func _process(delta: float) -> void:
+	if shake_time_left <= 0.0:
+		if offset != Vector2.ZERO:
+			offset = Vector2.ZERO
+			shake_strength = 0.0
+		return
+	shake_time_left = maxf(0.0, shake_time_left - delta)
+	var progress := shake_time_left / maxf(shake_duration, 0.001)
+	var amount := shake_strength * progress
+	var tick := Time.get_ticks_msec() / 1000.0
+	offset = Vector2(sin(tick * 91.0), cos(tick * 77.0)) * amount
+
+
+## Situational: kick a decaying screen shake (e.g. on hits). Repeated calls keep
+## the strongest/longest of the current and new shake.
+func start_shake(duration: float, strength: float) -> void:
+	shake_duration = maxf(shake_duration, duration)
+	shake_time_left = maxf(shake_time_left, duration)
+	shake_strength = maxf(shake_strength, strength)
 
 
 ## Situational: turn hero-follow on or off (off holds the last focus point).

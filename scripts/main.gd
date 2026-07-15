@@ -20,16 +20,13 @@ var director: EncounterDirector
 var board: PrototypeBoard
 var hero: PawnHero
 var current_room: Node
-var hud: Node
+var hud: GameHud
+var camera_rig: CameraRig
 var remaining_enemies := 0
 var total_enemies := 0
 var room_ending := false
 var debug_enabled := true
 var enemies: Array[FreeEnemy] = []
-var shake_time := 0.0
-var shake_duration := 0.0
-var shake_strength := 0.0
-var damage_flash_time := 0.0
 
 
 func _ready() -> void:
@@ -40,16 +37,14 @@ func _ready() -> void:
 	_update_status(room_message)
 
 
-func _process(delta: float) -> void:
+func _process(_delta: float) -> void:
 	if Input.is_action_just_pressed("restart_room"):
 		get_tree().reload_current_scene()
 	if Input.is_key_pressed(KEY_F3) and not _debug_key_was_pressed:
 		_set_debug_enabled(not debug_enabled)
 	_debug_key_was_pressed = Input.is_key_pressed(KEY_F3)
-	if hero != null and hud != null and hud.has_method("set_cell_status"):
-		hud.call("set_cell_status", hero.current_cell, _facing_name(hero.facing))
-	_update_shake(delta)
-	_update_damage_flash(delta)
+	if hero != null and hud != null:
+		hud.set_cell_status(hero.current_cell, _facing_name(hero.facing))
 
 
 func _setup_scene_nodes() -> void:
@@ -100,10 +95,10 @@ func _resolve_scene_node(node_path: NodePath, scene: PackedScene, fallback: Node
 func _setup_camera() -> void:
 	if hero == null or grid_world == null:
 		return
-	var camera := hero.get_node_or_null("Camera2D") as CameraRig
-	if camera == null:
+	camera_rig = hero.get_node_or_null("Camera2D") as CameraRig
+	if camera_rig == null:
 		return
-	camera.setup(grid_world)
+	camera_rig.setup(grid_world)
 
 
 func _connect_signal_once(source: Object, signal_name: StringName, target: Callable) -> void:
@@ -138,9 +133,9 @@ func _setup_room_instance(room: Node) -> void:
 
 
 func _setup_hud() -> void:
-	hud = _resolve_scene_node(hud_path, HUD_SCENE, CanvasLayer.new(), "HUD")
-	if hud != null and hud.has_method("setup"):
-		hud.call("setup", hero.courage if hero != null else 3)
+	hud = _resolve_scene_node(hud_path, HUD_SCENE, CanvasLayer.new(), "HUD") as GameHud
+	if hud != null:
+		hud.setup(hero.courage if hero != null else 3)
 	if hero != null:
 		_update_courage(hero.courage)
 		_update_skill_cooldown(hero.skill_cooldown_left)
@@ -230,9 +225,8 @@ func _on_hero_defeated() -> void:
 
 func _on_hero_damaged(amount: int, remaining: int) -> void:
 	_start_screen_shake(0.16, 4.2 + float(amount))
-	damage_flash_time = 0.22
-	if hud != null and hud.has_method("show_damage_flash"):
-		hud.call("show_damage_flash")
+	if hud != null:
+		hud.flash_damage()
 	if remaining == 1:
 		_update_status("One courage left. Wait for the warning, then cut through.")
 	elif remaining > 1:
@@ -240,33 +234,33 @@ func _on_hero_damaged(amount: int, remaining: int) -> void:
 
 
 func _update_courage(value: int) -> void:
-	if hud != null and hud.has_method("set_courage"):
-		hud.call("set_courage", value)
+	if hud != null:
+		hud.set_courage(value)
 
 
 func _update_skill_cooldown(time_left: float) -> void:
-	if hud != null and hud.has_method("set_skill_cooldown"):
-		hud.call("set_skill_cooldown", time_left, hero.pencil_thrust_cooldown if hero != null else 1.0)
+	if hud != null:
+		hud.set_skill_cooldown(time_left, hero.pencil_thrust_cooldown if hero != null else 1.0)
 
 
 func _update_token_owner(token_owner: Node) -> void:
-	if hud != null and hud.has_method("set_token_owner"):
-		hud.call("set_token_owner", token_owner)
+	if hud != null:
+		hud.set_token_owner(token_owner)
 
 
 func _update_encounter_count() -> void:
-	if hud != null and hud.has_method("set_encounter_count"):
-		hud.call("set_encounter_count", remaining_enemies, total_enemies)
+	if hud != null:
+		hud.set_encounter_count(remaining_enemies, total_enemies)
 
 
 func _update_status(text: String) -> void:
-	if hud != null and hud.has_method("set_status"):
-		hud.call("set_status", text)
+	if hud != null:
+		hud.set_status(text)
 
 
 func _show_result(title: String, subtitle: String) -> void:
-	if hud != null and hud.has_method("show_result"):
-		hud.call("show_result", title, subtitle)
+	if hud != null:
+		hud.show_result(title, subtitle)
 
 
 func _enemy_piece_name(enemy: Node) -> String:
@@ -275,32 +269,11 @@ func _enemy_piece_name(enemy: Node) -> String:
 	return "Enemy"
 
 
+## Screen shake is camera behavior: delegate to the hero's CameraRig, which
+## drives the built-in Camera2D offset (Main's own position never moves).
 func _start_screen_shake(duration: float, strength: float) -> void:
-	shake_duration = maxf(shake_duration, duration)
-	shake_time = maxf(shake_time, duration)
-	shake_strength = maxf(shake_strength, strength)
-
-
-func _update_shake(delta: float) -> void:
-	if shake_time <= 0.0:
-		position = Vector2.ZERO
-		shake_strength = 0.0
-		return
-	shake_time = maxf(0.0, shake_time - delta)
-	var progress := shake_time / maxf(shake_duration, 0.001)
-	var amount := shake_strength * progress
-	var tick := Time.get_ticks_msec() / 1000.0
-	position = Vector2(sin(tick * 91.0), cos(tick * 77.0)) * amount
-
-
-func _update_damage_flash(delta: float) -> void:
-	if damage_flash_time <= 0.0:
-		if hud != null and hud.has_method("update_damage_flash"):
-			hud.call("update_damage_flash", 0.0, 0.22)
-		return
-	damage_flash_time = maxf(0.0, damage_flash_time - delta)
-	if hud != null and hud.has_method("update_damage_flash"):
-		hud.call("update_damage_flash", damage_flash_time, 0.22)
+	if camera_rig != null:
+		camera_rig.start_shake(duration, strength)
 
 
 func _facing_name(direction: Vector2i) -> String:

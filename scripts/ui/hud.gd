@@ -13,6 +13,10 @@ extends CanvasLayer
 @onready var result_label: Label = $ResultLabel
 
 const SKILL_BAR_WIDTH := 92.0
+const DAMAGE_FLASH_DURATION := 0.22
+
+## The running fade tween for the damage flash; killed and restarted on each hit.
+var _damage_flash_tween: Tween
 
 
 func setup(initial_courage: int) -> void:
@@ -73,19 +77,18 @@ func set_status(text: String) -> void:
 		objective_label.text = text
 
 
-func show_damage_flash() -> void:
-	if damage_flash != null:
-		damage_flash.visible = true
-
-
-func update_damage_flash(time_left: float, duration: float) -> void:
+## One red screen flash that fades out on its own. Callers fire-and-forget;
+## the HUD owns the whole lifecycle (no per-frame driving from outside).
+func flash_damage() -> void:
 	if damage_flash == null:
 		return
-	if time_left <= 0.0:
-		damage_flash.visible = false
-		return
-	var alpha := 0.20 * time_left / maxf(duration, 0.001)
-	damage_flash.color = Color("#d84a3a", alpha)
+	if _damage_flash_tween != null and _damage_flash_tween.is_valid():
+		_damage_flash_tween.kill()
+	damage_flash.visible = true
+	damage_flash.color = Color("#d84a3a", 0.20)
+	_damage_flash_tween = create_tween()
+	_damage_flash_tween.tween_property(damage_flash, "color:a", 0.0, DAMAGE_FLASH_DURATION)
+	_damage_flash_tween.tween_callback(func() -> void: damage_flash.visible = false)
 
 
 func show_result(title: String, subtitle: String) -> void:

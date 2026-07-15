@@ -46,7 +46,8 @@ func _run() -> void:
 		and not result_label.visible
 	)
 	game.call("_on_hero_damaged", 1, 2)
-	var damage_feedback_ok: bool = damage_flash.visible and game.get("shake_time") > 0.0
+	var hero_camera := hero.get_node_or_null("Camera2D")
+	var damage_feedback_ok: bool = damage_flash.visible and hero_camera != null and hero_camera.get("shake_time_left") > 0.0
 	var enemies: Array = game.get("enemies")
 	var first_enemy := enemies[0] as FreeEnemy
 	game.call("_on_enemy_defeated", first_enemy)
