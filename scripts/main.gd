@@ -75,6 +75,7 @@ func _setup_scene_nodes() -> void:
 		_connect_signal_once(hero, &"damaged", Callable(self, "_on_hero_damaged"))
 		_connect_signal_once(hero, &"skill_cooldown_changed", Callable(self, "_update_skill_cooldown"))
 		_connect_signal_once(hero, &"defeated", Callable(self, "_on_hero_defeated"))
+		_setup_camera()
 
 	if existing_room != null:
 		_setup_room_instance(existing_room)
@@ -91,6 +92,18 @@ func _resolve_scene_node(node_path: NodePath, scene: PackedScene, fallback: Node
 	created.name = node_name
 	add_child(created)
 	return created
+
+
+## Binds the hero's CameraRig to the board. The rig owns all framing behavior
+## (follow, bounds clamp, zoom, smoothing) — tune it per scene on the node, or per
+## situation via its runtime setters. Called again when a room changes grid_world.bounds.
+func _setup_camera() -> void:
+	if hero == null or grid_world == null:
+		return
+	var camera := hero.get_node_or_null("Camera2D") as CameraRig
+	if camera == null:
+		return
+	camera.setup(grid_world)
 
 
 func _connect_signal_once(source: Object, signal_name: StringName, target: Callable) -> void:
