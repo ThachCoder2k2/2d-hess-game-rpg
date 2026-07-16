@@ -8,7 +8,6 @@ signal room_completed(room: Node)
 
 @export var room_message := ""
 @export var objective: Resource
-@export var hero_start_cell := Vector2i(3, 7)
 @export var blocked_cells: Array[Vector2i] = []
 @export var auto_activate_enemies := true
 
@@ -57,13 +56,6 @@ func get_start_message() -> String:
 	if objective != null and not String(objective.get("start_message")).is_empty():
 		return String(objective.get("start_message"))
 	return room_message
-
-
-func get_hero_start_cell() -> Vector2i:
-	var marker := get_node_or_null("HeroStart")
-	if marker != null and marker.has_method("get_hero_start_cell"):
-		return marker.call("get_hero_start_cell")
-	return hero_start_cell
 
 
 func get_clear_message() -> String:
