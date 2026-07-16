@@ -4,6 +4,11 @@ extends Node2D
 signal step_started(origin: Vector2i, destination: Vector2i)
 signal step_finished(destination: Vector2i)
 
+## Draw-order base for pieces. Sprites are ~1.5 cells tall and anchored at their
+## feet, so a piece one row lower on screen must draw over the piece/tiles above
+## it: z_index = ROW_Z_BASE + current_cell.y, updated whenever the cell changes.
+const ROW_Z_BASE := 2
+
 @export var current_cell := Vector2i.ZERO
 @export var step_duration := 0.18
 
@@ -18,7 +23,13 @@ func setup(world: GridWorld, start_cell: Vector2i) -> bool:
 	if not grid_world.register_actor(self, current_cell):
 		return false
 	position = grid_world.cell_to_world(current_cell)
+	update_depth_from_row()
 	return true
+
+
+## Lower rows draw on top (top-down depth for taller-than-cell sprites).
+func update_depth_from_row() -> void:
+	z_index = ROW_Z_BASE + current_cell.y
 
 
 func try_step(direction: Vector2i) -> bool:
@@ -47,6 +58,7 @@ func _finish_step(destination: Vector2i) -> void:
 	grid_world.finish_move(self, destination)
 	current_cell = destination
 	position = grid_world.cell_to_world(current_cell).round()
+	update_depth_from_row()
 	is_moving = false
 	emit_signal("step_finished", current_cell)
 

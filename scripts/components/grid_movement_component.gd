@@ -10,6 +10,7 @@ func setup(world: GridWorld, start_cell: Vector2i) -> bool:
 	if not world.register_actor(actor, start_cell):
 		return false
 	actor.position = world.cell_to_world(start_cell)
+	actor.update_depth_from_row()
 	return true
 
 
@@ -60,5 +61,6 @@ func _finish_step(destination: Vector2i) -> void:
 	actor.grid_world.finish_move(actor, destination)
 	actor.current_cell = destination
 	actor.position = actor.grid_world.cell_to_world(destination).round()
+	actor.update_depth_from_row()
 	actor.is_moving = false
 	actor.emit_signal("step_finished", destination)

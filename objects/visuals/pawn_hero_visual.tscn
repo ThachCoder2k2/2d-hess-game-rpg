@@ -187,7 +187,7 @@ spear_texture = ExtResource("4")
 ruler_blade_texture = ExtResource("5")
 full_health_texture = ExtResource("8")
 empty_health_texture = ExtResource("9")
-weapon_anchor = Vector2(4, -2)
+weapon_anchor = Vector2(4, -14)
 weapon_rest_length = 18.0
 
 [node name="TelegraphAura" type="Sprite2D" parent="."]
@@ -201,12 +201,13 @@ scale = Vector2(0.78, 0.78)
 [node name="SpriteRoot" type="Node2D" parent="MotionRoot"]
 
 [node name="BodySprite" type="Sprite2D" parent="MotionRoot/SpriteRoot"]
+position = Vector2(0, -8)
 texture = ExtResource("2")
-scale = Vector2(0.36, 0.36)
+scale = Vector2(0.5, 0.5)
 
 [node name="FacingArrow" type="Sprite2D" parent="MotionRoot/SpriteRoot"]
 visible = false
-position = Vector2(0, -19)
+position = Vector2(0, -34)
 texture = ExtResource("7")
 scale = Vector2(0.45, 0.45)
 
@@ -220,7 +221,7 @@ scale = Vector2(0.46, 0.46)
 
 [node name="HealthPips" type="Node2D" parent="MotionRoot/SpriteRoot"]
 visible = false
-position = Vector2(-8, -23)
+position = Vector2(-8, -40)
 
 [node name="Pip0" type="Sprite2D" parent="MotionRoot/SpriteRoot/HealthPips"]
 texture = ExtResource("8")
