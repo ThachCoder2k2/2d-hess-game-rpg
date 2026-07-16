@@ -6,4 +6,3 @@
 script = ExtResource("1")
 id = &"pawn_diagonal"
 cell_offsets = Array[Vector2i]([Vector2i(1, 1), Vector2i(1, -1)])
-telegraph_style = &"diagonal_slashes"

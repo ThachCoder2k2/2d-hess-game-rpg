@@ -8,5 +8,4 @@ id = &"knight_leap"
 uses_facing = false
 cell_offsets = Array[Vector2i]([Vector2i(-2, -1), Vector2i(-2, 1), Vector2i(2, -1), Vector2i(2, 1), Vector2i(-1, -2), Vector2i(1, -2), Vector2i(-1, 2), Vector2i(1, 2)])
 clip_to_board = true
-telegraph_style = &"knight_l"
 locks_facing = false

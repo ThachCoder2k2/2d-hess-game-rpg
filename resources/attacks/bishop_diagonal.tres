@@ -11,6 +11,5 @@ clip_to_board = true
 damage = 1
 telegraph_duration = 0.62
 recovery_duration = 0.5
-telegraph_style = &"diagonal_beams"
 requires_attack_token = true
 locks_facing = false

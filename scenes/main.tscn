@@ -1,6 +1,6 @@
-[gd_scene load_steps=8 format=3]
+[gd_scene format=4 uid="uid://2sfvi7iwk4f2"]
 
-[ext_resource type="Script" path="res://scripts/main.gd" id="1"]
+[ext_resource type="Script" uid="uid://cm5l012ltefe4" path="res://scripts/main.gd" id="1"]
 [ext_resource type="PackedScene" path="res://objects/world/grid_world.tscn" id="2"]
 [ext_resource type="PackedScene" path="res://objects/combat/encounter_director.tscn" id="3"]
 [ext_resource type="PackedScene" path="res://objects/world/prototype_board.tscn" id="4"]
@@ -8,21 +8,82 @@
 [ext_resource type="PackedScene" path="res://scenes/rooms/first_encounter.tscn" id="6"]
 [ext_resource type="PackedScene" path="res://scenes/ui/hud.tscn" id="7"]
 
-[node name="Main" type="Node2D"]
+[node name="Main" type="Node2D" unique_id=1651252280]
 script = ExtResource("1")
 
-[node name="GridWorld" parent="." instance=ExtResource("2")]
+[node name="GridWorld" parent="." unique_id=1587189948 instance=ExtResource("2")]
 
-[node name="EncounterDirector" parent="." instance=ExtResource("3")]
+[node name="EncounterDirector" parent="." unique_id=529604227 instance=ExtResource("3")]
 
-[node name="PrototypeBoard" parent="." instance=ExtResource("4")]
-draw_base_layer = false
+[node name="PrototypeBoard" parent="." unique_id=1293707123 instance=ExtResource("4")]
 
-[node name="PawnHero" parent="." instance=ExtResource("5")]
+[node name="PawnHero" parent="." unique_id=1545609314 instance=ExtResource("5")]
+position = Vector2(110, 229)
 
-[node name="FirstEncounter" parent="." instance=ExtResource("6")]
+[node name="FirstEncounter" parent="." unique_id=513087615 instance=ExtResource("6")]
 
-[node name="HUD" parent="." instance=ExtResource("7")]
+[node name="TileMap" parent="FirstEncounter/RoomArt" index="1"]
+tile_map_data = PackedByteArray("AAAAAAAAAAAEAAAAAAABAAAAAAAEAAAAAAACAAAAAAAEAAAAAAADAAAAAAAEAAAAAAAEAAAAAAAEAAAAAAAFAAAAAAAEAAAAAAAGAAAAAAAEAAAAAAAHAAAAAAAFAAAAAAAIAAAAAAAFAAAAAAAJAAAAAAAEAAAAAAAKAAAAAAAEAAAAAAALAAAAAAAEAAAAAAAMAAAAAAAEAAAAAAANAAAAAAAEAAAAAAAOAAAAAAAEAAAAAAAPAAAAAAAEAAAAAAAAAAEAAAAEAAAAAAABAAEAAAAAAAAAAAACAAEAAAABAAAAAAADAAEAAAAAAAAAAAAEAAEAAAABAAAAAAAFAAEAAAAAAAAAAAAGAAEAAAABAAAAAAAHAAEAAAACAAAAAAAIAAEAAAACAAAAAAAJAAEAAAAAAAAAAAAKAAEAAAABAAAAAAALAAEAAAAAAAAAAAAMAAEAAAABAAAAAAANAAEAAAAAAAAAAAAOAAEAAAABAAAAAAAPAAEAAAAEAAAAAAAAAAIAAAAGAAAAAAABAAIAAAABAAAAAAACAAIAAAAAAAAAAAADAAIAAAABAAAAAAAEAAIAAAAAAAAAAAAFAAIAAAABAAAAAAAGAAIAAAAAAAAAAAAHAAIAAAACAAAAAAAIAAIAAAACAAAAAAAJAAIAAAABAAAAAAAKAAIAAAAAAAAAAAALAAIAAAABAAAAAAAMAAIAAAAAAAAAAAANAAIAAAABAAAAAAAOAAIAAAAAAAAAAAAPAAIAAAAGAAAAAAAAAAMAAAAEAAAAAAABAAMAAAAAAAAAAAACAAMAAAABAAAAAAADAAMAAAAAAAAAAAAEAAMAAAABAAAAAAAFAAMAAAAAAAAAAAAGAAMAAAABAAAAAAAHAAMAAAACAAAAAAAIAAMAAAACAAAAAAAJAAMAAAAAAAAAAAAKAAMAAAABAAAAAAALAAMAAAAAAAAAAAAMAAMAAAABAAAAAAANAAMAAAAAAAAAAAAOAAMAAAABAAAAAAAPAAMAAAAEAAAAAAAAAAQAAAAEAAAAAAABAAQAAAABAAAAAAACAAQAAAAAAAAAAAADAAQAAAABAAAAAAAEAAQAAAAAAAAAAAAFAAQAAAABAAAAAAAGAAQAAAAAAAAAAAAHAAQAAAACAAAAAAAIAAQAAAACAAAAAAAJAAQAAAABAAAAAAAKAAQAAAAAAAAAAAALAAQAAAABAAAAAAAMAAQAAAAAAAAAAAANAAQAAAABAAAAAAAOAAQAAAAAAAAAAAAPAAQAAAAEAAAAAAAAAAUAAAAEAAAAAAABAAUAAAAAAAAAAAACAAUAAAABAAAAAAADAAUAAAAAAAAAAAAEAAUAAAABAAAAAAAFAAUAAAAAAAAAAAAGAAUAAAABAAAAAAAHAAUAAAACAAAAAAAIAAUAAAACAAAAAAAJAAUAAAAAAAAAAAAKAAUAAAABAAAAAAALAAUAAAAAAAAAAAAMAAUAAAABAAAAAAANAAUAAAAAAAAAAAAOAAUAAAABAAAAAAAPAAUAAAAEAAAAAAAAAAYAAAAGAAAAAAABAAYAAAABAAAAAAACAAYAAAAAAAAAAAADAAYAAAABAAAAAAAEAAYAAAAAAAAAAAAFAAYAAAABAAAAAAAGAAYAAAAAAAAAAAAHAAYAAAACAAAAAAAIAAYAAAACAAAAAAAJAAYAAAABAAAAAAAKAAYAAAAAAAAAAAALAAYAAAABAAAAAAAMAAYAAAAAAAAAAAANAAYAAAABAAAAAAAOAAYAAAAAAAAAAAAPAAYAAAAGAAAAAAAAAAcAAAAEAAAAAAABAAcAAAAAAAAAAAACAAcAAAABAAAAAAAFAAcAAAAAAAAAAAAGAAcAAAABAAAAAAAHAAcAAAACAAAAAAAIAAcAAAACAAAAAAAJAAcAAAAAAAAAAAAKAAcAAAABAAAAAAALAAcAAAAAAAAAAAAMAAcAAAABAAAAAAANAAcAAAAAAAAAAAAOAAcAAAABAAAAAAAPAAcAAAAEAAAAAAAAAAgAAAAEAAAAAAABAAgAAAAEAAAAAAACAAgAAAAEAAAAAAADAAgAAAAEAAAAAAAEAAgAAAAEAAAAAAAFAAgAAAAEAAAAAAAGAAgAAAAEAAAAAAAHAAgAAAAEAAAAAAAIAAgAAAAEAAAAAAAJAAgAAAAEAAAAAAAKAAgAAAAEAAAAAAALAAgAAAAEAAAAAAAMAAgAAAAEAAAAAAANAAgAAAAEAAAAAAAOAAgAAAAEAAAAAAAPAAgAAAAEAAAAAAAEAAcAAAABAAAAAAADAAcAAAAAAAAAAAA=")
+
+[node name="Blocker_07_02" parent="FirstEncounter" index="1"]
+position = Vector2(304, 116)
+
+[node name="Blocker_07_03" parent="FirstEncounter" index="2"]
+position = Vector2(304, 148)
+
+[node name="Blocker_07_05" parent="FirstEncounter" index="3"]
+position = Vector2(304, 212)
+
+[node name="Blocker_07_06" parent="FirstEncounter" index="4"]
+position = Vector2(304, 244)
+
+[node name="PencilSpearPickup" parent="FirstEncounter" index="5"]
+position = Vector2(240, 212)
+
+[node name="EditorLabel" parent="FirstEncounter/PencilSpearPickup/Preview" index="3"]
+offset_left = -34.0
+offset_top = 14.0
+offset_right = -34.0
+offset_bottom = 14.0
+
+[node name="RulerBladePickup" parent="FirstEncounter" index="6"]
+position = Vector2(432, 244)
+
+[node name="EditorLabel" parent="FirstEncounter/RulerBladePickup/Preview" index="3"]
+offset_left = -28.0
+offset_top = 14.0
+offset_right = -28.0
+offset_bottom = 14.0
+
+[node name="PawnRecruitSpawn" parent="FirstEncounter" index="7"]
+position = Vector2(208, 84)
+
+[node name="EditorLabel" parent="FirstEncounter/PawnRecruitSpawn/Preview" index="3"]
+offset_left = -24.0
+offset_top = 14.0
+offset_right = -24.0
+offset_bottom = 14.0
+
+[node name="ArmedPawnSpawn" parent="FirstEncounter" index="8"]
+position = Vector2(400, 84)
+
+[node name="EditorLabel" parent="FirstEncounter/ArmedPawnSpawn/Preview" index="3"]
+offset_left = -32.0
+offset_top = 14.0
+offset_right = -32.0
+offset_bottom = 14.0
+
+[node name="KnightTrackerSpawn" parent="FirstEncounter" index="9"]
+position = Vector2(496, 116)
+
+[node name="EditorLabel" parent="FirstEncounter/KnightTrackerSpawn/Preview" index="3"]
+offset_left = -30.0
+offset_top = 14.0
+offset_right = -30.0
+offset_bottom = 14.0
+
+[node name="HUD" parent="." unique_id=974649949 instance=ExtResource("7")]
 
 [editable path="PawnHero"]
+[editable path="PawnHero/Visual"]
 [editable path="FirstEncounter"]

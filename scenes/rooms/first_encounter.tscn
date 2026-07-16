@@ -16,15 +16,12 @@
 [ext_resource type="PackedScene" path="res://objects/visuals/black_pawn_visual.tscn" id="13"]
 [ext_resource type="PackedScene" path="res://objects/visuals/knight_enemy_visual.tscn" id="14"]
 [ext_resource type="PackedScene" path="res://objects/visuals/weapon_pickup_visual.tscn" id="15"]
-[ext_resource type="PackedScene" path="res://objects/markers/hero_start_marker.tscn" id="16"]
 [ext_resource type="PackedScene" path="res://objects/markers/blocker_marker.tscn" id="17"]
 [ext_resource type="PackedScene" path="res://objects/world/kingdom_tilemap.tscn" id="18"]
 
 [node name="FirstEncounter" instance=ExtResource("1")]
 room_message = "First clash: read the warning cells, deny the weapons, break the black line."
 objective = ExtResource("9")
-hero_start_cell = Vector2i(3, 7)
-blocked_cells = Array[Vector2i]([Vector2i(7, 2), Vector2i(7, 3), Vector2i(7, 5), Vector2i(7, 6)])
 
 [node name="RoomArt" type="Node2D" parent="."]
 z_index = -20
@@ -97,8 +94,6 @@ polygon = PackedVector2Array(0, 0, 88, 0, 102, 20, 0, 20)
 position = Vector2(456, 324)
 color = Color(1, 0.956863, 0.839216, 0.42)
 polygon = PackedVector2Array(0, 0, 120, 0, 120, 20, 18, 20)
-
-[node name="HeroStart" parent="." instance=ExtResource("16")]
 
 [node name="Blocker_07_02" parent="." instance=ExtResource("17")]
 grid_cell = Vector2i(7, 2)

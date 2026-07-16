@@ -1,60 +1,13 @@
-@tool
 class_name PrototypeBoard
 extends Node2D
 
-@export_group("Board Theme")
-@export var draw_base_layer := true:
-	set(value):
-		draw_base_layer = value
-		queue_redraw()
-@export var frame_color := Color("#30242a"):
-	set(value):
-		frame_color = value
-		queue_redraw()
-@export var light_tile_color := Color("#c9a77d"):
-	set(value):
-		light_tile_color = value
-		queue_redraw()
-@export var dark_tile_color := Color("#7f5f51"):
-	set(value):
-		dark_tile_color = value
-		queue_redraw()
-@export var tile_line_color := Color(0.18, 0.12, 0.14, 0.25):
-	set(value):
-		tile_line_color = value
-		queue_redraw()
-@export var blocker_fill_color := Color("#e8b83f"):
-	set(value):
-		blocker_fill_color = value
-		queue_redraw()
-@export var blocker_line_color := Color("#f5d56d"):
-	set(value):
-		blocker_line_color = value
-		queue_redraw()
+## Runtime combat overlay only: telegraph danger cells, hit flashes, and the F3
+## debug view. The board floor is the room's TileMap; blockers preview via their
+## own markers. This node draws nothing in the editor.
+
+@export_group("Impact Theme")
 @export var player_miss_color := Color("#d84a3a")
 @export var enemy_impact_color := Color("#ff9a75")
-
-@export_group("Editor Room Preview")
-@export var editor_preview_enabled := true:
-	set(value):
-		editor_preview_enabled = value
-		queue_redraw()
-@export var editor_grid_origin := Vector2(64, 36):
-	set(value):
-		editor_grid_origin = value
-		queue_redraw()
-@export_range(8, 96, 1) var editor_cell_size := 32:
-	set(value):
-		editor_cell_size = value
-		queue_redraw()
-@export var editor_bounds := Rect2i(0, 0, 16, 9):
-	set(value):
-		editor_bounds = value
-		queue_redraw()
-@export var editor_blocked_cells: Array[Vector2i] = []:
-	set(value):
-		editor_blocked_cells = value
-		queue_redraw()
 
 @export_group("Telegraph Theme")
 @export var danger_cell_color := Color("#d84a3a")
@@ -130,8 +83,6 @@ func clear_enemy_debug(enemy: FreeEnemy) -> void:
 
 
 func _process(delta: float) -> void:
-	if Engine.is_editor_hint():
-		return
 	effect_time += delta
 	if impact_time > 0.0:
 		impact_time = maxf(0.0, impact_time - delta)
@@ -143,39 +94,10 @@ func _process(delta: float) -> void:
 
 
 func _draw() -> void:
-	var origin := editor_grid_origin
-	var size := editor_cell_size
-	var bounds := editor_bounds
-	var blocked_cells: Array[Vector2i] = editor_blocked_cells.duplicate()
-	var has_runtime_world := grid_world != null
-	if has_runtime_world:
-		origin = grid_world.grid_origin
-		size = grid_world.cell_size
-		bounds = grid_world.bounds
-		blocked_cells.clear()
-		for cell: Vector2i in grid_world.blocked_cells:
-			blocked_cells.append(cell)
-	elif not Engine.is_editor_hint() or not editor_preview_enabled:
+	if grid_world == null:
 		return
-
-	if draw_base_layer:
-		draw_rect(Rect2(origin - Vector2(12, 12), Vector2(bounds.size * size) + Vector2(24, 24)), frame_color)
-		for y in bounds.size.y:
-			for x in bounds.size.x:
-				var cell := bounds.position + Vector2i(x, y)
-				var color := light_tile_color if (x + y) % 2 == 0 else dark_tile_color
-				var rect := _cell_rect(origin, size, bounds, cell)
-				draw_rect(rect, color)
-				draw_rect(rect, tile_line_color, false, 1.0)
-
-		for cell in blocked_cells:
-			var top_left := _cell_rect(origin, size, bounds, cell).position
-			draw_rect(Rect2(top_left + Vector2(3, 3), Vector2(size - 6, size - 6)), blocker_fill_color)
-			draw_rect(Rect2(top_left + Vector2(7, 7), Vector2(size - 14, size - 14)), blocker_line_color, false, 2.0)
-		_draw_playground_border(origin, size, bounds.size)
-
-	if not has_runtime_world:
-		return
+	var origin := grid_world.grid_origin
+	var size := grid_world.cell_size
 
 	for source in telegraphs:
 		if not is_instance_valid(source):
@@ -194,11 +116,6 @@ func _draw() -> void:
 
 	if debug_enabled:
 		_draw_debug_layer(origin, size)
-
-
-func _cell_rect(origin: Vector2, size: int, bounds: Rect2i, cell: Vector2i) -> Rect2:
-	var offset := cell - bounds.position
-	return Rect2(origin + Vector2(offset * size), Vector2.ONE * size)
 
 
 func _draw_danger_cell(origin: Vector2, size: int, cell: Vector2i, progress: float) -> void:
@@ -297,12 +214,3 @@ func _intent_color(type: EnemyIntent.Type) -> Color:
 			return debug_turn_path_color
 		_:
 			return debug_wait_path_color
-
-
-func _draw_playground_border(origin: Vector2, size: int, board_size: Vector2i) -> void:
-	var board_width := board_size.x * size
-	var board_height := board_size.y * size
-	for y in range(0, board_height, 64):
-		var color := Color("#2c78c4") if int(y / 64.0) % 2 == 0 else Color("#4e8a66")
-		draw_rect(Rect2(origin + Vector2(-10, y + 9), Vector2(7, 18)), color)
-		draw_rect(Rect2(origin + Vector2(board_width + 3, y + 37), Vector2(7, 18)), color)

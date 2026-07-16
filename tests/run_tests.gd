@@ -229,10 +229,8 @@ func _init() -> void:
 	var main_room_art := main_game.get_node_or_null("FirstEncounter/RoomArt")
 	var main_room := main_game.get_node_or_null("FirstEncounter")
 	var main_hero := main_game.get_node_or_null("PawnHero") as PawnHero
-	var main_hero_start_marker := main_game.get_node_or_null("FirstEncounter/HeroStart")
-	var main_hero_start_cell := Vector2i.ZERO
-	if main_room != null and main_room.has_method("get_hero_start_cell"):
-		main_hero_start_cell = main_room.call("get_hero_start_cell")
+	var main_hero_node := main_game.get_node_or_null("PawnHero") as Node2D
+	var main_grid_node := main_game.get_node_or_null("GridWorld") as GridWorld
 	var main_children_ok: bool = (
 		main_game.get_node_or_null("GridWorld") is GridWorld
 		and main_game.get_node_or_null("EncounterDirector") is EncounterDirector
@@ -243,11 +241,10 @@ func _init() -> void:
 		and main_game.get_node_or_null("HUD") != null
 	)
 	_expect(main_children_ok, "main scene owns editor-visible world, combat, board, player, room, and HUD nodes")
-	_expect(main_board != null and main_board.editor_preview_enabled and Vector2i(7, 2) in main_board.editor_blocked_cells, "main board owns an editor room preview")
-	_expect(main_board != null and not main_board.draw_base_layer, "main board leaves floor art to the editor-authored room")
+	_expect(main_board != null and not ("draw_base_layer" in main_board), "the board is a pure combat overlay with no floor-drawing path")
 	_expect(main_room_art != null and main_room_art.get_node_or_null("TileMap") is TileMapLayer and main_room_art.get_node_or_null("GridLines") is GridLinesOverlay, "first room owns editable TileMap board art nodes")
 	_expect(main_room != null and main_room.get_node_or_null("Blocker_07_02") != null and main_room.get_node("Blocker_07_02").has_method("get_blocked_cell"), "first room owns draggable blocker markers")
-	_expect(main_hero_start_marker != null and main_hero_start_marker.get("grid_cell") == main_hero_start_cell, "first room owns an editable hero start marker")
+	_expect(main_hero_node != null and main_grid_node != null and main_grid_node.is_inside(main_grid_node.world_to_cell(main_hero_node.position)), "the hero is its own spawn marker: parked on a playable cell in the main scene")
 	main_game.free()
 
 	var director := EncounterDirector.new()

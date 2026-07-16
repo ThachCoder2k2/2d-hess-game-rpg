@@ -5,4 +5,3 @@
 [node name="PrototypeBoard" type="Node2D"]
 z_index = -5
 script = ExtResource("1")
-editor_blocked_cells = Array[Vector2i]([Vector2i(7, 2), Vector2i(7, 3), Vector2i(7, 5), Vector2i(7, 6)])
