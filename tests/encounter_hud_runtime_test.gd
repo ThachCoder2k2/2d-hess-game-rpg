@@ -14,9 +14,7 @@ func _run() -> void:
 	director.set_paused(true)
 	var room := game.get_node_or_null("FirstEncounter")
 	var hero := game.get("hero") as PawnHero
-	var hero_start_cell := Vector2i.ZERO
-	if room != null and room.has_method("get_hero_start_cell"):
-		hero_start_cell = room.call("get_hero_start_cell")
+	var world := game.get("grid_world") as GridWorld
 	var hud := game.get("hud") as Node
 	var encounter_label := hud.get_node_or_null("EncounterLabel") as Label
 	var skill_fill := hud.get_node_or_null("SkillFill") as ColorRect
@@ -33,7 +31,9 @@ func _run() -> void:
 		editor_binding_ok
 		and game.get_node_or_null("FirstEncounter") != null
 		and hero != null
-		and hero.current_cell == hero_start_cell
+		and world != null
+		and hero.current_cell == world.world_to_cell(hero.position)
+		and world.is_inside(hero.current_cell)
 		and game.get("remaining_enemies") == 3
 		and game.get("total_enemies") == 3
 		and encounter_label != null

@@ -40,7 +40,6 @@ Every `.gd` file, one line each, linked to the concept note that explains it. Ba
 
 ## world
 - `world/grid_marker.gd` — editor drag-to-snap base. → [[World and Rooms]]
-- `world/hero_start_marker.gd` — hero start cell. → [[World and Rooms]]
 - `world/blocker_marker.gd` — a blocked cell. → [[World and Rooms]]
 - `world/enemy_spawn_point.gd` — enemy spawn (scene + definition). → [[World and Rooms]]
 - `world/pickup_spawn_point.gd` — pickup spawn (weapon). → [[World and Rooms]]

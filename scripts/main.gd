@@ -53,7 +53,7 @@ func _setup_scene_nodes() -> void:
 	board = _resolve_scene_node(board_path, BOARD_SCENE, PrototypeBoard.new(), "PrototypeBoard") as PrototypeBoard
 	hero = _resolve_scene_node(hero_path, PLAYER_SCENE, PawnHero.new(), "PawnHero") as PawnHero
 	var existing_room := get_node_or_null(room_path)
-	var resolved_hero_start := _get_room_hero_start_cell(existing_room)
+	var resolved_hero_start := _resolve_hero_start_cell()
 
 	if director != null:
 		_connect_signal_once(director, &"token_changed", Callable(self, "_update_token_owner"))
@@ -106,9 +106,16 @@ func _connect_signal_once(source: Object, signal_name: StringName, target: Calla
 		source.connect(signal_name, target)
 
 
-func _get_room_hero_start_cell(room: Node) -> Vector2i:
-	if room != null and room.has_method("get_hero_start_cell"):
-		return room.call("get_hero_start_cell")
+## The hero is its own spawn marker: wherever the PawnHero node is parked in the
+## editor is where it starts — the parked pixel position floors to the cell that
+## contains it, and setup() re-centers the sprite on that cell. The exported
+## hero_start_cell is only the fallback when the parked spot is off the board
+## (e.g. a bare-script Main in tests, where the hero sits at the origin).
+func _resolve_hero_start_cell() -> Vector2i:
+	if hero != null and grid_world != null:
+		var parked_cell := grid_world.world_to_cell(hero.position)
+		if grid_world.is_inside(parked_cell):
+			return parked_cell
 	return hero_start_cell
 
 
