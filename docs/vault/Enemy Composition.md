@@ -32,14 +32,16 @@ All extend `enemy_component.gd` (`EnemyComponent`), which holds the `actor` ref 
 ## The scene skeleton (`objects/actors/*.tscn`)
 ```
 EnemyActor  (script + EnemyDefinition .tres)
-├─ Visual                (Sprite2D + AnimationPlayer — [[Presentation]])
+├─ TelegraphAura         (warning glow — [[Presentation]])
+├─ MotionRoot/SpriteRoot (BodySprite, FacingArrow, WeaponPivot, HealthPips)
+├─ AnimationPlayer       (idle/step/attack/hurt/telegraph clips)
 ├─ GridMovementComponent
 ├─ EnemyBrainComponent
 ├─ HealthComponent
 └─ EquipmentComponent
 ```
 `black_pawn.tscn`, `knight_enemy.tscn`, `bishop_enemy.tscn`, `enemy_base.tscn` are all
-this, differing only by the assigned definition + visual.
+this, differing only by the assigned definition + sprite textures/animation values.
 
 > Two dead components (`AttackComponent`, `EnemyDebugComponent`) were removed — their
 > methods were never called; the attack lifecycle + debug live in [[Enemy AI|FreeEnemy]].

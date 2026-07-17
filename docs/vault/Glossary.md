@@ -26,7 +26,7 @@ Key terms, linked to where they live. Back to [[Home]].
   brain). [[Enemy Composition]].
 - **Marker** — an editor-draggable node whose `grid_cell` drives runtime placement
   (hero start / blocker / spawn). `GridMarker`. [[World and Rooms]].
-- **Visual** — the `Sprite2D` + `AnimationPlayer` child that shows an actor; mirrors
-  state, never drives it. [[Presentation]].
+- **Appearance** — the sprites + `AnimationPlayer` an actor owns directly
+  (`MotionRoot/SpriteRoot/...`); mirrors state, never drives it. [[Presentation]].
 - **Reserve → commit** — the two-phase move: `begin_move` (reserve) then `finish_move`
   (commit). [[Movement]].

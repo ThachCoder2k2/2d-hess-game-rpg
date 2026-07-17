@@ -51,7 +51,7 @@ Acceptance gate:
 - Spawn markers should instantiate editor-assigned PackedScene templates for enemies and pickups.
 - Pawn and Knight gameplay scenes should use the generic `EnemyActor` root plus component child nodes and `EnemyDefinition` Resources; do not add new enemy subclasses for normal content.
 - Player attacks, board theme values, enemy definitions, room objective text, and weapon data should be configurable through `.tres` Resources or Inspector exports.
-- Player, enemy, and pickup presentation should be owned by visible `Visual` child scene instances, with gameplay scripts only syncing state into them.
+- Player and enemy actors own their sprites and `AnimationPlayer` directly in their scenes (canonical Godot structure); gameplay scripts update them through typed references only. Pickups keep a `Visual` child scene.
 - Actor and pickup bodies should be real `Sprite2D` or animation scene nodes; do not draw them with `_draw()` in visual scripts.
 - Encounter rooms should own visible `RoomArt` child nodes for the board floor, blockers, boundaries, and key set dressing; a script-only board overlay is not enough for editor review.
 - Encounter gameplay placement should be managed through draggable marker nodes (`HeroStart`, `Blocker_*`, pickup spawns, enemy spawns) whose `grid_cell` values are used at runtime.
@@ -182,7 +182,7 @@ Do not start a broad new phase while the current phase has a broken playable sli
 - Research before building any new mechanic, in this order: (1) a built-in node/engine feature that already supports it (Timer, Tween, AnimationPlayer, Area2D signals, TileMapLayer, AStarGrid2D, Camera2D, CanvasLayer, UI containers); (2) a proven maintained addon — ask the human owner before adding a dependency; (3) only then custom script, stating in the commit why neither fit. Never re-implement what a node already does. See `docs/coding-standards.md` "Built-in nodes first".
 - Use self-documenting names. A variable/function name must convey what it holds or does without reading the body: dictionaries state their direction (`actor_by_cell`, `cell_by_actor`), values state their semantics (`state_time_left`, `observe_delay`), and cryptic/abbreviated names are avoided. Add a `##` doc comment to every non-obvious data structure (key → value for dictionaries). Before renaming, survey `.tscn`/`.tres` for serialized `@export` names and `get("name")` string access — those break silently.
 - Shared Resource assets should be treated as immutable at runtime; duplicate per-instance mutable weapon or profile data.
-- Do not add new actor or pickup `_draw()` methods for production behavior. Add or update a `Visual` child scene and sync state from gameplay scripts instead.
+- Do not add new actor or pickup `_draw()` methods for production behavior. Edit the actor's own sprite nodes / `AnimationPlayer` (or the pickup's `Visual` child scene) instead.
 
 ## Full Game Completion Workflow
 

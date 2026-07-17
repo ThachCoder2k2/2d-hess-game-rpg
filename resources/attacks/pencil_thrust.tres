@@ -1,6 +1,7 @@
-[gd_resource type="Resource" script_class="AttackProfile" load_steps=2 format=3]
+[gd_resource type="Resource" script_class="AttackProfile" load_steps=3 format=3]
 
 [ext_resource type="Script" path="res://scripts/combat/attack_profile.gd" id="1"]
+[ext_resource type="Texture2D" path="res://assets/sprites/generated/pencil_spear.png" id="2"]
 
 [resource]
 script = ExtResource("1")
@@ -10,3 +11,4 @@ damage = 1
 impact_delay = 0.11
 recovery = 0.52
 color = Color(0.556863, 0.784314, 0.909804, 1)
+texture = ExtResource("2")

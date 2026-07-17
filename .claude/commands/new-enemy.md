@@ -26,9 +26,9 @@ Steps:
      `resources/difficulty/standard.tres`.
 
 3. Create `objects/actors/<name>_enemy.tscn` — copy `objects/actors/bishop_enemy.tscn`,
-   change the definition ext_resource to your `<name>.tres` and the Visual to your
-   chosen visual scene. Root stays `EnemyActor`; keep the 4 components + Visual +
-   `[editable path="Visual"]`.
+   change the definition ext_resource to your `<name>.tres` and swap the BodySprite
+   texture (plus telegraph_modulate / animation values if the piece should feel
+   different). Root stays `EnemyActor`; keep the sprites + AnimationPlayer + 4 components.
 
 4. Add a test block to `tests/run_tests.gd` (copy the Bishop block): assert it uses
    `enemy_actor.gd` (no per-enemy script), moves/attacks per its data, and carries a

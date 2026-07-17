@@ -31,8 +31,6 @@ func apply_damage(amount: int, direction := Vector2i.ZERO) -> bool:
 	actor.health = maxi(0, actor.health - amount)
 	actor.flash_time = flash_duration
 	actor.recoil = Vector2(direction) * recoil_pixels
-	if actor.has_method("_sync_visual"):
-		actor.call("_sync_visual")
 	if actor.health <= 0:
 		_defeat_actor()
 	else:

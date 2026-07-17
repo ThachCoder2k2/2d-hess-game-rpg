@@ -16,7 +16,18 @@ enum State { OBSERVE, TELEGRAPH, COMMIT, RECOVER, DEFEATED }
 @export var unarmed_telegraph_time := 0.58
 @export var unarmed_recovery_time := 0.48
 @export var definition: EnemyDefinition
-@export var visual_path: NodePath = ^"Visual"
+
+@export_group("Appearance")
+## Body tint while winding up an attack (the "about to strike" warning color).
+@export var telegraph_modulate := Color("#d14a52")
+@export var show_facing_mark := true
+@export var show_health := true
+@export var weapon_anchor := Vector2(5, -14)
+@export_range(1.0, 64.0, 0.5) var weapon_rest_length := 18.0
+## Shown while armed when the equipped EnemyWeapon has no texture of its own.
+@export var default_weapon_texture: Texture2D
+@export var pip_full_texture: Texture2D
+@export var pip_empty_texture: Texture2D
 
 var target: PawnHero
 var director: EncounterDirector
@@ -39,15 +50,25 @@ var locked_attack_cells: Array[Vector2i] = []
 var debug_enabled := true
 var debug_label: Label
 var definition_applied := false
-var visual: Node
+
+## Edge-detection memory for choosing animation clips (play once on state change).
+var _was_hurt := false
+var _was_telegraphing := false
+
+@onready var _motion_root: Node2D = get_node_or_null("MotionRoot")
+@onready var _body_sprite: Sprite2D = get_node_or_null("MotionRoot/SpriteRoot/BodySprite")
+@onready var _facing_arrow: Sprite2D = get_node_or_null("MotionRoot/SpriteRoot/FacingArrow")
+@onready var _weapon_pivot: Node2D = get_node_or_null("MotionRoot/SpriteRoot/WeaponPivot")
+@onready var _weapon_sprite: Sprite2D = get_node_or_null("MotionRoot/SpriteRoot/WeaponPivot/WeaponSprite")
+@onready var _health_pips: Node2D = get_node_or_null("MotionRoot/SpriteRoot/HealthPips")
+@onready var _telegraph_aura: Sprite2D = get_node_or_null("TelegraphAura")
+@onready var _animation_player: AnimationPlayer = get_node_or_null("AnimationPlayer")
 
 
 func _ready() -> void:
 	_ensure_ai_data()
-	_resolve_visual()
 	_create_debug_label()
 	_ensure_step_tracking()
-	_sync_visual()
 
 
 func create_attack_pattern() -> AttackPattern:
@@ -66,16 +87,13 @@ func activate(hero: PawnHero, encounter_director: EncounterDirector) -> void:
 	state = State.OBSERVE
 	state_time_left = observe_delay
 	recent_cells = [current_cell]
-	_sync_visual()
 	_update_debug_label()
 
 
 func setup(world: GridWorld, start_cell: Vector2i) -> bool:
 	_ensure_ai_data()
 	_ensure_step_tracking()
-	var succeeded := super(world, start_cell)
-	_sync_visual()
-	return succeeded
+	return super(world, start_cell)
 
 
 func set_debug_enabled(value: bool) -> void:
@@ -88,7 +106,6 @@ func set_debug_enabled(value: bool) -> void:
 func equip(item: EnemyWeapon) -> void:
 	weapon = item
 	emit_signal("weapon_changed", self, weapon)
-	_sync_visual()
 
 
 func can_collect_weapon(pickup: WeaponPickup) -> bool:
@@ -105,7 +122,7 @@ func collect_weapon_pickup(pickup: WeaponPickup) -> bool:
 func _process(delta: float) -> void:
 	flash_time = maxf(0.0, flash_time - delta)
 	recoil = recoil.move_toward(Vector2.ZERO, delta * 70.0)
-	_sync_visual()
+	_update_appearance()
 	_update_debug_label()
 	if target == null or not is_instance_valid(target) or state == State.DEFEATED or is_moving:
 		return
@@ -246,7 +263,6 @@ func _execute_intent(intent: EnemyIntent) -> void:
 			state = State.TELEGRAPH
 			state_time_left = get_attack_telegraph_time()
 			emit_signal("telegraph_started", self, locked_attack_cells)
-			_sync_visual()
 		EnemyIntent.Type.MOVE:
 			last_move_direction = intent.direction
 			try_step(intent.direction)
@@ -260,7 +276,6 @@ func _execute_intent(intent: EnemyIntent) -> void:
 			state_time_left = 0.10
 		EnemyIntent.Type.TURN:
 			facing = intent.direction
-			_sync_visual()
 			state = State.RECOVER
 			state_time_left = 0.12
 		EnemyIntent.Type.WAIT:
@@ -375,7 +390,6 @@ func _resolve_attack() -> void:
 		director.release_attack(self)
 	state = State.RECOVER
 	state_time_left = get_attack_recovery_time()
-	_sync_visual()
 
 
 func take_damage(amount: int, direction := Vector2i.ZERO) -> void:
@@ -384,7 +398,6 @@ func take_damage(amount: int, direction := Vector2i.ZERO) -> void:
 	health -= amount
 	flash_time = 0.12
 	recoil = Vector2(direction) * 4.0
-	_sync_visual()
 	if health <= 0:
 		state = State.DEFEATED
 		emit_signal("telegraph_finished", self)
@@ -484,15 +497,84 @@ func _ensure_step_tracking() -> void:
 		step_finished.connect(_on_enemy_step_finished)
 
 
-func _resolve_visual() -> void:
-	if visual == null:
-		visual = get_node_or_null(visual_path)
+## The enemy drives its own sprites through typed references (canonical structure —
+## no visual wrapper). MotionRoot takes procedural offsets (recoil); the
+## AnimationPlayer animates SpriteRoot, so the two never fight. Null-guarded so
+## bare-script instances in tests run headless without any sprites.
+func _update_appearance() -> void:
+	if _body_sprite == null:
+		return
+	var telegraphing := state == State.TELEGRAPH
+	_body_sprite.modulate = telegraph_modulate if telegraphing else Color.WHITE
+	_motion_root.position = recoil
+
+	if _facing_arrow != null:
+		_facing_arrow.visible = show_facing_mark and facing != Vector2i.ZERO
+		if _facing_arrow.visible:
+			_facing_arrow.rotation = Vector2(facing).angle() + PI / 2.0
+
+	if _telegraph_aura != null:
+		_telegraph_aura.visible = telegraphing
+		if telegraphing:
+			var progress := get_telegraph_progress()
+			_telegraph_aura.scale = Vector2.ONE * (0.92 + progress * 0.25)
+			_telegraph_aura.modulate.a = 0.55 + progress * 0.35
+
+	_update_weapon()
+	_update_health_pips()
+	_update_clip(telegraphing)
 
 
-func _sync_visual() -> void:
-	_resolve_visual()
-	if visual != null and visual.has_method("sync_from_enemy"):
-		visual.call("sync_from_enemy", self)
+func _update_weapon() -> void:
+	if _weapon_pivot == null or _weapon_sprite == null:
+		return
+	var weapon_texture := default_weapon_texture
+	if weapon != null and weapon.texture != null:
+		weapon_texture = weapon.texture
+	_weapon_pivot.visible = weapon != null and weapon_texture != null and facing != Vector2i.ZERO
+	if not _weapon_pivot.visible:
+		return
+	_weapon_sprite.texture = weapon_texture
+	_weapon_pivot.position = weapon_anchor + Vector2(facing) * 4.0
+	_weapon_pivot.rotation = Vector2(facing).angle() + PI / 2.0
+	_weapon_sprite.position = Vector2(0.0, -weapon_rest_length)
+	_weapon_sprite.scale = Vector2.ONE
+
+
+func _update_health_pips() -> void:
+	if _health_pips == null:
+		return
+	var maximum := get_max_health()
+	_health_pips.visible = show_health and maximum > 1
+	if not _health_pips.visible:
+		return
+	var pips := _health_pips.get_children()
+	for index in pips.size():
+		var pip := pips[index] as Sprite2D
+		if pip == null:
+			continue
+		pip.visible = index < maximum
+		pip.texture = pip_full_texture if index < health else pip_empty_texture
+
+
+func _update_clip(telegraphing: bool) -> void:
+	var hurt := flash_time > 0.0
+	if hurt and not _was_hurt:
+		_play_clip(&"hurt")
+	elif telegraphing and not _was_telegraphing:
+		_play_clip(&"telegraph")
+	elif not telegraphing and not hurt:
+		_play_clip(&"step" if is_moving else &"idle")
+	_was_hurt = hurt
+	_was_telegraphing = telegraphing
+
+
+func _play_clip(clip: StringName) -> void:
+	if _animation_player == null or not _animation_player.has_animation(clip):
+		return
+	if _animation_player.current_animation == clip and _animation_player.is_playing():
+		return
+	_animation_player.play(clip)
 
 
 func _create_debug_label() -> void:

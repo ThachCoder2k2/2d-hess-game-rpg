@@ -1,23 +1,236 @@
-[gd_scene load_steps=10 format=3]
+[gd_scene load_steps=20 format=3]
 
 [ext_resource type="Script" path="res://scripts/entities/enemy_actor.gd" id="1"]
 [ext_resource type="Resource" path="res://resources/enemies/pawn_recruit.tres" id="2"]
-[ext_resource type="PackedScene" path="res://objects/components/grid_movement_component.tscn" id="3"]
-[ext_resource type="PackedScene" path="res://objects/components/enemy_brain_component.tscn" id="4"]
-[ext_resource type="PackedScene" path="res://objects/components/health_component.tscn" id="6"]
-[ext_resource type="PackedScene" path="res://objects/components/equipment_component.tscn" id="7"]
-[ext_resource type="PackedScene" path="res://objects/visuals/black_pawn_visual.tscn" id="9"]
+[ext_resource type="Texture2D" path="res://assets/sprites/generated/black_pawn.png" id="3"]
+[ext_resource type="Texture2D" path="res://assets/sprites/generated/toy_sword.png" id="4"]
+[ext_resource type="Texture2D" path="res://assets/sprites/generated/warning_aura.png" id="5"]
+[ext_resource type="Texture2D" path="res://assets/sprites/generated/facing_arrow.png" id="6"]
+[ext_resource type="Texture2D" path="res://assets/sprites/generated/health_pip_full.png" id="7"]
+[ext_resource type="Texture2D" path="res://assets/sprites/generated/health_pip_empty.png" id="8"]
+[ext_resource type="PackedScene" path="res://objects/components/grid_movement_component.tscn" id="9"]
+[ext_resource type="PackedScene" path="res://objects/components/enemy_brain_component.tscn" id="10"]
+[ext_resource type="PackedScene" path="res://objects/components/health_component.tscn" id="11"]
+[ext_resource type="PackedScene" path="res://objects/components/equipment_component.tscn" id="12"]
+
+[sub_resource type="Animation" id="Animation_reset"]
+length = 0.001
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("MotionRoot/SpriteRoot:position")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 0,
+"values": [Vector2(0, 0)]
+}
+tracks/1/type = "value"
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/path = NodePath("MotionRoot/SpriteRoot:scale")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 0,
+"values": [Vector2(1, 1)]
+}
+tracks/2/type = "value"
+tracks/2/imported = false
+tracks/2/enabled = true
+tracks/2/path = NodePath("MotionRoot/SpriteRoot/WeaponPivot/WeaponSprite:rotation")
+tracks/2/interp = 1
+tracks/2/loop_wrap = true
+tracks/2/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 0,
+"values": [0.0]
+}
+
+[sub_resource type="Animation" id="Animation_idle"]
+resource_name = "idle"
+length = 0.9
+loop_mode = 1
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("MotionRoot/SpriteRoot:position")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 0.45, 0.9),
+"transitions": PackedFloat32Array(1, 1, 1),
+"update": 0,
+"values": [Vector2(0, 0), Vector2(0, -1.0), Vector2(0, 0)]
+}
+
+[sub_resource type="Animation" id="Animation_hurt"]
+resource_name = "hurt"
+length = 0.16
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("MotionRoot/SpriteRoot:scale")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 0.08, 0.16),
+"transitions": PackedFloat32Array(1, 1, 1),
+"update": 0,
+"values": [Vector2(1, 1), Vector2(1.12, 0.88), Vector2(1, 1)]
+}
+
+[sub_resource type="Animation" id="Animation_attack"]
+resource_name = "attack"
+length = 0.2
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("MotionRoot/SpriteRoot/WeaponPivot/WeaponSprite:rotation")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 0.1, 0.2),
+"transitions": PackedFloat32Array(1, 1, 1),
+"update": 0,
+"values": [-0.35, 0.35, 0.0]
+}
+
+[sub_resource type="Animation" id="Animation_step"]
+resource_name = "step"
+length = 0.18
+loop_mode = 1
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("MotionRoot/SpriteRoot:position")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 0.09, 0.18),
+"transitions": PackedFloat32Array(1, 1, 1),
+"update": 0,
+"values": [Vector2(0, 0), Vector2(0, -2.5), Vector2(0, 0)]
+}
+tracks/1/type = "value"
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/path = NodePath("MotionRoot/SpriteRoot:scale")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/keys = {
+"times": PackedFloat32Array(0, 0.06, 0.18),
+"transitions": PackedFloat32Array(1, 1, 1),
+"update": 0,
+"values": [Vector2(1, 1), Vector2(1.06, 0.94), Vector2(1, 1)]
+}
+
+[sub_resource type="Animation" id="Animation_telegraph"]
+resource_name = "telegraph"
+length = 0.42
+loop_mode = 1
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("TelegraphAura:scale")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 0.21, 0.42),
+"transitions": PackedFloat32Array(1, 1, 1),
+"update": 0,
+"values": [Vector2(0.68, 0.68), Vector2(0.86, 0.86), Vector2(0.68, 0.68)]
+}
+tracks/1/type = "value"
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/path = NodePath("MotionRoot/SpriteRoot:scale")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/keys = {
+"times": PackedFloat32Array(0, 0.21, 0.42),
+"transitions": PackedFloat32Array(1, 1, 1),
+"update": 0,
+"values": [Vector2(1, 1), Vector2(1.12, 0.86), Vector2(1, 1)]
+}
+
+[sub_resource type="AnimationLibrary" id="AnimationLibrary_enemy"]
+_data = {
+&"RESET": SubResource("Animation_reset"),
+&"attack": SubResource("Animation_attack"),
+&"hurt": SubResource("Animation_hurt"),
+&"idle": SubResource("Animation_idle"),
+&"step": SubResource("Animation_step"),
+&"telegraph": SubResource("Animation_telegraph")
+}
 
 [node name="EnemyActor" type="Node2D"]
+z_index = 2
 script = ExtResource("1")
 definition = ExtResource("2")
+telegraph_modulate = Color(0.85, 0.31, 0.35, 1)
+show_facing_mark = true
+default_weapon_texture = ExtResource("4")
+pip_full_texture = ExtResource("7")
+pip_empty_texture = ExtResource("8")
 
-[node name="Visual" parent="." instance=ExtResource("9")]
+[node name="TelegraphAura" type="Sprite2D" parent="."]
+visible = false
+z_index = -1
+texture = ExtResource("5")
+scale = Vector2(0.68, 0.68)
 
-[node name="GridMovementComponent" parent="." instance=ExtResource("3")]
+[node name="MotionRoot" type="Node2D" parent="."]
 
-[node name="EnemyBrainComponent" parent="." instance=ExtResource("4")]
+[node name="SpriteRoot" type="Node2D" parent="MotionRoot"]
 
-[node name="HealthComponent" parent="." instance=ExtResource("6")]
+[node name="BodySprite" type="Sprite2D" parent="MotionRoot/SpriteRoot"]
+position = Vector2(0, -8)
+texture = ExtResource("3")
+scale = Vector2(0.6, 0.6)
 
-[node name="EquipmentComponent" parent="." instance=ExtResource("7")]
+[node name="FacingArrow" type="Sprite2D" parent="MotionRoot/SpriteRoot"]
+position = Vector2(0, -34)
+texture = ExtResource("6")
+scale = Vector2(0.4, 0.4)
+
+[node name="WeaponPivot" type="Node2D" parent="MotionRoot/SpriteRoot"]
+visible = false
+
+[node name="WeaponSprite" type="Sprite2D" parent="MotionRoot/SpriteRoot/WeaponPivot"]
+position = Vector2(0, -18)
+texture = ExtResource("4")
+scale = Vector2(0.46, 0.46)
+
+[node name="HealthPips" type="Node2D" parent="MotionRoot/SpriteRoot"]
+visible = false
+position = Vector2(-8, -40)
+
+[node name="Pip0" type="Sprite2D" parent="MotionRoot/SpriteRoot/HealthPips"]
+texture = ExtResource("7")
+
+[node name="Pip1" type="Sprite2D" parent="MotionRoot/SpriteRoot/HealthPips"]
+position = Vector2(8, 0)
+texture = ExtResource("7")
+
+[node name="Pip2" type="Sprite2D" parent="MotionRoot/SpriteRoot/HealthPips"]
+position = Vector2(16, 0)
+texture = ExtResource("7")
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="."]
+libraries = {
+&"": SubResource("AnimationLibrary_enemy")
+}
+
+[node name="GridMovementComponent" parent="." instance=ExtResource("9")]
+
+[node name="EnemyBrainComponent" parent="." instance=ExtResource("10")]
+
+[node name="HealthComponent" parent="." instance=ExtResource("11")]
+
+[node name="EquipmentComponent" parent="." instance=ExtResource("12")]

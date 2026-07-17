@@ -46,5 +46,4 @@ offset_bottom = 14.0
 [node name="HUD" parent="." unique_id=974649949 instance=ExtResource("7")]
 
 [editable path="PawnHero"]
-[editable path="PawnHero/Visual"]
 [editable path="FirstEncounter"]

@@ -6,13 +6,16 @@ Gameplay truth is [[Grid World|cells]]; presentation is paint.
 Back to [[Home]] · related: [[Enemy Composition]] · [[Player]] · [[World and Rooms]] · [[Combat and Telegraph]]
 
 ## Actor visuals
-- `scripts/visuals/piece_visual.gd` — `PieceVisual`: a `Sprite2D` body + `AnimationPlayer`
-  (clips: idle, step, attack, hurt, telegraph). The hero/enemy calls `sync_from_hero` /
-  `sync_from_enemy` each frame to push state in: facing, weapon texture, health pips,
-  modulate, which clip to play. **Never `_draw()`s the body** (that's a hard rule).
-- `scripts/visuals/pickup_visual.gd` — `PickupVisual`: the pickup sprite + float/glow.
-- Visual scenes: `objects/visuals/{pawn_hero,black_pawn,knight_enemy,weapon_pickup}_visual.tscn`.
-  Textures are assigned in the scene, not loaded in code.
+- Actors own their sprites directly (canonical Godot structure — no wrapper scene):
+  `MotionRoot/SpriteRoot` holds BodySprite, FacingArrow, WeaponPivot/WeaponSprite and
+  HealthPips; a sibling `AnimationPlayer` holds the clips (idle, step, attack, hurt,
+  telegraph). `pawn_hero.gd` / `free_enemy.gd` update them each frame through typed
+  `@onready` references (`_update_appearance`). MotionRoot takes procedural offsets
+  (recoil/bob); the AnimationPlayer animates SpriteRoot, so they never fight.
+  **Never `_draw()`s the body** (that's a hard rule).
+- `scripts/visuals/pickup_visual.gd` — `PickupVisual`: the pickup sprite + float/glow
+  (`objects/visuals/weapon_pickup_visual.tscn` — pickups still use a Visual child).
+- Textures are assigned in the scenes and weapon/attack `.tres`, not loaded in code.
 
 ## Board overlay
 `scripts/world/prototype_board.gd` — `PrototypeBoard`. The one place `_draw()` is

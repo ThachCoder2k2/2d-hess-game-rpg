@@ -83,9 +83,9 @@ func _run() -> void:
 		scene_pickup != null
 		and scene_pickup.get_node_or_null("Visual") != null
 		and scene_pawn != null
-		and scene_pawn.get_node_or_null("Visual") != null
+		and scene_pawn.get_node_or_null("MotionRoot/SpriteRoot/BodySprite") is Sprite2D
 		and scene_knight != null
-		and scene_knight.get_node_or_null("Visual") != null
+		and scene_knight.get_node_or_null("MotionRoot/SpriteRoot/BodySprite") is Sprite2D
 	)
 	var armed_pawn := world.actor_at(Vector2i(10, 1)) as EnemyActor
 	var armed_ok := armed_pawn != null and armed_pawn.weapon != null and armed_pawn.weapon.display_name == "Pencil Spear"

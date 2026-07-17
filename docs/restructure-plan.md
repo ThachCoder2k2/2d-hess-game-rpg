@@ -34,7 +34,7 @@ res://
 │  └─ encounter_director.gd/.tscn
 ├─ features/
 │  ├─ player/
-│  │  ├─ pawn_hero.gd  player.tscn  pawn_hero_visual.tscn
+│  │  ├─ pawn_hero.gd  player.tscn
 │  │  └─ attacks/ wooden_sword.tres  pencil_thrust.tres
 │  ├─ enemies/
 │  │  ├─ enemy_actor.gd  free_enemy.gd

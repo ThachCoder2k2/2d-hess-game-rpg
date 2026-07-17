@@ -1,7 +1,7 @@
 # Player
 
 **File:** `scripts/actors/pawn_hero.gd` · **Class:** `PawnHero` (extends [[Movement|GridActor]])
-**Scene:** `objects/actors/player.tscn` (PawnHero + a Visual child + two attack `.tres`)
+**Scene:** `objects/actors/player.tscn` (PawnHero + its own sprites/AnimationPlayer + Camera2D + two attack `.tres`)
 The white pawn you control.
 
 Back to [[Home]] · related: [[Movement]] · [[Combat and Telegraph]] · [[Data Resources]] · [[Presentation]]
@@ -35,5 +35,6 @@ invulnerability. `is_invulnerable` is set *synchronously* before the `await`, so
 hits on the same frame can't double-damage.
 
 ## What it does NOT do
-No sprite drawing — it syncs state into its Visual child ([[Presentation]]) via
-`sync_from_hero`. No collision — movement legality is all [[Grid World]] cells.
+No `_draw()` — it updates its own Sprite2D children through typed references
+(`_update_appearance`, [[Presentation]]). No collision — movement legality is all
+[[Grid World]] cells.

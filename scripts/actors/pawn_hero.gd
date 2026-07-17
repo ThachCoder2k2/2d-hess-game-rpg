@@ -20,7 +20,13 @@ const DIRECTIONS := {
 @export var pencil_thrust_cooldown := 1.25
 @export var wooden_sword: AttackProfile
 @export var pencil_thrust: AttackProfile
-@export var visual_path: NodePath = ^"Visual"
+
+@export_group("Appearance")
+@export var hurt_modulate := Color("#ff8170")
+@export var weapon_anchor := Vector2(4, -14)
+@export_range(1.0, 64.0, 0.5) var weapon_rest_length := 18.0
+## Shown while attacking when the active profile has no texture of its own.
+@export var default_weapon_texture: Texture2D
 var buffered_direction := Vector2i.ZERO
 var attack_on_cooldown := false
 var active_attack: AttackProfile
@@ -32,16 +38,21 @@ var skill_cooldown_left := 0.0
 var last_held_direction := Vector2i.ZERO
 var is_invulnerable := false
 var control_enabled := true
-var visual: Node
+
+## Edge-detection memory for choosing animation clips (play once on state change).
+var _was_hurt := false
+var _was_attacking := false
+
+@onready var _motion_root: Node2D = get_node_or_null("MotionRoot")
+@onready var _body_sprite: Sprite2D = get_node_or_null("MotionRoot/SpriteRoot/BodySprite")
+@onready var _weapon_pivot: Node2D = get_node_or_null("MotionRoot/SpriteRoot/WeaponPivot")
+@onready var _weapon_sprite: Sprite2D = get_node_or_null("MotionRoot/SpriteRoot/WeaponPivot/WeaponSprite")
+@onready var _animation_player: AnimationPlayer = get_node_or_null("AnimationPlayer")
 
 
 func _ready() -> void:
 	_ensure_attack_profiles()
-	_resolve_visual()
-
-	step_started.connect(func(_origin: Vector2i, _destination: Vector2i): _sync_visual())
 	step_finished.connect(_on_step_finished)
-	_sync_visual()
 
 
 func _ensure_attack_profiles() -> void:
@@ -61,7 +72,7 @@ func _process(delta: float) -> void:
 	if skill_cooldown_left > 0.0:
 		skill_cooldown_left = maxf(0.0, skill_cooldown_left - delta)
 		emit_signal("skill_cooldown_changed", skill_cooldown_left)
-	_sync_visual()
+	_update_appearance()
 
 	if not control_enabled:
 		return
@@ -113,7 +124,6 @@ func try_turn(direction: Vector2i) -> bool:
 		return false
 	facing = direction
 	buffered_direction = Vector2i.ZERO
-	_sync_visual()
 	return true
 
 
@@ -134,11 +144,9 @@ func _held_direction() -> Vector2i:
 func _attempt_step(direction: Vector2i) -> void:
 	if not try_step(direction):
 		bump_visual_time = 0.10
-		_sync_visual()
 
 
 func _on_step_finished(_destination: Vector2i) -> void:
-	_sync_visual()
 	if buffered_direction != Vector2i.ZERO and not attack_on_cooldown and control_enabled:
 		var direction := buffered_direction
 		buffered_direction = Vector2i.ZERO
@@ -154,7 +162,6 @@ func try_attack(profile: AttackProfile = null) -> bool:
 	attack_on_cooldown = true
 	active_attack = profile
 	attack_visual_time = profile.impact_delay + 0.10
-	_sync_visual()
 	var target_cells := profile.get_target_cells(current_cell, facing)
 	var tree := get_tree()
 	if tree == null:
@@ -207,7 +214,6 @@ func take_damage(amount: int, _direction := Vector2i.ZERO) -> bool:
 	hurt_visual_time = 0.18
 	emit_signal("courage_changed", courage)
 	emit_signal("damaged", amount, courage)
-	_sync_visual()
 	if courage <= 0:
 		control_enabled = false
 		emit_signal("defeated")
@@ -229,15 +235,63 @@ func _start_invulnerability() -> void:
 	if not is_inside_tree():
 		return
 	is_invulnerable = false
-	_sync_visual()
 
 
-func _resolve_visual() -> void:
-	if visual == null:
-		visual = get_node_or_null(visual_path)
+## The hero drives its own sprites through typed references (canonical structure —
+## no visual wrapper). MotionRoot takes procedural offsets; the AnimationPlayer
+## animates SpriteRoot, so the two never fight. Null-guarded so bare-script
+## instances in tests run headless without any sprites.
+func _update_appearance() -> void:
+	if _body_sprite == null:
+		return
+	var tint := hurt_modulate if hurt_visual_time > 0.0 else Color.WHITE
+	if is_invulnerable and int(Time.get_ticks_msec() / 70.0) % 2 == 0:
+		tint.a = 0.35
+	_body_sprite.modulate = tint
+
+	var bob := -1.0 if is_moving else 0.0
+	if bump_visual_time > 0.0:
+		bob += sin(bump_visual_time * 80.0) * 2.0
+	_motion_root.position = Vector2(0.0, bob)
+
+	_update_weapon()
+	_update_clip()
 
 
-func _sync_visual() -> void:
-	_resolve_visual()
-	if visual != null and visual.has_method("sync_from_hero"):
-		visual.call("sync_from_hero", self)
+func _update_weapon() -> void:
+	var attacking := attack_visual_time > 0.0
+	_weapon_pivot.visible = attacking and facing != Vector2i.ZERO
+	if not _weapon_pivot.visible:
+		return
+	var weapon_texture := default_weapon_texture
+	if active_attack != null and active_attack.texture != null:
+		weapon_texture = active_attack.texture
+	_weapon_sprite.texture = weapon_texture
+	_weapon_pivot.position = weapon_anchor + Vector2(facing) * 4.0
+	_weapon_pivot.rotation = Vector2(facing).angle() + PI / 2.0
+	var reach := 1.0
+	if active_attack != null:
+		reach = maxf(1.0, float(active_attack.range_cells))
+	_weapon_sprite.position = Vector2(0.0, -weapon_rest_length * (1.0 + (reach - 1.0) * 0.28))
+	_weapon_sprite.scale = Vector2.ONE * 1.12
+
+
+func _update_clip() -> void:
+	var hurt := hurt_visual_time > 0.0
+	var attacking := attack_visual_time > 0.0
+	if hurt and not _was_hurt:
+		_play_clip(&"hurt")
+	elif attacking and not _was_attacking:
+		_play_clip(&"attack")
+	elif not attacking and not hurt:
+		_play_clip(&"step" if is_moving else &"idle")
+	_was_hurt = hurt
+	_was_attacking = attacking
+
+
+func _play_clip(clip: StringName) -> void:
+	if _animation_player == null or not _animation_player.has_animation(clip):
+		return
+	if _animation_player.current_animation == clip and _animation_player.is_playing():
+		return
+	_animation_player.play(clip)

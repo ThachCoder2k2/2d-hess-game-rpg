@@ -55,7 +55,9 @@ Every enemy is the same skeleton:
 
 ```
 EnemyActor (generic script + an EnemyDefinition .tres)
-├─ Visual                Sprite2D + AnimationPlayer (idle/step/attack/hurt/telegraph)
+├─ MotionRoot/SpriteRoot sprites (body, facing arrow, weapon, health pips)
+├─ AnimationPlayer       clips: idle/step/attack/hurt/telegraph
+├─ TelegraphAura         warning glow shown while winding up
 ├─ GridMovementComponent registration, steps, legal moves, move tween
 ├─ EnemyBrainComponent   optional per-enemy DecisionConfig (AI knobs)
 ├─ HealthComponent       damage, hurt/defeat feedback, token release on death

@@ -1,13 +1,10 @@
 [gd_resource type="Resource" script_class="VisualDefinition" format=3 uid="uid://c8p1h1f6xmjoq"]
 
 [ext_resource type="Script" uid="uid://whbf5imveje" path="res://scripts/data/visual_definition.gd" id="1"]
-[ext_resource type="PackedScene" path="res://objects/visuals/black_pawn_visual.tscn" id="2"]
 
 [resource]
 script = ExtResource("1")
 id = &"pawn_compatibility"
-visual_scene = ExtResource("2")
-legacy_draw_kind = &"black_pawn"
 telegraph_color = Color(0.352941, 0.12549, 0.145098, 1)
 impact_color = Color(1, 0.603922, 0.458824, 1)
 weapon_anchor = Vector2(5, 0)

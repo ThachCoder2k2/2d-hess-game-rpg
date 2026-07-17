@@ -48,8 +48,8 @@ Every `.gd` file, one line each, linked to the concept note that explains it. Ba
 - `world/grid_lines_overlay.gd` — one-node grid draw. → [[Presentation]]
 
 ## visuals
-- `visuals/piece_visual.gd` — actor sprite + animation sync. → [[Presentation]]
 - `visuals/pickup_visual.gd` — pickup sprite + glow. → [[Presentation]]
+  (actors own their sprites directly — see `pawn_hero.gd` / `free_enemy.gd`)
 
 ## ui
 - `ui/hud.gd` — courage/skill/status/result HUD. → [[Presentation]]

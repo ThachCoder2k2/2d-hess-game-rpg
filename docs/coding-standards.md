@@ -78,8 +78,8 @@ before runtime methods.
   `@export`, don't reach up the tree.
 - Use `_get_configuration_warnings()` so the editor self-documents missing setup
   (see `enemy_actor.gd`).
-- Keep sub-scene children non-editable unless there's a reason (the actor prefabs
-  enable `[editable path="Visual"]` deliberately, for sprite/animation tweaking).
+- Keep sub-scene children non-editable unless there's a reason. Actor sprites and
+  the `AnimationPlayer` live directly in each actor scene, so they're always editable.
 
 ## Content vs behavior (the core rule)
 

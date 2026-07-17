@@ -63,11 +63,12 @@ func _init() -> void:
 	scene_hero._ensure_attack_profiles()
 	_expect(scene_hero.wooden_sword != null and scene_hero.wooden_sword.resource_path.ends_with("wooden_sword.tres"), "player scene owns Wooden Sword attack Resource")
 	_expect(scene_hero.pencil_thrust != null and scene_hero.pencil_thrust.resource_path.ends_with("pencil_thrust.tres"), "player scene owns Pencil Thrust attack Resource")
-	_expect(_piece_visual_is_sprite_animated(scene_hero.get_node_or_null("Visual"), "sync_from_hero"), "player scene owns a sprite-based animated visual child")
-	_expect(_visual_has_clip(scene_hero.get_node_or_null("Visual"), &"step"), "player visual owns a walk/step animation clip")
-	var piece_visual_source := FileAccess.get_file_as_string("res://scripts/visuals/piece_visual.gd")
+	_expect(_actor_is_sprite_animated(scene_hero), "player scene animates its own sprites (no visual wrapper)")
+	_expect(_actor_has_clip(scene_hero, &"step"), "player owns a walk/step animation clip")
+	var hero_source := FileAccess.get_file_as_string("res://scripts/actors/pawn_hero.gd")
+	var enemy_source := FileAccess.get_file_as_string("res://scripts/actors/free_enemy.gd")
 	var pickup_visual_source := FileAccess.get_file_as_string("res://scripts/visuals/pickup_visual.gd")
-	_expect(not piece_visual_source.contains("func _draw") and not piece_visual_source.contains("draw_"), "piece visuals use Sprite2D nodes instead of script drawing")
+	_expect(not hero_source.contains("func _draw") and not enemy_source.contains("func _draw"), "actor bodies use Sprite2D nodes instead of script drawing")
 	_expect(not pickup_visual_source.contains("func _draw") and not pickup_visual_source.contains("draw_"), "pickup visuals use Sprite2D nodes instead of script drawing")
 	scene_hero.free()
 
@@ -117,8 +118,8 @@ func _init() -> void:
 	pawn_variant._ensure_ai_data()
 	pawn_variant._configure_components()
 	_expect(pawn_variant != null and pawn_variant.definition.id == &"pawn_recruit", "Pawn scene variant uses generic EnemyActor with Pawn definition")
-	_expect(_piece_visual_is_sprite_animated(pawn_variant.get_node_or_null("Visual"), "sync_from_enemy") and pawn_variant.movement_component != null and pawn_variant.equipment_component != null, "Pawn scene variant owns sprite visual and components")
-	_expect(_visual_has_clip(pawn_variant.get_node_or_null("Visual"), &"step"), "Pawn visual owns a walk/step animation clip")
+	_expect(_actor_is_sprite_animated(pawn_variant) and pawn_variant.movement_component != null and pawn_variant.equipment_component != null, "Pawn scene variant owns its sprites and components")
+	_expect(_actor_has_clip(pawn_variant, &"step"), "Pawn owns a walk/step animation clip")
 	_expect(pawn_variant.get_piece_display_name() == "Pawn", "Pawn scene variant names itself from definition data")
 
 	var knight_variant_scene := load("res://objects/actors/knight_enemy.tscn") as PackedScene
@@ -127,8 +128,8 @@ func _init() -> void:
 	knight_variant._ensure_ai_data()
 	knight_variant._configure_components()
 	_expect(knight_variant != null and knight_variant.definition.id == &"knight_tracker", "Knight scene variant uses generic EnemyActor with Knight definition")
-	_expect(_piece_visual_is_sprite_animated(knight_variant.get_node_or_null("Visual"), "sync_from_enemy") and knight_variant.movement_component != null and knight_variant.equipment_component != null, "Knight scene variant owns sprite visual and components")
-	_expect(_visual_has_clip(knight_variant.get_node_or_null("Visual"), &"step"), "Knight visual owns a walk/step animation clip")
+	_expect(_actor_is_sprite_animated(knight_variant) and knight_variant.movement_component != null and knight_variant.equipment_component != null, "Knight scene variant owns its sprites and components")
+	_expect(_actor_has_clip(knight_variant, &"step"), "Knight owns a walk/step animation clip")
 	_expect(knight_variant.get_piece_display_name() == "Knight", "Knight scene variant names itself from definition data")
 
 	# Bishop: a whole new enemy authored purely from editor data (no bishop-specific script).
@@ -149,7 +150,7 @@ func _init() -> void:
 	pawn_shell._configure_components()
 	_expect(pawn_shell.definition.id == &"pawn_recruit", "base enemy scene exposes its default Pawn definition")
 	_expect(pawn_shell._get_configuration_warnings().is_empty(), "complete base enemy scene has no editor configuration warnings")
-	_expect(_piece_visual_is_sprite_animated(pawn_shell.get_node_or_null("Visual"), "sync_from_enemy"), "base enemy scene owns a sprite-based animated visual child")
+	_expect(_actor_is_sprite_animated(pawn_shell), "base enemy scene animates its own sprites (no visual wrapper)")
 	_expect(pawn_shell.movement_component.actor == pawn_shell and pawn_shell.brain_component.actor == pawn_shell, "movement and brain component nodes bind to the host")
 	_expect(pawn_shell.health_component.actor == pawn_shell and pawn_shell.equipment_component.actor == pawn_shell, "health and equipment component nodes bind to the host")
 	var health_feedback_player := pawn_shell.health_component.get_node_or_null("AnimationPlayer") as AnimationPlayer
@@ -398,17 +399,17 @@ func _init() -> void:
 	quit(1 if failures > 0 else 0)
 
 
-func _piece_visual_is_sprite_animated(visual: Node, sync_method: StringName) -> bool:
-	if visual == null or not visual.has_method(sync_method):
+func _actor_is_sprite_animated(actor: Node) -> bool:
+	if actor == null:
 		return false
-	return visual.get_node_or_null("MotionRoot/SpriteRoot/BodySprite") is Sprite2D \
-		and visual.get_node_or_null("AnimationPlayer") is AnimationPlayer
+	return actor.get_node_or_null("MotionRoot/SpriteRoot/BodySprite") is Sprite2D \
+		and actor.get_node_or_null("AnimationPlayer") is AnimationPlayer
 
 
-func _visual_has_clip(visual: Node, clip: StringName) -> bool:
-	if visual == null:
+func _actor_has_clip(actor: Node, clip: StringName) -> bool:
+	if actor == null:
 		return false
-	var player := visual.get_node_or_null("AnimationPlayer") as AnimationPlayer
+	var player := actor.get_node_or_null("AnimationPlayer") as AnimationPlayer
 	return player != null and player.has_animation(clip)
 
 
