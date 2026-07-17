@@ -20,10 +20,19 @@ move the node in the editor → it snaps to a cell and writes `grid_cell`. Subcl
 only their data + `_draw` gizmo:
 | Marker | File | Holds |
 |---|---|---|
-| HeroStartMarker | `hero_start_marker.gd` | the hero's start cell |
-| BlockerMarker | `blocker_marker.gd` | a blocked cell (wall) |
 | EnemySpawnPoint | `enemy_spawn_point.gd` | `enemy_scene` PackedScene + `definition` |
 | PickupSpawnPoint | `pickup_spawn_point.gd` | `pickup_scene` + `weapon` |
+
+**Walls are painted, not marked**: tiles with `solid = true` custom data (wall/throne/
+banner in the kingdom TileSet) auto-register as blocked cells at setup
+(`RoomEncounter._apply_solid_tiles`). Paint = collision. `BlockerMarker`
+(`blocker_marker.gd`) still exists as a legacy/dynamic-blocker option but the first
+room no longer uses it.
+
+Markers exist for things that are *instantiated at runtime*. The [[Player|hero]] already
+exists in `main.tscn`, so **it is its own spawn marker**: drag the PawnHero onto a cell
+and that's where it starts (`main.gd` floors the parked position with `world_to_cell`,
+then `setup()` re-centers it on the cell). There is no HeroStart marker.
 
 The room scene shows a **preview** child (the real sprite) at each marker, so the editor
 is WYSIWYG.

@@ -14,16 +14,28 @@ You can also open `scenes/main.tscn`; `PawnHero` and `FirstEncounter` have edita
 
 These nodes are gameplay markers. Drag them on the grid; their `grid_cell` updates and the runtime uses that cell.
 
-- `HeroStart`: player spawn cell.
-- `Blocker_*`: blocked cells. Moving one changes collision/pathing.
 - `PencilSpearPickup`, `RulerBladePickup`: weapon pickup cells.
 - `PawnRecruitSpawn`, `ArmedPawnSpawn`, `KnightTrackerSpawn`: enemy spawn cells.
 
 The markers snap to the 32px grid in editor.
 
+The hero has no marker: drag the `PawnHero` node itself (in `scenes/main.tscn`) onto a
+cell — wherever it stands is where it spawns. Any position inside a cell works; the
+runtime floors it to that cell and re-centers the sprite. For click-to-cell snapping
+while dragging, enable the editor's grid snap (magnet icon): grid step `32 × 32`,
+offset `16 × 20`.
+
+## Walls: paint them
+
+Walls are painted, not placed as markers. Any tile whose TileSet custom data has
+`solid = true` (the stone wall, throne, and banner tiles in the kingdom set) blocks
+movement and pathing automatically. Paint a wall tile on `RoomArt/TileMap` with
+Godot's TileMap tools → that cell is a wall. Erase it → the cell opens. Art and
+collision are the same action and can never disagree.
+
 ## Nodes That Are Visual Only
 
-- `RoomArt/TileMap`: TileMapLayer for board floor tiles.
+- `RoomArt/TileMap`: TileMapLayer for board floor tiles (solid tiles also block — see above).
 - `RoomArt/GridLines`: visible grid lines.
 - `RoomArt/Boundary`: crayon/tape boundary art.
 - `RoomArt/SetDressing`: background props.
@@ -40,7 +52,7 @@ Move these for presentation only. They do not change gameplay unless paired with
 ## Quick Editing Loop
 
 1. Open `scenes/rooms/first_encounter.tscn`.
-2. Drag `HeroStart`, enemy markers, pickup markers, or blocker markers.
+2. Drag enemy markers, pickup markers, or blocker markers (the hero: drag `PawnHero` in `scenes/main.tscn`).
 3. Use Godot's TileMap tools on `RoomArt/TileMap` when changing board floor tiles.
 4. Press Play from `scenes/main.tscn`.
 5. If the first 10 seconds feel messy, move fewer things at once and retest.

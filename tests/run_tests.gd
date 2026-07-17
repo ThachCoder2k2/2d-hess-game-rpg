@@ -243,7 +243,10 @@ func _init() -> void:
 	_expect(main_children_ok, "main scene owns editor-visible world, combat, board, player, room, and HUD nodes")
 	_expect(main_board != null and not ("draw_base_layer" in main_board), "the board is a pure combat overlay with no floor-drawing path")
 	_expect(main_room_art != null and main_room_art.get_node_or_null("TileMap") is TileMapLayer and main_room_art.get_node_or_null("GridLines") is GridLinesOverlay, "first room owns editable TileMap board art nodes")
-	_expect(main_room != null and main_room.get_node_or_null("Blocker_07_02") != null and main_room.get_node("Blocker_07_02").has_method("get_blocked_cell"), "first room owns draggable blocker markers")
+	var room_tilemap: TileMapLayer = null
+	if main_room != null:
+		room_tilemap = main_room.get_node_or_null("RoomArt/TileMap") as TileMapLayer
+	_expect(room_tilemap != null and room_tilemap.tile_set != null and room_tilemap.tile_set.get_custom_data_layers_count() > 0 and room_tilemap.tile_set.get_custom_data_layer_name(0) == "solid", "room walls block via painted solid tiles")
 	_expect(main_hero_node != null and main_grid_node != null and main_grid_node.is_inside(main_grid_node.world_to_cell(main_hero_node.position)), "the hero is its own spawn marker: parked on a playable cell in the main scene")
 	main_game.free()
 

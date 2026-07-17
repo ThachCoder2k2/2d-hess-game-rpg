@@ -16,7 +16,6 @@
 [ext_resource type="PackedScene" path="res://objects/visuals/black_pawn_visual.tscn" id="13"]
 [ext_resource type="PackedScene" path="res://objects/visuals/knight_enemy_visual.tscn" id="14"]
 [ext_resource type="PackedScene" path="res://objects/visuals/weapon_pickup_visual.tscn" id="15"]
-[ext_resource type="PackedScene" path="res://objects/markers/blocker_marker.tscn" id="17"]
 [ext_resource type="PackedScene" path="res://objects/world/kingdom_tilemap.tscn" id="18"]
 
 [node name="FirstEncounter" instance=ExtResource("1")]
@@ -35,33 +34,6 @@ polygon = PackedVector2Array(0, 0, 536, 0, 536, 312, 0, 312)
 
 [node name="GridLines" type="Node2D" parent="RoomArt"]
 script = ExtResource("19")
-
-[node name="Boundary" type="Node2D" parent="RoomArt"]
-
-[node name="OuterCrayonLine" type="Line2D" parent="RoomArt/Boundary"]
-points = PackedVector2Array(52, 24, 588, 24, 588, 348, 52, 348, 52, 24)
-width = 3.0
-default_color = Color(0.960784, 0.772549, 0.258824, 0.78)
-
-[node name="LeftTapeBlue" type="Polygon2D" parent="RoomArt/Boundary"]
-position = Vector2(48, 72)
-color = Color(0.172549, 0.470588, 0.768627, 1)
-polygon = PackedVector2Array(0, 0, 8, 0, 8, 52, 0, 52)
-
-[node name="LeftTapeGreen" type="Polygon2D" parent="RoomArt/Boundary"]
-position = Vector2(48, 204)
-color = Color(0.305882, 0.541176, 0.4, 1)
-polygon = PackedVector2Array(0, 0, 8, 0, 8, 52, 0, 52)
-
-[node name="RightTapeBlue" type="Polygon2D" parent="RoomArt/Boundary"]
-position = Vector2(584, 112)
-color = Color(0.172549, 0.470588, 0.768627, 1)
-polygon = PackedVector2Array(0, 0, 8, 0, 8, 52, 0, 52)
-
-[node name="RightTapeGreen" type="Polygon2D" parent="RoomArt/Boundary"]
-position = Vector2(584, 244)
-color = Color(0.305882, 0.541176, 0.4, 1)
-polygon = PackedVector2Array(0, 0, 8, 0, 8, 52, 0, 52)
 
 [node name="SetDressing" type="Node2D" parent="RoomArt"]
 
@@ -94,18 +66,6 @@ polygon = PackedVector2Array(0, 0, 88, 0, 102, 20, 0, 20)
 position = Vector2(456, 324)
 color = Color(1, 0.956863, 0.839216, 0.42)
 polygon = PackedVector2Array(0, 0, 120, 0, 120, 20, 18, 20)
-
-[node name="Blocker_07_02" parent="." instance=ExtResource("17")]
-grid_cell = Vector2i(7, 2)
-
-[node name="Blocker_07_03" parent="." instance=ExtResource("17")]
-grid_cell = Vector2i(7, 3)
-
-[node name="Blocker_07_05" parent="." instance=ExtResource("17")]
-grid_cell = Vector2i(7, 5)
-
-[node name="Blocker_07_06" parent="." instance=ExtResource("17")]
-grid_cell = Vector2i(7, 6)
 
 [node name="PencilSpearPickup" parent="." instance=ExtResource("2")]
 pickup_scene = ExtResource("10")

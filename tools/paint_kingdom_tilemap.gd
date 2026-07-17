@@ -9,6 +9,9 @@ const COLUMNS := 16
 const ROWS := 9
 const CARPET_COLUMNS := [7, 8]
 const BANNER_ROWS := [2, 6]
+## Interior wall cells (the old blocker layout). Wall/throne/banner tiles carry
+## solid=true custom data, so painting them IS the collision — no markers needed.
+const WALL_CELLS: Array[Vector2i] = [Vector2i(7, 2), Vector2i(7, 3), Vector2i(7, 5), Vector2i(7, 6)]
 
 const TILE_LIGHT_MARBLE := Vector2i(0, 0)
 const TILE_DARK_MARBLE := Vector2i(1, 0)
@@ -36,7 +39,7 @@ func _init() -> void:
 				atlas = TILE_THRONE
 			elif (x == 0 or x == COLUMNS - 1) and y in BANNER_ROWS:
 				atlas = TILE_BANNER
-			elif on_border:
+			elif on_border or Vector2i(x, y) in WALL_CELLS:
 				atlas = TILE_WALL
 			elif x in CARPET_COLUMNS:
 				atlas = TILE_CARPET

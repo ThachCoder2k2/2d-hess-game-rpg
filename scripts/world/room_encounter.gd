@@ -81,6 +81,20 @@ func _apply_blockers() -> void:
 	var cells := marker_cells if not marker_cells.is_empty() else blocked_cells
 	for cell in cells:
 		grid_world.add_block(cell)
+	_apply_solid_tiles()
+
+
+## Paint-once walls: every TileMap cell whose tile carries solid=true custom data
+## (walls, thrones, banners in the kingdom TileSet) blocks movement and pathing.
+## Painting the room IS the collision — art and logic cannot disagree.
+func _apply_solid_tiles() -> void:
+	var tilemap := get_node_or_null("RoomArt/TileMap") as TileMapLayer
+	if tilemap == null:
+		return
+	for cell in tilemap.get_used_cells():
+		var tile_data := tilemap.get_cell_tile_data(cell)
+		if tile_data != null and bool(tile_data.get_custom_data("solid")):
+			grid_world.add_block(cell)
 
 
 func _spawn_pickups() -> void:
