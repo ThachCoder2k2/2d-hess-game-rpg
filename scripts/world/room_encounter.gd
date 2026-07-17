@@ -30,7 +30,7 @@ func setup(world: GridWorld, player: PawnHero, encounter_director: EncounterDire
 	debug_enabled = debug_view_enabled
 	_apply_blockers()
 	_spawn_pickups()
-	_spawn_enemies()
+	_setup_enemies()
 
 
 func set_debug_enabled(value: bool) -> void:
@@ -120,25 +120,24 @@ func _spawn_pickups() -> void:
 		spawned_pickups.append(pickup)
 
 
-func _spawn_enemies() -> void:
+## Enemies are real scene children parked where they fight — like the hero, each
+## is its own spawn marker (drag the enemy in the editor to move its start).
+## Setup registers each one on the cell containing its parked position, wires its
+## signals, and activates it. Armed enemies equip definition.default_weapon.
+func _setup_enemies() -> void:
 	if grid_world == null:
 		return
-	for marker in _enemy_markers():
-		var enemy := marker.call("create_enemy") as FreeEnemy
+	for child in get_children():
+		var enemy := child as FreeEnemy
 		if enemy == null:
 			continue
-		var cell: Vector2i = marker.get("grid_cell")
-		enemy.z_index = 2
-		add_child(enemy)
-		if not enemy.setup(grid_world, cell):
-			enemy.queue_free()
+		var start_cell := grid_world.world_to_cell(enemy.position)
+		if not enemy.setup(grid_world, start_cell):
+			push_warning("Enemy '%s' could not register at its parked cell %s." % [enemy.name, start_cell])
 			continue
 		spawned_enemies.append(enemy)
 		_connect_enemy(enemy)
-		var starting_weapon := marker.call("create_starting_weapon") as EnemyWeapon
-		if starting_weapon != null:
-			enemy.equip(starting_weapon)
-		elif enemy.definition != null and enemy.definition.default_weapon != null:
+		if enemy.weapon == null and enemy.definition != null and enemy.definition.default_weapon != null:
 			enemy.equip(enemy.definition.default_weapon.duplicate(true))
 		if auto_activate_enemies:
 			enemy.activate(hero, director)
@@ -187,14 +186,6 @@ func _objective_text(property: StringName, fallback: String) -> String:
 		return fallback
 	var value := String(objective.get(property))
 	return value if not value.is_empty() else fallback
-
-
-func _enemy_markers() -> Array[Node]:
-	var markers: Array[Node] = []
-	for child in get_children():
-		if child.has_method("create_enemy"):
-			markers.append(child)
-	return markers
 
 
 func _pickup_markers() -> Array[Node]:

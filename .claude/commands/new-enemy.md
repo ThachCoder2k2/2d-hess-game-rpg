@@ -36,8 +36,10 @@ Steps:
 
 5. Run the editor import once (new class refs), then run `/verify`. All green.
 
-6. To play it: tell the human to set an `EnemySpawnPoint.enemy_scene` in a room to the
-   new `.tscn` (room placement is their editor call).
+6. To play it: instance the new `.tscn` directly in a room scene and park it on a
+   cell — enemies are their own spawn markers (the room registers every `FreeEnemy`
+   child at the cell containing its parked position). Exact placement is the
+   human's editor call.
 
 7. Update `progress.md` + `task_plan.md`, commit (stage explicit paths, exclude the
    human's dirty files), push.

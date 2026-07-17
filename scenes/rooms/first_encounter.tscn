@@ -3,18 +3,13 @@
 [ext_resource type="PackedScene" path="res://objects/world/room_encounter.tscn" id="1"]
 [ext_resource type="Script" path="res://scripts/world/grid_lines_overlay.gd" id="19"]
 [ext_resource type="PackedScene" path="res://objects/markers/pickup_spawn_point.tscn" id="2"]
-[ext_resource type="PackedScene" path="res://objects/markers/enemy_spawn_point.tscn" id="3"]
 [ext_resource type="Resource" path="res://resources/weapons/pencil_spear.tres" id="4"]
 [ext_resource type="Resource" path="res://resources/weapons/ruler_blade.tres" id="5"]
-[ext_resource type="Resource" path="res://resources/enemies/pawn_recruit.tres" id="6"]
 [ext_resource type="Resource" path="res://resources/enemies/pawn_armed.tres" id="7"]
-[ext_resource type="Resource" path="res://resources/enemies/knight_tracker.tres" id="8"]
 [ext_resource type="Resource" path="res://resources/objectives/first_encounter_clear_all.tres" id="9"]
 [ext_resource type="PackedScene" path="res://objects/world/weapon_pickup.tscn" id="10"]
 [ext_resource type="PackedScene" path="res://objects/actors/black_pawn.tscn" id="11"]
 [ext_resource type="PackedScene" path="res://objects/actors/knight_enemy.tscn" id="12"]
-[ext_resource type="PackedScene" path="res://objects/visuals/black_pawn_visual.tscn" id="13"]
-[ext_resource type="PackedScene" path="res://objects/visuals/knight_enemy_visual.tscn" id="14"]
 [ext_resource type="PackedScene" path="res://objects/visuals/weapon_pickup_visual.tscn" id="15"]
 [ext_resource type="PackedScene" path="res://objects/world/kingdom_tilemap.tscn" id="18"]
 
@@ -95,42 +90,12 @@ theme_override_colors/font_color = Color(1, 0.956863, 0.839216, 0.86)
 theme_override_font_sizes/font_size = 8
 text = "RULER"
 
-[node name="PawnRecruitSpawn" parent="." instance=ExtResource("3")]
-enemy_scene = ExtResource("11")
-grid_cell = Vector2i(4, 1)
-definition = ExtResource("6")
+[node name="PawnRecruit" parent="." instance=ExtResource("11")]
+position = Vector2(208, 84)
 
-[node name="Preview" parent="PawnRecruitSpawn" instance=ExtResource("13")]
-
-[node name="EditorLabel" type="Label" parent="PawnRecruitSpawn/Preview"]
-position = Vector2(-24, 14)
-theme_override_colors/font_color = Color(1, 0.956863, 0.839216, 0.86)
-theme_override_font_sizes/font_size = 8
-text = "PAWN"
-
-[node name="ArmedPawnSpawn" parent="." instance=ExtResource("3")]
-enemy_scene = ExtResource("11")
-grid_cell = Vector2i(10, 1)
+[node name="ArmedPawn" parent="." instance=ExtResource("11")]
+position = Vector2(400, 84)
 definition = ExtResource("7")
 
-[node name="Preview" parent="ArmedPawnSpawn" instance=ExtResource("13")]
-
-[node name="EditorLabel" type="Label" parent="ArmedPawnSpawn/Preview"]
-position = Vector2(-32, 14)
-theme_override_colors/font_color = Color(1, 0.956863, 0.839216, 0.86)
-theme_override_font_sizes/font_size = 8
-text = "ARMED"
-
-[node name="KnightTrackerSpawn" parent="." instance=ExtResource("3")]
-enemy_kind = 1
-enemy_scene = ExtResource("12")
-grid_cell = Vector2i(13, 2)
-definition = ExtResource("8")
-
-[node name="Preview" parent="KnightTrackerSpawn" instance=ExtResource("14")]
-
-[node name="EditorLabel" type="Label" parent="KnightTrackerSpawn/Preview"]
-position = Vector2(-30, 14)
-theme_override_colors/font_color = Color(1, 0.956863, 0.839216, 0.86)
-theme_override_font_sizes/font_size = 8
-text = "KNIGHT"
+[node name="KnightTracker" parent="." instance=ExtResource("12")]
+position = Vector2(496, 116)

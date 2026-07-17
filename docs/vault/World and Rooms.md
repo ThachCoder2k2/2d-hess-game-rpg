@@ -20,8 +20,14 @@ move the node in the editor → it snaps to a cell and writes `grid_cell`. Subcl
 only their data + `_draw` gizmo:
 | Marker | File | Holds |
 |---|---|---|
-| EnemySpawnPoint | `enemy_spawn_point.gd` | `enemy_scene` PackedScene + `definition` |
 | PickupSpawnPoint | `pickup_spawn_point.gd` | `pickup_scene` + `weapon` |
+
+**Enemies are real scene children, not markers**: instance an enemy scene
+(`black_pawn.tscn`, `knight_enemy.tscn`, ...) in the room and park it on a cell —
+`RoomEncounter._setup_enemies` registers every `FreeEnemy` child at the cell
+containing its parked position, wires its signals, and activates it. Same rule as
+the hero: what you see in the editor is what fights. Override `definition` on an
+instance to vary it (the armed pawn is a `black_pawn.tscn` with `pawn_armed.tres`).
 
 **Walls are painted, not marked**: tiles with `solid = true` custom data (wall/throne/
 banner in the kingdom TileSet) auto-register as blocked cells at setup

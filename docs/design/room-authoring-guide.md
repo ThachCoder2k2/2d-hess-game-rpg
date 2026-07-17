@@ -15,7 +15,10 @@ You can also open `scenes/main.tscn`; `PawnHero` and `FirstEncounter` have edita
 These nodes are gameplay markers. Drag them on the grid; their `grid_cell` updates and the runtime uses that cell.
 
 - `PencilSpearPickup`, `RulerBladePickup`: weapon pickup cells.
-- `PawnRecruitSpawn`, `ArmedPawnSpawn`, `KnightTrackerSpawn`: enemy spawn cells.
+- `PawnRecruit`, `ArmedPawn`, `KnightTracker`: the real enemies — instances of their
+  actor scenes, parked where they fight. Drag one to move its start; instance any
+  enemy scene and park it on a cell to add one. Override `definition` on an
+  instance to vary it (the armed pawn is `black_pawn.tscn` + `pawn_armed.tres`).
 
 The markers snap to the 32px grid in editor.
 
