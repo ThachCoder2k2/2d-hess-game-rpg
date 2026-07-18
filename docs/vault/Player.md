@@ -4,6 +4,21 @@
 **Scene:** `objects/actors/player.tscn` (PawnHero + its own sprites/AnimationPlayer + Camera2D + two attack `.tres`)
 The white pawn you control.
 
+## The scene skeleton (mirrors [[Enemy Composition]])
+```
+PawnHero  (host: state, signals, facades, appearance)
+├─ PlayerInputComponent    keys → intents (step/turn/attack/skill)
+├─ PlayerCombatComponent   attack coroutine, cooldowns, skill timer
+├─ PlayerHealthComponent   courage, invulnerability, defeat
+├─ MotionRoot/SpriteRoot + AnimationPlayer
+└─ Camera2D (CameraRig)
+```
+State (courage, cooldowns, `control_enabled`) stays on PawnHero — HUD, appearance,
+and tests read one place; components own behavior and mutate host state through
+`configure(host)` injection (base: `PlayerComponent`). Facades (`try_attack`,
+`take_damage`, `can_start_attack`, `try_skill`) stay on PawnHero; combat/health are
+created on demand for bare-script instances (tests), input is scene-only.
+
 Back to [[Home]] · related: [[Movement]] · [[Combat and Telegraph]] · [[Data Resources]] · [[Presentation]]
 
 ## Input (in `_process`)

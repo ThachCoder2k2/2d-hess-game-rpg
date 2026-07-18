@@ -61,8 +61,14 @@ func _init() -> void:
 	var scene_hero := player_scene.instantiate() as PawnHero
 	root.add_child(scene_hero)
 	scene_hero._ensure_attack_profiles()
+	scene_hero._configure_components()
 	_expect(scene_hero.wooden_sword != null and scene_hero.wooden_sword.resource_path.ends_with("wooden_sword.tres"), "player scene owns Wooden Sword attack Resource")
 	_expect(scene_hero.pencil_thrust != null and scene_hero.pencil_thrust.resource_path.ends_with("pencil_thrust.tres"), "player scene owns Pencil Thrust attack Resource")
+	_expect(scene_hero.get_node_or_null("PlayerInputComponent") is PlayerInputComponent \
+		and scene_hero.get_node_or_null("PlayerCombatComponent") is PlayerCombatComponent \
+		and scene_hero.get_node_or_null("PlayerHealthComponent") is PlayerHealthComponent, "player scene owns input/combat/health components")
+	_expect(scene_hero.input_component.player == scene_hero and scene_hero.combat_component.player == scene_hero \
+		and scene_hero.health_component.player == scene_hero, "player components bind to the host")
 	_expect(_actor_is_sprite_animated(scene_hero), "player scene animates its own sprites (no visual wrapper)")
 	_expect(_actor_has_clip(scene_hero, &"step"), "player owns a walk/step animation clip")
 	var hero_source := FileAccess.get_file_as_string("res://scripts/actors/pawn_hero.gd")

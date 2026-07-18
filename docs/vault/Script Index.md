@@ -14,6 +14,10 @@ Every `.gd` file, one line each, linked to the concept note that explains it. Ba
 - `entities/enemy_actor.gd` — generic enemy host, delegates to components. → [[Enemy Composition]]
 
 ## components
+- `components/player_component.gd` — player component base (holds the host ref). → [[Player]]
+- `components/player_input_component.gd` — keys → step/turn/attack/skill intents. → [[Player]]
+- `components/player_combat_component.gd` — attack lifecycle + cooldowns. → [[Player]]
+- `components/player_health_component.gd` — courage, invulnerability, defeat. → [[Player]]
 - `components/enemy_component.gd` — component base (holds the host ref). → [[Enemy Composition]]
 - `components/grid_movement_component.gd` — steps/legal moves. → [[Movement]]
 - `components/health_component.gd` — damage + hurt/defeat feedback. → [[Enemy Composition]]
