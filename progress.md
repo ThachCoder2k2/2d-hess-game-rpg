@@ -384,3 +384,12 @@ Researched the AI-focused editor surface at the owner's request. Found `EnemyBra
 - `_get_configuration_warnings()` on PawnHero flags missing components in the editor, same as EnemyActor.
 - Gotcha rediscovered: `run_tests.gd` runs in `SceneTree._init`, before `_ready` — the scene hero's components exist but aren't configured yet, so the test calls `_configure_components()` manually (exactly like the enemy variant tests). The first failed assertion aborted the script before `quit()`, which presented as a suite hang, not a failure.
 - Verified: editor import registers the 4 new classes, `run_tests` 0 failures (incl. new composition + binding assertions), all 6 runtime tests PASS, `git diff --check` clean, real-renderer frame identical to pre-split.
+
+## ECS Conversion Phase A: Core + Movement Slice - 2026-07-19
+
+- Owner chose full ECS conversion (over hybrid/stay, costs explained: editor drag-authoring becomes spawn-data + puppet views). Design + phase plan in `docs/ecs-conversion-plan.md` — read it before touching `scripts/ecs/`.
+- Built the core: `EcsWorld` (entity ids, `store_by_component` stores, ordered system ticking, event queue, `manual_tick` for deterministic tests), `EcsComponents` (pure-data inner classes + store-key consts), `EcsSystem` base, `EcsGrid` (reserve→commit occupancy ported 1:1 from GridWorld for int entity ids — GridWorld's typed `actor: Node` params can't hold ids; phase D reconciles).
+- Systems: `MovementSystem` (MoveIntent → begin_move/finish_move, MoveState progress, step events), `PlayerInputSystem` (keys → intents, buffering + hold-repeat port), `ViewSyncSystem` (the ONLY node-touching system: quad-eased slide, row depth, step/idle clips).
+- `tests/ecs_runtime_test.gd`: 17 assertions green (registration, blocks, reservation protects destination mid-move, origin stays occupied while sliding, commit transfers occupancy, view lands on cell center + row depth, occupied-cell rejection, destroy frees cell).
+- Node game untouched and green (`run_tests` 0 failures, room test PASS) — per plan rule "never half-flip": `scenes/main.tscn` runs the node game until phase D lands whole.
+- Next: phase B (CombatSystem + HealthSystem + hero attacks), C (EnemyAISystem port), D (flip main.gd, strip actor scripts to views, port tests, amend CLAUDE/AGENTS editor-first doctrine).
