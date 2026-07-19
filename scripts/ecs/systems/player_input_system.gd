@@ -22,6 +22,13 @@ func tick(delta: float) -> void:
 		var input_state: EcsComponents.PlayerInput = world.get_component(entity_id, EcsComponents.PLAYER_INPUT)
 		var move: EcsComponents.MoveState = world.get_component(entity_id, EcsComponents.MOVE_STATE)
 
+		var attack_intent: EcsComponents.AttackIntent = world.get_component(entity_id, EcsComponents.ATTACK_INTENT)
+		if attack_intent != null:
+			if Input.is_action_just_pressed("attack"):
+				attack_intent.kind = &"sword"
+			elif Input.is_action_just_pressed("skill_1"):
+				attack_intent.kind = &"skill"
+
 		var pressed_direction := _just_pressed_direction()
 		if pressed_direction != Vector2i.ZERO:
 			if Input.is_action_pressed("turn_mode"):

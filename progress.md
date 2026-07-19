@@ -393,3 +393,12 @@ Researched the AI-focused editor surface at the owner's request. Found `EnemyBra
 - `tests/ecs_runtime_test.gd`: 17 assertions green (registration, blocks, reservation protects destination mid-move, origin stays occupied while sliding, commit transfers occupancy, view lands on cell center + row depth, occupied-cell rejection, destroy frees cell).
 - Node game untouched and green (`run_tests` 0 failures, room test PASS) — per plan rule "never half-flip": `scenes/main.tscn` runs the node game until phase D lands whole.
 - Next: phase B (CombatSystem + HealthSystem + hero attacks), C (EnemyAISystem port), D (flip main.gd, strip actor scripts to views, port tests, amend CLAUDE/AGENTS editor-first doctrine).
+
+## ECS Conversion Phase B: Combat + Health Slice - 2026-07-19
+
+- `CombatSystem`: the attack lifecycle as timers, no coroutines — consume `AttackIntent`, lock `pending_cells` at swing start, resolve damage at `impact_left` expiry, release after `recovery_left` (recovery − impact_delay, ported timing). Damage goes into `world.damage_events`; presentation facts (`attack_started`, `attack_landed`, `skill_cooldown`) into the event queue.
+- `HealthSystem`: sole consumer of `damage_events` — invulnerability window (player-tagged only), hurt/flash timers, defeat (player: control off; non-player: leaves grid, view despawn happens at the flip via the `defeated` event).
+- `PlayerInputSystem` now writes `AttackIntent` (&"sword"/&"skill").
+- Behavior bug caught by the test and fixed in the system: intents must be consumed every tick — an attack press during cooldown is swallowed like the node game, not banked for auto-fire after recovery.
+- `tests/ecs_combat_test.gd`: 12 assertions green (lock/impact/recovery, single application per swing, skill gate, invulnerability swallow + decay, defeat event + grid removal, and the dodge rule: stepping off a locked cell before impact avoids the hit).
+- Both ECS tests green; node game untouched.

@@ -8,9 +8,12 @@ extends Node
 var store_by_component: Dictionary = {}
 var next_entity_id := 1
 var systems: Array[EcsSystem] = []
-## Cross-system messages (step_blocked, step_finished, damage...). Systems and
-## the HUD/camera bridge consume them via drain_events after each tick.
+## Cross-system messages (step_blocked, step_finished, damaged...). The
+## HUD/camera bridge consumes them via drain_events after each tick.
 var pending_events: Array[Dictionary] = []
+## Damage requests ({target, amount, direction}) written by CombatSystem (and
+## later EnemyAISystem), consumed exclusively by HealthSystem the same tick.
+var damage_events: Array[Dictionary] = []
 var grid := EcsGrid.new()
 ## When true, _process stops ticking — tests drive tick(delta) by hand instead.
 var manual_tick := false
