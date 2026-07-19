@@ -14,6 +14,9 @@ const VIEW_REF := &"view_ref"
 const PLAYER_COMBAT := &"player_combat"
 const ATTACK_INTENT := &"attack_intent"
 const HEALTH := &"health"
+const ENEMY_AI := &"enemy_ai"
+const WEAPON_SLOT := &"weapon_slot"
+const PICKUP_ITEM := &"pickup_item"
 
 
 class GridPos:
@@ -80,3 +83,46 @@ class Health:
 	var invulnerable_left := 0.0
 	var flash_left := 0.0
 	var hurt_visual_time := 0.0
+	## Knockback offset for the view; set on hit, decayed by HealthSystem.
+	var recoil := Vector2.ZERO
+
+
+class EnemyAI:
+	const STATE_OBSERVE := 0
+	const STATE_TELEGRAPH := 1
+	const STATE_COMMIT := 2
+	const STATE_RECOVER := 3
+	const STATE_DEFEATED := 4
+
+	var state := STATE_OBSERVE
+	var state_time_left := 0.0
+	var observe_delay := 0.42
+	var move_recovery_time := 0.18
+	var unarmed_telegraph_time := 0.58
+	var unarmed_recovery_time := 0.48
+	## Duration of the running telegraph, for progress display.
+	var telegraph_duration := 0.0
+	var attack_pattern: AttackPattern
+	var decision_profile: DecisionConfig
+	var definition: EnemyDefinition
+	var allowed_directions: Array[Vector2i] = [Vector2i.UP, Vector2i.DOWN, Vector2i.LEFT, Vector2i.RIGHT]
+	var path_memory_size := 6
+	var goal_commitment_decisions := 2
+	var action_memory: Array[StringName] = []
+	var recent_cells: Array[Vector2i] = []
+	var last_move_direction := Vector2i.ZERO
+	var committed_goal := Vector2i(-999, -999)
+	var committed_goal_kind: StringName = &"none"
+	var committed_target_snapshot := Vector2i(-999, -999)
+	var goal_decisions_left := 0
+	## Cells locked when the telegraph starts; the strike resolves against
+	## these, which is what makes dodging possible.
+	var locked_attack_cells: Array[Vector2i] = []
+
+
+class WeaponSlot:
+	var weapon: EnemyWeapon
+
+
+class PickupItem:
+	var weapon: EnemyWeapon

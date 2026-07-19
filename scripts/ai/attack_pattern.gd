@@ -21,7 +21,8 @@ extends Resource
 @export var locks_facing := true
 
 
-func get_attack_cells(world: GridWorld, origin: Vector2i, facing: Vector2i) -> Array[Vector2i]:
+## `world` is duck-typed (GridWorld or EcsGrid) — only is_inside(cell) is used.
+func get_attack_cells(world, origin: Vector2i, facing: Vector2i) -> Array[Vector2i]:
 	var cells: Array[Vector2i] = []
 	for offset in cell_offsets:
 		var cell: Vector2i

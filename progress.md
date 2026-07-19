@@ -402,3 +402,12 @@ Researched the AI-focused editor surface at the owner's request. Found `EnemyBra
 - Behavior bug caught by the test and fixed in the system: intents must be consumed every tick — an attack press during cooldown is swallowed like the node game, not banked for auto-fire after recovery.
 - `tests/ecs_combat_test.gd`: 12 assertions green (lock/impact/recovery, single application per swing, skill gate, invulnerability swallow + decay, defeat event + grid removal, and the dodge rule: stepping off a locked cell before impact avoids the hit).
 - Both ECS tests green; node game untouched.
+
+## ECS Conversion Phase C: Enemy AI Slice - 2026-07-19
+
+- `EnemyAISystem`: the FreeEnemy brain as a system — observe→decide→telegraph→commit→recover with the intent scoring ported verbatim (path-distance pursuit, goal commitment, flank/axis bonuses, repetition penalty, turn scoring). `EnemyIntent` (RefCounted) reused unchanged; `EnemyContext` logic inlined (its typed `FreeEnemy` param can't take entity ids). Attack token = `world.attack_token_owner` (EncounterDirector port); HealthSystem releases it on the holder's death.
+- `EcsGrid` gained the pathing + item registry: A* (`get_grid_path`/`get_path_distance`/`get_next_path_cell`, other movers + reservations solid unless goal), `is_plannable_cell`, `get_destinations`, `item_by_cell` with register/take.
+- `EcsActorFactory`: entities from the same `.tres` as the node game — `spawn_enemy` ports `_apply_definition` (movement timing, decision observe delay, unarmed pattern timings, difficulty multipliers, default weapon duplicate), plus `spawn_player`/`spawn_pickup`.
+- `AttackPattern.get_attack_cells` world param is now duck-typed (only `is_inside` used) so both GridWorld and EcsGrid work; node callers unaffected (suite verified).
+- `tests/ecs_enemy_test.gd`: 16 assertions green — definition-driven stats, pattern diagonals, pursuit closes path distance 8→3, telegraph locks cells + takes token, dodge by stepping off locked cells, dodged strike still releases token, held token blocks telegraphs, local pickup equips + leaves grid, lethal damage defeats + frees cell + releases token.
+- All 3 ECS tests + full node suite green. Next: phase D — the flip (main.gd boots EcsWorld from scene data, actor scenes become pure views, HUD/camera bridge consumes events, port remaining tests, amend CLAUDE/AGENTS doctrine).

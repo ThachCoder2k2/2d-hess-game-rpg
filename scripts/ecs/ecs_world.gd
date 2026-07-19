@@ -15,6 +15,10 @@ var pending_events: Array[Dictionary] = []
 ## later EnemyAISystem), consumed exclusively by HealthSystem the same tick.
 var damage_events: Array[Dictionary] = []
 var grid := EcsGrid.new()
+## The one attack token (EncounterDirector port): only the holder may
+## telegraph/strike. 0 = free. EnemyAISystem takes it; HealthSystem frees it
+## when the holder dies.
+var attack_token_owner := 0
 ## When true, _process stops ticking — tests drive tick(delta) by hand instead.
 var manual_tick := false
 
