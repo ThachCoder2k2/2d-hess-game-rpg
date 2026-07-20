@@ -1,4 +1,4 @@
-[gd_scene load_steps=16 format=3]
+[gd_scene load_steps=28 format=3]
 
 [ext_resource type="Script" path="res://scripts/ecs/actor_view.gd" id="1"]
 [ext_resource type="Resource" path="res://resources/enemies/pawn_recruit.tres" id="2"]
@@ -165,6 +165,57 @@ _data = {
 &"telegraph": SubResource("Animation_telegraph")
 }
 
+[sub_resource type="AnimationNodeAnimation" id="State_idle"]
+animation = &"idle"
+
+[sub_resource type="AnimationNodeAnimation" id="State_step"]
+animation = &"step"
+
+[sub_resource type="AnimationNodeAnimation" id="State_hurt"]
+animation = &"hurt"
+
+[sub_resource type="AnimationNodeAnimation" id="State_telegraph"]
+animation = &"telegraph"
+
+[sub_resource type="AnimationNodeAnimation" id="State_attack"]
+animation = &"attack"
+
+[sub_resource type="AnimationNodeStateMachineTransition" id="T_start"]
+advance_mode = 2
+
+[sub_resource type="AnimationNodeStateMachineTransition" id="T_to_step"]
+advance_mode = 2
+advance_condition = &"moving"
+
+[sub_resource type="AnimationNodeStateMachineTransition" id="T_to_idle"]
+advance_mode = 2
+advance_condition = &"not_moving"
+
+[sub_resource type="AnimationNodeStateMachineTransition" id="T_travel"]
+advance_mode = 1
+
+[sub_resource type="AnimationNodeStateMachineTransition" id="T_recover"]
+switch_mode = 2
+advance_mode = 2
+
+[sub_resource type="AnimationNodeStateMachineTransition" id="T_telegraph_out"]
+advance_mode = 2
+advance_condition = &"not_telegraphing"
+xfade_time = 0.06
+
+[sub_resource type="AnimationNodeStateMachine" id="StateMachine_actor"]
+states/attack/node = SubResource("State_attack")
+states/attack/position = Vector2(660, 340)
+states/hurt/node = SubResource("State_hurt")
+states/hurt/position = Vector2(480, 100)
+states/idle/node = SubResource("State_idle")
+states/idle/position = Vector2(320, 220)
+states/step/node = SubResource("State_step")
+states/step/position = Vector2(540, 220)
+states/telegraph/node = SubResource("State_telegraph")
+states/telegraph/position = Vector2(320, 380)
+transitions = ["Start", "idle", SubResource("T_start"), "idle", "step", SubResource("T_to_step"), "step", "idle", SubResource("T_to_idle"), "idle", "hurt", SubResource("T_travel"), "step", "hurt", SubResource("T_travel"), "telegraph", "hurt", SubResource("T_travel"), "hurt", "idle", SubResource("T_recover"), "idle", "telegraph", SubResource("T_travel"), "step", "telegraph", SubResource("T_travel"), "telegraph", "idle", SubResource("T_telegraph_out"), "idle", "attack", SubResource("T_travel"), "attack", "idle", SubResource("T_recover")]
+
 [node name="BlackPawn" type="Node2D"]
 z_index = 2
 script = ExtResource("1")
@@ -222,3 +273,8 @@ texture = ExtResource("7")
 libraries = {
 &"": SubResource("AnimationLibrary_pawn")
 }
+
+[node name="AnimationTree" type="AnimationTree" parent="."]
+tree_root = SubResource("StateMachine_actor")
+anim_player = NodePath("../AnimationPlayer")
+active = true

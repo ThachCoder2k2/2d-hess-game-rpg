@@ -446,3 +446,12 @@ Researched the AI-focused editor surface at the owner's request. Found `EnemyBra
 - Owner: "only health component?" — completed the set. `player.tscn` now carries HealthComponent + CombatComponent + MovementComponent + InputComponent nodes; the attack profiles moved OFF the ActorView root exports onto the CombatComponent node (single source — `ActorView` keeps only `definition` + appearance knobs), and step duration / held-repeat delay went from hardcoded factory defaults to Inspector fields.
 - New component nodes: `CombatComponent` (wooden_sword/pencil_thrust .tres + skill cooldown → PlayerCombat), `MovementComponent` (step_duration → MoveState), `InputComponent` (held_repeat_delay → PlayerInput; no-op on enemies). Enemies unchanged — their equivalents live in the definition .tres (no duplication).
 - `EcsBoot` spawns the player bare and lets the component nodes supply the kit. Suite assertions updated (CombatComponent carries the loadout; movement/input nodes present). All 6 suites green + render clean.
+
+## Animation State Graphs on AnimationTree - 2026-07-19
+
+- Owner picked node control for animation. Each actor scene now owns an `AnimationTree` (active, StateMachine root, driving the sibling AnimationPlayer): states idle/step/hurt/attack (+telegraph on enemies), with transitions, xfades, and at_end recovery authored in the editor graph — per our own rule, the hand-written clip picker yielded to the built-in node.
+- Split of duties: locomotion (idle↔step) flows through the graph's auto conditions (`moving`/`not_moving`); one-shots (hurt/attack/telegraph) enter via `travel()` on state edges because a state machine cannot express "from any state" entries; telegraph exits via the `not_telegraphing` condition with a 0.06s xfade; hurt/attack return to idle via at_end transitions — recovery timing is editor-tunable now.
+- `ViewSyncSystem` no longer picks clips: it publishes condition facts + fires travel on edges (`_drive_clips`). Views without a tree fall back to the old direct `play()` path, so bare test views keep working.
+- The gameplay slide (cell-to-cell lerp from MoveState) stays procedural — unchanged, per the MotionRoot/SpriteRoot contract.
+- New suite helper `_actor_has_state_graph`: all 5 actor scenes assert an active AnimationTree with a StateMachine root.
+- Verified: import clean, all 6 suites green, whitespace clean, real-render capture shows tree-driven hops/pursuit/pips/weapons live.

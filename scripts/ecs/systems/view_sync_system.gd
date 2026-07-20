@@ -78,17 +78,42 @@ func _sync_appearance(entity_id: int, view: EcsComponents.ViewRef, appearance: A
 	_sync_weapon(entity_id, appearance, combat, facing_direction, attacking)
 	_sync_health_pips(appearance, health)
 
-	if hurt and not view.was_hurt:
-		_play_clip(appearance, &"hurt")
-	elif attacking and not view.was_attacking:
-		_play_clip(appearance, &"attack")
-	elif telegraphing and not view.was_telegraphing:
-		_play_clip(appearance, &"telegraph")
-	elif not hurt and not attacking and not telegraphing:
-		_play_clip(appearance, &"step" if moving else &"idle")
+	_drive_clips(view, appearance, moving, hurt, attacking, telegraphing)
 	view.was_hurt = hurt
 	view.was_attacking = attacking
 	view.was_telegraphing = telegraphing
+
+
+## The animation state graph lives on each actor's AnimationTree (editor-owned:
+## states, transitions, xfades, at_end recovery). This system only publishes
+## facts: locomotion flows through the graph's auto conditions; one-shots
+## (hurt/attack/telegraph) enter via travel() on state edges, because a state
+## machine cannot express "from any state" entries. Views without a tree fall
+## back to direct AnimationPlayer play() so bare test views keep working.
+func _drive_clips(view: EcsComponents.ViewRef, appearance: ActorView, moving: bool, hurt: bool, attacking: bool, telegraphing: bool) -> void:
+	var tree := appearance.get_node_or_null("AnimationTree") as AnimationTree
+	if tree == null:
+		if hurt and not view.was_hurt:
+			_play_clip(appearance, &"hurt")
+		elif attacking and not view.was_attacking:
+			_play_clip(appearance, &"attack")
+		elif telegraphing and not view.was_telegraphing:
+			_play_clip(appearance, &"telegraph")
+		elif not hurt and not attacking and not telegraphing:
+			_play_clip(appearance, &"step" if moving else &"idle")
+		return
+	tree.set("parameters/conditions/moving", moving)
+	tree.set("parameters/conditions/not_moving", not moving)
+	tree.set("parameters/conditions/not_telegraphing", not telegraphing)
+	var playback: AnimationNodeStateMachinePlayback = tree.get("parameters/playback")
+	if playback == null:
+		return
+	if hurt and not view.was_hurt:
+		playback.travel(&"hurt")
+	elif attacking and not view.was_attacking:
+		playback.travel(&"attack")
+	elif telegraphing and not view.was_telegraphing:
+		playback.travel(&"telegraph")
 
 
 func _sync_weapon(entity_id: int, appearance: ActorView, combat: EcsComponents.PlayerCombat, facing_direction: Vector2i, attacking: bool) -> void:

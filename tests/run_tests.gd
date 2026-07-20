@@ -30,6 +30,15 @@ func _actor_has_clip(actor: Node, clip: StringName) -> bool:
 	return player != null and player.has_animation(clip)
 
 
+## The editor-owned animation state graph: an active AnimationTree whose state
+## machine drives the sibling AnimationPlayer.
+func _actor_has_state_graph(actor: Node) -> bool:
+	if actor == null:
+		return false
+	var tree := actor.get_node_or_null("AnimationTree") as AnimationTree
+	return tree != null and tree.active and tree.tree_root is AnimationNodeStateMachine
+
+
 func _view(scene_path: String) -> ActorView:
 	var view := (load(scene_path) as PackedScene).instantiate() as ActorView
 	root.add_child(view)
@@ -72,6 +81,7 @@ func _init() -> void:
 		and hero_combat_node.pencil_thrust != null, "CombatComponent node carries the attack loadout")
 	_expect(hero_view.get_node_or_null("MovementComponent") is MovementComponent \
 		and hero_view.get_node_or_null("InputComponent") is InputComponent, "player view carries movement and input component nodes")
+	_expect(_actor_has_state_graph(hero_view), "player animation transitions live in an editor AnimationTree graph")
 	var view_source := FileAccess.get_file_as_string("res://scripts/ecs/actor_view.gd")
 	_expect(not view_source.contains("func _draw") and not view_source.contains("func _process"), "actor views hold no logic at all")
 
@@ -89,6 +99,7 @@ func _init() -> void:
 		_expect(enemy_view.definition.id == expected_definitions[scene_path], "%s carries its own EnemyDefinition" % scene_name)
 		_expect(enemy_view.definition.validate().is_empty(), "%s definition has no missing configuration" % scene_name)
 		_expect(_actor_is_sprite_animated(enemy_view) and _actor_has_clip(enemy_view, &"telegraph"), "%s owns sprites + telegraph clip" % scene_name)
+		_expect(_actor_has_state_graph(enemy_view), "%s animation transitions live in an editor AnimationTree graph" % scene_name)
 
 	# --- Editor-authored combat data (the .tres stays the truth) ---
 	var pawn_definition := load("res://resources/enemies/pawn_recruit.tres") as EnemyDefinition
