@@ -59,7 +59,7 @@ func _choose_action(entity_id: int, ai: EcsComponents.EnemyAI, hero_id: int) -> 
 	for candidate in intents:
 		if candidate.score > best.score:
 			best = candidate
-	world.emit_event({"type": &"intent_changed", "entity": entity_id, "action": best.action_id, "score": best.score})
+	world.emit_event({"type": &"intent_changed", "entity": entity_id, "intent": best})
 	_execute_intent(entity_id, ai, best)
 
 
@@ -277,6 +277,7 @@ func _collect_local_item(entity_id: int) -> void:
 	slot.weapon = pickup.weapon
 	world.grid.take_item(grid_pos.cell)
 	world.destroy_entity(item_id)
+	world.emit_event({"type": &"pickup_taken", "item": item_id, "cell": grid_pos.cell})
 	world.emit_event({"type": &"weapon_changed", "entity": entity_id, "weapon": slot.weapon})
 
 

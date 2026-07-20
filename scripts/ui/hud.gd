@@ -23,7 +23,7 @@ func setup(initial_courage: int) -> void:
 	set_courage(initial_courage)
 	set_skill_cooldown(0.0, 1.0)
 	set_encounter_count(0, 0)
-	set_token_owner(null)
+	set_token_owner("")
 	set_status("")
 	if damage_flash != null:
 		damage_flash.visible = false
@@ -53,13 +53,14 @@ func set_skill_cooldown(time_left: float, cooldown_duration: float) -> void:
 	skill_fill.color = Color("#8ec8e8", 0.9) if time_left <= 0.0 else Color("#e8b83f", 0.82)
 
 
-func set_token_owner(token_owner: Node) -> void:
+## Empty name = the token is free (any enemy may strike next).
+func set_token_owner(owner_piece_name := "") -> void:
 	if token_label == null:
 		return
-	if token_owner == null:
+	if owner_piece_name.is_empty():
 		token_label.text = "ENEMY STRIKE READY"
 	else:
-		token_label.text = "STRIKE: " + _enemy_piece_name(token_owner).to_upper()
+		token_label.text = "STRIKE: " + owner_piece_name.to_upper()
 
 
 func set_encounter_count(remaining: int, total: int) -> void:
@@ -98,9 +99,3 @@ func show_result(title: String, subtitle: String) -> void:
 		return
 	result_label.text = title + "\n" + subtitle
 	result_label.visible = true
-
-
-func _enemy_piece_name(enemy: Node) -> String:
-	if enemy != null and enemy.has_method("get_piece_display_name"):
-		return String(enemy.call("get_piece_display_name"))
-	return "Enemy"

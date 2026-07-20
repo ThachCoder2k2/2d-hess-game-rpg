@@ -2,8 +2,9 @@ class_name PrototypeBoard
 extends Node2D
 
 ## Runtime combat overlay only: telegraph danger cells, hit flashes, and the F3
-## debug view. The board floor is the room's TileMap; blockers preview via their
-## own markers. This node draws nothing in the editor.
+## debug view. Reads the EcsGrid (board geometry/occupancy) and the EcsWorld
+## (telegraph progress, intent paths); telegraphs and intents are keyed by
+## entity id. This node draws nothing in the editor.
 
 @export_group("Impact Theme")
 @export var player_miss_color := Color("#d84a3a")
@@ -28,18 +29,25 @@ extends Node2D
 @export var debug_turn_path_color := Color("#ffd34e")
 @export var debug_wait_path_color := Color("#aeb5bd")
 
-var grid_world: GridWorld
+## The board geometry/occupancy service (EcsGrid).
+var grid_world
+## The running world, for telegraph progress + intent path lookups. Optional —
+## without it telegraphs draw at zero progress and intent paths are skipped.
+var ecs: EcsWorld
+## entity id -> locked cells while that entity telegraphs.
 var telegraphs: Dictionary = {}
 var impact_cells: Array[Vector2i] = []
 var impact_time := 0.0
 var impact_color := Color("#fff2a8")
 var debug_enabled := true
+## entity id -> the EnemyIntent it chose last (F3 path drawing).
 var enemy_intents: Dictionary = {}
 var effect_time := 0.0
 
 
-func setup(world: GridWorld) -> void:
+func setup(world, ecs_world: EcsWorld = null) -> void:
 	grid_world = world
+	ecs = ecs_world
 	queue_redraw()
 
 
@@ -57,13 +65,13 @@ func show_enemy_attack(cells: Array[Vector2i]) -> void:
 	queue_redraw()
 
 
-func set_telegraph(source: Node, cells: Array[Vector2i]) -> void:
-	telegraphs[source] = cells
+func set_telegraph(source_entity: int, cells: Array[Vector2i]) -> void:
+	telegraphs[source_entity] = cells
 	queue_redraw()
 
 
-func clear_telegraph(source: Node) -> void:
-	telegraphs.erase(source)
+func clear_telegraph(source_entity: int) -> void:
+	telegraphs.erase(source_entity)
 	queue_redraw()
 
 
@@ -72,13 +80,13 @@ func set_debug_enabled(value: bool) -> void:
 	queue_redraw()
 
 
-func set_enemy_intent(enemy: FreeEnemy, intent: EnemyIntent) -> void:
-	enemy_intents[enemy] = intent
+func set_enemy_intent(source_entity: int, intent: EnemyIntent) -> void:
+	enemy_intents[source_entity] = intent
 	queue_redraw()
 
 
-func clear_enemy_debug(enemy: FreeEnemy) -> void:
-	enemy_intents.erase(enemy)
+func clear_enemy_debug(source_entity: int) -> void:
+	enemy_intents.erase(source_entity)
 	queue_redraw()
 
 
@@ -93,19 +101,24 @@ func _process(delta: float) -> void:
 		queue_redraw()
 
 
+func _telegraph_progress(source_entity: int) -> float:
+	if ecs == null:
+		return 0.0
+	var ai: EcsComponents.EnemyAI = ecs.get_component(source_entity, EcsComponents.ENEMY_AI)
+	if ai == null or ai.state != EcsComponents.EnemyAI.STATE_TELEGRAPH:
+		return 0.0
+	return clampf(1.0 - ai.state_time_left / maxf(ai.telegraph_duration, 0.001), 0.0, 1.0)
+
+
 func _draw() -> void:
 	if grid_world == null:
 		return
-	var origin := grid_world.grid_origin
-	var size := grid_world.cell_size
+	var origin: Vector2 = grid_world.grid_origin
+	var size: int = grid_world.cell_size
 
-	for source in telegraphs:
-		if not is_instance_valid(source):
-			continue
-		var progress := 0.0
-		if source.has_method("get_telegraph_progress"):
-			progress = source.get_telegraph_progress()
-		for cell: Vector2i in telegraphs[source]:
+	for source_entity in telegraphs:
+		var progress := _telegraph_progress(source_entity)
+		for cell: Vector2i in telegraphs[source_entity]:
 			if grid_world.is_inside(cell):
 				_draw_danger_cell(origin, size, cell, progress)
 
@@ -149,14 +162,16 @@ func _draw_debug_layer(origin: Vector2, size: int) -> void:
 	for cell in grid_world.get_item_cells():
 		_draw_debug_cell(cell, Color(debug_item_color, 0.95), 2.0)
 
+	if ecs == null:
+		return
 	var stale: Array = []
-	for enemy in enemy_intents.keys():
-		if not is_instance_valid(enemy) or not enemy is FreeEnemy:
-			stale.append(enemy)
+	for source_entity in enemy_intents.keys():
+		if not ecs.has_component(source_entity, EcsComponents.ENEMY_AI):
+			stale.append(source_entity)
 			continue
-		_draw_intent_path(enemy, enemy_intents[enemy])
-	for enemy in stale:
-		enemy_intents.erase(enemy)
+		_draw_intent_path(source_entity, enemy_intents[source_entity])
+	for source_entity in stale:
+		enemy_intents.erase(source_entity)
 
 
 func _draw_debug_cell(cell: Vector2i, color: Color, width: float) -> void:
@@ -169,17 +184,22 @@ func _draw_debug_cell(cell: Vector2i, color: Color, width: float) -> void:
 	draw_rect(rect, color, false, width)
 
 
-func _draw_intent_path(enemy: FreeEnemy, intent: EnemyIntent) -> void:
-	var start := enemy.position
+func _draw_intent_path(source_entity: int, intent: EnemyIntent) -> void:
+	var grid_pos: EcsComponents.GridPos = ecs.get_component(source_entity, EcsComponents.GRID_POS)
+	var ai: EcsComponents.EnemyAI = ecs.get_component(source_entity, EcsComponents.ENEMY_AI)
+	if grid_pos == null or ai == null:
+		return
+	var current_cell := grid_pos.cell
+	var start: Vector2 = grid_world.cell_to_world(current_cell)
 	var color := _intent_color(intent.type)
 	if intent.type == EnemyIntent.Type.MOVE:
-		var goal := enemy.committed_goal if grid_world.is_inside(enemy.committed_goal) else intent.destination
-		var route := grid_world.get_grid_path(enemy, enemy.current_cell, goal)
+		var goal: Vector2i = ai.committed_goal if grid_world.is_inside(ai.committed_goal) else intent.destination
+		var route: Array[Vector2i] = grid_world.get_grid_path(source_entity, current_cell, goal)
 		var segment_start := start
 		if route.size() <= 1:
-			route = [enemy.current_cell, intent.destination]
+			route = [current_cell, intent.destination]
 		for index in range(1, route.size()):
-			var segment_end := grid_world.cell_to_world(route[index])
+			var segment_end: Vector2 = grid_world.cell_to_world(route[index])
 			draw_dashed_line(segment_start, segment_end, color, 2.0, 6.0)
 			draw_circle(segment_end, 3.0, color)
 			segment_start = segment_end
@@ -189,15 +209,14 @@ func _draw_intent_path(enemy: FreeEnemy, intent: EnemyIntent) -> void:
 		EnemyIntent.Type.ATTACK:
 			targets = intent.target_cells
 		EnemyIntent.Type.TURN:
-			var turn_target := enemy.current_cell + intent.direction
-			targets = [turn_target]
+			targets = [current_cell + intent.direction]
 		_:
-			targets = [enemy.current_cell]
+			targets = [current_cell]
 
 	for target_cell in targets:
 		if not grid_world.is_inside(target_cell):
 			continue
-		var finish := grid_world.cell_to_world(target_cell)
+		var finish: Vector2 = grid_world.cell_to_world(target_cell)
 		draw_dashed_line(start, finish, color, 2.0, 6.0)
 		draw_circle(finish, 4.0, color)
 

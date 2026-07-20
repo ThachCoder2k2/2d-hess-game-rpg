@@ -11,8 +11,11 @@ session. Read `AGENTS.md` for the full workflow, and `docs/ARCHITECTURE.md` +
 4. `git status --short` — never clobber the human's in-progress editor changes.
 
 ## Non-negotiable rules
-- **Editor-first.** Code is reusable behavior; content is scenes + `.tres`. To add a
-  new enemy/weapon/attack/room, edit data — do not hardcode content in scripts.
+- **Editor-first, ECS runtime.** The simulation is full ECS (`scripts/ecs/` —
+  read `docs/ecs-conversion-plan.md` first). Scenes are spawn data + puppet
+  views (parked ActorViews become entities at boot); tuning lives in `.tres`.
+  To add a new enemy/weapon/attack/room, edit data — never hardcode content in
+  scripts, never put logic in views/components (systems own all decisions).
 - **Research before building any new mechanic.** Mandatory order:
   1. Search Godot's built-in nodes/engine features for the capability
 	 (Timer, Tween, AnimationPlayer, Area2D signals, TileMapLayer, AStarGrid2D,
@@ -54,8 +57,7 @@ session. Read `AGENTS.md` for the full workflow, and `docs/ARCHITECTURE.md` +
 ```bash
 G="../Godot.app/Contents/MacOS/Godot"
 HOME=/tmp/unbound-pawn-godot "$G" --headless --path . -s tests/run_tests.gd
-for t in attack_runtime component_movement_runtime component_equipment_runtime \
-		 component_knight_movement_runtime room_encounter_runtime encounter_hud_runtime; do
+for t in ecs_runtime ecs_combat ecs_enemy room_encounter_runtime encounter_hud_runtime; do
   HOME=/tmp/unbound-pawn-godot "$G" --headless --path . -s tests/${t}_test.gd
 done
 HOME=/tmp/unbound-pawn-godot "$G" --headless --path . --editor --quit   # import clean

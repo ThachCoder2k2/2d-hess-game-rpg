@@ -219,3 +219,10 @@
 - Actor presentation lives on the actor: Sprite2D children + a sibling `AnimationPlayer`, driven by typed `@onready` refs in the actor script. Wrapper "Visual" scenes synced by polling (`visual.call("sync_from_x", self)`) trade typed access for indirection and hide the sprite tree from the scene dock — flattened away for player + enemies (phase 70). Pickups still use a small `Visual` child; that's fine at their complexity.
 - Keep two transform layers when code and animations both move sprites: procedural offsets on `MotionRoot`, animation tracks on `SpriteRoot`. One node for both = the tween/AnimationPlayer overwrite each other.
 - Sprite choices belong to data: `EnemyWeapon.texture` / `AttackProfile.texture` in the `.tres` beat id/name string lookups in code — a new weapon needs zero script changes to look right.
+
+## ECS Doctrine (post-flip)
+
+- The runtime is entities (ids) + component data + systems; the ONLY node-touching system is ViewSyncSystem. If a change needs a new decision, it goes in a system; new state goes in a component class (pure data); new content goes in `.tres` + a view scene. `docs/ecs-conversion-plan.md` is the map.
+- Scenes remain the authoring surface: parked ActorViews are spawn markers + puppets, so drag-to-place, Inspector overrides (the armed pawn = black_pawn view + pawn_armed.tres), and painted solid walls all survived the conversion intact.
+- Presentation bridges consume the event queue, never poke the simulation; the simulation never calls presentation. Events carry everything the bridge needs (the intent_changed event carries the whole EnemyIntent so F3 debug works without the board reading AI internals).
+- SceneTree-script tests: `_ready` does not run during `_init` — full-scene boots need `call_deferred` + `await process_frame` (re-learned twice now; it presents as Nil lookups or a hang when a failed assert skips `quit()`).

@@ -1,14 +1,10 @@
-[gd_resource type="Resource" script_class="AttackProfile" load_steps=3 format=3]
+[gd_resource type="Resource" script_class="AttackProfile" format=3 uid="uid://byvw26cd7u12f"]
 
-[ext_resource type="Script" path="res://scripts/combat/attack_profile.gd" id="1"]
-[ext_resource type="Texture2D" path="res://assets/sprites/generated/toy_sword.png" id="2"]
+[ext_resource type="Script" uid="uid://kp0wge5nj2h5" path="res://scripts/combat/attack_profile.gd" id="1"]
+[ext_resource type="Texture2D" uid="uid://6hr88wvg8w12" path="res://assets/sprites/generated/toy_sword.png" id="2"]
 
 [resource]
 script = ExtResource("1")
 display_name = "Wooden Sword"
-range_cells = 1
-damage = 1
-impact_delay = 0.07
-recovery = 0.3
 color = Color(1, 0.94902, 0.658824, 1)
 texture = ExtResource("2")

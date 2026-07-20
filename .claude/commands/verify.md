@@ -12,10 +12,9 @@ Run these and report a concise pass/fail table:
    — expect `TESTS COMPLETE: 0 failure(s)`.
 
 2. Each runtime test (expect `PASS`):
-   `tests/attack_runtime_test.gd`, `tests/component_movement_runtime_test.gd`,
-   `tests/component_equipment_runtime_test.gd`,
-   `tests/component_knight_movement_runtime_test.gd`,
-   `tests/room_encounter_runtime_test.gd`, `tests/encounter_hud_runtime_test.gd`
+   `tests/ecs_runtime_test.gd`, `tests/ecs_combat_test.gd`,
+   `tests/ecs_enemy_test.gd`, `tests/room_encounter_runtime_test.gd`,
+   `tests/encounter_hud_runtime_test.gd`
    — same invocation with `-s tests/<name>.gd`.
 
 3. Editor import clean:

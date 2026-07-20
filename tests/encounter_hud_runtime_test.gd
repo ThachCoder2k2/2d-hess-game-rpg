@@ -1,63 +1,64 @@
 extends SceneTree
 
+## Full main-scene boot: main.gd builds the EcsWorld from the authored scene,
+## binds HUD/board/camera, and the bridge answers events. Drives main._process
+## by hand (headless _init has no frame loop).
+
+var failures := 0
+
+
+func _expect(condition: bool, label: String) -> void:
+	if condition:
+		print("PASS: %s" % label)
+	else:
+		failures += 1
+		printerr("FAIL: %s" % label)
+
 
 func _init() -> void:
 	call_deferred("_run")
 
 
+## _ready only fires once the tree loop starts, so boot checks wait one frame.
 func _run() -> void:
-	var main_scene := load("res://scenes/main.tscn") as PackedScene
-	var game: Node = main_scene.instantiate()
-	root.add_child(game)
+	var main := (load("res://scenes/main.tscn") as PackedScene).instantiate()
+	root.add_child(main)
 	await process_frame
-	var director := game.get("director") as EncounterDirector
-	director.set_paused(true)
-	var room := game.get_node_or_null("FirstEncounter")
-	var hero := game.get("hero") as PawnHero
-	var world := game.get("grid_world") as GridWorld
-	var hud := game.get("hud") as Node
-	var encounter_label := hud.get_node_or_null("EncounterLabel") as Label
-	var skill_fill := hud.get_node_or_null("SkillFill") as ColorRect
-	var damage_flash := hud.get_node_or_null("DamageFlash") as ColorRect
-	var result_label := hud.get_node_or_null("ResultLabel") as Label
-	var editor_binding_ok: bool = (
-		game.get("grid_world") == game.get_node_or_null("GridWorld")
-		and game.get("director") == game.get_node_or_null("EncounterDirector")
-		and game.get("board") == game.get_node_or_null("PrototypeBoard")
-		and game.get("hero") == game.get_node_or_null("PawnHero")
-		and game.get("hud") == game.get_node_or_null("HUD")
-	)
-	var initial_ok: bool = (
-		editor_binding_ok
-		and game.get_node_or_null("FirstEncounter") != null
-		and hero != null
-		and world != null
-		and hero.current_cell == world.world_to_cell(hero.position)
-		and world.is_inside(hero.current_cell)
-		and game.get("remaining_enemies") == 3
-		and game.get("total_enemies") == 3
-		and encounter_label != null
-		and encounter_label.text == "ENEMIES 3/3"
-		and skill_fill != null
-		and is_equal_approx(skill_fill.size.x, 92.0)
-		and damage_flash != null
-		and not damage_flash.visible
-		and result_label != null
-		and not result_label.visible
-	)
-	game.call("_on_hero_damaged", 1, 2)
-	var hero_camera := hero.get_node_or_null("Camera2D")
-	var damage_feedback_ok: bool = damage_flash.visible and hero_camera != null and hero_camera.get("shake_time_left") > 0.0
-	var enemies: Array = game.get("enemies")
-	var first_enemy := enemies[0] as FreeEnemy
-	game.call("_on_enemy_defeated", first_enemy)
-	var defeat_update_ok: bool = (
-		game.get("remaining_enemies") == 2
-		and encounter_label.text == "ENEMIES 2/3"
-		and not result_label.visible
-	)
-	var succeeded := initial_ok and damage_feedback_ok and defeat_update_ok
-	game.free()
-	await process_frame
-	print("ENCOUNTER HUD TEST: %s" % ["PASS" if succeeded else "FAIL"])
+
+	var ecs: EcsWorld = main.get("ecs")
+	_expect(ecs != null and ecs.systems.size() == 6, "main boots the world with all six systems")
+	var player_id := int(main.get("player_id"))
+	_expect(player_id != 0, "main spawns the player entity")
+	var player_pos: EcsComponents.GridPos = ecs.get_component(player_id, EcsComponents.GRID_POS)
+	_expect(player_pos != null and player_pos.cell == _parked_cell(ecs, main), "player entity stands on the parked view's cell")
+	_expect(int(main.get("total_enemies")) == 3, "main counts the room's three enemies")
+
+	var hud := main.get("hud") as GameHud
+	_expect(hud != null and hud.courage_label.text.begins_with("COURAGE"), "HUD binds and shows courage")
+	_expect(String(hud.objective_label.text).begins_with("First clash"), "HUD shows the room's start message")
+
+	var board := main.get("board") as PrototypeBoard
+	_expect(board != null and board.grid_world == ecs.grid and board.ecs == ecs, "board overlay reads the ECS world")
+
+	var camera := main.get("camera_rig") as CameraRig
+	_expect(camera != null and camera.grid_world == ecs.grid, "camera rig clamps to the ECS board")
+
+	for _i in range(10):
+		main._process(0.016)
+	_expect(String(hud.status_label.text).begins_with("CELL"), "bridge feeds the cell status line each frame")
+
+	var enemies: Array = main.get("cast")["enemies"]
+	ecs.damage_events.append({"target": int(enemies[0]), "amount": 99, "direction": Vector2i.LEFT})
+	main._process(0.016)
+	main._process(0.016)
+	_expect(int(main.get("remaining_enemies")) == 2, "a defeat event updates the encounter count")
+	_expect(hud.encounter_label.text == "ENEMIES 2/3", "HUD shows the updated enemy count")
+
+	var succeeded := failures == 0
+	print("ENCOUNTER HUD TEST: %s" % ["PASS" if succeeded else "FAIL (%d)" % failures])
 	quit(0 if succeeded else 1)
+
+
+func _parked_cell(ecs: EcsWorld, main: Node) -> Vector2i:
+	var view := main.get_node_or_null("PawnHero") as Node2D
+	return ecs.grid.world_to_cell(view.position) if view != null else Vector2i(-1, -1)

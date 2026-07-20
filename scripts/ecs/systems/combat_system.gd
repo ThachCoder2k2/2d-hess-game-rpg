@@ -80,5 +80,5 @@ func _resolve_impact(entity_id: int, combat: EcsComponents.PlayerCombat) -> void
 				"direction": facing.direction if facing != null else Vector2i.ZERO,
 			})
 			hit_count += 1
-	world.emit_event({"type": &"attack_landed", "entity": entity_id, "cells": combat.pending_cells, "hit_count": hit_count})
+	world.emit_event({"type": &"attack_landed", "entity": entity_id, "cells": combat.pending_cells, "hit_count": hit_count, "profile": combat.active_attack})
 	combat.pending_cells = []

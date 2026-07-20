@@ -54,6 +54,11 @@ class PlayerInput:
 class ViewRef:
 	## The puppet node. Only ViewSyncSystem may touch it.
 	var node: Node2D
+	## Clip edge-detection memory (play once per state change) — view-side
+	## bookkeeping, so it lives with the view binding, not the simulation.
+	var was_hurt := false
+	var was_attacking := false
+	var was_telegraphing := false
 
 
 class AttackIntent:

@@ -131,6 +131,20 @@ func get_item_cells() -> Array[Vector2i]:
 	return cells
 
 
+func get_occupied_cells() -> Array[Vector2i]:
+	var cells: Array[Vector2i] = []
+	for cell: Vector2i in entity_by_cell:
+		cells.append(cell)
+	return cells
+
+
+func get_reservation_cells() -> Array[Vector2i]:
+	var cells: Array[Vector2i] = []
+	for cell: Vector2i in move_reservations:
+		cells.append(cell)
+	return cells
+
+
 ## Pathing — ported 1:1 from GridWorld (other movers and reservations are
 ## solid unless they sit on the goal).
 func get_grid_path(entity_id: int, origin: Vector2i, goal: Vector2i) -> Array[Vector2i]:

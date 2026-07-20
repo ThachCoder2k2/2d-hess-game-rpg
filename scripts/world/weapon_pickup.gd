@@ -1,47 +1,21 @@
 class_name WeaponPickup
 extends Node2D
 
-signal collected(pickup: WeaponPickup, collector: Node)
+## A floor-weapon VIEW. The pickup itself is an entity (PickupItem component,
+## spawned by EcsBoot); this node only shows the floating sprite and frees when
+## the bridge hears pickup_taken. No grid registration — the EnemyAISystem
+## collects the entity, never this node.
 
-var grid_world: GridWorld
-var current_cell := Vector2i.ZERO
-var weapon: EnemyWeapon
-var visual_time := 0.0
 @export var visual_path: NodePath = ^"Visual"
 
+var weapon: EnemyWeapon
+var visual_time := 0.0
 var visual: Node
 
 
 func _ready() -> void:
 	_resolve_visual()
 	_sync_visual()
-
-
-func setup(world: GridWorld, cell: Vector2i, item: EnemyWeapon) -> bool:
-	grid_world = world
-	current_cell = cell
-	weapon = item
-	if not grid_world.register_item(self, current_cell):
-		return false
-	position = grid_world.cell_to_world(current_cell)
-	_sync_visual()
-	return true
-
-
-func take(collector: Node) -> EnemyWeapon:
-	if weapon == null:
-		return null
-	var taken := weapon
-	weapon = null
-	grid_world.unregister_item(self)
-	emit_signal("collected", self, collector)
-	queue_free()
-	return taken
-
-
-func _exit_tree() -> void:
-	if grid_world != null:
-		grid_world.unregister_item(self)
 
 
 func _process(delta: float) -> void:

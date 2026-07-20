@@ -1,7 +1,7 @@
-[gd_resource type="Resource" script_class="EnemyWeapon" load_steps=3 format=3]
+[gd_resource type="Resource" script_class="EnemyWeapon" format=3 uid="uid://po15384k0voh"]
 
-[ext_resource type="Script" path="res://scripts/combat/enemy_weapon.gd" id="1"]
-[ext_resource type="Texture2D" path="res://assets/sprites/generated/ruler_blade.png" id="2"]
+[ext_resource type="Script" uid="uid://s15i4wk2lxn4" path="res://scripts/combat/enemy_weapon.gd" id="1"]
+[ext_resource type="Texture2D" uid="uid://cwfqcxn8ifl0r" path="res://assets/sprites/generated/ruler_blade.png" id="2"]
 
 [resource]
 script = ExtResource("1")
@@ -9,8 +9,6 @@ id = &"ruler_blade"
 display_name = "Ruler Blade"
 tags = Array[StringName]([&"melee"])
 shape = 1
-range_cells = 1
-damage = 1
 telegraph_time = 0.56
 recovery_time = 0.62
 color = Color(0.909804, 0.721569, 0.247059, 1)

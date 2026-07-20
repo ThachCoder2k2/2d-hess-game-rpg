@@ -38,9 +38,10 @@ extends Camera2D
 		position_smoothing_enabled = smoothing_speed > 0.0
 		position_smoothing_speed = maxf(0.001, smoothing_speed)
 
-## The board this rig frames. Set by setup(); used to read board bounds for clamping
-## and to convert a cell into a world point for focus_cell / static framing.
-var grid_world: GridWorld
+## The board this rig frames (EcsGrid — duck-typed: grid_origin, bounds,
+## cell_size, cell_to_world). Set by setup(); used to read board bounds for
+## clamping and to convert a cell into a world point for focus_cell.
+var grid_world
 
 ## World point the camera holds while follow_enabled is false.
 var focus_world_position := Vector2.ZERO
@@ -54,7 +55,7 @@ var shake_strength := 0.0
 
 ## Binds the rig to a board and applies every current knob, then makes it the active
 ## camera. Call again after a room changes grid_world.bounds so the clamp stays right.
-func setup(world: GridWorld) -> void:
+func setup(world) -> void:
 	grid_world = world
 	zoom = Vector2(zoom_level, zoom_level)
 	position_smoothing_enabled = smoothing_speed > 0.0
@@ -108,8 +109,8 @@ func _apply_bounds() -> void:
 	if grid_world == null:
 		return
 	if clamp_to_board_bounds:
-		var origin := grid_world.grid_origin
-		var board_pixel_size := grid_world.bounds.size * grid_world.cell_size
+		var origin: Vector2 = grid_world.grid_origin
+		var board_pixel_size: Vector2i = grid_world.bounds.size * grid_world.cell_size
 		limit_left = int(origin.x)
 		limit_top = int(origin.y)
 		limit_right = int(origin.x + board_pixel_size.x)

@@ -1,8 +1,6 @@
 [gd_scene format=4 uid="uid://2sfvi7iwk4f2"]
 
 [ext_resource type="Script" uid="uid://cm5l012ltefe4" path="res://scripts/main.gd" id="1"]
-[ext_resource type="PackedScene" path="res://objects/world/grid_world.tscn" id="2"]
-[ext_resource type="PackedScene" path="res://objects/combat/encounter_director.tscn" id="3"]
 [ext_resource type="PackedScene" path="res://objects/world/prototype_board.tscn" id="4"]
 [ext_resource type="PackedScene" path="res://objects/actors/player.tscn" id="5"]
 [ext_resource type="PackedScene" path="res://scenes/rooms/first_encounter.tscn" id="6"]
@@ -10,10 +8,6 @@
 
 [node name="Main" type="Node2D" unique_id=1651252280]
 script = ExtResource("1")
-
-[node name="GridWorld" parent="." unique_id=1587189948 instance=ExtResource("2")]
-
-[node name="EncounterDirector" parent="." unique_id=529604227 instance=ExtResource("3")]
 
 [node name="PrototypeBoard" parent="." unique_id=1293707123 instance=ExtResource("4")]
 

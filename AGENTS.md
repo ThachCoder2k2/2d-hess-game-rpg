@@ -276,10 +276,9 @@ Run relevant tests after every behavior change:
 
 ```bash
 HOME=/tmp/unbound-pawn-godot ../Godot.app/Contents/MacOS/Godot --headless --path . --script res://tests/run_tests.gd
-HOME=/tmp/unbound-pawn-godot ../Godot.app/Contents/MacOS/Godot --headless --path . --script res://tests/attack_runtime_test.gd
-HOME=/tmp/unbound-pawn-godot ../Godot.app/Contents/MacOS/Godot --headless --path . --script res://tests/component_movement_runtime_test.gd
-HOME=/tmp/unbound-pawn-godot ../Godot.app/Contents/MacOS/Godot --headless --path . --script res://tests/component_equipment_runtime_test.gd
-HOME=/tmp/unbound-pawn-godot ../Godot.app/Contents/MacOS/Godot --headless --path . --script res://tests/component_knight_movement_runtime_test.gd
+HOME=/tmp/unbound-pawn-godot ../Godot.app/Contents/MacOS/Godot --headless --path . --script res://tests/ecs_runtime_test.gd
+HOME=/tmp/unbound-pawn-godot ../Godot.app/Contents/MacOS/Godot --headless --path . --script res://tests/ecs_combat_test.gd
+HOME=/tmp/unbound-pawn-godot ../Godot.app/Contents/MacOS/Godot --headless --path . --script res://tests/ecs_enemy_test.gd
 HOME=/tmp/unbound-pawn-godot ../Godot.app/Contents/MacOS/Godot --headless --path . --script res://tests/encounter_hud_runtime_test.gd
 HOME=/tmp/unbound-pawn-godot ../Godot.app/Contents/MacOS/Godot --headless --path . --quit-after 1200
 HOME=/tmp/unbound-pawn-godot ../Godot.app/Contents/MacOS/Godot --headless --editor --path . --quit

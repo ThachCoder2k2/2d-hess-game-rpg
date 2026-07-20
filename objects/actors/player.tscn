@@ -1,14 +1,11 @@
-[gd_scene load_steps=15 format=3]
+[gd_scene load_steps=12 format=3]
 
-[ext_resource type="Script" path="res://scripts/actors/pawn_hero.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/ecs/actor_view.gd" id="1"]
 [ext_resource type="Resource" path="res://resources/attacks/wooden_sword.tres" id="2"]
 [ext_resource type="Resource" path="res://resources/attacks/pencil_thrust.tres" id="3"]
 [ext_resource type="Script" path="res://scripts/world/camera_rig.gd" id="5"]
 [ext_resource type="Texture2D" path="res://assets/sprites/generated/hero_pawn.png" id="6"]
 [ext_resource type="Texture2D" path="res://assets/sprites/generated/toy_sword.png" id="7"]
-[ext_resource type="PackedScene" path="res://objects/components/player_input_component.tscn" id="8"]
-[ext_resource type="PackedScene" path="res://objects/components/player_combat_component.tscn" id="9"]
-[ext_resource type="PackedScene" path="res://objects/components/player_health_component.tscn" id="10"]
 
 [sub_resource type="Animation" id="Animation_reset"]
 length = 0.001
@@ -163,9 +160,9 @@ _data = {
 [node name="PawnHero" type="Node2D"]
 z_index = 3
 script = ExtResource("1")
-current_cell = Vector2i(3, 7)
 wooden_sword = ExtResource("2")
 pencil_thrust = ExtResource("3")
+weapon_anchor = Vector2(4, -14)
 default_weapon_texture = ExtResource("7")
 
 [node name="MotionRoot" type="Node2D" parent="."]
@@ -196,9 +193,3 @@ follow_enabled = true
 clamp_to_board_bounds = true
 zoom_level = 1.0
 smoothing_speed = 8.0
-
-[node name="PlayerInputComponent" parent="." instance=ExtResource("8")]
-
-[node name="PlayerCombatComponent" parent="." instance=ExtResource("9")]
-
-[node name="PlayerHealthComponent" parent="." instance=ExtResource("10")]

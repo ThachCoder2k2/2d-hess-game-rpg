@@ -1,6 +1,6 @@
-[gd_scene load_steps=20 format=3]
+[gd_scene load_steps=16 format=3]
 
-[ext_resource type="Script" path="res://scripts/entities/enemy_actor.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/ecs/actor_view.gd" id="1"]
 [ext_resource type="Resource" path="res://resources/enemies/pawn_recruit.tres" id="2"]
 [ext_resource type="Texture2D" path="res://assets/sprites/generated/black_pawn.png" id="3"]
 [ext_resource type="Texture2D" path="res://assets/sprites/generated/toy_sword.png" id="4"]
@@ -8,10 +8,6 @@
 [ext_resource type="Texture2D" path="res://assets/sprites/generated/facing_arrow.png" id="6"]
 [ext_resource type="Texture2D" path="res://assets/sprites/generated/health_pip_full.png" id="7"]
 [ext_resource type="Texture2D" path="res://assets/sprites/generated/health_pip_empty.png" id="8"]
-[ext_resource type="PackedScene" path="res://objects/components/grid_movement_component.tscn" id="9"]
-[ext_resource type="PackedScene" path="res://objects/components/enemy_brain_component.tscn" id="10"]
-[ext_resource type="PackedScene" path="res://objects/components/health_component.tscn" id="11"]
-[ext_resource type="PackedScene" path="res://objects/components/equipment_component.tscn" id="12"]
 
 [sub_resource type="Animation" id="Animation_reset"]
 length = 0.001
@@ -226,11 +222,3 @@ texture = ExtResource("7")
 libraries = {
 &"": SubResource("AnimationLibrary_pawn")
 }
-
-[node name="GridMovementComponent" parent="." instance=ExtResource("9")]
-
-[node name="EnemyBrainComponent" parent="." instance=ExtResource("10")]
-
-[node name="HealthComponent" parent="." instance=ExtResource("11")]
-
-[node name="EquipmentComponent" parent="." instance=ExtResource("12")]

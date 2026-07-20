@@ -65,7 +65,7 @@ resources become component templates.
 7. `ViewSyncSystem` — writes positions/clips/tints/weapon sprites to ViewRef
    nodes (the only system allowed to touch nodes).
 
-## Phases (each ends green + committed; node game keeps running until D)
+## Phases — ALL COMPLETE (A: 3e53c1a · B: 618edf9 · C: 31ee0bc · D: the flip commit)
 
 - **A. Core + movement slice** — world, components, queries, events;
   PlayerInput/Movement/ViewSync; ECS runtime test: hero entity steps with

@@ -1,16 +1,14 @@
-[gd_resource type="Resource" script_class="EnemyWeapon" load_steps=3 format=3]
+[gd_resource type="Resource" script_class="EnemyWeapon" format=3 uid="uid://d0qxvb8xdjbov"]
 
-[ext_resource type="Script" path="res://scripts/combat/enemy_weapon.gd" id="1"]
-[ext_resource type="Texture2D" path="res://assets/sprites/generated/pencil_spear.png" id="2"]
+[ext_resource type="Script" uid="uid://s15i4wk2lxn4" path="res://scripts/combat/enemy_weapon.gd" id="1"]
+[ext_resource type="Texture2D" uid="uid://bork3o5rtutb0" path="res://assets/sprites/generated/pencil_spear.png" id="2"]
 
 [resource]
 script = ExtResource("1")
 id = &"pencil_spear"
 display_name = "Pencil Spear"
 tags = Array[StringName]([&"melee", &"reach"])
-shape = 0
 range_cells = 2
-damage = 1
 telegraph_time = 0.62
 recovery_time = 0.68
 color = Color(0.556863, 0.784314, 0.909804, 1)

@@ -1,100 +1,77 @@
 extends SceneTree
 
+## The room as spawn data: EcsBoot reads the authored first_encounter scene +
+## a parked player view and produces the whole cast — enemies at their parked
+## cells, the armed pawn already carrying its definition's weapon, pickups
+## registered, painted walls solid, and the objective completing when the
+## defeated events say so.
+
+var failures := 0
+
+
+func _expect(condition: bool, label: String) -> void:
+	if condition:
+		print("PASS: %s" % label)
+	else:
+		failures += 1
+		printerr("FAIL: %s" % label)
+
 
 func _init() -> void:
-	call_deferred("_run")
-
-
-func _run() -> void:
-	var world := GridWorld.new()
+	var world := EcsWorld.new()
+	world.manual_tick = true
 	root.add_child(world)
-	var board := PrototypeBoard.new()
-	root.add_child(board)
-	board.setup(world)
-	var hero := PawnHero.new()
-	root.add_child(hero)
-	var hero_ok := hero.setup(world, Vector2i(3, 7))
-	var director := EncounterDirector.new()
-	root.add_child(director)
-	var room_scene := load("res://scenes/rooms/first_encounter.tscn") as PackedScene
-	var room := room_scene.instantiate()
+	world.add_system(EnemyAISystem.new())
+	world.add_system(MovementSystem.new())
+	world.add_system(HealthSystem.new())
+	world.add_system(ViewSyncSystem.new())
+
+	var room := (load("res://scenes/rooms/first_encounter.tscn") as PackedScene).instantiate()
 	root.add_child(room)
-	var room_art_ok: bool = (
-		room.get_node_or_null("RoomArt") is Node2D
-		and room.get_node_or_null("RoomArt/TileMap") is TileMapLayer
-		and room.get_node_or_null("RoomArt/GridLines") is GridLinesOverlay
-	)
-	var marker_previews_ok: bool = (
-		room.get_node_or_null("PencilSpearPickup/Preview") != null
-		and room.get_node_or_null("RulerBladePickup/Preview") != null
-		and not (room.get_node("PencilSpearPickup/Preview") as CanvasItem).visible
-	)
-	var in_scene_enemies_ok: bool = (
-		room.get_node_or_null("PawnRecruit") is FreeEnemy
-		and room.get_node_or_null("ArmedPawn") is FreeEnemy
-		and room.get_node_or_null("KnightTracker") is FreeEnemy
-	)
-	var spawned: Array[FreeEnemy] = []
-	var completed_count := {"value": 0}
-	room.connect("enemy_spawned", func(enemy: FreeEnemy) -> void: spawned.append(enemy))
-	room.connect("room_completed", func(_room: Node) -> void: completed_count["value"] += 1)
-	room.call("setup", world, hero, director, board, false)
-	var blockers_ok: bool = (
-		not world.is_walkable(Vector2i(7, 2))
-		and not world.is_walkable(Vector2i(7, 3))
-		and not world.is_walkable(Vector2i(7, 5))
-		and not world.is_walkable(Vector2i(7, 6))
-		and not world.is_walkable(Vector2i(0, 0))
-		and not world.is_walkable(Vector2i(15, 8))
-	)
-	var pickups_ok: bool = (
-		world.item_at(Vector2i(5, 5)) is WeaponPickup
-		and world.item_at(Vector2i(11, 6)) is WeaponPickup
-	)
-	var enemies_ok: bool = (
-		hero_ok
-		and spawned.size() == 3
-		and room.call("get_total_enemy_count") == 3
-		and room.call("get_remaining_enemy_count") == 3
-		and world.actor_at(Vector2i(4, 1)) is EnemyActor
-		and world.actor_at(Vector2i(10, 1)) is EnemyActor
-		and world.actor_at(Vector2i(13, 2)) is EnemyActor
-	)
-	var scene_pickup := world.item_at(Vector2i(5, 5)) as WeaponPickup
-	var scene_pawn := world.actor_at(Vector2i(4, 1)) as EnemyActor
-	var scene_knight := world.actor_at(Vector2i(13, 2)) as EnemyActor
-	var scene_spawn_ok: bool = (
-		scene_pickup != null
-		and scene_pickup.scene_file_path.ends_with("weapon_pickup.tscn")
-		and scene_pawn != null
-		and scene_pawn.scene_file_path.ends_with("black_pawn.tscn")
-		and scene_knight != null
-		and scene_knight.scene_file_path.ends_with("knight_enemy.tscn")
-	)
-	var definitions_ok: bool = (
-		scene_pawn != null
-		and scene_pawn.definition != null
-		and scene_pawn.definition.id == &"pawn_recruit"
-		and scene_knight != null
-		and scene_knight.definition != null
-		and scene_knight.definition.id == &"knight_tracker"
-	)
-	var visuals_ok: bool = (
-		scene_pickup != null
-		and scene_pickup.get_node_or_null("Visual") != null
-		and scene_pawn != null
-		and scene_pawn.get_node_or_null("MotionRoot/SpriteRoot/BodySprite") is Sprite2D
-		and scene_knight != null
-		and scene_knight.get_node_or_null("MotionRoot/SpriteRoot/BodySprite") is Sprite2D
-	)
-	var armed_pawn := world.actor_at(Vector2i(10, 1)) as EnemyActor
-	var armed_ok := armed_pawn != null and armed_pawn.weapon != null and armed_pawn.weapon.display_name == "Pencil Spear"
-	var message := String(room.call("get_start_message"))
-	var message_ok: bool = message.begins_with("First clash")
-	for enemy in spawned:
-		enemy.state = FreeEnemy.State.DEFEATED
-		room.call("_on_enemy_defeated", enemy)
-	var completion_ok: bool = completed_count["value"] == 1 and String(room.call("get_clear_message")) == "ROOM CLEARED"
-	var succeeded: bool = blockers_ok and pickups_ok and enemies_ok and in_scene_enemies_ok and scene_spawn_ok and definitions_ok and visuals_ok and room_art_ok and marker_previews_ok and armed_ok and message_ok and completion_ok
-	print("ROOM ENCOUNTER TEST: %s" % ["PASS" if succeeded else "FAIL"])
+	var player_view := (load("res://objects/actors/player.tscn") as PackedScene).instantiate() as ActorView
+	player_view.position = Vector2(110, 229)
+	root.add_child(player_view)
+
+	var cast := EcsBoot.boot(world, player_view, room)
+	var player_id := int(cast["player"])
+	var enemies: Array = cast["enemies"]
+
+	_expect(player_id != 0 and world.grid.entity_at(Vector2i(1, 6)) == player_id, "parked player spawns on its containing cell")
+	_expect(enemies.size() == 3, "all three parked enemies spawn")
+	_expect(world.grid.entity_at(Vector2i(4, 1)) != 0, "PawnRecruit spawns at its parked cell")
+	_expect(world.grid.entity_at(Vector2i(10, 1)) != 0, "ArmedPawn spawns at its parked cell")
+	_expect(world.grid.entity_at(Vector2i(13, 2)) != 0, "KnightTracker spawns at its parked cell")
+
+	var armed_id := world.grid.entity_at(Vector2i(10, 1))
+	var armed_slot: EcsComponents.WeaponSlot = world.get_component(armed_id, EcsComponents.WEAPON_SLOT)
+	_expect(armed_slot != null and armed_slot.weapon != null and armed_slot.weapon.display_name == "Pencil Spear", "armed pawn carries its definition's default weapon")
+
+	var knight_id := world.grid.entity_at(Vector2i(13, 2))
+	var knight_ai: EcsComponents.EnemyAI = world.get_component(knight_id, EcsComponents.ENEMY_AI)
+	_expect(knight_ai != null and knight_ai.allowed_directions.size() == 8, "knight entity moves by its L-shaped MovementConfig")
+
+	_expect(world.grid.item_at(Vector2i(5, 5)) != 0 and world.grid.item_at(Vector2i(11, 6)) != 0, "both pickup markers register floor weapons")
+	_expect(cast["pickup_view_by_entity"].size() == 2, "pickups get floating views")
+	_expect(world.grid.blocked_cells.has(Vector2i(0, 0)) and world.grid.blocked_cells.has(Vector2i(7, 0)), "painted solid tiles block the border and thrones")
+	_expect(not world.grid.blocked_cells.has(Vector2i(5, 4)), "open floor stays walkable")
+
+	var piece_names: Dictionary = cast["piece_name_by_entity"]
+	_expect(String(piece_names.get(armed_id, "")) == "Pawn", "cast knows each entity's piece name")
+
+	_expect(String(room.call("get_start_message")).begins_with("First clash"), "room start message comes from the objective data")
+	_expect(String(room.call("get_clear_message")) == "ROOM CLEARED", "room clear message resolves")
+
+	var defeated_count := 0
+	for enemy_id: int in enemies:
+		world.damage_events.append({"target": enemy_id, "amount": 99, "direction": Vector2i.LEFT})
+	world.tick(0.016)
+	for event in world.drain_events():
+		if event.get("type") == &"defeated":
+			defeated_count += 1
+	_expect(defeated_count == 3, "lethal damage defeats every enemy with an event each")
+	var objective: Resource = room.get("objective")
+	_expect(objective != null and bool(objective.call("is_complete", 3, 3, 0)), "objective completes when the whole cast falls")
+
+	var succeeded := failures == 0
+	print("ROOM ENCOUNTER TEST: %s" % ["PASS" if succeeded else "FAIL (%d)" % failures])
 	quit(0 if succeeded else 1)
