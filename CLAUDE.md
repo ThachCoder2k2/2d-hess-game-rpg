@@ -16,6 +16,22 @@ session. Read `AGENTS.md` for the full workflow, and `docs/ARCHITECTURE.md` +
   views (parked ActorViews become entities at boot); tuning lives in `.tres`.
   To add a new enemy/weapon/attack/room, edit data — never hardcode content in
   scripts, never put logic in views/components (systems own all decisions).
+- **Where things go (the ECS map):**
+  - New state → pure-data class + key const in `scripts/ecs/ecs_components.gd`.
+  - New decision/behavior → a system in `scripts/ecs/systems/` ticked by the
+	world; ONLY `ViewSyncSystem` may touch nodes. Systems talk via components
+	and the event/damage queues, never by calling each other or presentation.
+  - New editor-draggable component → extend `EntityComponent` in
+	`scripts/ecs/components/` (Inspector data + one `apply()`; `EcsBoot` bakes
+	it at spawn; a node on an instance beats the definition; zero logic).
+  - Animation transitions → the actor scene's `AnimationTree` graph (states,
+	xfades, at_end recovery are editor-owned; `ViewSyncSystem` only publishes
+	conditions and fires `travel()` on event edges). Clips stay on the
+	sibling `AnimationPlayer`; keyframe `SpriteRoot`, never `MotionRoot`.
+  - The cell-to-cell slide is procedural (MovementSystem/ViewSync) — gameplay
+	timing for the reserve→commit dodge window; never keyframe it.
+  - Presentation (HUD/board/camera/main.gd) consumes `drain_events()` only;
+	it never reaches into the simulation.
 - **Research before building any new mechanic.** Mandatory order:
   1. Search Godot's built-in nodes/engine features for the capability
 	 (Timer, Tween, AnimationPlayer, Area2D signals, TileMapLayer, AStarGrid2D,
