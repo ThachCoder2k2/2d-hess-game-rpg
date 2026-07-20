@@ -422,3 +422,11 @@ Researched the AI-focused editor surface at the owner's request. Found `EnemyBra
 - Tests: `run_tests.gd` is now the data+structure suite (EcsGrid rules, views-are-pure checks, .tres content); room test boots the authored scene through `EcsBoot` (parked cells, armed pawn's spear, solid walls, pickups, objective); HUD test boots the full `main.tscn` and drives `_process` by hand (re-learned: `_ready` waits for the first frame in SceneTree tests). Deleted the 4 superseded component/attack runtime tests.
 - Verify docs updated (CLAUDE.md loop, /verify, AGENTS.md commands): suite = run_tests + ecs_runtime + ecs_combat + ecs_enemy + room_encounter_runtime + encounter_hud_runtime.
 - Verified: import clean, all 6 suites green, `git diff --check` clean, real-renderer capture — enemies pursue, armed pawn carries its spear, pips/arrow/pickups/HUD all live, F3 paths drawn from entity data.
+
+## Editor-Draggable ECS Components (Spec Nodes) - 2026-07-19
+
+- Owner wanted components back as nodes for scene authoring ("1 node as a component for ecs"). Answer: the authoring-component pattern — spec nodes in the dock, tables at runtime (same idea as Unity DOTS authoring/baking).
+- New `scripts/ecs/specs/`: `ComponentSpec` base (pure Inspector data, `apply(world, entity_id)`, editor warning when not under an ActorView) + `HealthSpec` (max health / invulnerability override), `WeaponSpec` (arms the entity with an EnemyWeapon .tres copy), `AISpec` (per-instance DecisionConfig override — the old brain-component idea as spawn data).
+- Workflow: open any actor scene or room instance → Add Child Node → HealthSpec/WeaponSpec/AISpec → tune in Inspector. `EcsBoot._apply_specs` bakes every spec child into the freshly spawned entity, after the definition, so an instance spec always wins.
+- Specs hold zero logic — systems still own every decision; a spec is just editor-visible component data.
+- Verified: import registers the 4 classes, all 6 suites green including 2 new assertions (HealthSpec overrides definition health; WeaponSpec arms at boot), whitespace clean.
