@@ -7,11 +7,10 @@ extends Node2D
 ## driving the sprites. No logic, no input, no state — systems own all of it
 ## (docs/ecs-conversion-plan.md).
 
-## Enemy spawn data (null on the player view).
+## Enemy spawn data (null on the player view; the player's kit lives on its
+## CombatComponent / HealthComponent / MovementComponent / InputComponent
+## child nodes instead).
 @export var definition: EnemyDefinition
-## Player spawn data (null on enemy views).
-@export var wooden_sword: AttackProfile
-@export var pencil_thrust: AttackProfile
 
 @export_group("Appearance")
 @export var hurt_modulate := Color("#ff8170")

@@ -1,7 +1,10 @@
-[gd_scene load_steps=13 format=3]
+[gd_scene load_steps=16 format=3]
 
 [ext_resource type="Script" path="res://scripts/ecs/actor_view.gd" id="1"]
 [ext_resource type="Script" path="res://scripts/ecs/components/health_component.gd" id="8"]
+[ext_resource type="Script" path="res://scripts/ecs/components/combat_component.gd" id="9"]
+[ext_resource type="Script" path="res://scripts/ecs/components/movement_component.gd" id="10"]
+[ext_resource type="Script" path="res://scripts/ecs/components/input_component.gd" id="11"]
 [ext_resource type="Resource" path="res://resources/attacks/wooden_sword.tres" id="2"]
 [ext_resource type="Resource" path="res://resources/attacks/pencil_thrust.tres" id="3"]
 [ext_resource type="Script" path="res://scripts/world/camera_rig.gd" id="5"]
@@ -161,8 +164,6 @@ _data = {
 [node name="PawnHero" type="Node2D"]
 z_index = 3
 script = ExtResource("1")
-wooden_sword = ExtResource("2")
-pencil_thrust = ExtResource("3")
 weapon_anchor = Vector2(4, -14)
 default_weapon_texture = ExtResource("7")
 
@@ -192,6 +193,20 @@ libraries = {
 script = ExtResource("8")
 max_health = 3
 invulnerability_duration = 0.7
+
+[node name="CombatComponent" type="Node" parent="."]
+script = ExtResource("9")
+wooden_sword = ExtResource("2")
+pencil_thrust = ExtResource("3")
+skill_cooldown_duration = 1.25
+
+[node name="MovementComponent" type="Node" parent="."]
+script = ExtResource("10")
+step_duration = 0.18
+
+[node name="InputComponent" type="Node" parent="."]
+script = ExtResource("11")
+held_repeat_delay = 0.22
 
 [node name="Camera2D" type="Camera2D" parent="."]
 script = ExtResource("5")

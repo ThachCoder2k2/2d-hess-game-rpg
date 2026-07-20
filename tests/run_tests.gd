@@ -62,12 +62,16 @@ func _init() -> void:
 	_expect(hero_view != null, "player scene root is an ActorView (no gameplay script)")
 	_expect(_actor_is_sprite_animated(hero_view), "player view owns its sprites and AnimationPlayer")
 	_expect(_actor_has_clip(hero_view, &"step") and _actor_has_clip(hero_view, &"attack"), "player view owns step/attack clips")
-	_expect(hero_view.wooden_sword != null and hero_view.wooden_sword.resource_path.ends_with("wooden_sword.tres"), "player view carries the Wooden Sword spawn data")
-	_expect(hero_view.pencil_thrust != null and hero_view.pencil_thrust.resource_path.ends_with("pencil_thrust.tres"), "player view carries the Pencil Thrust spawn data")
 	_expect(hero_view.definition == null, "player view has no enemy definition")
 	_expect(hero_view.get_node_or_null("Camera2D") is CameraRig, "player view carries the camera rig")
 	var hero_health_node := hero_view.get_node_or_null("HealthComponent") as HealthComponent
 	_expect(hero_health_node != null and hero_health_node.max_health == 3, "player view carries an editor-tunable HealthComponent node")
+	var hero_combat_node := hero_view.get_node_or_null("CombatComponent") as CombatComponent
+	_expect(hero_combat_node != null and hero_combat_node.wooden_sword != null \
+		and hero_combat_node.wooden_sword.resource_path.ends_with("wooden_sword.tres") \
+		and hero_combat_node.pencil_thrust != null, "CombatComponent node carries the attack loadout")
+	_expect(hero_view.get_node_or_null("MovementComponent") is MovementComponent \
+		and hero_view.get_node_or_null("InputComponent") is InputComponent, "player view carries movement and input component nodes")
 	var view_source := FileAccess.get_file_as_string("res://scripts/ecs/actor_view.gd")
 	_expect(not view_source.contains("func _draw") and not view_source.contains("func _process"), "actor views hold no logic at all")
 

@@ -440,3 +440,9 @@ Researched the AI-focused editor surface at the owner's request. Found `EnemyBra
 
 - Owner flagged the player scene as "not right": it showed zero component nodes, and player health config lived nowhere in the editor (spawn_player defaults only). Enemies get health from their definition .tres; the player has no definition, so its editor surface is the component node.
 - `player.tscn` now carries a `HealthComponent` child (max_health 3, invulnerability 0.7 — identical to the old defaults, now Inspector-tunable). EcsBoot bakes it at spawn like any component node. New suite assertion locks it in.
+
+## Full Player Component Set - 2026-07-19
+
+- Owner: "only health component?" — completed the set. `player.tscn` now carries HealthComponent + CombatComponent + MovementComponent + InputComponent nodes; the attack profiles moved OFF the ActorView root exports onto the CombatComponent node (single source — `ActorView` keeps only `definition` + appearance knobs), and step duration / held-repeat delay went from hardcoded factory defaults to Inspector fields.
+- New component nodes: `CombatComponent` (wooden_sword/pencil_thrust .tres + skill cooldown → PlayerCombat), `MovementComponent` (step_duration → MoveState), `InputComponent` (held_repeat_delay → PlayerInput; no-op on enemies). Enemies unchanged — their equivalents live in the definition .tres (no duplication).
+- `EcsBoot` spawns the player bare and lets the component nodes supply the kit. Suite assertions updated (CombatComponent carries the loadout; movement/input nodes present). All 6 suites green + render clean.

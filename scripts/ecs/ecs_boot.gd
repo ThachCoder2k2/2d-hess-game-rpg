@@ -25,7 +25,9 @@ static func boot(world: EcsWorld, player_view: ActorView, room_root: Node, fallb
 		var player_cell := world.grid.world_to_cell(player_view.position)
 		if not world.grid.is_inside(player_cell):
 			player_cell = fallback_player_cell
-		var player_id := EcsActorFactory.spawn_player(world, player_cell, player_view.wooden_sword, player_view.pencil_thrust)
+		# The kit (attack profiles, health, timings) comes from the view's
+		# component nodes, baked below.
+		var player_id := EcsActorFactory.spawn_player(world, player_cell, null, null)
 		_bind_view(world, player_id, player_view)
 		_apply_component_nodes(world, player_id, player_view)
 		cast["player"] = player_id
