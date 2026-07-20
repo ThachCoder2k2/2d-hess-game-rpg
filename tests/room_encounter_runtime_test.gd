@@ -72,18 +72,18 @@ func _init() -> void:
 	var objective: Resource = room.get("objective")
 	_expect(objective != null and bool(objective.call("is_complete", 3, 3, 0)), "objective completes when the whole cast falls")
 
-	# Editor-draggable ECS components: spec nodes under a view bake into the
-	# entity at boot (nodes in the dock, tables at runtime).
+	# Editor-draggable ECS components: component nodes under a view bake into
+	# the entity at boot (nodes in the dock, tables at runtime).
 	var spec_world := EcsWorld.new()
 	spec_world.manual_tick = true
 	root.add_child(spec_world)
 	var spec_view := ActorView.new()
 	spec_view.definition = load("res://resources/enemies/pawn_recruit.tres")
 	spec_view.position = spec_world.grid.cell_to_world(Vector2i(3, 3))
-	var health_spec := HealthSpec.new()
+	var health_spec := HealthComponent.new()
 	health_spec.max_health = 5
 	spec_view.add_child(health_spec)
-	var weapon_spec := WeaponSpec.new()
+	var weapon_spec := WeaponComponent.new()
 	weapon_spec.weapon = load("res://resources/weapons/ruler_blade.tres")
 	spec_view.add_child(weapon_spec)
 	var spec_room := Node2D.new()
@@ -92,9 +92,9 @@ func _init() -> void:
 	var spec_cast := EcsBoot.boot(spec_world, null, spec_room)
 	var spec_id: int = spec_cast["enemies"][0]
 	var spec_health: EcsComponents.Health = spec_world.get_component(spec_id, EcsComponents.HEALTH)
-	_expect(spec_health != null and spec_health.max_value == 5 and spec_health.current == 5, "HealthSpec node overrides the definition's health at boot")
+	_expect(spec_health != null and spec_health.max_value == 5 and spec_health.current == 5, "HealthComponent node overrides the definition's health at boot")
 	var spec_slot: EcsComponents.WeaponSlot = spec_world.get_component(spec_id, EcsComponents.WEAPON_SLOT)
-	_expect(spec_slot != null and spec_slot.weapon != null and spec_slot.weapon.id == &"ruler_blade", "WeaponSpec node arms the entity at boot")
+	_expect(spec_slot != null and spec_slot.weapon != null and spec_slot.weapon.id == &"ruler_blade", "WeaponComponent node arms the entity at boot")
 
 	var succeeded := failures == 0
 	print("ROOM ENCOUNTER TEST: %s" % ["PASS" if succeeded else "FAIL (%d)" % failures])

@@ -1,5 +1,5 @@
-class_name HealthSpec
-extends ComponentSpec
+class_name HealthComponent
+extends EntityComponent
 
 ## Overrides the entity's Health at spawn. Drag under a view to give one
 ## specific enemy more health than its definition, or tune the player's

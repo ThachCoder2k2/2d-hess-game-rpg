@@ -430,3 +430,8 @@ Researched the AI-focused editor surface at the owner's request. Found `EnemyBra
 - Workflow: open any actor scene or room instance → Add Child Node → HealthSpec/WeaponSpec/AISpec → tune in Inspector. `EcsBoot._apply_specs` bakes every spec child into the freshly spawned entity, after the definition, so an instance spec always wins.
 - Specs hold zero logic — systems still own every decision; a spec is just editor-visible component data.
 - Verified: import registers the 4 classes, all 6 suites green including 2 new assertions (HealthSpec overrides definition health; WeaponSpec arms at boot), whitespace clean.
+
+## Component Nodes Renamed (Spec -> Component) - 2026-07-19
+
+- Owner call: the editor nodes ARE the components, name them so. `ComponentSpec`->`EntityComponent` (base), `HealthSpec`->`HealthComponent`, `WeaponSpec`->`WeaponComponent`, `AISpec`->`AIComponent`; folder `scripts/ecs/specs/`->`scripts/ecs/components/`; `EcsBoot._apply_specs`->`_apply_component_nodes`.
+- Safe rename: no scene serialized the old class names (only code + the room test); the node-era `HealthComponent` class was already deleted, so no collision. All 6 suites green after re-import.

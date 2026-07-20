@@ -27,7 +27,7 @@ static func boot(world: EcsWorld, player_view: ActorView, room_root: Node, fallb
 			player_cell = fallback_player_cell
 		var player_id := EcsActorFactory.spawn_player(world, player_cell, player_view.wooden_sword, player_view.pencil_thrust)
 		_bind_view(world, player_id, player_view)
-		_apply_specs(world, player_id, player_view)
+		_apply_component_nodes(world, player_id, player_view)
 		cast["player"] = player_id
 		cast["view_by_entity"][player_id] = player_view
 		cast["piece_name_by_entity"][player_id] = "Pawn Hero"
@@ -40,7 +40,7 @@ static func boot(world: EcsWorld, player_view: ActorView, room_root: Node, fallb
 			var cell := world.grid.world_to_cell(enemy_view.position)
 			var enemy_id := EcsActorFactory.spawn_enemy(world, enemy_view.definition, cell)
 			_bind_view(world, enemy_id, enemy_view)
-			_apply_specs(world, enemy_id, enemy_view)
+			_apply_component_nodes(world, enemy_id, enemy_view)
 			cast["enemies"].append(enemy_id)
 			cast["view_by_entity"][enemy_id] = enemy_view
 			cast["piece_name_by_entity"][enemy_id] = enemy_view.definition.piece_name
@@ -94,11 +94,11 @@ static func _bind_view(world: EcsWorld, entity_id: int, view_node: Node2D) -> vo
 	view.node = view_node
 
 
-## Editor-draggable components: every ComponentSpec child of a view bakes its
+## Editor-draggable components: every EntityComponent child of a view bakes its
 ## Inspector data into the freshly spawned entity (after the definition, so a
-## spec on an instance always wins).
-static func _apply_specs(world: EcsWorld, entity_id: int, view_node: Node2D) -> void:
+## component node on an instance always wins).
+static func _apply_component_nodes(world: EcsWorld, entity_id: int, view_node: Node2D) -> void:
 	for child in view_node.get_children():
-		var spec := child as ComponentSpec
-		if spec != null:
-			spec.apply(world, entity_id)
+		var component_node := child as EntityComponent
+		if component_node != null:
+			component_node.apply(world, entity_id)

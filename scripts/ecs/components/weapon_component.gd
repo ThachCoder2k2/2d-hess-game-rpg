@@ -1,5 +1,5 @@
-class_name WeaponSpec
-extends ComponentSpec
+class_name WeaponComponent
+extends EntityComponent
 
 ## Arms the entity at spawn: sets the WeaponSlot to a copy of the assigned
 ## EnemyWeapon .tres. Beats the definition's default_weapon, so one parked

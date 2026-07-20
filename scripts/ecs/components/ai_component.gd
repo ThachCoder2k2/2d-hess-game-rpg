@@ -1,5 +1,5 @@
-class_name AISpec
-extends ComponentSpec
+class_name AIComponent
+extends EntityComponent
 
 ## Overrides the entity's AI personality at spawn: a per-instance
 ## DecisionConfig beats the shared EnemyDefinition.decision, so one parked

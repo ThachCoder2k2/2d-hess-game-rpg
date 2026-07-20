@@ -1,4 +1,4 @@
-class_name ComponentSpec
+class_name EntityComponent
 extends Node
 
 ## An editor-draggable component for the ECS: add one as a child of any actor
@@ -16,5 +16,5 @@ func apply(_world: EcsWorld, _entity_id: int) -> void:
 func _get_configuration_warnings() -> PackedStringArray:
 	var warnings := PackedStringArray()
 	if get_parent() is not ActorView:
-		warnings.append("ComponentSpec nodes belong under an actor view (player or enemy scene root).")
+		warnings.append("EntityComponent nodes belong under an actor view (player or enemy scene root).")
 	return warnings
