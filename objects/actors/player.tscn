@@ -1,6 +1,7 @@
-[gd_scene load_steps=12 format=3]
+[gd_scene load_steps=13 format=3]
 
 [ext_resource type="Script" path="res://scripts/ecs/actor_view.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/ecs/components/health_component.gd" id="8"]
 [ext_resource type="Resource" path="res://resources/attacks/wooden_sword.tres" id="2"]
 [ext_resource type="Resource" path="res://resources/attacks/pencil_thrust.tres" id="3"]
 [ext_resource type="Script" path="res://scripts/world/camera_rig.gd" id="5"]
@@ -186,6 +187,11 @@ scale = Vector2(0.46, 0.46)
 libraries = {
 &"": SubResource("AnimationLibrary_hero")
 }
+
+[node name="HealthComponent" type="Node" parent="."]
+script = ExtResource("8")
+max_health = 3
+invulnerability_duration = 0.7
 
 [node name="Camera2D" type="Camera2D" parent="."]
 script = ExtResource("5")

@@ -435,3 +435,8 @@ Researched the AI-focused editor surface at the owner's request. Found `EnemyBra
 
 - Owner call: the editor nodes ARE the components, name them so. `ComponentSpec`->`EntityComponent` (base), `HealthSpec`->`HealthComponent`, `WeaponSpec`->`WeaponComponent`, `AISpec`->`AIComponent`; folder `scripts/ecs/specs/`->`scripts/ecs/components/`; `EcsBoot._apply_specs`->`_apply_component_nodes`.
 - Safe rename: no scene serialized the old class names (only code + the room test); the node-era `HealthComponent` class was already deleted, so no collision. All 6 suites green after re-import.
+
+## Player Carries a HealthComponent Node - 2026-07-19
+
+- Owner flagged the player scene as "not right": it showed zero component nodes, and player health config lived nowhere in the editor (spawn_player defaults only). Enemies get health from their definition .tres; the player has no definition, so its editor surface is the component node.
+- `player.tscn` now carries a `HealthComponent` child (max_health 3, invulnerability 0.7 — identical to the old defaults, now Inspector-tunable). EcsBoot bakes it at spawn like any component node. New suite assertion locks it in.
