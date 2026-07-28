@@ -159,5 +159,14 @@ func _init() -> void:
 	_expect(registry.has(&"pickup") and registry.has(&"room_clear") and registry.has(&"defeat_jingle"), "SfxManager registry carries the three event sounds")
 	_expect(StringName(sfx_manager.get("bus")) == &"SFX", "SfxManager routes to the SFX bus")
 
+	# Music: an editor-owned looping AudioStreamPlayer in the main scene, no code.
+	var main_scene := (load("res://scenes/main.tscn") as PackedScene).instantiate()
+	var music_player := main_scene.get_node_or_null("MusicPlayer") as AudioStreamPlayer
+	_expect(music_player != null and music_player.autoplay, "main scene carries an autoplaying MusicPlayer")
+	_expect(music_player != null and music_player.bus == &"Music", "MusicPlayer routes to the Music bus")
+	var music_stream: AudioStreamWAV = music_player.stream as AudioStreamWAV if music_player != null else null
+	_expect(music_stream != null and music_stream.loop_mode == AudioStreamWAV.LOOP_FORWARD, "music track loops from its embedded WAV loop points")
+	main_scene.free()
+
 	print("TESTS COMPLETE: %d failure(s)" % failures)
 	quit(1 if failures > 0 else 0)

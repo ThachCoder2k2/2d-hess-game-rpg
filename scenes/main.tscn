@@ -5,6 +5,7 @@
 [ext_resource type="PackedScene" path="res://objects/actors/player.tscn" id="5"]
 [ext_resource type="PackedScene" path="res://scenes/rooms/first_encounter.tscn" id="6"]
 [ext_resource type="PackedScene" path="res://scenes/ui/hud.tscn" id="7"]
+[ext_resource type="AudioStream" path="res://assets/music/unbound_march.wav" id="8"]
 
 [node name="Main" type="Node2D" unique_id=1651252280]
 script = ExtResource("1")
@@ -38,6 +39,12 @@ offset_right = -28.0
 offset_bottom = 14.0
 
 [node name="HUD" parent="." unique_id=974649949 instance=ExtResource("7")]
+
+[node name="MusicPlayer" type="AudioStreamPlayer" parent="."]
+stream = ExtResource("8")
+volume_db = -8.0
+autoplay = true
+bus = &"Music"
 
 [editable path="PawnHero"]
 [editable path="FirstEncounter"]

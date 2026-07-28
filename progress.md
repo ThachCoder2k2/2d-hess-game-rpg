@@ -471,3 +471,9 @@ Researched the AI-focused editor surface at the owner's request. Found `EnemyBra
 - Bridge hookups in main.gd: pickup_taken → pickup chime, room complete → clear arpeggio, hero defeat → jingle; all via a null-safe `/root/SfxManager` lookup so headless tests without autoloads stay silent.
 - Gotcha: on the first import pass the SfxManager scene parsed before the new WAVs were imported (one-time "Failed loading resource" noise); the second pass is clean — expected first-scan ordering, not a defect.
 - Suite additions: bus layout loads; SfxManager registry carries the three event sounds and routes to SFX. All 6 suites green, import clean, render clean.
+
+## Music on the Music Bus - 2026-07-28
+
+- The empty Music bus gets its first content, structure-first: a `MusicPlayer` AudioStreamPlayer node in `scenes/main.tscn` (autoplay, bus `Music`, -8 dB) — zero code, the scene owns the soundtrack the same way clips own motion sounds.
+- Placeholder track: `tools/generate_music.py` → `assets/music/unbound_march.wav`, a 17s A-minor chiptune march (triangle bass eighths, 25%-duty square lead over Am-F-C-G, offbeat noise hats). The WAV embeds a `smpl` loop chunk over the whole file, so Godot's default "Detect From WAV" import yields a seamless `LOOP_FORWARD` stream with no import-dock tweaking. Real music ships by dropping a file over the same path.
+- Suite additions: main scene carries an autoplaying MusicPlayer, routed to Music, stream loops from its embedded WAV loop points. All 6 suites green, import clean.
