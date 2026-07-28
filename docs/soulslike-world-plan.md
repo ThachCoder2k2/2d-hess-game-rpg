@@ -1,8 +1,11 @@
 # The Unbound Pawn — Soulslike World Plan
 
 Research-backed plan for replacing the single-room structure with a Dark Souls
-style interconnected world: zones, shrines (bonfires), shortcuts, bosses,
-corpse-run, hand-authored map. Written 2026-07-28; sources at the bottom.
+style interconnected world. Owner-scoped to THE MAP and BOSS FIGHTS only:
+zones, shortcuts/loops, bosses, hand-authored world. No bonfire system, no
+corpse run, no leveling (cut by owner decision — the research on them stays
+below for reference). Death = the current behavior, zone reloads.
+Written 2026-07-28; sources at the bottom.
 
 ## Part 1 — What the research says
 
@@ -67,30 +70,29 @@ corpse-run, hand-authored map. Written 2026-07-28; sources at the bottom.
   which got criticized for having *no* map once areas grew; Hollow Knight's
   purchasable map is the loved middle ground).
 
-### The 10 rules we build by
-1. Zones loop back to their shrine; never pure corridors.
+### The 8 rules we build by (map + bosses scope)
+1. Zones loop back to their entrances; never pure corridors.
 2. A shortcut is one-way until opened from the far side; open state is forever.
-3. Rest = enemies respawn + heal refills; bosses/gates/items never reset.
-4. Sparse shrines, dense shortcuts.
-5. Boss arenas seal (fog gate) and sit close to a shrine or shortcut mouth.
-6. Death drops resolve at the death cell; one retrieval chance.
-7. Every encounter hand-placed; encounters teach.
-8. Each zone gets its own palette + a landmark readable from its junctions.
-9. No fast travel until the mid-game unlock (spatial mastery first).
-10. World state is one store keyed by stable IDs; the world is one graph.
+3. Re-entering a zone respawns normal enemies; bosses/gates/items never reset.
+4. Boss arenas seal (fog gate) and sit close to a zone entrance or shortcut
+   mouth — the runback must be short.
+5. Every encounter hand-placed; encounters teach.
+6. Each zone gets its own palette + a landmark readable from its junctions.
+7. No fast travel (spatial mastery first; the map is small enough to walk).
+8. World state is one store keyed by stable IDs; the world is one graph.
 
 ## Part 2 — Theme mapping (chess kingdom)
 
 | Souls concept | The Unbound Pawn |
 |---|---|
 | Lordran / Yharnam | The Kingdom — one continuous chessboard-land, zones = districts |
-| Bonfire / lantern | **White Shrine** (a blessed white square; the pawn rests, candles = estus) |
-| Souls / blood echoes | **Resolve** (dropped as a scattered pile of chess pieces on death) |
-| Fog gate | **The Black Line** — a rank of shadow the pawn pushes through |
+| Fog gate | **The Black Line** — a rank of shadow sealing the boss arena |
 | Boss | Major pieces: Rook Warden, Bishop Inquisitor, Knight Errant, the Queen |
 | Shortcut gate | Castle gates, drawbridges, rook-tunnels ("castling passages") |
-| Level-up | **Promotion steps** — spend resolve at shrines toward becoming a Queen |
-| Player death | "The child resets the board" (already in the defeat text) |
+| Player death | "The child resets the board" — the zone reloads (kept as-is) |
+
+(Cut by owner decision: White Shrine bonfires, Resolve corpse-run, Promotion
+leveling. Revisit later if wanted — the research above still applies.)
 
 ## Part 3 — Architecture (fits the ECS, all content stays data)
 
@@ -113,16 +115,12 @@ truth, presentation drains events):
    job) fades out, swaps the zone scene, reboots EcsBoot with WorldState
    filtering (dead bosses don't spawn, open gates spawn open, taken pickups
    skipped), places player at entry cell. Camera2D limits per zone (already
-   supported by CameraRig.setup).
+   supported by CameraRig.setup). Death keeps today's behavior: the zone
+   reloads, normal enemies respawn, world state persists.
 5. **Gates/shortcuts** — gate = blocker entity with a `GateComponent` (id,
    open_from_side). Opening emits an event; persistence write goes through
    WorldState. Grid just removes the block.
-6. **Shrines** — interact event → systems: refill Health, respawn zone
-   enemies (re-run enemy spawn with WorldState filter), set respawn point,
-   (later) promotion spend UI.
-7. **Corpse run** — on player defeat: write resolve pile into WorldState,
-   respawn at shrine, spawn a pickup entity at the pile when that zone boots.
-8. **Bosses** — an `EnemyDefinition` with `boss = true` + arena marker: on
+6. **Bosses** — an `EnemyDefinition` with `boss = true` + arena marker: on
    arena entry, seal exits (temporary blocks) + HUD boss bar (event-driven);
    on defeat, write WorldState, unseal, open the zone's reward gate.
 
@@ -136,22 +134,23 @@ later purely for the in-game map screen.
 ## Part 4 — Build phases (each = one milestone, tests stay green)
 
 1. **Two zones + travel** — world_graph.tres, ExitMarker, ZoneDirector swap
-   with fade, WorldState autoload (visited only), camera limits per zone.
-2. **White Shrine** — rest/respawn/refill/set-spawn loop; death returns to
-   shrine (replaces reload-scene).
-3. **Resolve + corpse run** — enemies drop resolve, death drops the pile,
-   retrieval, HUD counter.
-4. **Gates + first loop** — GateComponent, lever/one-side opening,
-   persistence; author zone 1 as a proper DS1 loop back to its shrine.
-5. **Boss framework + first boss** — fog-seal arena, boss HUD bar, permanent
-   death, reward gate (first boss: Rook Warden, data-only via /new-enemy).
-6. **World art + landmarks** — bigger boards, per-zone palettes, landmark
-   structures, paint-tool extensions. Art direction human-owned.
-7. **Promotion (leveling)** — spend resolve at shrines; stat steps toward
-   Queen. Later; needs its own design pass.
+   with fade, WorldState autoload (pickup/visited persistence), camera limits
+   per zone. Death = reload current zone (unchanged behavior, now
+   zone-aware).
+2. **Gates + the first loop** — GateComponent, lever/one-side opening,
+   persistent open state; author zone 1 as a proper DS1 loop: long path out,
+   shortcut gate back to the entrance.
+3. **Boss framework + the Rook Warden** — Black Line arena seal, boss HUD
+   bar, permanent defeat in WorldState, reward gate opens the way onward.
+   Boss content itself data-only via /new-enemy.
+4. **World art + landmarks + the map itself** — bigger boards, per-zone
+   palettes, landmark structures at junctions, paint-tool extensions; author
+   the 3-5 zone kingdom as one connected graph. Art direction human-owned.
 
 Phase 1 is the next buildable slice. Zones after that are pure content:
-scene + graph entry + hand-placed enemies.
+scene + graph entry + hand-placed enemies. Cut phases (shrine, corpse run,
+promotion) can slot back in later without rework — WorldState and the zone
+graph are the substrate they'd need anyway.
 
 ## Sources
 
