@@ -34,6 +34,7 @@ var current_zone_id: StringName = &""
 var travel_in_progress := false
 var _debug_key_was_pressed := false
 var _fullscreen_key_was_pressed := false
+var _book_key_was_pressed := false
 var _last_token_owner := 0
 
 
@@ -71,6 +72,7 @@ func _boot_zone(entry_id: StringName) -> void:
 
 	cast = EcsBoot.boot(ecs, player_view, current_room, hero_start_cell, _taken_pickup_names(), _opened_gate_ids())
 	_hide_opened_gate_visuals()
+	_unlock_met_rules()
 	player_id = int(cast.get("player", 0))
 	total_enemies = cast.get("enemies", []).size()
 	remaining_enemies = total_enemies
@@ -122,6 +124,9 @@ func _process(delta: float) -> void:
 		var window := get_window()
 		window.mode = Window.MODE_WINDOWED if window.mode == Window.MODE_FULLSCREEN else Window.MODE_FULLSCREEN
 	_fullscreen_key_was_pressed = Input.is_key_pressed(KEY_F11)
+	if Input.is_key_pressed(KEY_B) and not _book_key_was_pressed:
+		_toggle_rule_book()
+	_book_key_was_pressed = Input.is_key_pressed(KEY_B)
 
 	if not room_ending:
 		ecs.tick(delta)
@@ -492,6 +497,55 @@ func _zone_id_of(zone_root: Node) -> StringName:
 ## WorldState autoload, null-safe so headless tests without autoloads run.
 func _world_state() -> Node:
 	return get_node_or_null("/root/WorldState")
+
+
+## --- The Book of House Rules -------------------------------------------
+
+
+## Meeting a piece = sharing a zone with it. Every definition present in the
+## freshly booted zone writes its page into the book, once, forever.
+func _unlock_met_rules() -> void:
+	var world_state := _world_state()
+	if world_state != null and current_room != null:
+		var newly_met := false
+		for child in current_room.get_children():
+			var view := child as ActorView
+			if view == null or view.definition == null:
+				continue
+			var piece_id := String(view.definition.id)
+			if not world_state.unlocked_rule_ids.has(piece_id):
+				world_state.unlocked_rule_ids[piece_id] = true
+				newly_met = true
+		if newly_met:
+			world_state.save_state()
+			_update_status("New pieces on the board. The book writes their rules. [B]")
+	var book := _rule_book_ui()
+	if book != null:
+		book.refresh(_unlocked_rule_ids())
+
+
+func _toggle_rule_book() -> void:
+	var book := _rule_book_ui()
+	if book == null or travel_in_progress:
+		return
+	book.visible = not book.visible
+	if book.visible:
+		book.refresh(_unlocked_rule_ids())
+	_set_player_control(not book.visible)
+
+
+func _rule_book_ui() -> RuleBookUI:
+	return get_node_or_null(^"RuleBookUI") as RuleBookUI
+
+
+func _unlocked_rule_ids() -> Array:
+	var world_state := _world_state()
+	if world_state == null:
+		return []
+	var ids: Array = []
+	for key in world_state.unlocked_rule_ids:
+		ids.append(StringName(key))
+	return ids
 
 
 func _facing_name(direction: Vector2i) -> String:

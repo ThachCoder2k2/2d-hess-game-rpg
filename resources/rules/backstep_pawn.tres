@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="RuleEntry" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/rule_entry.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+piece_id = &"backstep_pawn"
+title = "The backstep pawn"
+original_rule = "A pawn marches forward and may never retreat."
+amendment = "This pawn may move backward. Strike from behind and it will not be there."
+flavor = "The child wrote it in the margin, and the board obeyed."

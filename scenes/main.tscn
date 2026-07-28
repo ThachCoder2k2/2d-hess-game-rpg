@@ -7,6 +7,7 @@
 [ext_resource type="PackedScene" path="res://scenes/ui/hud.tscn" id="7"]
 [ext_resource type="AudioStream" path="res://assets/music/unbound_march.wav" id="8"]
 [ext_resource type="Resource" path="res://resources/world/world_graph.tres" id="9"]
+[ext_resource type="PackedScene" path="res://scenes/ui/rule_book.tscn" id="10"]
 
 [node name="Main" type="Node2D" unique_id=1651252280]
 script = ExtResource("1")
@@ -27,6 +28,8 @@ stream = ExtResource("8")
 volume_db = -8.0
 autoplay = true
 bus = &"Music"
+
+[node name="RuleBookUI" parent="." instance=ExtResource("10")]
 
 [node name="FadeLayer" type="CanvasLayer" parent="."]
 layer = 10

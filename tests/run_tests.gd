@@ -221,5 +221,23 @@ func _init() -> void:
 	_expect(charging != null and charging.validate().is_empty(), "Charging Pawn definition has no missing configuration")
 	_expect(charging.movement.allowed_directions.has(Vector2i(0, 2)) and not charging.movement.allowed_directions.has(Vector2i.UP), "Charging Pawn only ever leaps two squares")
 
+	# --- The Book of House Rules: every page names a real piece, UI renders ---
+	var rule_book := load("res://resources/rules/rule_book.tres") as RuleBook
+	_expect(rule_book != null and rule_book.validate().is_empty(), "the rule book loads with complete pages")
+	var definition_ids: Array = []
+	for file_name in DirAccess.get_files_at("res://resources/enemies"):
+		if file_name.ends_with(".tres"):
+			var definition := load("res://resources/enemies/%s" % file_name) as EnemyDefinition
+			if definition != null:
+				definition_ids.append(definition.id)
+	for entry in rule_book.entries:
+		_expect(entry.piece_id in definition_ids, "book page '%s' names a real piece" % entry.title)
+	var book_ui := (load("res://scenes/ui/rule_book.tscn") as PackedScene).instantiate() as RuleBookUI
+	root.add_child(book_ui)
+	book_ui.refresh([&"pawn_recruit"])
+	_expect(book_ui.entry_list.item_count == rule_book.entries.size(), "book UI lists every page")
+	_expect(book_ui.count_label.text.begins_with("1 of"), "book UI counts known amendments")
+	_expect(book_ui.entry_list.get_item_text(book_ui.entry_list.item_count - 1) == "Unread ink", "unmet pieces stay unread ink")
+
 	print("TESTS COMPLETE: %d failure(s)" % failures)
 	quit(1 if failures > 0 else 0)

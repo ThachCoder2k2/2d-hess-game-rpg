@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="RuleEntry" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/rule_entry.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+piece_id = &"knight_tracker"
+title = "The knight"
+original_rule = "The knight leaps in an L, and no piece may bar its way."
+amendment = "None yet written."
+flavor = "The stable door is still closed."

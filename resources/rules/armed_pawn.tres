@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="RuleEntry" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/rule_entry.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+piece_id = &"pawn_armed"
+title = "The armed pawn"
+original_rule = "A pawn strikes only with its diagonal capture."
+amendment = "A pawn holding a weapon strikes as the weapon."
+flavor = "Someone left the toy sword within reach."

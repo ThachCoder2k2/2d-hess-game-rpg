@@ -16,6 +16,8 @@ var player_health_carry := -1
 var taken_pickup_ids: Dictionary = {}
 ## "gate_id" -> true. Opened gates stay open forever (gates milestone).
 var opened_gate_ids: Dictionary = {}
+## "piece_id" -> true. Book of House Rules pages read (first meeting).
+var unlocked_rule_ids: Dictionary = {}
 
 
 const SAVE_PATH := "user://world_state.cfg"
@@ -31,6 +33,7 @@ func reset() -> void:
 	player_health_carry = -1
 	taken_pickup_ids.clear()
 	opened_gate_ids.clear()
+	unlocked_rule_ids.clear()
 
 
 func pickup_id(zone_id: StringName, marker_name: String) -> String:
@@ -46,6 +49,7 @@ func save_state(path := SAVE_PATH) -> void:
 	file.set_value("world", "last_entry_id", last_entry_id)
 	file.set_value("world", "taken_pickup_ids", taken_pickup_ids.keys())
 	file.set_value("world", "opened_gate_ids", opened_gate_ids.keys())
+	file.set_value("world", "unlocked_rule_ids", unlocked_rule_ids.keys())
 	file.save(path)
 
 
@@ -61,3 +65,6 @@ func load_state(path := SAVE_PATH) -> void:
 	opened_gate_ids.clear()
 	for key in file.get_value("world", "opened_gate_ids", []):
 		opened_gate_ids[String(key)] = true
+	unlocked_rule_ids.clear()
+	for key in file.get_value("world", "unlocked_rule_ids", []):
+		unlocked_rule_ids[String(key)] = true
