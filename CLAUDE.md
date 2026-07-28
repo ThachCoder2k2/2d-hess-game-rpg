@@ -32,6 +32,12 @@ session. Read `AGENTS.md` for the full workflow, and `docs/ARCHITECTURE.md` +
 	timing for the reserve→commit dodge window; never keyframe it.
   - Presentation (HUD/board/camera/main.gd) consumes `drain_events()` only;
 	it never reaches into the simulation.
+  - Sound (three layers, one owner each): motion sounds → audio tracks inside
+	the actor's clips (keying its `AudioPlayer`, bus `SFX`); mixing →
+	`default_bus_layout.tres` (Master ← SFX/Music/UI); event sounds with no
+	clip (pickups, room clear, jingles, UI) → the `SfxManager` autoload's
+	Inspector stream registry, played ONLY by the main.gd bridge from drained
+	events. Systems never play audio. Recipe: `/new-sound`.
 - **Research before building any new mechanic.** Mandatory order:
   1. Search Godot's built-in nodes/engine features for the capability
 	 (Timer, Tween, AnimationPlayer, Area2D signals, TileMapLayer, AStarGrid2D,

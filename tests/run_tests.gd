@@ -149,5 +149,15 @@ func _init() -> void:
 	var pickup_visual_source := FileAccess.get_file_as_string("res://scripts/visuals/pickup_visual.gd")
 	_expect(not pickup_visual_source.contains("func _draw") and not pickup_visual_source.contains("draw_"), "pickup visuals use Sprite2D nodes instead of script drawing")
 
+	# --- The sound structure: bus layout + event-sound registry ---
+	var bus_layout := load("res://default_bus_layout.tres") as AudioBusLayout
+	_expect(bus_layout != null, "the audio bus layout loads")
+	var sfx_scene := load("res://objects/audio/sfx_manager.tscn") as PackedScene
+	var sfx_manager := sfx_scene.instantiate()
+	root.add_child(sfx_manager)
+	var registry: Dictionary = sfx_manager.get("streams")
+	_expect(registry.has(&"pickup") and registry.has(&"room_clear") and registry.has(&"defeat_jingle"), "SfxManager registry carries the three event sounds")
+	_expect(StringName(sfx_manager.get("bus")) == &"SFX", "SfxManager routes to the SFX bus")
+
 	print("TESTS COMPLETE: %d failure(s)" % failures)
 	quit(1 if failures > 0 else 0)

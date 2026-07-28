@@ -111,6 +111,7 @@ func _handle_events(events: Array[Dictionary]) -> void:
 			&"weapon_changed":
 				_on_enemy_weapon_changed(entity, event.get("weapon"))
 			&"pickup_taken":
+				_play_sfx(&"pickup")
 				_free_pickup_view(int(event.get("item", 0)))
 			&"defeated":
 				_on_defeated(entity)
@@ -196,6 +197,7 @@ func _check_completion() -> void:
 		return
 	room_ending = true
 	_set_player_control(false)
+	_play_sfx(&"room_clear")
 	var clear_message := _room_text("get_clear_message", "ROOM CLEARED")
 	_update_status(clear_message)
 	_show_result(clear_message, _room_text("get_clear_subtitle", "PRESS R TO RESET"))
@@ -205,6 +207,7 @@ func _on_player_defeated() -> void:
 	if room_ending:
 		return
 	room_ending = true
+	_play_sfx(&"defeat_jingle")
 	var defeat_message := _room_text("get_defeat_message", "THE PAWN FALLS")
 	_update_status(defeat_message)
 	_show_result(defeat_message, _room_text("get_defeat_subtitle", "THE CHILD RESETS THE BOARD"))
@@ -274,6 +277,15 @@ func _show_result(title: String, subtitle: String) -> void:
 func _start_screen_shake(duration: float, strength: float) -> void:
 	if camera_rig != null:
 		camera_rig.start_shake(duration, strength)
+
+
+## Event sounds route through the SfxManager autoload (layer 3 of the sound
+## structure). Looked up by path so headless tests without autoloads stay
+## silent instead of crashing.
+func _play_sfx(sound_name: StringName) -> void:
+	var sfx := get_node_or_null("/root/SfxManager")
+	if sfx != null:
+		sfx.call("play", sound_name)
 
 
 func _facing_name(direction: Vector2i) -> String:

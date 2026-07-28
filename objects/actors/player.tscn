@@ -322,3 +322,4 @@ parameters/conditions/moving = false
 parameters/conditions/not_moving = false
 
 [node name="AudioPlayer" type="AudioStreamPlayer" parent="."]
+bus = &"SFX"

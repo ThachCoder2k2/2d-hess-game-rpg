@@ -91,8 +91,46 @@ def defeat_crumple():
     write_wav("defeat_crumple.wav", samples)
 
 
+def _tone(freq, dur, wave_kind="sine", gain=0.3, release=0.5):
+    n = int(RATE * dur)
+    out = []
+    for i in range(n):
+        p = freq * i / RATE
+        if wave_kind == "square":
+            s = 1.0 if math.sin(2 * math.pi * p) > 0 else -1.0
+        else:
+            s = math.sin(2 * math.pi * p)
+        out.append(s * gain * env(i, n, 0.02, release))
+    return out
+
+
+def pickup_chime():
+    # Two quick rising notes: grabbed something nice.
+    samples = _tone(660.0, 0.08) + _tone(990.0, 0.12, gain=0.28)
+    write_wav("pickup_chime.wav", samples)
+
+
+def room_clear():
+    # Little victory arpeggio: C5 E5 G5 C6.
+    samples = []
+    for freq in (523.25, 659.25, 783.99, 1046.5):
+        samples += _tone(freq, 0.12, "square", gain=0.18, release=0.4)
+    write_wav("room_clear.wav", samples)
+
+
+def defeat_jingle():
+    # Three sagging notes: the pawn falls.
+    samples = []
+    for freq in (392.0, 329.63, 246.94):
+        samples += _tone(freq, 0.18, "square", gain=0.16, release=0.6)
+    write_wav("defeat_jingle.wav", samples)
+
+
 if __name__ == "__main__":
     telegraph_warning()
     sword_whoosh()
     hurt_thud()
     defeat_crumple()
+    pickup_chime()
+    room_clear()
+    defeat_jingle()

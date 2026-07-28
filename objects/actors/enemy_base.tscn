@@ -350,3 +350,4 @@ anim_player = NodePath("../AnimationPlayer")
 active = true
 
 [node name="AudioPlayer" type="AudioStreamPlayer" parent="."]
+bus = &"SFX"
