@@ -455,3 +455,10 @@ Researched the AI-focused editor surface at the owner's request. Found `EnemyBra
 - The gameplay slide (cell-to-cell lerp from MoveState) stays procedural — unchanged, per the MotionRoot/SpriteRoot contract.
 - New suite helper `_actor_has_state_graph`: all 5 actor scenes assert an active AnimationTree with a StateMachine root.
 - Verified: import clean, all 6 suites green, whitespace clean, real-render capture shows tree-driven hops/pursuit/pips/weapons live.
+
+## Sound Telegraphs + Editor-Owned Defeat - 2026-07-28
+
+- Research follow-ups built. (1) SOUND: the missing telegraph channel per the Into the Breach/telegraphing research — four generated chiptune SFX (`tools/generate_sfx.py` → `assets/sfx/`: telegraph_warning, sword_whoosh, hurt_thud, defeat_crumple), keyed as AUDIO TRACKS inside the animation clips through each actor's new `AudioStreamPlayer`. Editor-native: retiming a clip retimes its sound; the telegraph beep re-fires each windup loop.
+- (2) DEFEAT CLIP: every actor scene gains a `defeat` clip (squash to flat + crumple sound) and a terminal `defeat` state (travel-only entries from every state, no exit — holds the final pose). `ViewSyncSystem` travels to it once on the death edge (`Health.current <= 0`, `ViewRef.was_dead` memory); `main.gd`'s death tween is gone — the bridge now only schedules the view despawn 0.6s later. The last code-animated reaction is editor-owned.
+- Battle scars: the open editor resaved `player.tscn` mid-surgery (uid attrs, reordered blocks, dropped `active`/`states/defeat`) — repaired surgically; and .tscn sub_resources must be DEFINED before referenced — the defeat Animation initially landed after the AnimationLibrary that referenced it, failing parse on 5 scenes; fixed by reordering. Lesson recorded: close the editor before batch scene surgery.
+- Suite additions: defeat clip + AudioPlayer assertions on all 5 actor scenes. All 6 suites green, import clean, render clean.

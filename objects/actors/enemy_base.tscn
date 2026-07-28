@@ -1,4 +1,4 @@
-[gd_scene load_steps=28 format=3]
+[gd_scene load_steps=33 format=3]
 
 [ext_resource type="Script" path="res://scripts/ecs/actor_view.gd" id="1"]
 [ext_resource type="Resource" path="res://resources/enemies/pawn_recruit.tres" id="2"]
@@ -8,6 +8,9 @@
 [ext_resource type="Texture2D" path="res://assets/sprites/generated/facing_arrow.png" id="6"]
 [ext_resource type="Texture2D" path="res://assets/sprites/generated/health_pip_full.png" id="7"]
 [ext_resource type="Texture2D" path="res://assets/sprites/generated/health_pip_empty.png" id="8"]
+[ext_resource type="AudioStream" path="res://assets/sfx/telegraph_warning.wav" id="9"]
+[ext_resource type="AudioStream" path="res://assets/sfx/hurt_thud.wav" id="10"]
+[ext_resource type="AudioStream" path="res://assets/sfx/defeat_crumple.wav" id="11"]
 
 [sub_resource type="Animation" id="Animation_reset"]
 length = 0.001
@@ -80,6 +83,21 @@ tracks/0/keys = {
 "update": 0,
 "values": [Vector2(1, 1), Vector2(1.12, 0.88), Vector2(1, 1)]
 }
+tracks/1/type = "audio"
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/path = NodePath("AudioPlayer")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/keys = {
+"clips": [{
+"end_offset": 0.0,
+"start_offset": 0.0,
+"stream": ExtResource("10")
+}],
+"times": PackedFloat32Array(0)
+}
+tracks/1/use_blend = true
 
 [sub_resource type="Animation" id="Animation_attack"]
 resource_name = "attack"
@@ -154,11 +172,58 @@ tracks/1/keys = {
 "update": 0,
 "values": [Vector2(1, 1), Vector2(1.12, 0.86), Vector2(1, 1)]
 }
+tracks/2/type = "audio"
+tracks/2/imported = false
+tracks/2/enabled = true
+tracks/2/path = NodePath("AudioPlayer")
+tracks/2/interp = 1
+tracks/2/loop_wrap = true
+tracks/2/keys = {
+"clips": [{
+"end_offset": 0.0,
+"start_offset": 0.0,
+"stream": ExtResource("9")
+}],
+"times": PackedFloat32Array(0)
+}
+tracks/2/use_blend = true
+
+[sub_resource type="Animation" id="Animation_defeat"]
+resource_name = "defeat"
+length = 0.3
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("MotionRoot/SpriteRoot:scale")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 0.18, 0.3),
+"transitions": PackedFloat32Array(1, 1, 1),
+"update": 0,
+"values": [Vector2(1, 1), Vector2(1.15, 0.15), Vector2(1.2, 0.08)]
+}
+tracks/1/type = "audio"
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/path = NodePath("AudioPlayer")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/keys = {
+"clips": [{
+"end_offset": 0.0,
+"start_offset": 0.0,
+"stream": ExtResource("11")
+}],
+"times": PackedFloat32Array(0)
+}
+tracks/1/use_blend = true
 
 [sub_resource type="AnimationLibrary" id="AnimationLibrary_enemy"]
 _data = {
 &"RESET": SubResource("Animation_reset"),
 &"attack": SubResource("Animation_attack"),
+&"defeat": SubResource("Animation_defeat"),
 &"hurt": SubResource("Animation_hurt"),
 &"idle": SubResource("Animation_idle"),
 &"step": SubResource("Animation_step"),
@@ -179,6 +244,9 @@ animation = &"telegraph"
 
 [sub_resource type="AnimationNodeAnimation" id="State_attack"]
 animation = &"attack"
+
+[sub_resource type="AnimationNodeAnimation" id="State_defeat"]
+animation = &"defeat"
 
 [sub_resource type="AnimationNodeStateMachineTransition" id="T_start"]
 advance_mode = 2
@@ -206,6 +274,8 @@ xfade_time = 0.06
 [sub_resource type="AnimationNodeStateMachine" id="StateMachine_actor"]
 states/attack/node = SubResource("State_attack")
 states/attack/position = Vector2(660, 340)
+states/defeat/node = SubResource("State_defeat")
+states/defeat/position = Vector2(850, 220)
 states/hurt/node = SubResource("State_hurt")
 states/hurt/position = Vector2(480, 100)
 states/idle/node = SubResource("State_idle")
@@ -214,7 +284,7 @@ states/step/node = SubResource("State_step")
 states/step/position = Vector2(540, 220)
 states/telegraph/node = SubResource("State_telegraph")
 states/telegraph/position = Vector2(320, 380)
-transitions = ["Start", "idle", SubResource("T_start"), "idle", "step", SubResource("T_to_step"), "step", "idle", SubResource("T_to_idle"), "idle", "hurt", SubResource("T_travel"), "step", "hurt", SubResource("T_travel"), "telegraph", "hurt", SubResource("T_travel"), "hurt", "idle", SubResource("T_recover"), "idle", "telegraph", SubResource("T_travel"), "step", "telegraph", SubResource("T_travel"), "telegraph", "idle", SubResource("T_telegraph_out"), "idle", "attack", SubResource("T_travel"), "attack", "idle", SubResource("T_recover")]
+transitions = ["Start", "idle", SubResource("T_start"), "idle", "step", SubResource("T_to_step"), "step", "idle", SubResource("T_to_idle"), "idle", "hurt", SubResource("T_travel"), "step", "hurt", SubResource("T_travel"), "telegraph", "hurt", SubResource("T_travel"), "hurt", "idle", SubResource("T_recover"), "idle", "telegraph", SubResource("T_travel"), "step", "telegraph", SubResource("T_travel"), "telegraph", "idle", SubResource("T_telegraph_out"), "idle", "attack", SubResource("T_travel"), "attack", "idle", SubResource("T_recover"), "idle", "defeat", SubResource("T_travel"), "step", "defeat", SubResource("T_travel"), "hurt", "defeat", SubResource("T_travel"), "telegraph", "defeat", SubResource("T_travel")]
 
 [node name="EnemyActor" type="Node2D"]
 z_index = 2
@@ -278,3 +348,5 @@ libraries = {
 tree_root = SubResource("StateMachine_actor")
 anim_player = NodePath("../AnimationPlayer")
 active = true
+
+[node name="AudioPlayer" type="AudioStreamPlayer" parent="."]

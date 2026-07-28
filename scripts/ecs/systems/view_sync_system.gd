@@ -42,6 +42,7 @@ func _sync_appearance(entity_id: int, view: EcsComponents.ViewRef, appearance: A
 	var telegraphing := ai != null and ai.state == EcsComponents.EnemyAI.STATE_TELEGRAPH
 	var hurt := health != null and health.hurt_visual_time > 0.0
 	var attacking := combat != null and combat.attack_visual_time > 0.0
+	var dead := health != null and health.current <= 0
 
 	var body_sprite := appearance.get_node_or_null("MotionRoot/SpriteRoot/BodySprite") as Sprite2D
 	if body_sprite != null:
@@ -78,7 +79,7 @@ func _sync_appearance(entity_id: int, view: EcsComponents.ViewRef, appearance: A
 	_sync_weapon(entity_id, appearance, combat, facing_direction, attacking)
 	_sync_health_pips(appearance, health)
 
-	_drive_clips(view, appearance, moving, hurt, attacking, telegraphing)
+	_drive_clips(view, appearance, moving, hurt, attacking, telegraphing, dead)
 	view.was_hurt = hurt
 	view.was_attacking = attacking
 	view.was_telegraphing = telegraphing
@@ -90,8 +91,21 @@ func _sync_appearance(entity_id: int, view: EcsComponents.ViewRef, appearance: A
 ## (hurt/attack/telegraph) enter via travel() on state edges, because a state
 ## machine cannot express "from any state" entries. Views without a tree fall
 ## back to direct AnimationPlayer play() so bare test views keep working.
-func _drive_clips(view: EcsComponents.ViewRef, appearance: ActorView, moving: bool, hurt: bool, attacking: bool, telegraphing: bool) -> void:
+func _drive_clips(view: EcsComponents.ViewRef, appearance: ActorView, moving: bool, hurt: bool, attacking: bool, telegraphing: bool, dead: bool) -> void:
 	var tree := appearance.get_node_or_null("AnimationTree") as AnimationTree
+	# Death outranks everything: enter the defeat clip once, then hold its
+	# final pose (the graph's defeat state has no exit) until the bridge
+	# frees the view.
+	if dead:
+		if not view.was_dead:
+			view.was_dead = true
+			if tree != null:
+				var death_playback: AnimationNodeStateMachinePlayback = tree.get("parameters/playback")
+				if death_playback != null:
+					death_playback.travel(&"defeat")
+			else:
+				_play_clip(appearance, &"defeat")
+		return
 	if tree == null:
 		if hurt and not view.was_hurt:
 			_play_clip(appearance, &"hurt")

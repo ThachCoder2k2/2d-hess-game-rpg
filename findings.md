@@ -226,3 +226,5 @@
 - Scenes remain the authoring surface: parked ActorViews are spawn markers + puppets, so drag-to-place, Inspector overrides (the armed pawn = black_pawn view + pawn_armed.tres), and painted solid walls all survived the conversion intact.
 - Presentation bridges consume the event queue, never poke the simulation; the simulation never calls presentation. Events carry everything the bridge needs (the intent_changed event carries the whole EnemyIntent so F3 debug works without the board reading AI internals).
 - SceneTree-script tests: `_ready` does not run during `_init` — full-scene boots need `call_deferred` + `await process_frame` (re-learned twice now; it presents as Nil lookups or a hang when a failed assert skips `quit()`).
+
+- .tscn text surgery rules learned twice: (1) a SubResource must be DEFINED above any block that references it — the parser is single-pass; (2) never batch-edit scenes while the Godot editor is open — it resaves buffers (adding uid/unique_id attrs, reordering blocks, dropping default-valued properties like AnimationTree.active), which both invalidates text anchors and can clobber disk edits. Close the editor first.

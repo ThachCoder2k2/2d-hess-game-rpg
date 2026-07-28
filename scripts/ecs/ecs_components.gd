@@ -59,6 +59,7 @@ class ViewRef:
 	var was_hurt := false
 	var was_attacking := false
 	var was_telegraphing := false
+	var was_dead := false
 
 
 class AttackIntent:

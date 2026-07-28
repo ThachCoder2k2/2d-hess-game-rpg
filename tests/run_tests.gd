@@ -71,6 +71,8 @@ func _init() -> void:
 	_expect(hero_view != null, "player scene root is an ActorView (no gameplay script)")
 	_expect(_actor_is_sprite_animated(hero_view), "player view owns its sprites and AnimationPlayer")
 	_expect(_actor_has_clip(hero_view, &"step") and _actor_has_clip(hero_view, &"attack"), "player view owns step/attack clips")
+	_expect(_actor_has_clip(hero_view, &"defeat"), "player view owns an editor-authored defeat clip")
+	_expect(hero_view.get_node_or_null("AudioPlayer") is AudioStreamPlayer, "player view carries the clip-keyed audio player")
 	_expect(hero_view.definition == null, "player view has no enemy definition")
 	_expect(hero_view.get_node_or_null("Camera2D") is CameraRig, "player view carries the camera rig")
 	var hero_health_node := hero_view.get_node_or_null("HealthComponent") as HealthComponent
@@ -99,6 +101,7 @@ func _init() -> void:
 		_expect(enemy_view.definition.id == expected_definitions[scene_path], "%s carries its own EnemyDefinition" % scene_name)
 		_expect(enemy_view.definition.validate().is_empty(), "%s definition has no missing configuration" % scene_name)
 		_expect(_actor_is_sprite_animated(enemy_view) and _actor_has_clip(enemy_view, &"telegraph"), "%s owns sprites + telegraph clip" % scene_name)
+		_expect(_actor_has_clip(enemy_view, &"defeat") and enemy_view.get_node_or_null("AudioPlayer") is AudioStreamPlayer, "%s owns defeat clip + audio player" % scene_name)
 		_expect(_actor_has_state_graph(enemy_view), "%s animation transitions live in an editor AnimationTree graph" % scene_name)
 
 	# --- Editor-authored combat data (the .tres stays the truth) ---

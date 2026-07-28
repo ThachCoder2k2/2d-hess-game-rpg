@@ -1,15 +1,18 @@
-[gd_scene load_steps=26 format=3]
+[gd_scene format=3 uid="uid://ccqe76typpaaq"]
 
-[ext_resource type="Script" path="res://scripts/ecs/actor_view.gd" id="1"]
-[ext_resource type="Script" path="res://scripts/ecs/components/health_component.gd" id="8"]
-[ext_resource type="Script" path="res://scripts/ecs/components/combat_component.gd" id="9"]
-[ext_resource type="Script" path="res://scripts/ecs/components/movement_component.gd" id="10"]
-[ext_resource type="Script" path="res://scripts/ecs/components/input_component.gd" id="11"]
-[ext_resource type="Resource" path="res://resources/attacks/wooden_sword.tres" id="2"]
-[ext_resource type="Resource" path="res://resources/attacks/pencil_thrust.tres" id="3"]
-[ext_resource type="Script" path="res://scripts/world/camera_rig.gd" id="5"]
-[ext_resource type="Texture2D" path="res://assets/sprites/generated/hero_pawn.png" id="6"]
-[ext_resource type="Texture2D" path="res://assets/sprites/generated/toy_sword.png" id="7"]
+[ext_resource type="Script" uid="uid://16la5b2fanxj" path="res://scripts/ecs/actor_view.gd" id="1"]
+[ext_resource type="Resource" uid="uid://byvw26cd7u12f" path="res://resources/attacks/wooden_sword.tres" id="2"]
+[ext_resource type="Resource" uid="uid://bog2k4gpe6yi4" path="res://resources/attacks/pencil_thrust.tres" id="3"]
+[ext_resource type="Script" uid="uid://d22stukg2rlbf" path="res://scripts/world/camera_rig.gd" id="5"]
+[ext_resource type="Texture2D" uid="uid://dmt84lc321uq" path="res://assets/sprites/generated/hero_pawn.png" id="6"]
+[ext_resource type="Texture2D" uid="uid://6hr88wvg8w12" path="res://assets/sprites/generated/toy_sword.png" id="7"]
+[ext_resource type="Script" uid="uid://wtat33gah5lr" path="res://scripts/ecs/components/health_component.gd" id="8"]
+[ext_resource type="Script" uid="uid://b747qwpo66rih" path="res://scripts/ecs/components/combat_component.gd" id="9"]
+[ext_resource type="Script" uid="uid://b75f8h6xf31fg" path="res://scripts/ecs/components/movement_component.gd" id="10"]
+[ext_resource type="Script" uid="uid://upbidox0dhdq" path="res://scripts/ecs/components/input_component.gd" id="11"]
+[ext_resource type="AudioStream" path="res://assets/sfx/sword_whoosh.wav" id="12"]
+[ext_resource type="AudioStream" path="res://assets/sfx/hurt_thud.wav" id="13"]
+[ext_resource type="AudioStream" path="res://assets/sfx/defeat_crumple.wav" id="14"]
 
 [sub_resource type="Animation" id="Animation_reset"]
 length = 0.001
@@ -50,22 +53,48 @@ tracks/2/keys = {
 "values": [0.0]
 }
 
-[sub_resource type="Animation" id="Animation_idle"]
-resource_name = "idle"
-length = 0.8
-loop_mode = 1
+[sub_resource type="Animation" id="Animation_attack"]
+resource_name = "attack"
+length = 0.18
 tracks/0/type = "value"
 tracks/0/imported = false
 tracks/0/enabled = true
-tracks/0/path = NodePath("MotionRoot/SpriteRoot:position")
+tracks/0/path = NodePath("MotionRoot/SpriteRoot/WeaponPivot/WeaponSprite:rotation")
 tracks/0/interp = 1
 tracks/0/loop_wrap = true
 tracks/0/keys = {
-"times": PackedFloat32Array(0, 0.4, 0.8),
+"times": PackedFloat32Array(0, 0.08, 0.18),
 "transitions": PackedFloat32Array(1, 1, 1),
 "update": 0,
-"values": [Vector2(0, 0), Vector2(0, -1.5), Vector2(0, 0)]
+"values": [-0.45, 0.42, 0.0]
 }
+tracks/1/type = "value"
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/path = NodePath("MotionRoot/SpriteRoot:position")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/keys = {
+"times": PackedFloat32Array(0, 0.06, 0.18),
+"transitions": PackedFloat32Array(1, 1, 1),
+"update": 0,
+"values": [Vector2(0, 0), Vector2(0, -4), Vector2(0, 0)]
+}
+tracks/2/type = "audio"
+tracks/2/imported = false
+tracks/2/enabled = true
+tracks/2/path = NodePath("AudioPlayer")
+tracks/2/interp = 1
+tracks/2/loop_wrap = true
+tracks/2/keys = {
+"clips": [{
+"end_offset": 0.0,
+"start_offset": 0.0,
+"stream": ExtResource("12")
+}],
+"times": PackedFloat32Array(0)
+}
+tracks/2/use_blend = true
 
 [sub_resource type="Animation" id="Animation_hurt"]
 resource_name = "hurt"
@@ -93,6 +122,38 @@ tracks/1/keys = {
 "transitions": PackedFloat32Array(1, 1, 1, 1),
 "update": 0,
 "values": [Vector2(0, 0), Vector2(2.5, 0), Vector2(-2, 0), Vector2(0, 0)]
+}
+tracks/2/type = "audio"
+tracks/2/imported = false
+tracks/2/enabled = true
+tracks/2/path = NodePath("AudioPlayer")
+tracks/2/interp = 1
+tracks/2/loop_wrap = true
+tracks/2/keys = {
+"clips": [{
+"end_offset": 0.0,
+"start_offset": 0.0,
+"stream": ExtResource("13")
+}],
+"times": PackedFloat32Array(0)
+}
+tracks/2/use_blend = true
+
+[sub_resource type="Animation" id="Animation_idle"]
+resource_name = "idle"
+length = 0.8
+loop_mode = 1
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("MotionRoot/SpriteRoot:position")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 0.4, 0.8),
+"transitions": PackedFloat32Array(1, 1, 1),
+"update": 0,
+"values": [Vector2(0, 0), Vector2(0, -1.5), Vector2(0, 0)]
 }
 
 [sub_resource type="Animation" id="Animation_step"]
@@ -124,42 +185,52 @@ tracks/1/keys = {
 "values": [Vector2(1, 1), Vector2(1.08, 0.92), Vector2(0.95, 1.06), Vector2(1, 1)]
 }
 
-[sub_resource type="Animation" id="Animation_attack"]
-resource_name = "attack"
-length = 0.18
+[sub_resource type="Animation" id="Animation_defeat"]
+resource_name = "defeat"
+length = 0.3
 tracks/0/type = "value"
 tracks/0/imported = false
 tracks/0/enabled = true
-tracks/0/path = NodePath("MotionRoot/SpriteRoot/WeaponPivot/WeaponSprite:rotation")
+tracks/0/path = NodePath("MotionRoot/SpriteRoot:scale")
 tracks/0/interp = 1
 tracks/0/loop_wrap = true
 tracks/0/keys = {
-"times": PackedFloat32Array(0, 0.08, 0.18),
+"times": PackedFloat32Array(0, 0.18, 0.3),
 "transitions": PackedFloat32Array(1, 1, 1),
 "update": 0,
-"values": [-0.45, 0.42, 0.0]
+"values": [Vector2(1, 1), Vector2(1.15, 0.15), Vector2(1.2, 0.08)]
 }
-tracks/1/type = "value"
+tracks/1/type = "audio"
 tracks/1/imported = false
 tracks/1/enabled = true
-tracks/1/path = NodePath("MotionRoot/SpriteRoot:position")
+tracks/1/path = NodePath("AudioPlayer")
 tracks/1/interp = 1
 tracks/1/loop_wrap = true
 tracks/1/keys = {
-"times": PackedFloat32Array(0, 0.06, 0.18),
-"transitions": PackedFloat32Array(1, 1, 1),
-"update": 0,
-"values": [Vector2(0, 0), Vector2(0, -4), Vector2(0, 0)]
+"clips": [{
+"end_offset": 0.0,
+"start_offset": 0.0,
+"stream": ExtResource("14")
+}],
+"times": PackedFloat32Array(0)
 }
+tracks/1/use_blend = true
 
 [sub_resource type="AnimationLibrary" id="AnimationLibrary_hero"]
 _data = {
 &"RESET": SubResource("Animation_reset"),
 &"attack": SubResource("Animation_attack"),
+&"defeat": SubResource("Animation_defeat"),
 &"hurt": SubResource("Animation_hurt"),
 &"idle": SubResource("Animation_idle"),
 &"step": SubResource("Animation_step")
 }
+
+[sub_resource type="AnimationNodeAnimation" id="State_attack"]
+animation = &"attack"
+
+[sub_resource type="AnimationNodeAnimation" id="State_hurt"]
+animation = &"hurt"
 
 [sub_resource type="AnimationNodeAnimation" id="State_idle"]
 animation = &"idle"
@@ -167,11 +238,8 @@ animation = &"idle"
 [sub_resource type="AnimationNodeAnimation" id="State_step"]
 animation = &"step"
 
-[sub_resource type="AnimationNodeAnimation" id="State_hurt"]
-animation = &"hurt"
-
-[sub_resource type="AnimationNodeAnimation" id="State_attack"]
-animation = &"attack"
+[sub_resource type="AnimationNodeAnimation" id="State_defeat"]
+animation = &"defeat"
 
 [sub_resource type="AnimationNodeStateMachineTransition" id="T_start"]
 advance_mode = 2
@@ -185,7 +253,6 @@ advance_mode = 2
 advance_condition = &"not_moving"
 
 [sub_resource type="AnimationNodeStateMachineTransition" id="T_travel"]
-advance_mode = 1
 
 [sub_resource type="AnimationNodeStateMachineTransition" id="T_recover"]
 switch_mode = 2
@@ -193,70 +260,65 @@ advance_mode = 2
 
 [sub_resource type="AnimationNodeStateMachine" id="StateMachine_actor"]
 states/attack/node = SubResource("State_attack")
-states/attack/position = Vector2(660, 340)
+states/attack/position = Vector2(829, 376)
+states/defeat/node = SubResource("State_defeat")
+states/defeat/position = Vector2(850, 220)
 states/hurt/node = SubResource("State_hurt")
 states/hurt/position = Vector2(480, 100)
 states/idle/node = SubResource("State_idle")
 states/idle/position = Vector2(320, 220)
 states/step/node = SubResource("State_step")
 states/step/position = Vector2(540, 220)
-transitions = ["Start", "idle", SubResource("T_start"), "idle", "step", SubResource("T_to_step"), "step", "idle", SubResource("T_to_idle"), "idle", "hurt", SubResource("T_travel"), "step", "hurt", SubResource("T_travel"), "attack", "hurt", SubResource("T_travel"), "hurt", "idle", SubResource("T_recover"), "idle", "attack", SubResource("T_travel"), "step", "attack", SubResource("T_travel"), "attack", "idle", SubResource("T_recover")]
+transitions = ["Start", "idle", SubResource("T_start"), "idle", "step", SubResource("T_to_step"), "step", "idle", SubResource("T_to_idle"), "idle", "hurt", SubResource("T_travel"), "step", "hurt", SubResource("T_travel"), "attack", "hurt", SubResource("T_travel"), "hurt", "idle", SubResource("T_recover"), "idle", "attack", SubResource("T_travel"), "step", "attack", SubResource("T_travel"), "attack", "idle", SubResource("T_recover"), "idle", "defeat", SubResource("T_travel"), "step", "defeat", SubResource("T_travel"), "hurt", "defeat", SubResource("T_travel"), "attack", "defeat", SubResource("T_travel")]
 
-[node name="PawnHero" type="Node2D"]
+[node name="PawnHero" type="Node2D" unique_id=860054415]
 z_index = 3
 script = ExtResource("1")
 weapon_anchor = Vector2(4, -14)
 default_weapon_texture = ExtResource("7")
 
-[node name="MotionRoot" type="Node2D" parent="."]
+[node name="MotionRoot" type="Node2D" parent="." unique_id=475993718]
 
-[node name="SpriteRoot" type="Node2D" parent="MotionRoot"]
+[node name="SpriteRoot" type="Node2D" parent="MotionRoot" unique_id=810224020]
 
-[node name="BodySprite" type="Sprite2D" parent="MotionRoot/SpriteRoot"]
+[node name="BodySprite" type="Sprite2D" parent="MotionRoot/SpriteRoot" unique_id=332353943]
 position = Vector2(0, -8)
-texture = ExtResource("6")
 scale = Vector2(0.5, 0.5)
+texture = ExtResource("6")
 
-[node name="WeaponPivot" type="Node2D" parent="MotionRoot/SpriteRoot"]
+[node name="WeaponPivot" type="Node2D" parent="MotionRoot/SpriteRoot" unique_id=1353551086]
 visible = false
 
-[node name="WeaponSprite" type="Sprite2D" parent="MotionRoot/SpriteRoot/WeaponPivot"]
+[node name="WeaponSprite" type="Sprite2D" parent="MotionRoot/SpriteRoot/WeaponPivot" unique_id=1644425038]
 position = Vector2(0, -18)
-texture = ExtResource("7")
 scale = Vector2(0.46, 0.46)
+texture = ExtResource("7")
 
-[node name="AnimationPlayer" type="AnimationPlayer" parent="."]
-libraries = {
-&"": SubResource("AnimationLibrary_hero")
-}
+[node name="AnimationPlayer" type="AnimationPlayer" parent="." unique_id=1067127119]
+libraries/ = SubResource("AnimationLibrary_hero")
 
-[node name="HealthComponent" type="Node" parent="."]
+[node name="HealthComponent" type="Node" parent="." unique_id=1937133876]
 script = ExtResource("8")
-max_health = 3
-invulnerability_duration = 0.7
 
-[node name="CombatComponent" type="Node" parent="."]
+[node name="CombatComponent" type="Node" parent="." unique_id=782913554]
 script = ExtResource("9")
 wooden_sword = ExtResource("2")
 pencil_thrust = ExtResource("3")
-skill_cooldown_duration = 1.25
 
-[node name="MovementComponent" type="Node" parent="."]
+[node name="MovementComponent" type="Node" parent="." unique_id=75190364]
 script = ExtResource("10")
-step_duration = 0.18
 
-[node name="InputComponent" type="Node" parent="."]
+[node name="InputComponent" type="Node" parent="." unique_id=170311077]
 script = ExtResource("11")
-held_repeat_delay = 0.22
 
-[node name="Camera2D" type="Camera2D" parent="."]
+[node name="Camera2D" type="Camera2D" parent="." unique_id=1157041373]
 script = ExtResource("5")
-follow_enabled = true
-clamp_to_board_bounds = true
-zoom_level = 1.0
-smoothing_speed = 8.0
 
-[node name="AnimationTree" type="AnimationTree" parent="."]
+[node name="AnimationTree" type="AnimationTree" parent="." unique_id=1261665792]
 tree_root = SubResource("StateMachine_actor")
 anim_player = NodePath("../AnimationPlayer")
 active = true
+parameters/conditions/moving = false
+parameters/conditions/not_moving = false
+
+[node name="AudioPlayer" type="AudioStreamPlayer" parent="."]

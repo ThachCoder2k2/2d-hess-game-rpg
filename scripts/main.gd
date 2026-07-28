@@ -170,16 +170,19 @@ func _on_defeated(entity: int) -> void:
 	_check_completion()
 
 
-## The flatten-and-vanish death: the view squashes and frees, the entity is
-## already off the grid (HealthSystem did that).
+## Death visuals are editor-owned now: ViewSyncSystem travels the view's
+## AnimationTree to the defeat clip (squash + crumple sound). The bridge only
+## schedules the despawn after the clip has had its moment.
 func _play_defeat_animation(entity: int) -> void:
 	var view := cast.get("view_by_entity", {}).get(entity) as Node2D
 	if view == null or not is_instance_valid(view):
 		return
-	ecs.remove_component(entity, EcsComponents.VIEW_REF)
 	var tween := create_tween()
-	tween.tween_property(view, "scale", Vector2(1.15, 0.15), 0.18)
-	tween.tween_callback(view.queue_free)
+	tween.tween_interval(0.6)
+	tween.tween_callback(func() -> void:
+		ecs.remove_component(entity, EcsComponents.VIEW_REF)
+		if is_instance_valid(view):
+			view.queue_free())
 
 
 func _check_completion() -> void:
