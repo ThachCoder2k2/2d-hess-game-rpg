@@ -477,3 +477,10 @@ Researched the AI-focused editor surface at the owner's request. Found `EnemyBra
 - The empty Music bus gets its first content, structure-first: a `MusicPlayer` AudioStreamPlayer node in `scenes/main.tscn` (autoplay, bus `Music`, -8 dB) — zero code, the scene owns the soundtrack the same way clips own motion sounds.
 - Placeholder track: `tools/generate_music.py` → `assets/music/unbound_march.wav`, a 17s A-minor chiptune march (triangle bass eighths, 25%-duty square lead over Am-F-C-G, offbeat noise hats). The WAV embeds a `smpl` loop chunk over the whole file, so Godot's default "Detect From WAV" import yields a seamless `LOOP_FORWARD` stream with no import-dock tweaking. Real music ships by dropping a file over the same path.
 - Suite additions: main scene carries an autoplaying MusicPlayer, routed to Music, stream loops from its embedded WAV loop points. All 6 suites green, import clean.
+
+## Demo Posture + macOS Export - 2026-07-28
+
+- Debug overlay demoted from hardcoded `true` to an Inspector checkbox on the Main scene root (`@export var debug_enabled := false` in main.gd); boot pushes it to the board so the scene is the single switch, F3 still toggles live.
+- Real-game window: fullscreen at boot (`window/size/mode=3`), aspect-preserving letterbox over the 640x360 viewport (`stretch/aspect="keep"`), F11 drops to windowed, hero pawn is the project icon.
+- macOS export works end to end: official 4.6.3 templates installed to `~/Library/Application Support/Godot/export_templates/4.6.3.stable`; `export_presets.cfg` (gitignored per convention — local file, recreate from this recipe if lost: macOS preset, ad-hoc codesign, notarization off, universal arch, export_path `build/TheUnboundPawn.zip`); ETC2/ASTC VRAM compression enabled in project.godot (hard requirement for arm64/universal export). Export: `Godot --headless --path . --export-release "macOS" build/TheUnboundPawn.zip` with the real $HOME (templates live there). Verified: 74MB zip, universal Mach-O, boots and quits clean.
+- Suite additions: debug ships off, window ships fullscreen. All 6 suites green.
