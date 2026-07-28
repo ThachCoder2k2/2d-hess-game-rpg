@@ -166,6 +166,11 @@ func _init() -> void:
 	_expect(music_player != null and music_player.bus == &"Music", "MusicPlayer routes to the Music bus")
 	var music_stream: AudioStreamWAV = music_player.stream as AudioStreamWAV if music_player != null else null
 	_expect(music_stream != null and music_stream.loop_mode == AudioStreamWAV.LOOP_FORWARD, "music track loops from its embedded WAV loop points")
+
+	# Demo posture: debug overlay is an Inspector checkbox that ships off,
+	# and the game window ships fullscreen (F11 toggles at runtime).
+	_expect(not bool(main_scene.get("debug_enabled")), "debug overlay ships off (Inspector checkbox on Main)")
+	_expect(int(ProjectSettings.get_setting("display/window/size/mode", 0)) == 3, "game window ships fullscreen")
 	main_scene.free()
 
 	print("TESTS COMPLETE: %d failure(s)" % failures)

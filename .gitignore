@@ -3,4 +3,5 @@
 *.translation
 *.swp
 export_presets.cfg
+build/
 docs/vault/.obsidian/

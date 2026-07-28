@@ -11,6 +11,8 @@ extends Node2D
 @export var board_path: NodePath = ^"PrototypeBoard"
 @export var hud_path: NodePath = ^"HUD"
 @export var hero_start_cell := Vector2i(3, 7)
+## Draw board boundaries, paths, and behavior labels. F3 still toggles at runtime.
+@export var debug_enabled := false
 
 var ecs: EcsWorld
 var cast: Dictionary = {}
@@ -23,8 +25,8 @@ var remaining_enemies := 0
 var total_enemies := 0
 var defeated_enemies := 0
 var room_ending := false
-var debug_enabled := true
 var _debug_key_was_pressed := false
+var _fullscreen_key_was_pressed := false
 var _last_token_owner := 0
 
 
@@ -53,6 +55,7 @@ func _ready() -> void:
 	if board != null:
 		board.z_index = -5
 		board.setup(ecs.grid, ecs)
+		board.set_debug_enabled(debug_enabled)
 	if player_view != null:
 		camera_rig = player_view.get_node_or_null("Camera2D") as CameraRig
 		if camera_rig != null:
@@ -66,6 +69,10 @@ func _process(delta: float) -> void:
 	if Input.is_key_pressed(KEY_F3) and not _debug_key_was_pressed:
 		_set_debug_enabled(not debug_enabled)
 	_debug_key_was_pressed = Input.is_key_pressed(KEY_F3)
+	if Input.is_key_pressed(KEY_F11) and not _fullscreen_key_was_pressed:
+		var window := get_window()
+		window.mode = Window.MODE_WINDOWED if window.mode == Window.MODE_FULLSCREEN else Window.MODE_FULLSCREEN
+	_fullscreen_key_was_pressed = Input.is_key_pressed(KEY_F11)
 
 	if not room_ending:
 		ecs.tick(delta)
