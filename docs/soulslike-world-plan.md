@@ -87,12 +87,52 @@ Written 2026-07-28; sources at the bottom.
 |---|---|
 | Lordran / Yharnam | The Kingdom — one continuous chessboard-land, zones = districts |
 | Fog gate | **The Black Line** — a rank of shadow sealing the boss arena |
-| Boss | Major pieces: Rook Warden, Bishop Inquisitor, Knight Errant, the Queen |
+| Bosses | Major pieces; **first boss = the Knight** (owner decision) |
+| Road enemies | **Pawns with special powers** — every regular enemy is a pawn variant |
 | Shortcut gate | Castle gates, drawbridges, rook-tunnels ("castling passages") |
+| Item descriptions / lore | **The Book of House Rules** (see below) |
 | Player death | "The child resets the board" — the zone reloads (kept as-is) |
 
 (Cut by owner decision: White Shrine bonfires, Resolve corpse-run, Promotion
 leveling. Revisit later if wanted — the research above still applies.)
+
+## Part 2.5 — Content design (owner direction, 2026-07-28)
+
+**Chess rules are the law of the world.** Every piece moves and captures the
+way chess says it does — the existing data already enforces this (pawn
+diagonal capture, knight L-jumps live in MovementConfig/AttackPattern .tres).
+Drama comes from *amendments*: a pawn variant or a boss bends exactly ONE
+rule, and every bend is written down.
+
+**The Book of House Rules** — an in-game book (UI screen) listing rule
+changes. Each entry is a `.tres` (`RuleEntry`: piece name, the original chess
+rule, the amended rule, flavor line). An entry unlocks the first time the
+player meets the piece that bends it (event-driven: the bridge sees the
+encounter event, tells the book). The book doubles as the game's enemy
+compendium, lore delivery, and tutorial — soulslike item-description
+storytelling, chess-flavored.
+
+**The road to the Knight: pawn variants.** Every regular enemy between the
+start and the first boss is a pawn with one special power = one amendment.
+Examples to author (all data-only via /new-enemy — definition + movement +
+decision + attack .tres, zero script):
+- *Pawn Recruit* (exists): the baseline — the book's first entry states the
+  unbroken rule: forward march, diagonal capture.
+- *Armed Pawn* (exists): "A pawn holding a weapon strikes as the weapon."
+- *Backstep Pawn*: may retreat — "Pawns may move backward."
+- *Charging Pawn*: always moves two squares — "The first-move charge never
+  ends."
+- *Passant Wraith*: captures the player when passed — "En passant applies to
+  you."
+- *Promoted Zealot* (elite, guards the boss door): a pawn one rank from
+  promotion, faster and armed — "A pawn near the last rank forgets fear."
+
+**First boss: the Knight (the Knight Errant).** Chess-legal L-jumps over any
+piece and pit (terrifying on a grid — no corridor is safe), telegraphed
+landing cells; its ONE amendment, revealed mid-fight and written to the book:
+**"The Knight may move twice."** (chained double-jump in phase 2 of the
+fight). Arena sealed by the Black Line; defeat is permanent; the reward gate
+opens the road onward.
 
 ## Part 3 — Architecture (fits the ECS, all content stays data)
 
@@ -139,11 +179,17 @@ later purely for the in-game map screen.
    zone-aware).
 2. **Gates + the first loop** — GateComponent, lever/one-side opening,
    persistent open state; author zone 1 as a proper DS1 loop: long path out,
-   shortcut gate back to the entrance.
-3. **Boss framework + the Rook Warden** — Black Line arena seal, boss HUD
-   bar, permanent defeat in WorldState, reward gate opens the way onward.
-   Boss content itself data-only via /new-enemy.
-4. **World art + landmarks + the map itself** — bigger boards, per-zone
+   shortcut gate back to the entrance. Populate with the first pawn variants
+   (Backstep, Charging) via /new-enemy.
+3. **The Book of House Rules** — RuleEntry .tres + book UI screen +
+   event-driven unlocks (first encounter writes the entry). Seed it with
+   entries for every variant authored so far.
+4. **Boss framework + the Knight Errant** — Black Line arena seal, boss HUD
+   bar, permanent defeat in WorldState, reward gate opens the road onward.
+   Phase-2 double-jump amendment writes itself into the book mid-fight.
+   Remaining pawn variants (Passant Wraith, Promoted Zealot) guard the
+   approach.
+5. **World art + landmarks + the map itself** — bigger boards, per-zone
    palettes, landmark structures at junctions, paint-tool extensions; author
    the 3-5 zone kingdom as one connected graph. Art direction human-owned.
 
