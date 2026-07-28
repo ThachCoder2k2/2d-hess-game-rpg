@@ -9,17 +9,23 @@ extends RefCounted
 
 ## Boots everything and returns the cast:
 ## { "player": id, "enemies": [ids], "view_by_entity": {id: Node2D},
-##   "piece_name_by_entity": {id: String}, "pickup_view_by_entity": {id: Node2D} }
-static func boot(world: EcsWorld, player_view: ActorView, room_root: Node, fallback_player_cell := Vector2i(3, 7)) -> Dictionary:
+##   "piece_name_by_entity": {id: String}, "pickup_view_by_entity": {id: Node2D},
+##   "pickup_name_by_entity": {id: String} }
+## skipped_pickup_names: marker node names the bridge already recorded as
+## taken (WorldState) — they never respawn.
+static func boot(world: EcsWorld, player_view: ActorView, room_root: Node, fallback_player_cell := Vector2i(3, 7), skipped_pickup_names: Array = []) -> Dictionary:
 	var cast := {
 		"player": 0,
 		"enemies": [],
 		"view_by_entity": {},
 		"piece_name_by_entity": {},
 		"pickup_view_by_entity": {},
+		"pickup_name_by_entity": {},
 	}
 	if room_root != null:
+		_apply_board_size(world, room_root)
 		apply_solid_tiles(world, room_root)
+		_bake_zone_exits(world, room_root)
 
 	if player_view != null:
 		var player_cell := world.grid.world_to_cell(player_view.position)
@@ -46,8 +52,30 @@ static func boot(world: EcsWorld, player_view: ActorView, room_root: Node, fallb
 			cast["enemies"].append(enemy_id)
 			cast["view_by_entity"][enemy_id] = enemy_view
 			cast["piece_name_by_entity"][enemy_id] = enemy_view.definition.piece_name
-		_spawn_pickups(world, room_root, cast)
+		_spawn_pickups(world, room_root, cast, skipped_pickup_names)
 	return cast
+
+
+## Zone/room scenes export board_size (RoomEncounter); the grid takes its
+## bounds from the scene so every zone can be a different board.
+static func _apply_board_size(world: EcsWorld, room_root: Node) -> void:
+	var size: Variant = room_root.get("board_size")
+	if size is Vector2i and size.x > 0 and size.y > 0:
+		world.grid.bounds = Rect2i(Vector2i.ZERO, size)
+
+
+## Door cells: every ZoneExitMarker child becomes an exit_by_cell entry the
+## MovementSystem watches for the player.
+static func _bake_zone_exits(world: EcsWorld, room_root: Node) -> void:
+	for child in room_root.get_children():
+		var exit_marker := child as ZoneExitMarker
+		if exit_marker == null:
+			continue
+		var cell := world.grid.world_to_cell(exit_marker.position)
+		world.grid.exit_by_cell[cell] = {
+			"zone": exit_marker.target_zone,
+			"entry": exit_marker.target_entry,
+		}
 
 
 ## Paint-once walls, ported from the node-era RoomEncounter: every TileMap cell
@@ -62,15 +90,16 @@ static func apply_solid_tiles(world: EcsWorld, room_root: Node) -> void:
 			world.grid.add_block(cell)
 
 
-static func _spawn_pickups(world: EcsWorld, room_root: Node, cast: Dictionary) -> void:
+static func _spawn_pickups(world: EcsWorld, room_root: Node, cast: Dictionary, skipped_pickup_names: Array = []) -> void:
 	for child in room_root.get_children():
-		if not child.has_method("create_weapon"):
+		if not child.has_method("create_weapon") or String(child.name) in skipped_pickup_names:
 			continue
 		var weapon := child.call("create_weapon") as EnemyWeapon
 		if weapon == null:
 			continue
 		var cell: Vector2i = child.get("grid_cell")
 		var item_id := EcsActorFactory.spawn_pickup(world, weapon, cell)
+		cast["pickup_name_by_entity"][item_id] = String(child.name)
 		var pickup_view := _make_pickup_view(child, weapon)
 		if pickup_view != null:
 			room_root.add_child(pickup_view)

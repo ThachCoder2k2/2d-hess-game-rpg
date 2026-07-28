@@ -173,5 +173,37 @@ func _init() -> void:
 	_expect(int(ProjectSettings.get_setting("display/window/size/mode", 0)) == 3, "game window ships fullscreen")
 	main_scene.free()
 
+	# --- The world graph: every zone loads, every door resolves ---
+	var world_graph := load("res://resources/world/world_graph.tres") as WorldGraph
+	_expect(world_graph != null and world_graph.validate().is_empty(), "the world graph loads with zones")
+	var entry_ids_by_zone := {}
+	var zone_roots := {}
+	for zone_id: StringName in world_graph.zone_scene_by_id:
+		var zone_root := world_graph.get_zone_scene(zone_id).instantiate()
+		root.add_child(zone_root)
+		zone_roots[zone_id] = zone_root
+		_expect(StringName(zone_root.get("zone_id")) == zone_id, "zone '%s' carries its own zone_id" % zone_id)
+		var board: Vector2i = zone_root.get("board_size")
+		_expect(board.x >= 16 and board.y >= 9, "zone '%s' board is at least one screen" % zone_id)
+		var entry_ids: Array = []
+		for child in zone_root.get_children():
+			if child is ZoneEntryMarker:
+				entry_ids.append(child.entry_id)
+		entry_ids_by_zone[zone_id] = entry_ids
+		_expect(not entry_ids.is_empty(), "zone '%s' has at least one entry marker" % zone_id)
+	for zone_id: StringName in zone_roots:
+		for child in zone_roots[zone_id].get_children():
+			if child is ZoneExitMarker:
+				var exit_label := "%s/%s" % [zone_id, child.name]
+				_expect(world_graph.has_zone(child.target_zone), "door %s targets a zone in the graph" % exit_label)
+				_expect(child.target_entry in entry_ids_by_zone.get(child.target_zone, []), "door %s lands on a real entry marker" % exit_label)
+
+	# --- Pawn variants stay pure data ---
+	var backstep := load("res://resources/enemies/backstep_pawn.tres") as EnemyDefinition
+	_expect(backstep != null and backstep.validate().is_empty(), "Backstep Pawn definition has no missing configuration")
+	var charging := load("res://resources/enemies/charging_pawn.tres") as EnemyDefinition
+	_expect(charging != null and charging.validate().is_empty(), "Charging Pawn definition has no missing configuration")
+	_expect(charging.movement.allowed_directions.has(Vector2i(0, 2)) and not charging.movement.allowed_directions.has(Vector2i.UP), "Charging Pawn only ever leaps two squares")
+
 	print("TESTS COMPLETE: %d failure(s)" % failures)
 	quit(1 if failures > 0 else 0)

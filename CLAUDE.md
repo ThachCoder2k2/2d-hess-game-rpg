@@ -79,7 +79,7 @@ session. Read `AGENTS.md` for the full workflow, and `docs/ARCHITECTURE.md` +
 ```bash
 G="../Godot.app/Contents/MacOS/Godot"
 HOME=/tmp/unbound-pawn-godot "$G" --headless --path . -s tests/run_tests.gd
-for t in ecs_runtime ecs_combat ecs_enemy room_encounter_runtime encounter_hud_runtime; do
+for t in ecs_runtime ecs_combat ecs_enemy room_encounter_runtime encounter_hud_runtime zone_travel_runtime; do
   HOME=/tmp/unbound-pawn-godot "$G" --headless --path . -s tests/${t}_test.gd
 done
 HOME=/tmp/unbound-pawn-godot "$G" --headless --path . --editor --quit   # import clean

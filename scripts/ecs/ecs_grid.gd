@@ -21,6 +21,9 @@ var cell_by_entity: Dictionary = {}
 ## (finish_move). While sliding, origin stays occupied and destination stays
 ## reserved — nobody can race into either.
 var move_reservations: Dictionary = {}
+## cell -> {"zone": StringName, "entry": StringName}. Door cells baked from
+## ZoneExitMarkers; the player landing here triggers a zone travel.
+var exit_by_cell: Dictionary = {}
 
 
 func cell_to_world(cell: Vector2i) -> Vector2:

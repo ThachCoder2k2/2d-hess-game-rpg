@@ -1,0 +1,24 @@
+[gd_resource type="Resource" script_class="EnemyDefinition" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/enemy_definition.gd" id="1"]
+[ext_resource type="Resource" path="res://resources/movement/pawn_backstep.tres" id="2"]
+[ext_resource type="Resource" path="res://resources/decisions/pawn_skirmisher.tres" id="3"]
+[ext_resource type="Resource" path="res://resources/attacks/pawn_diagonal.tres" id="4"]
+[ext_resource type="Resource" path="res://resources/visuals/pawn_compatibility.tres" id="5"]
+[ext_resource type="Resource" path="res://resources/difficulty/standard.tres" id="6"]
+
+[resource]
+script = ExtResource("1")
+id = &"backstep_pawn"
+display_name = "Backstep Pawn"
+piece_name = "Backstep Pawn"
+movement = ExtResource("2")
+decision = ExtResource("3")
+unarmed_attack = ExtResource("4")
+allowed_weapon_tags = Array[StringName]([&"melee", &"reach"])
+weapon_preferences = {
+&"pencil_spear": 0.9,
+&"ruler_blade": 0.8
+}
+visual = ExtResource("5")
+difficulty = ExtResource("6")

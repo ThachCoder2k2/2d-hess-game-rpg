@@ -31,11 +31,11 @@ func _run() -> void:
 	_expect(player_id != 0, "main spawns the player entity")
 	var player_pos: EcsComponents.GridPos = ecs.get_component(player_id, EcsComponents.GRID_POS)
 	_expect(player_pos != null and player_pos.cell == _parked_cell(ecs, main), "player entity stands on the parked view's cell")
-	_expect(int(main.get("total_enemies")) == 3, "main counts the room's three enemies")
+	_expect(int(main.get("total_enemies")) == 5, "main counts the Toybox Yard's five enemies")
 
 	var hud := main.get("hud") as GameHud
 	_expect(hud != null and hud.courage_label.text.begins_with("COURAGE"), "HUD binds and shows courage")
-	_expect(String(hud.objective_label.text).begins_with("First clash"), "HUD shows the room's start message")
+	_expect(String(hud.objective_label.text).begins_with("The Toybox Yard"), "HUD shows the zone's start message")
 
 	var board := main.get("board") as PrototypeBoard
 	_expect(board != null and board.grid_world == ecs.grid and board.ecs == ecs, "board overlay reads the ECS world")
@@ -51,8 +51,8 @@ func _run() -> void:
 	ecs.damage_events.append({"target": int(enemies[0]), "amount": 99, "direction": Vector2i.LEFT})
 	main._process(0.016)
 	main._process(0.016)
-	_expect(int(main.get("remaining_enemies")) == 2, "a defeat event updates the encounter count")
-	_expect(hud.encounter_label.text == "ENEMIES 2/3", "HUD shows the updated enemy count")
+	_expect(int(main.get("remaining_enemies")) == 4, "a defeat event updates the encounter count")
+	_expect(hud.encounter_label.text == "ENEMIES 4/5", "HUD shows the updated enemy count")
 
 	var succeeded := failures == 0
 	print("ENCOUNTER HUD TEST: %s" % ["PASS" if succeeded else "FAIL (%d)" % failures])

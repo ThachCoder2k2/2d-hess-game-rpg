@@ -1,0 +1,39 @@
+[gd_scene load_steps=7 format=3]
+
+[ext_resource type="PackedScene" path="res://objects/world/room_encounter.tscn" id="1"]
+[ext_resource type="PackedScene" path="res://objects/world/chalk_tilemap.tscn" id="2"]
+[ext_resource type="PackedScene" path="res://objects/actors/black_pawn.tscn" id="3"]
+[ext_resource type="Script" path="res://scripts/world/zone_exit_marker.gd" id="4"]
+[ext_resource type="Script" path="res://scripts/world/zone_entry_marker.gd" id="5"]
+[ext_resource type="Resource" path="res://resources/enemies/charging_pawn.tres" id="6"]
+
+[node name="ChalkGardens" instance=ExtResource("1")]
+room_message = "The Chalk Gardens. Charging pawns own the lanes."
+zone_id = &"chalk_gardens"
+board_size = Vector2i(24, 12)
+
+[node name="RoomArt" type="Node2D" parent="."]
+
+[node name="TileMap" parent="RoomArt" instance=ExtResource("2")]
+
+[node name="FromYardEntry" type="Marker2D" parent="."]
+position = Vector2(592, 372)
+script = ExtResource("5")
+entry_id = &"from_yard"
+
+[node name="SouthDoor" type="Marker2D" parent="."]
+position = Vector2(592, 404)
+script = ExtResource("4")
+target_zone = &"toybox_yard"
+target_entry = &"from_gardens"
+
+[node name="ChargingPawnNorth" parent="." instance=ExtResource("3")]
+position = Vector2(336, 84)
+definition = ExtResource("6")
+
+[node name="ChargingPawnSouth" parent="." instance=ExtResource("3")]
+position = Vector2(528, 340)
+definition = ExtResource("6")
+
+[node name="GardenRecruit" parent="." instance=ExtResource("3")]
+position = Vector2(720, 212)

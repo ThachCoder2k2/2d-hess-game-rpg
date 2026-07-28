@@ -18,6 +18,7 @@ func tick(delta: float) -> void:
 				grid_pos.cell = move.to_cell
 				move.moving = false
 				world.emit_event({"type": &"step_finished", "entity": entity_id, "cell": move.to_cell})
+				_check_zone_exit(entity_id, move.to_cell)
 			continue
 
 		var intent: EcsComponents.MoveIntent = world.get_component(entity_id, EcsComponents.MOVE_INTENT)
@@ -39,3 +40,19 @@ func tick(delta: float) -> void:
 			world.emit_event({"type": &"step_started", "entity": entity_id, "cell": destination})
 		else:
 			world.emit_event({"type": &"step_blocked", "entity": entity_id, "direction": direction})
+
+
+## Door cells (EcsGrid.exit_by_cell, baked from ZoneExitMarkers): the player
+## landing on one asks the bridge for a zone travel. Enemies never travel.
+func _check_zone_exit(entity_id: int, cell: Vector2i) -> void:
+	if world.get_component(entity_id, EcsComponents.PLAYER_TAG) == null:
+		return
+	var exit: Dictionary = world.grid.exit_by_cell.get(cell, {})
+	if exit.is_empty():
+		return
+	world.emit_event({
+		"type": &"zone_exit",
+		"entity": entity_id,
+		"zone": exit.get("zone", &""),
+		"entry": exit.get("entry", &"start"),
+	})

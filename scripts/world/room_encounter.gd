@@ -8,6 +8,10 @@ extends Node2D
 
 @export var room_message := ""
 @export var objective: Resource
+## World-map identity (empty = standalone room outside the world graph).
+@export var zone_id: StringName = &""
+## Board cells this room spans; EcsBoot sizes the grid from it.
+@export var board_size := Vector2i(16, 9)
 
 
 func get_start_message() -> String:

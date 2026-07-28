@@ -13,6 +13,10 @@ extends Node2D
 @export var hero_start_cell := Vector2i(3, 7)
 ## Draw board boundaries, paths, and behavior labels. F3 still toggles at runtime.
 @export var debug_enabled := false
+## The world as data: zone id -> scene. Assigned = world mode (zone travel on
+## door cells, no clear-all win screen unless a zone carries an objective).
+@export var world_graph: WorldGraph
+@export var fade_rect_path: NodePath = ^"FadeLayer/FadeRect"
 
 var ecs: EcsWorld
 var cast: Dictionary = {}
@@ -25,42 +29,86 @@ var remaining_enemies := 0
 var total_enemies := 0
 var defeated_enemies := 0
 var room_ending := false
+var player_view: ActorView
+var current_zone_id: StringName = &""
+var travel_in_progress := false
 var _debug_key_was_pressed := false
 var _fullscreen_key_was_pressed := false
 var _last_token_owner := 0
 
 
 func _ready() -> void:
-	ecs = EcsWorld.new()
-	ecs.name = "EcsWorld"
-	ecs.manual_tick = true
-	add_child(ecs)
-	ecs.add_system(PlayerInputSystem.new())
-	ecs.add_system(EnemyAISystem.new())
-	ecs.add_system(MovementSystem.new())
-	ecs.add_system(CombatSystem.new())
-	ecs.add_system(HealthSystem.new())
-	ecs.add_system(ViewSyncSystem.new())
-
 	current_room = get_node_or_null(room_path)
-	var player_view := get_node_or_null(hero_path) as ActorView
+	player_view = get_node_or_null(hero_path) as ActorView
 	board = get_node_or_null(board_path) as PrototypeBoard
 	hud = get_node_or_null(hud_path) as GameHud
+	if player_view != null:
+		camera_rig = player_view.get_node_or_null("Camera2D") as CameraRig
 
-	cast = EcsBoot.boot(ecs, player_view, current_room, hero_start_cell)
+	# Death and R both reload this scene; WorldState (autoload) remembers
+	# which zone the run is in, so the reload boots there, not the default.
+	var entry_id: StringName = &"start"
+	var world_state := _world_state()
+	if world_state != null:
+		entry_id = world_state.last_entry_id
+		if world_graph != null and world_state.current_zone_id != &"" \
+			and world_state.current_zone_id != _zone_id_of(current_room):
+			current_room = _swap_zone_node(world_state.current_zone_id)
+	_boot_zone(entry_id)
+
+
+## Builds a fresh EcsWorld from the current zone node. Called at scene start
+## and again after every zone swap — the whole simulation is rebuilt, only
+## the player view node and WorldState persist.
+func _boot_zone(entry_id: StringName) -> void:
+	if ecs != null:
+		remove_child(ecs)
+		ecs.queue_free()
+	ecs = _make_world()
+	var entry_cell := _find_entry_cell(current_room, entry_id)
+	if player_view != null and entry_cell != Vector2i(-1, -1):
+		player_view.position = ecs.grid.cell_to_world(entry_cell)
+
+	cast = EcsBoot.boot(ecs, player_view, current_room, hero_start_cell, _taken_pickup_names())
 	player_id = int(cast.get("player", 0))
 	total_enemies = cast.get("enemies", []).size()
 	remaining_enemies = total_enemies
+	defeated_enemies = 0
+	room_ending = false
+	_last_token_owner = 0
+	current_zone_id = _zone_id_of(current_room)
+
+	var world_state := _world_state()
+	if world_state != null:
+		if current_zone_id != &"":
+			world_state.current_zone_id = current_zone_id
+		if world_state.player_health_carry > 0:
+			var health: EcsComponents.Health = ecs.get_component(player_id, EcsComponents.HEALTH)
+			if health != null:
+				health.current = mini(world_state.player_health_carry, health.max_health)
+		world_state.player_health_carry = -1
 
 	if board != null:
 		board.z_index = -5
 		board.setup(ecs.grid, ecs)
 		board.set_debug_enabled(debug_enabled)
-	if player_view != null:
-		camera_rig = player_view.get_node_or_null("Camera2D") as CameraRig
-		if camera_rig != null:
-			camera_rig.setup(ecs.grid)
+	if camera_rig != null:
+		camera_rig.setup(ecs.grid)
 	_setup_hud()
+
+
+func _make_world() -> EcsWorld:
+	var world := EcsWorld.new()
+	world.name = "EcsWorld"
+	world.manual_tick = true
+	add_child(world)
+	world.add_system(PlayerInputSystem.new())
+	world.add_system(EnemyAISystem.new())
+	world.add_system(MovementSystem.new())
+	world.add_system(CombatSystem.new())
+	world.add_system(HealthSystem.new())
+	world.add_system(ViewSyncSystem.new())
+	return world
 
 
 func _process(delta: float) -> void:
@@ -118,10 +166,13 @@ func _handle_events(events: Array[Dictionary]) -> void:
 			&"weapon_changed":
 				_on_enemy_weapon_changed(entity, event.get("weapon"))
 			&"pickup_taken":
+				_record_pickup_taken(int(event.get("item", 0)))
 				_play_sfx(&"pickup")
 				_free_pickup_view(int(event.get("item", 0)))
 			&"defeated":
 				_on_defeated(entity)
+			&"zone_exit":
+				_travel_to(StringName(event.get("zone", &"")), StringName(event.get("entry", &"start")))
 
 
 func _on_player_attack_landed(event: Dictionary) -> void:
@@ -196,6 +247,10 @@ func _play_defeat_animation(entity: int) -> void:
 func _check_completion() -> void:
 	if room_ending:
 		return
+	# World mode: clearing a zone is quiet — only an explicit objective (boss
+	# arenas, later) can end the run with a result screen.
+	if world_graph != null and (current_room == null or current_room.get("objective") == null):
+		return
 	var complete := total_enemies > 0 and remaining_enemies <= 0
 	var objective: Resource = current_room.get("objective") if current_room != null else null
 	if objective != null and objective.has_method("is_complete"):
@@ -214,6 +269,9 @@ func _on_player_defeated() -> void:
 	if room_ending:
 		return
 	room_ending = true
+	var world_state := _world_state()
+	if world_state != null:
+		world_state.player_health_carry = -1
 	_play_sfx(&"defeat_jingle")
 	var defeat_message := _room_text("get_defeat_message", "THE PAWN FALLS")
 	_update_status(defeat_message)
@@ -293,6 +351,109 @@ func _play_sfx(sound_name: StringName) -> void:
 	var sfx := get_node_or_null("/root/SfxManager")
 	if sfx != null:
 		sfx.call("play", sound_name)
+
+
+## --- Zone travel (the world map) -----------------------------------------
+
+
+## The player stepped on a door cell: fade out, swap the zone scene, rebuild
+## the simulation, fade back in. WorldState carries health and remembers the
+## destination so death/R reloads land in the right zone.
+func _travel_to(zone_id: StringName, entry_id: StringName) -> void:
+	if travel_in_progress or room_ending or world_graph == null or not world_graph.has_zone(zone_id):
+		return
+	travel_in_progress = true
+	_set_player_control(false)
+	var world_state := _world_state()
+	if world_state != null:
+		var health: EcsComponents.Health = ecs.get_component(player_id, EcsComponents.HEALTH)
+		world_state.player_health_carry = health.current if health != null else -1
+		world_state.current_zone_id = zone_id
+		world_state.last_entry_id = entry_id
+	await _fade_to(1.0)
+	current_room = _swap_zone_node(zone_id)
+	_boot_zone(entry_id)
+	await _fade_to(0.0)
+	_set_player_control(true)
+	travel_in_progress = false
+
+
+## Replaces the current zone node with the target zone's scene, keeping the
+## tree position so draw order (board below, HUD above) stays intact.
+func _swap_zone_node(zone_id: StringName) -> Node:
+	var zone_scene := world_graph.get_zone_scene(zone_id) if world_graph != null else null
+	if zone_scene == null:
+		return current_room
+	var slot_index := current_room.get_index() if current_room != null else get_child_count()
+	if current_room != null:
+		remove_child(current_room)
+		current_room.queue_free()
+	var zone := zone_scene.instantiate()
+	add_child(zone)
+	move_child(zone, slot_index)
+	return zone
+
+
+func _find_entry_cell(zone_root: Node, entry_id: StringName) -> Vector2i:
+	if zone_root == null:
+		return Vector2i(-1, -1)
+	var fallback := Vector2i(-1, -1)
+	for child in zone_root.get_children():
+		var entry := child as ZoneEntryMarker
+		if entry == null:
+			continue
+		var cell := ecs.grid.world_to_cell(entry.position)
+		if entry.entry_id == entry_id:
+			return cell
+		if fallback == Vector2i(-1, -1):
+			fallback = cell
+	return fallback
+
+
+## The editor-owned FadeLayer rect; the bridge only tweens its alpha.
+func _fade_to(target_alpha: float) -> void:
+	var fade_rect := get_node_or_null(fade_rect_path) as ColorRect
+	if fade_rect == null:
+		return
+	var tween := create_tween()
+	tween.tween_property(fade_rect, "modulate:a", target_alpha, 0.22)
+	await tween.finished
+
+
+func _record_pickup_taken(item_id: int) -> void:
+	var world_state := _world_state()
+	if world_state == null or current_zone_id == &"":
+		return
+	var marker_name := String(cast.get("pickup_name_by_entity", {}).get(item_id, ""))
+	if not marker_name.is_empty():
+		world_state.taken_pickup_ids[world_state.pickup_id(current_zone_id, marker_name)] = true
+
+
+## Pickup marker names already taken in this zone (WorldState) — EcsBoot
+## skips them so grabbed weapons never respawn.
+func _taken_pickup_names() -> Array:
+	var world_state := _world_state()
+	var zone_id := _zone_id_of(current_room)
+	if world_state == null or zone_id == &"":
+		return []
+	var names: Array = []
+	var prefix := String(zone_id) + "/"
+	for key: String in world_state.taken_pickup_ids:
+		if key.begins_with(prefix):
+			names.append(key.substr(prefix.length()))
+	return names
+
+
+func _zone_id_of(zone_root: Node) -> StringName:
+	if zone_root == null:
+		return &""
+	var value: Variant = zone_root.get("zone_id")
+	return value if value is StringName else &""
+
+
+## WorldState autoload, null-safe so headless tests without autoloads run.
+func _world_state() -> Node:
+	return get_node_or_null("/root/WorldState")
 
 
 func _facing_name(direction: Vector2i) -> String:
