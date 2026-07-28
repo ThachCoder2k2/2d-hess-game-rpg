@@ -134,6 +134,40 @@ landing cells; its ONE amendment, revealed mid-fight and written to the book:
 fight). Arena sealed by the Black Line; defeat is permanent; the reward gate
 opens the road onward.
 
+## Part 2.6 — Drawn design (locked 2026-07-28)
+
+**The five boards, one loop:**
+
+| Zone | Board | Palette | Landmark | Population |
+|---|---|---|---|---|
+| 1. The Toybox Yard (start) | 20×11 | warm amber | chess-clock tower | teach sequence below |
+| 2. The Chalk Gardens | 24×12 | chalk green | giant inkwell | Charging Pawns in open lanes |
+| 3. The Bookshelf Pass | 22×10 | book purple | leaning book monolith | Passant Wraiths in passages, optional treasure |
+| 4. The Stable Approach | 14×9 | stable gray | knight statue | Promoted Zealot at the door |
+| 5. The Knight's Stable (arena) | 11×9 | black/red | the Black Line | the Knight Errant |
+
+Graph: 1→2 (north), 2→3 (east), **3→1 one-way gate (the loop home)**,
+3→4 (north), 4→arena. Reward gate in the arena opens the road onward.
+Short approach zone before the boss = short retries (anti-runback rule).
+
+**Zone 1 teach sequence** (route S→N, drawn in the layout diagram):
+① lone Pawn Recruit in the open → ② recruit pair behind a blind corner
+(ambush grammar) → ③ Armed Pawn guarding the weapon pickup → ④ Backstep
+Pawn in a corridor (retreat rule bend where it hurts). East-edge amber gate
+stays locked until entered from Zone 3.
+
+**Knight Errant numbers:** HP 12 (normals run 2–3), phase shift at 6.
+Chess-legal L-jumps that ignore walls/pits; landing cell telegraphed 0.9s;
+landing recovery 1.2s = the whole damage window. Phase 2 amendment
+("The Knight may move twice") = chained jump pairs, second landing
+telegraphed mid-flight; the book flashes the new entry mid-fight. Black
+Line seals the entrance row on entry. Player HP stays 3.
+
+**Book UI (drawn as mockup):** two-page spread — left = entry list
+(check = read, lock = "unread ink"), right = open entry: piece name,
+"first met in" line, Original rule (muted), Amendment (accent block),
+flavor line in the serif voice. Counter: "N of M amendments known."
+
 ## Part 3 — Architecture (fits the ECS, all content stays data)
 
 New pieces, following existing law (systems decide, scenes are data, .tres is
