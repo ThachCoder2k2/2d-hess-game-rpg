@@ -1,0 +1,170 @@
+# The Unbound Pawn — Soulslike World Plan
+
+Research-backed plan for replacing the single-room structure with a Dark Souls
+style interconnected world: zones, shrines (bonfires), shortcuts, bosses,
+corpse-run, hand-authored map. Written 2026-07-28; sources at the bottom.
+
+## Part 1 — What the research says
+
+### FromSoft world structure (DS1–3, Bloodborne)
+- **DS1 is the gold standard because of loops, not size.** The whole early game
+  spirals out of one hub (Firelink) and keeps folding back into it via unlocked
+  shortcuts. The core trick, distilled by level-design writeups: *"a path that
+  could be reached in a straight line is forcibly made into a circle."* The
+  shortcut-open moment is narrative architecture — the world reveals itself as
+  one coherent whole.
+- **No early fast travel forced spatial mastery.** Players memorized the world
+  because they had to walk it. Later games (DS3 linear-with-branches,
+  Bloodborne hub-warping) traded the interconnection away for production speed;
+  every retrospective calls that a loss.
+- **Bloodborne's Central Yharnam = the formula in one zone**: essentially one
+  path until the first lantern shortcut opens, then the level fans into three
+  routes that all keep reconnecting to the same lantern. Loops double as
+  difficulty pacing: a route that was lethal on first pass becomes the trivial
+  commute later.
+
+### Checkpoints (bonfires/lanterns)
+- Resting resets: all normal enemies respawn, traps reset, healing refills.
+- Persists forever: bosses dead, doors/shortcuts opened, items taken.
+- Checkpoints are deliberately sparse; **shortcuts substitute for checkpoint
+  density**. A shortcut effectively multiplies one checkpoint into several
+  (Death's Door runs its whole structure on this).
+- The checkpoint is the emotional safe-haven; distance from it is the tension
+  dial (Blighttown works because Firelink feels far away).
+
+### Shortcuts
+- One-way until opened: gate unbars from the far side, ladder kicks down.
+  On a top-down grid the equivalents are: locked gates operable from one side,
+  levers, collapsed bridges, key doors.
+- Pacing role: long tense push → shortcut opens → relief + mastery. Target
+  rhythm from Death's Door critique: opening one "every couple of minutes" is
+  almost too often; DS1 spaces them per-zone.
+
+### Bosses
+- Fog gate = commitment: arena seals, no escape, checkpoint-adjacent runback
+  (bosses in Death's Door "almost always have a checkpoint right outside" —
+  reviewers loved it; long runbacks are the single most criticized element of
+  the whole genre).
+- Boss death is the canonical permanent event: gates progress, stays dead.
+
+### Enemy placement
+- Every encounter is hand-placed and teaches something; ambush grammar (first
+  one enemy, then the same corner with two), elite/normal rhythm, density
+  matched to corridor width. No random spawns anywhere in the genre.
+
+### Death loop (corpse run)
+- Die → drop currency at death cell → one retrieval chance → lose it if you
+  die again. Creates real stakes without destroying progress (progress = the
+  world state, which never rolls back). Critics' caveat: if the run back is
+  boring, players just sprint past everything — keep runbacks short and let
+  shortcuts do the work.
+
+### Landmarks + readability (top-down translation)
+- FromSoft uses visible destinations (Anor Londo on the horizon) and vertical
+  layering. Top-down games translate this as: distinct palette + tile
+  vocabulary per zone (Hyper Light Drifter), landmark structures at junctions
+  (Tunic), and small-but-distinctive layouts instead of maps (Death's Door —
+  which got criticized for having *no* map once areas grew; Hollow Knight's
+  purchasable map is the loved middle ground).
+
+### The 10 rules we build by
+1. Zones loop back to their shrine; never pure corridors.
+2. A shortcut is one-way until opened from the far side; open state is forever.
+3. Rest = enemies respawn + heal refills; bosses/gates/items never reset.
+4. Sparse shrines, dense shortcuts.
+5. Boss arenas seal (fog gate) and sit close to a shrine or shortcut mouth.
+6. Death drops resolve at the death cell; one retrieval chance.
+7. Every encounter hand-placed; encounters teach.
+8. Each zone gets its own palette + a landmark readable from its junctions.
+9. No fast travel until the mid-game unlock (spatial mastery first).
+10. World state is one store keyed by stable IDs; the world is one graph.
+
+## Part 2 — Theme mapping (chess kingdom)
+
+| Souls concept | The Unbound Pawn |
+|---|---|
+| Lordran / Yharnam | The Kingdom — one continuous chessboard-land, zones = districts |
+| Bonfire / lantern | **White Shrine** (a blessed white square; the pawn rests, candles = estus) |
+| Souls / blood echoes | **Resolve** (dropped as a scattered pile of chess pieces on death) |
+| Fog gate | **The Black Line** — a rank of shadow the pawn pushes through |
+| Boss | Major pieces: Rook Warden, Bishop Inquisitor, Knight Errant, the Queen |
+| Shortcut gate | Castle gates, drawbridges, rook-tunnels ("castling passages") |
+| Level-up | **Promotion steps** — spend resolve at shrines toward becoming a Queen |
+| Player death | "The child resets the board" (already in the defeat text) |
+
+## Part 3 — Architecture (fits the ECS, all content stays data)
+
+New pieces, following existing law (systems decide, scenes are data, .tres is
+truth, presentation drains events):
+
+1. **Zone scenes** — exactly today's room scenes, just bigger boards. A zone =
+   tilemap + parked ActorViews + pickup markers + new `ExitMarker` nodes on
+   edge cells + optional `ShrineMarker` / `GateMarker` / `BossArenaMarker`.
+   EcsBoot already rebuilds the whole world from any such scene.
+2. **World graph as data** — `resources/world/world_graph.tres`: zone id →
+   scene path; exit id → (target zone, entry cell, one_way flag). The world is
+   one `.tres`; adding a zone = one scene + one graph entry.
+3. **`WorldState` autoload** (pure data + save/load, no gameplay decisions):
+   defeated boss ids, opened gate ids, taken pickup ids, current shrine
+   (zone + cell), dropped resolve (zone + cell + amount), resolve carried.
+   Saved to `user://save.cfg` (ConfigFile). Stable ids come from marker
+   exports, MetSys-style object-ID pattern.
+4. **Zone travel** — player enters an exit cell → ZoneDirector (main.gd's new
+   job) fades out, swaps the zone scene, reboots EcsBoot with WorldState
+   filtering (dead bosses don't spawn, open gates spawn open, taken pickups
+   skipped), places player at entry cell. Camera2D limits per zone (already
+   supported by CameraRig.setup).
+5. **Gates/shortcuts** — gate = blocker entity with a `GateComponent` (id,
+   open_from_side). Opening emits an event; persistence write goes through
+   WorldState. Grid just removes the block.
+6. **Shrines** — interact event → systems: refill Health, respawn zone
+   enemies (re-run enemy spawn with WorldState filter), set respawn point,
+   (later) promotion spend UI.
+7. **Corpse run** — on player defeat: write resolve pile into WorldState,
+   respawn at shrine, spawn a pickup entity at the pile when that zone boots.
+8. **Bosses** — an `EnemyDefinition` with `boss = true` + arena marker: on
+   arena entry, seal exits (temporary blocks) + HUD boss bar (event-driven);
+   on defeat, write WorldState, unseal, open the zone's reward gate.
+
+**Dependency decision (needs the human):** the MetSys addon (KoBeWi's
+Metroidvania System, Godot 4.5+, maintained) provides room transitions,
+object-ID persistence, and a minimap for grid-room worlds. Recommendation:
+**don't adopt for the core** — our ECS boot/persistence is bespoke and small —
+but steal its object-ID and scrolling-transition patterns, and reconsider it
+later purely for the in-game map screen.
+
+## Part 4 — Build phases (each = one milestone, tests stay green)
+
+1. **Two zones + travel** — world_graph.tres, ExitMarker, ZoneDirector swap
+   with fade, WorldState autoload (visited only), camera limits per zone.
+2. **White Shrine** — rest/respawn/refill/set-spawn loop; death returns to
+   shrine (replaces reload-scene).
+3. **Resolve + corpse run** — enemies drop resolve, death drops the pile,
+   retrieval, HUD counter.
+4. **Gates + first loop** — GateComponent, lever/one-side opening,
+   persistence; author zone 1 as a proper DS1 loop back to its shrine.
+5. **Boss framework + first boss** — fog-seal arena, boss HUD bar, permanent
+   death, reward gate (first boss: Rook Warden, data-only via /new-enemy).
+6. **World art + landmarks** — bigger boards, per-zone palettes, landmark
+   structures, paint-tool extensions. Art direction human-owned.
+7. **Promotion (leveling)** — spend resolve at shrines; stat steps toward
+   Queen. Later; needs its own design pass.
+
+Phase 1 is the next buildable slice. Zones after that are pure content:
+scene + graph entry + hand-placed enemies.
+
+## Sources
+
+- GMTK / Mark Brown — "The World Design of Dark Souls" (Boss Keys)
+- The Level Design Book — Undead Burg case study
+- TheGamer — "Dark Souls 1: FromSoftware's Magnum Opus Of Interconnected
+  Level Design"; "Bloodborne's Central Yharnam Is An Example Of Perfect
+  Level Design"
+- James Roha (Medium) — "World Design lessons from FromSoftware"
+- Bramasole (Medium) — "The Ultimate Methodology of creating Souls-like Level"
+- Fextralife wikis — Bonfire mechanics (what resets/persists)
+- Game Developer — "9 Things We can Learn about Game Design from Dark Souls"
+- PC Gamer / Nintendo Life / The Gemsbok — Death's Door reviews (shortcut
+  density, checkpoint criticism, no-map debate)
+- KoBeWi — Metroidvania System (MetSys) repo + wiki (Godot 4 room/persistence
+  patterns)
