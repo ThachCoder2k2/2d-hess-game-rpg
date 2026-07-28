@@ -16,7 +16,7 @@ func _expect(condition: bool, label: String) -> void:
 		printerr("FAIL: %s" % label)
 
 
-func _boot_zone(scene_path: String, player_cell: Vector2i, skipped_pickups: Array = []) -> Dictionary:
+func _boot_zone(scene_path: String, player_cell: Vector2i, skipped_pickups: Array = [], opened_gates: Array = []) -> Dictionary:
 	var zone := (load(scene_path) as PackedScene).instantiate()
 	root.add_child(zone)
 	var world := EcsWorld.new()
@@ -26,7 +26,7 @@ func _boot_zone(scene_path: String, player_cell: Vector2i, skipped_pickups: Arra
 	var player_view := (load("res://objects/actors/player.tscn") as PackedScene).instantiate() as ActorView
 	root.add_child(player_view)
 	player_view.position = world.grid.cell_to_world(player_cell)
-	var cast := EcsBoot.boot(world, player_view, zone, player_cell, skipped_pickups)
+	var cast := EcsBoot.boot(world, player_view, zone, player_cell, skipped_pickups, opened_gates)
 	return {"world": world, "cast": cast, "zone": zone}
 
 
@@ -61,6 +61,32 @@ func _init() -> void:
 	_expect(gardens_world.grid.bounds.size == Vector2i(24, 12), "chalk gardens sizes its own larger board")
 	var south_door: Dictionary = gardens_world.grid.exit_by_cell.get(Vector2i(16, 11), {})
 	_expect(south_door.get("zone") == &"toybox_yard" and south_door.get("entry") == &"from_gardens", "the south door loops back to the Toybox Yard")
+
+	# --- The home gate: a wall from the yard side ---
+	var wrong_side := _boot_zone("res://scenes/zones/bookshelf_pass.tscn", Vector2i(1, 8))
+	var wrong_world: EcsWorld = wrong_side["world"]
+	_expect(not wrong_world.grid.is_walkable(Vector2i(2, 8)), "the home gate cell starts blocked")
+	var wrong_player := int(wrong_side["cast"]["player"])
+	var wrong_intent: EcsComponents.MoveIntent = wrong_world.get_component(wrong_player, EcsComponents.MOVE_INTENT)
+	wrong_intent.direction = Vector2i.RIGHT
+	for _i in range(10):
+		wrong_world.tick(0.05)
+	_expect(not wrong_world.grid.is_walkable(Vector2i(2, 8)), "pushing the gate from the yard side stays a wall")
+
+	# --- ...and it opens from the interior, once, forever ---
+	var opener := _boot_zone("res://scenes/zones/bookshelf_pass.tscn", Vector2i(3, 8))
+	var opener_world: EcsWorld = opener["world"]
+	var opener_player := int(opener["cast"]["player"])
+	var opener_intent: EcsComponents.MoveIntent = opener_world.get_component(opener_player, EcsComponents.MOVE_INTENT)
+	opener_intent.direction = Vector2i.LEFT
+	for _i in range(10):
+		opener_world.tick(0.05)
+	var gate_events := opener_world.drain_events().filter(func(event: Dictionary) -> bool: return event.get("type") == &"gate_opened")
+	_expect(gate_events.size() == 1 and gate_events[0].get("gate") == &"pass_home_gate", "pushing from the interior opens the gate and names it")
+	_expect(opener_world.grid.is_walkable(Vector2i(2, 8)), "the opened gate cell is ordinary floor")
+	var opened_boot := _boot_zone("res://scenes/zones/bookshelf_pass.tscn", Vector2i(1, 8), [], [&"pass_home_gate"])
+	var opened_world: EcsWorld = opened_boot["world"]
+	_expect(opened_world.grid.is_walkable(Vector2i(2, 8)) and opened_world.grid.gate_by_cell.is_empty(), "an opened gate never spawns blocked again")
 
 	var succeeded := failures == 0
 	print("ZONE TRAVEL TEST: %s" % ["PASS" if succeeded else "FAIL (%d)" % failures])

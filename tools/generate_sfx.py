@@ -126,6 +126,15 @@ def defeat_jingle():
     write_wav("defeat_jingle.wav", samples)
 
 
+def gate_open():
+    # A low wooden groan sliding upward: the bar lifts, the way opens.
+    samples = []
+    for freq in (98.0, 123.47, 164.81):
+        samples += _tone(freq, 0.14, "square", gain=0.2, release=0.5)
+    samples += _tone(329.63, 0.16, gain=0.22, release=0.7)
+    write_wav("gate_open.wav", samples)
+
+
 if __name__ == "__main__":
     telegraph_warning()
     sword_whoosh()
@@ -134,3 +143,4 @@ if __name__ == "__main__":
     pickup_chime()
     room_clear()
     defeat_jingle()
+    gate_open()

@@ -1,0 +1,66 @@
+[gd_scene load_steps=12 format=3]
+
+[ext_resource type="PackedScene" path="res://objects/world/room_encounter.tscn" id="1"]
+[ext_resource type="PackedScene" path="res://objects/world/bookshelf_tilemap.tscn" id="2"]
+[ext_resource type="PackedScene" path="res://objects/actors/black_pawn.tscn" id="3"]
+[ext_resource type="Script" path="res://scripts/world/zone_exit_marker.gd" id="4"]
+[ext_resource type="Script" path="res://scripts/world/zone_entry_marker.gd" id="5"]
+[ext_resource type="Resource" path="res://resources/enemies/backstep_pawn.tres" id="6"]
+[ext_resource type="Resource" path="res://resources/enemies/pawn_armed.tres" id="7"]
+[ext_resource type="PackedScene" path="res://objects/markers/pickup_spawn_point.tscn" id="8"]
+[ext_resource type="Resource" path="res://resources/weapons/ruler_blade.tres" id="9"]
+[ext_resource type="PackedScene" path="res://objects/world/weapon_pickup.tscn" id="10"]
+[ext_resource type="PackedScene" path="res://objects/markers/gate_marker.tscn" id="11"]
+
+[node name="BookshelfPass" instance=ExtResource("1")]
+room_message = "The Bookshelf Pass. Somewhere here, a way home."
+zone_id = &"bookshelf_pass"
+board_size = Vector2i(22, 10)
+
+[node name="RoomArt" type="Node2D" parent="."]
+
+[node name="TileMap" parent="RoomArt" instance=ExtResource("2")]
+
+[node name="FromGardensEntry" type="Marker2D" parent="."]
+position = Vector2(112, 148)
+script = ExtResource("5")
+entry_id = &"from_gardens"
+
+[node name="FromYardEntry" type="Marker2D" parent="."]
+position = Vector2(112, 308)
+script = ExtResource("5")
+entry_id = &"from_yard"
+
+[node name="WestDoor" type="Marker2D" parent="."]
+position = Vector2(80, 148)
+script = ExtResource("4")
+target_zone = &"chalk_gardens"
+target_entry = &"from_pass"
+
+[node name="HomeDoor" type="Marker2D" parent="."]
+position = Vector2(80, 308)
+script = ExtResource("4")
+target_zone = &"toybox_yard"
+target_entry = &"from_pass"
+
+[node name="HomeGate" parent="." instance=ExtResource("11")]
+position = Vector2(144, 308)
+gate_id = &"pass_home_gate"
+opens_from = Vector2i(-1, 0)
+
+[node name="ShelfBackstepWest" parent="." instance=ExtResource("3")]
+position = Vector2(336, 116)
+definition = ExtResource("6")
+
+[node name="ShelfBackstepEast" parent="." instance=ExtResource("3")]
+position = Vector2(624, 276)
+definition = ExtResource("6")
+
+[node name="ShelfArmedPawn" parent="." instance=ExtResource("3")]
+position = Vector2(656, 148)
+definition = ExtResource("7")
+
+[node name="RulerBladePickup" parent="." instance=ExtResource("8")]
+pickup_scene = ExtResource("10")
+grid_cell = Vector2i(20, 1)
+weapon = ExtResource("9")

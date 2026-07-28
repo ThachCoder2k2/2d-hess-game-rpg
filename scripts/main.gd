@@ -69,7 +69,8 @@ func _boot_zone(entry_id: StringName) -> void:
 	if player_view != null and entry_cell != Vector2i(-1, -1):
 		player_view.position = ecs.grid.cell_to_world(entry_cell)
 
-	cast = EcsBoot.boot(ecs, player_view, current_room, hero_start_cell, _taken_pickup_names())
+	cast = EcsBoot.boot(ecs, player_view, current_room, hero_start_cell, _taken_pickup_names(), _opened_gate_ids())
+	_hide_opened_gate_visuals()
 	player_id = int(cast.get("player", 0))
 	total_enemies = cast.get("enemies", []).size()
 	remaining_enemies = total_enemies
@@ -173,6 +174,8 @@ func _handle_events(events: Array[Dictionary]) -> void:
 				_on_defeated(entity)
 			&"zone_exit":
 				_travel_to(StringName(event.get("zone", &"")), StringName(event.get("entry", &"start")))
+			&"gate_opened":
+				_on_gate_opened(StringName(event.get("gate", &"")))
 
 
 func _on_player_attack_landed(event: Dictionary) -> void:
@@ -272,6 +275,7 @@ func _on_player_defeated() -> void:
 	var world_state := _world_state()
 	if world_state != null:
 		world_state.player_health_carry = -1
+		world_state.save_state()
 	_play_sfx(&"defeat_jingle")
 	var defeat_message := _room_text("get_defeat_message", "THE PAWN FALLS")
 	_update_status(defeat_message)
@@ -370,6 +374,7 @@ func _travel_to(zone_id: StringName, entry_id: StringName) -> void:
 		world_state.player_health_carry = health.current if health != null else -1
 		world_state.current_zone_id = zone_id
 		world_state.last_entry_id = entry_id
+		world_state.save_state()
 	await _fade_to(1.0)
 	current_room = _swap_zone_node(zone_id)
 	_boot_zone(entry_id)
@@ -427,6 +432,39 @@ func _record_pickup_taken(item_id: int) -> void:
 	var marker_name := String(cast.get("pickup_name_by_entity", {}).get(item_id, ""))
 	if not marker_name.is_empty():
 		world_state.taken_pickup_ids[world_state.pickup_id(current_zone_id, marker_name)] = true
+		world_state.save_state()
+
+
+## A shortcut gate unbarred: permanent from this moment, across deaths and
+## launches. The marker's closed-gate visual disappears.
+func _on_gate_opened(gate_id: StringName) -> void:
+	var world_state := _world_state()
+	if world_state != null and gate_id != &"":
+		world_state.opened_gate_ids[String(gate_id)] = true
+		world_state.save_state()
+	_hide_opened_gate_visuals()
+	_play_sfx(&"gate_open")
+	_update_status("The gate unbars. It will never close again.")
+
+
+func _opened_gate_ids() -> Array:
+	var world_state := _world_state()
+	if world_state == null:
+		return []
+	var ids: Array = []
+	for key in world_state.opened_gate_ids:
+		ids.append(StringName(key))
+	return ids
+
+
+func _hide_opened_gate_visuals() -> void:
+	if current_room == null:
+		return
+	var opened := _opened_gate_ids()
+	for child in current_room.get_children():
+		var gate_marker := child as GateMarker
+		if gate_marker != null:
+			gate_marker.visible = gate_marker.gate_id not in opened
 
 
 ## Pickup marker names already taken in this zone (WorldState) — EcsBoot

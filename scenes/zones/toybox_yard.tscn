@@ -36,6 +36,17 @@ script = ExtResource("4")
 target_zone = &"chalk_gardens"
 target_entry = &"from_yard"
 
+[node name="FromPassEntry" type="Marker2D" parent="."]
+position = Vector2(656, 244)
+script = ExtResource("5")
+entry_id = &"from_pass"
+
+[node name="EastDoor" type="Marker2D" parent="."]
+position = Vector2(688, 244)
+script = ExtResource("4")
+target_zone = &"bookshelf_pass"
+target_entry = &"from_yard"
+
 [node name="LoneRecruit" parent="." instance=ExtResource("3")]
 position = Vector2(240, 308)
 

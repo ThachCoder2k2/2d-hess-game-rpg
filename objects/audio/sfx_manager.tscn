@@ -1,14 +1,16 @@
-[gd_scene load_steps=5 format=3]
+[gd_scene load_steps=6 format=3]
 
 [ext_resource type="Script" path="res://scripts/audio/sfx_manager.gd" id="1"]
 [ext_resource type="AudioStream" path="res://assets/sfx/pickup_chime.wav" id="2"]
 [ext_resource type="AudioStream" path="res://assets/sfx/room_clear.wav" id="3"]
 [ext_resource type="AudioStream" path="res://assets/sfx/defeat_jingle.wav" id="4"]
+[ext_resource type="AudioStream" path="res://assets/sfx/gate_open.wav" id="5"]
 
 [node name="SfxManager" type="Node"]
 script = ExtResource("1")
 streams = Dictionary[StringName, AudioStream]({
 &"defeat_jingle": ExtResource("4"),
+&"gate_open": ExtResource("5"),
 &"pickup": ExtResource("2"),
 &"room_clear": ExtResource("3")
 })

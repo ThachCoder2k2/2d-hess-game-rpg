@@ -17,7 +17,7 @@ const TILE_LANDMARK := Vector2i(5, 0)
 var zone_layouts := {
 	"toybox_tilemap": {
 		"size": Vector2i(20, 11),
-		"doors": [Vector2i(16, 0)],
+		"doors": [Vector2i(16, 0), Vector2i(19, 6)],
 		"walls": [
 			Vector2i(8, 4), Vector2i(8, 5), Vector2i(8, 6), Vector2i(9, 4), Vector2i(10, 4),
 			Vector2i(15, 2), Vector2i(15, 3), Vector2i(15, 4),
@@ -28,11 +28,28 @@ var zone_layouts := {
 	},
 	"chalk_tilemap": {
 		"size": Vector2i(24, 12),
-		"doors": [Vector2i(16, 11)],
+		"doors": [Vector2i(16, 11), Vector2i(23, 5)],
 		"walls": _lane_walls(),
 		"landmark": [Vector2i(11, 5), Vector2i(12, 5), Vector2i(11, 6), Vector2i(12, 6)],
 	},
+	"bookshelf_tilemap": {
+		"size": Vector2i(22, 10),
+		"doors": [Vector2i(0, 3), Vector2i(0, 8)],
+		"walls": _shelf_walls(),
+		"landmark": [Vector2i(11, 1), Vector2i(12, 1), Vector2i(11, 2), Vector2i(12, 2)],
+	},
 }
+
+
+## Bookshelf aisles + the gated home corridor (walls above cells 1..3 of
+## row 8 seal the corridor; the gate marker sits at cell (2, 8)).
+static func _shelf_walls() -> Array:
+	var walls: Array = [Vector2i(1, 7), Vector2i(2, 7), Vector2i(3, 7)]
+	for y in [1, 2, 3, 5, 6, 7]:
+		walls.append(Vector2i(6, y))
+	for y in [2, 3, 4, 6, 7, 8]:
+		walls.append(Vector2i(15, y))
+	return walls
 
 
 ## Two horizontal chalk-lane walls with door gaps, per the drawn design.

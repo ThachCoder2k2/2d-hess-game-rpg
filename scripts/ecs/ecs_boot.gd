@@ -13,7 +13,7 @@ extends RefCounted
 ##   "pickup_name_by_entity": {id: String} }
 ## skipped_pickup_names: marker node names the bridge already recorded as
 ## taken (WorldState) — they never respawn.
-static func boot(world: EcsWorld, player_view: ActorView, room_root: Node, fallback_player_cell := Vector2i(3, 7), skipped_pickup_names: Array = []) -> Dictionary:
+static func boot(world: EcsWorld, player_view: ActorView, room_root: Node, fallback_player_cell := Vector2i(3, 7), skipped_pickup_names: Array = [], opened_gate_ids: Array = []) -> Dictionary:
 	var cast := {
 		"player": 0,
 		"enemies": [],
@@ -26,6 +26,7 @@ static func boot(world: EcsWorld, player_view: ActorView, room_root: Node, fallb
 		_apply_board_size(world, room_root)
 		apply_solid_tiles(world, room_root)
 		_bake_zone_exits(world, room_root)
+		_bake_gates(world, room_root, opened_gate_ids)
 
 	if player_view != null:
 		var player_cell := world.grid.world_to_cell(player_view.position)
@@ -62,6 +63,21 @@ static func _apply_board_size(world: EcsWorld, room_root: Node) -> void:
 	var size: Variant = room_root.get("board_size")
 	if size is Vector2i and size.x > 0 and size.y > 0:
 		world.grid.bounds = Rect2i(Vector2i.ZERO, size)
+
+
+## Shortcut gates: every GateMarker child blocks its cell unless WorldState
+## already opened it (the bridge passes those ids in) — then it is floor.
+static func _bake_gates(world: EcsWorld, room_root: Node, opened_gate_ids: Array) -> void:
+	for child in room_root.get_children():
+		var gate_marker := child as GateMarker
+		if gate_marker == null or gate_marker.gate_id in opened_gate_ids:
+			continue
+		var cell := world.grid.world_to_cell(gate_marker.position)
+		world.grid.add_block(cell)
+		world.grid.gate_by_cell[cell] = {
+			"id": gate_marker.gate_id,
+			"opens_from": gate_marker.opens_from,
+		}
 
 
 ## Door cells: every ZoneExitMarker child becomes an exit_by_cell entry the

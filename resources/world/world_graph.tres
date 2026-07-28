@@ -1,12 +1,14 @@
-[gd_resource type="Resource" script_class="WorldGraph" load_steps=4 format=3]
+[gd_resource type="Resource" script_class="WorldGraph" load_steps=5 format=3]
 
 [ext_resource type="Script" path="res://scripts/data/world_graph.gd" id="1"]
 [ext_resource type="PackedScene" path="res://scenes/zones/toybox_yard.tscn" id="2"]
 [ext_resource type="PackedScene" path="res://scenes/zones/chalk_gardens.tscn" id="3"]
+[ext_resource type="PackedScene" path="res://scenes/zones/bookshelf_pass.tscn" id="4"]
 
 [resource]
 script = ExtResource("1")
 zone_scene_by_id = Dictionary[StringName, PackedScene]({
+&"bookshelf_pass": ExtResource("4"),
 &"chalk_gardens": ExtResource("3"),
 &"toybox_yard": ExtResource("2")
 })

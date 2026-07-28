@@ -156,7 +156,7 @@ func _init() -> void:
 	var sfx_manager := sfx_scene.instantiate()
 	root.add_child(sfx_manager)
 	var registry: Dictionary = sfx_manager.get("streams")
-	_expect(registry.has(&"pickup") and registry.has(&"room_clear") and registry.has(&"defeat_jingle"), "SfxManager registry carries the three event sounds")
+	_expect(registry.has(&"pickup") and registry.has(&"room_clear") and registry.has(&"defeat_jingle") and registry.has(&"gate_open"), "SfxManager registry carries the four event sounds")
 	_expect(StringName(sfx_manager.get("bus")) == &"SFX", "SfxManager routes to the SFX bus")
 
 	# Music: an editor-owned looping AudioStreamPlayer in the main scene, no code.
@@ -197,6 +197,22 @@ func _init() -> void:
 				var exit_label := "%s/%s" % [zone_id, child.name]
 				_expect(world_graph.has_zone(child.target_zone), "door %s targets a zone in the graph" % exit_label)
 				_expect(child.target_entry in entry_ids_by_zone.get(child.target_zone, []), "door %s lands on a real entry marker" % exit_label)
+
+	# --- WorldState survives a save/load round trip ---
+	var world_state_script := load("res://scripts/world/world_state.gd")
+	var saved_state: Node = world_state_script.new()
+	saved_state.current_zone_id = &"bookshelf_pass"
+	saved_state.last_entry_id = &"from_yard"
+	saved_state.taken_pickup_ids["toybox_yard/PencilSpearPickup"] = true
+	saved_state.opened_gate_ids["pass_home_gate"] = true
+	saved_state.save_state("user://test_world_state.cfg")
+	var loaded_state: Node = world_state_script.new()
+	loaded_state.load_state("user://test_world_state.cfg")
+	_expect(loaded_state.current_zone_id == &"bookshelf_pass" and loaded_state.last_entry_id == &"from_yard" \
+		and loaded_state.taken_pickup_ids.has("toybox_yard/PencilSpearPickup") \
+		and loaded_state.opened_gate_ids.has("pass_home_gate"), "WorldState survives a save/load round trip")
+	saved_state.free()
+	loaded_state.free()
 
 	# --- Pawn variants stay pure data ---
 	var backstep := load("res://resources/enemies/backstep_pawn.tres") as EnemyDefinition

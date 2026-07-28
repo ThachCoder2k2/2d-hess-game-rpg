@@ -24,6 +24,17 @@ var move_reservations: Dictionary = {}
 ## cell -> {"zone": StringName, "entry": StringName}. Door cells baked from
 ## ZoneExitMarkers; the player landing here triggers a zone travel.
 var exit_by_cell: Dictionary = {}
+## cell -> {"id": StringName, "opens_from": Vector2i}. Closed shortcut gates
+## (also present in blocked_cells); the player moving in opens_from's
+## direction onto the cell opens the gate permanently.
+var gate_by_cell: Dictionary = {}
+
+
+## Unbars a gate: the cell becomes ordinary floor. Persistence is the
+## caller's job (MovementSystem emits, the bridge writes WorldState).
+func open_gate(cell: Vector2i) -> void:
+	gate_by_cell.erase(cell)
+	blocked_cells.erase(cell)
 
 
 func cell_to_world(cell: Vector2i) -> Vector2:
