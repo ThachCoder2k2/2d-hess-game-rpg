@@ -88,7 +88,7 @@ func _boot_zone(entry_id: StringName) -> void:
 		if world_state.player_health_carry > 0:
 			var health: EcsComponents.Health = ecs.get_component(player_id, EcsComponents.HEALTH)
 			if health != null:
-				health.current = mini(world_state.player_health_carry, health.max_health)
+				health.current = mini(world_state.player_health_carry, health.max_value)
 		world_state.player_health_carry = -1
 
 	if board != null:

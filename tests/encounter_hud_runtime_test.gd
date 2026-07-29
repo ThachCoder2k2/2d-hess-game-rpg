@@ -21,6 +21,18 @@ func _init() -> void:
 
 ## _ready only fires once the tree loop starts, so boot checks wait one frame.
 func _run() -> void:
+	# Autoloads DO load in -s script mode, so use the real WorldState and
+	# plant a pending health carry — the boot must apply and consume it
+	# (the live travel path that shipped broken once).
+	var world_state: Node = root.get_node_or_null("/root/WorldState")
+	if world_state == null:
+		world_state = load("res://scripts/world/world_state.gd").new()
+		world_state.name = "WorldState"
+		root.add_child(world_state)
+	world_state.set("current_zone_id", &"")
+	world_state.set("last_entry_id", &"start")
+	world_state.set("player_health_carry", 2)
+
 	var main := (load("res://scenes/main.tscn") as PackedScene).instantiate()
 	root.add_child(main)
 	await process_frame
@@ -32,6 +44,9 @@ func _run() -> void:
 	var player_pos: EcsComponents.GridPos = ecs.get_component(player_id, EcsComponents.GRID_POS)
 	_expect(player_pos != null and player_pos.cell == _parked_cell(ecs, main), "player entity stands on the parked view's cell")
 	_expect(int(main.get("total_enemies")) == 5, "main counts the Toybox Yard's five enemies")
+	var player_health: EcsComponents.Health = ecs.get_component(player_id, EcsComponents.HEALTH)
+	_expect(player_health != null and player_health.current == 2, "a pending health carry applies to the booted player")
+	_expect(int(world_state.get("player_health_carry")) == -1, "the health carry is consumed by the boot")
 
 	var hud := main.get("hud") as GameHud
 	_expect(hud != null and hud.courage_label.text.begins_with("COURAGE"), "HUD binds and shows courage")
