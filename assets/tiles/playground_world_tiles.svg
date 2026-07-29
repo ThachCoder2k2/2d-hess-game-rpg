@@ -1,4 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="192" height="32" viewBox="0 0 192 32" shape-rendering="crispEdges">
+<svg xmlns="http://www.w3.org/2000/svg" width="608" height="32" viewBox="0 0 608 32" shape-rendering="crispEdges">
   <!-- 0: wood floor (the owner's original playground tile, verbatim) -->
   <rect x="0" y="0" width="32" height="32" fill="#7f5f51"/>
   <rect x="0.5" y="0.5" width="31" height="31" fill="none" stroke="#2e1f24" stroke-opacity="0.38"/>
@@ -17,7 +17,7 @@
   <rect x="96.5" y="0.5" width="31" height="31" fill="none" stroke="#2e1f24" stroke-opacity="0.34"/>
   <path d="M100 28 L102 24 M106 29 L108 25 M114 27 L116 23 M121 29 L123 25" stroke="#a5c47b" stroke-width="1.2" stroke-opacity="0.8"/>
   <path d="M118 4 L124 2" stroke="#5e7f42" stroke-width="1" stroke-opacity="0.6"/>
-  <!-- 4: toy-block wall (SOLID) - stacked crayon blocks -->
+  <!-- 4: toy-block wall (SOLID) - stacked crayon blocks, the village's rock -->
   <rect x="128" y="0" width="32" height="32" fill="#2e1f24"/>
   <rect x="129" y="1" width="14" height="14" fill="#c95b4f"/>
   <rect x="145" y="1" width="14" height="14" fill="#e0b93f"/>
@@ -35,4 +35,103 @@
   <path d="M182 2 L182 0 L188 1 L182 3 Z" fill="#f4efe6"/>
   <rect x="167" y="21" width="7" height="7" fill="#d97f74" fill-opacity="0.7"/>
   <rect x="169" y="10" width="6" height="5" fill="#ecd07a" fill-opacity="0.7"/>
+  <!-- 6: cobble courtyard (rounded paving stones, the muster yard's floor) -->
+  <rect x="192" y="0" width="32" height="32" fill="#a9a396"/>
+  <rect x="192.5" y="0.5" width="31" height="31" fill="none" stroke="#2e1f24" stroke-opacity="0.34"/>
+  <rect x="194" y="2" width="12" height="12" rx="3" fill="#c2bcae"/>
+  <rect x="209" y="2" width="12" height="12" rx="3" fill="#b6afa1"/>
+  <rect x="194" y="17" width="12" height="12" rx="3" fill="#b6afa1"/>
+  <rect x="209" y="17" width="12" height="12" rx="3" fill="#c8c2b4"/>
+  <!-- 7: throne carpet (the keep's runner: red felt, gold trim) -->
+  <rect x="224" y="0" width="32" height="32" fill="#b34a45"/>
+  <rect x="226.5" y="2.5" width="27" height="27" fill="none" stroke="#e0b93f" stroke-width="2"/>
+  <path d="M240 8 L247 16 L240 24 L233 16 Z" fill="#d97f74"/>
+  <rect x="224.5" y="0.5" width="31" height="31" fill="none" stroke="#2e1f24" stroke-opacity="0.4"/>
+  <!-- 8: marble hall (pale court tiling, the keep and the high tower) -->
+  <rect x="256" y="0" width="32" height="32" fill="#ece7dd"/>
+  <rect x="256" y="0" width="16" height="16" fill="#cfd9e6"/>
+  <rect x="272" y="16" width="16" height="16" fill="#cfd9e6"/>
+  <rect x="256.5" y="0.5" width="31" height="31" fill="none" stroke="#2e1f24" stroke-opacity="0.3"/>
+  <!-- 9: library boards (dark reading-room planks) -->
+  <rect x="288" y="0" width="32" height="32" fill="#6b4a3a"/>
+  <path d="M288 8 H320 M288 16 H320 M288 24 H320" stroke="#2e1f24" stroke-opacity="0.45" stroke-width="1"/>
+  <path d="M292 4 L306 4 M300 20 L316 20" stroke="#8a6249" stroke-width="1" stroke-opacity="0.7"/>
+  <rect x="288.5" y="0.5" width="31" height="31" fill="none" stroke="#2e1f24" stroke-opacity="0.3"/>
+  <!-- 10: rampart (SOLID) - grey castle stonework, the kingdom's real walls -->
+  <rect x="320" y="0" width="32" height="32" fill="#2e1f24"/>
+  <rect x="321" y="1" width="13" height="9" fill="#9aa3ad"/>
+  <rect x="336" y="1" width="15" height="9" fill="#8b95a0"/>
+  <rect x="321" y="12" width="21" height="9" fill="#8b95a0"/>
+  <rect x="344" y="12" width="7" height="9" fill="#9aa3ad"/>
+  <rect x="321" y="23" width="15" height="8" fill="#9aa3ad"/>
+  <rect x="338" y="23" width="13" height="8" fill="#828c97"/>
+  <path d="M322 2 H332 M322 13 H340" stroke="#b6bec8" stroke-width="1" stroke-opacity="0.8"/>
+  <!-- 11: wall tower (SOLID) - stone drum with a cone roof and a flag -->
+  <rect x="352" y="0" width="32" height="32" fill="#2e1f24"/>
+  <rect x="357" y="13" width="22" height="18" rx="2" fill="#b6bec8"/>
+  <rect x="357" y="13" width="22" height="4" fill="#8b95a0"/>
+  <path d="M368 1 L380 13 L356 13 Z" fill="#5b7fc9"/>
+  <path d="M368 1 L368 -3 L375 -1 L368 2 Z" fill="#f4efe6"/>
+  <rect x="365" y="19" width="6" height="9" rx="3" fill="#2e1f24"/>
+  <!-- 12: hedge (SOLID) - clipped garden bush with berries -->
+  <rect x="384" y="0" width="32" height="32" fill="#2e1f24"/>
+  <circle cx="393" cy="9" r="9" fill="#5e8f46"/>
+  <circle cx="407" cy="8" r="9" fill="#6b9c50"/>
+  <circle cx="391" cy="23" r="9" fill="#6b9c50"/>
+  <circle cx="406" cy="23" r="9" fill="#5e8f46"/>
+  <circle cx="399" cy="16" r="8" fill="#79ad5c"/>
+  <circle cx="396" cy="11" r="2" fill="#c95b4f"/>
+  <circle cx="408" cy="21" r="2" fill="#c95b4f"/>
+  <!-- 13: bookshelf (SOLID) - the pass's leaning stacks -->
+  <rect x="416" y="0" width="32" height="32" fill="#2e1f24"/>
+  <rect x="417" y="13" width="30" height="3" fill="#6b4a3a"/>
+  <rect x="417" y="29" width="30" height="3" fill="#6b4a3a"/>
+  <rect x="419" y="3" width="5" height="10" fill="#c95b4f"/>
+  <rect x="425" y="2" width="4" height="11" fill="#e0b93f"/>
+  <rect x="430" y="4" width="6" height="9" fill="#5b7fc9"/>
+  <rect x="437" y="2" width="4" height="11" fill="#ece7dd"/>
+  <rect x="442" y="5" width="5" height="8" fill="#c95b4f"/>
+  <rect x="419" y="19" width="4" height="10" fill="#5b7fc9"/>
+  <rect x="424" y="18" width="6" height="11" fill="#ece7dd"/>
+  <rect x="431" y="20" width="4" height="9" fill="#c95b4f"/>
+  <rect x="436" y="18" width="5" height="11" fill="#e0b93f"/>
+  <rect x="442" y="21" width="5" height="8" fill="#5b7fc9"/>
+  <!-- 14: moat water (SOLID) - the ring around the keep -->
+  <rect x="448" y="0" width="32" height="32" fill="#4f8fc9"/>
+  <rect x="448" y="22" width="32" height="10" fill="#3f78ae"/>
+  <path d="M452 8 q5 -4 10 0 q5 4 10 0" stroke="#9ccdf0" stroke-width="2" fill="none"/>
+  <path d="M450 18 q5 -4 10 0 q5 4 10 0" stroke="#7fb6e0" stroke-width="2" fill="none"/>
+  <path d="M456 27 q5 -3 10 0" stroke="#9ccdf0" stroke-width="1.5" fill="none" stroke-opacity="0.7"/>
+  <!-- 15: banner wall (SOLID) - the keep's stonework, dressed for court -->
+  <rect x="480" y="0" width="32" height="32" fill="#2e1f24"/>
+  <rect x="481" y="1" width="30" height="30" fill="#8b95a0"/>
+  <path d="M481 11 H511 M481 21 H511" stroke="#2e1f24" stroke-opacity="0.5" stroke-width="1"/>
+  <path d="M489 2 L503 2 L503 24 L496 19 L489 24 Z" fill="#c95b4f"/>
+  <path d="M489 9 L496 13 L503 9" stroke="#e0b93f" stroke-width="2" fill="none"/>
+  <!-- 16: cottage (SOLID) - a village house, roof seen from above -->
+  <rect x="512" y="0" width="32" height="32" fill="#2e1f24"/>
+  <rect x="515" y="13" width="26" height="18" fill="#ece0c8"/>
+  <path d="M512 14 L528 2 L544 14 Z" fill="#c95b4f"/>
+  <rect x="524" y="21" width="8" height="10" fill="#7f5f51"/>
+  <rect x="517" y="17" width="5" height="5" fill="#e0b93f"/>
+  <rect x="534" y="17" width="5" height="5" fill="#e0b93f"/>
+  <rect x="526" y="5" width="4" height="7" fill="#9aa3ad"/>
+  <!-- 17: toy-block wall, second stacking (SOLID) - breaks the tiling repeat -->
+  <rect x="544" y="0" width="32" height="32" fill="#2e1f24"/>
+  <rect x="545" y="1" width="14" height="14" fill="#5b7fc9"/>
+  <rect x="561" y="1" width="14" height="14" fill="#c95b4f"/>
+  <rect x="545" y="17" width="14" height="14" fill="#e0b93f"/>
+  <rect x="561" y="17" width="14" height="14" fill="#5b7fc9"/>
+  <rect x="549" y="5" width="6" height="6" fill="#82a0d9" fill-opacity="0.7"/>
+  <rect x="565" y="21" width="6" height="6" fill="#82a0d9" fill-opacity="0.7"/>
+  <rect x="565" y="5" width="6" height="6" fill="#d97f74" fill-opacity="0.7"/>
+  <rect x="549" y="21" width="6" height="6" fill="#ecd07a" fill-opacity="0.7"/>
+  <!-- 18: spilled blocks (SOLID) - a half-built stack, dark gaps between -->
+  <rect x="576" y="0" width="32" height="32" fill="#2e1f24"/>
+  <rect x="578" y="4" width="11" height="11" fill="#a8493f"/>
+  <rect x="593" y="9" width="13" height="9" fill="#b8942f"/>
+  <rect x="580" y="19" width="9" height="9" fill="#4a6aa8"/>
+  <rect x="592" y="21" width="12" height="10" fill="#a8493f"/>
+  <rect x="581" y="7" width="5" height="5" fill="#c46a5e" fill-opacity="0.6"/>
+  <rect x="595" y="24" width="5" height="4" fill="#c46a5e" fill-opacity="0.6"/>
 </svg>
