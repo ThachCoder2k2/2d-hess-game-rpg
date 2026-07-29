@@ -14,10 +14,15 @@ extends SceneTree
 const SIZE := Vector2i(72, 40)
 const START_CELL := Vector2i(4, 35)
 
-const TILE_LIGHT := Vector2i(0, 0)
-const TILE_DARK := Vector2i(1, 0)
+const TILE_WOOD := Vector2i(0, 0)
+const TILE_SAND := Vector2i(1, 0)
+const TILE_CHALK := Vector2i(2, 0)
+const TILE_GRASS := Vector2i(3, 0)
 const TILE_WALL := Vector2i(4, 0)
 const TILE_LANDMARK := Vector2i(5, 0)
+
+## DISKS indexes whose floor is the grass mat (the garden lawns).
+const GRASS_DISKS := [6, 7]
 
 ## District bowls: center, radius. Carved in order; overlaps merge.
 const DISKS := [
@@ -69,9 +74,9 @@ const LANDMARKS := [
 
 
 func _init() -> void:
-	var tile_set := load("res://resources/tiles/kingdom_tileset.tres") as TileSet
+	var tile_set := load("res://resources/tiles/playground_world_tileset.tres") as TileSet
 	if tile_set == null:
-		push_error("kingdom_tileset.tres failed to load (run an editor import first).")
+		push_error("playground_world_tileset.tres failed to load (run an editor import first).")
 		quit(1)
 		return
 
@@ -87,10 +92,21 @@ func _init() -> void:
 	quit(0 if success else 1)
 
 
+## Floors remember what carved them: disk cells are yards (checker), the
+## garden disks are grass, and cells only a road touched are chalk lines.
+var grass_cells: Dictionary = {}
+var chalk_cells: Dictionary = {}
+
+
 func _carve_world() -> Dictionary:
 	var open: Dictionary = {}
-	for disk in DISKS:
+	var disk_cells: Dictionary = {}
+	for index in DISKS.size():
+		var disk: Array = DISKS[index]
 		_carve_disk(open, disk[0], disk[1])
+		_carve_disk(disk_cells, disk[0], disk[1])
+		if index in GRASS_DISKS:
+			_carve_disk(grass_cells, disk[0], disk[1])
 	for path in PATHS:
 		var points: Array = path[0]
 		for i in range(points.size() - 1):
@@ -99,6 +115,9 @@ func _carve_world() -> Dictionary:
 			var steps := int(from.distance_to(to) / 0.4) + 1
 			for step in range(steps + 1):
 				_carve_disk(open, from.lerp(to, float(step) / steps), path[1])
+	for cell in open:
+		if not disk_cells.has(cell):
+			chalk_cells[cell] = true
 	for cell in EXTRA_ROCK:
 		open.erase(cell)
 	for cell in LANDMARKS:
@@ -151,7 +170,12 @@ func _paint(open: Dictionary, tile_set: TileSet) -> bool:
 			if landmark_cells.has(cell):
 				atlas = TILE_LANDMARK
 			elif open.has(cell):
-				atlas = TILE_LIGHT if (x + y) % 2 == 0 else TILE_DARK
+				if grass_cells.has(cell):
+					atlas = TILE_GRASS
+				elif chalk_cells.has(cell):
+					atlas = TILE_CHALK
+				else:
+					atlas = TILE_WOOD if (x + y) % 2 == 0 else TILE_SAND
 			else:
 				atlas = TILE_WALL
 			layer.set_cell(cell, 0, atlas)

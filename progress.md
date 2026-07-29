@@ -512,6 +512,12 @@ Researched the AI-focused editor surface at the owner's request. Found `EnemyBra
 - Zone-travel machinery KEPT (future interiors/boss seals) — the kingdom is simply the only zone; a synthetic injected door keeps MovementSystem's exit path covered in CI. Old five zone scenes + tilemaps deleted; old saves fall back gracefully to the authored default.
 - Suite: kingdom census (17 inhabitants, 5 treasures, 2 gates), both gates' one-way trilogies, leash calm/wake probes (far enemy never stirs, distance-8 enemy idles, adjacent enemy wakes), injected-door zone_exit. ecs_enemy pursuit spec now starts inside the leash. All 7 suites green; live boot clean.
 
+## The Kingdom Wears the Playground - 2026-07-29
+
+- Owner correction: the world must look like the child's playground THEY designed, not throne-room marble. New atlas `assets/tiles/playground_world_tiles.svg` in the owner's exact language — their two original floor tiles copied verbatim (wood #7f5f51 / sand #c9a77d, crayon outlines, hand-scratches), plus chalk-road (white chalk squiggle on sand), grass mat (garden lawns), toy-block wall (stacked crayon red/blue/yellow blocks = the solid rock), and a block-tower-with-flag landmark prop.
+- `resources/tiles/playground_world_tileset.tres` mirrors the kingdom tileset format (solid custom data on wall + landmark); the carve tool now paints with it and remembers WHAT carved each cell: district disks = the owner's checker, garden disks = grass, road-only cells = chalk lines — the roads between districts literally read as chalk drawn on the ground.
+- Owner's original `playground_tileset.tres`/`playground_tiles.svg` untouched; kingdom (throne) tileset stays for the first_encounter demo room. All 7 suites green (toy blocks still block — solid data verified by boot tests); live screenshot approved-pending: ART DIRECTION IS OWNER-OWNED, this is the hand-off pass.
+
 ## World v2: the DS3 Opening Skeleton - 2026-07-29
 
 - Owner verdict: three zones too simple. Researched DS3's opening (Cemetery of Ash road to Iudex, Firelink hub, High Wall loops) and rebuilt the world as five zones on that skeleton — tutorial cemetery (item behind spawn, fountain landmark, soft branch + warned hard pocket), boss-gate arena (Stable Gate, armed Wardens holding the Knight's future chamber), safe three-door hub (White Court), four-court looping level with an internal one-way shortcut (Chalk Gardens = High Wall), and the Bookshelf Pass now looping one-way back to the HUB, not the yard.

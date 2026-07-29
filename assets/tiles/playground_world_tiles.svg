@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="192" height="32" viewBox="0 0 192 32" shape-rendering="crispEdges">
+  <!-- 0: wood floor (the owner's original playground tile, verbatim) -->
+  <rect x="0" y="0" width="32" height="32" fill="#7f5f51"/>
+  <rect x="0.5" y="0.5" width="31" height="31" fill="none" stroke="#2e1f24" stroke-opacity="0.38"/>
+  <path d="M2 29 L9 31 M21 1 L30 3" stroke="#9d7a62" stroke-width="1" stroke-opacity="0.55"/>
+  <!-- 1: sand floor (the owner's original playground tile, verbatim) -->
+  <rect x="32" y="0" width="32" height="32" fill="#c9a77d"/>
+  <rect x="32.5" y="0.5" width="31" height="31" fill="none" stroke="#2e1f24" stroke-opacity="0.32"/>
+  <path d="M36 2 L44 1 M51 30 L61 27" stroke="#e0c093" stroke-width="1" stroke-opacity="0.58"/>
+  <!-- 2: chalk road (sand with a child's chalk line down it) -->
+  <rect x="64" y="0" width="32" height="32" fill="#c9a77d"/>
+  <rect x="64.5" y="0.5" width="31" height="31" fill="none" stroke="#2e1f24" stroke-opacity="0.32"/>
+  <path d="M70 26 L78 18 L74 14 L84 6" stroke="#f4efe6" stroke-width="2" stroke-opacity="0.85" fill="none"/>
+  <path d="M87 28 L90 24" stroke="#f4efe6" stroke-width="1.5" stroke-opacity="0.6"/>
+  <!-- 3: grass mat (the gardens' picnic lawn) -->
+  <rect x="96" y="0" width="32" height="32" fill="#7fa25a"/>
+  <rect x="96.5" y="0.5" width="31" height="31" fill="none" stroke="#2e1f24" stroke-opacity="0.34"/>
+  <path d="M100 28 L102 24 M106 29 L108 25 M114 27 L116 23 M121 29 L123 25" stroke="#a5c47b" stroke-width="1.2" stroke-opacity="0.8"/>
+  <path d="M118 4 L124 2" stroke="#5e7f42" stroke-width="1" stroke-opacity="0.6"/>
+  <!-- 4: toy-block wall (SOLID) - stacked crayon blocks -->
+  <rect x="128" y="0" width="32" height="32" fill="#2e1f24"/>
+  <rect x="129" y="1" width="14" height="14" fill="#c95b4f"/>
+  <rect x="145" y="1" width="14" height="14" fill="#e0b93f"/>
+  <rect x="129" y="17" width="14" height="14" fill="#5b7fc9"/>
+  <rect x="145" y="17" width="14" height="14" fill="#c95b4f"/>
+  <rect x="133" y="5" width="6" height="6" fill="#d97f74" fill-opacity="0.7"/>
+  <rect x="149" y="21" width="6" height="6" fill="#d97f74" fill-opacity="0.7"/>
+  <rect x="149" y="5" width="6" height="6" fill="#ecd07a" fill-opacity="0.7"/>
+  <rect x="133" y="21" width="6" height="6" fill="#82a0d9" fill-opacity="0.7"/>
+  <!-- 5: landmark prop (SOLID) - a block tower with a flag -->
+  <rect x="160" y="0" width="32" height="32" fill="#2e1f24"/>
+  <rect x="163" y="18" width="26" height="13" fill="#c95b4f"/>
+  <rect x="166" y="8" width="20" height="10" fill="#e0b93f"/>
+  <rect x="170" y="2" width="12" height="6" fill="#5b7fc9"/>
+  <path d="M182 2 L182 0 L188 1 L182 3 Z" fill="#f4efe6"/>
+  <rect x="167" y="21" width="7" height="7" fill="#d97f74" fill-opacity="0.7"/>
+  <rect x="169" y="10" width="6" height="5" fill="#ecd07a" fill-opacity="0.7"/>
+</svg>
