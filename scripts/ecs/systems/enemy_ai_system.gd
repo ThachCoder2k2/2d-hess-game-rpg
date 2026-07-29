@@ -22,7 +22,10 @@ func tick(delta: float) -> void:
 			continue
 		match ai.state:
 			EcsComponents.EnemyAI.STATE_OBSERVE:
-				_choose_action(entity_id, ai, hero_id)
+				if _hero_in_aggro_range(entity_id, ai, hero_id):
+					_choose_action(entity_id, ai, hero_id)
+				else:
+					ai.state_time_left = ai.observe_delay
 			EcsComponents.EnemyAI.STATE_TELEGRAPH:
 				_resolve_attack(entity_id, ai, hero_id)
 			EcsComponents.EnemyAI.STATE_COMMIT:
@@ -35,6 +38,19 @@ func tick(delta: float) -> void:
 func _find_player() -> int:
 	var players := world.query([EcsComponents.PLAYER_TAG, EcsComponents.GRID_POS])
 	return players[0] if not players.is_empty() else 0
+
+
+## The semi-open-world leash: an idle enemy only starts deciding once the
+## hero walks into its aggro radius. Mid-action states (telegraph, commit,
+## recover) always finish — the leash never interrupts a swing.
+func _hero_in_aggro_range(entity_id: int, ai: EcsComponents.EnemyAI, hero_id: int) -> bool:
+	if ai.decision_profile == null:
+		return true
+	var self_pos: EcsComponents.GridPos = world.get_component(entity_id, EcsComponents.GRID_POS)
+	var hero_pos: EcsComponents.GridPos = world.get_component(hero_id, EcsComponents.GRID_POS)
+	if self_pos == null or hero_pos == null:
+		return true
+	return _manhattan(self_pos.cell, hero_pos.cell) <= ai.decision_profile.aggro_radius
 
 
 func _choose_action(entity_id: int, ai: EcsComponents.EnemyAI, hero_id: int) -> void:

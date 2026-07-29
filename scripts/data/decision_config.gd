@@ -9,6 +9,12 @@ extends Resource
 @export_group("Timing")
 @export_range(0.0, 2.0, 0.01) var observe_delay := 0.42
 
+@export_group("Aggro")
+## Manhattan distance (cells) at which the enemy notices the hero. Beyond it
+## the enemy stands idle — this is what keeps a semi-open map calm outside
+## the player's neighborhood.
+@export_range(2, 60) var aggro_radius := 7
+
 @export_group("Action scores")
 @export var attack_score := 100.0
 @export var future_threat_score := 28.0

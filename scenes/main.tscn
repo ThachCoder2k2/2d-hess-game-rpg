@@ -3,7 +3,7 @@
 [ext_resource type="Script" uid="uid://cm5l012ltefe4" path="res://scripts/main.gd" id="1"]
 [ext_resource type="PackedScene" path="res://objects/world/prototype_board.tscn" id="4"]
 [ext_resource type="PackedScene" path="res://objects/actors/player.tscn" id="5"]
-[ext_resource type="PackedScene" path="res://scenes/zones/toybox_yard.tscn" id="6"]
+[ext_resource type="PackedScene" path="res://scenes/zones/the_kingdom.tscn" id="6"]
 [ext_resource type="PackedScene" path="res://scenes/ui/hud.tscn" id="7"]
 [ext_resource type="AudioStream" path="res://assets/music/unbound_march.wav" id="8"]
 [ext_resource type="Resource" path="res://resources/world/world_graph.tres" id="9"]
@@ -17,7 +17,7 @@ world_graph = ExtResource("9")
 [node name="PrototypeBoard" parent="." unique_id=1293707123 instance=ExtResource("4")]
 
 [node name="PawnHero" parent="." unique_id=1545609314 instance=ExtResource("5")]
-position = Vector2(144, 404)
+position = Vector2(208, 1172)
 
 [node name="CurrentZone" parent="." instance=ExtResource("6")]
 

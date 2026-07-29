@@ -1,18 +1,10 @@
-[gd_resource type="Resource" script_class="WorldGraph" load_steps=7 format=3]
+[gd_resource type="Resource" script_class="WorldGraph" load_steps=3 format=3]
 
 [ext_resource type="Script" path="res://scripts/data/world_graph.gd" id="1"]
-[ext_resource type="PackedScene" path="res://scenes/zones/toybox_yard.tscn" id="2"]
-[ext_resource type="PackedScene" path="res://scenes/zones/chalk_gardens.tscn" id="3"]
-[ext_resource type="PackedScene" path="res://scenes/zones/bookshelf_pass.tscn" id="4"]
-[ext_resource type="PackedScene" path="res://scenes/zones/stable_gate.tscn" id="5"]
-[ext_resource type="PackedScene" path="res://scenes/zones/white_court.tscn" id="6"]
+[ext_resource type="PackedScene" path="res://scenes/zones/the_kingdom.tscn" id="2"]
 
 [resource]
 script = ExtResource("1")
 zone_scene_by_id = Dictionary[StringName, PackedScene]({
-&"bookshelf_pass": ExtResource("4"),
-&"chalk_gardens": ExtResource("3"),
-&"stable_gate": ExtResource("5"),
-&"toybox_yard": ExtResource("2"),
-&"white_court": ExtResource("6")
+&"kingdom": ExtResource("2")
 })

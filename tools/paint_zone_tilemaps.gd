@@ -1,111 +1,71 @@
 extends SceneTree
 
-## Build tool: paints the world-zone tilemaps (greybox pass — final art is
-## human-owned) and saves them under objects/world/. Border walls carry the
-## collision (solid=true custom data on the tile); door cells stay floor so
-## the exit markers on them are walkable. Run headless:
-##   Godot --headless --path . -s tools/paint_zone_tilemaps.gd
-## Rerun after changing a layout below.
+## Build tool: carves THE KINGDOM — one continuous 72x40 semi-open board
+## (Hyper Light Drifter / Dark Souls structure, docs/soulslike-world-plan.md)
+## — and saves it as objects/world/kingdom_world_tilemap.tscn. The world
+## starts as solid rock; districts are carved as organic disks and winding
+## paths, so nothing is a rectangle and regions flow into each other under
+## one scrolling camera. Border walls ARE the collision (solid=true tiles).
 ##
-## World v2 follows Dark Souls 3's opening skeleton (docs/soulslike-world-plan.md):
-## tutorial cemetery -> boss-gate arena -> hub -> dense looping level -> side
-## level that loops one-way back to the hub.
+## The tool validates itself: a BFS from the spawn must reach every carved
+## cell, so an accidentally orphaned pocket fails the build.
+##   Godot --headless --path . -s tools/paint_zone_tilemaps.gd
+
+const SIZE := Vector2i(72, 40)
+const START_CELL := Vector2i(4, 35)
 
 const TILE_LIGHT := Vector2i(0, 0)
 const TILE_DARK := Vector2i(1, 0)
 const TILE_WALL := Vector2i(4, 0)
 const TILE_LANDMARK := Vector2i(5, 0)
 
-## Zone layouts: name -> {size, door cells (kept floor), interior walls,
-## landmark cells (solid, drawn as throne tiles for the greybox)}.
-var zone_layouts := {
-	"toybox_tilemap": {
-		"size": Vector2i(24, 13),
-		"doors": [Vector2i(19, 0)],
-		"walls": _cemetery_walls(),
-		"landmark": [Vector2i(11, 6), Vector2i(12, 6), Vector2i(11, 7), Vector2i(12, 7)],
-	},
-	"stable_tilemap": {
-		"size": Vector2i(12, 9),
-		"doors": [Vector2i(6, 0), Vector2i(6, 8)],
-		"walls": [Vector2i(2, 2), Vector2i(9, 2), Vector2i(2, 6), Vector2i(9, 6)],
-		"landmark": [],
-	},
-	"court_tilemap": {
-		"size": Vector2i(16, 10),
-		"doors": [Vector2i(8, 0), Vector2i(8, 9), Vector2i(0, 5)],
-		"walls": [],
-		"landmark": [Vector2i(7, 4), Vector2i(8, 4), Vector2i(7, 5), Vector2i(8, 5)],
-	},
-	"chalk_tilemap": {
-		"size": Vector2i(28, 14),
-		"doors": [Vector2i(8, 13), Vector2i(27, 11)],
-		"walls": _high_wall_walls(),
-		"landmark": [Vector2i(18, 5), Vector2i(19, 5), Vector2i(18, 6), Vector2i(19, 6)],
-	},
-	"bookshelf_tilemap": {
-		"size": Vector2i(24, 11),
-		"doors": [Vector2i(0, 5), Vector2i(0, 9)],
-		"walls": _shelf_walls(),
-		"landmark": [Vector2i(9, 1), Vector2i(10, 1), Vector2i(9, 2), Vector2i(10, 2)],
-	},
-}
+## District bowls: center, radius. Carved in order; overlaps merge.
+const DISKS := [
+	[Vector2(4, 35), 2.2],    # spawn nook (treasure behind the spawn)
+	[Vector2(12, 32), 6.5],   # the Toybox Yard bowl
+	[Vector2(5, 26), 2.6],    # hills pocket (soft branch)
+	[Vector2(21, 37), 2.6],   # warned pocket (hard branch)
+	[Vector2(28, 20), 4.2],   # the Stable Gate arena
+	[Vector2(39, 13), 5.2],   # the White Court plateau
+	[Vector2(31, 5), 4.6],    # Chalk Gardens, west field
+	[Vector2(42, 4), 4.4],    # Chalk Gardens, east field
+	[Vector2(54, 17), 4.2],   # Bookshelf Pass, south hall
+	[Vector2(60, 10), 4.6],   # Bookshelf Pass, north hall
+	[Vector2(68, 5), 1.8],    # treasure nook at the world's edge
+]
 
+## Winding roads: waypoint list, carve radius. Narrow = tense, wide = safe.
+const PATHS := [
+	[[Vector2(4, 35), Vector2(9, 34), Vector2(11, 33)], 1.6],                     # spawn -> yard
+	[[Vector2(8, 29), Vector2(6, 27)], 1.2],                                      # yard -> hills
+	[[Vector2(15, 35), Vector2(18, 36), Vector2(20, 37)], 1.2],                   # yard -> warned pocket
+	[[Vector2(16, 29), Vector2(20, 26), Vector2(23, 24), Vector2(26, 22)], 1.8],  # the road north
+	[[Vector2(30, 18), Vector2(33, 16), Vector2(36, 15)], 1.8],                   # arena -> court
+	[[Vector2(40, 9), Vector2(41, 6)], 1.6],                                      # court -> gardens east
+	[[Vector2(34, 5), Vector2(38, 4)], 1.8],                                      # gardens bridge west<->east
+	[[Vector2(32, 9), Vector2(32, 12), Vector2(35, 13)], 1.1],                    # gardens shortcut corridor (gated)
+	[[Vector2(44, 13), Vector2(47, 14), Vector2(50, 16)], 1.8],                   # court -> pass
+	[[Vector2(56, 14), Vector2(58, 12)], 1.8],                                    # pass south<->north
+	[[Vector2(63, 8), Vector2(66, 6)], 1.1],                                      # pass -> treasure nook
+	[[Vector2(54, 20), Vector2(50, 20), Vector2(47, 19), Vector2(43, 15)], 1.1],  # pass home corridor (gated)
+]
 
-## Cemetery of Ash road: bottom spawn corridor (item BEHIND the spawn), a
-## fountain field, a soft west "hills" branch, and a walled east pocket with
-## the hard guards + treasure. The row-10 wall separates corridor from field
-## (gap at x=18); col-7 walls the hills (gap row 3); col-20 walls the warned
-## pocket (gap row 6).
-static func _cemetery_walls() -> Array:
-	var walls: Array = []
-	for x in range(4, 23):
-		if x != 18:
-			walls.append(Vector2i(x, 10))
-	for y in range(1, 9):
-		if y != 3:
-			walls.append(Vector2i(7, y))
-	for y in range(3, 10):
-		if y != 6:
-			walls.append(Vector2i(20, y))
-	return walls
+## Rock put back AFTER carving: arena pillars, garden hedges, shelf ridges.
+const EXTRA_ROCK := [
+	Vector2i(26, 20), Vector2i(30, 20), Vector2i(28, 18), Vector2i(28, 22),
+	Vector2i(29, 4), Vector2i(33, 6), Vector2i(43, 3), Vector2i(40, 6), Vector2i(31, 2),
+	Vector2i(52, 16), Vector2i(53, 16), Vector2i(54, 16),
+	Vector2i(58, 10), Vector2i(58, 11),
+	Vector2i(61, 12), Vector2i(62, 12),
+]
 
-
-## High Wall rooms: a central spine (gaps rows 3 and 10) splits east/west;
-## horizontal walls split top/bottom on each side. The west row-9 wall has NO
-## painted gap — the gap cell (6, 9) is the one-way shortcut gate.
-static func _high_wall_walls() -> Array:
-	var walls: Array = []
-	for y in range(1, 13):
-		if y != 3 and y != 10:
-			walls.append(Vector2i(14, y))
-	for x in range(1, 14):
-		if x != 6:
-			walls.append(Vector2i(x, 4))
-	for x in range(1, 14):
-		if x != 6:
-			walls.append(Vector2i(x, 9))
-	for x in range(15, 27):
-		if x != 22:
-			walls.append(Vector2i(x, 9))
-	return walls
-
-
-## Bookshelf aisles + the gated hub corridor: walls above row-9 cells 1..3
-## seal the corridor; the gate marker sits at (2, 9). Shelf columns have one
-## aisle gap each.
-static func _shelf_walls() -> Array:
-	var walls: Array = [Vector2i(1, 8), Vector2i(2, 8), Vector2i(3, 8)]
-	for y in range(1, 10):
-		if y != 5:
-			walls.append(Vector2i(7, y))
-	for y in range(1, 10):
-		if y != 6:
-			walls.append(Vector2i(12, y))
-	for y in range(1, 10):
-		if y != 3:
-			walls.append(Vector2i(17, y))
-	return walls
+## Solid landmark tiles, visible from far under the scrolling camera.
+const LANDMARKS := [
+	Vector2i(11, 31), Vector2i(12, 31), Vector2i(11, 32), Vector2i(12, 32),
+	Vector2i(38, 12), Vector2i(39, 12), Vector2i(38, 13), Vector2i(39, 13),
+	Vector2i(41, 3), Vector2i(42, 3), Vector2i(41, 4), Vector2i(42, 4),
+	Vector2i(59, 9), Vector2i(60, 9), Vector2i(59, 10), Vector2i(60, 10),
+]
 
 
 func _init() -> void:
@@ -114,38 +74,88 @@ func _init() -> void:
 		push_error("kingdom_tileset.tres failed to load (run an editor import first).")
 		quit(1)
 		return
-	var failures := 0
-	for zone_name: String in zone_layouts:
-		if not _paint_zone(zone_name, zone_layouts[zone_name], tile_set):
-			failures += 1
-	quit(1 if failures > 0 else 0)
+
+	var open := _carve_world()
+	var orphans := _validate_connectivity(open)
+	if not orphans.is_empty():
+		push_error("KINGDOM CARVE: %d cells unreachable from the spawn, e.g. %s" % [orphans.size(), orphans.slice(0, 6)])
+		quit(1)
+		return
+
+	var success := _paint(open, tile_set)
+	print("KINGDOM TILEMAP: %s (%d open cells, all reachable)" % ["OK" if success else "FAIL", open.size()])
+	quit(0 if success else 1)
 
 
-func _paint_zone(zone_name: String, layout: Dictionary, tile_set: TileSet) -> bool:
-	var size: Vector2i = layout["size"]
+func _carve_world() -> Dictionary:
+	var open: Dictionary = {}
+	for disk in DISKS:
+		_carve_disk(open, disk[0], disk[1])
+	for path in PATHS:
+		var points: Array = path[0]
+		for i in range(points.size() - 1):
+			var from: Vector2 = points[i]
+			var to: Vector2 = points[i + 1]
+			var steps := int(from.distance_to(to) / 0.4) + 1
+			for step in range(steps + 1):
+				_carve_disk(open, from.lerp(to, float(step) / steps), path[1])
+	for cell in EXTRA_ROCK:
+		open.erase(cell)
+	for cell in LANDMARKS:
+		open.erase(cell)
+	# The outer ring is always rock so the board has a rim.
+	for cell in open.keys():
+		if cell.x <= 0 or cell.y <= 0 or cell.x >= SIZE.x - 1 or cell.y >= SIZE.y - 1:
+			open.erase(cell)
+	return open
+
+
+func _carve_disk(open: Dictionary, center: Vector2, radius: float) -> void:
+	for y in range(int(center.y - radius) - 1, int(center.y + radius) + 2):
+		for x in range(int(center.x - radius) - 1, int(center.x + radius) + 2):
+			if Vector2(x, y).distance_to(center) <= radius:
+				open[Vector2i(x, y)] = true
+
+
+## Every carved cell must be walkable from the spawn (4-directional).
+func _validate_connectivity(open: Dictionary) -> Array:
+	var reached: Dictionary = {}
+	var frontier: Array = [START_CELL]
+	reached[START_CELL] = true
+	while not frontier.is_empty():
+		var cell: Vector2i = frontier.pop_back()
+		for direction in [Vector2i.UP, Vector2i.DOWN, Vector2i.LEFT, Vector2i.RIGHT]:
+			var next: Vector2i = cell + direction
+			if open.has(next) and not reached.has(next):
+				reached[next] = true
+				frontier.append(next)
+	var orphans: Array = []
+	for cell in open:
+		if not reached.has(cell):
+			orphans.append(cell)
+	return orphans
+
+
+func _paint(open: Dictionary, tile_set: TileSet) -> bool:
 	var layer := TileMapLayer.new()
 	layer.name = "TileMap"
 	layer.position = Vector2(64, 36)
 	layer.tile_set = tile_set
-	for y in size.y:
-		for x in size.x:
+	var landmark_cells: Dictionary = {}
+	for cell in LANDMARKS:
+		landmark_cells[cell] = true
+	for y in SIZE.y:
+		for x in SIZE.x:
 			var cell := Vector2i(x, y)
-			var on_border: bool = x == 0 or x == size.x - 1 or y == 0 or y == size.y - 1
 			var atlas: Vector2i
-			if cell in layout["doors"]:
-				atlas = TILE_LIGHT
-			elif cell in layout["landmark"]:
+			if landmark_cells.has(cell):
 				atlas = TILE_LANDMARK
-			elif on_border or cell in layout["walls"]:
-				atlas = TILE_WALL
-			elif (x + y) % 2 == 0:
-				atlas = TILE_LIGHT
+			elif open.has(cell):
+				atlas = TILE_LIGHT if (x + y) % 2 == 0 else TILE_DARK
 			else:
-				atlas = TILE_DARK
+				atlas = TILE_WALL
 			layer.set_cell(cell, 0, atlas)
 	var packed := PackedScene.new()
-	var pack_err := packed.pack(layer)
-	var path := "res://objects/world/%s.tscn" % zone_name
-	var save_err := ResourceSaver.save(packed, path) if pack_err == OK else FAILED
-	print("ZONE TILEMAP %s: %s" % [zone_name, "OK" if save_err == OK else "FAIL (pack=%d save=%d)" % [pack_err, save_err]])
-	return save_err == OK
+	if packed.pack(layer) != OK:
+		return false
+	return ResourceSaver.save(packed, "res://objects/world/kingdom_world_tilemap.tscn") == OK

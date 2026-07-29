@@ -36,7 +36,9 @@ func _init() -> void:
 	var thrust := load("res://resources/attacks/pencil_thrust.tres") as AttackProfile
 
 	var hero := EcsActorFactory.spawn_player(world, Vector2i(2, 3), sword, thrust)
-	var pawn := EcsActorFactory.spawn_enemy(world, definition, Vector2i(10, 3))
+	# Distance 7 = exactly the default aggro radius; the leash (zone_travel
+	# suite) keeps anything farther asleep.
+	var pawn := EcsActorFactory.spawn_enemy(world, definition, Vector2i(9, 3))
 	var pawn_ai: EcsComponents.EnemyAI = world.get_component(pawn, EcsComponents.ENEMY_AI)
 	var pawn_pos: EcsComponents.GridPos = world.get_component(pawn, EcsComponents.GRID_POS)
 	var pawn_health: EcsComponents.Health = world.get_component(pawn, EcsComponents.HEALTH)

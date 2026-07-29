@@ -1,0 +1,126 @@
+[gd_scene load_steps=13 format=3]
+
+[ext_resource type="PackedScene" path="res://objects/world/room_encounter.tscn" id="1"]
+[ext_resource type="PackedScene" path="res://objects/world/kingdom_world_tilemap.tscn" id="2"]
+[ext_resource type="PackedScene" path="res://objects/actors/black_pawn.tscn" id="3"]
+[ext_resource type="Script" path="res://scripts/world/zone_entry_marker.gd" id="4"]
+[ext_resource type="Resource" path="res://resources/enemies/backstep_pawn.tres" id="5"]
+[ext_resource type="Resource" path="res://resources/enemies/pawn_armed.tres" id="6"]
+[ext_resource type="Resource" path="res://resources/enemies/charging_pawn.tres" id="7"]
+[ext_resource type="PackedScene" path="res://objects/markers/gate_marker.tscn" id="8"]
+[ext_resource type="PackedScene" path="res://objects/markers/pickup_spawn_point.tscn" id="9"]
+[ext_resource type="Resource" path="res://resources/weapons/pencil_spear.tres" id="10"]
+[ext_resource type="Resource" path="res://resources/weapons/ruler_blade.tres" id="11"]
+[ext_resource type="PackedScene" path="res://objects/world/weapon_pickup.tscn" id="12"]
+
+[node name="TheKingdom" instance=ExtResource("1")]
+room_message = "The Kingdom of the Board. One land, five districts; the road remembers."
+zone_id = &"kingdom"
+board_size = Vector2i(72, 40)
+
+[node name="RoomArt" type="Node2D" parent="."]
+
+[node name="TileMap" parent="RoomArt" instance=ExtResource("2")]
+
+[node name="StartEntry" type="Marker2D" parent="."]
+position = Vector2(208, 1172)
+script = ExtResource("4")
+entry_id = &"start"
+
+[node name="GardensShortcutGate" parent="." instance=ExtResource("8")]
+position = Vector2(1104, 404)
+gate_id = &"gardens_lane_gate"
+opens_from = Vector2i(0, 1)
+
+[node name="PassHomeGate" parent="." instance=ExtResource("8")]
+position = Vector2(1584, 660)
+gate_id = &"pass_home_gate"
+opens_from = Vector2i(-1, 0)
+
+[node name="YardRecruit" parent="." instance=ExtResource("3")]
+position = Vector2(400, 1108)
+
+[node name="YardFieldRecruit" parent="." instance=ExtResource("3")]
+position = Vector2(592, 980)
+
+[node name="RoadRecruit" parent="." instance=ExtResource("3")]
+position = Vector2(816, 788)
+
+[node name="GardensRecruit" parent="." instance=ExtResource("3")]
+position = Vector2(1008, 148)
+
+[node name="GardensAmbushRecruit" parent="." instance=ExtResource("3")]
+position = Vector2(1360, 308)
+
+[node name="PocketArmedWest" parent="." instance=ExtResource("3")]
+position = Vector2(720, 1204)
+definition = ExtResource("6")
+
+[node name="PocketArmedEast" parent="." instance=ExtResource("3")]
+position = Vector2(784, 1236)
+definition = ExtResource("6")
+
+[node name="WardenWest" parent="." instance=ExtResource("3")]
+position = Vector2(944, 692)
+definition = ExtResource("6")
+
+[node name="WardenEast" parent="." instance=ExtResource("3")]
+position = Vector2(1008, 692)
+definition = ExtResource("6")
+
+[node name="TreasureArmedPawn" parent="." instance=ExtResource("3")]
+position = Vector2(2192, 244)
+definition = ExtResource("6")
+
+[node name="HillsBackstep" parent="." instance=ExtResource("3")]
+position = Vector2(240, 884)
+definition = ExtResource("5")
+
+[node name="GardensBackstep" parent="." instance=ExtResource("3")]
+position = Vector2(1328, 212)
+definition = ExtResource("5")
+
+[node name="PassBackstepSouth" parent="." instance=ExtResource("3")]
+position = Vector2(1744, 628)
+definition = ExtResource("5")
+
+[node name="PassBackstepNorth" parent="." instance=ExtResource("3")]
+position = Vector2(2032, 404)
+definition = ExtResource("5")
+
+[node name="GardensChargerWest" parent="." instance=ExtResource("3")]
+position = Vector2(1040, 212)
+definition = ExtResource("7")
+
+[node name="GardensChargerEast" parent="." instance=ExtResource("3")]
+position = Vector2(1488, 212)
+definition = ExtResource("7")
+
+[node name="PassCharger" parent="." instance=ExtResource("3")]
+position = Vector2(1904, 436)
+definition = ExtResource("7")
+
+[node name="SpawnSpearPickup" parent="." instance=ExtResource("9")]
+pickup_scene = ExtResource("12")
+grid_cell = Vector2i(2, 35)
+weapon = ExtResource("10")
+
+[node name="HillsRulerPickup" parent="." instance=ExtResource("9")]
+pickup_scene = ExtResource("12")
+grid_cell = Vector2i(4, 25)
+weapon = ExtResource("11")
+
+[node name="PocketRulerPickup" parent="." instance=ExtResource("9")]
+pickup_scene = ExtResource("12")
+grid_cell = Vector2i(22, 38)
+weapon = ExtResource("11")
+
+[node name="GardensSpearPickup" parent="." instance=ExtResource("9")]
+pickup_scene = ExtResource("12")
+grid_cell = Vector2i(28, 3)
+weapon = ExtResource("10")
+
+[node name="EdgeSpearPickup" parent="." instance=ExtResource("9")]
+pickup_scene = ExtResource("12")
+grid_cell = Vector2i(68, 5)
+weapon = ExtResource("10")
