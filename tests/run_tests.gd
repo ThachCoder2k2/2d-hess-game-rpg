@@ -184,7 +184,7 @@ func _init() -> void:
 		zone_roots[zone_id] = zone_root
 		_expect(StringName(zone_root.get("zone_id")) == zone_id, "zone '%s' carries its own zone_id" % zone_id)
 		var board: Vector2i = zone_root.get("board_size")
-		_expect(board.x >= 16 and board.y >= 9, "zone '%s' board is at least one screen" % zone_id)
+		_expect(board.x >= 8 and board.y >= 7, "zone '%s' board is at least an arena" % zone_id)
 		var entry_ids: Array = []
 		for child in zone_root.get_children():
 			if child is ZoneEntryMarker:

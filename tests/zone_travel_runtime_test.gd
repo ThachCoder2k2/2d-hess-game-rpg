@@ -31,14 +31,14 @@ func _boot_zone(scene_path: String, player_cell: Vector2i, skipped_pickups: Arra
 
 
 func _init() -> void:
-	# --- The Toybox Yard boots as a 20x11 board with a north door ---
-	var booted := _boot_zone("res://scenes/zones/toybox_yard.tscn", Vector2i(16, 1))
+	# --- The Toybox Yard boots as a 24x13 board with a north door ---
+	var booted := _boot_zone("res://scenes/zones/toybox_yard.tscn", Vector2i(19, 1))
 	var world: EcsWorld = booted["world"]
-	_expect(world.grid.bounds.size == Vector2i(20, 11), "toybox yard sizes the grid from its board_size export")
-	var door: Dictionary = world.grid.exit_by_cell.get(Vector2i(16, 0), {})
-	_expect(door.get("zone") == &"chalk_gardens" and door.get("entry") == &"from_yard", "the north door cell targets the Chalk Gardens")
-	_expect(booted["cast"]["enemies"].size() == 5, "toybox yard spawns its five teaching enemies")
-	_expect(not booted["cast"]["pickup_name_by_entity"].is_empty(), "the spear pickup spawns with a stable marker name")
+	_expect(world.grid.bounds.size == Vector2i(24, 13), "toybox yard sizes the grid from its board_size export")
+	var door: Dictionary = world.grid.exit_by_cell.get(Vector2i(19, 0), {})
+	_expect(door.get("zone") == &"stable_gate" and door.get("entry") == &"from_yard", "the north door cell targets the Stable Gate")
+	_expect(booted["cast"]["enemies"].size() == 6, "toybox yard spawns its six cemetery enemies")
+	_expect(booted["cast"]["pickup_name_by_entity"].size() == 3, "the yard's three treasures spawn with stable marker names")
 
 	# --- Stepping onto the door emits zone_exit with the destination ---
 	var player_id := int(booted["cast"]["player"])
@@ -49,32 +49,32 @@ func _init() -> void:
 	var travel_events := world.drain_events().filter(func(event: Dictionary) -> bool: return event.get("type") == &"zone_exit")
 	_expect(travel_events.size() == 1, "landing on the door emits exactly one zone_exit event")
 	if not travel_events.is_empty():
-		_expect(travel_events[0].get("zone") == &"chalk_gardens" and travel_events[0].get("entry") == &"from_yard", "the zone_exit event carries the door's destination")
+		_expect(travel_events[0].get("zone") == &"stable_gate" and travel_events[0].get("entry") == &"from_yard", "the zone_exit event carries the door's destination")
 
 	# --- Taken pickups never respawn ---
-	var rebooted := _boot_zone("res://scenes/zones/toybox_yard.tscn", Vector2i(1, 9), ["PencilSpearPickup"])
-	_expect(rebooted["cast"]["pickup_name_by_entity"].is_empty(), "a taken pickup is skipped on the next zone boot")
+	var rebooted := _boot_zone("res://scenes/zones/toybox_yard.tscn", Vector2i(2, 11), ["PencilSpearPickup"])
+	_expect(not rebooted["cast"]["pickup_name_by_entity"].values().has("PencilSpearPickup"), "a taken pickup is skipped on the next zone boot")
 
-	# --- The Chalk Gardens boots and doors back south ---
-	var gardens := _boot_zone("res://scenes/zones/chalk_gardens.tscn", Vector2i(16, 10))
+	# --- The Chalk Gardens boots and doors back to the Court ---
+	var gardens := _boot_zone("res://scenes/zones/chalk_gardens.tscn", Vector2i(8, 12))
 	var gardens_world: EcsWorld = gardens["world"]
-	_expect(gardens_world.grid.bounds.size == Vector2i(24, 12), "chalk gardens sizes its own larger board")
-	var south_door: Dictionary = gardens_world.grid.exit_by_cell.get(Vector2i(16, 11), {})
-	_expect(south_door.get("zone") == &"toybox_yard" and south_door.get("entry") == &"from_gardens", "the south door loops back to the Toybox Yard")
+	_expect(gardens_world.grid.bounds.size == Vector2i(28, 14), "chalk gardens sizes its own larger board")
+	var south_door: Dictionary = gardens_world.grid.exit_by_cell.get(Vector2i(8, 13), {})
+	_expect(south_door.get("zone") == &"white_court" and south_door.get("entry") == &"from_gardens", "the south door returns to the White Court")
 
-	# --- The home gate: a wall from the yard side ---
-	var wrong_side := _boot_zone("res://scenes/zones/bookshelf_pass.tscn", Vector2i(1, 8))
+	# --- The home gate: a wall from the Court side ---
+	var wrong_side := _boot_zone("res://scenes/zones/bookshelf_pass.tscn", Vector2i(1, 9))
 	var wrong_world: EcsWorld = wrong_side["world"]
-	_expect(not wrong_world.grid.is_walkable(Vector2i(2, 8)), "the home gate cell starts blocked")
+	_expect(not wrong_world.grid.is_walkable(Vector2i(2, 9)), "the home gate cell starts blocked")
 	var wrong_player := int(wrong_side["cast"]["player"])
 	var wrong_intent: EcsComponents.MoveIntent = wrong_world.get_component(wrong_player, EcsComponents.MOVE_INTENT)
 	wrong_intent.direction = Vector2i.RIGHT
 	for _i in range(10):
 		wrong_world.tick(0.05)
-	_expect(not wrong_world.grid.is_walkable(Vector2i(2, 8)), "pushing the gate from the yard side stays a wall")
+	_expect(not wrong_world.grid.is_walkable(Vector2i(2, 9)), "pushing the gate from the Court side stays a wall")
 
 	# --- ...and it opens from the interior, once, forever ---
-	var opener := _boot_zone("res://scenes/zones/bookshelf_pass.tscn", Vector2i(3, 8))
+	var opener := _boot_zone("res://scenes/zones/bookshelf_pass.tscn", Vector2i(3, 9))
 	var opener_world: EcsWorld = opener["world"]
 	var opener_player := int(opener["cast"]["player"])
 	var opener_intent: EcsComponents.MoveIntent = opener_world.get_component(opener_player, EcsComponents.MOVE_INTENT)
@@ -83,10 +83,16 @@ func _init() -> void:
 		opener_world.tick(0.05)
 	var gate_events := opener_world.drain_events().filter(func(event: Dictionary) -> bool: return event.get("type") == &"gate_opened")
 	_expect(gate_events.size() == 1 and gate_events[0].get("gate") == &"pass_home_gate", "pushing from the interior opens the gate and names it")
-	_expect(opener_world.grid.is_walkable(Vector2i(2, 8)), "the opened gate cell is ordinary floor")
-	var opened_boot := _boot_zone("res://scenes/zones/bookshelf_pass.tscn", Vector2i(1, 8), [], [&"pass_home_gate"])
+	_expect(opener_world.grid.is_walkable(Vector2i(2, 9)), "the opened gate cell is ordinary floor")
+	var opened_boot := _boot_zone("res://scenes/zones/bookshelf_pass.tscn", Vector2i(1, 9), [], [&"pass_home_gate"])
 	var opened_world: EcsWorld = opened_boot["world"]
-	_expect(opened_world.grid.is_walkable(Vector2i(2, 8)) and opened_world.grid.gate_by_cell.is_empty(), "an opened gate never spawns blocked again")
+	_expect(opened_world.grid.is_walkable(Vector2i(2, 9)) and opened_world.grid.gate_by_cell.is_empty(), "an opened gate never spawns blocked again")
+
+	# --- The hub is safe and triple-doored ---
+	var court := _boot_zone("res://scenes/zones/white_court.tscn", Vector2i(8, 8))
+	var court_world: EcsWorld = court["world"]
+	_expect(court["cast"]["enemies"].is_empty(), "the White Court spawns no enemies")
+	_expect(court_world.grid.exit_by_cell.size() == 3, "the White Court has three doors")
 
 	var succeeded := failures == 0
 	print("ZONE TRAVEL TEST: %s" % ["PASS" if succeeded else "FAIL (%d)" % failures])

@@ -43,7 +43,7 @@ func _run() -> void:
 	_expect(player_id != 0, "main spawns the player entity")
 	var player_pos: EcsComponents.GridPos = ecs.get_component(player_id, EcsComponents.GRID_POS)
 	_expect(player_pos != null and player_pos.cell == _parked_cell(ecs, main), "player entity stands on the parked view's cell")
-	_expect(int(main.get("total_enemies")) == 5, "main counts the Toybox Yard's five enemies")
+	_expect(int(main.get("total_enemies")) == 6, "main counts the Toybox Yard's six enemies")
 	var player_health: EcsComponents.Health = ecs.get_component(player_id, EcsComponents.HEALTH)
 	_expect(player_health != null and player_health.current == 2, "a pending health carry applies to the booted player")
 	_expect(int(world_state.get("player_health_carry")) == -1, "the health carry is consumed by the boot")
@@ -66,8 +66,8 @@ func _run() -> void:
 	ecs.damage_events.append({"target": int(enemies[0]), "amount": 99, "direction": Vector2i.LEFT})
 	main._process(0.016)
 	main._process(0.016)
-	_expect(int(main.get("remaining_enemies")) == 4, "a defeat event updates the encounter count")
-	_expect(hud.encounter_label.text == "ENEMIES 4/5", "HUD shows the updated enemy count")
+	_expect(int(main.get("remaining_enemies")) == 5, "a defeat event updates the encounter count")
+	_expect(hud.encounter_label.text == "ENEMIES 5/6", "HUD shows the updated enemy count")
 
 	var succeeded := failures == 0
 	print("ENCOUNTER HUD TEST: %s" % ["PASS" if succeeded else "FAIL (%d)" % failures])

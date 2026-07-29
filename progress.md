@@ -503,6 +503,12 @@ Researched the AI-focused editor surface at the owner's request. Found `EnemyBra
 - WorldState saves to disk (`user://world_state.cfg`, ConfigFile): zone, entry, taken pickups, opened gates. Saved on travel/pickup/gate/death; loaded by the autoload at launch — the world resumes across app restarts. Health deliberately never saves (each launch starts the current zone fresh).
 - Suite: zone_travel gains the gate trilogy (starts blocked / wrong side stays wall / right side opens + named event + never respawns blocked); run_tests gains the WorldState save-load round trip and the fourth registry sound. All 7 suites green; live boot clean.
 
+## World v2: the DS3 Opening Skeleton - 2026-07-29
+
+- Owner verdict: three zones too simple. Researched DS3's opening (Cemetery of Ash road to Iudex, Firelink hub, High Wall loops) and rebuilt the world as five zones on that skeleton — tutorial cemetery (item behind spawn, fountain landmark, soft branch + warned hard pocket), boss-gate arena (Stable Gate, armed Wardens holding the Knight's future chamber), safe three-door hub (White Court), four-court looping level with an internal one-way shortcut (Chalk Gardens = High Wall), and the Bookshelf Pass now looping one-way back to the HUB, not the yard.
+- All content-layer work: paint-tool layouts ×5, zone scenes (3 reworked, 2 new), world graph, hero start. Zero engine/system changes — the phase-1/2 machinery absorbed a full world rebuild as pure data, which was the point of building it that way.
+- Suite: door-graph validation now covers 12 doors/5 zones automatically; zone_travel updated to the new geometry (gate moved to (2,9), Gardens 28×14, Yard 24×13, hub safety + triple doors asserted). Size floor relaxed to arena-size (the Stable Gate is deliberately 12×9). All 7 suites green; live boot clean.
+
 ## The Book of House Rules - 2026-07-28
 
 - The game's compendium/lore/tutorial object, all data: `RuleEntry` .tres (piece_id + title + original chess rule + amendment + flavor) collected by `resources/rules/rule_book.tres` (`RuleBook`). Five pages authored: the first law, armed/backstep/charging pawns, and the knight (ships locked — its piece never walks the world zones yet, proving the unread-ink state).

@@ -1,4 +1,4 @@
-[gd_scene load_steps=7 format=3]
+[gd_scene load_steps=12 format=3]
 
 [ext_resource type="PackedScene" path="res://objects/world/room_encounter.tscn" id="1"]
 [ext_resource type="PackedScene" path="res://objects/world/chalk_tilemap.tscn" id="2"]
@@ -6,45 +6,75 @@
 [ext_resource type="Script" path="res://scripts/world/zone_exit_marker.gd" id="4"]
 [ext_resource type="Script" path="res://scripts/world/zone_entry_marker.gd" id="5"]
 [ext_resource type="Resource" path="res://resources/enemies/charging_pawn.tres" id="6"]
+[ext_resource type="Resource" path="res://resources/enemies/backstep_pawn.tres" id="7"]
+[ext_resource type="PackedScene" path="res://objects/markers/gate_marker.tscn" id="8"]
+[ext_resource type="PackedScene" path="res://objects/markers/pickup_spawn_point.tscn" id="9"]
+[ext_resource type="Resource" path="res://resources/weapons/pencil_spear.tres" id="10"]
+[ext_resource type="PackedScene" path="res://objects/world/weapon_pickup.tscn" id="11"]
 
 [node name="ChalkGardens" instance=ExtResource("1")]
-room_message = "The Chalk Gardens. Charging pawns own the lanes."
+room_message = "The Chalk Gardens. Four courts, one long way around - unless you find the short one."
 zone_id = &"chalk_gardens"
-board_size = Vector2i(24, 12)
+board_size = Vector2i(28, 14)
 
 [node name="RoomArt" type="Node2D" parent="."]
 
 [node name="TileMap" parent="RoomArt" instance=ExtResource("2")]
 
-[node name="FromYardEntry" type="Marker2D" parent="."]
-position = Vector2(592, 372)
+[node name="FromCourtEntry" type="Marker2D" parent="."]
+position = Vector2(336, 436)
 script = ExtResource("5")
-entry_id = &"from_yard"
-
-[node name="SouthDoor" type="Marker2D" parent="."]
-position = Vector2(592, 404)
-script = ExtResource("4")
-target_zone = &"toybox_yard"
-target_entry = &"from_gardens"
+entry_id = &"from_court"
 
 [node name="FromPassEntry" type="Marker2D" parent="."]
-position = Vector2(784, 212)
+position = Vector2(912, 404)
 script = ExtResource("5")
 entry_id = &"from_pass"
 
+[node name="SouthDoor" type="Marker2D" parent="."]
+position = Vector2(336, 468)
+script = ExtResource("4")
+target_zone = &"white_court"
+target_entry = &"from_gardens"
+
 [node name="EastDoor" type="Marker2D" parent="."]
-position = Vector2(816, 212)
+position = Vector2(944, 404)
 script = ExtResource("4")
 target_zone = &"bookshelf_pass"
 target_entry = &"from_gardens"
 
-[node name="ChargingPawnNorth" parent="." instance=ExtResource("3")]
-position = Vector2(336, 84)
+[node name="LaneGate" parent="." instance=ExtResource("8")]
+position = Vector2(272, 340)
+gate_id = &"gardens_lane_gate"
+opens_from = Vector2i(0, 1)
+
+[node name="SouthRecruit" parent="." instance=ExtResource("3")]
+position = Vector2(176, 404)
+
+[node name="SouthCharger" parent="." instance=ExtResource("3")]
+position = Vector2(720, 404)
 definition = ExtResource("6")
 
-[node name="ChargingPawnSouth" parent="." instance=ExtResource("3")]
-position = Vector2(528, 340)
+[node name="AmbushRecruit" parent="." instance=ExtResource("3")]
+position = Vector2(560, 116)
+
+[node name="EastFieldCharger" parent="." instance=ExtResource("3")]
+position = Vector2(624, 116)
 definition = ExtResource("6")
 
-[node name="GardenRecruit" parent="." instance=ExtResource("3")]
-position = Vector2(720, 212)
+[node name="InkwellCharger" parent="." instance=ExtResource("3")]
+position = Vector2(848, 244)
+definition = ExtResource("6")
+
+[node name="WestFieldCharger" parent="." instance=ExtResource("3")]
+position = Vector2(240, 116)
+definition = ExtResource("6")
+
+[node name="WestBackstep" parent="." instance=ExtResource("3")]
+position = Vector2(208, 276)
+definition = ExtResource("7")
+
+[node name="CornerSpearPickup" parent="." instance=ExtResource("9")]
+pickup_scene = ExtResource("11")
+grid_cell = Vector2i(26, 1)
+weapon = ExtResource("10")

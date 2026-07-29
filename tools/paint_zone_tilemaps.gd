@@ -6,6 +6,10 @@ extends SceneTree
 ## the exit markers on them are walkable. Run headless:
 ##   Godot --headless --path . -s tools/paint_zone_tilemaps.gd
 ## Rerun after changing a layout below.
+##
+## World v2 follows Dark Souls 3's opening skeleton (docs/soulslike-world-plan.md):
+## tutorial cemetery -> boss-gate arena -> hub -> dense looping level -> side
+## level that loops one-way back to the hub.
 
 const TILE_LIGHT := Vector2i(0, 0)
 const TILE_DARK := Vector2i(1, 0)
@@ -16,51 +20,91 @@ const TILE_LANDMARK := Vector2i(5, 0)
 ## landmark cells (solid, drawn as throne tiles for the greybox)}.
 var zone_layouts := {
 	"toybox_tilemap": {
-		"size": Vector2i(20, 11),
-		"doors": [Vector2i(16, 0), Vector2i(19, 6)],
-		"walls": [
-			Vector2i(8, 4), Vector2i(8, 5), Vector2i(8, 6), Vector2i(9, 4), Vector2i(10, 4),
-			Vector2i(15, 2), Vector2i(15, 3), Vector2i(15, 4),
-			Vector2i(17, 2), Vector2i(17, 3), Vector2i(17, 4),
-			Vector2i(2, 6),
-		],
-		"landmark": [Vector2i(3, 2), Vector2i(4, 2), Vector2i(3, 3), Vector2i(4, 3)],
+		"size": Vector2i(24, 13),
+		"doors": [Vector2i(19, 0)],
+		"walls": _cemetery_walls(),
+		"landmark": [Vector2i(11, 6), Vector2i(12, 6), Vector2i(11, 7), Vector2i(12, 7)],
+	},
+	"stable_tilemap": {
+		"size": Vector2i(12, 9),
+		"doors": [Vector2i(6, 0), Vector2i(6, 8)],
+		"walls": [Vector2i(2, 2), Vector2i(9, 2), Vector2i(2, 6), Vector2i(9, 6)],
+		"landmark": [],
+	},
+	"court_tilemap": {
+		"size": Vector2i(16, 10),
+		"doors": [Vector2i(8, 0), Vector2i(8, 9), Vector2i(0, 5)],
+		"walls": [],
+		"landmark": [Vector2i(7, 4), Vector2i(8, 4), Vector2i(7, 5), Vector2i(8, 5)],
 	},
 	"chalk_tilemap": {
-		"size": Vector2i(24, 12),
-		"doors": [Vector2i(16, 11), Vector2i(23, 5)],
-		"walls": _lane_walls(),
-		"landmark": [Vector2i(11, 5), Vector2i(12, 5), Vector2i(11, 6), Vector2i(12, 6)],
+		"size": Vector2i(28, 14),
+		"doors": [Vector2i(8, 13), Vector2i(27, 11)],
+		"walls": _high_wall_walls(),
+		"landmark": [Vector2i(18, 5), Vector2i(19, 5), Vector2i(18, 6), Vector2i(19, 6)],
 	},
 	"bookshelf_tilemap": {
-		"size": Vector2i(22, 10),
-		"doors": [Vector2i(0, 3), Vector2i(0, 8)],
+		"size": Vector2i(24, 11),
+		"doors": [Vector2i(0, 5), Vector2i(0, 9)],
 		"walls": _shelf_walls(),
-		"landmark": [Vector2i(11, 1), Vector2i(12, 1), Vector2i(11, 2), Vector2i(12, 2)],
+		"landmark": [Vector2i(9, 1), Vector2i(10, 1), Vector2i(9, 2), Vector2i(10, 2)],
 	},
 }
 
 
-## Bookshelf aisles + the gated home corridor (walls above cells 1..3 of
-## row 8 seal the corridor; the gate marker sits at cell (2, 8)).
-static func _shelf_walls() -> Array:
-	var walls: Array = [Vector2i(1, 7), Vector2i(2, 7), Vector2i(3, 7)]
-	for y in [1, 2, 3, 5, 6, 7]:
-		walls.append(Vector2i(6, y))
-	for y in [2, 3, 4, 6, 7, 8]:
-		walls.append(Vector2i(15, y))
+## Cemetery of Ash road: bottom spawn corridor (item BEHIND the spawn), a
+## fountain field, a soft west "hills" branch, and a walled east pocket with
+## the hard guards + treasure. The row-10 wall separates corridor from field
+## (gap at x=18); col-7 walls the hills (gap row 3); col-20 walls the warned
+## pocket (gap row 6).
+static func _cemetery_walls() -> Array:
+	var walls: Array = []
+	for x in range(4, 23):
+		if x != 18:
+			walls.append(Vector2i(x, 10))
+	for y in range(1, 9):
+		if y != 3:
+			walls.append(Vector2i(7, y))
+	for y in range(3, 10):
+		if y != 6:
+			walls.append(Vector2i(20, y))
 	return walls
 
 
-## Two horizontal chalk-lane walls with door gaps, per the drawn design.
-static func _lane_walls() -> Array:
+## High Wall rooms: a central spine (gaps rows 3 and 10) splits east/west;
+## horizontal walls split top/bottom on each side. The west row-9 wall has NO
+## painted gap — the gap cell (6, 9) is the one-way shortcut gate.
+static func _high_wall_walls() -> Array:
 	var walls: Array = []
-	for x in range(4, 20):
-		if x != 6 and x != 17:
-			walls.append(Vector2i(x, 3))
-	for x in range(4, 20):
-		if x != 10:
-			walls.append(Vector2i(x, 7))
+	for y in range(1, 13):
+		if y != 3 and y != 10:
+			walls.append(Vector2i(14, y))
+	for x in range(1, 14):
+		if x != 6:
+			walls.append(Vector2i(x, 4))
+	for x in range(1, 14):
+		if x != 6:
+			walls.append(Vector2i(x, 9))
+	for x in range(15, 27):
+		if x != 22:
+			walls.append(Vector2i(x, 9))
+	return walls
+
+
+## Bookshelf aisles + the gated hub corridor: walls above row-9 cells 1..3
+## seal the corridor; the gate marker sits at (2, 9). Shelf columns have one
+## aisle gap each.
+static func _shelf_walls() -> Array:
+	var walls: Array = [Vector2i(1, 8), Vector2i(2, 8), Vector2i(3, 8)]
+	for y in range(1, 10):
+		if y != 5:
+			walls.append(Vector2i(7, y))
+	for y in range(1, 10):
+		if y != 6:
+			walls.append(Vector2i(12, y))
+	for y in range(1, 10):
+		if y != 3:
+			walls.append(Vector2i(17, y))
 	return walls
 
 

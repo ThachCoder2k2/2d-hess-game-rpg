@@ -1,4 +1,4 @@
-[gd_scene load_steps=11 format=3]
+[gd_scene load_steps=12 format=3]
 
 [ext_resource type="PackedScene" path="res://objects/world/room_encounter.tscn" id="1"]
 [ext_resource type="PackedScene" path="res://objects/world/toybox_tilemap.tscn" id="2"]
@@ -10,61 +10,65 @@
 [ext_resource type="Resource" path="res://resources/weapons/pencil_spear.tres" id="8"]
 [ext_resource type="Resource" path="res://resources/enemies/pawn_armed.tres" id="9"]
 [ext_resource type="PackedScene" path="res://objects/world/weapon_pickup.tscn" id="10"]
+[ext_resource type="Resource" path="res://resources/weapons/ruler_blade.tres" id="11"]
 
 [node name="ToyboxYard" instance=ExtResource("1")]
-room_message = "The Toybox Yard. March north; the clock tower watches."
+room_message = "The Toybox Yard. The road north is watched; not every path is the road."
 zone_id = &"toybox_yard"
-board_size = Vector2i(20, 11)
+board_size = Vector2i(24, 13)
 
 [node name="RoomArt" type="Node2D" parent="."]
 
 [node name="TileMap" parent="RoomArt" instance=ExtResource("2")]
 
 [node name="StartEntry" type="Marker2D" parent="."]
-position = Vector2(112, 340)
+position = Vector2(144, 404)
 script = ExtResource("5")
 entry_id = &"start"
 
-[node name="FromGardensEntry" type="Marker2D" parent="."]
-position = Vector2(592, 84)
+[node name="FromGateEntry" type="Marker2D" parent="."]
+position = Vector2(688, 84)
 script = ExtResource("5")
-entry_id = &"from_gardens"
+entry_id = &"from_gate"
 
 [node name="NorthDoor" type="Marker2D" parent="."]
-position = Vector2(592, 52)
+position = Vector2(688, 52)
 script = ExtResource("4")
-target_zone = &"chalk_gardens"
+target_zone = &"stable_gate"
 target_entry = &"from_yard"
 
-[node name="FromPassEntry" type="Marker2D" parent="."]
-position = Vector2(656, 244)
-script = ExtResource("5")
-entry_id = &"from_pass"
+[node name="CorridorRecruit" parent="." instance=ExtResource("3")]
+position = Vector2(272, 404)
 
-[node name="EastDoor" type="Marker2D" parent="."]
-position = Vector2(688, 244)
-script = ExtResource("4")
-target_zone = &"bookshelf_pass"
-target_entry = &"from_yard"
+[node name="FieldRecruitWest" parent="." instance=ExtResource("3")]
+position = Vector2(368, 212)
 
-[node name="LoneRecruit" parent="." instance=ExtResource("3")]
-position = Vector2(240, 308)
+[node name="FieldRecruitEast" parent="." instance=ExtResource("3")]
+position = Vector2(592, 308)
 
-[node name="AmbushRecruitWest" parent="." instance=ExtResource("3")]
-position = Vector2(368, 244)
+[node name="HillsBackstep" parent="." instance=ExtResource("3")]
+position = Vector2(176, 116)
+definition = ExtResource("6")
 
-[node name="AmbushRecruitEast" parent="." instance=ExtResource("3")]
-position = Vector2(400, 244)
-
-[node name="ArmedPawn" parent="." instance=ExtResource("3")]
-position = Vector2(496, 276)
+[node name="PocketArmedNorth" parent="." instance=ExtResource("3")]
+position = Vector2(752, 212)
 definition = ExtResource("9")
 
-[node name="BackstepPawn" parent="." instance=ExtResource("3")]
-position = Vector2(592, 148)
-definition = ExtResource("6")
+[node name="PocketArmedSouth" parent="." instance=ExtResource("3")]
+position = Vector2(784, 276)
+definition = ExtResource("9")
 
 [node name="PencilSpearPickup" parent="." instance=ExtResource("7")]
 pickup_scene = ExtResource("10")
-grid_cell = Vector2i(14, 7)
+grid_cell = Vector2i(1, 11)
 weapon = ExtResource("8")
+
+[node name="HillsRulerPickup" parent="." instance=ExtResource("7")]
+pickup_scene = ExtResource("10")
+grid_cell = Vector2i(2, 2)
+weapon = ExtResource("11")
+
+[node name="PocketRulerPickup" parent="." instance=ExtResource("7")]
+pickup_scene = ExtResource("10")
+grid_cell = Vector2i(22, 5)
+weapon = ExtResource("11")

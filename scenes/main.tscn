@@ -17,7 +17,7 @@ world_graph = ExtResource("9")
 [node name="PrototypeBoard" parent="." unique_id=1293707123 instance=ExtResource("4")]
 
 [node name="PawnHero" parent="." unique_id=1545609314 instance=ExtResource("5")]
-position = Vector2(112, 340)
+position = Vector2(144, 404)
 
 [node name="CurrentZone" parent="." instance=ExtResource("6")]
 

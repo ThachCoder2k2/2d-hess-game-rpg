@@ -168,6 +168,22 @@ Line seals the entrance row on entry. Player HP stays 3.
 "first met in" line, Original rule (muted), Amendment (accent block),
 flavor line in the serif voice. Counter: "N of M amendments known."
 
+## Part 2.7 — World v2: the DS3 opening skeleton (owner direction, 2026-07-29)
+
+The three-zone triangle was too simple. Rebuilt on Dark Souls 3's opening
+structure (Cemetery of Ash → Iudex Gundyr → Firelink Shrine → High Wall):
+
+| DS3 | Ours | Shape |
+|---|---|---|
+| Cemetery of Ash | The Toybox Yard, 24×13 | tutorial road: item BEHIND spawn (backtrack lesson), fountain landmark, soft west "hills" branch (backstep guard + ruler), warned east pocket (2 armed pawns + ruler) |
+| Iudex Gundyr arena | The Stable Gate, 12×9 | boss-gate chamber between tutorial and hub; two armed Wardens hold it until the Knight moves in |
+| Firelink Shrine | The White Court, 16×10 | safe hub, zero enemies, three doors (Stable, Gardens, gated Pass return) |
+| High Wall of Lothric | The Chalk Gardens, 28×14 | four courts around a central spine, ambush behind the spine gap, internal one-way shortcut gate (gardens_lane_gate) folding the long way back to the entrance |
+| Wall→settlement branch | The Bookshelf Pass, 24×11 | side level; its gated corridor loops one-way back to the hub (pass_home_gate) |
+
+Graph: yard → stable_gate → white_court → {gardens ↔ pass}, pass → court
+(one-way loop). Two shortcut gates, twelve doors, all CI-validated.
+
 ## Part 3 — Architecture (fits the ECS, all content stays data)
 
 New pieces, following existing law (systems decide, scenes are data, .tres is
