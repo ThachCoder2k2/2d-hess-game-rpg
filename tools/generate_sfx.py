@@ -126,6 +126,22 @@ def defeat_jingle():
     write_wav("defeat_jingle.wav", samples)
 
 
+def wake_stir():
+    # A soft cloth rustle swelling into two rising notes: the pawn comes to.
+    random.seed(11)
+    n = int(RATE * 0.34)
+    samples = []
+    last = 0.0
+    for i in range(n):
+        t = i / n
+        # The filter opens as the rustle grows, so it reads as waking, not settling.
+        last += (0.12 + 0.45 * t) * (random.uniform(-1, 1) - last)
+        samples.append(last * 0.22 * env(i, n, 0.5, 0.35))
+    samples += _tone(392.0, 0.11, gain=0.16, release=0.5)
+    samples += _tone(587.33, 0.16, gain=0.18, release=0.6)
+    write_wav("wake_stir.wav", samples)
+
+
 def gate_open():
     # A low wooden groan sliding upward: the bar lifts, the way opens.
     samples = []
@@ -144,3 +160,4 @@ if __name__ == "__main__":
     room_clear()
     defeat_jingle()
     gate_open()
+    wake_stir()

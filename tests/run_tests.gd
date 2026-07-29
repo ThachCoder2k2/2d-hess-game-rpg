@@ -39,6 +39,21 @@ func _actor_has_state_graph(actor: Node) -> bool:
 	return tree != null and tree.active and tree.tree_root is AnimationNodeStateMachine
 
 
+## True when the actor's state graph leaves its Start node into `state` — the
+## boot pose is graph-owned, so nothing in script has to kick it off.
+func _graph_starts_in(actor: Node, state: StringName) -> bool:
+	var tree := actor.get_node_or_null("AnimationTree") as AnimationTree
+	if tree == null:
+		return false
+	var graph := tree.tree_root as AnimationNodeStateMachine
+	if graph == null:
+		return false
+	for index in graph.get_transition_count():
+		if graph.get_transition_from(index) == &"Start" and graph.get_transition_to(index) == state:
+			return true
+	return false
+
+
 func _view(scene_path: String) -> ActorView:
 	var view := (load(scene_path) as PackedScene).instantiate() as ActorView
 	root.add_child(view)
@@ -72,6 +87,7 @@ func _init() -> void:
 	_expect(_actor_is_sprite_animated(hero_view), "player view owns its sprites and AnimationPlayer")
 	_expect(_actor_has_clip(hero_view, &"step") and _actor_has_clip(hero_view, &"attack"), "player view owns step/attack clips")
 	_expect(_actor_has_clip(hero_view, &"defeat"), "player view owns an editor-authored defeat clip")
+	_expect(_actor_has_clip(hero_view, &"wake") and _graph_starts_in(hero_view, &"wake"), "the hero boots into the wake clip, then falls through to idle")
 	_expect(hero_view.get_node_or_null("AudioPlayer") is AudioStreamPlayer, "player view carries the clip-keyed audio player")
 	_expect(hero_view.definition == null, "player view has no enemy definition")
 	_expect(hero_view.get_node_or_null("Camera2D") is CameraRig, "player view carries the camera rig")

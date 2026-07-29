@@ -229,6 +229,9 @@
 
 - .tscn text surgery rules learned twice: (1) a SubResource must be DEFINED above any block that references it — the parser is single-pass; (2) never batch-edit scenes while the Godot editor is open — it resaves buffers (adding uid/unique_id attrs, reordering blocks, dropping default-valued properties like AnimationTree.active), which both invalidates text anchors and can clobber disk edits. Close the editor first.
 
+- A one-shot boot pose is graph-owned, not code-owned: retarget the StateMachine's `Start` edge at the new state and give that state an AtEnd transition home. The view is instantiated once, so the clip plays exactly once at boot with zero script involvement — no ViewSync edge, no new condition, no input lock. Asserting only "the clip exists" is not enough; also assert the `Start` edge points at it, or a clip nothing enters passes CI.
+- Rotating a whole actor sprite works because `SpriteRoot`'s origin sits at the pawn's feet — a −90° rotation lays the piece on the ground with its base still on the cell. Rotation lives on `SpriteRoot` like every other animation track (`MotionRoot` is ViewSync's every-tick territory), so `Animation_reset` needs a rotation track too or the editor leaves the pawn face-down after preview.
+
 ## World Painting
 
 - Decorative solids must be painted over rock ONLY. The kingdom's curtain wall, keep ring, library ring and moat never overwrite an open cell, so no amount of wall-drawing can sever the world; road crossings become gatehouses for free. Painting walls first and carving doors after would need every doorway kept in sync with every road by hand.
