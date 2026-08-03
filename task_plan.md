@@ -185,6 +185,7 @@ Acceptance criteria:
 - Board floor art should use TileMapLayer and TileSet assets. Avoid adding one Polygon2D node per floor tile.
 - Keep reusable object `.tscn` templates under `objects/`; keep `scenes/` limited to playable/editor entry scenes, rooms, and UI.
 - Actor and pickup bodies should be real sprite/animation scene nodes. Do not reintroduce `_draw()` body rendering in `pawn_hero.gd`, `free_enemy.gd`, or `scripts/visuals/pickup_visual.gd`.
+- Chess-piece sprite art (owner-approved look, 2026-08) is generated, not hand-painted: `tools/generate_chess_sprites.gd` owns the shape tables and bakes `assets/sprites/generated/chess/`. Change a silhouette by editing a row radius and re-running; never repaint an exported PNG. Its `manifest.json` is the only source for frame size, `anchor_row` (the row that sits on the CELL CENTRE) and `block_size_in_world_pixels`.
 
 ## Errors Encountered
 
@@ -202,3 +203,4 @@ Acceptance criteria:
 | GDScript could not infer the type of a new Resource loaded from script in `run_tests.gd` | 1 | Typed the instances as `Resource` and called objective methods dynamically, matching the pre-editor-import bridge style |
 | `SceneTree._init` tests checked `Main._ready()` bindings too early | 1 | Kept ownership checks in the main suite and moved ready-time binding checks into the deferred HUD runtime test |
 | Newly added global visual classes were not available during early headless script loading | 1 | Older gameplay scripts reference visual children dynamically through `Node` and `has_method()` until editor import registers the classes |
+| Sprite generator failed to parse: `Cannot infer the type of "mane_centre" variable` | 1 | Indexing an untyped `Array` yields Variant, so `:=` cannot infer from it. Extracted an explicitly typed local (`var mane_start: int = ...`) before the float math |

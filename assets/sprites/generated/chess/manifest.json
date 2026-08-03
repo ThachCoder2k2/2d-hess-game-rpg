@@ -1,0 +1,59 @@
+{
+	"block_size_in_world_pixels": 2,
+	"double_step": {
+		"anchor_row": 18,
+		"frame_height": 21,
+		"frame_width": 18,
+		"sheet": "double_step_states.png",
+		"states": [
+			"idle",
+			"alert",
+			"windup",
+			"commit",
+			"hurt",
+			"down"
+		]
+	},
+	"knight": {
+		"anchor_row": 27,
+		"frame_height": 30,
+		"frame_width": 24,
+		"sheet": "knight_states.png",
+		"states": [
+			"idle",
+			"alert",
+			"windup",
+			"commit",
+			"hurt",
+			"down"
+		]
+	},
+	"pawn": {
+		"anchor_row": 17,
+		"frame_height": 20,
+		"frame_width": 18,
+		"sheet": "pawn_states.png",
+		"states": [
+			"idle",
+			"alert",
+			"windup",
+			"commit",
+			"hurt",
+			"down"
+		]
+	},
+	"promoted": {
+		"anchor_row": 20,
+		"frame_height": 23,
+		"frame_width": 18,
+		"sheet": "promoted_states.png",
+		"states": [
+			"idle",
+			"alert",
+			"windup",
+			"commit",
+			"hurt",
+			"down"
+		]
+	}
+}
