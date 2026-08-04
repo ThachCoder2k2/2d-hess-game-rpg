@@ -30,8 +30,8 @@ const OUT_DIR := "res://assets/sprites/generated/chess"
 ## Index 0 is a real drawn colour (the ring), not a shading stop.
 const PALETTES := {
 	"IV": ["#1a1218", "#c39aa0", "#ecdcd2", "#fffaf4"],  # ivory — the pawn
-	"GD": ["#241407", "#c47c10", "#f5b02a", "#ffe07a"],  # gold — the knight
-	"MN": ["#3d1206", "#c33f16", "#f26a2a", "#ff9d55"],  # the knight's mane
+	"BK": ["#04060b", "#0d1422", "#1b2537", "#39485f"],  # obsidian — the knight
+	"SB": ["#04060b", "#37455a", "#55677f", "#8195ad"],  # steel band — his pedestal
 	"BR": ["#1b1114", "#6a4a4a", "#93706d", "#c09a95"],  # brown — the promoted
 	"RD": ["#3d0a08", "#b02a16", "#e8512a", "#ff8a5c"],  # red accent
 	"NV": ["#0c0d16", "#232b45", "#3c4763", "#66748f"],  # navy — double-step
@@ -56,22 +56,20 @@ const EYE_MASKS := {
 	"down": ["K.K", ".K.", "K.K"],
 }
 
-## The knight's head, row by row, ear down to the base of the neck. Front is the
-## leftmost block of the row, back the rightmost, mane the first block that
-## belongs to the mane (-1 = this row has no mane).
+## The knight's head, row by row, ear tip down to the base of the neck. Front is
+## the leftmost block of the row (he faces left), back the rightmost.
 ##
-## What each stretch does, because the numbers alone hide it:
-##   rows 0-2   a slender ear, three blocks held two rows before the skull opens
-##   rows 3-9   one long straight forehead slope, 12 -> 3
-##   rows 10-12 the muzzle pushed out to x=2; the widest part of the piece
-##   row  13    the squared lip
-##   row  14    THE JAW CUT — the front edge jumps four blocks in a single row
-##   rows 15-20 the throat, eight blocks wide: half the head
-## The back edge is a CURVE (14 -> 18 -> 15) and kicks out to 18 on rows 5, 8
-## and 11 to notch the mane. A flat back edge reads as a slab, not a horse.
-const KNIGHT_FRONT := [12, 12, 11, 9, 8, 7, 6, 5, 4, 3, 2, 2, 2, 3, 7, 9, 9, 8, 8, 8, 8]
-const KNIGHT_BACK := [14, 15, 16, 17, 17, 18, 17, 17, 18, 17, 17, 18, 16, 16, 16, 16, 16, 16, 16, 15, 15]
-const KNIGHT_MANE := [-1, -1, 15, 15, 15, 15, 14, 14, 14, 14, 14, 13, 13, 13, 13, 13, 13, 13, 14, 14, 14]
+## THESE NUMBERS ARE TRACED, NOT DESIGNED. Every hand-authored revision of this
+## silhouette read wrong. What follows is the outline of the actual chess knight
+## glyph U+265E (BLACK CHESS KNIGHT) as cut by Apple Symbols: rendered at 900pt,
+## cropped to its bounding box, scaled uniformly to 21 rows, reduced to one
+## [leftmost, rightmost] filled pair per row, then shifted one block right so the
+## neck centres over the pedestal. The ear, the brow, the eye socket, the muzzle
+## taper and the throat cut are the typeface's proportions, not mine.
+## Do not "improve" a single row by hand. To change the shape, retrace the glyph
+## with `tools/trace_knight_glyph.py` and paste both arrays wholesale.
+const KNIGHT_FRONT := [5, 5, 5, 5, 4, 4, 3, 3, 2, 1, 1, 1, 1, 1, 1, 2, 6, 6, 6, 6, 6]
+const KNIGHT_BACK := [10, 10, 11, 13, 14, 15, 16, 16, 17, 17, 18, 18, 18, 18, 19, 19, 19, 19, 19, 19, 19]
 
 ## The promoted pawn's crown is a cross — also hand-authored spans.
 const CROSS_SPANS := [[7, 8], [7, 8], [5, 10], [7, 8], [7, 8]]
@@ -191,24 +189,30 @@ func _build_pieces() -> void:
 	}
 
 	# The first boss. Tallest piece on the board, and the only one whose head is
-	# hand-authored rather than turned.
+	# hand-authored rather than turned. He is one solid obsidian colour — no mane,
+	# no trim: the shape alone has to carry him, and the only lighter blocks are
+	# the two steel rings of his pedestal.
 	var knight_head: Array[Array] = []
 	for row in KNIGHT_FRONT.size():
 		knight_head.append([KNIGHT_FRONT[row], KNIGHT_BACK[row]])
 	_pieces["knight"] = {
-		"width": 22,
-		"palette": "GD",
+		# 24, not 22: the traced neck is 14 blocks across and sits in x 6..19, so
+		# the pedestal has to be wide enough to carry it. centre = 12.
+		"width": 24,
+		"palette": "BK",
 		"head": knight_head,
-		"mane": KNIGHT_MANE,
-		"mane_palette": "MN",
-		# One eye, not a mirrored pair — the knight is seen in profile.
-		"eye_at": Vector2i(5, 6),
-		"nostril": Vector2i(3, 11),
-		"mouth_row": 12,
-		"mouth_span": Vector2i(2, 4),
+		# One eye, not a mirrored pair — the knight is seen in profile. All three
+		# facial marks sit in the glyph's own hollows: the eye socket at rows 4-6,
+		# the nostril in the muzzle tip, the mouth in the gap at row 13.
+		"eye_at": Vector2i(5, 4),
+		"nostril": Vector2i(2, 12),
+		"mouth_row": 13,
+		"mouth_span": Vector2i(6, 8),
+		# The pedestal: it starts as wide as the neck it carries, pinches once
+		# under a steel ring, then flares out to the widest block of any piece.
 		"rows": [
-			_lathe(5.0), _lathe(5.6, "GB"), _lathe(5.0), _lathe(5.6),
-			_lathe(6.4), _lathe(7.4), _lathe(8.0),
+			_lathe(7.0), _lathe(6.4, "SB"), _lathe(6.0), _lathe(6.4),
+			_lathe(7.0), _lathe(7.8), _lathe(8.8, "SB"), _lathe(9.6), _lathe(9.0),
 		],
 	}
 
@@ -264,7 +268,6 @@ func _raster(piece_id: String, state: String) -> Image:
 	var image := Image.create_empty(width, height, false, Image.FORMAT_RGBA8)
 	image.fill(Color(0, 0, 0, 0))
 
-	var mane: Array = piece.get("mane", [])
 	var base_palette: String = piece["palette"]
 
 	for y in body_height:
@@ -285,16 +288,6 @@ func _raster(piece_id: String, state: String) -> Image:
 				palette = rows[y - head_rows]["material"]
 
 			var tone := _band((x + 0.5 - (row_centre + 0.5)) / row_radius)
-
-			# The mane is its own colour AND its own axis: reshading it off its
-			# own centre is what makes it read as a separate plane rather than a
-			# stripe painted onto the neck.
-			var mane_start: int = mane[y] if is_head and not mane.is_empty() else -1
-			if mane_start >= 0 and x >= mane_start:
-				palette = piece["mane_palette"]
-				var mane_centre := (mane_start + right) / 2.0
-				var mane_radius := maxf(0.8, (right - mane_start + 1) / 2.0)
-				tone = _band((x + 0.5 - (mane_centre + 0.5)) / mane_radius)
 
 			# The top and bottom faces of the volume, so pieces stack in depth.
 			if not _is_occupied(occupied, x + 1, y):

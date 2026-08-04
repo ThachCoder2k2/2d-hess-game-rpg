@@ -15,9 +15,9 @@
 		]
 	},
 	"knight": {
-		"anchor_row": 27,
-		"frame_height": 30,
-		"frame_width": 24,
+		"anchor_row": 29,
+		"frame_height": 32,
+		"frame_width": 26,
 		"sheet": "knight_states.png",
 		"states": [
 			"idle",
