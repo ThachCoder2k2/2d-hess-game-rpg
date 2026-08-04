@@ -1,0 +1,98 @@
+{
+	"block_size_in_world_pixels": 2,
+	"patch_size_in_blocks": 4,
+	"sheet": "tiles_sheet.png",
+	"tile_size_in_pixels": 32,
+	"tiles": {
+		"board_dark": {
+			"file": "board_dark.png",
+			"note": "the board's dark square, the other half of the boss floor",
+			"raised": false,
+			"solid": false
+		},
+		"board_light": {
+			"file": "board_light.png",
+			"note": "the board's pale square — inside here, chess rules bind",
+			"raised": false,
+			"solid": false
+		},
+		"box_ruins": {
+			"file": "box_ruins.png",
+			"note": "the spilled chess box, torn cardboard walls to fight between",
+			"raised": true,
+			"solid": false
+		},
+		"chalk_path": {
+			"file": "chalk_path.png",
+			"note": "a child's chalk line — the map's only signage, points onward",
+			"raised": false,
+			"solid": false
+		},
+		"crayon_ramp": {
+			"file": "crayon_ramp.png",
+			"note": "a spill of crayons laid like logs — the climb out of the floor",
+			"raised": true,
+			"solid": false
+		},
+		"crossbar": {
+			"file": "crossbar.png",
+			"note": "the table's crossbar — high road, drops away on both sides",
+			"raised": true,
+			"solid": false
+		},
+		"deep_pile": {
+			"file": "deep_pile.png",
+			"note": "thick carpet; where the pawn wakes up, slow and ash-dark",
+			"raised": true,
+			"solid": false
+		},
+		"deep_pile_worn": {
+			"file": "deep_pile_worn.png",
+			"note": "carpet trodden flat — the readable path through the pile",
+			"raised": false,
+			"solid": false
+		},
+		"gate": {
+			"file": "gate.png",
+			"note": "the seam the Knight defends; crossing it starts the fight",
+			"raised": true,
+			"solid": false
+		},
+		"lamplight": {
+			"file": "lamplight.png",
+			"note": "the pool of lamplight the kingdom sits in; safety you can see",
+			"raised": false,
+			"solid": false
+		},
+		"ruler_bridge": {
+			"file": "ruler_bridge.png",
+			"note": "the Ruler: one plank wide, no cover, the crossing you dread",
+			"raised": true,
+			"solid": false
+		},
+		"sag": {
+			"file": "sag.png",
+			"note": "the sagging fabric bowl; every step funnels toward the middle",
+			"raised": false,
+			"solid": false
+		},
+		"tablecloth": {
+			"file": "tablecloth.png",
+			"note": "hanging cloth — the wall that closes the world's west side",
+			"raised": true,
+			"solid": true
+		},
+		"varnish": {
+			"file": "varnish.png",
+			"note": "polished floorboard; the open middle where sightlines are long",
+			"raised": false,
+			"solid": false
+		},
+		"void": {
+			"file": "void.png",
+			"note": "the dark under the table; the edge of everything",
+			"raised": false,
+			"solid": true
+		}
+	}
+}
