@@ -56,6 +56,13 @@ const TILE_DIR := "res://assets/sprites/generated/tiles"
 ## A piece is replaced on its own. Draw the bed, leave the other eighteen
 ## procedural, and the room still builds and still checks its routes.
 const PIECE_ART_DIR := "res://assets/art/pieces"
+
+## The room's shell is drawn on the same terms as a piece: "the_room.png" and
+## "the_room_height.png", the whole map at one pixel per block, always at the
+## top-left corner. Its template comes out identical to what the generator makes
+## now, so you can repaint the wallpaper or redraw the window and leave the rest
+## of the floor exactly as it is.
+const ROOM_ART_NAME := "the_room"
 const PIECE_TEMPLATE_DIR := "res://assets/art/piece_templates"
 
 ## THE HEIGHT MAP'S KEY. One flat colour per height, painted at one pixel per
@@ -1085,10 +1092,12 @@ func _make_output_dir() -> bool:
 ## only place a piece's own coordinates become the room's, so a piece can never
 ## come apart from its shadow, its posts or its blanket.
 func _regions(hand: Dictionary = {}) -> Array:
-	var regions := _emit(
-		THE_ROOM["name"], 0, THE_ROOM["up_in_inches"], Vector2i.ZERO,
-		THE_ROOM["emits"], 1
-	)
+	var regions := []
+	if not hand.has(ROOM_ART_NAME):
+		regions = _emit(
+			THE_ROOM["name"], 0, THE_ROOM["up_in_inches"], Vector2i.ZERO,
+			THE_ROOM["emits"], 1
+		)
 	for index in PLACEMENTS.size():
 		var placement: Dictionary = PLACEMENTS[index]
 		if hand.has(placement["piece"]):
@@ -1316,14 +1325,15 @@ func _cell(painted: Dictionary, key: String, x: int, y: int) -> int:
 	return painted[key][block_y * int(painted["width"]) + block_x]
 
 
-## Counts cells no object claimed. The room covers the map, so this is zero
-## unless an edit left a hole — and a hole is a bug, not a coastline.
+## Counts cells nothing claimed. It asks WHO owns the cell rather than what it is
+## made of: a hand-drawn piece has an owner and no material, so counting
+## materials reported the whole floor missing the moment the room was drawn by
+## hand. A canary that cries wolf is worse than no canary.
 func _count_holes(painted: Dictionary) -> int:
-	var names: PackedStringArray = painted["names"]
 	var holes := 0
 	for y in MAP_HEIGHT_IN_CELLS:
 		for x in MAP_WIDTH_IN_CELLS:
-			if names[_cell(painted, "material_by_block", x, y)] == "void":
+			if _cell(painted, "object_by_block", x, y) < 0:
 				holes += 1
 	return holes
 
@@ -1656,7 +1666,9 @@ func _write_manifest(painted: Dictionary, regions: Array) -> bool:
 ## and is reported rather than silently half-applied.
 func _load_hand_pieces() -> Dictionary:
 	var hand := {}
-	for name in PIECES:
+	var drawable := PIECES.keys()
+	drawable.append(ROOM_ART_NAME)
+	for name in drawable:
 		var art_path := "%s/%s.png" % [PIECE_ART_DIR, name]
 		var height_path := "%s/%s_height.png" % [PIECE_ART_DIR, name]
 		var has_art := FileAccess.file_exists(art_path)
@@ -1694,6 +1706,10 @@ func _load_hand_pieces() -> Dictionary:
 func _apply_hand_heights(painted: Dictionary, hand: Dictionary) -> bool:
 	if hand.is_empty():
 		return true
+	var inches_by_rgb := {}
+	for hex in HEIGHT_IN_INCHES_BY_COLOUR:
+		inches_by_rgb[hex.hex_to_int()] = HEIGHT_IN_INCHES_BY_COLOUR[hex]
+	var solid_rgb: int = SOLID_COLOUR.hex_to_int()
 	var width: int = painted["width"]
 	var height: int = painted["height"]
 	var height_by_block: PackedInt32Array = painted["height_by_block"]
@@ -1701,40 +1717,54 @@ func _apply_hand_heights(painted: Dictionary, hand: Dictionary) -> bool:
 	var object_by_block: PackedInt32Array = painted["object_by_block"]
 	var order_by_block: PackedInt32Array = painted["order_by_block"]
 
+	var laid := []
+	if hand.has(ROOM_ART_NAME):
+		laid.append({"name": ROOM_ART_NAME, "origin": Vector2i.ZERO, "object_index": 0})
 	for index in PLACEMENTS.size():
 		var placement: Dictionary = PLACEMENTS[index]
-		if not hand.has(placement["piece"]):
-			continue
-		var heights: Image = hand[placement["piece"]]["heights"]
-		var origin: Vector2i = placement["origin"] * BLOCKS_PER_CELL
+		if hand.has(placement["piece"]):
+			laid.append({
+				"name": placement["piece"],
+				"origin": placement["origin"] * BLOCKS_PER_CELL,
+				"object_index": index + 1,
+			})
+
+	for lay in laid:
+		var heights: Image = hand[lay["name"]]["heights"]
+		var origin: Vector2i = lay["origin"]
+		var object_index: int = lay["object_index"]
+		var art_width := heights.get_width()
+		var data := heights.get_data()
 		for y in heights.get_height():
 			var map_y := origin.y + y
 			if map_y < 0 or map_y >= height:
 				continue
-			for x in heights.get_width():
+			var row := map_y * width
+			var art_row := y * art_width
+			for x in art_width:
 				var map_x := origin.x + x
 				if map_x < 0 or map_x >= width:
 					continue
-				var pixel := heights.get_pixel(x, y)
-				if pixel.a < 0.5:
+				var at := (art_row + x) * 4
+				if data[at + 3] < 128:
 					continue
-				var key := "%02x%02x%02x" % [pixel.r8, pixel.g8, pixel.b8]
-				var here := map_y * width + map_x
-				if key == SOLID_COLOUR:
+				var rgb := (data[at] << 16) | (data[at + 1] << 8) | data[at + 2]
+				var here := row + map_x
+				if rgb == solid_rgb:
 					solid_by_block[here] = 1
-				elif HEIGHT_IN_INCHES_BY_COLOUR.has(key):
-					height_by_block[here] = HEIGHT_IN_INCHES_BY_COLOUR[key]
+				elif inches_by_rgb.has(rgb):
+					height_by_block[here] = inches_by_rgb[rgb]
 					solid_by_block[here] = 0
 				else:
 					printerr(
-						"piece ", placement["piece"], ": height map has #", key, " at ",
-						Vector2i(x, y), ", which is not in the key. Use the swatch strip in ",
-						PIECE_TEMPLATE_DIR
+						lay["name"], ": height map has #%06x" % rgb, " at ", Vector2i(x, y),
+						", which is not in the key. Eyedropper from ",
+						PIECE_TEMPLATE_DIR, "/height_key.png"
 					)
 					quit(1)
 					return false
-				object_by_block[here] = index + 1
-				order_by_block[here] = 10000 + index
+				object_by_block[here] = object_index
+				order_by_block[here] = 10000 + object_index
 	return true
 
 
@@ -1742,6 +1772,9 @@ func _apply_hand_heights(painted: Dictionary, hand: Dictionary) -> bool:
 ## resolution and respecting its alpha. It goes on last and untouched: no bevel,
 ## no grain, no contact shadow is added over your work, because you drew those.
 func _composite_hand_art(block_map: Image, hand: Dictionary) -> void:
+	if hand.has(ROOM_ART_NAME):
+		var room: Image = hand[ROOM_ART_NAME]["art"]
+		block_map.blend_rect(room, Rect2i(Vector2i.ZERO, room.get_size()), Vector2i.ZERO)
 	for placement in PLACEMENTS:
 		if not hand.has(placement["piece"]):
 			continue
@@ -1774,42 +1807,82 @@ func _export_templates(tiles: Dictionary) -> bool:
 		var piece: Dictionary = PIECES[name]
 		var scale := _scale_of(piece)
 		var size: Vector2i = piece["size"] * scale
-		var regions := _emit(name, 1, piece["up_in_inches"], Vector2i.ZERO, piece["emits"], scale)
-		var painted := _paint(regions, tiles, size.x, size.y)
-		var art := _stamp(painted, tiles)
-		if art == null:
+		if not _export_one(
+			name, size, _emit(name, 1, piece["up_in_inches"], Vector2i.ZERO, piece["emits"], scale),
+			tiles, colour_by_height
+		):
 			return false
 
-		var object_by_block: PackedInt32Array = painted["object_by_block"]
-		var height_by_block: PackedInt32Array = painted["height_by_block"]
-		var solid_by_block: PackedByteArray = painted["solid_by_block"]
-		var heights := Image.create(size.x, size.y, false, Image.FORMAT_RGBA8)
-		for y in size.y:
-			for x in size.x:
-				var here := y * size.x + x
-				if object_by_block[here] < 0:
-					art.set_pixel(x, y, Color(0, 0, 0, 0))
-					continue
-				if solid_by_block[here] == 1:
-					heights.set_pixel(x, y, Color(SOLID_COLOUR))
-					continue
-				var inches := height_by_block[here]
-				if not colour_by_height.has(inches):
-					printerr(name, " stands at ", inches, " inches, which has no colour in the key")
-					quit(1)
-					return false
-				heights.set_pixel(x, y, Color(colour_by_height[inches]))
-
-		if art.save_png("%s/%s.png" % [PIECE_TEMPLATE_DIR, name]) != OK:
-			printerr("could not write the template for ", name)
-			quit(1)
-			return false
-		if heights.save_png("%s/%s_height.png" % [PIECE_TEMPLATE_DIR, name]) != OK:
-			printerr("could not write the height template for ", name)
-			quit(1)
-			return false
+	if not _export_one(
+		ROOM_ART_NAME, Vector2i(MAP_WIDTH_IN_BLOCKS, MAP_HEIGHT_IN_BLOCKS),
+		_emit(ROOM_ART_NAME, 1, THE_ROOM["up_in_inches"], Vector2i.ZERO, THE_ROOM["emits"], 1),
+		tiles, colour_by_height
+	):
+		return false
 
 	return _write_height_key(colour_by_height)
+
+
+## Renders one drawable — a piece, or the whole room — to the PNG pair you would
+## draw by hand. The art gets alpha nought wherever nothing was painted, so the
+## floor shows through your silhouette; the height map gets one flat colour per
+## height beside it. Both are written through raw byte arrays rather than
+## set_pixel, because the room alone is three million pixels.
+func _export_one(
+	name: String, size: Vector2i, regions: Array, tiles: Dictionary,
+	colour_by_height: Dictionary
+) -> bool:
+	var painted := _paint(regions, tiles, size.x, size.y)
+	var stamped := _stamp(painted, tiles)
+	if stamped == null:
+		return false
+
+	var object_by_block: PackedInt32Array = painted["object_by_block"]
+	var height_by_block: PackedInt32Array = painted["height_by_block"]
+	var solid_by_block: PackedByteArray = painted["solid_by_block"]
+
+	var bytes_by_height := {}
+	for inches in colour_by_height:
+		var colour := Color(colour_by_height[inches])
+		bytes_by_height[inches] = [colour.r8, colour.g8, colour.b8]
+	var solid := Color(SOLID_COLOUR)
+
+	var art_bytes := stamped.get_data()
+	var height_bytes := PackedByteArray()
+	height_bytes.resize(size.x * size.y * 4)
+	for i in size.x * size.y:
+		var at := i * 4
+		if object_by_block[i] < 0:
+			art_bytes[at + 3] = 0
+			height_bytes[at + 3] = 0
+			continue
+		height_bytes[at + 3] = 255
+		if solid_by_block[i] == 1:
+			height_bytes[at] = solid.r8
+			height_bytes[at + 1] = solid.g8
+			height_bytes[at + 2] = solid.b8
+			continue
+		var inches := height_by_block[i]
+		if not bytes_by_height.has(inches):
+			printerr(name, " stands at ", inches, " inches, which has no colour in the key")
+			quit(1)
+			return false
+		var rgb: Array = bytes_by_height[inches]
+		height_bytes[at] = rgb[0]
+		height_bytes[at + 1] = rgb[1]
+		height_bytes[at + 2] = rgb[2]
+
+	var art := Image.create_from_data(size.x, size.y, false, Image.FORMAT_RGBA8, art_bytes)
+	var heights := Image.create_from_data(size.x, size.y, false, Image.FORMAT_RGBA8, height_bytes)
+	if art.save_png("%s/%s.png" % [PIECE_TEMPLATE_DIR, name]) != OK:
+		printerr("could not write the template for ", name)
+		quit(1)
+		return false
+	if heights.save_png("%s/%s_height.png" % [PIECE_TEMPLATE_DIR, name]) != OK:
+		printerr("could not write the height template for ", name)
+		quit(1)
+		return false
+	return true
 
 
 ## Writes the height key three ways: a swatch strip to eyedropper from, a GIMP
