@@ -26,6 +26,29 @@ The first playable foundation includes:
 - Real PNG sprite placeholders and AnimationPlayer clips for the hero, Pawns, Knight, pickups, and toy weapons.
 - Headless grid-logic tests.
 
+## First run after a fresh clone — build the art
+
+Everything under `assets/sprites/generated/` is produced by a script in `tools/`,
+so the repository carries the generators and not their output. A fresh clone has
+no sprites and no tiles until you build them, and Godot will report missing
+textures if you open the project first. Build them once:
+
+```bash
+HOME=/tmp/unbound-pawn-godot ../Godot.app/Contents/MacOS/Godot --headless --path . -s tools/generate_chess_sprites.gd
+```
+
+```bash
+HOME=/tmp/unbound-pawn-godot ../Godot.app/Contents/MacOS/Godot --headless --path . -s tools/generate_kingdom_tiles.gd
+```
+
+```bash
+HOME=/tmp/unbound-pawn-godot ../Godot.app/Contents/MacOS/Godot --headless --path . -s tools/generate_demo_map.gd
+```
+
+Hand-drawn art is different: `assets/art/pieces/` is source, is committed, and is
+never regenerated. Anything you draw and drop in there replaces the procedural
+version of that piece on the next build.
+
 ## Run
 
 Open `project.godot` in Godot 4.6 or run:

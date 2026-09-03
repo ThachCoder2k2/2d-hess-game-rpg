@@ -5,3 +5,12 @@
 export_presets.cfg
 build/
 docs/vault/.obsidian/
+
+# Generated art. Every file under here is rebuilt from scratch by a script in
+# tools/, so the repo carries the generator and not its output — otherwise one
+# tweaked constant churns hundreds of binary files in the diff.
+assets/sprites/generated/
+assets/art/piece_templates/
+
+# NOT ignored, on purpose: assets/art/pieces/. That is hand-drawn source art.
+# Nothing regenerates it and losing it loses the work.
