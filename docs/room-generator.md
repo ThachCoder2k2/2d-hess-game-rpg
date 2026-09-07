@@ -4,6 +4,12 @@ Two scripts in `tools/` build the demo room. Nothing in the game runs them; they
 are run by hand and they write files. This is the map of them, in the order that
 makes them readable rather than the order they appear on disk.
 
+Reading the code for the first time? Read
+[`room-generator-walkthrough.md`](room-generator-walkthrough.md) instead — the
+same code in the order the machine runs it, following one block of the picture
+from the sentence that describes it to the two pixels it becomes. Come back here
+afterwards; this page is the reference you keep.
+
 ```bash
 HOME=/tmp/unbound-pawn-godot ../Godot.app/Contents/MacOS/Godot --headless --path . -s tools/generate_kingdom_tiles.gd
 ```
