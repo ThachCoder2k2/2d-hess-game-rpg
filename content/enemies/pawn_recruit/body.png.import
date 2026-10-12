@@ -3,7 +3,7 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://cbkfsux0rk0ja"
-path="res://.godot/imported/black_pawn.png-86ea7c8e8efeb4858e8ac8d59215ee98.ctex"
+path="res://.godot/imported/body.png-be7ed784893915fc7a342da7a44cc116.ctex"
 metadata={
 "vram_texture": false
 }
@@ -11,7 +11,7 @@ metadata={
 [deps]
 
 source_file="res://content/enemies/pawn_recruit/body.png"
-dest_files=["res://.godot/imported/black_pawn.png-86ea7c8e8efeb4858e8ac8d59215ee98.ctex"]
+dest_files=["res://.godot/imported/body.png-be7ed784893915fc7a342da7a44cc116.ctex"]
 
 [params]
 
