@@ -101,7 +101,8 @@ func _init() -> void:
 		and hero_view.get_node_or_null("InputComponent") is InputComponent, "player view carries movement and input component nodes")
 	_expect(_actor_has_state_graph(hero_view), "player animation transitions live in an editor AnimationTree graph")
 	var view_source := FileAccess.get_file_as_string("res://scripts/ecs/actor_view.gd")
-	_expect(not view_source.contains("func _draw") and not view_source.contains("func _process"), "actor views hold no logic at all")
+	# A moved file reads as "", which would make the "does not contain" check pass for nothing.
+	_expect(not view_source.is_empty() and not view_source.contains("func _draw") and not view_source.contains("func _process"), "actor views hold no logic at all")
 
 	# --- Enemy scenes are views + definitions ---
 	var expected_definitions := {
@@ -163,7 +164,8 @@ func _init() -> void:
 	_expect(bool(count_objective.call("is_complete", 2, 3, 1)), "defeat-count objective can complete before all enemies fall")
 
 	var pickup_visual_source := FileAccess.get_file_as_string("res://scripts/visuals/pickup_visual.gd")
-	_expect(not pickup_visual_source.contains("func _draw") and not pickup_visual_source.contains("draw_"), "pickup visuals use Sprite2D nodes instead of script drawing")
+	# Same guard as above: an empty read (a moved file) must fail, not pass vacuously.
+	_expect(not pickup_visual_source.is_empty() and not pickup_visual_source.contains("func _draw") and not pickup_visual_source.contains("draw_"), "pickup visuals use Sprite2D nodes instead of script drawing")
 
 	# --- The sound structure: bus layout + event-sound registry ---
 	var bus_layout := load("res://default_bus_layout.tres") as AudioBusLayout
