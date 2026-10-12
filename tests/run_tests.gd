@@ -275,7 +275,7 @@ func _init() -> void:
 				definition_ids.append(definition.id)
 	for entry in rule_book.entries:
 		_expect(entry.piece_id in definition_ids, "book page '%s' names a real piece" % entry.title)
-	var book_ui := (load("res://scenes/ui/rule_book.tscn") as PackedScene).instantiate() as RuleBookUI
+	var book_ui := (load("res://presentation/ui/codex/rule_book.tscn") as PackedScene).instantiate() as RuleBookUI
 	root.add_child(book_ui)
 	book_ui.refresh([&"pawn_recruit"])
 	_expect(book_ui.entry_list.item_count == rule_book.entries.size(), "book UI lists every page")

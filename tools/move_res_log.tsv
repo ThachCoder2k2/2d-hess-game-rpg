@@ -45,3 +45,7 @@ objects/markers/pickup_spawn_point.tscn	authoring/markers/pickup_spawn_point.tsc
 objects/markers/player_unlock_marker.tscn	authoring/markers/player_unlock_marker.tscn
 scripts/world/room_encounter.gd	authoring/room_encounter.gd
 objects/world/room_encounter.tscn	authoring/room_encounter.tscn
+scripts/ui/hud.gd	presentation/ui/hud/hud.gd
+scenes/ui/hud.tscn	presentation/ui/hud/hud.tscn
+scripts/ui/rule_book_ui.gd	presentation/ui/codex/rule_book_ui.gd
+scenes/ui/rule_book.tscn	presentation/ui/codex/rule_book.tscn
