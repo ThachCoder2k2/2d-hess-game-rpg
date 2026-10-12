@@ -19,8 +19,12 @@ tools/bootstrap_worktree.sh                    # or: GODOT_BIN=/path/to/Godot BO
 ```
 
 Generated art is gitignored, so a new checkout has scenes whose textures do not exist yet and no
-class registry. The script imports once (so the audio autoload loads), runs the four generators,
-imports again, and exits non-zero on any `ERROR`, `SCRIPT ERROR` or `Parse Error`. About 50 s.
+class registry. The script imports once as a warm-up (so the audio autoload loads; on a fresh clone it
+prints "Failed loading resource" for the room art that does not exist yet, which it reports but
+tolerates), runs the four generators, imports again, and exits non-zero on any `ERROR`,
+`SCRIPT ERROR` or `Parse Error` from the generators or from that second import. About 50 s.
+Verified on a brand-new `git clone` of the branch: after the script, the whole suite and every new
+test pass and `git status` is clean.
 
 ## Every tool, one line each
 
