@@ -79,7 +79,7 @@ CurrentZone/PawnRecruit/MotionRoot/SpriteRoot/WeaponPivot/WeaponSprite Sprite2D
 CurrentZone/PawnRecruit/TelegraphAura Sprite2D
 CurrentZone/RoomArt Node2D position=(0.00,0.00) z_index=-20
 CurrentZone/RoomArt/Frame Polygon2D position=(52.00,24.00)
-CurrentZone/RoomArt/GridLines Node2D script=res://scripts/world/grid_lines_overlay.gd position=(0.00,0.00)
+CurrentZone/RoomArt/GridLines Node2D script=res://presentation/board/grid_lines_overlay.gd position=(0.00,0.00)
 CurrentZone/RoomArt/SetDressing Node2D position=(0.00,0.00)
 CurrentZone/RoomArt/SetDressing/DuelLaneScuff Line2D position=(0.00,0.00)
 CurrentZone/RoomArt/SetDressing/WarningScratchA Line2D position=(0.00,0.00)

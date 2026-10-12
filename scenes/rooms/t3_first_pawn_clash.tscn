@@ -2,7 +2,7 @@
 
 [ext_resource type="PackedScene" uid="uid://cxwxrf8td7kh1" path="res://authoring/room_encounter.tscn" id="1_room"]
 [ext_resource type="PackedScene" uid="uid://bps3hxs0hyrgq" path="res://objects/world/kingdom_tilemap.tscn" id="2_tilemap"]
-[ext_resource type="Script" uid="uid://drrg761p361t0" path="res://scripts/world/grid_lines_overlay.gd" id="3_grid"]
+[ext_resource type="Script" uid="uid://drrg761p361t0" path="res://presentation/board/grid_lines_overlay.gd" id="3_grid"]
 [ext_resource type="Script" uid="uid://ctn0g5fqvworr" path="res://authoring/markers/zone_entry_marker.gd" id="4_entry"]
 [ext_resource type="Script" uid="uid://dwvm3p3vlf0py" path="res://authoring/markers/zone_exit_marker.gd" id="5_exit"]
 [ext_resource type="PackedScene" uid="uid://dy23jflk5mhj" path="res://objects/actors/black_pawn.tscn" id="6_pawn"]

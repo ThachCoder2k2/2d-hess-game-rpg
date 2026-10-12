@@ -54,7 +54,7 @@ CurrentZone/Exit_To_Act2Toybox Marker2D script=res://authoring/markers/zone_exit
 CurrentZone/Exit_To_Boss Marker2D script=res://authoring/markers/zone_exit_marker.gd position=(80.00,212.00)
 CurrentZone/RoomArt Node2D position=(0.00,0.00) z_index=-20
 CurrentZone/RoomArt/Frame Polygon2D position=(52.00,24.00)
-CurrentZone/RoomArt/GridLines Node2D script=res://scripts/world/grid_lines_overlay.gd position=(0.00,0.00)
+CurrentZone/RoomArt/GridLines Node2D script=res://presentation/board/grid_lines_overlay.gd position=(0.00,0.00)
 CurrentZone/RoomArt/SetDressing Node2D position=(0.00,0.00)
 CurrentZone/RoomArt/SetDressing/ChildHandShadow Polygon2D position=(388.00,72.00)
 CurrentZone/RoomArt/SetDressing/OpenRugPath Line2D position=(0.00,0.00)

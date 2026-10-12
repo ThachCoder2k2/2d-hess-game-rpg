@@ -134,7 +134,7 @@ CurrentZone/PawnRecruit/TelegraphAura Sprite2D
 CurrentZone/PencilSpearPickup Node2D script=res://authoring/markers/pickup_spawn_point.gd position=(304.00,244.00)
 CurrentZone/RoomArt Node2D position=(0.00,0.00) z_index=-20
 CurrentZone/RoomArt/Frame Polygon2D position=(52.00,24.00)
-CurrentZone/RoomArt/GridLines Node2D script=res://scripts/world/grid_lines_overlay.gd position=(0.00,0.00)
+CurrentZone/RoomArt/GridLines Node2D script=res://presentation/board/grid_lines_overlay.gd position=(0.00,0.00)
 CurrentZone/RoomArt/SetDressing Node2D position=(0.00,0.00)
 CurrentZone/RoomArt/SetDressing/BrokenRulePaper Polygon2D position=(300.00,76.00)
 CurrentZone/RoomArt/SetDressing/RuleBreakSlashA Line2D position=(0.00,0.00)

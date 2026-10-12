@@ -56,3 +56,6 @@ objects/world/weapon_pickup.tscn	presentation/views/weapon_pickup.tscn
 scripts/audio/sfx_manager.gd	presentation/audio/sfx_manager.gd
 objects/audio/sfx_manager.tscn	presentation/audio/sfx_manager.tscn
 scripts/world/camera_rig.gd	presentation/camera/camera_rig.gd
+scripts/world/prototype_board.gd	presentation/board/prototype_board.gd
+objects/world/prototype_board.tscn	presentation/board/prototype_board.tscn
+scripts/world/grid_lines_overlay.gd	presentation/board/grid_lines_overlay.gd
