@@ -59,8 +59,10 @@ Steps:
    - `visual.tres` (`VisualDefinition`) — `piece_type` (a row of `piece_sizes.tres`: pawn, knight,
      bishop, rook, queen, king, or a boss row), `body_texture` (this enemy's `body.png`),
      `anchor_offset` (a nudge, normally zero), `clip_speed_scales` (clip name to a multiple of the
-     base tempo: `{idle: 1.25}` plays idle 25 % faster; unlisted clips play at 1.0), plus the
-     telegraph and impact colors. The base scene reads it: the body appears on the base line with no
+     base tempo: `{idle: 1.25}` plays idle 25 % faster; unlisted clips play at 1.0). Its
+     `telegraph_color`, `impact_color` and `weapon_anchor` are fields nothing reads yet (the telegraph tint is
+     `telegraph_modulate` on the actor view, the hand is `weapon_anchor` on the actor view), so tuning them
+     changes nothing. The base scene reads the rest: the body appears on the base line with no
      scene edit, and the clips run at the stated speed. A piece several enemies share goes in
      `_shared/visuals/` (the black pawns share `pawn_compatibility.tres`).
    - `body.png` — the enemy's picture, drawn at scale 1, no larger than its kind's box (pawn 18 x 22,

@@ -1,13 +1,16 @@
 # Architecture
 
 The Unbound Pawn — a 2D top-down grid-combat RPG in Godot 4.6.3. This document
-describes the code **as it is built today** (checked against the tree on 2026-10-12, at
-the end of milestone M1b, the folder migration). The simulation is a full ECS; the
+describes the code **as it is built today** (checked against the tree on 2026-10-13, at
+the end of milestone M2, the content registry and the actor collapse). The simulation is a full ECS; the
 node-composition architecture that older docs described (`GridWorld`, `FreeEnemy`,
 `PawnHero`, `EnemyActor`, `EncounterDirector`, per-actor component nodes) was deleted in
 the ECS conversion (`docs/ecs-conversion-plan.md`, owner decision 2026-07-19). The folders
 were rearranged in M1b to the tree of `docs/game-base-plan.md` section 13; the move is
-recorded file by file in `docs/migration-notes.md` and `tools/move_res_log.tsv`.
+recorded file by file in `docs/migration-notes.md` and `tools/move_res_log.tsv`. M2 then added the
+content registry (`ContentDb`), the hero as data (`PlayerDefinition`), the one actor view and the table
+that keeps every piece smaller than its cell; the section "The content registry, the hero and the actor
+view" below is where they fit together.
 
 Pair this file with `docs/coding-standards.md` (conventions), `AGENTS.md` (workflow),
 `CLAUDE.md` (binding rules), `docs/OWNER_GUIDE.md` (how the owner changes things) and
@@ -98,6 +101,7 @@ presentation/            HOW THE WORLD IS SHOWN: reads events, never decides
 
 shell/                   THE GAME AROUND THE GAME
   game_root.gd/.tscn     the one game scene and its bridge (605 lines; split in M3b)
+  content/               ContentDb (the content registry, a static class) and ContentKind
   save/world_state.gd    WorldState autoload: zone, entry, taken pickups, opened gates, read pages
 
 assets/                  shared raw art and audio not owned by one content item
@@ -262,6 +266,79 @@ diagonals (`content/enemies/bishop_zoner/movement.tres`), the Knight the eight L
 enemies move cardinally" note in `findings.md` is superseded (`docs/game-base-plan.md` D-08).
 Equipping a weapon replaces the piece's chess-shaped *attack*, not its movement.
 
+## The content registry, the hero and the actor view
+
+What M2 added, in the order a piece travels from a folder to the board.
+
+**`ContentDb`** (`shell/content/content_db.gd`, `content_kind.gd`) is the only code that loads `content/` by id. A
+static class, not an autoload, because no autoload exists while a suite's `_init()` runs
+(`test_content_db_in_init` asserts it works there). An id is a folder name (or a file name), listed once per kind on
+the first ask; a name starting with `_` (`_shared`) or `.` is not an id. Ten kinds are registered, one line each in
+`ContentDb._ensure_kinds()`:
+
+| Kind | Folder under `content/` | The id is | Main file | Class |
+|---|---|---|---|---|
+| `player` | `player/` | the kind itself | `player.tres` | `PlayerDefinition` |
+| `world` | `world/` | the kind itself | `world.tres` | `WorldGraph` |
+| `piece_sizes` | `feel/` | the kind itself | `piece_sizes.tres` | `PieceSizeTable` |
+| `enemies` | `enemies/` | the folder name | `<id>/enemy.tres` | `EnemyDefinition` |
+| `rooms` | `rooms/` | the folder name | `<id>/room.tscn` | `PackedScene` |
+| `rules` | `rules/` | the folder name | `<id>/page.tres` | `RuleEntry` |
+| `skills` | `skills/` | the folder name | `<id>/<id>.tres` | `AttackProfile` |
+| `pickups` | `pickups/` | the folder name | `<id>/<id>.tres` | `EnemyWeapon` |
+| `difficulty` | `difficulty/` | the file name | `<id>.tres` | `DifficultyProfile` |
+| `tilesets` | `tilesets/` | the folder name | `<id>/tileset.tres` | `TileSet` |
+
+`ids(kind)`, `has_id`, `path_of`, `fetch(kind, id)` (null when unknown, never an error), `all(kind)`, and the
+shortcuts `player()`, `world()` and `piece_sizes()`. Everything comes from `ResourceLoader`'s shared cache, so
+`duplicate()` before changing a resource. Two validators return readable sentences and are empty when all is well;
+tests and tools call them and nothing calls them at game start. `validate()` checks each entry: the main file exists,
+loads and is the right class, the class's own `validate()` is empty, the folder is lowercase snake_case, an `id`
+property equals the folder and no two entries claim one id. `validate_cross_refs()` checks the references between
+entries: a Book page's `piece_id` is an enemy, an enemy's difficulty, default weapon and weapon preferences are
+registered, the player's two attacks are skills, **every actor's `piece_type` is a row of the size table and its body
+picture is no larger than that row's box**, the world graph and the room folders agree, every door leads to a zone and an
+entry marker that exist, every room's `zone_id` equals its folder and every enemy parked in a room is a registered
+enemy. `tests/content/test_validate_all.gd` runs both over the real tree; `test_content_db_detects_problems` runs them
+over a deliberately broken tree under `user://` and requires each defect to be named. A new kind is one
+`_add_kind` line, a `validate()` on its class and a minimum count in `test_validate_all`.
+
+**`PlayerDefinition`** (`schema/entity/player_definition.gd`, `content/player/player.tres`) is the hero as data:
+`max_courage`, `invulnerability_duration`, `step_duration`, `held_repeat_delay`, `skill_cooldown_duration`,
+`starts_with_sword`, the two `AttackProfile` files (`wooden_sword`, `pencil_thrust`), `piece_name`, and its
+`VisualDefinition` (`content/player/visual.tres`: piece type `pawn`, `body.png`, clip speeds). `ActorView.player_definition`
+names it; `EcsBoot` calls `EcsActorFactory.spawn_player_from_definition` to bake it into the player entity, exactly as an
+`EnemyDefinition` is baked into an enemy. `player.tscn` carries no tuning number and no `EntityComponent` node. A node
+of that kind on a room's instance of the player still wins over the file, field by field, so one room can override a value
+without touching the shared file. A class default equals the pre-M2 hero, so a view with no definition plays as before;
+`test_player_definition` proves each field reaches the entity.
+
+**The actor view.** There is one: `presentation/views/actors/actor_view_base.tscn`. Its nodes are
+`ActorView` (the script, the spawn data) with `TelegraphAura`, `MotionRoot/SpriteRoot` (`BodySprite`, `FacingArrow`,
+`WeaponPivot/WeaponSprite`, `HealthPips/Pip0..2`), `AnimationPlayer` (the clips), `AnimationTree` (the graph) and
+`AudioPlayer`. The four scenes beside it inherit it and set only what is theirs. A piece's look is data read by
+`ViewSyncSystem`, the only writer:
+
+| What | Comes from | Written to |
+|---|---|---|
+| the body picture and where it stands | `VisualDefinition.body_texture`, `piece_type`, `anchor_offset` and the size table's `PieceSizeTable.body_top_left()` | `BodySprite.texture` and `.position`, at scale 1 |
+| how fast each clip plays | `VisualDefinition.clip_speed_scales` (clip name to a multiple, default 1.0) | the `TimeScale` node of each graph state, parameter `parameters/<state>/TimeScale/scale` |
+| the telegraph tint | `ActorView.telegraph_modulate` (a thin scene may set its own; `VisualDefinition.telegraph_color`, `impact_color` and `weapon_anchor` are fields nothing reads yet) | the aura |
+| the facing arrow, the held weapon's size and place, the pips | `ActorView.facing_mark_distance` (10 px out on the facing side), `weapon_held_scale` (0.16), `weapon_anchor`, `weapon_rest_length`; pips are placed by the base scene along the top edge | the arrow, the weapon, the pips |
+
+**The size table and who reads it.** `content/feel/piece_sizes.tres` (`PieceSizeTable`, one `PieceSize` row per kind: `body_box`,
+`base_offset_y`, `footprint_cells`) is the owner's rule that a piece is smaller than its cell, written as data
+(`docs/owner-decisions.md`, 2026-10-12). `PieceSizeTable.validate()` holds the 2 px margin and the chess height order.
+Six readers keep to it: `ViewSyncSystem` (places the body), `ContentDb.validate_cross_refs()` (a picture larger than its
+box is a problem), `tools/generate_chess_sprites.gd` (refuses to draw a piece that does not fit), `test_piece_size_table`
+(the table's own rules), `tests/architecture/test_pieces_inside_cell.gd` (boots the hero, the three thin scenes and every
+enemy of `content/enemies/` through the real `EcsBoot` and `ViewSyncSystem`, in every facing, armed, telegraphing and at
+about 600 clip poses, and measures the opaque pixels each actor draws against its cell: 2 px from every edge) and
+`tools/render_actor_preview.gd` (draws the hero, a black pawn, the knight and the bishop in their cells at 4x into
+`assets/_generated/previews/pieces_in_cells.png`, composed on the CPU with `Image`, no renderer needed). A new
+kind of piece is a row; a boss is a row with a bigger footprint. `tools/actor_stage.gd` and `tools/actor_cell_probe.gd`
+are the shared helpers of the last two.
+
 ## The event contract
 
 19 event types exist. `game_root.gd` `_handle_events` matches 15 of them; the other four
@@ -394,10 +471,10 @@ HOME=/tmp/unbound-pawn-godot ../Godot.app/Contents/MacOS/Godot --headless --path
 
 ## What is built and what is next
 
-The tree above is the part of `docs/game-base-plan.md` §13 that M1b built: the folders, the
-moves, the guards that keep code and content where they belong, and the placeholder tools.
-The ECS contract is kept as it was. M2 has landed `ContentDb`, `PlayerDefinition`, the one `actor_view_base.tscn`
-with its thin scenes and the in-cell size table; still to come, in plan order: the runtime seams — commands, the input snapshot, the `HudSnapshot`, the
+The tree above is the part of `docs/game-base-plan.md` §13 that M1b and M2 built: the folders, the
+moves, the guards that keep code and content where they belong, the placeholder tools, and, from M2, the content
+registry, the hero as data, the one actor view and the in-cell size table (the section above). The ECS contract is
+kept as it was. Still to come, in plan order: the runtime seams — commands, the input snapshot, the `HudSnapshot`, the
 schedule files, `events.gd` (M3a) — the split of `game_root.gd` and the save service (M3b),
 then the shell, input, text, story, skills, bosses and the other five districts. The
 owner-facing "how do I change X" table, with real paths for what exists today, is

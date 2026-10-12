@@ -18,10 +18,17 @@ nothing you change here touches code.*
   *File names are roles. To swap art, overwrite the file with the same name; nothing else changes.*
 - **Mỗi thứ một file.** Một PNG cho một tile, một prop, một icon, một khung hình; không gộp sheet.
   *One file per thing: one PNG per tile, prop, icon or animation frame; no sheets or atlases.*
-- Mọi thứ trong đây tra theo id qua `ContentDb`; thêm hoặc sửa xong, `tests/content/test_validate_all.gd` kiểm
-  mọi file có hợp lệ và mọi tham chiếu có trỏ tới một id có thật không.
-  *Everything here is looked up by id through `ContentDb`; after an edit, `tests/content/test_validate_all.gd`
-  checks that every file is valid and every reference points at an id that exists.*
+- Mọi thứ trong đây tra theo id qua `ContentDb` (sổ đăng ký, `shell/content/content_db.gd`; mười loại: `player`,
+  `world`, `piece_sizes`, `enemies`, `rooms`, `rules`, `skills`, `pickups`, `difficulty`, `tilesets`). Thêm một thư mục
+  `enemies/<id>/` có `enemy.tres` là xong, **không phải đăng ký ở đâu**: `ContentDb` tìm thấy nó theo tên. Thêm hoặc
+  sửa xong, `tests/content/test_validate_all.gd` kiểm mọi file có hợp lệ (`validate()`), tên thư mục có bằng `id` trong
+  file, và mọi tham chiếu có trỏ tới một id có thật không (kể cả hình lớn hơn hộp của loại quân).
+  *Everything here is looked up by id through `ContentDb` (the registry, ten kinds). A folder `enemies/<id>/` with an
+  `enemy.tres` is all it takes: nothing is registered, `ContentDb` finds it by name. After an edit,
+  `tests/content/test_validate_all.gd` checks that every file is valid (`validate()`), the folder name equals the
+  `id` inside, and every reference points at an id that exists, a picture larger than its kind's box included.*
+- `_shared/` (như `enemies/_shared/`) chứa mảnh nhiều thứ dùng chung: sửa một file ở đó là đổi **tất cả** thứ trỏ tới nó.
+  *`_shared/` holds pieces many things share: editing a file there changes everything that points at it.*
 - File nào còn là hình/tiếng tạm: `tools/list_placeholders.gd` in ra, dựa trên `_placeholders.json`.
   *Which files are still stand-ins: `tools/list_placeholders.gd` prints them, from `_placeholders.json`.*
 
@@ -31,7 +38,8 @@ nothing you change here touches code.*
 |---|---|
 | Chỉnh máu, tốc độ, AI hoặc đòn đánh của một enemy | `enemies/<id>/enemy.tres` và các `.tres` cạnh nó (`movement`, `decision`, `unarmed_attack`, `visual`); dùng chung: `enemies/_shared/` |
 | Chỉnh cảm giác con tốt (thời gian bước, courage, invulnerability, hồi chiêu kỹ năng) | `player/player.tres` (một file) |
-| Đổi hình của con tốt hoặc một enemy | ghi đè `player/body.png` hoặc `enemies/<id>/body.png` (vẽ ở tỉ lệ 1:1, không lớn hơn hộp của loại quân trong `feel/piece_sizes.tres`) |
+| Thêm một biến thể enemy (máu, vũ khí, tốc độ khác) | **1 file**: chép `enemies/pawn_recruit/enemy.tres` thành `enemies/<id>/enemy.tres`, sửa `id` (bằng tên thư mục), `display_name`, `max_health`; nó dùng lại phần còn lại ở `enemies/_shared/`. Thêm hình riêng: **+2 file** (`visual.tres`, `body.png`). Đặt vào phòng: kéo `presentation/views/actors/actor_view_base.tscn` vào `rooms/<id>/room.tscn`, đặt `Definition`. Từng bước đã chạy thử thật: `.claude/commands/new-enemy.md` |
+| Đổi hình của con tốt hoặc một enemy | ghi đè `player/body.png` hoặc `enemies/<id>/body.png` (vẽ ở tỉ lệ 1:1, không lớn hơn hộp của loại quân trong `feel/piece_sizes.tres`; mục 6 của `../docs/OWNER_GUIDE.md`; ảnh xem trước: `../assets/_generated/previews/pieces_in_cells.png`) |
 | Đổi quân cờ to nhỏ thế nào trong ô (quân phải nhỏ hơn ô) | `feel/piece_sizes.tres` (hộp, vạch đứng và cỡ chân đế của từng loại quân) |
 | Đổi icon kiếm, bút chì, vũ khí | ghi đè `skills/<id>/icon.png` hoặc `pickups/<id>/icon.png` |
 | Chỉnh bố cục phòng, chỗ đứng enemy, cửa | mở `rooms/<id>/room.tscn` trong Godot và kéo node |
@@ -42,7 +50,10 @@ nothing you change here touches code.*
 | Đổi bộ tile | `tilesets/<bộ>/tileset.tres`, atlas ở `../assets/tiles/<bộ>/` (đừng sửa tay `tile_map_data`) |
 | Đổi tiếng động, nhạc | ghi đè file trong `../assets/sfx/` hoặc `../assets/music/` (cùng tên) |
 
-*EN: The pawn's feel (step time, Courage, invulnerability, skill cooldown): `player/player.tres`, one file.
+*EN: A variant enemy (other health, weapon or speed) is one file, `enemies/<id>/enemy.tres` (copy `pawn_recruit`'s,
+change `id`, `display_name`, `max_health`); a picture of its own adds `visual.tres` and `body.png`; to place it,
+instance `presentation/views/actors/actor_view_base.tscn` in a room and set `definition` (walked once for real:
+`.claude/commands/new-enemy.md`). The pawn's feel (step time, Courage, invulnerability, skill cooldown): `player/player.tres`, one file.
 Enemy stats, AI and attacks: `enemies/<id>/enemy.tres` and the `.tres` beside it (shared pieces in
 `enemies/_shared/`). Pictures: overwrite `player/body.png`, `enemies/<id>/body.png`, `skills/<id>/icon.png`,
 `pickups/<id>/icon.png`, `rooms/<id>/background.png`. How big each kind of piece is inside its 32 px cell (a piece

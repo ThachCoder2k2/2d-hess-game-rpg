@@ -254,3 +254,23 @@ The five dependency edges and six room references listed under step 3 stay repor
 `content/audio/` and `sound_bank.tres` (the registry is still Inspector exports on `sfx_manager.tscn`), `ContentDb` and the
 actor collapse (M2), `/new-skill` (M7a), `/new-room` and `/new-beat` (M14), the tile and animation-frame assembly tools, and
 prose paths in `docs/design/*` and the production checklists (planning documents).
+
+## M2 (2026-10-13): what the registry and the actor collapse changed
+
+No file was moved by M2 (`tools/move_res_log.tsv` has no M2 line, `git diff -M` finds no rename): M2 added files,
+edited files and deleted one (`presentation/views/actors/enemy_base.tscn`, which was `black_pawn.tscn` byte for byte under
+another node name; its six test labels continue as black_pawn's through `tests/label_renames.txt`). It closes the items the
+M1b notes left for M2.
+
+| M1b left this undone | M2 did |
+|---|---|
+| `ContentDb` | `shell/content/content_db.gd` and `content_kind.gd`, ten kinds; the registry method is `fetch`, because a static `get` would override `Object.get` |
+| the four 353-line actor scenes | `presentation/views/actors/actor_view_base.tscn` plus `player`, `black_pawn`, `knight_enemy`, `bishop_enemy` as thin inherited scenes. They stay in `actors/` beside the base (the plan's `content/enemies/<id>/actor.tscn` is not needed: an enemy is a definition on the base) |
+| the pawn's numbers on `player.tscn` | `content/player/player.tres` (`PlayerDefinition`) and `content/player/visual.tres` |
+| `content/feel/` | exists, with `piece_sizes.tres` (the owner's rule that a piece is smaller than its cell, 2026-10-12) |
+| `/new-enemy` for the new layout | rewritten in step 2 from the code, then walked once for real in step 3 on a scratch clone |
+| the bishop borrowed the knight's picture | `content/enemies/bishop_zoner/body.png`; `content/_placeholders.json` has 26 entries |
+
+Still not built, unchanged by M2: `content/_index.json` (the exported-build fallback), `content/audio/`, `ecs/schedule/`,
+`ecs/events/`, and `dev_sandbox` (M6). The five dependency edges and six room references of step 3 are still the owner's to
+decide.

@@ -76,26 +76,32 @@ layer may name which (`tests/architecture/test_dependency_edges.gd` enforces it)
 - `presentation/` — how the world is shown: `views/` (`ActorView`, pickup views, and
   `views/actors/`: `actor_view_base.tscn`, the one actor view, plus the thin scenes inheriting it), `ui/hud/`, `ui/codex/`, `board/`, `camera/`, `audio/`. Reads events;
   never decides.
-- `shell/` — the game around the game: `game_root.tscn/.gd` (the one game scene and its bridge)
-  and `save/world_state.gd`.
+- `shell/` — the game around the game: `game_root.tscn/.gd` (the one game scene and its bridge),
+  `content/` (`ContentDb`, the content registry) and `save/world_state.gd`.
 - `assets/` shared raw art and audio (`tiles/`, `ui/`, `sfx/`, `music/`, `map_pieces/`; the
   gitignored `_generated/` is generator output only) · `tools/` build scripts and generators ·
   `tests/` headless tests · `docs/` documentation.
 
 Do not move authored room layout or gameplay placement into scripts. Do not move or rename a
 file by hand: `tools/move_res.py` does it with the sidecars and every `res://` string
-(`tools/README.md`). The rest of the plan's tree (`ecs/events/`, `ecs/schedule/`, `shell/content/`,
-`content/story|audio|feel|ui|...`) appears with the milestones that need it.
+(`tools/README.md`). The rest of the plan's tree (`ecs/events/`, `ecs/schedule/`,
+`content/story|audio|ui|...` and the rest of `content/feel/`) appears with the milestones that need it
+(`shell/content/` and `content/feel/piece_sizes.tres` came with M2).
 
 ## Current Priority
 
 The base is built milestone by milestone from `docs/game-base-plan.md` section 15.
-**M1a (safety net and tooling) and M1b (folder migration) are done and wait in `human_review`**.
-M1b moved every script, scene and resource into the new tree with no gameplay change (the strict
-runner stayed green after every move, the six room dumps changed only by path strings), applied the
-`CLAUDE.md` amendments the owner approved at OG0, and added the placeholder tools. Next is **M2**
-(the content registry and the actor-scene collapse). The owner can browse `content/`, run
-`tools/list_placeholders.gd` for the art and audio TODO, and read `docs/OWNER_GUIDE.md`.
+**M1a (safety net and tooling), M1b (folder migration) and M2 (content registry and actor collapse) are
+done and wait in `human_review`**. M1b moved every script, scene and resource into the new tree with no
+gameplay change (the strict runner stayed green after every move, the six room dumps changed only by path
+strings), applied the `CLAUDE.md` amendments the owner approved at OG0, and added the placeholder tools.
+M2 added `ContentDb` (content by id, two validators), `PlayerDefinition` (`content/player/player.tres`),
+collapsed the four 353-line actor scenes into one `actor_view_base.tscn` plus thin scenes, and built the
+owner's decision of 2026-10-12 that a piece is smaller than its cell (`content/feel/piece_sizes.tres`, the
+generated chess family drawn to it, `tools/render_actor_preview.gd`, `test_pieces_inside_cell`). Next is
+**M3a** (the runtime seams). The owner can browse `content/`, run `tools/list_placeholders.gd` for the art
+and audio TODO, open `assets/_generated/previews/pieces_in_cells.png`, and read `docs/OWNER_GUIDE.md`
+(section 6 is the in-cell rule, in Vietnamese).
 Current status of every area, and what is waiting on the owner, lives in
 `docs/where-we-are.md`. Do not start a broad new phase while the current one has a broken
 playable slice.
@@ -464,7 +470,7 @@ registry and the generated art; see `tools/README.md`).
 ## Next Recommended Work
 
 Follow `docs/where-we-are.md` section 5 for the order of work and `docs/game-base-plan.md`
-section 15 for the milestone you are on. M1a and M1b are done; the next milestone is M2 (the
-content registry and the actor collapse). Five dependency edges and six room references are still
+section 15 for the milestone you are on. M1a, M1b and M2 are done; the next milestone is M3a (the
+runtime seams). Five dependency edges and six room references are still
 undecided (listed in `tests/architecture/test_dependency_edges.gd` and `test_content_references.gd`);
 the owner decides them before `tests/architecture/allowed_edges.txt` is frozen.

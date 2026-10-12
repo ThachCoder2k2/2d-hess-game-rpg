@@ -3,7 +3,7 @@ extends RefCounted
 
 ## One kind of content the registry (ContentDb) knows: which folder of content/ holds
 ## it, how its ids are spelled on disk, which file is its main file and which class that
-## file must load as. A kind is a row in ContentDb._build_kinds(); adding one is one line.
+## file must load as. A kind is a row in ContentDb._ensure_kinds(); adding one is one line.
 
 ## Where the ids of a kind are spelled on disk.
 enum IdSource {

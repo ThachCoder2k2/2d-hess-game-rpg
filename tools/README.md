@@ -99,7 +99,43 @@ a new enemy body, a new sound), add its row to `GENERATED_SEEDS` or `ADOPTED_PLA
 fails if a row is not recorded, a listed file is gone, or a tracked scene names `assets/_generated/`.
 Measured on this tree at M1b: 25 placeholders (3 bodies, 4 icons, 1 pickup, 2 room backgrounds, 1 tile
 atlas, 4 interface pictures, 9 sound effects, 1 music loop); overwriting one file moved the count from 25
-to 24 still to replace and put "1 replaced by you" in the summary.
+to 24 still to replace and put "1 replaced by you" in the summary. At M2 it is 26 (4 bodies: M2 redrew the
+three M1b bodies inside their cells and gave the bishop its own); adding a scratch enemy body as an
+`ADOPTED_PLACEHOLDERS` row moved it to 27 and overwriting that picture back to "26 still to replace, 1
+replaced by you".
+
+A row of `GENERATED_SEEDS` may carry `"supersedes_stand_in": true`: the tool then also replaces an EARLIER
+stand-in, and only while that file still equals the hash recorded for it (so it is provably not the
+owner's art), and records the new picture in its place (`PlaceholderManifest.seed_decision` holds the rule and
+`tests/content/test_placeholders_manifest.gd` proves it). M2 used it to swap the three M1b bodies for the
+pieces drawn inside their cells. Without the flag a file that is already there is never touched.
+
+## The pieces in their cells: the size table, the generator, the preview
+
+The owner's rule (2026-10-12) is that a piece is smaller than its 32 x 32 cell. Three tools and two tests hold it,
+all reading `content/feel/piece_sizes.tres` through `ContentDb.piece_sizes()` (a static class, so it works in a
+tool's `_init()`; a tool never loads `content/` by path):
+
+```bash
+"$G" --headless --path . -s tools/generate_chess_sprites.gd   # draws the pieces to assets/_generated/chess/; refuses one that does not fit its box
+"$G" --headless --path . -s tools/seed_placeholders.gd        # copies them into content/<kind>/<id>/body.png where absent, records the hashes
+"$G" --headless --path . -s tools/render_actor_preview.gd     # writes assets/_generated/previews/pieces_in_cells.png
+```
+
+`render_actor_preview.gd` boots the real actor scenes through `tools/actor_stage.gd` (one `ViewSyncSystem` tick, as the game
+does), reads what every visible sprite draws with `tools/actor_cell_probe.gd` (opaque pixels, in pixels from the cell's
+centre) and composes the picture on the CPU, so it needs no renderer and no display. The picture is 1336 x 568 px
+(`(46 + 9 x 32) x 4` by `(14 + 4 x 32) x 4`): four rows (HERO, BLACK PAWN, KNIGHT, BISHOP) by nine cells (at rest facing
+down, right, up, left; armed facing the same four ways, with the pencil spear for an enemy and the pencil thrust for
+the hero; alert, the telegraph aura), every cell 32 px at 4x with whole-number nearest-neighbour zoom. The grey lines are
+the cell edges and the faint red frame is the 2 px margin, so a piece that touches the red frame is on the limit. The
+hero's alert cell is empty on purpose. An enemy that is only a `definition` on `actor_view_base.tscn` is not a row
+(`ACTORS` at the top of the tool lists the rows); `tests/architecture/test_pieces_inside_cell.gd` measures it and
+names it. `bootstrap_worktree.sh` draws the picture last; `tests/architecture/test_actor_preview_tool.gd` runs the
+tool in a child process and checks the picture's size, zoom, grid lines, margin frame and that the hero is in its cell.
+The picture is gitignored (generated, never hand-edited): it is a review artefact for the owner, and the tests are the
+gate. The knight in the generator is traced on 15 rows by `trace_knight_glyph.py --rows 15` (21 reproduces the
+owner-approved arrays kept in a comment) because no whole-number scaling fits it into its 20 x 24 box.
 
 ## Tools that save scenes: keep the uids
 
