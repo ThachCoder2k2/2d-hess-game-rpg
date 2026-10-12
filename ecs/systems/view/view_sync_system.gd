@@ -67,7 +67,7 @@ func _sync_appearance(entity_id: int, view: EcsComponents.ViewRef, appearance: A
 		var offset := health.recoil if health != null else Vector2.ZERO
 		if combat != null and moving:
 			offset += Vector2(0.0, -1.0)
-		motion_root.position = offset
+		motion_root.position = _limited_to_margin(appearance, offset)
 
 	var aura := appearance.get_node_or_null("TelegraphAura") as Sprite2D
 	if aura != null:
@@ -92,6 +92,17 @@ func _sync_appearance(entity_id: int, view: EcsComponents.ViewRef, appearance: A
 	view.was_hurt = hurt
 	view.was_attacking = attacking
 	view.was_telegraphing = telegraphing
+
+
+## A hit shoves a piece a few pixels and a step lifts the hero one; neither may carry it out of its
+## cell (the owner's rule, docs/owner-decisions.md 2026-10-12: everything a piece draws stays inside
+## its own cell). Each axis is limited to the size table's minimum margin, the room a piece keeps
+## on every side at rest: at the worst moment of a shove it touches the cell's edge and never
+## crosses it. Only the drawn offset is limited; Health.recoil itself is untouched.
+func _limited_to_margin(appearance: ActorView, offset: Vector2) -> Vector2:
+	var piece_sizes := appearance.piece_sizes if appearance.piece_sizes != null else PieceSizeTable.new()
+	var limit := float(piece_sizes.minimum_margin)
+	return Vector2(clampf(offset.x, -limit, limit), clampf(offset.y, -limit, limit))
 
 
 ## Writes what the actor's VisualDefinition says into the view's nodes. It happens once per

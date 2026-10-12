@@ -86,6 +86,13 @@ static func set_facing(stage: Dictionary, direction: Vector2i) -> void:
 	facing.direction = direction
 
 
+## The actor has just been hit: Health.recoil is this offset (pixels), the shove ViewSyncSystem draws
+## on MotionRoot. HealthSystem sets 4 px along the hit; a test may set more to prove the limit.
+static func shove(stage: Dictionary, offset: Vector2) -> void:
+	var health: EcsComponents.Health = _component(stage, EcsComponents.HEALTH)
+	health.recoil = offset
+
+
 ## An enemy holds this weapon (a pickup's EnemyWeapon), so its weapon is drawn.
 static func give_enemy_weapon(stage: Dictionary, weapon: EnemyWeapon) -> void:
 	var slot: EcsComponents.WeaponSlot = _component(stage, EcsComponents.WEAPON_SLOT)

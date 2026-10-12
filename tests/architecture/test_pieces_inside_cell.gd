@@ -11,6 +11,7 @@ extends UnboundTest
 ## every direction, holding every weapon, telegraphing, and at every keyframe of every clip:
 ##   - at rest, the whole actor (body, health pips, facing arrow, held weapon, telegraph aura) lies
 ##     inside its cell with at least `minimum_margin` pixels to every edge;
+##   - shoved by a hit (4 px, or harder) it may touch the cell's edge and never crosses it;
 ##   - at every keyframe of every clip it stays inside the cell (the margin is spent on the motion);
 ##   - every body picture is no larger than its kind's box, and the pieces are as tall as a real
 ##     chess set says: a pawn is lower than a bishop and a knight;
@@ -138,6 +139,17 @@ func _check_actor_at_rest(scene_path: String, role: String, definition: EnemyDef
 				if part["part"] == ActorCellProbe.PART_BODY:
 					body_height = int((part["rect"] as Rect2).size.y)
 					_check_body_in_box(part["rect"], view, label)
+
+	# A hit shoves the piece (HealthSystem: 4 px along the hit). The shove may spend the margin and
+	# touch the cell's edge, never cross it, however hard the hit: ViewSyncSystem limits the offset.
+	for facing in ActorStage.FACINGS:
+		for shove_pixels: float in [4.0, 12.0]:
+			ActorStage.set_facing(stage, facing)
+			ActorStage.shove(stage, Vector2(facing) * shove_pixels)
+			ActorStage.tick(stage)
+			_expect_inside_cell(probe.drawn_parts(view), 0.0, "%s shoved %d px toward %s" % [label, int(shove_pixels), facing])
+	ActorStage.shove(stage, Vector2.ZERO)
+	ActorStage.tick(stage)
 
 	if role == ActorStage.ROLE_ENEMY:
 		for weapon_id: StringName in [&"pencil_spear", &"ruler_blade"]:
