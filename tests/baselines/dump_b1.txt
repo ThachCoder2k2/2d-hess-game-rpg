@@ -152,7 +152,7 @@ PawnHero Node2D script=res://presentation/views/actor_view.gd position=(112.00,2
 PawnHero/AnimationPlayer AnimationPlayer
 PawnHero/AnimationTree AnimationTree
 PawnHero/AudioPlayer AudioStreamPlayer
-PawnHero/Camera2D Camera2D script=res://scripts/world/camera_rig.gd
+PawnHero/Camera2D Camera2D script=res://presentation/camera/camera_rig.gd
 PawnHero/CombatComponent Node script=res://authoring/entity_components/combat_component.gd
 PawnHero/HealthComponent Node script=res://authoring/entity_components/health_component.gd
 PawnHero/InputComponent Node script=res://authoring/entity_components/input_component.gd
