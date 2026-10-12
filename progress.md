@@ -789,3 +789,25 @@ Researched the AI-focused editor surface at the owner's request. Found `EnemyBra
 - Registered `t1_white_kings_fall` in `resources/world/world_graph.tres`.
 - Updated `scenes/main.tscn` so the game starts in T1 with the pawn parked at the approved starting cell.
 - T1 currently contains scene-owned TileMap, grid overlay, set dressing props, entry markers, and a future exit marker toward T2.
+
+## Owner directions and gate OG0 — 2026-10-12 (recorded verbatim)
+
+Owner's words in chat (Vietnamese, as typed), with the translation used by the plan:
+
+1. "game không phải mỗi gameplay mà phải kể 1 câu chuyện ... tôi chỉ muốn bạn dựng 1 cái base đẩy đủ tất cả, còn lại tôi sẽ vẽ và nâng cấp story, bạn tính có làm được cho nó hoàn hảo nhất có thể trước khi tôi nhảy vào hay không? nghiên cứu về cảm xúc con người khi chơi game nữa nhé, tôi tin bạn"
+   — build one complete base with everything; the owner draws the art and upgrades the story; research player emotion.
+2. "gameplay cũng phải có lộ trình tăng tiến rồi kĩ năng đàng hoàng nhé, sau đó nhớ là sắp xếp code và folder một cách mà tôi có thể nhảy vào xử lý mà không phải thay đổi quá nhiều trước hết là dựa theo ecs design pattern"
+   — a real progression and skill system; code and folders arranged ECS-first so the owner changes little.
+
+Plan built from these: `docs/game-base-plan.md` v1.1 (commit f96a12c).
+
+Gate OG0 answers (owner picked each option in chat, 2026-10-12):
+
+| Question | Owner's answer |
+| --- | --- |
+| Move all code and folders to the ECS tree (content/, ecs/, schema/, authoring/, presentation/, shell/) and amend CLAUDE.md "Folder ownership" to match; tag pre-restructure exists | "Đồng ý" (agree) — M1b may run; the CLAUDE.md amendments of plan §2.4 apply when M1b lands the paths |
+| Controls and rules (plan §2.3 T-1, T-3, T-8): R = call child (restart moves to the pause menu), Q locked until the T4 pencil pickup, movement lock while swinging, input buffer expiry; drop aim time-slow, Gentle Nudge, Rest Squares | "Đồng ý hết" (agree to all) |
+| Source language of the story | "Tiếng Anh, Việt sau" — English source, Vietnamese column later |
+| Cleared rooms on return (plan §2.3 T-5, reverses the 2026-07-28 Souls respawn rule) | "Giữ sạch" — cleared rooms stay cleared |
+
+Tag `pre-restructure` (f96a12c) marks the last commit before the restructure.
