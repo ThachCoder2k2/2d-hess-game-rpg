@@ -32,6 +32,12 @@ const ENEMY_SCENE_PATHS := {
 	"res://presentation/views/actors/knight_enemy.tscn": &"knight_tracker",
 	"res://presentation/views/actors/bishop_enemy.tscn": &"bishop_zoner",
 }
+## The kinds whose body reaches up into the pip row. The pips sit on the top margin line of the
+## cell, 4 px tall; a queen (26 px) and a king (28 px) stand up to or past that line, so nothing
+## above them fits inside the cell: their pips are drawn over the crown. Every other row must keep
+## its head at or below the pips. A new row (a boss) that is tall enough to reach them fails the
+## check below by name until it is added here, which is the owner's decision to take.
+const KINDS_WHOSE_PIPS_OVERLAP_THE_CROWN: Array[StringName] = [&"queen", &"king"]
 ## A fresh actor counts as a real measurement only if it drew at least these parts.
 const MINIMUM_PARTS_AT_REST := 1
 ## Seconds between the extra samples taken along every clip (besides its keys).
@@ -55,6 +61,7 @@ func _init() -> void:
 
 	_check_pictures_fit_their_boxes()
 	_check_static_scenes_show_what_the_game_draws()
+	_check_pips_against_every_head()
 	# The tree is not running while _init() is on the stack, and a sprite is only "visible in the
 	# tree" (and has a global transform) once it is: wait one frame before booting actors.
 	await wait_frames(1)
@@ -114,6 +121,36 @@ func _check_static_scenes_show_what_the_game_draws() -> void:
 		_expect(body.position == expected_position and not body.centered and body.scale == Vector2.ONE,
 			"%s: the editor draws the body where the game will (position %s, got %s)" % [scene_path.get_file(), expected_position, body.position])
 		view.free()
+
+
+## The health pips sit above a piece's head, inside the margin; where a kind is too tall for that
+## the table says so. Measured on the base scene's real pip nodes (the row's position and every pip's
+## picture size at its scale), against the head of every row of the size table.
+func _check_pips_against_every_head() -> void:
+	var view := (load(BASE_SCENE_PATH) as PackedScene).instantiate() as ActorView
+	var pip_row := view.get_node("MotionRoot/SpriteRoot/HealthPips") as Node2D
+	var band_top := INF
+	var band_bottom := -INF
+	var band_left := INF
+	var band_right := -INF
+	for child in pip_row.get_children():
+		var pip := child as Sprite2D
+		var half_size := Vector2(pip.texture.get_size()) * pip.scale / 2.0
+		var centre := pip_row.position + pip.position
+		band_top = minf(band_top, centre.y - half_size.y)
+		band_bottom = maxf(band_bottom, centre.y + half_size.y)
+		band_left = minf(band_left, centre.x - half_size.x)
+		band_right = maxf(band_right, centre.x + half_size.x)
+	view.free()
+	var half_cell := cell_size / 2.0
+	_expect(band_top >= -half_cell + margin and band_left >= -half_cell + margin and band_right <= half_cell - margin,
+		"the pip row (x %s to %s, y %s to %s) is inside the cell's margin" % [band_left, band_right, band_top, band_bottom])
+	for row in table.rows:
+		var head_top := float(row.base_offset_y - row.body_box.y)
+		var overlaps := head_top < band_bottom
+		var expected_to_overlap := KINDS_WHOSE_PIPS_OVERLAP_THE_CROWN.has(row.piece_type)
+		_expect(overlaps == expected_to_overlap,
+			"a %s's head (box top %s px from the centre) %s the pip row (down to %s px)%s" % [row.piece_type, head_top, "reaches into" if overlaps else "stays below", band_bottom, "" if overlaps == expected_to_overlap else ": decide whether its pips go over its crown (KINDS_WHOSE_PIPS_OVERLAP_THE_CROWN) or the pip row moves"])
 
 
 # --------------------------------------------------------------------------- at rest
