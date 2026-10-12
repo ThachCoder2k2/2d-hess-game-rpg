@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://h38rg0optq8b"
-path="res://.godot/imported/hero_pawn_unarmed.png-bdaea699c55eb57bf5f7812523e93159.ctex"
+path="res://.godot/imported/body.png-73969fcb425d9df24026e2cf75dc6749.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/sprites/generated/hero_pawn_unarmed.png"
-dest_files=["res://.godot/imported/hero_pawn_unarmed.png-bdaea699c55eb57bf5f7812523e93159.ctex"]
+source_file="res://content/player/body.png"
+dest_files=["res://.godot/imported/body.png-73969fcb425d9df24026e2cf75dc6749.ctex"]
 
 [params]
 

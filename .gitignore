@@ -13,10 +13,9 @@ docs/archive/vault/.obsidian/
 # hundreds of binary files in the diff. Never hand-edit anything in there.
 assets/_generated/
 
-# NOT ignored, on purpose: the PNGs sitting directly in assets/sprites/generated/
-# (hero_pawn.png, toy_sword.png, black_pawn.png, ...). Despite the folder name no
-# script draws them, so they are source art and a fresh clone needs them. They move
-# to content/<kind>/<id>/body.png in a later M1b step; this note goes with them.
+# The sprites that used to sit in assets/sprites/generated/ are source art (no
+# script draws them) and now live, tracked, in content/<kind>/<id>/body.png|icon.png
+# and assets/ui/actor_view/. Hand-drawn art never goes in an ignored folder.
 
 # NOT ignored, on purpose: assets/art/pieces/. That is hand-drawn source art.
 # Nothing regenerates it and losing it loses the work.

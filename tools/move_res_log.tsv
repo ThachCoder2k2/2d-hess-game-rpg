@@ -125,3 +125,5 @@ scenes/rooms/t4_broken_rule_yard.tscn	content/rooms/t4_broken_rule_yard/room.tsc
 scenes/rooms/b1_black_pawn_captain.tscn	content/rooms/b1_black_pawn_captain/room.tscn
 scenes/rooms/h1_chess_rug_hub.tscn	content/rooms/h1_chess_rug_hub/room.tscn
 resources/world/world_graph.tres	content/world/world.tres
+assets/sprites/generated/hero_pawn_unarmed.png	content/player/body.png
+assets/sprites/generated/hero_pawn.png	content/player/icon.png
