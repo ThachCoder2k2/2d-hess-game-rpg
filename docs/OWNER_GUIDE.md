@@ -164,12 +164,12 @@ are later work, and nothing in the tree blocks them.*
 | Chỉnh cảm giác con tốt (bước, courage, invulnerability, kiếm) | các node `MovementComponent`, `InputComponent`, `CombatComponent`, `HealthComponent` trong `presentation/views/actors/player.tscn`, và `content/skills/wooden_sword/wooden_sword.tres`, `content/skills/pencil_thrust/pencil_thrust.tres` |
 | Đổi sprite (con tốt, enemy, icon, pickup) | ghi đè `body.png` / `icon.png` / `pickup.png` trong thư mục của nó: `content/player/`, `content/enemies/<id>/`, `content/skills/<id>/`, `content/pickups/<id>/` (xem mục 4). Tới M2, mọi pawn dùng chung hình `pawn_recruit` và bishop dùng hình `knight_tracker` (chúng chưa có hình riêng) |
 | Đổi hình bàn đồ vẽ tay | `assets/map_pieces/` (hình bạn vẽ tay, được track; thay thế bản sinh tự động) |
-| Đổi hình nền của phòng T1 hoặc T2 | ghi đè `content/rooms/t1_white_kings_fall/background.png` hoặc `content/rooms/t2_fallen_sword_tile/background.png` |
+| Đổi hình nền của phòng T1 hoặc T2 | **Tạm thời:** ghi đè `content/rooms/t1_white_kings_fall/background.png` hoặc `content/rooms/t2_fallen_sword_tile/background.png`. Hai tấm nền vẽ sẵn này là đồ cũ: theo quyết định của bạn (vẽ từng thứ một, `docs/owner-decisions.md`), phòng sẽ được ghép từ từng tile và từng đồ vật riêng, nên đừng vẽ lại cả tấm — hãy vẽ theo danh sách trong `docs/assets/`. |
 | Đổi một trang của Book of House Rules | `content/rules/<id>/page.tres` (chữ nằm trong file này tới khi có hệ `.po` ở M4); danh sách trang: `content/rules/rule_book.tres` |
 | Đổi độ khó (nhân máu và sát thương toàn cục) | `content/difficulty/standard.tres` |
 | Đổi vũ khí nhặt được trên sàn | `content/pickups/<id>/<id>.tres` |
 | Đổi đồ thị thế giới (phòng nào nối phòng nào) | `content/world/world.tres` |
-| Đổi bộ tile của sàn/tường | `content/tilesets/<bộ>/tileset.tres` và `tilemap.tscn` (đừng sửa tay `tile_map_data`, dùng `tools/paint_*.gd`); atlas ở `assets/tiles/<bộ>/atlas.svg` |
+| Đổi bộ tile của sàn/tường | `content/tilesets/<bộ>/tileset.tres` và `tilemap.tscn` (đừng sửa tay `tile_map_data`, dùng `tools/paint_*.gd`); atlas ở `assets/tiles/<bộ>/atlas.svg` là đồ cũ; bạn vẽ từng tile riêng (`assets/tiles/<khu>/<tile_id>.png`), công cụ sẽ tự ghép atlas |
 | Đổi âm thanh sự kiện / âm thanh chuyển động | ghi đè `assets/sfx/<tên>.wav` (cùng tên là mọi chỗ dùng tự nâng cấp), hoặc `presentation/audio/sfx_manager.tscn` (mục `streams` trong Inspector) / track âm thanh trong clip của actor |
 | Đổi phím | `project.godot`, mục `[input]` (hoặc Project Settings → Input Map) |
 | Đổi chữ (thoại, thông báo) | còn nằm rải rác: `RoomEncounter` trong `content/rooms/<id>/room.tscn`, `RoomObjective` `.tres` (`tests/fixtures/first_encounter/objective.tres` là ví dụ), `shell/game_root.gd`, `presentation/ui/hud/hud.gd`. Hệ thống `.po` đến ở M4 |
@@ -213,7 +213,7 @@ bố cục phòng, đổi sprite, đổi art nền phòng.
 | Thêm một boss (Add a boss) | `boss.tres`, `enemy.tres`, `body.png`, the arena `room.tscn`, beats + `.po` rows, a milestone row, a `music_cues` row | 7-10 | no, if its attacks use existing kinds | available after M8b |
 | Thêm hoặc chỉnh một phase của boss (Add or retune a boss phase) | `boss.tres` (a new windup clip also edits the boss's actor scene) | 1-2 | no | available after M8b |
 | Đổi sprite (Swap a sprite) | overwrite `body.png` (+ `VisualDefinition.anchor_offset` if the frame size changes); the placeholder flag clears by hash | 1-2 | no | **available now** for `content/player/body.png` and the enemies that have a `body.png` (`pawn_recruit`, `knight_tracker`); `anchor_offset` and a `body.png` per enemy: M2 |
-| Đổi art nền của một phòng (Swap a room's art) | overwrite `background.png` | 1 | no | **available now** for T1 and T2 (`content/rooms/<id>/background.png`); the other rooms get one with M5 |
+| Đổi art của một phòng (Swap a room's art) | overwrite its single tile and prop PNGs (one file per thing, see `docs/assets/`); a tool assembles the room. The painted `background.png` of T1/T2 is a legacy placeholder, not something to redraw | 1 per thing | no | tiles and props: after the assembly tool lands; T1/T2 backgrounds: overwrite now if wanted |
 | Đổi portrait, skin UI hoặc font (Swap a portrait, UI skin or font) | overwrite the file in `content/story/characters/`, `content/ui/theme/`, `assets/fonts/` | 1 | no | available after M4 (skin UI, font), M6 (portrait) |
 | Thêm nhạc hoặc đổi bài nhạc đang phát (Add music or change which track plays) | drop the file in `assets/music/` + a row in `music_cues.tres` | 2 | no | available after M6 |
 | Thêm hoặc đổi âm thanh sự kiện (pickup, jingle, UI) (Add or swap an event sound (pickup, jingle, UI)) | drop the file + a row in `sound_bank.tres` | 2 | no | available after M6 |
