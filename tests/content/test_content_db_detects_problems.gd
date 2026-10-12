@@ -52,6 +52,8 @@ func _init() -> void:
 	_expect_problem(registry_problems, "enemies/incomplete: Enemy definition requires MovementConfig", "a definition's own validate() warning is reported with its entry")
 	_expect_problem(registry_problems, "enemies/twin_a: its id property says 'twin_b' but its folder (the id) says 'twin_a'", "the first of two entries claiming one id is reported")
 	_expect_problem(registry_problems, "enemies/twin_b: the id 'twin_b' is already claimed by twin_a", "a duplicate id is reported")
+	_expect_problem(registry_problems, "enemies/wrong_reference_class: in user://content_db_fixture/enemies/wrong_reference_class/enemy.tres the property 'default_weapon' names a resource, but it is empty", "a reference to a resource of the wrong class (a skill where a weapon belongs), which Godot drops without a word, is reported with the property")
+	_expect_no_problem_about(registry_problems, "enemies/wrong_reference_class: in res://content", "...and only the broken property, not the shared parts the enemy names rightly")
 	_expect_problem(registry_problems, "difficulty/Bad_Profile: a name is the id", "a flat kind checks the file name too")
 	_expect_problem(registry_problems, "tilesets: the folder", "a kind whose folder is missing is reported")
 	_expect_problem(registry_problems, "player: the folder", "a one-of-a-kind file whose folder is missing is reported")
@@ -108,6 +110,7 @@ func _write_fixture_tree() -> void:
 
 	# enemies: a clean control and one defect each.
 	_write(FIXTURE_ROOT.path_join("enemies/clean_pawn/enemy.tres"), _enemy_text("clean_pawn", ""))
+	_write(FIXTURE_ROOT.path_join("enemies/wrong_reference_class/enemy.tres"), _enemy_text("wrong_reference_class", "default_weapon = ExtResource(\"7\")\n").replace("\n[resource]\n", "\n[ext_resource type=\"Resource\" path=\"res://content/skills/wooden_sword/wooden_sword.tres\" id=\"7\"]\n\n[resource]\n"))
 	_write(FIXTURE_ROOT.path_join("enemies/ghost_hunter/enemy.tres"), _enemy_text("ghost_hunter", "weapon_preferences = {&\"ghost_weapon\": 1.0}\n"))
 	_write(FIXTURE_ROOT.path_join("enemies/mislabeled/enemy.tres"), _enemy_text("another_name", ""))
 	_write(FIXTURE_ROOT.path_join("enemies/Loud_Name/enemy.tres"), _enemy_text("Loud_Name", ""))

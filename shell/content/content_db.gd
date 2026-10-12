@@ -18,7 +18,9 @@ extends RefCounted
 ## resource before changing it.
 ##
 ## validate() checks every entry of every kind (it loads, it is the right class, its
-## own validate() is empty, its id property equals its folder). validate_cross_refs()
+## own validate() is empty, its id property equals its folder, and no reference in its file
+## was silently dropped: Godot leaves a property empty, with no message, when the resource
+## it names is of another class than the property takes). validate_cross_refs()
 ## checks that references between content name ids that exist (a Book page's piece, a
 ## door's target zone and entry, a weapon preference, the world graph against the room
 ## folders). Both return readable sentences, empty when all is well. Tests and tools
@@ -137,10 +139,12 @@ static func clear_cache() -> void:
 ## Problems with the entries themselves, one sentence each (empty = healthy). For every
 ## kind: the folder exists; each id is lowercase snake_case; the main file exists, loads
 ## and is the right class; the class's own validate() is empty; an `id` property equals
-## the folder name and no two entries claim the same one.
+## the folder name and no two entries claim the same one; every property the main file (or a
+## resource file it names) assigns a resource to actually holds one.
 static func validate() -> PackedStringArray:
 	_ensure_kinds()
 	var problems := PackedStringArray()
+	var checked_reference_paths: Dictionary[String, bool] = {}
 	for kind_name in _kind_names:
 		var kind: ContentKind = _kind_by_name[kind_name]
 		if not DirAccess.dir_exists_absolute(kind.directory_path(_content_root)):
@@ -151,7 +155,7 @@ static func validate() -> PackedStringArray:
 			problems.append("%s: the file %s does not exist." % [kind_name, kind.main_file_path(_content_root, kind_name)])
 		var entry_by_claimed_id: Dictionary[String, StringName] = {}
 		for id in entry_ids:
-			_validate_entry(kind, id, entry_by_claimed_id, problems)
+			_validate_entry(kind, id, entry_by_claimed_id, problems, checked_reference_paths)
 		for misspelled_id in _ids_that_break_the_naming_rule(kind):
 			problems.append("%s/%s: a name is the id, so it must be lowercase snake_case (a-z, 0-9, _), starting with a letter." % [kind_name, misspelled_id])
 	return problems
@@ -237,7 +241,7 @@ static func _ids_that_break_the_naming_rule(kind: ContentKind) -> Array[String]:
 
 
 # --------------------------------------------------------------------------- validate()
-static func _validate_entry(kind: ContentKind, id: StringName, entry_by_claimed_id: Dictionary[String, StringName], problems: PackedStringArray) -> void:
+static func _validate_entry(kind: ContentKind, id: StringName, entry_by_claimed_id: Dictionary[String, StringName], problems: PackedStringArray, checked_reference_paths: Dictionary[String, bool]) -> void:
 	var label := "%s/%s" % [kind.kind_name, id]
 	var path := kind.main_file_path(_content_root, id)
 	if not ResourceLoader.exists(path):
@@ -252,6 +256,7 @@ static func _validate_entry(kind: ContentKind, id: StringName, entry_by_claimed_
 		return
 	if resource is PackedScene and not (resource as PackedScene).can_instantiate():
 		problems.append("%s: %s is not a scene that can be instanced." % [label, path])
+	_check_dropped_references(label, resource, problems, checked_reference_paths)
 	if kind.expects_validate_method():
 		if resource.has_method(&"validate"):
 			for warning in resource.call(&"validate"):
@@ -265,6 +270,46 @@ static func _validate_entry(kind: ContentKind, id: StringName, entry_by_claimed_
 		elif entry_by_claimed_id.has(claimed_id):
 			problems.append("%s: the id '%s' is already claimed by %s." % [label, claimed_id, entry_by_claimed_id[claimed_id]])
 		entry_by_claimed_id[claimed_id] = id
+
+
+# --------------------------------------------------------------------------- dropped references
+## A property whose file line says `name = ExtResource(...)` (or SubResource) must hold something
+## once loaded. When the named resource is of another class than the property takes (a skill
+## where a weapon belongs), Godot leaves the property null and prints nothing, and an optional
+## field would then lose its value in silence. The `.tres` text is read for the names assigned a
+## resource in its `[resource]` section and each is compared with the loaded value. Resource files
+## the property names (a visual, an attack) are checked the same way, once each per validate().
+static func _check_dropped_references(label: String, resource: Resource, problems: PackedStringArray, checked_reference_paths: Dictionary[String, bool]) -> void:
+	var path := resource.resource_path
+	if not path.ends_with(".tres") or checked_reference_paths.has(path):
+		return
+	checked_reference_paths[path] = true
+	for property_name in _property_names_assigned_a_resource_in(path):
+		if not (property_name in resource):
+			continue
+		var value: Variant = resource.get(property_name)
+		if value == null:
+			problems.append("%s: in %s the property '%s' names a resource, but it is empty: the file is missing, does not load, or is not the class this property takes." % [label, path, property_name])
+		elif value is Resource:
+			_check_dropped_references(label, value as Resource, problems, checked_reference_paths)
+
+
+## The names of the properties the `[resource]` section of a .tres assigns an ExtResource or
+## SubResource (a single resource, not an array or dictionary of them).
+static func _property_names_assigned_a_resource_in(path: String) -> Array[StringName]:
+	var names: Array[StringName] = []
+	var assignment := RegEx.create_from_string("^([A-Za-z_][A-Za-z0-9_]*) = (ExtResource|SubResource)\\(")
+	var in_resource_section := false
+	for line in FileAccess.get_file_as_string(path).split("\n"):
+		if line.begins_with("["):
+			in_resource_section = line.strip_edges() == "[resource]"
+			continue
+		if not in_resource_section:
+			continue
+		var found := assignment.search(line)
+		if found != null:
+			names.append(StringName(found.get_string(1)))
+	return names
 
 
 # --------------------------------------------------------------------------- cross references
