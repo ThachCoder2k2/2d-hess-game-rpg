@@ -1,4 +1,4 @@
-extends SceneTree
+extends UnboundTest
 
 ## Architecture guard (REPORT-ONLY until M1b stamps the tree): counts [ext_resource]
 ## lines that name a file by path only. A scene or resource that references a file
@@ -19,6 +19,7 @@ const MAX_FILES_LISTED := 15
 
 
 func _init() -> void:
+	suite_title = "ARCHITECTURE NO PATH-ONLY EXT_RESOURCE TEST"
 	var resource_paths := ProjectFiles.collect_files(["tscn", "tres"])
 	var path_only_count_by_file: Dictionary = {}
 	var total_reference_count := 0
@@ -27,8 +28,8 @@ func _init() -> void:
 	for resource_path in resource_paths:
 		var file_text := ProjectFiles.read_text(resource_path)
 		if file_text.is_empty():
-			printerr("FAIL: cannot read %s" % resource_path)
-			quit(1)
+			_expect(false, "cannot read %s" % resource_path)
+			finish()
 			return
 		var lines := file_text.split("\n")
 		if not lines[0].contains(" uid=\"uid://"):
@@ -41,12 +42,7 @@ func _init() -> void:
 				path_only_total += 1
 				path_only_count_by_file[resource_path] = int(path_only_count_by_file.get(resource_path, 0)) + 1
 
-	var failures := 0
-	if resource_paths.size() < MINIMUM_FILES_SCANNED:
-		printerr("FAIL: only %d scene/resource files found (expected at least %d); the walk is broken" % [resource_paths.size(), MINIMUM_FILES_SCANNED])
-		failures += 1
-	else:
-		print("PASS: the scan read %d scene/resource files (at least %d) and %d ext_resource lines" % [resource_paths.size(), MINIMUM_FILES_SCANNED, total_reference_count])
+	_expect(resource_paths.size() >= MINIMUM_FILES_SCANNED, "the scan read %d scene/resource files (at least %d) and %d ext_resource lines" % [resource_paths.size(), MINIMUM_FILES_SCANNED, total_reference_count])
 
 	print("REPORT path-only ext_resource lines: %d of %d in %d of %d scene/resource files" % [path_only_total, total_reference_count, path_only_count_by_file.size(), resource_paths.size()])
 	print("REPORT scene/resource headers without uid: %d of %d" % [headers_without_uid, resource_paths.size()])
@@ -60,10 +56,5 @@ func _init() -> void:
 	print("REPORT fix: run tools/stamp_uids.gd (M1b stamps; M1a only ships the tool). Mode: %s" % ("ENFORCING" if ENFORCING else "report-only"))
 
 	if ENFORCING:
-		if path_only_total == 0:
-			print("PASS: no ext_resource line names a file by path only")
-		else:
-			printerr("FAIL: %d path-only ext_resource line(s) remain" % path_only_total)
-			failures += 1
-	print("ARCHITECTURE NO PATH-ONLY EXT_RESOURCE TEST: %s" % ("PASS" if failures == 0 else "FAIL"))
-	quit(1 if failures > 0 else 0)
+		_expect(path_only_total == 0, "no ext_resource line names a file by path only (%d remain)" % path_only_total)
+	finish()

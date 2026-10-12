@@ -1,4 +1,4 @@
-extends SceneTree
+extends UnboundTest
 
 ## Architecture guard (REPORT-ONLY in M1a): every tracked .gd must have a tracked
 ## .gd.uid, and every tracked imported asset (png, wav, svg, ...) must have a
@@ -23,15 +23,15 @@ const MAX_LISTED := 25
 
 
 func _init() -> void:
+	suite_title = "ARCHITECTURE SIDECARS TRACKED TEST"
 	var tracked_result := ProjectFiles.git_tracked_files()
 	if not String(tracked_result["error"]).is_empty():
 		# Without git there is nothing to compare the disk against, so the guard has
 		# checked nothing. Say so as a failure (like every other "the scan saw zero
 		# files" case below) instead of printing PASS: a skipped gate that claims PASS
 		# is rejected by the runner anyway ("no verdict line"), with a confusing reason.
-		printerr("FAIL: sidecars were not checked: %s" % tracked_result["error"])
-		print("ARCHITECTURE SIDECARS TRACKED TEST: FAIL (1)")
-		quit(1)
+		_expect(false, "sidecars were not checked: %s" % tracked_result["error"])
+		finish()
 		return
 	var tracked_files: Array[String] = []
 	tracked_files.assign(tracked_result["files"])
@@ -39,12 +39,7 @@ func _init() -> void:
 	for tracked_file in tracked_files:
 		tracked_set[tracked_file] = true
 
-	var failures := 0
-	if tracked_files.size() < MINIMUM_TRACKED_FILES:
-		printerr("FAIL: git lists only %d tracked files (expected at least %d)" % [tracked_files.size(), MINIMUM_TRACKED_FILES])
-		failures += 1
-	else:
-		print("PASS: git lists %d tracked files (at least %d, so the walk is not empty)" % [tracked_files.size(), MINIMUM_TRACKED_FILES])
+	_expect(tracked_files.size() >= MINIMUM_TRACKED_FILES, "git lists %d tracked files (at least %d, so the walk is not empty)" % [tracked_files.size(), MINIMUM_TRACKED_FILES])
 
 	var tracked_gd_count := 0
 	var tracked_imported_count := 0
@@ -74,19 +69,10 @@ func _init() -> void:
 	_list("  orphan sidecar", orphan_sidecars)
 	print("REPORT fix: run the import pass (godot --headless --editor --quit) and commit the new sidecars. Mode: %s" % ("ENFORCING" if ENFORCING else "report-only"))
 
-	if tracked_gd_count > 0 and tracked_imported_count > 0:
-		print("PASS: the scan saw %d tracked .gd files and %d tracked imported assets" % [tracked_gd_count, tracked_imported_count])
-	else:
-		printerr("FAIL: the scan saw %d tracked .gd files and %d tracked imported assets; it checked nothing" % [tracked_gd_count, tracked_imported_count])
-		failures += 1
+	_expect(tracked_gd_count > 0 and tracked_imported_count > 0, "the scan saw %d tracked .gd files and %d tracked imported assets" % [tracked_gd_count, tracked_imported_count])
 	if ENFORCING:
-		if gd_missing_uid.is_empty() and imported_missing_import.is_empty():
-			print("PASS: every tracked .gd and imported asset has a tracked sidecar")
-		else:
-			printerr("FAIL: %d .gd and %d asset(s) lack a tracked sidecar" % [gd_missing_uid.size(), imported_missing_import.size()])
-			failures += 1
-	print("ARCHITECTURE SIDECARS TRACKED TEST: %s" % ("PASS" if failures == 0 else "FAIL (%d)" % failures))
-	quit(1 if failures > 0 else 0)
+		_expect(gd_missing_uid.is_empty() and imported_missing_import.is_empty(), "every tracked .gd and imported asset has a tracked sidecar (%d .gd and %d asset(s) lack one)" % [gd_missing_uid.size(), imported_missing_import.size()])
+	finish()
 
 
 func _list(label: String, entries: Array[String]) -> void:

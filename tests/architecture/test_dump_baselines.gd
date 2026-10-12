@@ -1,4 +1,4 @@
-extends SceneTree
+extends UnboundTest
 
 ## Architecture guard (ENFORCING): the deterministic world dump of every baseline
 ## room must equal tests/baselines/dump_<room>.txt byte for byte. The dump covers
@@ -21,18 +21,8 @@ const WorldDumper := preload("res://tools/world_dumper.gd")
 const MINIMUM_BASELINE_LINES := 30
 const MAX_DIFF_LINES_PRINTED := 12
 
-var failures := 0
-
-
-func _expect(condition: bool, label: String) -> void:
-	if condition:
-		print("PASS: %s" % label)
-	else:
-		failures += 1
-		printerr("FAIL: %s" % label)
-
-
 func _init() -> void:
+	suite_title = "DUMP BASELINES TEST"
 	var dumper := WorldDumper.new()
 	_expect(WorldDumper.BASELINE_ROOM_IDS.size() == 6, "six baseline rooms are listed (t1-t4, b1, h1)")
 	for room_id in WorldDumper.BASELINE_ROOM_IDS:
@@ -53,8 +43,7 @@ func _init() -> void:
 		var second_text := dumper.dump_room(self, room_id)
 		_expect(second_text == current_text, "dump of '%s' is deterministic (two runs in one process are identical)" % room_id)
 
-	print("DUMP BASELINES TEST: %s" % ("PASS" if failures == 0 else "FAIL"))
-	quit(1 if failures > 0 else 0)
+	finish()
 
 
 ## Prints the first differing lines as "line N: baseline | current", enough to see what moved.

@@ -1,4 +1,4 @@
-extends SceneTree
+extends UnboundTest
 
 ## Architecture guard (REPORT-ONLY in M1a): derives the real class_name dependency
 ## graph from the code and prints every edge that crosses a layer of
@@ -80,6 +80,7 @@ var load_path_regex := RegEx.new()
 
 
 func _init() -> void:
+	suite_title = "ARCHITECTURE DEPENDENCY EDGES TEST"
 	class_name_regex.compile("(?m)^class_name\\s+([A-Za-z_][A-Za-z0-9_]*)")
 	identifier_regex.compile("[A-Za-z_][A-Za-z0-9_]*")
 	triple_quoted_regex.compile("\"\"\"[\\s\\S]*?\"\"\"")
@@ -96,8 +97,8 @@ func _init() -> void:
 	for script_path in source_paths:
 		var script_text := ProjectFiles.read_text(script_path)
 		if script_text.is_empty():
-			printerr("FAIL: cannot read %s" % script_path)
-			quit(1)
+			_expect(false, "cannot read %s" % script_path)
+			finish()
 			return
 		for class_match in class_name_regex.search_all(script_text):
 			symbol_file_by_name[class_match.get_string(1)] = script_path
@@ -111,12 +112,9 @@ func _init() -> void:
 		code_by_path[script_path] = comment_regex.sub(without_strings, "", true)
 	_add_autoload_symbols()
 
-	var failures := 0
-	if source_paths.size() < MINIMUM_SOURCE_FILES or symbol_file_by_name.size() < MINIMUM_SYMBOLS:
-		printerr("FAIL: found %d source files and %d class_name symbols (expected at least %d and %d); the walk is broken" % [source_paths.size(), symbol_file_by_name.size(), MINIMUM_SOURCE_FILES, MINIMUM_SYMBOLS])
-		failures += 1
-	else:
-		print("PASS: the walk found %d source files and %d class_name/autoload symbols (at least %d and %d)" % [source_paths.size(), symbol_file_by_name.size(), MINIMUM_SOURCE_FILES, MINIMUM_SYMBOLS])
+	_expect(
+		source_paths.size() >= MINIMUM_SOURCE_FILES and symbol_file_by_name.size() >= MINIMUM_SYMBOLS,
+		"the walk found %d source files and %d class_name/autoload symbols (at least %d and %d)" % [source_paths.size(), symbol_file_by_name.size(), MINIMUM_SOURCE_FILES, MINIMUM_SYMBOLS])
 
 	var unmapped_files: Array[String] = []
 	for script_path in source_paths:
@@ -126,13 +124,8 @@ func _init() -> void:
 
 	_print_report(source_paths.size(), unmapped_files)
 	if ENFORCING:
-		if violation_lines.is_empty():
-			print("PASS: every cross-layer edge is allowed by the 13.1 table")
-		else:
-			printerr("FAIL: %d edge(s) are not allowed by the 13.1 table" % violation_lines.size())
-			failures += 1
-	print("ARCHITECTURE DEPENDENCY EDGES TEST: %s" % ("PASS" if failures == 0 else "FAIL"))
-	quit(1 if failures > 0 else 0)
+		_expect(violation_lines.is_empty(), "every cross-layer edge is allowed by the 13.1 table (%d are not)" % violation_lines.size())
+	finish()
 
 
 ## project.godot [autoload] entries: the autoload name is a symbol too (WorldState, SfxManager).
