@@ -1,0 +1,353 @@
+{
+ "summary": "Emotion in games comes mostly from mechanics and pacing, with story giving it meaning. Lazzaro's paper title says this outright ('emotion without story'). Most of the sources below point the same way for The Unbound Pawn. (1) Read-the-board danger: telegraph everything and make every death attributable. Into the Breach, NecroDancer and Miyazaki all converge on this, and Juul explains why a failure feels personal. Hitchcock's bomb-under-the-table gives the emotion: suspense is built by telling the player what is coming. (2) Autonomy, competence and relatedness (SDT): the pawn's rule-breaking is autonomy, telegraph-reading is competence, and the child and rescued pieces are relatedness. The 2006 SDT paper tested relatedness mostly in multiplayer, so applying it to a companion is an inference. (3) Memory is shaped by peaks and endings (Gutwin CHI 2016: strong for recalled challenge, mixed for fun). Boss kills must be player-executed, every boss exit must lead to a relief room, and saves should land on successes. (4) Sad or moving beats are valued when built from attachment, loss and reduced control, and followed by reflection (Bopp CHI 2016). The Queen disabling the child's help and the King shutting the box must therefore be earned by prior reliance (Brothers). Juul argues games create negative feelings rather than purge them, so catharsis must be engineered as earned release. (5) Awe needs vastness plus low attentional demand (Possler), so scale reveals go in the hub and at room entrances, never mid-fight. The destination is visible from the start (Journey). Nostalgia is served by generic, tactile toys, and the owner's hand-drawn art is a strength there.\n\nRepo gaps that undermine emotion today, from docs/where-we-are.md: nothing teaches Shift-turn, Q or strike (line 176). There is no title screen, pause or settings, and the sim keeps running with the Book open (lines 96, 172). The pickup glow is red, which collides with the red-means-danger rule (line 94). There is no hit-stop or particles (line 94). Enemies never enter the attack animation state (line 93). The T2 child whisper contradicts the approved flow map, where the child first notices the pawn after B1 (line 97 and docs/production/act-1-opening-to-first-boss-flow-map.md:561-571). Fixing these comes before any story polish.\n\nEvidence quality. Directly read: the MDA paper, Chen's CACM piece, the SDT/PENS paper, Gutwin's peak-end paper, the Swink chapter, Pathos in Play, Bopp's abstract, and the Wikipedia, Game Developer, Game Informer, Nintendo, Vice, Apple and NME pages cited. Known from search summaries only, because the page was paywalled or returned 403: Possler's awe chapter, Wulf's nostalgia study (abstract partial), Oliver 2016, Klimmt 2009, the ACM peak-end study on TLOU2 and God of War, Kotaku on Brothers, the Plucky Squire interview, and the Journey GDC recap. Boss-phase design advice comes from blogs and forums, not research. Hit-stop durations differ by source (about 40-80 ms versus about 0.2 s) and need playtesting. Telegraph minimums and rest-beat lengths in the rules are my starting values, not sourced constants. No repo file was edited; PDF-to-text scratch files are in /tmp/emo_research.",
+ "frameworks": [
+  {
+   "name": "MDA: Mechanics, Dynamics, Aesthetics and the 8 kinds of fun",
+   "core_idea": "Aesthetics means the emotional responses a game aims to evoke. The paper lists eight: sensation, fantasy, narrative, challenge, fellowship, discovery, expression, submission. The designer works from mechanics up to dynamics up to aesthetics, while the player experiences it in reverse. The paper says dramatic tension comes from dynamics that produce rising tension, then release, then denouement. It also says competitive games lose investment when the player cannot see a way to win.",
+   "source": "[primary, read in full] https://cdn.aaai.org/Workshops/2004/WS-04-04/WS04-04-001.pdf",
+   "apply_here": "Write the target aesthetics per act before designing rooms. Rough mapping: Fantasy (child's toy war) and Narrative are constant; Challenge is bosses and telegraphs; Sensation is step/strike juice; Discovery is hub locks and the Book of House Rules; Expression is the owner's hand-drawn art and rule-writing; Fellowship is the child plus rescued pieces; Submission is the relaxed hub. Every mechanic in docs/design must name the aesthetic it serves, which echoes the GDD one-sentence production rule at docs/design/gdd.md:638-640."
+  },
+  {
+   "name": "Flow and the challenge/skill channel",
+   "core_idea": "Chen summarises Csikszentmihalyi's eight flow components: a challenge needing skill, merged action and awareness, clear goals, immediate feedback, concentration, sense of control, loss of self-consciousness, altered time. Too much challenge gives anxiety, too little gives boredom, and a temporary lull is tolerated if more is promised. Different players have different flow zones. Choices should be embedded in the core activity (his surfing example) rather than added as menus. Flow duration is the key quality metric.",
+   "source": "[primary, read in full] https://www.jenovachen.com/flowingames/p31-chen.pdf ; thesis on player-chosen difficulty: https://www.jenovachen.com/flowingames/Flow_in_games_final.pdf [search summary only]",
+   "apply_here": "The core loop at docs/design/full-gameplay-design-v2.md:31-43 (a board-state problem every 30-90 s) is the flow engine. Choices (stand, bait, turn, spend Believe) must live inside the grid fight, not in menus. Keep modal interruptions out of combat (the Book must pause the sim; docs/where-we-are.md:96). Offer player-chosen assist options (GDD accessibility, docs/design/gdd.md:524-533) rather than silent difficulty changes."
+  },
+  {
+   "name": "Self-Determination Theory in games (autonomy, competence, relatedness; PENS)",
+   "core_idea": "Games pull players by satisfying three needs. Autonomy comes from choice over strategies, non-controlling guidance and rewards used as information, not control. Competence comes from optimal challenge, new skills, positive feedback and intuitive controls (the controls are the game's 'price of admission'). Relatedness comes from connection with others. In the 2006 studies, autonomy and competence predicted enjoyment, presence and well-being. The authors say they expect relatedness to matter mainly in multiplayer and were only 'intrigued' by computer-generated characters.",
+   "source": "[primary, read in full] https://selfdeterminationtheory.org/SDT/documents/2006_RyanRigbyPrzybylski_MandE.pdf",
+   "apply_here": "Autonomy: 'rule-breaking is heroism' (docs/design/gdd.md:33-35) means rooms need at least 2 viable solutions. Competence: telegraphs plus a snappy 0.18 s step (docs/design/gdd.md:94) and informational rewards (Book entries). Relatedness for a single-player game is an extension of SDT, not a tested result: the child and rescued pieces are the relatedness channel, so they must be interactive, not exposition."
+  },
+  {
+   "name": "Lazzaro's Four Keys to Fun",
+   "core_idea": "Hard Fun produces fiero (personal triumph over adversity); Easy Fun produces curiosity; Serious Fun produces relaxation and excitement from changing the player and world; People Fun produces amusement. Players alternate between keys within a session, and best-selling games offer at least three of the four. The emotions come from play itself, not from story or audio.",
+   "source": "[primary page, fetched] https://www.nicolelazzaro.com/the4-keys-to-fun/ ; https://www.roadtovr.com/nicole-lazzaro-four-keys-fun-virtual-reality/ [secondary, fetched]",
+   "apply_here": "Each act needs at least 3 keys. Hard = boss and telegraph reading. Easy = bedroom props, hub locks, Book entries. Serious = freedom as meaning (ending, Rule Step as choice). People = the child and rescued pieces, which stand in for the missing multiplayer. Since the owner wants a story, note that the story rides on Serious Fun, not instead of Hard Fun."
+  },
+  {
+   "name": "Interest curve and tension/release (Schell)",
+   "core_idea": "An experience is a series of moments. A good curve has an early hook, interest that rises with rests between peaks, and a finale that is the most interesting moment. Curves are fractal: a level or fight has its own mini curve. The Lens of Flow describes an ideal cycle of tension and release. Interest comes from inherent interest (risk, novelty, drama), poetry of presentation, and projection (how easily the player imagines themselves in it). The Lens of Emotion asks which emotions you want, which you get, and why they differ.",
+   "source": "[secondary notes of the book, fetched] https://notesbylex.com/the-art-of-game-design-a-book-of-lenses-2nd-edition-by-jesse-schell ; also MDA's tension-release-denouement https://cdn.aaai.org/Workshops/2004/WS-04-04/WS04-04-001.pdf",
+   "apply_here": "Draw three curves: game, act (Act 0 to Ending, docs/design/nar1-story-outline-spec.md:21-50), and room (Rest, Teach, Test, Twist, Boss, Shortcut: docs/design/full-gameplay-design-v2.md:627-650). Black King must be the single highest peak. Keep the pawn silent and customisable by the player's imagination (projection)."
+  },
+  {
+   "name": "Peak-end rule applied to games",
+   "core_idea": "Retrospective judgments are weighted toward the most intense moment and the final moment (Kahneman's original studies are cited by Gutwin). In three game experiments with identical objective content, sequences ending harder were remembered as more challenging; fun, interest and replay preference moved in one game, did not in another, and never went against the hypothesis. Authors caution that generalisation to games is not yet reliable. A separate study of TLOU2 and God of War reaction posts argues games need both a peak and an ending.",
+   "source": "[primary, read in full] https://www.benlafreniere.ca/assets/papers/p5608-gutwin.pdf ; [search summary only, page 403] https://dl.acm.org/doi/fullHtml/10.1145/3582437.3587195",
+   "apply_here": "Treat it as a cheap heuristic, not a law. Make each boss end in a clean player-executed win, make the pre-boss room easier than the boss, put a relief room after every boss, and save on successes. The ending image must be the strongest memory of the whole game."
+  },
+  {
+   "name": "The Art of Failure (Juul) and the fairness consensus",
+   "core_idea": "Juul's paradox: players avoid failure yet choose games that guarantee it. Games differ from tragic fiction because the player feels personally lacking, and the escape from that feeling by improving is a core pleasure. He rejects catharsis as the explanation: games create negative feelings, they do not purge them. A reviewer notes that removing failure entirely would make completion hollow, and that too much pain makes players quit. Designers converge on fairness: Miyazaki wants players to see why they died and apply the lesson next try; Ma wanted every Into the Breach loss to feel like the player's own doing; Clark wanted NecroDancer deaths to trace to the player's skill or knowledge.",
+   "source": "[primary blurb, fetched] https://www.penguinrandomhouse.com/books/656618/the-art-of-failure-by-jesper-juul/ ; [review, fetched] https://gamescriticism.org/2023/07/24/why-failing-in-games-is-a-positive-aspect-of-play-a-review-of-jesper-juuls-the-art-of-failure/ ; https://gameinformer.com/interview/2024/06/24/from-softwares-hidetaka-miyazaki-discusses-his-approach-to-difficulty ; https://www.gamedeveloper.com/game-platforms/road-to-the-igf-subset-games-i-into-the-breach-i- ; https://www.gamedeveloper.com/audio/game-design-deep-dive-finding-the-beat-in-i-crypt-of-the-necrodancer-i-",
+   "apply_here": "Souls-like 'earned triumph' in this repo (docs/soulslike-world-plan.md:73-82) needs an explicit fairness contract: every damage cell pre-telegraphed, red reserved for danger, a death-cause freeze frame, a fast retry. The GDD's 80%-hits-understood target (docs/design/gdd.md:576-583) is the right metric. Never treat 'harder' as the goal; Miyazaki frames difficulty as a means to accomplishment."
+  },
+  {
+   "name": "Suspense versus surprise (Hitchcock)",
+   "core_idea": "Showing the audience the hidden bomb and the clock turns an ordinary scene into sustained suspense, whereas a surprise explosion gives only a moment of shock. Whenever possible, give the audience the information.",
+   "source": "[secondary, fetched] https://nevalalee.wordpress.com/2011/10/26/the-bomb-under-the-table/ ; context via search summary https://nofilmschool.com/alfred-hitchcock-and-francois-truffaut-explain-surprise-vs-suspense",
+   "apply_here": "A telegraph is the bomb under the table: the Knight's L-landing marker (0.9 s in docs/soulslike-world-plan.md:159), the Rook's declared lane, the Bishop's diagonal. The player should know the threat and its timing, then feel the squeeze. Reserve true surprise for single authored moments (first child intervention, phase-2 twist), not for damage."
+  },
+  {
+   "name": "Awe, vastness and scale",
+   "core_idea": "Awe arises from perceived vastness plus a need for accommodation (Keltner and Haidt). Possler, Klimmt and Raney model awe in games and note that gameplay cognitive demands may act as a barrier to awe because they consume attention. A topic analysis of player awe reports found scenery, first-time immersion, narrative climax, character resonance and vastness as themes (via search summary).",
+   "source": "[search summary only; chapter paywalled] https://www.researchgate.net/publication/327200306_Gaming_is_Awesome_A_Theoretical_Model_on_Cognitive_Demands_and_the_Elicitation_of_Awe_During_Video_Game_Play ; Nintendo on Pikmin's top-down tiny-scale view [fetched] https://www.nintendo.com/en-ca/whatsnew/ask-the-developer-vol-10-pikmin-4-part-1/",
+   "apply_here": "The pawn is a 1.5-inch piece in a bedroom (pawn-scale map exists but is unused: docs/where-we-are.md:114). Put scale reveals (bed edge as cliff, window moonlight, the child's hand shadow on the rug) at hub and room entrances with zero live enemies, because awe competes with combat for attention. Do it with composition and parallax, not non-integer zoom (docs/design/gdd.md:144)."
+  },
+  {
+   "name": "Nostalgia and childhood imagination",
+   "core_idea": "Wulf, Bowman, Velez and Breuer found nostalgia from remembered games was driven by memories and by satisfied competence and relatedness needs within the memory, and was associated with present feelings of connectedness. The abstract I could access was partial. The Plucky Squire is a design example of a storybook world intersecting a physical desk with toys and mugs (via search summary).",
+   "source": "[partial abstract via search summary] https://www.researchgate.net/publication/328087196_Once_Upon_a_Game_Exploring_Video_Game_Nostalgia_and_Its_Impact_on_Well-Being ; https://www.unrealengine.com/en-US/developer-interviews/the-plucky-squire-blends-2d-and-3d-visuals-in-aesthetically-pleasing-and-mechanically-interesting-ways [search summary only]",
+   "apply_here": "Use universal childhood objects (wooden blocks, crayons, toy tracks, rug) and material-true sounds (docs/design/gdd.md:503-510) so players project their own bedroom. Nostalgia is strengthened when memories contain mastery and companionship, so the child-pawn relationship carries it. The owner's hand-drawn art is an asset for this feeling, not a placeholder problem."
+  },
+  {
+   "name": "Identification, empathy and attachment",
+   "core_idea": "Klimmt, Hefner and Vorderer define player-avatar identification as a temporary merging of self-concept with the avatar, fostered by interactivity, and distinct from empathy toward an external entity. Bopp et al. found players value sadness from losing in-game progress, bonding with characters and limited control. Ico builds care through a vulnerable companion you hold by the hand with no HUD; Pikmin builds attachment to many tiny units whose deaths are audible.",
+   "source": "[search summary] https://www.semanticscholar.org/paper/The-Video-Game-Experience-as-%E2%80%9CTrue%E2%80%9D-Identification:-Klimmt-Hefner/4ac4615e37c88d70304f495100d9ea309b03c3d2 ; [fetched] https://research.aalto.fi/en/publications/negative-emotion-positive-experience-emotionally-moving-moments-i/ ; https://en.wikipedia.org/wiki/Ico ; https://www.nintendo.com/en-ca/whatsnew/ask-the-developer-vol-10-pikmin-4-part-1/",
+   "apply_here": "Two separate channels: identification with the pawn (give it agency, keep it silent) and empathy toward others (the child, rescued pieces, exhausted black pawns: docs/design/gdd.md:176). Attachment must come from an interaction that costs the player something (escort, hold, position), not from text."
+  },
+  {
+   "name": "Moving, bittersweet and meaningful experiences (eudaimonic appreciation)",
+   "core_idea": "From 121 player accounts, most players valued negative feelings like sadness in games; triggers included loss of progress, bonding with characters, limited control and personal memories, and the experiences prompted reflection. Oliver et al. (N=512) found meaningful games produced higher appreciation than fun-recalled games (abstract via search summary). Pathos in Play identifies a technique of removing the player's ability to act after presenting a challenge, set against the usual power fantasy.",
+   "source": "[fetched] https://research.aalto.fi/en/publications/negative-emotion-positive-experience-emotionally-moving-moments-i/ ; https://arxiv.org/abs/1909.06799 (text read from PDF) ; [search summary] https://www.semanticscholar.org/paper/Video-Games-as-Meaningful-Entertainment-Experiences-Oliver-Bowman/a2b180c889c3d88defa94fa0123460424515128d",
+   "apply_here": "The story beats that matter (dead King in T1, Queen disabling child help, King shutting the box, ending) are exactly these triggers: loss, attachment, reduced control, then reflection. Tone constraint from the GDD: no gore, no mockery of grief (docs/design/gdd.md:447-449)."
+  },
+  {
+   "name": "Game feel and juice as emotion",
+   "core_idea": "Swink defines game feel as real-time control of virtual objects in a simulated space with interactions emphasised by polish; polish alters how objects feel without changing the simulation, and for players simulation and polish are indistinguishable. Jonasson and Purho show a dull Breakout clone made alive by tweens, squash, particles, sound; Nijman (Vlambeer) shows hit pause, camera kick and shake. A 2024 CHI PLAY paper argues game feel research focuses on power and control, and wider emotions may require deliberately breaking good game feel (for example hard-to-control characters).",
+   "source": "[chapter text read] http://mycours.es/gamedesign2014/files/2014/10/Game-Feel-Steve-Swink-chapter-1.pdf ; https://www.gdcvault.com/play/1016487/juice-it-or-lose ; https://www.youtube.com/watch?v=AJdEqssNZ-U [search summaries] ; https://dl.acm.org/doi/10.1145/3665463.3678781 [abstract via search summary]",
+   "apply_here": "Two-stage plan. Stage A: make strike, step and enemy defeat feel great (no hit-stop or particles today: docs/where-we-are.md:94). Stage B: invert feel on purpose in the King encounter, where directions are withdrawn and restored (docs/design/gdd.md:366-373), after the feel has been learned. Juice should follow a hierarchy so peaks stay special."
+  },
+  {
+   "name": "Onboarding and the first five minutes",
+   "core_idea": "World 1-1 teaches by placement: a slow first enemy, harmless early bumps, coins that reward trying, and some pits with floors so failure is cheap (Miyamoto statements as reported). Nintendo's four-step structure (introduce, develop, twist, resolve; tied to kishotenketsu) introduces a mechanic safely before danger. Apple advises teaching one step at a time, giving an active role, and getting players into gameplay quickly. The SDT paper treats intuitive controls as the price of admission.",
+   "source": "[fetched] https://en.wikipedia.org/wiki/World_1-1 ; https://mcvuk.com/business-news/publishing/video-nintendos-level-design-secrets-in-four-steps/ ; https://developer.apple.com/app-store/onboarding-for-games/ ; https://selfdeterminationtheory.org/SDT/documents/2006_RyanRigbyPrzybylski_MandE.pdf",
+   "apply_here": "Act 0 plus T1-T3 already follow safe, then single-threat, then twist (docs/production/act-1-opening-to-first-boss-flow-map.md:527-536). Missing today: nothing teaches Shift-turn, Q or strike (docs/where-we-are.md:176), and there is no title, pause or settings (line 172). Prompts must follow docs/design/ui2-tutorial-prompt-style-spec.md (one idea, safe moments, fade)."
+  },
+  {
+   "name": "Telegraphed tension in grid and chess-like games",
+   "core_idea": "Into the Breach makes enemy intent visible so each battle is a puzzle and every loss feels like the player's doing. Hoplite uses a bomb that explodes the next turn and limited safe squares, so each step both avoids damage and sets up the next. NecroDancer keeps enemy patterns predictable, widened the timing window to a full beat because accuracy falls under stress, and made everything move on the beat. Pawnbarian highlights tiles that would hurt you, so chess knowledge is not required. Shotgun King lets a lone king choose to attack or move, after which all white pieces act together.",
+   "source": "[fetched] https://www.gamedeveloper.com/game-platforms/road-to-the-igf-subset-games-i-into-the-breach-i- ; https://www.pentadact.com/2014-03-29-the-randomised-tactical-elegance-of-hoplite/ ; https://www.gamedeveloper.com/audio/game-design-deep-dive-finding-the-beat-in-i-crypt-of-the-necrodancer-i- ; https://www.gamingonlinux.com/2020/05/pawnbarian-turns-chess-into-a-card-based-roguelike/ ; https://en.wikipedia.org/wiki/Shotgun_King:_The_Final_Checkmate",
+   "apply_here": "The pawn is the Shotgun King inversion: a lone weak piece versus armies obeying chess rules, in real time. Keep simultaneous threat shapes few (docs/design/gdd.md:609), show threatened cells with pattern as well as colour, and make input windows more forgiving under stress, never less."
+  },
+  {
+   "name": "Death as narrative (Hades) and non-judgmental assist (Celeste)",
+   "core_idea": "Kasavin describes making death part of the story with characters who remember and comment on prior attempts, and building systems that soften difficulty walls for players engaged in the story. Celeste's Assist Mode lets players change rules while the default stays the intended challenge; it was renamed from 'Cheat Mode' because that label felt judgmental, and Thorson wants players to move between difficulties without feeling they are playing wrong.",
+   "source": "[fetched] https://www.gamedeveloper.com/design/roguelikes-and-narrative-design-with-i-hades-i-creative-director-greg-kasavin ; https://www.vice.com/en/article/celeste-difficulty-assist-mode/ ; [search summary] https://www.inlander.com/archive/hades-writer-greg-kasavin-on-how-he-made-video-game-deaths-drive-a-feel-good/article_f508bf3c-7c29-5586-80ed-1cd615017dc1.html",
+   "apply_here": "In this game death is 'the child resets the board' (docs/soulslike-world-plan.md:94). Use it: the child and the pieces react to retries, and each failure unlocks Book of House Rules knowledge. Accessibility options (docs/design/gdd.md:524-533) get neutral names."
+  },
+  {
+   "name": "Environmental storytelling",
+   "core_idea": "Staging a space so players infer what happened there, rather than being told, makes them active interpreters. Attendee notes describe cause-and-effect vignettes, reference points and contrast as techniques (via search summary of the talk).",
+   "source": "[definition, fetched] https://www.worch.com/2010/03/11/gdc-2010/ ; techniques via search summary https://alexx-kay.livejournal.com/284287.html",
+   "apply_here": "The bedroom is the story delivery system: scattered pieces after the child's war, crayon scratches before the child speaks (docs/production/act-1-opening-to-first-boss-flow-map.md:561-571), a hand-drawn rescue banner. Every story beat should have a prop version so text is optional and the owner can redraw it."
+  },
+  {
+   "name": "Controls-as-emotion and earned loss (Brothers, Journey)",
+   "core_idea": "In Brothers each brother is mapped to one stick and trigger, so the ending's loss changes how your hands work (Kotaku, via search summary, describes the final swim depending on the formerly 'other brother' trigger; Wikipedia confirms the control scheme and plot but not the control change; spoiler). Journey mapped its emotional range up front, scored the game as one continuous arc, and made the finale destination visible from the opening.",
+   "source": "[fetched] https://en.wikipedia.org/wiki/Brothers:_A_Tale_of_Two_Sons ; https://www.nme.com/features/gaming-features/journey-anniversary-austin-wintory-traveler-soundtrack-3181421 ; [search summary only] https://kotaku.com/brothers-tale-of-two-sons-remake-ending-older-younger-1851302128 ; https://www.destructoid.com/journey-inspired-by-world-of-warcraft-loneliness/",
+   "apply_here": "The King closing the chess box and the pawn losing directions one by one (docs/design/gdd.md:366-373) is a Brothers-style move: only works if the player relied on those abilities first. Show the Black Castle silhouette from the hub early, as Journey shows its mountain."
+  }
+ ],
+ "emotions": [
+  {
+   "emotion": "Grief and loneliness (opening)",
+   "what_triggers_it": "Loss made visible without explanation, followed by being alone with limited agency. Players report valuing sadness that arises from loss and from reduced control, and it often prompts reflection.",
+   "mechanic_or_moment_in_this_game": "T1 White King's Fall: the dead King and scattered pieces are on the first screen, no enemies, no text, only room tone. The only action is a step. The route to the exit passes the King. See docs/production/act-1-opening-to-first-boss-flow-map.md:260-292 and docs/design/full-gameplay-design-v2.md:142-203. Keep input response normal (PENS says intuitive controls are the price of admission) and express weight through animation, sound and light instead.",
+   "source": "https://research.aalto.fi/en/publications/negative-emotion-positive-experience-emotionally-moving-moments-i/ ; https://arxiv.org/abs/1909.06799 ; https://selfdeterminationtheory.org/SDT/documents/2006_RyanRigbyPrzybylski_MandE.pdf"
+  },
+  {
+   "emotion": "Suspense and dread",
+   "what_triggers_it": "The player knows the threat and its timing but cannot yet fully answer it. Information, not surprise, produces the sustained feeling.",
+   "mechanic_or_moment_in_this_game": "Cell-aligned telegraphs with a commit delay: pawn diagonals, Knight L-landing marker (0.9 s, docs/soulslike-world-plan.md:159), Rook declared lane, Black Line arena seal, three Courage points (docs/design/gdd.md:129-136).",
+   "source": "https://nevalalee.wordpress.com/2011/10/26/the-bomb-under-the-table/ ; https://www.pentadact.com/2014-03-29-the-randomised-tactical-elegance-of-hoplite/ ; https://www.gamedeveloper.com/game-platforms/road-to-the-igf-subset-games-i-into-the-breach-i-"
+  },
+  {
+   "emotion": "Competence and fiero",
+   "what_triggers_it": "Overcoming a real risk of failure and attributing the win to own skill. Lazzaro: Hard Fun yields fiero; SDT: optimal challenge plus positive feedback builds competence; Miyazaki: difficulty serves a sense of accomplishment.",
+   "mechanic_or_moment_in_this_game": "Reading an L-shaped marker, stepping to the safe cell and striking in the landing recovery window (damage window = 1.2 s in docs/soulslike-world-plan.md:160-161). First Rule Step success (docs/design/full-gameplay-design-v2.md:324-326). Every boss kill must be a player strike.",
+   "source": "https://www.nicolelazzaro.com/the4-keys-to-fun/ ; https://selfdeterminationtheory.org/SDT/documents/2006_RyanRigbyPrzybylski_MandE.pdf ; https://gameinformer.com/interview/2024/06/24/from-softwares-hidetaka-miyazaki-discusses-his-approach-to-difficulty"
+  },
+  {
+   "emotion": "Autonomy and defiant pride",
+   "what_triggers_it": "Choice that matters, non-controlling guidance, freedom over strategy; SDT says rewards used as information support autonomy.",
+   "mechanic_or_moment_in_this_game": "First backward or sideways step as an act of disobedience (T4: 'I am still a pawn, but no longer trapped', docs/production/act-1-opening-to-first-boss-flow-map.md:376-393). Rooms with at least 2 solutions. The final unassisted diagonal step by choice (docs/design/gdd.md:373).",
+   "source": "https://selfdeterminationtheory.org/SDT/documents/2006_RyanRigbyPrzybylski_MandE.pdf"
+  },
+  {
+   "emotion": "Curiosity and discovery",
+   "what_triggers_it": "A visible gap in knowledge with a promised answer (Lazzaro's Easy Fun, MDA discovery). Journey's visible mountain shows how a far destination sustains pull.",
+   "mechanic_or_moment_in_this_game": "Hub locks with visible causes (paper pile, block wall, toy-furniture barricade: docs/production/act-1-opening-to-first-boss-flow-map.md:496-505), the desk glimpse, Book of House Rules with 'N of M amendments known' (docs/soulslike-world-plan.md:107-113, 167-169), and the under-bed shadow visible from H1.",
+   "source": "https://www.nicolelazzaro.com/the4-keys-to-fun/ ; https://cdn.aaai.org/Workshops/2004/WS-04-04/WS04-04-001.pdf ; https://www.nme.com/features/gaming-features/journey-anniversary-austin-wintory-traveler-soundtrack-3181421"
+  },
+  {
+   "emotion": "Awe and smallness",
+   "what_triggers_it": "Perceived vastness that does not fit existing mental structures, felt more when gameplay demand is low (Possler et al., model-level claim).",
+   "mechanic_or_moment_in_this_game": "Scale reveals at hub or room entrances with no live enemies: the bed's edge as a cliff, window moonlight, the child's hand shadow crossing the rug, the Chess Box looming. Pikmin demonstrates the garden-at-tiny-scale appeal.",
+   "source": "https://www.researchgate.net/publication/327200306_Gaming_is_Awesome_A_Theoretical_Model_on_Cognitive_Demands_and_the_Elicitation_of_Awe_During_Video_Game_Play [search summary only] ; https://www.nintendo.com/en-ca/whatsnew/ask-the-developer-vol-10-pikmin-4-part-1/"
+  },
+  {
+   "emotion": "Nostalgic warmth",
+   "what_triggers_it": "Reminders of past experiences that carried mastery and companionship; present feelings of connectedness.",
+   "mechanic_or_moment_in_this_game": "Blocks, crayons, toy tracks, rug fibres; wooden thunks for combat sounds (docs/design/gdd.md:503-510); the night-light and morning light in the ending. Generic objects let each player map their own childhood.",
+   "source": "https://www.researchgate.net/publication/328087196_Once_Upon_a_Game_Exploring_Video_Game_Nostalgia_and_Its_Impact_on_Well-Being [partial abstract via search summary]"
+  },
+  {
+   "emotion": "Attachment and care",
+   "what_triggers_it": "A vulnerable other whose fate depends on the player, with repeated small interactions. Ico builds this with a held hand and no HUD; Pikmin uses audible loss; players report bonding with characters as a trigger of valued sadness.",
+   "mechanic_or_moment_in_this_game": "Rescued white pieces restore Courage at safe locations and visibly build the hub (docs/design/gdd.md:134, 303-310, 434). The first rescue should require an interaction (escort or short hold), a name and one line.",
+   "source": "https://en.wikipedia.org/wiki/Ico ; https://www.nintendo.com/en-ca/whatsnew/ask-the-developer-vol-10-pikmin-4-part-1/ ; https://research.aalto.fi/en/publications/negative-emotion-positive-experience-emotionally-moving-moments-i/"
+  },
+  {
+   "emotion": "Recognition and hope (being seen)",
+   "what_triggers_it": "Relatedness: another mind notices and responds to you. SDT's relatedness need; the 2006 paper only tested it socially, so this is an extension.",
+   "mechanic_or_moment_in_this_game": "After the B1 victory the child notices the pawn for the first time (docs/production/act-1-opening-to-first-boss-flow-map.md:561-571), preceded by a crayon scratch in T4. The first blue line must change the room, not the enemy HP.",
+   "source": "https://selfdeterminationtheory.org/SDT/documents/2006_RyanRigbyPrzybylski_MandE.pdf ; docs/design/nar1-story-outline-spec.md:67-100 (repo)"
+  },
+  {
+   "emotion": "Trust and partnership",
+   "what_triggers_it": "Reliable help that reshapes the situation without doing the job: competence preserved, relatedness added.",
+   "mechanic_or_moment_in_this_game": "Place Block, Draw Path, Turn the Board, Gentle Nudge limited by the Believe meter (docs/design/gdd.md:229-268); help changes the room, not enemy HP (docs/design/full-gameplay-design-v2.md:670-677).",
+   "source": "https://selfdeterminationtheory.org/SDT/documents/2006_RyanRigbyPrzybylski_MandE.pdf ; https://en.wikipedia.org/wiki/Ico"
+  },
+  {
+   "emotion": "Betrayal and powerlessness (then resolve)",
+   "what_triggers_it": "A capability the player relied on is withdrawn. Pathos in Play identifies removing the player's ability to act as a deliberate emotional technique; Brothers turns learned controls into the emotional payload.",
+   "mechanic_or_moment_in_this_game": "Queen phase 3 disables an intervention (docs/design/full-gameplay-design-v2.md:476-478); the King shuts the box and severs help; directions are lost and restored one at a time through memories of rescued pieces (docs/design/gdd.md:366-373).",
+   "source": "https://arxiv.org/abs/1909.06799 ; https://en.wikipedia.org/wiki/Brothers:_A_Tale_of_Two_Sons ; https://kotaku.com/brothers-tale-of-two-sons-remake-ending-older-younger-1851302128 [search summary only]"
+  },
+  {
+   "emotion": "Frustration converting to determination",
+   "what_triggers_it": "Failure the player can attribute to themselves, with a quick return to try again. Juul: the escape from feeling inadequate by improving is core to the enjoyment.",
+   "mechanic_or_moment_in_this_game": "Room-level reset with no progress lost (docs/design/gdd.md:129-136); death-cause freeze frame; first death by each enemy family unlocks a Book entry; short runbacks (docs/soulslike-world-plan.md:79-80).",
+   "source": "https://www.penguinrandomhouse.com/books/656618/the-art-of-failure-by-jesper-juul/ ; https://www.gamedeveloper.com/design/roguelikes-and-narrative-design-with-i-hades-i-creative-director-greg-kasavin"
+  },
+  {
+   "emotion": "Sensory joy",
+   "what_triggers_it": "Responsive control plus polish that makes simulated objects feel physical; juice maximises output for input.",
+   "mechanic_or_moment_in_this_game": "The step, strike and enemy-defeat feel: squash and anticipation poses, wooden-thunk SFX, brief hit-stop, camera nudge. Currently absent: hit-stop and particles (docs/where-we-are.md:94).",
+   "source": "http://mycours.es/gamedesign2014/files/2014/10/Game-Feel-Steve-Swink-chapter-1.pdf ; https://www.gdcvault.com/play/1016487/juice-it-or-lose ; https://www.youtube.com/watch?v=AJdEqssNZ-U"
+  },
+  {
+   "emotion": "Relief and safety",
+   "what_triggers_it": "Release after a tension peak, in a place that shows the consequence of success. Schell's tension-release cycle; soulslike hubs make the checkpoint the emotional safe haven.",
+   "mechanic_or_moment_in_this_game": "H1 Chess Rug hub: no enemies, visible change after each boss (shelter, banners, train; docs/design/gdd.md:303-310), shortcut openings (docs/soulslike-world-plan.md:38-44).",
+   "source": "https://notesbylex.com/the-art-of-game-design-a-book-of-lenses-2nd-edition-by-jesse-schell ; docs/soulslike-world-plan.md:29-44 (repo)"
+  },
+  {
+   "emotion": "Surprise and delight",
+   "what_triggers_it": "An understandable twist on something learned (the third step of the four-step structure) or a first-time event.",
+   "mechanic_or_moment_in_this_game": "Boss phase-2 'amendment' (Knight may move twice, docs/soulslike-world-plan.md:130-135); the child's first intervention (docs/design/gdd.md:332); the toy-material humour from scale (docs/design/gdd.md:449).",
+   "source": "https://mcvuk.com/business-news/publishing/video-nintendos-level-design-secrets-in-four-steps/ ; https://nevalalee.wordpress.com/2011/10/26/the-bomb-under-the-table/"
+  },
+  {
+   "emotion": "Ambivalence and compassion for opponents",
+   "what_triggers_it": "Antagonists with understandable motives and visible suffering; ambiguity is reported to produce guilt and grief in Ico and Shadow of the Colossus (DiGRA 2015 analysis, via search summary).",
+   "mechanic_or_moment_in_this_game": "Exhausted black pawns (docs/design/gdd.md:176), the Queen's sincere fear that rule-less worlds are forgotten (docs/design/gdd.md:443), bosses defeated not killed and broken pieces becoming toys (docs/design/gdd.md:423).",
+   "source": "https://www.researchgate.net/publication/277016389_Proceedings_of_DiGRA_2015_Diversity_of_play_Games_-_Cultures_-Identities_The_Tragedy_of_Betrayal_How_the_design_of_Ico_and_Shadow_of_the_Colossus_elicits_emotion [search summary only]"
+  },
+  {
+   "emotion": "Catharsis, freedom and bittersweet closure",
+   "what_triggers_it": "Release after long constraint, plus mixed-affect meaning. Juul says games do not purge negative emotion but generate it, so the release has to be built and earned, not assumed. Journey's finale supports a cathartic payoff through a destination visible from the start and a long climb.",
+   "mechanic_or_moment_in_this_game": "The ending: the pawn refuses promotion, pieces leave their starting squares, the pawn stands outside the board in morning light (docs/design/gdd.md:375-380; docs/design/nar1-story-outline-spec.md:103-120). Ending variations from rescues (docs/design/gdd.md:545).",
+   "source": "https://www.penguinrandomhouse.com/books/656618/the-art-of-failure-by-jesper-juul/ ; https://www.nme.com/features/gaming-features/journey-anniversary-austin-wintory-traveler-soundtrack-3181421 ; https://www.semanticscholar.org/paper/Video-Games-as-Meaningful-Entertainment-Experiences-Oliver-Bowman/a2b180c889c3d88defa94fa0123460424515128d"
+  }
+ ],
+ "pacing_rules": [
+  "Emotion target by act (starting plan, to be edited by the owner): Act 0 grief and loneliness resolving to agency; Act 1 first competence and first defiance (backward step), ending with being noticed; Act 2 suspense to first fiero (Knight) and surprise (phase-2 amendment); Act 3 wonder and trust (first chalk path); Act 4 patience and standing your ground (Eraser Guard); Act 5 vulnerability and betrayal (help disrupted); Act 6 independence and catharsis; Ending bittersweet freedom. Derived from docs/design/nar1-story-outline-spec.md:21-50 and docs/design/full-gameplay-design-v2.md:274-563; Schell's lens of emotion says to compare target against measured player emotion each playtest (https://notesbylex.com/the-art-of-game-design-a-book-of-lenses-2nd-edition-by-jesse-schell).",
+  "Room cycle = Rest, Teach, Test, Twist, Boss/Reward, Shortcut (docs/design/full-gameplay-design-v2.md:627-650); this is Nintendo's introduce, develop, twist, resolve in different clothes (https://mcvuk.com/business-news/publishing/video-nintendos-level-design-secrets-in-four-steps/). Every cycle must end on a release beat, which is Schell's tension-and-release cycle.",
+  "Hook inside 10 seconds of control; first sword by minute 5 per docs/design/gdd.md:594, which T1->T2 already supports. Start gameplay quickly and avoid front-loaded menus (https://developer.apple.com/app-store/onboarding-for-games/).",
+  "Boredom guard: measure the longest gap without a meaningful decision. The repo promise is a board-state problem every 30-90 s (docs/design/full-gameplay-design-v2.md:31-43); flag any playtest gap over 90 s. Chen: too little challenge makes players leave, a temporary lull is tolerated only if more is promised (https://www.jenovachen.com/flowingames/p31-chen.pdf).",
+  "Alternate arousal: never two boss-grade rooms in a row; after any room with 3+ threat shapes, follow with a low-demand traverse or hub of at least 20 s. 20 s is my starting value, not a sourced constant; the principle is Schell's rising interest with rests.",
+  "After each boss: a relief room with zero hostiles where the world visibly changes, at least 45 s before the next demand (hub evolution, docs/design/gdd.md:303-310). Peak-end evidence: sequences ending harder are remembered as harder, so a boss-then-relief ending protects remembered challenge (https://www.benlafreniere.ca/assets/papers/p5608-gutwin.pdf).",
+  "The room before a boss is a Test, not a Twist, and its threat budget must be below the boss's. Gutwin found the final difficulty segment dominated recalled challenge; fun and replay effects were inconsistent across games.",
+  "Child presence curve as the relatedness curve: nothing (T1-T3), trace objects (T4 crayon scratch), recognition after B1, helping hand (Acts 3-4), disrupted help (Act 5), silence in the box (Act 6 middle), together at the final strike. Matches docs/production/act-1-opening-to-first-boss-flow-map.md:561-571, docs/design/full-gameplay-design-v2.md:654-668 and docs/design/gdd.md:270-272.",
+  "Awe beats go in low-demand slots only: one per act at a room entrance or hub, enemies at zero, at least 3 s of uninterrupted view, with the music thinning. Rationale: gameplay demands compete for the attention that awe needs (https://www.researchgate.net/publication/327200306_Gaming_is_Awesome_A_Theoretical_Model_on_Cognitive_Demands_and_the_Elicitation_of_Awe_During_Video_Game_Play, search summary only).",
+  "New verbs arrive on a drip (one unlock per district, docs/design/full-gameplay-design_v2.md:581-590) because SDT lists opportunities to acquire new skills as a competence supporter (https://selfdeterminationtheory.org/SDT/documents/2006_RyanRigbyPrzybylski_MandE.pdf). Do not add a new verb in the final act; Act 6 subverts verbs the player already knows, as Brothers does with learned controls (https://en.wikipedia.org/wiki/Brothers:_A_Tale_of_Two_Sons).",
+  "Do not interrupt flow with modal text. Dialogue never obscures danger cells (docs/design/gdd.md:520-522); the Book of House Rules must pause the simulation while open (currently it does not: docs/where-we-are.md:96). Flow duration is the quality metric (Chen).",
+  "Show the destination early: the under-bed or Chess Box silhouette is visible from the hub from Act 1 and grows each act, as Journey's mountain is visible from the opening (https://www.nme.com/features/gaming-features/journey-anniversary-austin-wintory-traveler-soundtrack-3181421). Matches landmark rule 6 in docs/soulslike-world-plan.md:73-82."
+ ],
+ "failure_and_frustration": [
+  "Juul's frame: failure in a game feels personal, so the first job is making it attributable and the second is making the retry cheap. He argues games create negative feelings instead of purging them, and the pleasure comes from improving to escape them. A reviewer adds that a game without failure would feel hollow, and that excess pain makes players quit. Do not remove failure; control its cost. Sources: https://www.penguinrandomhouse.com/books/656618/the-art-of-failure-by-jesper-juul/ ; https://gamescriticism.org/2023/07/24/why-failing-in-games-is-a-positive-aspect-of-play-a-review-of-jesper-juuls-the-art-of-failure/",
+  "Three working designers converge on one contract: the player must be able to see why they died and apply it next try (Miyazaki), every loss should feel like the player's own doing (Ma, Into the Breach), and deaths should trace to player skill or knowledge, not randomness (Clark, NecroDancer). For this game: every damaging cell is pre-highlighted, there is no off-screen damage, no unreadable stacks of threat shapes. Sources: https://gameinformer.com/interview/2024/06/24/from-softwares-hidetaka-miyazaki-discusses-his-approach-to-difficulty ; https://www.gamedeveloper.com/game-platforms/road-to-the-igf-subset-games-i-into-the-breach-i- ; https://www.gamedeveloper.com/audio/game-design-deep-dive-finding-the-beat-in-i-crypt-of-the-necrodancer-i-",
+  "Stress lowers accuracy: Clark's first 20%-of-a-beat window caused misses when players were most stressed, and a full-beat window felt best, with an autocalibration shift toward where players drift under stress. Rule: input tolerances in boss fights are equal or looser than in tutorial rooms, never tighter. The GDD's 0.12 s input buffer (docs/design/gdd.md:97) is the minimum, not the maximum.",
+  "Make early failure cheap, like World 1-1's floored pits that let you climb out instead of replaying the level (Miyamoto as reported). T1-T4 need no meaningful loss; tutorial deaths should reset in seconds. Source: https://en.wikipedia.org/wiki/World_1-1",
+  "Take the sting out of death with story: Hades uses characters who remember attempts and builds systems to soften difficulty walls for players engaged in the narrative. Here the child resets the board (docs/soulslike-world-plan.md:94); let the child and the pieces react to repeated attempts, and make the first death by each enemy family write a Book of House Rules entry. Sources: https://www.gamedeveloper.com/design/roguelikes-and-narrative-design-with-i-hades-i-creative-director-greg-kasavin ; https://www.inlander.com/archive/hades-writer-greg-kasavin-on-how-he-made-video-game-deaths-drive-a-feel-good/article_f508bf3c-7c29-5586-80ed-1cd615017dc1.html [search summary]",
+  "Ambush grammar: Miyazaki says he places enemies in blind spots to catch careless players, not on dead-end roads to overwhelm. The soulslike plan already codifies lone enemy first, then the same corner with two (docs/soulslike-world-plan.md:53-56). Allow an ambush only after the enemy family has been previewed and taught.",
+  "Difficulty options: Celeste keeps its challenge as default and lets players adjust rules, after renaming 'Cheat Mode' because the name felt judgmental. The GDD's assist ideas (slower enemies when stationary, adjustable telegraph duration; docs/design/gdd.md:524-533) should use neutral names, be opt-in per save, and never be triggered silently. Chen prefers player-chosen adjustment. Sources: https://www.vice.com/en/article/celeste-difficulty-assist-mode/ ; https://www.jenovachen.com/flowingames/Flow_in_games_final.pdf [search summary only]",
+  "Remembered difficulty is end-weighted (Gutwin). A player who quits after a bad final segment will report the game as too hard even if the average was fair, so (a) end sessions on successes via save timing, and (b) when interpreting playtests, check what the last 2 minutes of each session contained. Source: https://www.benlafreniere.ca/assets/papers/p5608-gutwin.pdf",
+  "Frustration valve without breaking the fantasy: after 3 consecutive deaths in one encounter the child offers one non-solving nudge (for example a hint line or the assist menu). It never changes enemy HP, consistent with docs/design/full-gameplay-design-v2.md:670-677. Starting values, to be tuned in QA.3.",
+  "Deliberate unfairness is only legitimate as authored story pain, not as combat pain: the Queen disabling help or the King removing directions is designed powerlessness (Pathos in Play) and must come with a short grace window and a clear explanation in the fiction. Source: https://arxiv.org/abs/1909.06799",
+  "Known red flag in this repo: the pickup glow uses red, the same colour as imminent damage, and enemies cannot yet enter their attack animation state, so telegraph to strike never plays (docs/where-we-are.md:93-94). Until fixed, fairness cannot be judged by playtesters."
+ ],
+ "reference_games": [
+  {
+   "game": "Into the Breach",
+   "technique": "Fully visible enemy intent; every battle becomes a puzzle; buildings tie collateral damage to the win and loss conditions.",
+   "lesson_for_us": "Show intent for every damaging attack and make stakes beyond Courage (hub pieces, child help) so avoiding a hit has a story cost. Source: https://www.gamedeveloper.com/game-platforms/road-to-the-igf-subset-games-i-into-the-breach-i- ; https://gdcvault.com/play/1026333/-Into-the-Breach-Design"
+  },
+  {
+   "game": "Hoplite",
+   "technique": "Delayed hazards (a bomb that explodes next turn) and limited safe squares make each move do two jobs: avoid and set up.",
+   "lesson_for_us": "Knight landing markers and Rook lanes are our bombs. Tension comes from planning around known hazards. Source: https://www.pentadact.com/2014-03-29-the-randomised-tactical-elegance-of-hoplite/"
+  },
+  {
+   "game": "Shotgun King: The Final Checkmate",
+   "technique": "A lone weak piece against chess armies; on each turn choose to attack or move, then every white piece acts; each stage ends by destroying the white king; upgrade cards pair a boon for you with a boon for the enemy.",
+   "lesson_for_us": "Asymmetry sells the fantasy; chess movement stays readable because enemies keep their rules. Our version is real-time, so telegraph timing replaces turn order. Source: https://en.wikipedia.org/wiki/Shotgun_King:_The_Final_Checkmate"
+  },
+  {
+   "game": "Pawnbarian",
+   "technique": "Chess piece movement shown with highlighted legal moves and the tiles enemies threaten; no chess knowledge required.",
+   "lesson_for_us": "Our Book of House Rules and cell highlights should teach chess-lite without text. Source: https://www.gamingonlinux.com/2020/05/pawnbarian-turns-chess-into-a-card-based-roguelike/"
+  },
+  {
+   "game": "Crypt of the NecroDancer",
+   "technique": "Grid movement on a beat; predictable enemy patterns; the timing window widened to a full beat because stressed players are less accurate.",
+   "lesson_for_us": "Grid action can have flow if patterns are predictable. Consider an optional audio pulse that aligns with telegraph timing (docs/design/au3-enemy-telegraph-sfx-spec.md), and widen windows under stress. Source: https://www.gamedeveloper.com/audio/game-design-deep-dive-finding-the-beat-in-i-crypt-of-the-necrodancer-i-"
+  },
+  {
+   "game": "Super Mario Bros. (World 1-1)",
+   "technique": "Teach by placement: slow first enemy, rewarding blocks, pits of varying width with some having floors; no text.",
+   "lesson_for_us": "T1-T3 should teach movement, facing and strike with level geometry, not prompts. Source: https://en.wikipedia.org/wiki/World_1-1"
+  },
+  {
+   "game": "Dark Souls / Demon's Souls",
+   "technique": "Fairness over difficulty; consistent learnable patterns; bosses as exams; sense of accomplishment as the goal.",
+   "lesson_for_us": "The soulslike plan's boss gate, short approach and shortcut relief fit. Do not copy punishing runbacks (docs/soulslike-world-plan.md:79-80). Sources: https://gameinformer.com/interview/2024/06/24/from-softwares-hidetaka-miyazaki-discusses-his-approach-to-difficulty ; https://www.gamedeveloper.com/design/dark-souls-game-design-analysis-why-do-we-come-back-to-die-"
+  },
+  {
+   "game": "Hades",
+   "technique": "Death advances the story; characters acknowledge attempts; systems soften difficulty walls for story-engaged players.",
+   "lesson_for_us": "Make retries emotionally productive: the child and pieces comment, and the Book logs lessons. Source: https://www.gamedeveloper.com/design/roguelikes-and-narrative-design-with-i-hades-i-creative-director-greg-kasavin"
+  },
+  {
+   "game": "Celeste",
+   "technique": "Assist Mode with fine-grained rule changes, neutral naming, default challenge intact.",
+   "lesson_for_us": "Offer opt-in assists without shame. Source: https://www.vice.com/en/article/celeste-difficulty-assist-mode/"
+  },
+  {
+   "game": "Journey",
+   "technique": "Target emotional arc designed first; destination visible from the opening; score treated as one continuous arc; loneliness plus awe.",
+   "lesson_for_us": "Write the emotional arc as data and score to it; show the Black Castle early. Sources: https://www.nme.com/features/gaming-features/journey-anniversary-austin-wintory-traveler-soundtrack-3181421 ; https://www.destructoid.com/journey-inspired-by-world-of-warcraft-loneliness/"
+  },
+  {
+   "game": "Ico",
+   "technique": "Subtractive design (no HUD), a vulnerable companion you hold by the hand; critics credit the bond for the ending's impact.",
+   "lesson_for_us": "The child and rescued pieces must be felt through an interaction, not through exposition. Caveat: sources disagree on tap versus hold for the hand button. Source: https://en.wikipedia.org/wiki/Ico"
+  },
+  {
+   "game": "Brothers: A Tale of Two Sons (spoilers)",
+   "technique": "One brother per stick and trigger; the ending uses what the player's hands have learned.",
+   "lesson_for_us": "Teach the pawn's directional freedom thoroughly, then take it away in the finale. Sources: https://en.wikipedia.org/wiki/Brothers:_A_Tale_of_Two_Sons ; https://kotaku.com/brothers-tale-of-two-sons-remake-ending-older-younger-1851302128 [search summary only, page 403]"
+  },
+  {
+   "game": "Pikmin",
+   "technique": "Top-down view of a tiny-scale garden world, individually mourned small units with audible deaths.",
+   "lesson_for_us": "Scale plus fragility builds attachment and awe; rescued pieces should be small, named and visibly gone if lost. Source: https://www.nintendo.com/en-ca/whatsnew/ask-the-developer-vol-10-pikmin-4-part-1/"
+  },
+  {
+   "game": "The Plucky Squire",
+   "technique": "A storybook world overlapping a real desk with ordinary objects as terrain.",
+   "lesson_for_us": "The GDD already cites it; keep the bedroom reality and the imagined war present in every scene (docs/design/gdd.md:41-43). Source: https://www.unrealengine.com/en-US/developer-interviews/the-plucky-squire-blends-2d-and-3d-visuals-in-aesthetically-pleasing-and-mechanically-interesting-ways [search summary only]"
+  },
+  {
+   "game": "Nuclear Throne and the Vlambeer / Juice It talks",
+   "technique": "Hit pause, camera kick, shake, squash, particles; maximum output for minimal input.",
+   "lesson_for_us": "Build a juice hierarchy and keep telegraph colour language clean. Starting hit-stop must be tuned; sources disagree on duration (about 40-80 ms versus about 0.2 s). Sources: https://www.gdcvault.com/play/1016487/juice-it-or-lose ; https://www.youtube.com/watch?v=AJdEqssNZ-U"
+  }
+ ],
+ "design_rules_for_this_game": [
+  "R1 Emotion is data. Every room spec and every story-beat data row carries emotion_target (one word), release_beat (what relieves it) and lazzaro_key; a room or beat missing any field fails the room QA checklist. Test: a linter over room specs and beat resources. Why: MDA designs backward from the aesthetic, Schell's lens of emotion compares target with actual. https://cdn.aaai.org/Workshops/2004/WS-04-04/WS04-04-001.pdf",
+  "R2 Time to control. From pressing New Game or Continue, the player has control within 10 s, and the first step triggers at least 3 feedback channels (animation, sound, a visual effect). Test: stopwatch plus feedback matrix. Why: start gameplay quickly; polish sells interaction. https://developer.apple.com/app-store/onboarding-for-games/ ; http://mycours.es/gamedesign2014/files/2014/10/Game-Feel-Steve-Swink-chapter-1.pdf",
+  "R3 T1 is a loss scene, not a tutorial room. No enemies, no text boxes, no music or a single sustained instrument; the dead White King is on the first screen and the only route to the exit passes within 3 cells of him. Test: scene audit. Why: moving sadness comes from loss and limited control, followed by reflection. https://research.aalto.fi/en/publications/negative-emotion-positive-experience-emotionally-moving-moments-i/ ; docs/production/act-1-opening-to-first-boss-flow-map.md:260-292",
+  "R4 Teach ladder. Each new verb or enemy shape appears in safe, then single-threat, then twist order; teach rooms contain zero damage sources; each room introduces at most one new verb. Test: room data audit (damage_sources == 0 in teach rooms, new_verbs <= 1). Why: Mario 1-1 and the four-step structure. https://en.wikipedia.org/wiki/World_1-1 ; https://mcvuk.com/business-news/publishing/video-nintendos-level-design-secrets-in-four-steps/",
+  "R5 One prompt at a time. Shift-turn, strike and Q each get exactly one prompt; shown only when no hostile entity is alive, one idea long, dismissed by performing the action. Test: prompt-system unit test plus a first-time-player run (nothing currently teaches these: docs/where-we-are.md:176). Why: PENS price of admission; Apple one step at a time. https://selfdeterminationtheory.org/SDT/documents/2006_RyanRigbyPrzybylski_MandE.pdf ; docs/design/ui2-tutorial-prompt-style-spec.md",
+  "R6 Telegraph contract. No attack may damage a cell that was highlighted for at least telegraph_min before impact; starting minimums 0.45 s for basic attacks (my derivation from the GDD 0.18 s step plus a reaction margin, tune in QA.3) and 0.9 s for the Knight landing (docs/soulslike-world-plan.md:159). Test: headless test iterating every attack .tres and asserting telegraph > 0 and damage cells subset of telegraphed cells. Why: suspense depends on information; fairness depends on visibility. https://nevalalee.wordpress.com/2011/10/26/the-bomb-under-the-table/ ; https://www.gamedeveloper.com/game-platforms/road-to-the-igf-subset-games-i-into-the-breach-i-",
+  "R7 Red is sacred. Saturated red appears only on imminent damage; pickups, interactables and UI never use it (the pickup glow is red today: docs/where-we-are.md:94). Test: palette lint plus 640x360 screenshot review. Why: unambiguous danger language is what makes deaths attributable. docs/design/gdd.md:478-486",
+  "R8 Explain every death. On defeat, hold the frame at least 0.6 s with the damaging attack's origin and telegraph visible, then reset. Test: 5 playtesters, at least 80% correctly name the cause (the GDD target at docs/design/gdd.md:576-583). Why: failure feels personal, so attribution matters. https://www.penguinrandomhouse.com/books/656618/the-art-of-failure-by-jesper-juul/ ; https://gameinformer.com/interview/2024/06/24/from-softwares-hidetaka-miyazaki-discusses-his-approach-to-difficulty",
+  "R9 Cheap retry. Death to control returns in 5 s or less; the walk from retry spot to a boss is 20 s or less (or one room); nothing collected is lost. Test: stopwatch in QA, assertion in WorldState tests. Why: take the sting out of failure; floored pits in World 1-1; soulslike runback rule (docs/soulslike-world-plan.md:79-80). https://www.gamedeveloper.com/design/roguelikes-and-narrative-design-with-i-hades-i-creative-director-greg-kasavin ; https://en.wikipedia.org/wiki/World_1-1",
+  "R10 Death yields knowledge. The first death by each enemy family unlocks a Book of House Rules entry or margin note, shown at the next safe state. Test: unit test mapping player_defeated(enemy_family) to a RuleEntry unlock. Why: failure becomes progress, rewards as information support autonomy. https://www.gamedeveloper.com/design/roguelikes-and-narrative-design-with-i-hades-i-creative-director-greg-kasavin ; https://selfdeterminationtheory.org/SDT/documents/2006_RyanRigbyPrzybylski_MandE.pdf ; docs/soulslike-world-plan.md:107-113",
+  "R11 Forgiveness never tightens under stress. Input buffer and recovery tolerances in boss fights are equal to or looser than in tutorial rooms (GDD buffer 0.12 s is the floor, docs/design/gdd.md:97). Test: movement/combat tests under 3 simultaneous threats. Why: accuracy falls when stressed. https://www.gamedeveloper.com/audio/game-design-deep-dive-finding-the-beat-in-i-crypt-of-the-necrodancer-i-",
+  "R12 No hidden rubber-banding; opt-in help only. Enemy parameters never read death count unless the player enabled an assist; after 3 consecutive deaths in one encounter the child offers once a non-solving nudge (hint or assist menu), neutrally named. Test: grep that no system reads death_count; unit test that the offer fires once per streak. Why: players have different flow zones; chosen adjustment beats silent adjustment; neutral naming avoids shame. https://www.jenovachen.com/flowingames/p31-chen.pdf ; https://www.vice.com/en/article/celeste-difficulty-assist-mode/ ; docs/design/gdd.md:524-533",
+  "R13 Boss rule arc. Every boss spec states rule_taught (phase 1) and rule_bent (phase 2); phase 2 changes at least one of telegraph shape, timing or arena, never only HP or speed; the bend is written into the Book mid-fight (Knight: 'may move twice', docs/soulslike-world-plan.md:130-135). Test: boss .tres fields present and phase configs differ. Why: the twist step of the four-step structure; boss pattern advice from blogs is lower evidence. https://mcvuk.com/business-news/publishing/video-nintendos-level-design-secrets-in-four-steps/",
+  "R14 Player-executed kill. Every boss's final damage comes from a player strike during a clearly signalled vulnerable pose; no scripted or damage-over-time kills; the child never deals damage. Test: unit test that boss HP reaching 0 traces to a player attack entity. Why: competence and fiero need self-attribution. https://www.nicolelazzaro.com/the4-keys-to-fun/ ; docs/design/full-gameplay-design-v2.md:670-677",
+  "R15 Juice hierarchy. A normal hit uses at least 4 simultaneous channels (anticipation or squash pose, SFX, hit-stop, flash or particle); boss kills and the final strike get the maximum budget (longest hit-stop, strongest shake, a beat of audio duck afterwards); reduce-shake and reduce-flash toggles remove effects but never telegraphs. Starting hit-stop 60-120 ms, tune by playtest. Test: FX matrix review plus accessibility test. Why: polish carries the feel; peaks must remain special. http://mycours.es/gamedesign2014/files/2014/10/Game-Feel-Steve-Swink-chapter-1.pdf ; https://www.youtube.com/watch?v=AJdEqssNZ-U ; docs/design/gdd.md:529-531",
+  "R16 Relief after every boss. Each boss exit leads to a zero-hostile room where something visibly changes (hub evolution) and lasts at least 45 s (starting value) before the next demand. Test: room-graph audit of boss -> exit -> safe room; an event fires for the hub change. Why: tension-and-release cycles; remembered difficulty follows the last segment. https://notesbylex.com/the-art-of-game-design-a-book-of-lenses-2nd-edition-by-jesse-schell ; https://www.benlafreniere.ca/assets/papers/p5608-gutwin.pdf ; docs/design/gdd.md:303-310",
+  "R17 Save on success. WorldState autosaves only on success events (room clear, shortcut opened, pickup, boss defeat), never mid-fight, so the natural quit point is after a win. Test: list of WorldState write callers. Why: peak-end heuristic (evidence for games is mixed but never contradicts). https://www.benlafreniere.ca/assets/papers/p5608-gutwin.pdf",
+  "R18 Pre-boss room is a Test. The threat budget of the room immediately before any boss is lower than that boss's phase-1 budget. Test: encounter budget in data. Why: the final difficulty segment dominates recalled challenge. https://www.benlafreniere.ca/assets/papers/p5608-gutwin.pdf",
+  "R19 Three keys per act. Each act spec lists at least 3 of Lazzaro's 4 keys with the specific room or beat serving each: Hard (boss), Easy (props, hub, Book), Serious (a meaning beat), People (child or rescue beat). Test: act spec checklist. Why: best-selling games use at least three, players alternate between them. https://www.nicolelazzaro.com/the4-keys-to-fun/",
+  "R20 Two solutions per room. Every combat room has at least 2 distinct viable clears (fight, bait, cover, child help), each recorded once in QA; T4's rule 'reposition, not stand and attack' is the template (docs/production/act-1-opening-to-first-boss-flow-map.md:388-393). Test: two recorded clears with different strategies per room. Why: autonomy needs real choice. https://selfdeterminationtheory.org/SDT/documents/2006_RyanRigbyPrzybylski_MandE.pdf",
+  "R21 The child is a person, not a menu. No child voice before the B1 victory (docs/production/act-1-opening-to-first-boss-flow-map.md:561-571; resolve the T2 whisper conflict, docs/where-we-are.md:97); child lines are 8 words or fewer, at most one per room, emotional before instructional, never during danger; every intervention changes the room, not enemy HP. Test: lint on child dialogue data and a trigger test that dialogue only fires in safe states. Why: relatedness must be felt through action. docs/design/nar1-story-outline-spec.md:67-100 ; https://en.wikipedia.org/wiki/Ico",
+  "R22 Earned reliance before loss. Before any boss disables an intervention, the player must have used it successfully at least 3 times; the loss is shown by a visible hand-stop and HUD change, then followed by a quiet beat of at least 20 s with no enemies. Test: WorldState counter plus sequence test. Why: removal of abilities only hurts if relied upon; moving beats are followed by reflection. https://arxiv.org/abs/1909.06799 ; https://en.wikipedia.org/wiki/Brothers:_A_Tale_of_Two_Sons ; https://research.aalto.fi/en/publications/negative-emotion-positive-experience-emotionally-moving-moments-i/",
+  "R23 Controls as story in Act 6. In the King encounter directions are withdrawn and restored one at a time, each by a rescued-piece memory with unique audio and animation; no damage can occur in the first 30 s after any withdrawal; the altered scheme is learnable in 30 s or less. Test: scripted test plus QA. Why: learned controls carry emotional payload when subverted; emotional game feel may require deliberate rule-breaking. https://en.wikipedia.org/wiki/Brothers:_A_Tale_of_Two_Sons ; https://dl.acm.org/doi/10.1145/3665463.3678781 ; docs/design/gdd.md:366-373",
+  "R24 Attachment by interaction. By the end of Act 1's hub the player has rescued at least one friendly piece through an interaction that costs time or position (escort or a short hold), the piece has a name and one line, and its station visibly changes the hub and restores Courage. Test: scene audit and WorldState flag. Why: Ico and Pikmin build care through mechanics, not exposition; bonding with characters is a trigger of valued sadness. https://en.wikipedia.org/wiki/Ico ; https://www.nintendo.com/en-ca/whatsnew/ask-the-developer-vol-10-pikmin-4-part-1/ ; docs/design/gdd.md:134",
+  "R25 One awe slot per act. One scale reveal per act at a room entrance or hub, enemies at zero, view held at least 3 s with music thinning, built with composition or parallax rather than non-integer zoom. Test: camera-event audit asserting enemy_count == 0 at trigger. Why: awe needs vastness and attention that combat consumes. https://www.researchgate.net/publication/327200306_Gaming_is_Awesome_A_Theoretical_Model_on_Cognitive_Demands_and_the_Elicitation_of_Awe_During_Video_Game_Play ; docs/design/gdd.md:144",
+  "R26 Destination in view. The under-bed or Chess Box silhouette is visible in the hub backdrop from H1 and gains detail after each boss. Test: screenshot checklist after each boss. Why: a visible far goal sustains pull through a long journey. https://www.nme.com/features/gaming-features/journey-anniversary-austin-wintory-traveler-soundtrack-3181421 ; docs/soulslike-world-plan.md:73-82",
+  "R27 Preview before lethal. Every enemy family has a preview encounter (visible and non-lethal, or telegraph-only) earlier in the room graph than its first lethal use; ambushes come only after the family is learned. Test: graph audit. Why: suspense requires prior knowledge; fair ambush only catches the careless. https://nevalalee.wordpress.com/2011/10/26/the-bomb-under-the-table/ ; https://gameinformer.com/interview/2024/06/24/from-softwares-hidetaka-miyazaki-discusses-his-approach-to-difficulty ; docs/design/full-gameplay-design-v2.md:303-310",
+  "R28 Legibility budget. At most 2 distinct threat shapes at once in normal rooms and 3 in bosses; each shape has a unique pattern as well as colour. Test: encounter data audit plus colour-blind screenshot pass. Why: readable intent is what makes grid tension solvable instead of noisy. https://www.gamedeveloper.com/game-platforms/road-to-the-igf-subset-games-i-into-the-breach-i- ; https://www.gamingonlinux.com/2020/05/pawnbarian-turns-chess-into-a-card-based-roguelike/ ; docs/design/gdd.md:609, 531",
+  "R29 Story is data the owner can rewrite. Every story beat (dialogue, child line, Book entry, prop-story vignette, ending card) is a data row with id, trigger event, text, sound id and emotion tag, referenced by id; zero literal story strings in scripts or scenes (rooms currently hard-code lines: docs/where-we-are.md:97). Test: grep for literal story strings plus a loader test that swaps all text from data. Why: the owner will rewrite the story and redraw the art; environmental props carry story without text. https://www.worch.com/2010/03/11/gdc-2010/ ; docs/where-we-are.md:97",
+  "R30 The ending is earned release. The last 3 minutes contain zero damage sources; the final playable act is a previously forbidden free move chosen by the player (the pawn steps outside its square); the world shows visible variations from rescues (docs/design/gdd.md:545); the final image holds at least 10 s before credits. Test: ending scene audit with zero hostile entities and flag-driven variations. Why: Juul says games do not purge negative feelings, so release must be built; the ending is the strongest peak-end memory. https://www.penguinrandomhouse.com/books/656618/the-art-of-failure-by-jesper-juul/ ; https://www.benlafreniere.ca/assets/papers/p5608-gutwin.pdf ; docs/design/nar1-story-outline-spec.md:103-120"
+ ]
+}

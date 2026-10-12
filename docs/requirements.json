@@ -1,0 +1,2010 @@
+{
+ "requirements": [
+  {
+   "system": "movement",
+   "requirement": "One-cell cardinal step per input, no diagonal movement",
+   "source": "docs/design/gdd.md:84-90; docs/design/gp2-player-movement-feel-spec.md:15-22",
+   "in_code": "exists",
+   "priority": "must"
+  },
+  {
+   "system": "movement",
+   "requirement": "Step duration about 0.16-0.20 s (target 0.18 s)",
+   "source": "docs/design/gdd.md:96; docs/design/gp2-player-movement-feel-spec.md:28; code scripts/ecs/ecs_components.gd:39",
+   "in_code": "exists",
+   "priority": "must"
+  },
+  {
+   "system": "movement",
+   "requirement": "Held direction repeats a step after about 0.22 s",
+   "source": "docs/design/gdd.md:97; docs/design/gp2-player-movement-feel-spec.md:29; code scripts/ecs/systems/player_input_system.gd:53-67",
+   "in_code": "exists",
+   "priority": "must"
+  },
+  {
+   "system": "movement",
+   "requirement": "Input buffer of about 0.12 s that expires (code buffers one direction with no expiry)",
+   "source": "docs/design/gdd.md:98; docs/design/gp2-player-movement-feel-spec.md:30; code scripts/ecs/systems/player_input_system.gd:36-37,44-46",
+   "in_code": "partial",
+   "priority": "should"
+  },
+  {
+   "system": "movement",
+   "requirement": "Pawn faces its last movement direction, also when the step is blocked",
+   "source": "docs/design/gdd.md:99; code scripts/ecs/systems/movement_system.gd:31-33",
+   "in_code": "exists",
+   "priority": "must"
+  },
+  {
+   "system": "movement",
+   "requirement": "A dangerous step may be cancelled only before the pawn leaves its start cell",
+   "source": "docs/design/gdd.md:100",
+   "in_code": "missing",
+   "priority": "could"
+  },
+  {
+   "system": "movement",
+   "requirement": "Shift+direction turns instantly without moving or reserving a cell",
+   "source": "docs/design/gdd.md:118-120; code scripts/ecs/systems/player_input_system.gd:34-35",
+   "in_code": "exists",
+   "priority": "must"
+  },
+  {
+   "system": "movement",
+   "requirement": "Turning cannot interrupt an active step or an attack impact window (turn branch currently runs before the moving check)",
+   "source": "docs/design/gdd.md:121; code scripts/ecs/systems/player_input_system.gd:34-37",
+   "in_code": "partial",
+   "priority": "should"
+  },
+  {
+   "system": "movement",
+   "requirement": "Blocked step gives visible or audible bump feedback, never silent input loss (step_blocked event has no consumer in main.gd)",
+   "source": "docs/design/vertical-slice-design.md:278-279; code scripts/ecs/systems/movement_system.gd:44",
+   "in_code": "partial",
+   "priority": "should"
+  },
+  {
+   "system": "movement",
+   "requirement": "Reserve-then-commit grid occupancy; both cells held during a step; no collision mid-step",
+   "source": "docs/design/vertical-slice-design.md:162-168; code scripts/ecs/ecs_grid.gd",
+   "in_code": "exists",
+   "priority": "must"
+  },
+  {
+   "system": "movement",
+   "requirement": "Pixel-snapped motion and camera, no subpixel blur (camera eases with smoothing_speed 8.0, no snap found)",
+   "source": "docs/design/vertical-slice-design.md:167; docs/design/pixel-art-bible.md:23,199; code scripts/world/camera_rig.gd",
+   "in_code": "partial",
+   "priority": "should"
+  },
+  {
+   "system": "input",
+   "requirement": "Every gameplay verb has a keyboard and a controller mapping (project.godot has zero joypad events)",
+   "source": "docs/design/gdd.md:161; docs/design/ui5-input-remap-controller-plan-spec.md:11-26; docs/design/vertical-slice-design.md:299; project.godot [input]",
+   "in_code": "missing",
+   "priority": "must"
+  },
+  {
+   "system": "input",
+   "requirement": "Full input remapping",
+   "source": "docs/design/gdd.md:526; docs/design/ui5-input-remap-controller-plan-spec.md:9-12",
+   "in_code": "missing",
+   "priority": "should"
+  },
+  {
+   "system": "input",
+   "requirement": "InputMap actions for Interact (E), Call child (R), Select help, Focus, Pause (project.godot holds only move, attack, skill_1, turn_mode, restart_room)",
+   "source": "docs/design/gdd.md:150-159; docs/design/full-gameplay-design-v2.md:127-136; project.godot [input]",
+   "in_code": "missing",
+   "priority": "must"
+  },
+  {
+   "system": "input",
+   "requirement": "B, F3 and F11 become InputMap actions instead of raw key polls",
+   "source": "docs/design/ui5-input-remap-controller-plan-spec.md:11-21; code scripts/main.gd:121-130",
+   "in_code": "missing",
+   "priority": "should"
+  },
+  {
+   "system": "input",
+   "requirement": "Room restart must not share the R key with Call child; restart moves to pause menu or hold",
+   "source": "docs/design/full-gameplay-design-v2.md:134; project.godot restart_room=R; code scripts/main.gd:119-120",
+   "in_code": "partial",
+   "priority": "must"
+  },
+  {
+   "system": "input",
+   "requirement": "Controls explainable in one small panel (today a static HelpLabel)",
+   "source": "docs/design/ui5-input-remap-controller-plan-spec.md:30-31; scenes/ui/hud.tscn:100",
+   "in_code": "partial",
+   "priority": "should"
+  },
+  {
+   "system": "combat",
+   "requirement": "Wooden Sword hits one adjacent cell in the facing direction; damage lands on the impact frame",
+   "source": "docs/design/gdd.md:105; docs/design/vertical-slice-design.md:170-178; code scripts/ecs/systems/combat_system.gd:59-61,74-87",
+   "in_code": "exists",
+   "priority": "must"
+  },
+  {
+   "system": "combat",
+   "requirement": "Sword recovery about 0.30 s so spamming is worse than reading",
+   "source": "docs/design/gdd.md:106; docs/design/gp3-basic-sword-combat-spec.md:30,50; code scripts/combat/attack_profile.gd:8",
+   "in_code": "exists",
+   "priority": "must"
+  },
+  {
+   "system": "combat",
+   "requirement": "Pawn cannot move during the first part of a swing (MovementSystem never reads PlayerCombat)",
+   "source": "docs/design/gdd.md:109; docs/design/vertical-slice-design.md:177; code scripts/ecs/systems/movement_system.gd",
+   "in_code": "missing",
+   "priority": "must"
+  },
+  {
+   "system": "combat",
+   "requirement": "A hit staggers common enemies briefly",
+   "source": "docs/design/gdd.md:107; docs/design/vertical-slice-design.md:178",
+   "in_code": "missing",
+   "priority": "should"
+  },
+  {
+   "system": "combat",
+   "requirement": "Attacking an armored face causes recoil and no damage",
+   "source": "docs/design/gdd.md:108; docs/design/enemy-behavior-bible.md:296-297",
+   "in_code": "missing",
+   "priority": "should"
+  },
+  {
+   "system": "combat",
+   "requirement": "No combo strings",
+   "source": "docs/design/gdd.md:110",
+   "in_code": "exists",
+   "priority": "must"
+  },
+  {
+   "system": "combat",
+   "requirement": "Target cells locked at swing start; one damage application per swing",
+   "source": "docs/design/vertical-slice-design.md:174,179; code scripts/ecs/systems/combat_system.gd:59",
+   "in_code": "exists",
+   "priority": "must"
+  },
+  {
+   "system": "combat",
+   "requirement": "Player invulnerability window after a hit (0.7 s)",
+   "source": "docs/design/vertical-slice-design.md:180; code scripts/ecs/ecs_components.gd:89; scripts/ecs/systems/health_system.gd:46-47",
+   "in_code": "exists",
+   "priority": "must"
+  },
+  {
+   "system": "combat",
+   "requirement": "Pencil Thrust: two-cell line on Q, impact 0.11 s, recovery 0.52 s, cooldown 1.25 s",
+   "source": "docs/design/gdd.md:125-127; docs/design/vertical-slice-design.md:185-187; resources/attacks/pencil_thrust.tres",
+   "in_code": "exists",
+   "priority": "must"
+  },
+  {
+   "system": "combat",
+   "requirement": "Enemy telegraph locks target cells so stepping out dodges; token released on dodge",
+   "source": "AGENTS.md:257; findings.md:214; code scripts/ecs/ecs_components.gd:125-127",
+   "in_code": "exists",
+   "priority": "must"
+  },
+  {
+   "system": "combat",
+   "requirement": "One room-level attack token prevents simultaneous enemy strikes",
+   "source": "AGENTS.md:256; docs/design/ai-behavior-plan.md (Attack Tokens); code scripts/ecs/systems/health_system.gd:43-44",
+   "in_code": "exists",
+   "priority": "must"
+  },
+  {
+   "system": "combat",
+   "requirement": "Hit feedback: flash, chip particles, small shake (stronger on player damage), hit-stop only if it helps clarity",
+   "source": "docs/design/fx2-hit-feedback-spec.md:13-17; docs/design/pixel-art-bible.md:165; code scripts/main.gd:195-216, scripts/ui/hud.gd:90-99",
+   "in_code": "partial",
+   "priority": "should"
+  },
+  {
+   "system": "combat",
+   "requirement": "Sword attack refused before the sword unlock, with HUD feedback",
+   "source": "docs/production/stage-1-review-loop.md:35-55; code scripts/ecs/systems/combat_system.gd:41-43",
+   "in_code": "exists",
+   "priority": "must"
+  },
+  {
+   "system": "combat",
+   "requirement": "Player loadout of one toy weapon plus up to two Imagination skills, changed only at safe zones",
+   "source": "docs/design/gdd.md:111-114",
+   "in_code": "missing",
+   "priority": "should"
+  },
+  {
+   "system": "combat",
+   "requirement": "Weapons change rhythm and geometry (Pencil Spear, Ruler Blade, Eraser, Chalk Line), not stats; the player must be able to pick weapons up (only enemies take items today)",
+   "source": "docs/design/gameplay-reference-research.md:52-64; docs/design/gdd.md:113; code scripts/ecs/systems/enemy_ai_system.gd:289-296",
+   "in_code": "partial",
+   "priority": "should"
+  },
+  {
+   "system": "combat",
+   "requirement": "Focus: hold to emphasise enemy telegraphs without stopping time",
+   "source": "docs/design/gdd.md:159; docs/design/fx6-accessibility-readability-pass-spec.md:16",
+   "in_code": "missing",
+   "priority": "should"
+  },
+  {
+   "system": "combat",
+   "requirement": "Assist option that slows enemies while the pawn is stationary",
+   "source": "docs/design/gdd.md:532",
+   "in_code": "missing",
+   "priority": "could"
+  },
+  {
+   "system": "combat",
+   "requirement": "F3 debug overlay explains each enemy decision, off by default in builds",
+   "source": "docs/design/enemy-behavior-bible.md:925-935; docs/design/enemy-debug-overlay-design.md; code scripts/world/prototype_board.gd",
+   "in_code": "exists",
+   "priority": "should"
+  },
+  {
+   "system": "skills",
+   "requirement": "Rule Step: fast two-cell emergency move with cooldown, earned from the Knight boss",
+   "source": "docs/design/full-gameplay-design-v2.md:320-326; docs/design/gp4-skill-system-spec.md:26",
+   "in_code": "missing",
+   "priority": "must"
+  },
+  {
+   "system": "skills",
+   "requirement": "Chalk Path: child-assisted temporary walkable route, earned from the Bishop boss",
+   "source": "docs/design/full-gameplay-design-v2.md:381-385; docs/design/gp4-skill-system-spec.md:27",
+   "in_code": "missing",
+   "priority": "must"
+  },
+  {
+   "system": "skills",
+   "requirement": "Eraser Guard: guard or parry against straight-line attacks, earned from the Rook boss",
+   "source": "docs/design/full-gameplay-design-v2.md:430-434; docs/design/an4-weapon-animation-set-spec.md:15",
+   "in_code": "missing",
+   "priority": "must"
+  },
+  {
+   "system": "skills",
+   "requirement": "Final Rule Break: one-time story power (first unassisted diagonal step) that opens the Black Castle and ends the King",
+   "source": "docs/design/full-gameplay-design-v2.md:480-484; docs/design/gdd.md:373,421",
+   "in_code": "missing",
+   "priority": "must"
+  },
+  {
+   "system": "skills",
+   "requirement": "Each skill has a boss or room that earns it, a safe teach, a combat test, an optional mastery use",
+   "source": "docs/review-batch-5-full-game-expansion.md:78-84; docs/design/gp4-skill-system-spec.md:33-37",
+   "in_code": "missing",
+   "priority": "must"
+  },
+  {
+   "system": "skills",
+   "requirement": "Skills change decisions and never replace one-cell movement",
+   "source": "docs/review-batch-5-full-game-expansion.md:72-76; docs/design/gp4-skill-system-spec.md:12-19",
+   "in_code": "partial",
+   "priority": "must"
+  },
+  {
+   "system": "skills",
+   "requirement": "HUD shows only unlocked skills with cooldown (Q THRUST only today)",
+   "source": "docs/design/ui1-hud-scope-spec.md:18; code scripts/ui/hud.gd:44-58",
+   "in_code": "partial",
+   "priority": "must"
+  },
+  {
+   "system": "child",
+   "requirement": "Child intervention system with a Believe meter (max 2 calls; refills from hits, rescues, brave acts; bosses give controlled refills)",
+   "source": "docs/design/gdd.md:229-235; docs/design/full-gameplay-design-v2.md:670-677",
+   "in_code": "missing",
+   "priority": "must"
+  },
+  {
+   "system": "child",
+   "requirement": "Place or Move Block on a highlighted empty cell: stops projectiles, Rook charges, Knight landings; not under a unit",
+   "source": "docs/design/gdd.md:237-244; docs/design/vertical-slice-design.md:242-253; docs/design/gp5-child-intervention-system-spec.md:22",
+   "in_code": "missing",
+   "priority": "must"
+  },
+  {
+   "system": "child",
+   "requirement": "Draw Chalk Path across up to three gap cells; fades in boss arenas",
+   "source": "docs/design/gdd.md:246-252; docs/design/gp5-child-intervention-system-spec.md:23",
+   "in_code": "missing",
+   "priority": "must"
+  },
+  {
+   "system": "child",
+   "requirement": "Place Paper Bridge over broken tiles",
+   "source": "docs/design/gp5-child-intervention-system-spec.md:24; docs/design/an5-child-intervention-animation-spec.md:16",
+   "in_code": "missing",
+   "priority": "should"
+  },
+  {
+   "system": "child",
+   "requirement": "Erase Rule Mark disables a marked hazard or lock briefly",
+   "source": "docs/design/gp5-child-intervention-system-spec.md:25; docs/design/an5-child-intervention-animation-spec.md:17",
+   "in_code": "missing",
+   "priority": "could"
+  },
+  {
+   "system": "child",
+   "requirement": "Hold Ruler Gate opens a shortcut or timed path",
+   "source": "docs/design/gp5-child-intervention-system-spec.md:26; docs/design/ld7-shortcuts-locks-spec.md:16",
+   "in_code": "missing",
+   "priority": "could"
+  },
+  {
+   "system": "child",
+   "requirement": "Turn the Board rotates an authored marked room section 90 degrees",
+   "source": "docs/design/gdd.md:254-260",
+   "in_code": "missing",
+   "priority": "could"
+  },
+  {
+   "system": "child",
+   "requirement": "Gentle Nudge moves the pawn one otherwise illegal diagonal cell with brief immunity",
+   "source": "docs/design/gdd.md:262-268",
+   "in_code": "missing",
+   "priority": "could"
+  },
+  {
+   "system": "child",
+   "requirement": "Help changes the room, never enemy HP, and cannot clear a phase by itself",
+   "source": "docs/design/gdd.md:235; docs/design/full-gameplay-design-v2.md:672-677; docs/design/gp5-child-intervention-system-spec.md:12-18",
+   "in_code": "missing",
+   "priority": "must"
+  },
+  {
+   "system": "child",
+   "requirement": "Targeting mode: valid cells in blue within 5 cells, time slows to 35 percent, cancel costs nothing",
+   "source": "docs/design/vertical-slice-design.md:243-253",
+   "in_code": "missing",
+   "priority": "should"
+  },
+  {
+   "system": "child",
+   "requirement": "Child hand sprite: larger and smoother than the chess world, never a cursor or divine beam (160x120 or larger)",
+   "source": "docs/design/gdd.md:462; docs/design/pixel-art-bible.md:53-58,85",
+   "in_code": "missing",
+   "priority": "must"
+  },
+  {
+   "system": "child",
+   "requirement": "Child actions animate physically, slower and heavier than pawn combat",
+   "source": "docs/design/an5-child-intervention-animation-spec.md:14-28",
+   "in_code": "missing",
+   "priority": "should"
+  },
+  {
+   "system": "child",
+   "requirement": "Child intervention sounds from crayon, paper, block, eraser, cloth",
+   "source": "docs/design/au4-child-intervention-sfx-spec.md:12-19",
+   "in_code": "missing",
+   "priority": "should"
+  },
+  {
+   "system": "child",
+   "requirement": "Bosses can temporarily disrupt help (Queen Tear Drawing, King Close the Box)",
+   "source": "docs/design/full-gameplay-design-v2.md:676; docs/design/enemy-behavior-bible.md:318-319,362-363",
+   "in_code": "missing",
+   "priority": "must"
+  },
+  {
+   "system": "child",
+   "requirement": "Interventions authored per room (allowed types and placement)",
+   "source": "docs/design/gp5-child-intervention-system-spec.md:36-38",
+   "in_code": "missing",
+   "priority": "must"
+  },
+  {
+   "system": "child",
+   "requirement": "Crayon-blue visual language reserved for child help",
+   "source": "docs/design/art1-visual-target-spec.md:53-64; docs/design/fx1-telegraph-language-spec.md:14-20",
+   "in_code": "missing",
+   "priority": "should"
+  },
+  {
+   "system": "health",
+   "requirement": "Three Courage points; boss signature attacks may remove two",
+   "source": "docs/design/gdd.md:129-134; scripts/ai/attack_pattern.gd:17",
+   "in_code": "exists",
+   "priority": "must"
+  },
+  {
+   "system": "health",
+   "requirement": "Rescued white pieces restore one Courage at fixed safe locations; three optional rescues",
+   "source": "docs/design/gdd.md:134-135,546",
+   "in_code": "missing",
+   "priority": "should"
+  },
+  {
+   "system": "failure",
+   "requirement": "On defeat return to the latest checkpoint with the room reset; no progress lost (code reloads the scene at the last entry)",
+   "source": "docs/design/gdd.md:136-137; docs/design/gp6-failure-checkpoint-rules-spec.md:14-19; code scripts/main.gd:285-302",
+   "in_code": "partial",
+   "priority": "must"
+  },
+  {
+   "system": "failure",
+   "requirement": "Boss defeat resets the boss room to phase one, retries are fast",
+   "source": "docs/design/gp6-failure-checkpoint-rules-spec.md:18,44-45",
+   "in_code": "missing",
+   "priority": "must"
+  },
+  {
+   "system": "failure",
+   "requirement": "Checkpoints before bosses, at hubs, after major rewards",
+   "source": "docs/design/gp6-failure-checkpoint-rules-spec.md:25-30; docs/design/tech3-save-checkpoint-system-spec.md:14",
+   "in_code": "missing",
+   "priority": "must"
+  },
+  {
+   "system": "failure",
+   "requirement": "Pickup reset rule: room pickups reset unless marked persistent (code keeps every taken pickup forever)",
+   "source": "docs/design/gp6-failure-checkpoint-rules-spec.md:20; code scripts/main.gd:480-487",
+   "in_code": "partial",
+   "priority": "must"
+  },
+  {
+   "system": "failure",
+   "requirement": "Low-health state gets feedback (colour change only today)",
+   "source": "AGENTS.md:234; code scripts/ui/hud.gd:40",
+   "in_code": "partial",
+   "priority": "should"
+  },
+  {
+   "system": "failure",
+   "requirement": "Death rule explainable in one sentence; copy 'The child resets the board'",
+   "source": "docs/design/gp6-failure-checkpoint-rules-spec.md:39; docs/soulslike-world-plan.md:94; code scripts/main.gd:296",
+   "in_code": "exists",
+   "priority": "should"
+  },
+  {
+   "system": "save",
+   "requirement": "Major unlocks persist across death",
+   "source": "docs/design/gp6-failure-checkpoint-rules-spec.md:19; code scripts/world/world_state.gd:21-22",
+   "in_code": "exists",
+   "priority": "must"
+  },
+  {
+   "system": "save",
+   "requirement": "Persist zone, entry, taken pickups, opened gates, unlocks, rule pages to disk",
+   "source": "docs/soulslike-world-plan.md:203-209; code scripts/world/world_state.gd:25-82",
+   "in_code": "exists",
+   "priority": "must"
+  },
+  {
+   "system": "save",
+   "requirement": "New Game, Continue and a clean-start path (WorldState.reset has no caller)",
+   "source": "docs/where-we-are.md:171; docs/design/tech3-save-checkpoint-system-spec.md:12-18; code scripts/world/world_state.gd:33",
+   "in_code": "missing",
+   "priority": "must"
+  },
+  {
+   "system": "save",
+   "requirement": "Cleared rooms and defeated bosses persist (bosses never reset)",
+   "source": "docs/soulslike-world-plan.md:76-82,213-216",
+   "in_code": "missing",
+   "priority": "must"
+  },
+  {
+   "system": "save",
+   "requirement": "Settings (volume, shake, accessibility) persist",
+   "source": "docs/design/vertical-slice-design.md:270-275; docs/design/ui4-pause-settings-spec.md:11-18",
+   "in_code": "missing",
+   "priority": "must"
+  },
+  {
+   "system": "save",
+   "requirement": "Save format versioned so it can grow; an old save must not break a new build",
+   "source": "docs/design/tech3-save-checkpoint-system-spec.md:19; code scripts/world/world_state.gd:26",
+   "in_code": "partial",
+   "priority": "should"
+  },
+  {
+   "system": "enemy-pawn",
+   "requirement": "Pawn Recruit: moves one cardinal cell, faces last move, slow diagonal telegraph, long recovery",
+   "source": "docs/design/en1-pawn-behavior-spec.md:21-38; resources/enemies/pawn_recruit.tres",
+   "in_code": "exists",
+   "priority": "must"
+  },
+  {
+   "system": "enemy-pawn",
+   "requirement": "Armed pawns: a toy weapon replaces the diagonal attack; Pencil Spear two straight cells, Ruler Blade front plus forward diagonals",
+   "source": "docs/design/gdd.md:186-193; resources/enemies/pawn_armed.tres",
+   "in_code": "exists",
+   "priority": "must"
+  },
+  {
+   "system": "enemy-pawn",
+   "requirement": "Pawn variants each bend exactly one rule: Backstep and Charging exist, Passant Wraith and Promoted Zealot do not",
+   "source": "docs/soulslike-world-plan.md:115-128",
+   "in_code": "partial",
+   "priority": "should"
+  },
+  {
+   "system": "enemy-pawn",
+   "requirement": "Veteran and Desperate pawn variants",
+   "source": "docs/design/enemy-behavior-bible.md:160-164",
+   "in_code": "missing",
+   "priority": "could"
+  },
+  {
+   "system": "enemy-knight",
+   "requirement": "Knight: L-shaped locked telegraph, leap, left vulnerable after landing; used in rooms (data exists, only the standalone first_encounter.tscn uses it)",
+   "source": "docs/design/gdd.md:178-184; docs/design/en2-knight-behavior-spec.md:21-27; resources/enemies/knight_tracker.tres",
+   "in_code": "partial",
+   "priority": "must"
+  },
+  {
+   "system": "enemy-knight",
+   "requirement": "Knight shadow shows the destination and the knight leaves ground occupancy while airborne",
+   "source": "docs/design/vertical-slice-design.md:222-225; docs/design/pixel-art-bible.md:119",
+   "in_code": "missing",
+   "priority": "should"
+  },
+  {
+   "system": "enemy-bishop",
+   "requirement": "Bishop: long diagonal lane with a telegraph that grows outward, keeps distance 4-7, retreats from adjacent (data-only bishop_zoner.tres, instant beams)",
+   "source": "docs/design/gdd.md:195-200; docs/design/en3-bishop-behavior-spec.md:21-26; docs/design/enemy-behavior-bible.md:212-250; resources/enemies/bishop_zoner.tres",
+   "in_code": "partial",
+   "priority": "must"
+  },
+  {
+   "system": "enemy-bishop",
+   "requirement": "Mirror and Torn Bishop variants (mirrors and folded paper redirect beams)",
+   "source": "docs/design/gdd.md:199; docs/design/enemy-behavior-bible.md:252-255",
+   "in_code": "missing",
+   "priority": "should"
+  },
+  {
+   "system": "enemy-rook",
+   "requirement": "Rook: locks a row or column, charges until blocked, breaks fragile blocks, stunned on collision",
+   "source": "docs/design/gdd.md:202-207; docs/design/en4-rook-behavior-spec.md:19-26; docs/design/enemy-behavior-bible.md:256-297",
+   "in_code": "missing",
+   "priority": "must"
+  },
+  {
+   "system": "enemy-rook",
+   "requirement": "Rook must turn in place before changing attack axis; Wooden and Iron Rook variants",
+   "source": "docs/design/gdd.md:207; docs/design/enemy-behavior-bible.md:293-297",
+   "in_code": "missing",
+   "priority": "should"
+  },
+  {
+   "system": "enemy-queen",
+   "requirement": "Queen maneuvers Royal Line, Royal Diagonal, Command Mark, Seize Toy, Tear the Drawing, with limited simultaneous lanes",
+   "source": "docs/design/gdd.md:209-214; docs/design/enemy-behavior-bible.md:299-345",
+   "in_code": "missing",
+   "priority": "must"
+  },
+  {
+   "system": "enemy-king",
+   "requirement": "King: one-cell movement, King's Reach (8 cells), Lock Direction, Restore Formation, Reverse Color (once), Close the Box; one global rule modifier at a time",
+   "source": "docs/design/gdd.md:216-221; docs/design/enemy-behavior-bible.md:347-390,837-852",
+   "in_code": "missing",
+   "priority": "must"
+  },
+  {
+   "system": "enemy-common",
+   "requirement": "Every enemy has a distinct role, a tell before damage, and a weakness or recovery window",
+   "source": "docs/game-production-aspect-specs.md:141-151",
+   "in_code": "partial",
+   "priority": "must"
+  },
+  {
+   "system": "enemy-common",
+   "requirement": "Aggro leash so far enemies stay idle",
+   "source": "scripts/data/decision_config.gd:12-16",
+   "in_code": "exists",
+   "priority": "should"
+  },
+  {
+   "system": "enemy-common",
+   "requirement": "Weapon pickup reservation and abandonment rules",
+   "source": "docs/design/enemy-behavior-bible.md:425-441",
+   "in_code": "partial",
+   "priority": "should"
+  },
+  {
+   "system": "enemy-common",
+   "requirement": "Encounter recipes: Pawn Intro, Pair, Armed Lesson, Knight Pressure, Bishop Crossing, Rook Cover, Queen Court",
+   "source": "docs/design/en7-encounter-recipes-spec.md:19-29; docs/design/enemy-behavior-bible.md:854-921",
+   "in_code": "partial",
+   "priority": "must"
+  },
+  {
+   "system": "enemy-common",
+   "requirement": "Introduce one new geometry at a time; near group at most two common enemies",
+   "source": "docs/design/enemy-behavior-bible.md:455-461; docs/design/en7-encounter-recipes-spec.md:13-18",
+   "in_code": "partial",
+   "priority": "must"
+  },
+  {
+   "system": "enemy-common",
+   "requirement": "Automated response-cell validation for every authored combination",
+   "source": "docs/design/enemy-behavior-bible.md:459-462,971-984",
+   "in_code": "missing",
+   "priority": "should"
+  },
+  {
+   "system": "enemy-common",
+   "requirement": "Enemy decision log (last 100) and playtest metrics",
+   "source": "docs/design/enemy-behavior-bible.md:937-969",
+   "in_code": "missing",
+   "priority": "could"
+  },
+  {
+   "system": "enemy-common",
+   "requirement": "Armed enemies replace, never stack, the chess attack",
+   "source": "docs/game-production-aspect-specs.md:148",
+   "in_code": "exists",
+   "priority": "must"
+  },
+  {
+   "system": "boss",
+   "requirement": "Boss framework: phases by condition, authored maneuvers (telegraph, commit, recover), arena events, retry-safe",
+   "source": "docs/design/enemy-ai-implementation-roadmap.md:195-221",
+   "in_code": "missing",
+   "priority": "must"
+  },
+  {
+   "system": "boss",
+   "requirement": "Boss HUD bar shown only during boss fights",
+   "source": "docs/design/gdd.md:521; docs/design/vertical-slice-design.md:267",
+   "in_code": "missing",
+   "priority": "must"
+  },
+  {
+   "system": "boss",
+   "requirement": "Arena seal (Black Line) on entry, short runback, defeat stored permanently",
+   "source": "docs/soulslike-world-plan.md:76-82,213-216",
+   "in_code": "missing",
+   "priority": "must"
+  },
+  {
+   "system": "boss",
+   "requirement": "Phase change is visible and mechanical: animation, arena or light change, new telegraph, safe beat",
+   "source": "docs/design/fx5-boss-phase-feedback-spec.md:11-17; docs/game-production-aspect-specs.md:149-150",
+   "in_code": "missing",
+   "priority": "must"
+  },
+  {
+   "system": "boss",
+   "requirement": "B1 Black Pawn Captain with three phases (slow diagonal; shove or swing; summons or breaks cover) and a reward that opens H1 (today a 4 HP single-phase definition plus two guards)",
+   "source": "docs/production/act-1-opening-to-first-boss-flow-map.md:445-466; resources/enemies/black_pawn_captain.tres",
+   "in_code": "partial",
+   "priority": "must"
+  },
+  {
+   "system": "boss",
+   "requirement": "Knight Captain, three phases (one mark; two cells with late choice; shaking toybox and train), reward Rule Step",
+   "source": "docs/design/full-gameplay-design-v2.md:312-326; docs/design/enemy-behavior-bible.md:786-800",
+   "in_code": "missing",
+   "priority": "must"
+  },
+  {
+   "system": "boss",
+   "requirement": "Bishop Oracle: beams, mirrored beams, drawn path across islands, reward Chalk Path",
+   "source": "docs/design/full-gameplay-design-v2.md:373-385; docs/design/enemy-behavior-bible.md:802-809",
+   "in_code": "missing",
+   "priority": "must"
+  },
+  {
+   "system": "boss",
+   "requirement": "Rook Warden: one line, breaks weak blocks, needs Eraser Guard or a child block, reward Eraser Guard",
+   "source": "docs/design/full-gameplay-design-v2.md:422-434; docs/design/enemy-behavior-bible.md:811-818",
+   "in_code": "missing",
+   "priority": "must"
+  },
+  {
+   "system": "boss",
+   "requirement": "Queen of Tricks: lanes, armed-pawn summons, disables a child intervention, opens the Black Castle",
+   "source": "docs/design/full-gameplay-design-v2.md:471-484; docs/design/enemy-behavior-bible.md:820-835",
+   "in_code": "missing",
+   "priority": "must"
+  },
+  {
+   "system": "boss",
+   "requirement": "Black King and Rule Engine: four phases, child help blocked then restored for the finale, final unassisted diagonal strike",
+   "source": "docs/design/full-gameplay-design-v2.md:522-530; docs/design/gdd.md:416-421; docs/design/en6-king-behavior-spec.md:28-35",
+   "in_code": "missing",
+   "priority": "must"
+  },
+  {
+   "system": "boss",
+   "requirement": "Bosses are defeated, not killed; broken pieces become ordinary toys",
+   "source": "docs/design/gdd.md:423",
+   "in_code": "missing",
+   "priority": "should"
+  },
+  {
+   "system": "boss",
+   "requirement": "A boss rule amendment is written into the Book of House Rules mid-fight (the Knight may move twice)",
+   "source": "docs/soulslike-world-plan.md:132-135",
+   "in_code": "missing",
+   "priority": "should"
+  },
+  {
+   "system": "boss",
+   "requirement": "Promoted Zealot elite guarding the boss door",
+   "source": "docs/soulslike-world-plan.md:127-128",
+   "in_code": "missing",
+   "priority": "could"
+  },
+  {
+   "system": "world",
+   "requirement": "Rooms are separate editable scenes with the standard tree (RoomArt, Entries, Exits, Enemies, Pickups, Props, RoomLogic)",
+   "source": "docs/design/ld3-room-template-spec.md:14-28; docs/design/tech2-room-transition-system-spec.md:57-75; objects/world/room_encounter.tscn",
+   "in_code": "partial",
+   "priority": "must"
+  },
+  {
+   "system": "world",
+   "requirement": "Room metadata: zone_id, board_size, room_message, objective, entry markers, exit markers",
+   "source": "docs/design/ld3-room-template-spec.md:33-42; scripts/world/room_encounter.gd:9-14",
+   "in_code": "exists",
+   "priority": "must"
+  },
+  {
+   "system": "world",
+   "requirement": "World graph as one resource; every door resolves to a real zone and entry (tested)",
+   "source": "docs/design/tech2-room-transition-system-spec.md:107-128; docs/soulslike-world-plan.md:197-200; resources/world/world_graph.tres",
+   "in_code": "exists",
+   "priority": "must"
+  },
+  {
+   "system": "world",
+   "requirement": "Exit data: target_zone, target_entry, requires_flag, locked_message, one_way (only requires_room_clear exists)",
+   "source": "docs/design/tech2-room-transition-system-spec.md:109-117; scripts/world/zone_exit_marker.gd:10-15",
+   "in_code": "partial",
+   "priority": "must"
+  },
+  {
+   "system": "world",
+   "requirement": "Fade-swap transition and spawn at the target entry",
+   "source": "docs/design/tech2-room-transition-system-spec.md:45-53; code scripts/main.gd:382-399,471-477",
+   "in_code": "exists",
+   "priority": "must"
+  },
+  {
+   "system": "world",
+   "requirement": "Backtracking works unless intentionally blocked",
+   "source": "docs/design/tech2-room-transition-system-spec.md:136",
+   "in_code": "exists",
+   "priority": "must"
+  },
+  {
+   "system": "world",
+   "requirement": "Each locked exit explains why it is locked (code has one hard-coded captain message for every lock)",
+   "source": "docs/design/ld7-shortcuts-locks-spec.md:23-26; code scripts/main.gd:402-403",
+   "in_code": "partial",
+   "priority": "must"
+  },
+  {
+   "system": "world",
+   "requirement": "Locks are visible before they open and tied to skill, story or district completion",
+   "source": "docs/design/ld7-shortcuts-locks-spec.md:22-27; docs/review-batch-4-vertical-slice-expansion.md (Shortcuts And Locks)",
+   "in_code": "partial",
+   "priority": "must"
+  },
+  {
+   "system": "world",
+   "requirement": "One-way shortcut gates opened from the far side stay open forever",
+   "source": "docs/soulslike-world-plan.md:74-75; code scripts/ecs/systems/movement_system.gd:51-63; scripts/world/gate_marker.gd",
+   "in_code": "exists",
+   "priority": "must"
+  },
+  {
+   "system": "world",
+   "requirement": "Shortcut back to the hub at the end of every district (mechanism exists, no district uses it)",
+   "source": "docs/design/ld6-district-layout-plans-spec.md:12-16; docs/design/full-gameplay-design-v2.md:640-649",
+   "in_code": "partial",
+   "priority": "must"
+  },
+  {
+   "system": "world",
+   "requirement": "Stage 1 chain T1-T2-T3-T4-B1-H1 wired and playable",
+   "source": "docs/production/act-1-opening-to-first-boss-flow-map.md:203-256; resources/world/world_graph.tres",
+   "in_code": "exists",
+   "priority": "must"
+  },
+  {
+   "system": "world",
+   "requirement": "Decide the fate of legacy world content: 72x40 kingdom, first_encounter demo room, pawn-scale 128x96 bedroom generator",
+   "source": "docs/where-we-are.md:114; scenes/zones/the_kingdom.tscn; tools/generate_demo_map.gd",
+   "in_code": "partial",
+   "priority": "must"
+  },
+  {
+   "system": "world",
+   "requirement": "Hub evolution after each boss (shelter, banners and bridges, train shortcut, pieces gather, free building)",
+   "source": "docs/design/gdd.md:303-310",
+   "in_code": "missing",
+   "priority": "should"
+  },
+  {
+   "system": "world",
+   "requirement": "Camera frames the room, keeps threats visible, scrolls larger boards",
+   "source": "docs/design/gdd.md:139-143; docs/design/pixel-art-bible.md:22-26; scripts/world/camera_rig.gd",
+   "in_code": "partial",
+   "priority": "must"
+  },
+  {
+   "system": "world",
+   "requirement": "Boss camera pullback only when integer scaling stays stable",
+   "source": "docs/design/gdd.md:144",
+   "in_code": "missing",
+   "priority": "could"
+  },
+  {
+   "system": "world",
+   "requirement": "Gameplay sandbox room for tuning movement, sword, telegraph",
+   "source": "docs/design/tech4-gameplay-sandbox-spec.md:12-24",
+   "in_code": "missing",
+   "priority": "should"
+  },
+  {
+   "system": "world",
+   "requirement": "In-game map screen",
+   "source": "docs/soulslike-world-plan.md:217-222",
+   "in_code": "missing",
+   "priority": "could"
+  },
+  {
+   "system": "rooms",
+   "requirement": "T1 White King's Fall: quiet, no enemies, dead King focal point, retreat marks, one exit",
+   "source": "docs/production/t1-white-kings-fall-production-spec.md:13-42,233-255; scenes/rooms/t1_white_kings_fall.tscn",
+   "in_code": "exists",
+   "priority": "must"
+  },
+  {
+   "system": "rooms",
+   "requirement": "T2 Fallen Sword Tile: sword unlock, turn and strike tutorial, harmless target to hit (scene has no strike target)",
+   "source": "docs/production/act-1-opening-to-first-boss-flow-map.md:294-326; docs/design/gp1-ld2-core-loop-first-chain-spec.md:216-232; scenes/rooms/t2_fallen_sword_tile.tscn",
+   "in_code": "partial",
+   "priority": "must"
+  },
+  {
+   "system": "rooms",
+   "requirement": "T3 First Pawn Clash: one Pawn Recruit, exit locked until cleared",
+   "source": "docs/production/act-1-opening-to-first-boss-flow-map.md:328-359; scenes/rooms/t3_first_pawn_clash.tscn",
+   "in_code": "exists",
+   "priority": "must"
+  },
+  {
+   "system": "rooms",
+   "requirement": "T4 Broken Rule Yard: repositioning, cover tiles, pawn plus armed pawn",
+   "source": "docs/production/act-1-opening-to-first-boss-flow-map.md:361-400; scenes/rooms/t4_broken_rule_yard.tscn",
+   "in_code": "partial",
+   "priority": "must"
+  },
+  {
+   "system": "rooms",
+   "requirement": "H1 Chess Rug Hub: Toybox open; Bookshelf, Block Tower, Dollhouse, Under-Bed, Desk visible but locked with readable reasons; child foreshadow (scene has only a door into the legacy kingdom)",
+   "source": "docs/production/act-1-opening-to-first-boss-flow-map.md:468-505; docs/design/ld5-chess-rug-hub-spec.md:12-19; scenes/rooms/h1_chess_rug_hub.tscn:59-69",
+   "in_code": "partial",
+   "priority": "must"
+  },
+  {
+   "system": "rooms",
+   "requirement": "Every room answers: which part of the room, why adjacent, what fantasy, what rule it teaches",
+   "source": "docs/production/act-1-opening-to-first-boss-flow-map.md:597-621",
+   "in_code": "partial",
+   "priority": "should"
+  },
+  {
+   "system": "districts",
+   "requirement": "Toybox Knight district: Gate, L-Jump Lanes, Toy Track Ambush, Knight Captain, return shortcut",
+   "source": "docs/design/full-gameplay-design-v2.md:274-329; docs/design/ld6-district-layout-plans-spec.md:20-24",
+   "in_code": "missing",
+   "priority": "must"
+  },
+  {
+   "system": "districts",
+   "requirement": "Bookshelf Bishop district: Book Spine Steps, Diagonal Chapel, Torn Page Bridge, Bishop Oracle",
+   "source": "docs/design/full-gameplay-design-v2.md:332-390",
+   "in_code": "missing",
+   "priority": "must"
+  },
+  {
+   "system": "districts",
+   "requirement": "Block Tower Rook district: Block Yard, Ruler Bridge, Breakable Wall Test, Rook Warden",
+   "source": "docs/design/full-gameplay-design-v2.md:393-439",
+   "in_code": "missing",
+   "priority": "must"
+  },
+  {
+   "system": "districts",
+   "requirement": "Dollhouse Queen district: Foyer, Mixed Court, Royal Stage, Queen of Tricks",
+   "source": "docs/design/full-gameplay-design-v2.md:442-489",
+   "in_code": "missing",
+   "priority": "must"
+  },
+  {
+   "system": "districts",
+   "requirement": "Under-Bed Black Castle: Castle Gate, Last Board, Rule Engine, Black King",
+   "source": "docs/design/full-gameplay-design-v2.md:492-563",
+   "in_code": "missing",
+   "priority": "must"
+  },
+  {
+   "system": "districts",
+   "requirement": "Each district follows Rest, Teach, Test, Twist, Boss or Reward, Shortcut; no filler rooms",
+   "source": "docs/design/ld4-room-formula-spec.md:14-45; docs/design/full-gameplay-design-v2.md:627-651",
+   "in_code": "missing",
+   "priority": "must"
+  },
+  {
+   "system": "districts",
+   "requirement": "About 25 authored rooms in total (6 Stage 1 rooms exist)",
+   "source": "docs/design/gdd.md:545",
+   "in_code": "partial",
+   "priority": "must"
+  },
+  {
+   "system": "districts",
+   "requirement": "Optional O1_CrayonCache and three optional rescues",
+   "source": "docs/design/full-gameplay-design-v2.md:229; docs/design/gdd.md:546",
+   "in_code": "missing",
+   "priority": "should"
+  },
+  {
+   "system": "districts",
+   "requirement": "Desk and child area as a support space",
+   "source": "docs/design/ld1-bedroom-world-layout-spec.md:34,56-61",
+   "in_code": "missing",
+   "priority": "should"
+  },
+  {
+   "system": "districts",
+   "requirement": "Finale gauntlet with all enemy types, then the chess box",
+   "source": "docs/design/gdd.md:366-373",
+   "in_code": "missing",
+   "priority": "must"
+  },
+  {
+   "system": "districts",
+   "requirement": "Ending scene: bedroom morning",
+   "source": "docs/design/nar6-ending-script-spec.md:11-19; docs/design/nar1-story-outline-spec.md:107-115",
+   "in_code": "missing",
+   "priority": "must"
+  },
+  {
+   "system": "art",
+   "requirement": "Top-down pixel art at 640x360, 32 px tiles, nearest filtering, integer scaling",
+   "source": "docs/design/gdd.md:143,455-476; docs/design/pixel-art-bible.md:13-26; project.godot [display] [rendering]",
+   "in_code": "exists",
+   "priority": "must"
+  },
+  {
+   "system": "art",
+   "requirement": "Colour language: red = danger, dark orange = anticipation, blue = child help, yellow = interactable, mint = safe, ivory vs charcoal sides",
+   "source": "docs/design/art1-visual-target-spec.md:53-66; docs/design/gdd.md:478-486",
+   "in_code": "partial",
+   "priority": "must"
+  },
+  {
+   "system": "art",
+   "requirement": "Pickups never look like damage warnings",
+   "source": "docs/design/fx3-pickup-feedback-spec.md:17-24; docs/where-we-are.md:94 (reports red pickup light)",
+   "in_code": "partial",
+   "priority": "should"
+  },
+  {
+   "system": "art",
+   "requirement": "Hero sprite set: four-direction idle, step, sword, pencil, turn, hurt, defeat, victory",
+   "source": "docs/design/pixel-art-bible.md:93-105",
+   "in_code": "partial",
+   "priority": "must"
+  },
+  {
+   "system": "art",
+   "requirement": "Common enemy sprite sets for Pawn, Knight, Bishop, Rook",
+   "source": "docs/design/pixel-art-bible.md:106-112,74-87",
+   "in_code": "partial",
+   "priority": "must"
+  },
+  {
+   "system": "art",
+   "requirement": "Boss sprites (Black Pawn Captain, Knight Captain, Bishop Oracle, Rook Warden, Queen, King) 48-96 px",
+   "source": "docs/design/gdd.md:473; docs/design/art4-character-sprite-list-spec.md:13-24",
+   "in_code": "missing",
+   "priority": "must"
+  },
+  {
+   "system": "art",
+   "requirement": "Fallen White King and fallen white pieces as story props (Polygon2D placeholders in T1)",
+   "source": "docs/design/art4-character-sprite-list-spec.md:25-26; scenes/rooms/t1_white_kings_fall.tscn",
+   "in_code": "partial",
+   "priority": "must"
+  },
+  {
+   "system": "art",
+   "requirement": "Owner-approved generated chess family (pawn, double-step, promoted, knight) wired into scenes",
+   "source": "findings.md:241-249; task_plan.md:308; assets/sprites/generated/chess/",
+   "in_code": "partial",
+   "priority": "should"
+  },
+  {
+   "system": "art",
+   "requirement": "Tile palette and district tile kits (toybox, bookshelf, block tower, dollhouse, under-bed)",
+   "source": "docs/design/art2-tile-palette-list-spec.md:11-32; docs/design/art3-bedroom-district-art-targets-spec.md:12-22",
+   "in_code": "partial",
+   "priority": "must"
+  },
+  {
+   "system": "art",
+   "requirement": "Prop list: chess remains, writing tools, paper, toys, furniture, light sources",
+   "source": "docs/design/art5-prop-list-spec.md:11-20",
+   "in_code": "partial",
+   "priority": "should"
+  },
+  {
+   "system": "art",
+   "requirement": "Art-swap contract: owner drops hand-drawn files over placeholders (fixed names, sizes, anchors, import) with a validation test",
+   "source": "owner message 2026-10-12; README.md (assets/art/pieces drop-in); assets/sprites/generated/chess manifest",
+   "in_code": "partial",
+   "priority": "must"
+  },
+  {
+   "system": "art",
+   "requirement": "Actor and pickup bodies are Sprite2D plus AnimationPlayer, never _draw",
+   "source": "CLAUDE.md (Non-negotiable rules); AGENTS.md:185",
+   "in_code": "exists",
+   "priority": "must"
+  },
+  {
+   "system": "art",
+   "requirement": "Separate shadow sprites",
+   "source": "docs/design/gdd.md:476",
+   "in_code": "missing",
+   "priority": "could"
+  },
+  {
+   "system": "art",
+   "requirement": "Lighting: warm global tone, PointLight2D only for lamps, magic, interventions",
+   "source": "docs/design/pixel-art-bible.md:173-179",
+   "in_code": "missing",
+   "priority": "could"
+  },
+  {
+   "system": "art",
+   "requirement": "Pixel UI font, Courage as ivory chess bases, Believe as crayon marks, toy-object icons",
+   "source": "docs/design/pixel-art-bible.md:181-188",
+   "in_code": "missing",
+   "priority": "should"
+  },
+  {
+   "system": "art",
+   "requirement": "Dialogue portraits for the pawn and a child treatment",
+   "source": "docs/design/pixel-art-bible.md:215",
+   "in_code": "missing",
+   "priority": "should"
+  },
+  {
+   "system": "art",
+   "requirement": "Readability audit: light and dark tiles, grayscale, busy combat",
+   "source": "docs/design/art6-readability-audit-spec.md:11-31",
+   "in_code": "missing",
+   "priority": "should"
+  },
+  {
+   "system": "art",
+   "requirement": "Final polish pass that removes placeholder look from the slice path",
+   "source": "docs/design/art7-final-polish-pass-spec.md:23-31",
+   "in_code": "missing",
+   "priority": "could"
+  },
+  {
+   "system": "animation",
+   "requirement": "Player clips wake, idle, step, attack, hurt, defeat",
+   "source": "docs/design/an1-player-animation-set-spec.md:14-23; objects/actors/player.tscn",
+   "in_code": "exists",
+   "priority": "must"
+  },
+  {
+   "system": "animation",
+   "requirement": "Player turn, pickup reaction and victory clips",
+   "source": "docs/design/an1-player-animation-set-spec.md:19,21; docs/design/pixel-art-bible.md:99-103",
+   "in_code": "missing",
+   "priority": "should"
+  },
+  {
+   "system": "animation",
+   "requirement": "Enemy clips idle, move, alert, windup, commit, recover, hurt, defeat; the attack clip never plays for enemies (attacking is read from PlayerCombat)",
+   "source": "docs/design/an2-enemy-animation-set-spec.md:9-18; code scripts/ecs/systems/view_sync_system.gd:44,112-128",
+   "in_code": "partial",
+   "priority": "must"
+  },
+  {
+   "system": "animation",
+   "requirement": "Editor-owned AnimationTree state graphs on every actor",
+   "source": "CLAUDE.md; docs/design/an6-animationtree-qa-spec.md:11-18",
+   "in_code": "exists",
+   "priority": "must"
+  },
+  {
+   "system": "animation",
+   "requirement": "Boss animation plans: idle authority, windup per pattern, phase transition, hurt/recover, defeat",
+   "source": "docs/design/an3-boss-animation-plans-spec.md:12-21",
+   "in_code": "missing",
+   "priority": "must"
+  },
+  {
+   "system": "animation",
+   "requirement": "Weapon animations with unique silhouettes and timing",
+   "source": "docs/design/an4-weapon-animation-set-spec.md:9-17",
+   "in_code": "missing",
+   "priority": "should"
+  },
+  {
+   "system": "animation",
+   "requirement": "Animation never moves the logical grid anchor; RESET pose clean",
+   "source": "docs/design/an6-animationtree-qa-spec.md:16-18",
+   "in_code": "exists",
+   "priority": "must"
+  },
+  {
+   "system": "vfx",
+   "requirement": "Telegraph shapes per threat family (pawn corner slashes, knight outlined L, rook arrows, bishop lane band)",
+   "source": "docs/design/fx1-telegraph-language-spec.md:26-33; docs/design/pixel-art-bible.md:152-160",
+   "in_code": "partial",
+   "priority": "must"
+  },
+  {
+   "system": "vfx",
+   "requirement": "Particles for chips, dust, crayon strokes, paper",
+   "source": "docs/design/pixel-art-bible.md:162-171; docs/design/fx4-defeat-feedback-spec.md:12-18",
+   "in_code": "missing",
+   "priority": "should"
+  },
+  {
+   "system": "vfx",
+   "requirement": "Pickup glow and idle motion",
+   "source": "docs/design/fx3-pickup-feedback-spec.md:11-17",
+   "in_code": "partial",
+   "priority": "should"
+  },
+  {
+   "system": "vfx",
+   "requirement": "Boss phase effects and room-light shifts",
+   "source": "docs/design/fx5-boss-phase-feedback-spec.md:11-17",
+   "in_code": "missing",
+   "priority": "must"
+  },
+  {
+   "system": "vfx",
+   "requirement": "Defeat leaves no stale telegraph; no gore",
+   "source": "docs/design/fx4-defeat-feedback-spec.md:12-30",
+   "in_code": "exists",
+   "priority": "must"
+  },
+  {
+   "system": "audio",
+   "requirement": "Bus layout Master, SFX, Music, UI",
+   "source": "docs/design/au6-mix-pass-spec.md:9-33; default_bus_layout.tres",
+   "in_code": "exists",
+   "priority": "must"
+  },
+  {
+   "system": "audio",
+   "requirement": "Three-layer sound law: clip tracks, bus layout, SfxManager registry via the event bridge",
+   "source": "CLAUDE.md (Sound); scripts/audio/sfx_manager.gd",
+   "in_code": "exists",
+   "priority": "must"
+  },
+  {
+   "system": "audio",
+   "requirement": "Warning sound per threat family (pawn, knight, bishop, rook, queen, king); only telegraph_warning.wav exists",
+   "source": "docs/design/au3-enemy-telegraph-sfx-spec.md:11-20; assets/sfx/",
+   "in_code": "partial",
+   "priority": "must"
+  },
+  {
+   "system": "audio",
+   "requirement": "Player step tap, turn tick, sword hit, guard sounds",
+   "source": "docs/design/au2-movement-attack-sfx-spec.md:11-19",
+   "in_code": "partial",
+   "priority": "must"
+  },
+  {
+   "system": "audio",
+   "requirement": "Music states: opening, hub, district, combat, boss, final King, ending (one looping track exists)",
+   "source": "docs/design/au5-music-plan-spec.md:12-22; docs/design/gdd.md:501-510; scenes/main.tscn:26-30",
+   "in_code": "partial",
+   "priority": "must"
+  },
+  {
+   "system": "audio",
+   "requirement": "Mix priority and ducking so warnings beat music",
+   "source": "docs/design/au6-mix-pass-spec.md:11-21; docs/design/au1-audio-identity-spec.md:36-42",
+   "in_code": "partial",
+   "priority": "should"
+  },
+  {
+   "system": "audio",
+   "requirement": "Room ambience per area; final fight strips voice and ambience",
+   "source": "docs/design/au1-audio-identity-spec.md:24-34; docs/design/gdd.md:512",
+   "in_code": "missing",
+   "priority": "should"
+  },
+  {
+   "system": "audio",
+   "requirement": "Toy, wood, paper, crayon sound identity rather than generic fantasy (current SFX are generated chiptune)",
+   "source": "docs/design/au1-audio-identity-spec.md:12-22; docs/design/gdd.md:503-508",
+   "in_code": "partial",
+   "priority": "should"
+  },
+  {
+   "system": "audio",
+   "requirement": "Master, SFX, Music volume sliders",
+   "source": "docs/design/ui4-pause-settings-spec.md:15",
+   "in_code": "missing",
+   "priority": "must"
+  },
+  {
+   "system": "hud",
+   "requirement": "HUD: Courage, equipped weapon, short status prompt, optional enemy count",
+   "source": "docs/design/ui1-hud-scope-spec.md:12-30; code scripts/ui/hud.gd:36-83",
+   "in_code": "partial",
+   "priority": "must"
+  },
+  {
+   "system": "hud",
+   "requirement": "Believe meter and intervention icon appear only once the child system matters",
+   "source": "docs/design/gdd.md:518-519; docs/design/ui1-hud-scope-spec.md:35",
+   "in_code": "missing",
+   "priority": "must"
+  },
+  {
+   "system": "hud",
+   "requirement": "HUD and dialogue never cover danger cells",
+   "source": "docs/design/gdd.md:522; docs/design/ui1-hud-scope-spec.md:55-58",
+   "in_code": "partial",
+   "priority": "must"
+  },
+  {
+   "system": "hud",
+   "requirement": "Separate production HUD from debug readouts (cell coordinates, facing, strike token currently always visible)",
+   "source": "docs/design/ui1-hud-scope-spec.md:44-58; code scripts/ui/hud.gd:62-80",
+   "in_code": "partial",
+   "priority": "should"
+  },
+  {
+   "system": "tutorial",
+   "requirement": "Prompts: one idea each, short, safe moments, fade after use, teach by room shape first",
+   "source": "docs/design/ui2-tutorial-prompt-style-spec.md:11-18; docs/review-batch-5-full-game-expansion.md:164-168",
+   "in_code": "partial",
+   "priority": "must"
+  },
+  {
+   "system": "tutorial",
+   "requirement": "Teach move, hold, turn, sword, telegraph dodge, thrust, pickup denial, reset",
+   "source": "AGENTS.md:201-204",
+   "in_code": "partial",
+   "priority": "must"
+  },
+  {
+   "system": "rulebook",
+   "requirement": "Book of House Rules: pages unlock on first meeting, original rule vs amendment, flavour, count of amendments",
+   "source": "docs/design/ui3-rule-book-design-spec.md:11-18; docs/soulslike-world-plan.md:101-113; scripts/ui/rule_book_ui.gd",
+   "in_code": "exists",
+   "priority": "must"
+  },
+  {
+   "system": "rulebook",
+   "requirement": "Pages for every piece and boss (5 pages exist; none for Captain, Bishop, Rook, Queen, King)",
+   "source": "docs/soulslike-world-plan.md:109-113; resources/rules/rule_book.tres",
+   "in_code": "partial",
+   "priority": "must"
+  },
+  {
+   "system": "rulebook",
+   "requirement": "Opening the book safely pauses or interrupts play (enemies keep ticking today)",
+   "source": "docs/design/ui3-rule-book-design-spec.md:17; code scripts/main.gd:574-582,118-136",
+   "in_code": "partial",
+   "priority": "must"
+  },
+  {
+   "system": "menu",
+   "requirement": "Title screen",
+   "source": "docs/where-we-are.md:96,172",
+   "in_code": "missing",
+   "priority": "must"
+  },
+  {
+   "system": "menu",
+   "requirement": "Pause menu: resume, restart room, volumes, controls, quit",
+   "source": "docs/design/ui4-pause-settings-spec.md:11-18",
+   "in_code": "missing",
+   "priority": "must"
+  },
+  {
+   "system": "menu",
+   "requirement": "Settings screen",
+   "source": "docs/design/ui4-pause-settings-spec.md:11-18",
+   "in_code": "missing",
+   "priority": "must"
+  },
+  {
+   "system": "menu",
+   "requirement": "Credits",
+   "source": "docs/where-we-are.md:172",
+   "in_code": "missing",
+   "priority": "must"
+  },
+  {
+   "system": "menu",
+   "requirement": "End-of-game and epilogue screen",
+   "source": "docs/where-we-are.md:172; docs/design/nar6-ending-script-spec.md:9-10",
+   "in_code": "missing",
+   "priority": "must"
+  },
+  {
+   "system": "menu",
+   "requirement": "Quit to menu or desktop",
+   "source": "docs/design/ui4-pause-settings-spec.md:16",
+   "in_code": "missing",
+   "priority": "must"
+  },
+  {
+   "system": "a11y",
+   "requirement": "Reduced camera shake and reduced flashing",
+   "source": "docs/design/gdd.md:530; docs/design/ui6-accessibility-options-spec.md:13; docs/design/fx6-accessibility-readability-pass-spec.md:15",
+   "in_code": "missing",
+   "priority": "must"
+  },
+  {
+   "system": "a11y",
+   "requirement": "High-contrast danger mode and pattern cues in addition to colour",
+   "source": "docs/design/gdd.md:529,531; docs/design/ui6-accessibility-options-spec.md:17,27",
+   "in_code": "missing",
+   "priority": "must"
+  },
+  {
+   "system": "a11y",
+   "requirement": "Hold or toggle Focus, adjustable telegraph duration, text speed",
+   "source": "docs/design/gdd.md:527-528; docs/design/ui6-accessibility-options-spec.md:14-18",
+   "in_code": "missing",
+   "priority": "should"
+  },
+  {
+   "system": "a11y",
+   "requirement": "Grayscale readability check of every room",
+   "source": "docs/design/fx6-accessibility-readability-pass-spec.md:14-18",
+   "in_code": "missing",
+   "priority": "should"
+  },
+  {
+   "system": "text",
+   "requirement": "Localization-ready strings (all text out of code and scenes)",
+   "source": "docs/where-we-are.md:174",
+   "in_code": "missing",
+   "priority": "should"
+  },
+  {
+   "system": "text",
+   "requirement": "Story text lives in data the owner can rewrite: dialogue, room messages, prompts, unlock lines, boss beats, ending (many strings are hard-coded in scripts/main.gd:169,202,214-223,403,425,499,568)",
+   "source": "owner message 2026-10-12; AGENTS.md:174; scripts/data/room_objective.gd; scripts/data/rule_entry.gd",
+   "in_code": "partial",
+   "priority": "must"
+  },
+  {
+   "system": "narrative",
+   "requirement": "Story spine: powerless pawn becomes free, never royal; child is a companion; bosses are rules",
+   "source": "docs/design/nar1-story-outline-spec.md:11-19,91-99",
+   "in_code": "partial",
+   "priority": "must"
+  },
+  {
+   "system": "narrative",
+   "requirement": "Opening mostly visual: army defeated, King falls, black retreats, pawn remains, child notices, pawn wakes, player moves",
+   "source": "docs/design/nar2-opening-script-spec.md:11-23; docs/design/nar1-story-outline-spec.md:52-63; scenes/rooms/t1_white_kings_fall.tscn:7",
+   "in_code": "partial",
+   "priority": "must"
+  },
+  {
+   "system": "narrative",
+   "requirement": "Dialogue system: short lines (4 or fewer), outside active combat, data-driven",
+   "source": "docs/design/gdd.md:431; docs/game-production-aspect-specs.md:380",
+   "in_code": "missing",
+   "priority": "must"
+  },
+  {
+   "system": "narrative",
+   "requirement": "Cutscene and story-beat system (AnimationPlayer beats, trigger zones, player-hand events)",
+   "source": "task_plan.md:228; docs/design/gdd.md:434",
+   "in_code": "missing",
+   "priority": "must"
+  },
+  {
+   "system": "narrative",
+   "requirement": "Child voice rules: short, curious, sometimes scared, never a tutorial robot",
+   "source": "docs/design/nar3-child-voice-rules-spec.md:11-18; docs/design/nar1-story-outline-spec.md:67-87",
+   "in_code": "missing",
+   "priority": "must"
+  },
+  {
+   "system": "narrative",
+   "requirement": "Child presence staged in Act 1: none, crayon scratch at T4, notices after B1, desk light in H1 (T2 scene still says the child whispers take it)",
+   "source": "docs/production/act-1-opening-to-first-boss-flow-map.md:561-571; scenes/rooms/t2_fallen_sword_tile.tscn (FallenSwordUnlock message)",
+   "in_code": "partial",
+   "priority": "must"
+  },
+  {
+   "system": "narrative",
+   "requirement": "Pawn first believes the child is a god; the child admits they only imagine a better ending",
+   "source": "docs/design/gdd.md:270-272",
+   "in_code": "missing",
+   "priority": "must"
+  },
+  {
+   "system": "narrative",
+   "requirement": "Midpoint reveal: the battle began as a story the child played alone",
+   "source": "docs/design/gdd.md:352-355",
+   "in_code": "missing",
+   "priority": "should"
+  },
+  {
+   "system": "narrative",
+   "requirement": "One story or theme beat per district",
+   "source": "docs/design/nar4-district-story-beats-spec.md:13-19; docs/review-batch-5-full-game-expansion.md:184-191",
+   "in_code": "missing",
+   "priority": "must"
+  },
+  {
+   "system": "narrative",
+   "requirement": "Boss beats: short intro, personality behaviour, phase-change beat, defeat beat; no speeches in combat",
+   "source": "docs/design/nar5-boss-dialogue-behavior-beats-spec.md:11-17",
+   "in_code": "missing",
+   "priority": "must"
+  },
+  {
+   "system": "narrative",
+   "requirement": "Queen speaks directly to the child (freedom is forgotten); King closes the box",
+   "source": "docs/design/gdd.md:359-362,366-373",
+   "in_code": "missing",
+   "priority": "must"
+  },
+  {
+   "system": "narrative",
+   "requirement": "Character arcs for the Pawn, Child, Queen (ideological antagonist) and King (false believer)",
+   "source": "docs/design/gdd.md:437-445",
+   "in_code": "missing",
+   "priority": "must"
+  },
+  {
+   "system": "narrative",
+   "requirement": "Ending: pawn refuses promotion, pieces freed, child rebuilds, pawn stands outside the board by a blue crayon line",
+   "source": "docs/design/gdd.md:375-380; docs/design/nar1-story-outline-spec.md:107-119; docs/design/nar6-ending-script-spec.md:11-19",
+   "in_code": "missing",
+   "priority": "must"
+  },
+  {
+   "system": "narrative",
+   "requirement": "Ending varies slightly with rescued pieces",
+   "source": "docs/design/gdd.md:547",
+   "in_code": "missing",
+   "priority": "could"
+  },
+  {
+   "system": "narrative",
+   "requirement": "Environmental storytelling: moved toys, child drawings, bedroom layer in every scene",
+   "source": "docs/design/gdd.md:432,41-45",
+   "in_code": "partial",
+   "priority": "should"
+  },
+  {
+   "system": "narrative",
+   "requirement": "Rescued white pieces offer optional reflections",
+   "source": "docs/design/gdd.md:433",
+   "in_code": "missing",
+   "priority": "should"
+  },
+  {
+   "system": "narrative",
+   "requirement": "Tone: serious war, warm playground, no gore, humour from scale and material",
+   "source": "docs/design/gdd.md:447-449; docs/design/nar2-opening-script-spec.md:35",
+   "in_code": "partial",
+   "priority": "should"
+  },
+  {
+   "system": "emotion",
+   "requirement": "Emotional beat map: every room and act tagged with a target emotion, stored as data and checked in playtest",
+   "source": "owner message 2026-10-12 (research human emotion); docs/design/gdd.md:57-66",
+   "in_code": "missing",
+   "priority": "must"
+  },
+  {
+   "system": "emotion",
+   "requirement": "Intended arc: vulnerable opening, clever in encounters, surprised at first intervention, capable at the finale",
+   "source": "docs/design/gdd.md:57; docs/design/nar1-story-outline-spec.md:21-33",
+   "in_code": "partial",
+   "priority": "must"
+  },
+  {
+   "system": "emotion",
+   "requirement": "At least three of Lazzaro's four fun keys (hard, easy, people, serious) present in each act, with fiero from boss wins",
+   "source": "https://www.nicolelazzaro.com/the4-keys-to-fun/; https://www.researchgate.net/publication/248446107_Why_we_Play_Games_Four_Keys_to_More_Emotion_without_Story",
+   "in_code": "partial",
+   "priority": "should"
+  },
+  {
+   "system": "emotion",
+   "requirement": "Autonomy, competence and relatedness: rule-breaking choice, clear mastery curve, child bond",
+   "source": "https://selfdeterminationtheory.org/SDT/documents/2006_RyanRigbyPrzybylski_MandE.pdf; docs/design/gdd.md:25-27",
+   "in_code": "partial",
+   "priority": "must"
+  },
+  {
+   "system": "emotion",
+   "requirement": "Child must read as a companion (hesitation, fear, delight), checked in playtest",
+   "source": "docs/design/gdd.md:588-590; docs/design/nar1-story-outline-spec.md:81-87",
+   "in_code": "missing",
+   "priority": "must"
+  },
+  {
+   "system": "emotion",
+   "requirement": "Layered juice (squash, particles, shake, sound) added only after controls respond instantly",
+   "source": "https://roblog.co.uk/2024/03/juicy-games/; docs/design/fx2-hit-feedback-spec.md:9-29",
+   "in_code": "partial",
+   "priority": "should"
+  },
+  {
+   "system": "emotion",
+   "requirement": "Design the finale and ending as the peak and end; avoid front-loading; remove cheap or unreadable deaths",
+   "source": "https://en.wikipedia.org/wiki/Peak%E2%80%93end_rule; docs/design/enemy-behavior-bible.md:964-969",
+   "in_code": "missing",
+   "priority": "must"
+  },
+  {
+   "system": "emotion",
+   "requirement": "Gentle failure plus fine-grained assist options",
+   "source": "https://www.vice.com/en/article/celeste-difficulty-assist-mode/; docs/design/gdd.md:528-533",
+   "in_code": "partial",
+   "priority": "should"
+  },
+  {
+   "system": "emotion",
+   "requirement": "Quiet beats and music rests: silent T1, safe hubs, final-fight silence",
+   "source": "docs/production/t1-white-kings-fall-production-spec.md:284-301; docs/design/au5-music-plan-spec.md:14-22",
+   "in_code": "partial",
+   "priority": "should"
+  },
+  {
+   "system": "emotion",
+   "requirement": "Grief without gore: toppled pieces, cracked bases, pieces return to being toys",
+   "source": "docs/design/gdd.md:423,447-449,619-621",
+   "in_code": "partial",
+   "priority": "should"
+  },
+  {
+   "system": "emotion",
+   "requirement": "Attachment through rescue: rescued pieces return to the hub and the ending",
+   "source": "docs/design/gdd.md:304-310,546-547",
+   "in_code": "missing",
+   "priority": "should"
+  },
+  {
+   "system": "emotion",
+   "requirement": "Post-boss and ending emotion questionnaire in the playtest form",
+   "source": "docs/owner-review-template.md; docs/design/gdd.md:586-597",
+   "in_code": "missing",
+   "priority": "should"
+  },
+  {
+   "system": "game-flow",
+   "requirement": "Complete flow: title, new game, opening, Acts 0-6, ending, credits, back to title",
+   "source": "owner message 2026-10-12 (complete playable base); docs/where-we-are.md:172",
+   "in_code": "missing",
+   "priority": "must"
+  },
+  {
+   "system": "game-flow",
+   "requirement": "Automated start-to-end route test (boot to credits)",
+   "source": "docs/design/qa5-vertical-slice-test-plan-spec.md:11-28; docs/where-we-are.md:98",
+   "in_code": "missing",
+   "priority": "must"
+  },
+  {
+   "system": "game-flow",
+   "requirement": "Difficulty and balance pass for every fight (standard.tres is untuned)",
+   "source": "docs/where-we-are.md:177; resources/difficulty/standard.tres",
+   "in_code": "partial",
+   "priority": "should"
+  },
+  {
+   "system": "tools",
+   "requirement": "Room authoring guide matching the ECS and zone markers (docs/design/room-authoring-guide.md predates the ECS flip)",
+   "source": "docs/design/tool2-room-authoring-guide-update-spec.md:12-21; docs/design/room-authoring-guide.md",
+   "in_code": "partial",
+   "priority": "should"
+  },
+  {
+   "system": "tools",
+   "requirement": "Asset import rules and tile-editing workflow documented",
+   "source": "docs/design/tool3-asset-import-rules-spec.md:11-17; docs/design/tool4-tile-editing-workflow-spec.md:11-18",
+   "in_code": "partial",
+   "priority": "should"
+  },
+  {
+   "system": "tools",
+   "requirement": "Structured owner review template",
+   "source": "docs/design/tool5-review-checklist-template-spec.md:11-20; docs/owner-review-template.md",
+   "in_code": "exists",
+   "priority": "should"
+  },
+  {
+   "system": "tools",
+   "requirement": "Fresh clone builds and runs; generators documented with order",
+   "source": "README.md (First run after a fresh clone); git commit a10cab3",
+   "in_code": "exists",
+   "priority": "must"
+  },
+  {
+   "system": "tools",
+   "requirement": "Single test runner and CI (7 test scripts, no .github)",
+   "source": "docs/design/tech5-automated-tests-spec.md:12-19; docs/where-we-are.md:181",
+   "in_code": "partial",
+   "priority": "should"
+  },
+  {
+   "system": "tools",
+   "requirement": "Editor handoff note per system: Open, Tune, Goal, Try, Tell me",
+   "source": "AGENTS.md:290-302",
+   "in_code": "missing",
+   "priority": "should"
+  },
+  {
+   "system": "qa",
+   "requirement": "Smoke checklist, room QA checklist, combat-feel test log, bug format",
+   "source": "docs/design/qa1-smoke-test-checklist-spec.md:12-26; docs/design/qa2-room-qa-checklist-spec.md:11-20; docs/design/qa3-combat-feel-tests-spec.md:11-19; docs/design/qa4-bug-tracking-format-spec.md:11-22",
+   "in_code": "missing",
+   "priority": "should"
+  },
+  {
+   "system": "qa",
+   "requirement": "Automated coverage: movement, combat, telegraph, graph validation, resource references, scene boot",
+   "source": "docs/design/tech5-automated-tests-spec.md:12-19; tests/ (7 scripts)",
+   "in_code": "exists",
+   "priority": "must"
+  },
+  {
+   "system": "qa",
+   "requirement": "Performance budget: stable 60 FPS, capped enemies, short VFX",
+   "source": "docs/design/tech6-performance-budget-spec.md:11-17",
+   "in_code": "missing",
+   "priority": "should"
+  },
+  {
+   "system": "qa",
+   "requirement": "At least three outside playtesters",
+   "source": "docs/where-we-are.md:136",
+   "in_code": "missing",
+   "priority": "should"
+  },
+  {
+   "system": "release",
+   "requirement": "Exported build that runs outside the editor (macOS zip from 2026-07-28 is stale; no Windows or Linux preset)",
+   "source": "docs/design/rel1-vertical-slice-package-spec.md:11-23; export_presets.cfg",
+   "in_code": "partial",
+   "priority": "must"
+  },
+  {
+   "system": "release",
+   "requirement": "Package notes: controls, known issues, playtime, feedback questions, version",
+   "source": "docs/design/rel1-vertical-slice-package-spec.md:11-18",
+   "in_code": "missing",
+   "priority": "should"
+  },
+  {
+   "system": "release",
+   "requirement": "Screenshot plan, trailer beats, store-page text",
+   "source": "docs/design/rel2-screenshot-plan-spec.md:11-18; docs/design/rel3-trailer-capture-plan-spec.md:11-22; docs/design/rel4-store-page-description-spec.md:11-18",
+   "in_code": "missing",
+   "priority": "could"
+  },
+  {
+   "system": "release",
+   "requirement": "Steam page and public demo plan (15-25 min demo, Next Fest)",
+   "source": "reports/Th\u1ecb tr\u01b0\u1eddng game cho indie dev.md (action plan, phases 1-2)",
+   "in_code": "missing",
+   "priority": "could"
+  },
+  {
+   "system": "release",
+   "requirement": "LICENSE, font and asset credits",
+   "source": "docs/where-we-are.md:178",
+   "in_code": "missing",
+   "priority": "should"
+  },
+  {
+   "system": "process",
+   "requirement": "ECS rules: state in components, decisions in systems, only ViewSyncSystem touches nodes, content in .tres",
+   "source": "CLAUDE.md (Non-negotiable rules); docs/ecs-conversion-plan.md",
+   "in_code": "exists",
+   "priority": "must"
+  },
+  {
+   "system": "process",
+   "requirement": "Verify suite green and import clean before every commit; one logical change per commit",
+   "source": "CLAUDE.md (Verify before you commit)",
+   "in_code": "exists",
+   "priority": "must"
+  },
+  {
+   "system": "process",
+   "requirement": "Research built-in nodes then addons (ask owner) before custom code",
+   "source": "CLAUDE.md; AGENTS.md:182",
+   "in_code": "exists",
+   "priority": "must"
+  }
+ ],
+ "content_inventory": {
+  "acts_and_areas": [
+   "Act 0 'The Board Dies' (5-8 min): T1_WhiteKingsFall [scene exists], T2_FallenSwordTile [scene exists] - full-gameplay-design-v2.md:142-201",
+   "Act 1 'First Rule Break' per v2: T3_ChessRugBattlefield, H1_ChessRugHub, optional O1_CrayonCache - v2:205-271 (superseded by the Act 1 flow map below)",
+   "Act 1 per the newest flow map (2026-09-30, 12-18 min first play / 8-12 slice pace): T1 White King's Fall, T2 Fallen Sword Tile, T3 First Pawn Clash, T4 Broken Rule Yard, B1 Black Pawn Captain, H1 Chess Rug Hub - act-1-opening-to-first-boss-flow-map.md:203-256 [all six scenes exist as greybox, wired in resources/world/world_graph.tres]",
+   "Act 2 Toybox Knight District (15-20 min): K1 Toybox Gate, K2 L-Jump Lanes, K3 Toy Track Ambush, KB Knight Captain, shortcut lid path to hub - v2:274-329 [missing]",
+   "Act 3 Bookshelf Bishop District (15-20 min): Book Spine Steps, Diagonal Chapel, Torn Page Bridge, Bishop Oracle, child draws shortcut to hub - v2:332-390 [missing]",
+   "Act 4 Block Tower Rook District (15-20 min): R1 Block Yard, R2 Ruler Bridge, R3 Breakable Wall Test, RB Rook Warden, shortcut gate - v2:393-439 [missing]",
+   "Act 5 Dollhouse Queen District (15-20 min): Q1 Foyer, Q2 Mixed Court, Q3 Royal Stage, QB Queen of Tricks, Black Castle path opens - v2:442-489 [missing]",
+   "Act 6 Under-Bed Black Castle (20-25 min): F1 Castle Gate, F2 Last Board, F3 Rule Engine, FB Black King - v2:492-563 [missing]",
+   "Ending: bedroom morning, quiet chessboard, pawn outside the board by a blue crayon line - v2:546-563; nar6-ending-script-spec.md:11-19 [missing]",
+   "GDD regions (older naming): Prologue Broken Opening, Toy-Track Maze, Storybook Chapel, Block Fortress, Midpoint exploration, Dollhouse Palace, Finale Chess Box, Ending (gdd.md:314-382) with a ruined-board hub that evolves after each boss (gdd.md:303-310)",
+   "Bedroom world map (LD.1): Window/moonlight, Desk/child area (support space), Bookshelf (Bishop), Block Tower (Rook), Toybox (Knight), Chess Rug (hub), Dollhouse (Queen), Bed/Under-bed (King) - ld1-bedroom-world-layout-spec.md:14-24",
+   "H1 locked routes with lock logic: Bookshelf (page pile / missing bridge), Block Tower (block wall / ruler gate), Dollhouse (furniture barricade / royal seal), Under-Bed (blanket shadow / fear gate), Desk (visible, unreachable) - act-1:496-505",
+   "Legacy and parked world content: scenes/zones/the_kingdom.tscn (72x40 semi-open kingdom: Toybox Yard, Chalk Gardens, Bookshelf Pass, Stable Gate, White Court per soulslike-world-plan.md:137-185), scenes/rooms/first_encounter.tscn (standalone demo room with Knight and Bishop), tools/generate_demo_map.gd (pawn-scale 128x96 bedroom, 1 cell = 1.5 in)",
+   "Support areas the docs call for but nothing builds: gameplay sandbox room (tech4), optional 3 rescues, in-game map screen (could), title screen, pause/settings, credits, epilogue screen"
+  ],
+  "enemies": [
+   "Black Pawn Recruit (pawn_recruit.tres) - exists, diagonal-forward unarmed attack",
+   "Armed Pawn (pawn_armed.tres; Pencil Spear / Ruler Blade replace the diagonal) - exists",
+   "Backstep Pawn (backstep_pawn.tres, 'may move backward') - exists",
+   "Charging Pawn (charging_pawn.tres, +-2 leaps) - exists",
+   "Passant Wraith (captures when passed), Promoted Zealot (elite, armed, faster) - soulslike-world-plan.md:123-128 - missing",
+   "Veteran Pawn, Desperate Pawn variants - enemy-behavior-bible.md:160-164 - missing",
+   "Knight family: Tracker Knight (knight_tracker.tres, data only, 8 L-offsets), Guard Knight - enemy-behavior-bible.md:206-210 - not in any Stage 1 room",
+   "Bishop family: Diagonal Bishop / Zoner (bishop_zoner.tres, data only), Mirror Bishop, Torn Bishop - enemy-behavior-bible.md:250-255",
+   "Rook family: Wooden Rook (breaks after repeated collisions), Iron Rook (front armor) - enemy-behavior-bible.md:293-297 - missing",
+   "Toy hazards and helpers: toy train crossing a row (Knight Captain phase 3), Rook-like toy cart (vertical-slice room 3), paper reflectors/mirror stickers, destructible block walls - gdd.md:199; vertical-slice-design.md:259; enemy-behavior-bible.md:786-800",
+   "Commanded pawns and blocker formations: Queen Command Mark, King Restore Formation toy pawns - enemy-behavior-bible.md:316-317,361",
+   "Enemy weapons: Pencil Spear, Ruler Blade (exist); Marble Launcher, Wind-Up Hammer (future) - enemy-behavior-bible.md:401-423"
+  ],
+  "bosses": [
+   "B1 Black Pawn Captain / Pawn Captain / Rank Breaker / Black Vanguard - tutorial boss, 3 phases (act-1:445-466) - partial (resources/enemies/black_pawn_captain.tres, 4 HP, no phases)",
+   "Knight Captain (a.k.a. Knight Errant in the July plan) - 'You cannot catch what leaps', 3 phases, reward Rule Step - missing",
+   "Bishop Oracle (a.k.a. Bishop of Order) - 'Every piece has a purpose', reward Chalk Path - missing",
+   "Rook Warden (a.k.a. Iron Rook) - 'The straight path is the only path', reward Eraser Guard - missing",
+   "Queen of Tricks (a.k.a. Black Queen) - 'Freedom is another name for chaos', disables a child intervention, opens Black Castle - missing",
+   "Black King plus the Rule Engine - 'The rules are mine', 4 phases, final unassisted diagonal strike - missing",
+   "Optional mini-boss: Promoted Zealot at the Knight's door (soulslike-world-plan.md:127-128)"
+  ],
+  "skills_weapons": [
+   "Wooden Sword - 1 cell, recovery 0.30 s - exists (unlocked by the T2 PlayerUnlockMarker)",
+   "Pencil Thrust / Pencil Spear - 2 cells, recovery 0.52 s, cooldown 1.25 s on Q - exists (available as soon as the sword is unlocked)",
+   "Rule Step / Dodge - 2-cell emergency move, from Knight Captain - missing",
+   "Chalk Path - child-assisted temporary route, from Bishop Oracle - missing",
+   "Eraser Guard - guard/parry vs straight attacks, from Rook Warden - missing",
+   "Final Rule Break - story power, unassisted diagonal step, King finale - missing",
+   "Ruler Blade - front plus forward diagonals (exists only as enemy weapon)",
+   "Child interventions: Place/Move Block, Draw Chalk Path, Paper Bridge, Erase Rule Mark, Hold Ruler Gate, Turn the Board, Gentle Nudge - all missing",
+   "Believe meter (max 2), Focus (telegraph emphasis), Call / Select help actions - missing",
+   "Future weapons: Marble Launcher, Wind-Up Hammer (enemy-behavior-bible.md:413-423)",
+   "Pawn Courage 3 points, rescue heals - Courage exists, rescue heal missing"
+  ],
+  "story_beats": [
+   "White army loses; Black used forbidden toy weapons; the White King falls or is executed before player control (gdd.md:316-321; v2:148-153)",
+   "T1: the pawn wakes alone among fallen pieces; text 'The king has fallen. Move.' (scenes/rooms/t1_white_kings_fall.tscn:7)",
+   "T2: a weapon left by a cheating black piece; pawn takes the sword (child whisper 'Try another way' in gdd.md:324; flow map says no child voice yet - conflict)",
+   "T3: first pawn clash - the pawn can fight and read the board (act-1:328-359)",
+   "T4: the pawn is already breaking the movement rule (back, left, right); crayon scratch crosses a tile (act-1:361-400,565)",
+   "B1: the last black guard of the rug falls; the child notices the pawn for the first time (blue crayon mark, desk light, small gasp) (act-1:445-466,566-569)",
+   "H1: the bedroom world opens, Toybox next, desk foreshadow, locked routes (act-1:468-505)",
+   "Toybox: Knight pride - status is not strength; child first points or whispers; Rule Step earned (nar1:44; nar4:15)",
+   "Bookshelf: Bishop defends written rules; child redraws the battlefield with chalk; pawn crosses a crayon line the Bishop says is not real (nar1:45; gdd.md:399)",
+   "Block Tower: Rook enforces walls and lines; defense and endurance; Rook destroys its own throne by refusing to turn (nar1:46; gdd.md:407)",
+   "Midpoint: hub recovered; two optional rescues; child reveals the battle began as a story they played alone (gdd.md:350-355)",
+   "Dollhouse: Queen controls the stage, speaks to the child, tears child drawings; help becomes vulnerable (nar1:48; gdd.md:359-362)",
+   "Under-Bed: Black King closes the chess box, severs child help; memories of rescued pieces restore directions one at a time (gdd.md:366-373)",
+   "Finale: pawn takes the first unassisted diagonal step, breaks the Rule Engine; pieces become toys again (gdd.md:416-423)",
+   "Ending: pawn refuses promotion, pieces freed from compulsory movement, child rebuilds the playground, pawn stands outside the board near a blue crayon line, child leaves it (gdd.md:375-380; nar1:107-119)",
+   "Hub evolution beats: block shelter, crayon banners and paper bridges, salvaged train, pieces gather at the chess box, pieces build freely (gdd.md:303-310)"
+  ],
+  "characters": [
+   "The Pawn (hero): obedient survivor to angry rebel to responsible liberator; chooses its own rule (gdd.md:439)",
+   "The Child: distant observer to protector to trusted companion who learns to let the pawn act alone; shown by hand, shadow, drawings, voice (gdd.md:440-441,462)",
+   "White King: dead focal prop in T1 (fallen King, broken crown)",
+   "Fallen and rescued white pieces: optional reflections, hub population, ending variation (gdd.md:433,546)",
+   "Black Pawn Captain: stolen toy blade or royal banner, blocks the rug edge (act-1:425-430)",
+   "Knight Captain: proud cavalry leader of the Toybox",
+   "Bishop Oracle / Bishop of Order: faith in written rules",
+   "Rook Warden / Iron Rook: force, walls, straight-line authority",
+   "Queen of Tricks / Black Queen: ideological antagonist, believes rigid rules prevent meaninglessness (gdd.md:442-443)",
+   "Black King: the rule system pretending to be a person; uses the Rule Engine selectively to keep authority (gdd.md:444-445; nar1:99)",
+   "The Rule Engine: mechanical device beneath the chess box (gdd.md:219,418)",
+   "Black army generic pieces: Pawns, Knights, Bishops, Rooks"
+  ]
+ },
+ "conflicts": [
+  {
+   "topic": "What 'done' means: slice vs complete base",
+   "options": "(a) GDD slice: two Toy-Track rooms, Knight Captain with two phases, Place Block, 10-15 min. (b) vertical-slice-design: Sword Yard, Pawn Ambush, Helping Hand, Knight Arena, 10-15 min. (c) v2 slice: opening, hub, Toybox, Knight Captain, Rule Step, 12-18 min. (d) Act 1 flow map: Act 1 = T1..H1 only (8-12 or 12-18 min), Toybox is Act 2. (e) Batch 4 slice ends after Knight Captain. (f) market report: 15-25 min demo. (g) Owner 2026-10-12: one COMPLETE base with everything.",
+   "sources": "docs/design/gdd.md:560-572; docs/design/vertical-slice-design.md:255-260; docs/design/full-gameplay-design-v2.md:732-760; docs/production/act-1-opening-to-first-boss-flow-map.md:37-44; docs/review-batch-4-vertical-slice-expansion.md (Vertical Slice Test Path); reports/Th\u1ecb tr\u01b0\u1eddng game cho indie dev.md; owner message 2026-10-12",
+   "recommended": "Build Acts 0-6 plus ending as one playable, tested chain with every system; keep Stage 1 + Toybox as the first polish milestone but not the cut line.",
+   "why": "The newest owner direction (2026-10-12) supersedes every slice framing, and the GDD already lists the full required content (gdd.md:539-547)."
+  },
+  {
+   "topic": "Game length target",
+   "options": "90-120 min (gdd.md:9, aspect specs); 110-125 min first play (gdd.md:382); 12-18 or 8-12 min (Act 1 map); 10-15 min (slice docs).",
+   "sources": "docs/design/gdd.md:9,382; docs/production/act-1-opening-to-first-boss-flow-map.md:38-41; docs/design/gp7-progression-pacing-spec.md:14-22; docs/where-we-are.md:168-170",
+   "recommended": "No minute promise for the base. Fix structure instead: roughly 25 rooms, each district 3 normal rooms plus boss, so the owner extends content later.",
+   "why": "The owner will deepen story and art himself; the base should prove structure and systems, and length can be measured after he adds content."
+  },
+  {
+   "topic": "World shape",
+   "options": "(a) GDD compact connected map with ruined-board hub. (b) July 2026 owner verdicts: door-connected rectangles read as Gungeon, wanted a semi-open soulslike kingdom (72x40). (c) task_plan 2026-07: connected rooms, not one scrolling map. (d) Batch 1 TECH.2 (2026-09-30): separate editable room scenes with fade-swap and a world graph. (e) pawn-scale 128x96 bedroom generator (2026-09-03), used by no scene. H1 still exits into the legacy kingdom.",
+   "sources": "docs/design/gdd.md:276-312; progress.md:538; task_plan.md:296; docs/design/tech2-room-transition-system-spec.md:3,130-139; docs/review-batch-1-foundation.md:145-157; docs/where-we-are.md:114; scenes/rooms/h1_chess_rug_hub.tscn:59-69",
+   "recommended": "Separate editable room scenes on the world graph (per-room board_size), bedroom districts per LD.1/v2, Chess Rug hub. Retire the 72x40 kingdom to a legacy folder; use the pawn-scale bedroom map only as backdrop or art reference.",
+   "why": "Batch 1 and the Act 1 map (2026-09-30) are the newest recorded owner approvals and the existing travel, gate and save systems already support them; three world models cannot ship."
+  },
+  {
+   "topic": "Which boss is first",
+   "options": "Knight Errant (July owner decision); Knight Captain as the first/slice boss (GDD, v2); Black Pawn Captain as the tutorial boss with the Knight Captain moved to Act 2 (Act 1 map).",
+   "sources": "docs/soulslike-world-plan.md:90,130-135; docs/design/gdd.md:326-332; docs/design/full-gameplay-design-v2.md:732-760; docs/production/act-1-opening-to-first-boss-flow-map.md:44-67,585-593",
+   "recommended": "B1 Black Pawn Captain is first; Knight Captain is the first district boss in Act 2. Fold the 'Knight may move twice' amendment into Knight Captain phase 2/3.",
+   "why": "The 2026-09-30 Act 1 flow map is newest and explicitly replaced the Knight-in-Act-1 plan."
+  },
+  {
+   "topic": "Boss and room naming plus ID collisions",
+   "options": "Bishop of Order vs Bishop Oracle; Iron Rook vs Rook Warden; Black Queen vs Queen of Tricks; Knight Errant vs Knight Captain. Room id B1 is the Black Pawn Captain in Act 1 and Book Spine Steps in the Bookshelf plan.",
+   "sources": "docs/design/gdd.md:388-421; docs/design/full-gameplay-design-v2.md:351-359,373,422,471; docs/production/act-1-opening-to-first-boss-flow-map.md:402; docs/design/enemy-behavior-bible.md:786-852",
+   "recommended": "Use the v2 names. Prefix district rooms uniquely (TB/BS/BT/DH/UB) and keep B1 for the Pawn Captain.",
+   "why": "v2 (2026-09-29) is the newest full design and ids must be unique for the world graph."
+  },
+  {
+   "topic": "Child intervention set, meter and first appearance",
+   "options": "GDD: Place Block, Draw Path, Turn the Board, Gentle Nudge; Believe max 2; first help in Toy-Track Maze. v2: arc notices, whispers, chalk path, moves block, protected, blocked; Believe meter in normal rooms, scripted in bosses. GP.5: Move Block, Chalk Path, Paper Bridge, Erase Rule Mark, Ruler Gate. Slice doc: Place Block introduced in the 3rd room. Act 1 map: foreshadow only until after B1. Code T2 line: 'The child whispers: take it'.",
+   "sources": "docs/design/gdd.md:225-272,326-332; docs/design/full-gameplay-design-v2.md:654-677,788-796; docs/design/gp5-child-intervention-system-spec.md:20-28; docs/design/vertical-slice-design.md:255-260; docs/production/act-1-opening-to-first-boss-flow-map.md:561-571; scenes/rooms/t2_fallen_sword_tile.tscn",
+   "recommended": "Follow the v2 arc inside the Act 1 map staging: silent foreshadow in Act 1, first spoken/pointed help in Act 2, Chalk Path/Paper Bridge in Act 3, Move Block and Ruler Gate in Act 4, disruption in Act 5. Believe meter max 2 for rooms, scripted for bosses. Change the T2 whisper line (data).",
+   "why": "The 2026-09-30 Act 1 map and v2 are newest; the story-first owner direction needs the child's reveal to be a designed emotional beat, not a tutorial line."
+  },
+  {
+   "topic": "Pencil Thrust timing and skill list",
+   "options": "GDD: Pencil Thrust in the loadout from the start. v2: Pencil Spear unlocked in Act 1 (hub). GP.7: optional at 10-25 min. Act 1 map: no major skill at B1. Code: Q works as soon as the sword is picked up. Chalk Path is both a pawn skill (gp4) and a child intervention (gp5); Gentle Nudge (GDD) vs Final Rule Break (v2).",
+   "sources": "docs/design/gdd.md:123-127,262-268; docs/design/full-gameplay-design-v2.md:262-266,567-590; docs/design/gp7-progression-pacing-spec.md:16-17; docs/production/act-1-opening-to-first-boss-flow-map.md:453-466; scripts/ecs/systems/combat_system.gd:45-51",
+   "recommended": "Six verbs: Sword, Pencil Thrust (optional pickup in H1, player-pickable), Rule Step, Chalk Path (child-assisted), Eraser Guard, Final Rule Break (= the unassisted diagonal step; fold Gentle Nudge into it). Q locked until the pencil is found.",
+   "why": "Batch 5 and v2 recommend exactly this set; it keeps Act 1 tutorial-clean and gives the player pickup system a purpose."
+  },
+  {
+   "topic": "Enemy movement law",
+   "options": "Chess rules as law of the world, every piece moves and captures as chess says, Charging Pawn moves two squares (owner direction 2026-07-28). Enemy freedom revision approved June 2026: all common enemies move one free cardinal cell, chess identity lives in the unarmed attack. Sept specs and v2 repeat one-cell free movement. where-we-are decision 7 asks again.",
+   "sources": "docs/soulslike-world-plan.md:99-128; findings.md:45-51; docs/design/gdd.md:186-193; docs/design/en2-knight-behavior-spec.md:21-27; docs/design/full-gameplay-design-v2.md:612-624; docs/where-we-are.md:156",
+   "recommended": "One free cardinal step for all common enemies (matches code and every Sept spec); chess identity in attack geometry; special-power pawn variants (Backstep, Charging, Passant, Zealot) are labelled rule amendments written in the Book of House Rules.",
+   "why": "Newest specs and the working code agree; the Book of House Rules (a July owner idea) keeps the 'amended law' flavour without changing locomotion."
+  },
+  {
+   "topic": "Death, checkpoints and pickup persistence",
+   "options": "GP.6: room resets, pickups reset unless persistent, boss retry at phase 1, checkpoints at hubs and before bosses. Code: scene reload at last entry, every taken pickup persists forever, no checkpoint. Soulslike plan: bosses, gates, items never reset. Slice doc: store only room checkpoint and settings.",
+   "sources": "docs/design/gp6-failure-checkpoint-rules-spec.md:12-30; docs/design/tech3-save-checkpoint-system-spec.md:12-18; docs/soulslike-world-plan.md:76-82; docs/design/vertical-slice-design.md:270-275; scripts/main.gd:285-302,480-487",
+   "recommended": "Low-punishment model: death returns to the latest hub or boss-door checkpoint; room resets; unlocks, story flags, opened gates, defeated bosses, rescues persist; consumable room pickups reset; boss retry restarts at phase 1.",
+   "why": "Matches GP.6 and the GDD promise 'no progress lost' and the emotional goal of motivation after failure."
+  },
+  {
+   "topic": "Key bindings",
+   "options": "Code: R = restart room, Space or K = attack, Q = skill, B and F3 and F11 raw keys. v2: R = Call child, E = Interact, Focus on hold. GDD: Call, Select Help, Focus, Interact.",
+   "sources": "project.godot [input]; scripts/main.gd:119-130; docs/design/full-gameplay-design-v2.md:127-136; docs/design/gdd.md:150-159",
+   "recommended": "Space/K attack, Q skill, E interact, R call child, Tab or C select help, hold Ctrl or F focus, Esc pause (restart room lives in the pause menu), B rule book, Shift+dir turn, plus controller map and remap screen.",
+   "why": "v2 (newest) assigns R to the child; restart as a single keypress also conflicts with the emotional design of the child resetting the board."
+  },
+  {
+   "topic": "Child help in the final fight",
+   "options": "GDD: King shuts the box and severs all help; pawn alone. v2 phase 4: child reaches in but cannot finish. EN.6: blocked, then restored for the final opening. Bible: Close the Box disables interventions in phase 3.",
+   "sources": "docs/design/gdd.md:366-373; docs/design/full-gameplay-design-v2.md:522-530; docs/design/en6-king-behavior-spec.md:28-35; docs/design/enemy-behavior-bible.md:359-365",
+   "recommended": "Phase 3 help is blocked (Close the Box); for the final opening the child's hand only reaches in as a non-solving gesture; the pawn takes the diagonal step unassisted.",
+   "why": "Reconciles all four texts and delivers the strongest emotional peak (independence then partnership)."
+  },
+  {
+   "topic": "Sprite scale and art pipeline",
+   "options": "GDD and pixel-art-bible: pawn 32x40, knight 48x48, boss 64-96. Owner-approved generated chess family: pawn 18x20, knight 24x32 with outline. task_plan: pieces about 48 px. Owner decided to hand-draw art (2026-09-03, 2026-10-12) and called AI-made art poor. Stage 1 rooms use baked backgrounds.",
+   "sources": "docs/design/gdd.md:465-476; docs/design/pixel-art-bible.md:74-87; findings.md:241-249; task_plan.md:207; docs/where-we-are.md:191-192; owner message 2026-10-12",
+   "recommended": "One sprite contract driven by a manifest (frame size, anchor row on cell centre, 4 facings, state list). All generated art is flagged placeholder; the owner replaces files by name; no AI art is finalized.",
+   "why": "Owner-owned art is the newest explicit direction; a stable contract is the only way hand art can drop in without touching code."
+  },
+  {
+   "topic": "Audio identity",
+   "options": "GDD: small orchestral palette, toy piano, music box, hand percussion, voices close and natural. AU.1: wood, paper, crayon, blocks. Code: generated chiptune SFX and a 17 s A-minor chiptune march.",
+   "sources": "docs/design/gdd.md:501-510; docs/design/au1-audio-identity-spec.md:12-22; progress.md:508; tools/generate_sfx.py; tools/generate_music.py",
+   "recommended": "Keep generated WAVs as named placeholders in the SfxManager registry and clip tracks; ship a swap list per required sound; do not treat chiptune as final.",
+   "why": "Sound law (CLAUDE.md) already makes files swappable; identity is a taste call for the owner."
+  },
+  {
+   "topic": "Engineering doctrine in AGENTS.md vs CLAUDE.md",
+   "options": "AGENTS.md says do not introduce a strict ECS and lists stale E1 targets; CLAUDE.md and the code are a full ECS (owner chose it 2026-07-19).",
+   "sources": "AGENTS.md:181,20-60; CLAUDE.md; docs/ecs-conversion-plan.md:3",
+   "recommended": "CLAUDE.md and the ECS map win; rewrite AGENTS.md priority and rules to match.",
+   "why": "Newest owner decision (2026-07-19) and the only description that matches the repo."
+  },
+  {
+   "topic": "HUD scope",
+   "options": "UI.1: minimal HUD (Courage, weapon, short prompt, optional enemy count). GDD: Courage marks, Believe, intervention icon, boss bar. Code HUD shows cell coordinates, facing, strike-token label, enemy count and a static controls strip.",
+   "sources": "docs/design/ui1-hud-scope-spec.md:12-30; docs/design/gdd.md:516-522; scripts/ui/hud.gd:62-80; scenes/ui/hud.tscn:100",
+   "recommended": "Production HUD per GDD/UI.1 (marks, Believe, icon, boss bar); debug fields behind F3 only.",
+   "why": "Prevents the build from looking like a prototype to the owner and testers."
+  },
+  {
+   "topic": "Hub exit targets vs act boundaries",
+   "options": "Act 1 map: Toybox is Act 2 with new rooms. Code: H1 Exit_To_Act2Toybox loads the legacy 72x40 kingdom zone.",
+   "sources": "docs/production/act-1-opening-to-first-boss-flow-map.md:71-98,583-593; scenes/rooms/h1_chess_rug_hub.tscn:65-69",
+   "recommended": "Point the Toybox door at the new Toybox gate room; other doors become explained locks; legacy kingdom removed from the graph.",
+   "why": "Matches the owner-approved act structure and removes the 'three world models' hazard."
+  },
+  {
+   "topic": "Rescues and ending variations",
+   "options": "GDD: three optional rescues restore Courage, hub grows, ending varies. v2, NAR and GP specs contain no rescues.",
+   "sources": "docs/design/gdd.md:134-135,303-310,546-547; docs/design/full-gameplay-design-v2.md:229; docs/design/nar6-ending-script-spec.md:11-19",
+   "recommended": "Keep three rescues as the attachment mechanic (they feed hub evolution and the ending); ending variants are 'could'.",
+   "why": "The owner asked for emotion research; rescue-and-return is the cheapest authored attachment loop and is already in the approved GDD."
+  },
+  {
+   "topic": "Time slow vs Focus",
+   "options": "Slice doc: time slows to 35 percent while choosing a block cell. GDD: Focus emphasises telegraphs and does not stop time; selection without opening a menu.",
+   "sources": "docs/design/vertical-slice-design.md:246-253; docs/design/gdd.md:159-161",
+   "recommended": "Slow only during child-targeting, with an accessibility toggle; Focus never slows time.",
+   "why": "Keeps real-time identity while making placement fair and accessible."
+  },
+  {
+   "topic": "Camera behaviour",
+   "options": "GDD: camera follows by room, not tight tracking. Code: CameraRig follows the hero with smoothing 8.0 and clamps to the board. Pixel bible: snap to whole pixels.",
+   "sources": "docs/design/gdd.md:139-143; docs/design/pixel-art-bible.md:22-26; scripts/world/camera_rig.gd",
+   "recommended": "Static framing for single-screen rooms, scroll only larger boards, snap to integer pixels, optional shake reduction.",
+   "why": "Matches the fixed 16x9 room model and the readability pillar."
+  },
+  {
+   "topic": "Approval workflow vs the owner's new request",
+   "options": "Owner rule: plan small part, approve, implement, verify, owner reviews in Godot, accept (2026-09-29). New request (2026-10-12): build one complete base, then the owner takes over art and story. All 'owner approved' text in docs is agent-written with no verbatim quote.",
+   "sources": "docs/production-checklist.md:20-30; progress.md:601-605; docs/where-we-are.md:186-192; owner message 2026-10-12",
+   "recommended": "Treat the 2026-10-12 message as a batch approval to build the whole base; still log each system with a handoff note and collect owner review forms after delivery; record future approvals verbatim.",
+   "why": "The per-task gate would block a full base; the owner explicitly asked for the complete base first."
+  }
+ ],
+ "owner_recorded_directions": [
+  "2026-10-12 (owner chat, relayed by the workflow harness; translated from Vietnamese): a game is not only gameplay, it must tell a story; 'you never delivered all the requirements'; build ONE complete base with everything, the owner will draw the art and upgrade the story himself; make it as perfect as possible before he jumps in; research human emotion while playing games; 'I trust you'. The message opens with '1 is OK, but regarding 2'. The referent is not in the repo; the likeliest reading is docs/where-we-are.md section 6, decision 1 (permission to commit and push, lines 148-150) and decision 2 (world shape / slice, lines 151-154). Inference only; commits a10cab3, c46442f, 008e0dc, bacca5c and branch game-base were created 2026-10-12, consistent with decision 1 being granted. Source: workflow request.",
+  "2026-10-12 (earlier, via owner audit request): owner judged the game boring and the AI-made art poor (stated in the task brief; not in a repo file).",
+  "2026-10-02: owner asked to compare the opening against commercial first stages such as Prince of Persia: The Lost Crown and to proceed beyond a thin technical slice. Source: task_plan.md:3-6; docs/production/stage-1-commercial-tutorial-redesign.md:5-20.",
+  "2026-09-30: owner approved Batch 1 Foundation (GP.1, LD.2, LD.1, ART.1, NAR.1, TECH.2): one-cell real-time grid movement identity, chess rug opening/hub, bedroom-object districts, top-down pixel art with readability over decoration, pawn stays a pawn, child foreshadowed before unlocked, separate editable room scenes with visible exits and fade-swap. Source: progress.md:757-762; docs/review-batch-1-foundation.md:3,214-226. Evidence is an agent-written note, no verbatim quote (docs/where-we-are.md:188-192).",
+  "2026-09-30: owner clarified the game should be split into acts, with Batch 1 informing Act 1. Source: progress.md:767-772.",
+  "2026-09-30: owner clarified Toybox is NOT part of Act 1; Act 1 needs its own tutorial arc and a small boss first (action-adventure opening). Source: progress.md:775-782; docs/production/act-1-opening-to-first-boss-flow-map.md:3-26.",
+  "2026-09-30: owner asked to redesign and start building; Act 1 flow and T1 spec approved for the initial build. Source: progress.md:784-791; docs/production/act-1-opening-to-first-boss-flow-map.md:679-691; docs/production/t1-white-kings-fall-production-spec.md:379-391.",
+  "2026-09-29: owner pointed out the aspects checklist looked sequential; lanes are parallel, each task still gated. Source: progress.md:626-630.",
+  "2026-09-29: owner clarified checklists are not enough; every aspect needs a completion spec with hard requirements. Source: progress.md:632-637; docs/game-production-aspect-specs.md:15-26.",
+  "2026-09-29: owner working rule: plan one small part, get owner approval, implement only that part, verify, owner reviews in Godot, then move on; if Codex is not confident it must stop at planning. Source: progress.md:601-605; docs/production-checklist.md:20-30.",
+  "2026-09-03: owner decided to hand-draw the art himself (stated in chat, per docs/where-we-are.md:191-192; recorded only in commit messages cfc594f 'let a human take it over', f841907 'Let the room be drawn by hand too', a4613b9).",
+  "2026-08-04: owner rejected four hand-authored knight silhouettes in a row ('that shape looks weird', 'even worse'), asked for a full-black piece shaped like a real chess knight, then reviewed the traced result and said keep it; 'keep the design of the pawn' held through every revision. The same day's floor commit c03747a cites 'the owner's coarseness rule' (flat colour blocks, no noise or dither). Source: progress.md:594-599; git log c03747a.",
+  "2026-08-03: owner asked to export the approved piece forms and save them (about 23 correction rounds of the art language). Source: progress.md:585.",
+  "2026-07-29: owner asked to SEE the kingdom map and for a hero wakeup animation. Source: progress.md:576.",
+  "2026-07-29: owner verdict on the semi-open world: 'too anotony'; map must read as a kingdom. Source: progress.md:566.",
+  "2026-07-29: owner verdict: three zones too simple; rebuild on the Dark Souls 3 opening skeleton (five zones). Source: progress.md:553; docs/soulslike-world-plan.md:171-185.",
+  "2026-07-29: owner correction: the world must look like the child's playground THEY designed (their wood #7f5f51 / sand #c9a77d crayon-outlined tiles), not throne-room marble. Source: progress.md:547.",
+  "2026-07-29: owner verdict on v2: door-connected rectangles read as Enter the Gungeon rooms, not a soulslike world; redesign as one continuous 72x40 kingdom. Source: progress.md:538.",
+  "2026-07-28: owner scoped the soulslike plan to THE MAP and BOSS FIGHTS only; bonfires, corpse run, leveling cut; death = zone reload; first boss = the Knight. Source: docs/soulslike-world-plan.md:3-8,90,96-97.",
+  "2026-07-28: owner content direction: chess rules are the law of the world, drama comes from single-rule amendments; Book of House Rules as compendium, lore and tutorial; pawn variants on the road to the Knight. Source: docs/soulslike-world-plan.md:99-135.",
+  "2026-07-28: owner asked for structured sound (rule and workflow first): three-layer sound law and /new-sound. Source: progress.md:498.",
+  "2026-07-20: owner picked node control for animation (AnimationTree state graphs). Source: progress.md:482.",
+  "2026-07-19/20: owner chose full ECS ('go for ecs'), wanted components back as editor nodes ('1 node as a component for ecs'), named them components, flagged the player scene as 'not right', and asked 'only health component?' so the full player component set was added. Source: docs/ecs-conversion-plan.md:3; progress.md:420,458,466,471,476.",
+  "2026-07-17: owner asked to flatten the Visual wrapper for player and enemies ('change both player and enemies') and to split the player script into components for easier extension. Source: progress.md:401,410.",
+  "2026-07-14: owner decision recorded 'World shape (owner decision, 2026-07): connected rooms, not one big scrolling map'; owner-requested naming clarity pass and self-documenting names rule. Source: task_plan.md:192,296; commits 538d04c, fe602a6, 5db334f.",
+  "2026-07-07: owner asked for an AI-focused editor surface (DecisionConfig on the AI node). Source: progress.md:354.",
+  "2026-06-21: owner approved the Tactical Predator behavior direction for the enemy intent foundation. Source: progress.md (section 2026-06-21).",
+  "2026-06-19..21: owner approved the enemy freedom revision (cardinal movement, chess-shaped unarmed attacks, weapon replacement). Source: progress.md (Combat Revision); findings.md:45-51.",
+  "2026-06-19: owner playtest feedback: 0.18 s step feels right, held movement stays, sword response feels right, Shift+direction turning needed, sword range stays 1 cell, approved slice loadout Wooden Sword + Pencil Thrust. Source: findings.md:26-33.",
+  "2026-06-18: GDD v1.1 'Approved concept'; art target is Enter the Gungeon-level readability. Source: docs/design/gdd.md:3-11; findings.md:10-17.",
+  "Standing rule (undated): ask the owner before replacing art direction, changing core controls, changing the intended 2-hour scope, removing a mechanic, or making a destructive migration; owner owns play feel, layout, art/audio taste and story tone. Source: AGENTS.md:62-90.",
+  "Caveat: no repo file contains a verbatim owner quote; every 'owner approved' line is agent-written (docs/where-we-are.md:188-192). Batches 2-5 are still draft (docs/production-approval-board.md:32-43)."
+ ],
+ "summary": "Answer key: 249 requirements extracted from the GDD, v2 design, slice/soulslike/map plans, Act 1 flow map, T1 spec, the 76 lane specs (all read), five review batches, aspect specs, AGENTS/CLAUDE/task_plan/findings/progress, plus owner-direction-derived emotion and game-flow rows (web: Lazzaro four keys, SDT 2006, Juice it or lose it, peak-end rule, Celeste assist). Code check: 47 exist, 76 partial, 126 missing; 156 are 'must' for a complete base.\\n\\nThe owner's complaint is accurate. What exists and works: ECS runtime, one-cell movement, buffering, Shift-turn, Wooden Sword and Pencil Thrust, telegraph/dodge/attack-token pawn family (recruit, armed, backstep, charging, captain), 6 greybox Stage 1 rooms (T1-T4, B1, H1) on a world graph with fade travel, exit locks, sword unlock, one-way gates, autosave of zone/pickups/gates/unlocks/rule pages, the Book of House Rules (5 pages), SFX registry plus buses, wake animation, AnimationTree on 5 actors. Story is almost absent in code: it is only a few strings (room_message, one unlock line, 5 rule pages). Missing entirely: dialogue and cutscene systems, child presence and every intervention (Believe, Place Block, Chalk Path...), Rule Step, Eraser Guard, Final Rule Break, boss framework (phases, boss bar, arena seal, per-boss retry), Rook, Queen, King and 4 of 5 districts (Toybox through Under-Bed, about 20 rooms), the ending, title/pause/settings/credits/New Game, controller and remap, accessibility options, particles/hit-stop/lighting, localization/text-in-data, hub evolution, rescues, checkpoints.\\n\\nCode defects against the docs: no attack movement lock, no stagger, input buffer never expires, turning allowed mid-step, all locked exits show the captain message, enemy attack clip is never driven (view_sync reads PlayerCombat), the Rule Book does not pause enemies, H1 leads into the legacy 72x40 kingdom, T2 still has a child whisper that the Act 1 map forbids, knight and bishop exist only in first_encounter.tscn, and the player cannot pick up weapons.\\n\\nDecisions the newest owner direction forces (see conflicts): treat the whole Acts 0-6 chain as the deliverable, rooms-on-a-world-graph as the world model, Black Pawn Captain as first boss, v2 names and the six-verb skill set, one-cell enemy movement, low-punishment checkpoint rules, R reserved for Call child, and a manifest-driven art/audio swap contract so the owner can drop hand-drawn files in. Story and emotion should be authored as data (dialogue, beat map, boss beats, ending) so the owner can rewrite them.\\n\\nCaveats: read-only audit; I did not run Godot tests (the 235 PASS figure is from docs/where-we-are.md and an earlier audit, unverified here). The repo moved since the brief's git snapshot: branch is game-base, HEAD bacca5c, Stage 1 committed as c46442f; only docs/progress edits are uncommitted. No repo file holds a verbatim owner quote, so all 'owner approved' records are agent paraphrase. The referent of the owner's opening '1 ok, but 2' is inferred, not documented.\""
+}

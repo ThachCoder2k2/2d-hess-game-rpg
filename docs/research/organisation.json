@@ -1,0 +1,338 @@
+{
+ "current_layout": "TODAY (counted from the files, 2026-10-12). scenes/ 11 .tscn; objects/ 17 .tscn; resources/ 37 .tres in 11 sub-folders; scripts/ 51 .gd = 3,793 lines (scripts/ecs = 1,728); tests/ 7 files (967 lines); tools/ 11; docs/ 129 files. The layout is type-first (scenes / objects / resources / scripts), a leftover of the node era.\n\nKEEP (it is already ECS-correct): EcsWorld is 102 lines of stores + query + system list + event queue (scripts/ecs/ecs_world.gd); components are pure data (scripts/ecs/ecs_components.gd:1-135); six systems; only ViewSyncSystem touches nodes; EntityComponent nodes bake Inspector data into an entity at spawn (scripts/ecs/components/entity_component.gd), which is the same author-then-bake split Unity DOTS uses. The problem is not the ECS core. It is that everything around it is organised by file type instead of by the thing the owner names, and things that should be data are code.\n\nWHERE IT FIGHTS THE OWNER (evidence in path:line):\nF1 One thing, many folders. A new enemy = 5 .tres in 5 folders (resources/movement, attacks, decisions, visuals, enemies) + objects/actors/<name>.tscn + a test block (.claude/commands/new-enemy.md:10-37), +2 files for a Book page (resources/rules/*.tres and rule_book.tres), +1 room edit = up to 10 files in 9 folders. Sharing is thin: 10 of the 14 enemy sub-resources are used by exactly one enemy; only the pawn family shares.\nF2 Copy-paste scenes. objects/actors/black_pawn.tscn, enemy_base.tscn, knight_enemy.tscn, bishop_enemy.tscn are 353-354 lines each and differ by texture, definition and a few clip timings (diff black_pawn vs bishop_enemy: idle 0.9 s vs 0.72 s). A change to the shared clip set is made 4 times.\nF3 Three schemas for \"a thing that hits cells\": AttackProfile (player: range_cells, impact_delay, recovery), AttackPattern (enemy: cell_offsets, telegraph_duration), EnemyWeapon (floor weapon: shape, range_cells, telegraph_time). One idea, three vocabularies.\nF4 Skills are not data-driven. PlayerCombat has exactly two fixed slots (ecs_components.gd:70-83); PlayerInputSystem maps attack to &\"sword\" and skill_1 to &\"skill\" (player_input_system.gd:27-30); CombatSystem picks wooden_sword or pencil_thrust by that string (combat_system.gd:45-49); the HUD hard-codes \"Q THRUST READY\", \"FIND SWORD\" and 3 pips (hud.gd:39,47,49); project.godot has one skill action (:69); the sword unlock is the literal \"wooden_sword\" (main.gd:412). Adding a third skill edits at least 7 files including code, and GP.4's Rule Step / Chalk Path / Eraser Guard / Final Rule Break (docs/design/gp4-skill-system-spec.md) have no place to live.\nF5 Progression has no home. WorldState keeps four ad-hoc dictionaries (world_state.gd:14-22) each with its own save/load code (:50-82), and a save-version mismatch silently wipes everything (:66-68). There is no milestone/route data, so GP.7's pacing table (docs/design/gp7-progression-pacing-spec.md) cannot be edited anywhere.\nF6 Words live in code and scenes. Player-facing strings sit in main.gd (:147,169,214,216,403,425,499), hud.gd, rule_book_ui.gd:72, every room.tscn room_message, RoomObjective .tres, PlayerUnlockMarker exports; \"Pawn Hero\" is a literal in ecs_boot.gd:43. No text table, no dialogue/cutscene schema, no locale: renaming a character or adding Vietnamese is a hunt.\nF7 main.gd (605 lines) is a god-bridge that contradicts its own header (:3-7, \"no gameplay decision lives here\"): it decides room clear and defeat (:264-302), applies unlocks (:406-414), records pickups and gates (:480-520), owns zone swap and fade, polls F3/F11/B, writes HUD text, and hard-codes the system order (:109-114). Rules hidden there are invisible to anyone reading ecs/systems.\nF8 Boot is hand-wired. EcsBoot has one _bake_* per marker type (ecs_boot.gd:69-109) and duck-types pickups with has_method/call (:125-149); EcsActorFactory maps definition to components by hand (ecs_actor_factory.gd:31-71); EcsGrid carries door/gate/unlock dictionaries (ecs_grid.gd:26-33); MovementSystem contains the gate, door and unlock rules (movement_system.gd:47-102). A new floor trigger edits 4-5 existing files.\nF9 \"Component\" means two things: runtime data classes (ecs_components.gd) and editor nodes in scripts/ecs/components/ (HealthComponent, CombatComponent... extending EntityComponent). Someone opening components/ finds the wrong one.\nF10 Art slots are traps. assets/sprites/generated/ mixes 12 tracked source sprites (hero_pawn, toy_sword, black_pawn...) with four gitignored generator outputs (.gitignore:12-15: chess, tiles, maps, rooms). T1/T2 backgrounds load from the ignored rooms/ folder (scenes/rooms/t1_white_kings_fall.tscn:8), so hand-drawn art dropped there is untracked or overwritten by tools/generate_stage1_room_art.gd. Music is one autoplay stream wired in scenes/main.tscn:26-28; there is no per-room or per-beat music.\nF11 Docs describe a game that no longer exists: docs/ARCHITECTURE.md:69-99 (grid_world.gd, free_enemy.gd), docs/coding-standards.md:176-177 (\"No ECS\"), AGENTS.md:52 and .claude/commands/new-enemy.md:7,31 (EnemyActor root), docs/restructure-plan.md (its target tree has features/enemies/components/grid_movement, all deleted). Following any of them produces wrong files. docs/restructure-plan.md's own trigger (\"adding a feature edits 4+ scattered folders\", \"hunting across scripts/objects/resources for one entity\") has already fired.\nF12 Fragile paths. 213 of 251 ext_resource lines (85%) are path-only with no uid=; 49 of 66 tracked .tscn/.tres lack a header uid; tests hard-code about 30 res:// literals (tests/run_tests.gd:108-112 and others); scripts/combat/enemy_weapon.gd:34-39 load()s two .tres by literal path; project.godot:14,24,25 hold the main-scene and autoload paths. Moving a file outside the editor breaks references.\nF13 Tests: one 284-line monolith plus six runtime scripts run by a shell loop (CLAUDE.md \"Verify\"), no runner that discovers them, and no architecture guard (the only structural check is a string grep in tests/run_tests.gd:~105).",
+ "ecs_organisation_research": [
+  {
+   "source": "https://github.com/csprance/gecs ; https://csprance.com/blog/gecs-entities ; https://github.com/csprance/gecs/releases",
+   "approach": "GECS, the most active Godot ECS addon. Components are data-only Resources with @export; entities are Node scenes (the author calls scene-based entities prefabs) or built in code; components are attached in the Inspector through an exported component_resources list or in define_components(). About 613 stars and 1,212 commits on the README; v9.3.x releases listed (the fetched page shows day and month, not year); requires Godot 4.6+; v8.0.0 removed the old Observer API with no shim.",
+   "takeaway": "Its authoring shape (an entity = a file holding a typed list of component resources) is exactly the shape recommended here for EntityDefinition.parts, so the repo can adopt GECS later without redoing content. Do not adopt it now: its entities are Nodes, this repo's are integer ids, so adoption means rewriting all six systems and about 400 EcsComponents references (23 files); CLAUDE.md also requires owner approval for any dependency. Treat it as an owner decision, not a default."
+  },
+  {
+   "source": "https://github.com/GodotECS/godex ; https://github.com/GodotECS/godex/wiki/Setup",
+   "approach": "Godex is a C++ engine module that must be compiled into Godot and needs a core patch; the org page shows the repo last updated 18 Sep 2023.",
+   "takeaway": "Not usable with the prebuilt ../Godot.app this project runs on, and stalled since 2023. Rule out."
+  },
+  {
+   "source": "https://godotengine.org/article/why-isnt-godot-ecs-based-game-engine/",
+   "approach": "Godot's lead developer explains the engine is node/inheritance based and composes at a higher level than ECS, while stating nothing stops a game from using ECS.",
+   "takeaway": "ECS here is a project-level choice layered on Godot. Keep Godot doing what it is good at (scenes, Resources, Inspector, AnimationTree) for authoring and views, and keep the runtime in tables. Do not fight the editor."
+  },
+  {
+   "source": "https://github.com/godothub/godot-ecs ; https://godotengine.org/asset-library/asset/2702 ; https://github.com/Germenzi/gdECSv4 ; https://github.com/jonchun/gd-ecs",
+   "approach": "Other pure-GDScript ECS libraries: godothub/godot-ecs (Asset Library lists 3.1.0 for Godot 4.5), gdECSv4 (older entry, 2023), gd-ecs (flagged as roughly 800 days stale in the search listing).",
+   "takeaway": "Maturity evidence is weak (I did not verify star counts). The in-repo EcsWorld already provides what they offer; keep it and spend effort on content layout instead."
+  },
+  {
+   "source": "https://github.com/SanderMertens/ecs-faq",
+   "approach": "Mertens' ECS FAQ: entities are ids, components are plain data with no behaviour, systems are functions over entities with a given component set; keep each component and system to one responsibility.",
+   "takeaway": "Supports one component per concept and one rule per system file, and the rule that a method with a decision inside a component belongs in a system (already in docs/ecs-conversion-plan.md). The FAQ does not cover prefabs, so that part comes from Flecs below."
+  },
+  {
+   "source": "https://github.com/SanderMertens/flecs/blob/master/docs/PrefabsManual.md",
+   "approach": "Flecs prefab = a template entity kept out of normal queries by a Prefab tag; instances reuse it through an IsA relationship; a variant is a prefab that IsA another prefab and overrides only the values that differ.",
+   "takeaway": "Model every enemy/skill/boss as a definition file that is never in the world until spawned, with an optional base (variant) so black_pawn_captain is pawn_recruit plus overrides instead of a full copy (today it repeats 6 references: resources/enemies/black_pawn_captain.tres)."
+  },
+  {
+   "source": "https://www.gamedevs.org/uploads/data-driven-game-object-system.pdf",
+   "approach": "Scott Bilas, GDC 2002 (Dungeon Siege): data-driven means no engineer required; assemble objects from components via data; lay templates out as a specialization tree; include and enforce an external schema; the slides count 21 C++ components and 148 script components for over 7,300 object types.",
+   "takeaway": "Few code components, thousands of data-assembled things. Data-drive the structure (which parts an entity has), not just numbers, and enforce a schema: here, one Resource class per part with validate(), run over every definition by a test."
+  },
+  {
+   "source": "https://cowboyprogramming.com/2007/01/05/evolve-your-heirachy/",
+   "approach": "Mick West's component refactor: designers define new object types by assembling and configuring existing components; he warns that unexpected component order can desynchronise systems (physics before animation versus the reverse).",
+   "takeaway": "Parts in a definition must not depend on each other's bake order: each part writes only its own component, and cross-part wiring happens in systems, whose order lives in ONE file (ecs/schedule.gd)."
+  },
+  {
+   "source": "https://wiki.cavesofqud.com/wiki/Modding:Objects",
+   "approach": "Caves of Qud object blueprints are XML files; objects are built from reusable parts (C# classes); a mod can merge into or fully replace a blueprint; mixins copy parts from another blueprint; a modder defines a new creature by assigning existing parts, no code.",
+   "takeaway": "The proven shape for 'owner adds content without code': a folder of blueprint files, parts as the only extension point, merge/variant semantics instead of copies. EntityDefinition + EntityPart + base is this design in Godot Resources."
+  },
+  {
+   "source": "https://bevy.org/learn/quick-start/getting-started/plugins/ ; https://taintedcoders.com/bevy/code-organization",
+   "approach": "Bevy organises code by feature: each feature is a module exposing a plugin that registers its systems and resources; a top-level game plugin lists them; guidance says plugins should not import each other and rendering/window setup stays out so tests can run headless.",
+   "takeaway": "The valid alternative to by-role code folders. At 6 systems it is premature; by-role with phase sub-folders (ecs/systems/input, decide, move, act, resolve, world, progress, view) is clearer for this size. Switching later is cheap because ecs/schedule.gd already is the plugin list and no file refers to another by path."
+  },
+  {
+   "source": "https://bevy.org/news/bevy-0-15/",
+   "approach": "Bevy 0.15 replaced spawn-time bundles (flat component lists the spawner must know) with required components: a component declares what it needs and spawning it adds the rest.",
+   "takeaway": "The dependency 'enemy needs Health + Move + Brain' must live in the data or the component, not in each spawner. Today it is hand-copied in EcsActorFactory.spawn_player / spawn_enemy (ecs_actor_factory.gd:10-71). The builder should loop over definition.parts and each part declares its prerequisites."
+  },
+  {
+   "source": "https://bevy.org/news/bevy-0-19/",
+   "approach": "Bevy 0.19's next-generation scenes treat a scene as a patch: layered scenes overwrite only the fields they set; .bsn asset files are planned but the first-party loader is not shipped yet.",
+   "takeaway": "Even a code-first ECS is moving to data scenes that patch a base. Confirms base + overrides for definitions, and that data-file formats for entities are still maturing, so use Godot's native .tres rather than inventing a format."
+  },
+  {
+   "source": "https://docs.unity3d.com/Packages/com.unity.entities@1.4/manual/ecs-workflow-example-authoring-baking.html ; https://docs.unity3d.com/Packages/com.unity.entities@1.0/manual/baking-overview.html",
+   "approach": "Unity DOTS splits an authoring MonoBehaviour plus its Baker (same file), the runtime component (own file) and the system (own file). Baking is one-way and editor-only; it converts authoring data into entities and cannot be reversed.",
+   "takeaway": "Map: EntityPart resource with apply() = authoring + baker; ecs/components = runtime data; ecs/systems = rules. Rename today's EntityComponent nodes to Authoring so 'component' means one thing, and keep the bake one-way (views are never read back into the simulation)."
+  },
+  {
+   "source": "https://gameprogrammingpatterns.com/type-object.html",
+   "approach": "Type Object replaces a subclass per monster kind with one Breed class whose instances are data objects loaded from files, so designers add kinds without programmers.",
+   "takeaway": "This is what EnemyDefinition already is. Extend it to skills, bosses, pickups, rooms and story beats so each 'kind' is a schema class and each instance a file."
+  },
+  {
+   "source": "https://gameprogrammingpatterns.com/event-queue.html",
+   "approach": "An event queue decouples sender and receiver in identity and in time; use it only when time decoupling is needed.",
+   "takeaway": "The drain_events() queue (ecs_world.gd:85-92) is the right channel from simulation to HUD/audio/camera. Keep it the only channel, and list every event name and payload in one file (ecs/events/events.gd) instead of 18 bare strings matched in main.gd:156-193."
+  },
+  {
+   "source": "https://docs.godotengine.org/en/stable/tutorials/best_practices/project_organization.html",
+   "approach": "Godot docs: group assets as close to the scenes that use them as possible, organise by subject rather than file type, use snake_case folders and files (case-sensitive PCK exports), keep third-party code in addons/, use .gdignore for folders Godot should not import.",
+   "takeaway": "Supports one folder per content thing with its art beside it (overwrite body.png in place), a top-level addons/, and assets/_source/ with a .gdignore for layered masters."
+  },
+  {
+   "source": "https://www.gdquest.com/library/modular_game_architecture/",
+   "approach": "GDQuest layers a Godot project by role and dependency direction: add-ons (game-agnostic), systems (rules), content (game-specific quests, dialogue, levels, characters), UI (reads systems, never changes state). Content uses systems; nothing depends on content.",
+   "takeaway": "The dependency rule for the target tree, enforced by a test: ecs and presentation never reference res://content paths; content may reference schema, authoring and base view scenes. This is what lets the owner edit content/ freely."
+  },
+  {
+   "source": "https://github.com/abmarnie/godot-architecture-organization-advice",
+   "approach": "Community guide cited by docs/restructure-plan.md: one folder per scene with its exclusive resources, prefix exclusive resources with the scene name, prefer .tres for readable diffs, move and rename inside the editor, commit before moving.",
+   "takeaway": "Source of the procedural rules in the migration plan (editor moves, commit first, .tres only). It is silent on UIDs, so UID handling comes from the official 4.4 article below."
+  },
+  {
+   "source": "https://docs.godotengine.org/en/stable/tutorials/best_practices/scene_organization.html",
+   "approach": "Godot docs: scenes should be self-contained; a parent wires dependencies down (signals up, calls down, injected references); autoloads only for systems that own their data and work in isolation; sibling nodes talk through a common ancestor.",
+   "takeaway": "Backs shell/game_root as the one wiring point, small presentation bridges instead of main.gd, and exactly three autoloads (ContentDb, SaveService, Sfx) instead of reaching up the tree."
+  },
+  {
+   "source": "https://docs.godotengine.org/en/stable/tutorials/scripting/resources.html",
+   "approach": "Godot docs: custom Resources are Inspector-editable data containers saved as text .tres (binary .res on export); Godot loads each file once and shares the instance; Resources defined as inner classes do not serialise their properties.",
+   "takeaway": "Rules: one Resource class per file under schema/ (never an inner class); treat loaded definitions as immutable and duplicate(true) when a runtime copy must change (as the repo already does for weapons). The existing EcsComponents inner classes are runtime RefCounted data, so they are unaffected."
+  },
+  {
+   "source": "https://docs.godotengine.org/en/stable/tutorials/assets_pipeline/importing_3d_scenes/import_configuration.html",
+   "approach": "The scene-inheritance section: an inherited scene can add nodes anywhere but cannot remove base nodes and cannot edit sub-resources.",
+   "takeaway": "A single enemy view base plus tiny inherited scenes is safe for texture/colour/offset overrides. Per-enemy clip timing (bishop idle 0.72 s vs pawn 0.9 s) lives in Animation sub-resources, so it needs either one base per family or a replacement AnimationLibrary. These are placeholder tween clips the owner will redraw anyway."
+  },
+  {
+   "source": "https://godotengine.org/article/uid-changes-coming-to-godot-4-4/ ; https://github.com/godotengine/godot/pull/103468 ; https://github.com/Aureliolo/gdharness/pull/384",
+   "approach": "Since 4.4 every resource has a UID; references store uid plus path and fall back to the path; moves outside the editor are supported if the .uid file moves with its script and the UIDs are committed; references saved before 4.4 stay path-only until re-saved; an editor UID upgrade tool opens and saves every scene/resource to add them. A third-party report found headless ResourceSaver resaves rebuilt scene headers and dropped load_steps and the scene's own uid, and that the engine import pass is what mints .uid sidecars.",
+   "takeaway": "This repo is 85% path-only, so first step is a UID-stamp pass done in the editor (not headless). After it, moves are safe and tests/content stop breaking. The headless-resave caveat is from one third-party PR: confirm on a copy before trusting it either way."
+  },
+  {
+   "source": "https://github.com/godotengine/godot/pull/96590",
+   "approach": "ResourceLoader.list_directory() (Godot 4.4+) lists the original resource files of a folder, including in exported builds where text resources are remapped.",
+   "takeaway": "Makes a folder-scanning ContentDb export-safe: adding a folder under content/ registers it with no registry edit. Project is on 4.6, so available. It lists resources only, not arbitrary files."
+  },
+  {
+   "source": "https://docs.godotengine.org/en/latest/tutorials/i18n/localization_using_spreadsheets.html ; https://github.com/nathanhoad/godot_dialogue_manager",
+   "approach": "Godot imports a CSV as translations (first column key, one column per locale, imported .translation files that this repo's .gitignore already excludes). The Dialogue Manager addon (MIT, .dialogue plain-text files, v4 line needs Godot 4.6+, active releases) adds branching, conditions and mutations.",
+   "takeaway": "Built-in first (CLAUDE.md research order): all words in content/story/text.csv with columns key,en,vi gives rewrite-a-line = edit one row and add-a-language = add a column. The docs are inconsistent on whether an imported CSV is auto-registered, so check Project Settings after the first import. Dialogue Manager is only worth its dependency if branching dialogue gets heavy: owner decision."
+  },
+  {
+   "source": "https://dev.epicgames.com/documentation/en-us/unreal-engine/using-gameplay-abilities-in-unreal-engine ; https://github.com/Clubbable/GASDocumentation",
+   "approach": "Unreal's Gameplay Ability System defines per ability what it does, what it costs and when it may be used; the community GAS documentation describes cost and cooldown as data-only effects configured, not subclassed.",
+   "takeaway": "A skill is a data file with cost, cooldown, timing and a list of effect resources; one can_cast() question is shared by the system that casts and the HUD that greys the slot. New behaviour is a new effect type (one schema file + one handler), never an edit to existing skills."
+  }
+ ],
+ "target_tree": "THE ECS CONTRACT, MAPPED TO FOLDERS (this is what the layout optimises for)\n  entity    = integer id, assembled by ecs/core/entity_builder.gd from ONE definition file in content/\n  prefab    = EntityDefinition (.tres): base (optional variant) + parts[]   [Flecs prefab / Qud blueprint]\n  component = pure data                       -> ecs/components/\n  system    = one rule per file               -> ecs/systems/<phase>/ ; order lives ONLY in ecs/schedule.gd\n  authoring = Inspector data + apply(), one-way bake -> schema/entity/parts/ and authoring/markers/   [Unity authoring+baker]\n  view      = puppet; only ecs/systems/view/ may touch nodes -> presentation/views/\n  events    = the only channel from simulation to presentation -> ecs/events/\n  content   = referenced BY ID in code, never by path; contains zero .gd files -> content/\nDEPENDENCY RULE (enforced by tests/architecture): content -> schema, authoring, presentation/views base scenes; ecs -> schema; schema -> engine only; authoring -> ecs/core + schema; presentation -> ecs (reads events/components) + schema; shell -> everything. Nothing but ContentDb loads content/.\nCODE IS ORGANISED BY ECS ROLE; CONTENT IS ORGANISED BY THE THING YOU NAME.\n\nres://\n\u251c\u2500 project.godot              main_scene = shell/boot.tscn; exactly 3 autoloads: ContentDb (registry), SaveService (flags), Sfx\n\u251c\u2500 default_bus_layout.tres    Master <- SFX / Music / UI / Voice\n\u251c\u2500 README.md AGENTS.md CLAUDE.md task_plan.md progress.md findings.md   root docs, rewritten to this tree\n\u2502\n\u251c\u2500 content/                   THE OWNER'S FOLDER: data + art + audio + words. Zero .gd files (a test enforces it). Folder name = id. A leading underscore (_shared, _template, _legacy_kingdom) is skipped by the registry.\n\u2502  \u251c\u2500 README.md               one-page \"I want to change X, open Y\" map (the owner change table)\n\u2502  \u251c\u2500 player/                 player.tres (EntityDefinition: courage, step time, input feel, starting skills, look), view.tscn, body PNGs\n\u2502  \u251c\u2500 skills/<skill_id>/      skill.tres (SkillDefinition: slot, cell pattern, wind-up/impact/recovery, cooldown, cost, effects[], unlock hint key) + icon.png + cast sfx. wooden_sword, pencil_thrust, rule_step, chalk_path, eraser_guard, final_rule_break (GP.4)\n\u2502  \u251c\u2500 progression/            progression.tres (ProgressionTrack): THE growth route. Ordered milestones: trigger (boss_defeated, room_cleared, pickup, flag) -> grants (skill, +courage, zone, codex page, flag, toast). GP.7 pacing table lives here\n\u2502  \u251c\u2500 enemies/<enemy_id>/     enemy.tres (EntityDefinition: base, stats, movement, AI, attacks, codex page, loot, look) + body.png. Add view.tscn only for bespoke animation. _shared/ holds bases such as pawn_base.tres\n\u2502  \u251c\u2500 bosses/<boss_id>/       boss.tres (EntityDefinition + phases[]: health threshold, skill set, AI profile, optional story beat) + art\n\u2502  \u251c\u2500 pickups/<id>/           floor weapons / items (ruler_blade, pencil_spear...) .tres + sprite\n\u2502  \u251c\u2500 rooms/<room_id>/        room.tscn (RoomEncounter root: tiles, EntitySpawn + marker nodes), objective.tres, background.png. folder = zone id (t1_white_kings_fall...). _legacy_kingdom/ for the 72x40 zone until the owner decides\n\u2502  \u251c\u2500 world/                  world.tres (WorldDefinition): start room, act order, map positions. Travel connections come from exit markers inside rooms\n\u2502  \u251c\u2500 story/\n\u2502  \u2502  \u251c\u2500 text.csv             EVERY player-facing string: key,en,vi (Godot CSV translation). The one place words live\n\u2502  \u2502  \u251c\u2500 characters/<id>.tres name key, portrait set, voice sfx, text colour\n\u2502  \u2502  \u251c\u2500 dialogues/<id>.tres  ordered lines: speaker, text key, emotion/pose, sfx\n\u2502  \u2502  \u251c\u2500 cutscenes/<id>.tres  step list: fade, camera, move actor, dialogue, sfx/music, wait, set flag, spawn/despawn\n\u2502  \u2502  \u2514\u2500 beats/<act>.tres     StoryBeats: WHEN (event + flags, once-only) -> WHAT (dialogue / cutscene / toast), with a mood tag\n\u2502  \u251c\u2500 audio/                  sound_bank.tres (event name -> stream, replaces the SfxManager Inspector dictionary), music_cues.tres (room / boss / beat / mood -> track)\n\u2502  \u251c\u2500 feel/                   feel_profile.tres: screen shake, hit flash, hit-stop, despawn delay (replaces literals in main.gd/hud.gd)\n\u2502  \u251c\u2500 difficulty/             standard.tres, story.tres, hard.tres: timing + health/damage multipliers, chosen in Settings\n\u2502  \u2514\u2500 tilesets/               TileSet .tres + atlases + the painted shared tilemaps (do not hand-edit tile_map_data)\n\u2502\n\u251c\u2500 schema/                    THE SHAPE OF CONTENT: one Resource class per file, @export + ## docs + validate(). Code with no behaviour; what the Inspector shows. Never inner-class Resources\n\u2502  \u251c\u2500 entity/                 EntityDefinition, EntityPart base, parts/: HealthPart, MovePart, InputPart, BrainPart (AI), SkillSetPart, LookPart, CodexPart, LootPart\n\u2502  \u251c\u2500 skills/                 SkillDefinition, CellPattern, SkillTiming, effects/: DamageEffect, DashEffect, ShieldEffect, PathEffect, GrantEffect...\n\u2502  \u251c\u2500 progression/            ProgressionTrack, Milestone, triggers/ (typed), grants/ (typed)\n\u2502  \u251c\u2500 story/                  StoryBeat, DialogueScript, DialogueLine, CutsceneScript, CutsceneStep types, CharacterDefinition\n\u2502  \u2514\u2500 world/ audio/ feel/ difficulty/   WorldDefinition, RoomObjective, SoundBank, MusicCues, FeelProfile, DifficultyProfile\n\u2502\n\u251c\u2500 ecs/                       THE SIMULATION: rules only. No art, prose or tuning numbers. No Node access outside ecs/systems/view/\n\u2502  \u251c\u2500 core/                   EcsWorld, EcsSystem, EcsGrid, EntityBuilder, ContentDb, WorldFlags: plumbing, rarely edited\n\u2502  \u251c\u2500 components/             pure-data classes. Today ecs_components.gd (135 lines, ~400 reference sites in 23 files) stays; every NEW component is its own file with a KEY const; migrate old ones only when touched\n\u2502  \u251c\u2500 systems/<phase>/        input/ (keys->intents) decide/ (enemy AI) move/ act/ (skill cast, effect handlers) resolve/ (damage, death, objectives) world/ (triggers, travel, cutscene) progress/ (milestones, story beats, flags) view/ (ViewSyncSystem, the ONLY node-toucher)\n\u2502  \u251c\u2500 events/                 events.gd: every event name and its payload keys, documented once\n\u2502  \u2514\u2500 schedule.gd             THE one ordered list of systems (+ effect handlers). Add a rule = one file + one line here\n\u2502\n\u251c\u2500 authoring/                 THINGS YOU DRAG INTO A SCENE: Inspector data + apply(); no logic\n\u2502  \u251c\u2500 markers/                entity_spawn (@tool, previews the definition's sprite), zone_entry, zone_exit, gate, blocker, trigger, pickup_spawn (+ .tscn)\n\u2502  \u2514\u2500 room_encounter.gd/.tscn room root: zone id, board size, objective ref\n\u2502\n\u251c\u2500 presentation/              HOW THE WORLD IS SHOWN: reads events and components, never decides\n\u2502  \u251c\u2500 views/                  actor_view.gd, actor_view_base.tscn (AnimationTree + clip set shared by all actors), pickup view, vfx scenes\n\u2502  \u251c\u2500 ui/                     hud/ (courage, skill slots built from SkillLoadout, objective), dialogue_box/, codex/ (Book of House Rules), skills_screen/, toast/\n\u2502  \u251c\u2500 board/                  telegraph + grid overlay, F3 debug overlay\n\u2502  \u251c\u2500 camera/                 camera_rig (shake, limits)\n\u2502  \u251c\u2500 audio/                  sfx_manager, music_director (plays music_cues)\n\u2502  \u251c\u2500 text/                   text_service.gd: key + {placeholders} -> string; the ONLY caller of tr()\n\u2502  \u2514\u2500 bridges/                EventRouter + small handlers (hud_bridge, audio_bridge, camera_bridge, board_bridge, dialogue_bridge): drain_events() -> presentation\n\u2502\n\u251c\u2500 shell/                     THE GAME AROUND THE GAME\n\u2502  \u251c\u2500 boot.tscn/.gd           main scene: loads content, Title vs Continue\n\u2502  \u251c\u2500 game_root.tscn/.gd      in-game scene (replaces main.tscn/main.gd): builds the world from the schedule, ticks it, swaps rooms with fade. Target 150 lines, zero rules\n\u2502  \u251c\u2500 title/ pause/ settings/ credits/ game_over/   screens\n\u2502  \u251c\u2500 save/                   save_service (autoload), slots, WorldFlags (de)serialisation, save migration\n\u2502  \u2514\u2500 input/                  remap and controller glue\n\u2502\n\u251c\u2500 assets/                    SHARED art/audio not owned by one content item\n\u2502  \u251c\u2500 tiles/ ui/ fonts/ music/ sfx/ concept-art/\n\u2502  \u251c\u2500 _source/                layered masters (.aseprite/.psd/.kra); .gdignore so Godot never imports them\n\u2502  \u2514\u2500 _generated/             output of tools/ (gitignored, never hand-edited; replaces assets/sprites/generated/{chess,tiles,maps,rooms})\n\u251c\u2500 tools/                     generators, content scaffolds, validators (never shipped)\n\u251c\u2500 tests/\n\u2502  \u251c\u2500 run_all.gd              ONE runner: discovers tests/**/test_*.gd (replaces the shell loop)\n\u2502  \u251c\u2500 architecture/           layering guards: content has no .gd; no res://content literals outside content/ and tests/; no Node API in ecs/ except systems/view; ids = folder names; every definition passes validate()\n\u2502  \u251c\u2500 ecs/  content/  golden/  playthrough/   system tests (manual_tick), per-definition checks via ContentDb, old-vs-new oracle tests used during migration, T1-to-H1 smoke\n\u251c\u2500 docs/                      ARCHITECTURE.md (this tree), OWNER_GUIDE.md, design/ (the 92 specs), archive/ (superseded plans)\n\u2514\u2500 addons/                    third-party only; empty. Any addition needs the owner's OK (CLAUDE.md)\n\nWHAT THIS REPLACES: scenes/ and objects/ and resources/ dissolve into content/, authoring/, presentation/ and shell/; scripts/ dissolves into ecs/, schema/, authoring/, presentation/, shell/. objects/actors/*.tscn (4 x 353 lines) become one actor_view_base.tscn plus per-entity LookPart data; the 18 enemy sub-.tres collapse into embedded parts plus a pawn base.",
+ "owner_change_table": [
+  {
+   "owner_wants_to": "Add an enemy that is a variant of an existing one (new pawn type, re-skin, different health, speed or weapon)",
+   "edit_this": "content/enemies/<id>/enemy.tres (EntityDefinition with base = pawn_recruit and only the overridden parts, plus its CodexPart) and content/enemies/<id>/body.png. The registry finds the folder. Placing it in a room is one EntitySpawn node in that room.tscn (not counted). Today: up to 10 files in 9 folders (.claude/commands/new-enemy.md:10-37 plus rule page plus room).",
+   "files_touched": 2,
+   "code_needed": false
+  },
+  {
+   "owner_wants_to": "Add an enemy with a genuinely new behaviour (rook charge lane, queen teleport)",
+   "edit_this": "enemy.tres + one new EntityPart or SkillEffect script in schema/ + one system or handler file in ecs/systems/<phase>/ + one line in ecs/schedule.gd. No existing file is edited. Today: EcsComponents, EcsActorFactory and EnemyAISystem all change.",
+   "files_touched": 4,
+   "code_needed": true
+  },
+  {
+   "owner_wants_to": "Add a skill built from existing blocks (cell pattern, damage, dash, shield)",
+   "edit_this": "content/skills/<id>/skill.tres (+ icon.png), and one Milestone in content/progression/progression.tres to hand it to the pawn. HUD slot, input binding, cooldown bar and text come from the file. Today: at least 7 files incl. code (ecs_components.gd:70-83, combat_system.gd:45-49, player_input_system.gd:27-30, hud.gd:47-49, main.gd:412, project.godot, combat_component.gd).",
+   "files_touched": 3,
+   "code_needed": false
+  },
+  {
+   "owner_wants_to": "Add a skill that needs a new kind of effect (e.g. Chalk Path creates temporary walkable cells)",
+   "edit_this": "schema/skills/effects/<x>_effect.gd (data) + ecs/systems/act/effects/<x>_handler.gd + one line in ecs/schedule.gd + the skill.tres that uses it. Existing skills and systems are untouched.",
+   "files_touched": 4,
+   "code_needed": true
+  },
+  {
+   "owner_wants_to": "Change a skill's numbers (damage, range, wind-up, recovery, cooldown, cost)",
+   "edit_this": "content/skills/<id>/skill.tres only. Today a skill's numbers are split: cooldown on player.tscn's CombatComponent (combat_component.gd:11), damage/range in resources/attacks/*.tres.",
+   "files_touched": 1,
+   "code_needed": false
+  },
+  {
+   "owner_wants_to": "Change when or how a skill / upgrade is earned (the progression route)",
+   "edit_this": "content/progression/progression.tres: reorder milestones or change a trigger (boss_defeated, room_cleared, pickup, flag). Today: a marker export, the literal at main.gd:412 and a WorldState dictionary.",
+   "files_touched": 1,
+   "code_needed": false
+  },
+  {
+   "owner_wants_to": "Write or rewrite a line of story, dialogue or UI text (any language)",
+   "edit_this": "content/story/text.csv: edit the row for the key. Adding Vietnamese (or any language) is one new column in the same file. Today: strings in main.gd (7 places), hud.gd, rule_book_ui.gd, every room.tscn, objective .tres.",
+   "files_touched": 1,
+   "code_needed": false
+  },
+  {
+   "owner_wants_to": "Stage a cutscene or a conversation",
+   "edit_this": "content/story/cutscenes/<id>.tres (steps: fade, camera, move actor, dialogue, sfx, music, wait, set flag) + its lines in text.csv + one StoryBeat in content/story/beats/<act>.tres saying when it fires. Today: impossible without new code, there is no dialogue or cutscene system.",
+   "files_touched": 3,
+   "code_needed": false
+  },
+  {
+   "owner_wants_to": "Add a room",
+   "edit_this": "content/rooms/<id>/room.tscn (paint tiles, drop markers and EntitySpawn nodes) + background.png in the same folder + one exit/entry marker edit in the neighbouring room.tscn. Folder name is the zone id; no world-graph edit. Today: room .tscn + a line in world_graph.tres + neighbour edit + RoomObjective .tres (3-4 files).",
+   "files_touched": 3,
+   "code_needed": false
+  },
+  {
+   "owner_wants_to": "Replace a sprite (pawn, enemy, pickup, skill icon)",
+   "edit_this": "Overwrite content/<kind>/<id>/body.png (or icon.png) in place; every reference keeps working because the filename is a convention. If the frame size changes, also tweak the LookPart fields in that entity's .tres (then 2 files). Today the PNG sits in assets/sprites/generated/ and is referenced from a 353-line scene.",
+   "files_touched": 1,
+   "code_needed": false
+  },
+  {
+   "owner_wants_to": "Replace a room's art",
+   "edit_this": "Overwrite content/rooms/<id>/background.png (tracked by git). Today T1/T2 backgrounds load from gitignored assets/sprites/generated/rooms/ and are regenerated by tools/generate_stage1_room_art.gd, so hand-drawn art there would be untracked or overwritten.",
+   "files_touched": 1,
+   "code_needed": false
+  },
+  {
+   "owner_wants_to": "Add music or change which track plays where",
+   "edit_this": "Drop the file in assets/music/ and add one row in content/audio/music_cues.tres (room / boss / beat / mood -> track). Today: a single autoplay stream wired in scenes/main.tscn:26-28, no per-room music.",
+   "files_touched": 2,
+   "code_needed": false
+  },
+  {
+   "owner_wants_to": "Rename a story character (e.g. the Pawn Hero)",
+   "edit_this": "content/story/text.csv: the CHAR_<ID>_NAME row (all languages). Lines use {pawn}-style placeholders that presentation/text/text_service.gd fills in. Today: literals in ecs_boot.gd:43, main.gd, hud.gd and several .tres.",
+   "files_touched": 1,
+   "code_needed": false
+  },
+  {
+   "owner_wants_to": "Tune difficulty",
+   "edit_this": "Global: content/difficulty/<profile>.tres (add health and damage multipliers to the existing timing ones). One enemy only: that enemy's enemy.tres. Today the global timing file is already one file (resources/difficulty/standard.tres, referenced by all 7 enemies) but it holds only 1.0 defaults and has no health/damage knobs.",
+   "files_touched": 1,
+   "code_needed": false
+  },
+  {
+   "owner_wants_to": "Tune game feel (screen shake, hit flash, hit-stop, despawn delay)",
+   "edit_this": "content/feel/feel_profile.tres. Today: literals at main.gd:200,209,257 and hud.gd:96.",
+   "files_touched": 1,
+   "code_needed": false
+  },
+  {
+   "owner_wants_to": "Change how the pawn feels (step time, key-repeat delay, courage, invulnerability)",
+   "edit_this": "content/player/player.tres (HealthPart, MovePart, InputPart). Today the same values sit on component nodes inside objects/actors/player.tscn.",
+   "files_touched": 1,
+   "code_needed": false
+  },
+  {
+   "owner_wants_to": "Add or retune a boss phase",
+   "edit_this": "content/bosses/<id>/boss.tres: phases[] with health threshold, skill set, AI profile and optional story beat. Needs the one-time PhaseSystem (no boss phases exist today, per docs/where-we-are.md).",
+   "files_touched": 1,
+   "code_needed": false
+  },
+  {
+   "owner_wants_to": "Add a Book of House Rules page or any codex entry",
+   "edit_this": "CodexPart inside the entity's enemy.tres + its text rows in text.csv. Today: resources/rules/<x>.tres + an entry in rule_book.tres, with piece_id matched to EnemyDefinition.id by hand.",
+   "files_touched": 2,
+   "code_needed": false
+  },
+  {
+   "owner_wants_to": "Add a new floor mechanic (spikes, switch, one-way tile)",
+   "edit_this": "authoring/markers/<x>_marker.gd (+ .tscn) + ecs/components/<x>.gd + ecs/systems/world/<x>_system.gd + one line in ecs/schedule.gd. EcsGrid, EcsBoot and MovementSystem are not edited. Today those three (ecs_boot.gd:69-109, ecs_grid.gd:26-33, movement_system.gd:47-102) plus the marker all change.",
+   "files_touched": 4,
+   "code_needed": true
+  }
+ ],
+ "conventions": [
+  "Folder = id. content/<kind>/<id>/ holds a definition file named after its kind (enemy.tres, skill.tres, boss.tres, room.tscn). ContentDb derives the id from the folder name and stamps it at load, so the id is spelled in exactly one place and cannot drift. A test asserts no duplicate ids per kind.",
+  "A leading underscore means 'not content': _shared, _template, _legacy_kingdom are skipped by the registry. Use _shared for bases (pawn_base.tres) that variants point to.",
+  "Reference content by id in code, by uid in scenes/resources, never by res:// path in code. The only hard-coded content path is the one ContentDb constant for content/world/world.tres. Fixes enemy_weapon.gd:34-39 and the ~30 literals in tests/.",
+  "File and class naming: files snake_case, classes PascalCase (Godot docs). Suffix by role: *_system.gd (XxxSystem), *_part.gd (XxxPart extends EntityPart), *_effect.gd, *_handler.gd, *_marker.gd, *_bridge.gd. Rename the editor nodes in scripts/ecs/components/ from *Component to *Authoring (then to *Part) so 'component' only ever means runtime data.",
+  "One Resource class per file; never an inner-class Resource (Godot does not serialise their properties). Every schema class has ## doc comments on each @export (they become Inspector tooltips) and a validate() that a test runs over every file ContentDb finds.",
+  "Components are nouns of pure data with no method that decides anything. New components go in their own file under ecs/components/ with a KEY const; the existing inner classes in ecs_components.gd migrate only when touched (about 400 reference sites in 23 files make a big-bang split not worth the risk).",
+  "Systems: one rule per file, a short ## header saying which components it reads and writes and which events it emits, no calls to other systems, no Node API (only ecs/systems/view/ may). Their order exists in exactly one place, ecs/schedule.gd; phase folder names carry no numbers so there is no second ordering to keep in sync.",
+  "Parts must not depend on each other's apply() order: each part writes only its own component and declares prerequisites; cross-part wiring is a system's job.",
+  "Events are past-tense snake_case StringNames declared once in ecs/events/events.gd with their payload keys documented. Systems and presentation never share state except through components and these events.",
+  "One value, one home. Anything the owner might tune (timings, shake, flash colours, despawn delay, difficulty, text) lives in content/; code holds structural constants only. A guard test greps ecs/ and presentation/ for tuning literals once the migration finishes.",
+  "Translation keys are UPPERCASE and namespaced: ROOM_<ROOM>_START, DLG_<ID>_<NN>, SKILL_<ID>_NAME / _DESC / _HINT, CHAR_<ID>_NAME, CODEX_<ID>_RULE / _AMEND, UI_<AREA>_<WHAT>. Notes for translators go in a column whose header starts with an underscore (Godot ignores it). Lines refer to characters as {pawn}, never by typed name.",
+  "Art filenames are roles, not versions: body.png, icon.png, background.png, portrait_<emotion>.png. Overwriting the file in place swaps the art with zero reference edits. Layered masters live in assets/_source/ (.gdignore); generator output lives in assets/_generated/ (gitignored). Nothing hand-drawn ever goes in a gitignored folder.",
+  "Views: one actor_view_base.tscn owns the AnimationTree and clip set (CLAUDE.md rule). Per-entity differences are LookPart data (texture, tint, scale, anchors, telegraph colour). Make a bespoke inherited view scene only for bosses or hand-animated art, remembering inherited scenes cannot edit sub-resources.",
+  "Dependency rules are tests, not etiquette: tests/architecture fails if content/ contains a .gd, if ecs/ or presentation/ references res://content, if a Node API appears in ecs/ outside systems/view, or if a definition fails validate().",
+  "Moving and renaming: do it in the Godot editor FileSystem dock; commit moves separately from edits so git keeps rename history; commit every .uid and .import file; never gitignore .uid; after any tools/ generator that saves a .tscn (paint_*.gd, generate_playground_tilemap.gd) re-save in the editor. Keep CLAUDE.md's rule: survey @export names and get()/set() string access before renaming anything (62 string-access sites in scripts/ today).",
+  "Autoloads: only ContentDb, SaveService, Sfx. Anything else is injected into the world at boot (world.content, world.flags), so headless tests run without autoloads, as they do today."
+ ],
+ "migration_plan": [
+  {
+   "step": "0. Freeze and baseline (S). Branch from game-base (git status shows only .mcp.json, reports/, research_notes/ untracked). Run /verify and record the numbers CLAUDE.md expects (TESTS COMPLETE: 0 failure(s) and PASS for ecs_runtime, ecs_combat, ecs_enemy, room_encounter_runtime, encounter_hud_runtime, zone_travel_runtime). Tag pre-restructure.",
+   "how_safely": "A tag gives a one-command rollback for every later step; each step below is its own commit, so unlike docs/restructure-plan.md ('all-or-nothing, one big PR') any step can be dropped alone once step 1 has landed. Stage explicit paths only so the owner's in-editor dirty files are never swept in.",
+   "risk": "Low. Only trap: the owner has uncommitted editor changes at the time. Ask them to commit or stash first."
+  },
+  {
+   "step": "1. Stamp UIDs in the editor (S-M). Open the project in the Godot editor and run its UID upgrade tool (or open and re-save each scene/resource). Goal: path-only ext_resource lines drop from 213 of 251 to 0 and every tracked scene/resource gets a header uid. Commit alone: 'stamp UIDs, no behaviour change'.",
+   "how_safely": "Do it in the editor, not with a headless ResourceSaver script: one third-party report (gdharness PR 384) found headless resaves drop a scene's own uid and load_steps. Review the diff: only uid= additions are acceptable. Then re-run the full verify. Verify with: grep -rh ext_resource --include=*.tscn --include=*.tres . | grep -vc uid=. After this, references survive moves (Godot 4.4 UID article).",
+   "risk": "Low-medium: a large mechanical diff. If any non-uid change appears, revert and use the editor's per-scene save instead."
+  },
+  {
+   "step": "2. Make the docs tell the truth (S). Rewrite docs/ARCHITECTURE.md to the target tree; delete the 'No ECS' bullets from docs/coding-standards.md:176-177 and the node-era pattern text; fix AGENTS.md:52,261 and the Target-files list; fix .claude/commands/new-enemy.md (EnemyActor root, :7,31); refresh docs/vault Script Index. Move docs/restructure-plan.md and docs/design/editor-first-entity-architecture-plan.md to docs/archive/ with a one-line 'superseded by ARCHITECTURE.md' banner.",
+   "how_safely": "Docs only, zero runtime effect, lands before any move because every agent and the owner follow these files. Keep restructure-plan.md's still-valid procedure (class_name is path-independent, move in editor, leaf-first, verify checklist) by folding it into this plan.",
+   "risk": "Low. Wrongly-edited docs cannot break the build; the cost of skipping this step is agents scaffolding EnemyActor scenes that no longer exist."
+  },
+  {
+   "step": "3. Guard rails before moves (M). (a) Add tests/architecture/ in REPORT-ONLY mode: content has no .gd, no res://content literals outside content/ and tests/, no Node API in ecs/ outside systems/view, ids equal folder names. (b) Replace the ~30 hard-coded res:// literals in tests (e.g. tests/run_tests.gd:108-112, tests/ecs_combat_test.gd:33) with lookups through one tests/support/paths.gd so a move edits one file. (c) Add tests/run_all.gd that discovers tests/**/test_*.gd and replaces the shell loop in CLAUDE.md.",
+   "how_safely": "Report-only means it cannot turn the suite red; it prints the violation count, which becomes the migration's progress bar. Run /verify; counts must equal the step-0 baseline.",
+   "risk": "Low. Small chance a test relied on a path literal for what it asserts; keep that assertion and only centralise the path."
+  },
+  {
+   "step": "4a. Move code, mechanical, leaf-first (M). scripts/data, scripts/combat, scripts/ai -> schema/; scripts/ecs/** -> ecs/ (core/, systems/<phase>/); one commit per folder. No logic edits.",
+   "how_safely": "Drag in the Godot FileSystem dock (it rewrites dependents; after step 1 every reference is uid-based). class_name references are path-independent so scripts keep compiling (docs/restructure-plan.md:63-66). After each batch: godot --headless --editor --quit (rebuilds the class cache; CLAUDE.md gotcha), the 7 test scripts, git diff --check, then a boot with --quit-after 600 for zero script errors. Check project.godot:14,24,25 (main scene, autoloads) after every batch.",
+   "risk": "Medium. The four script-path strings in tests (world_state.gd, pickup_visual.gd, actor_view.gd, room_objective.gd) and the project.godot lines are path-based; step 3(b) and the per-batch project.godot check cover them."
+  },
+  {
+   "step": "4b. Move the rest of the code (M). Markers + room_encounter + objects/markers -> authoring/; ui, visuals, camera_rig, prototype_board, grid_lines_overlay, SfxManager, hud/rule_book scenes -> presentation/; main.gd + main.tscn + world_state.gd -> shell/ (renamed, body untouched). Rename scripts/ecs/components/*_component.gd classes to *Authoring.",
+   "how_safely": "Same per-batch checks as 4a. Before the rename, survey @export names in scenes and the 62 get()/set()/call()/has_method() string-access sites (CLAUDE.md rule). Scenes reference scripts by uid, so renaming a class_name does not touch .tscn; update the one test line that does 'is MovementComponent'.",
+   "risk": "Medium: the autoload and main-scene paths in project.godot, and string-based property access that fails silently at runtime."
+  },
+  {
+   "step": "5. Group content by thing (M-L). In the editor, create content/enemies/<id>/ and drag each enemy's .tres + actor .tscn + sprite into it (sub-resources stay separate for now); then pickups/weapons, rooms (scenes/rooms/<id>.tscn -> content/rooms/<id>/room.tscn, and its background PNG out of gitignored assets/sprites/generated/rooms/ into the room folder), player, tilesets, audio. Move the 12 tracked source sprites out of assets/sprites/generated/ next to their owners; rename the remaining generator output folder to assets/_generated/ and update .gitignore:12-15 and the tools/ OUT_DIR constants in the same commit. One content kind per commit.",
+   "how_safely": "Editor drag only (it handles .import sidecars for PNG/WAV; moving those with git mv is unverified). After each commit: grep -rn 'res://scripts/\\|res://objects/\\|res://scenes/\\|res://resources/' . --include=*.gd --include=*.tscn --include=*.tres (the check from docs/restructure-plan.md:117-118) must shrink to zero; run the 7 tests; capture a real-renderer frame of T1 and H1 before and after (CLAUDE.md --write-movie) and compare.",
+   "risk": "Medium: .import files for moved art; the tools/ generators write to the old paths (generate_stage1_room_art.gd, paint_*.gd) and must be updated, and anything they save must be re-saved in the editor to keep uids."
+  },
+  {
+   "step": "6. ContentDb + EntityDefinition + EntityBuilder behind golden tests (L). Add ecs/core/content_db.gd (scans content/** with ResourceLoader.list_directory, skips _*, derives ids from folders), schema/entity/*, and ecs/core/entity_builder.gd BESIDE the existing EcsActorFactory/EcsBoot. Golden test: for every existing enemy and the player, build through the old factory (the oracle, ecs_actor_factory.gd:31-71 including difficulty multipliers) and the new builder, then compare every component field. Only then: collapse 7 enemy .tres to base + variants with embedded single-use parts (captain = pawn_recruit + overrides), replace the 4 actor scenes with one actor_view_base.tscn + LookPart, move baking into markers and parts (delete EcsBoot's per-type _bake_*), and retire EntityComponent nodes in favour of EntityPart overrides on EntitySpawn.",
+   "how_safely": "Keep the old factory until the golden test has passed twice in a row and the 6 runtime tests are green on the new path; delete it in a separate commit. Do the actor-scene collapse as its own commit and compare real-renderer frames; accept that per-enemy clip timings (bishop 0.72 s idle vs pawn 0.9 s) become shared or move to a per-family base, because inherited scenes cannot edit sub-resources. Owner decision: parked ActorViews (minimal change, still inherited scenes) or EntitySpawn markers (target).",
+   "risk": "Medium-high: the biggest behavioural surface. The oracle test is the mitigation; do not skip it. Folder-duplicate scaffolding (copy _template) is UNVERIFIED: duplicated files keep the same uid and may point at the original's sub-files. Spike it in the editor on a throwaway branch; if it misbehaves, write tools/new_content.gd that copies text files, strips uid= headers and rewrites paths."
+  },
+  {
+   "step": "7. Words first, because the owner can start writing at once (M). Add presentation/text/text_service.gd and content/story/text.csv (key,en,vi); move the hard-coded strings (main.gd:147,169,214,216,403,425,499; hud.gd:39,47,49,70; rule_book_ui.gd:72; room_message exports; RoomObjective and PlayerUnlockMarker text) into keys; scenes and Resources then hold keys. Add CharacterDefinition for names; add StoryBeat/DialogueScript/CutsceneScript schemas with StoryBeatSystem and CutsceneSystem under ecs/systems/progress and world.",
+   "how_safely": "Fallback rule: a missing key renders the key itself and a test fails on any key used in content/ but absent from the CSV. After the first import confirm in Project Settings that the .translation is registered (the docs conflict on auto-registration). The .translation output is already gitignored (.gitignore). Keep dialogue on built-in CSV; revisit Dialogue Manager only if branching gets heavy.",
+   "risk": "Low-medium: Godot treats every non-underscore column header as a locale, so keep translator notes in an underscore-prefixed column."
+  },
+  {
+   "step": "8. Skills (L). Add schema/skills/*, components SkillLoadout/SkillCooldowns/SkillCast, SkillCastSystem + effect handlers beside CombatSystem. Port wooden_sword and pencil_thrust to content/skills/; give them slots; add skill_2..skill_4 input actions; build HUD slots from SkillLoadout (no 'Q THRUST' text); keep ONE can_cast() used by both system and HUD. Only after parity: delete PlayerCombat's two fixed fields, AttackIntent.kind strings, and finally converge AttackPattern/EnemyWeapon/AttackProfile into SkillDefinition for enemies.",
+   "how_safely": "Port the lifecycle verbatim first and refactor later (the rule in docs/ecs-conversion-plan.md:89). tests/ecs_combat_test.gd timing assertions (impact_delay, recovery, cooldown) stay unchanged and are the parity oracle. Land per-skill content (rule_step, chalk_path, eraser_guard) only after the system is green, each as a data file.",
+   "risk": "High for feel regressions (timers, cooldown swallowing, buffered input). Mitigated by verbatim port and unchanged timing tests; the enemy-attack convergence is the riskiest sub-step, so do it last and keep it optional."
+  },
+  {
+   "step": "9. Progression, flags and save (M). Add WorldFlags (one namespaced dictionary: pickup.<zone>.<node>, gate.<id>, codex.<piece>, unlock.<id>, milestone.<id>, boss.<id>) replacing WorldState's four dictionaries (world_state.gd:14-22); ProgressionSystem + content/progression/progression.tres; turn the T2 sword pickup into a milestone (removes main.gd:406-414 and the literal at :412); SAVE_VERSION 3.",
+   "how_safely": "Write a v2-to-v3 migrator instead of the current 'version mismatch resets everything' (world_state.gd:66-68); test round-trip and migration with a saved v2 fixture. Keep the v2 loader until the owner confirms the migration on their real save in user://.",
+   "risk": "Medium: a bad migration wipes progress. Fixture tests plus keeping the old loader contain it."
+  },
+  {
+   "step": "10. Split main.gd (L). Create shell/game_root (target 150 lines) that builds the world from ecs/schedule.gd and ticks it; move room clear/defeat rules to an ObjectiveSystem (from main.gd:264-302); move zone travel and fade to a ZoneTravel controller; replace the 40-line event match (main.gd:156-193) with EventRouter + bridges; add shell screens (title, pause, settings, credits) as scenes reusing boot.",
+   "how_safely": "One extracted responsibility per commit, each guarded by the existing zone_travel_runtime and encounter_hud_runtime tests; keep the old main.gd path alive until the new game_root passes the T1-to-H1 playthrough smoke test (add it in tests/playthrough).",
+   "risk": "Medium: travel, fade and death-reload ordering are subtle (WorldState carry, await timing)."
+  },
+  {
+   "step": "11. Audio, feel, difficulty registries (S-M). content/audio/sound_bank.tres and music_cues.tres replace the SfxManager Inspector dictionary and the single MusicPlayer in main.tscn:26-28; content/feel/feel_profile.tres replaces the literals at main.gd:200,209,257 and hud.gd:96; difficulty profiles gain health/damage multipliers and a Settings selector.",
+   "how_safely": "Same names as today at first (sound ids unchanged), so no caller changes; verify by listening and by the existing room_clear/pickup event flow.",
+   "risk": "Low."
+  },
+  {
+   "step": "12. Turn the guards on and ship the recipes (S). tests/architecture becomes enforcing (fail on violation); rewrite /new-enemy and add /new-skill, /new-room, /new-story-beat to match; write content/README.md (the change table above) and docs/OWNER_GUIDE.md; update CLAUDE.md and AGENTS.md folder-ownership sections.",
+   "how_safely": "The suite proves the layout rules hold from now on, so later work cannot regress the structure silently. Run /verify and a final real-renderer capture comparison against the step-0 baseline.",
+   "risk": "Low. This is the point where future agents and the owner are bound by the same rules."
+  }
+ ],
+ "summary": "Recommendation: keep the ECS runtime and reorganise everything around it so that code is grouped by ECS role (ecs/components, ecs/systems/<phase>, ecs/schedule.gd) and content is grouped by the thing the owner names (content/skills/<id>, enemies/<id>, rooms/<id>, story/text.csv, progression/progression.tres), with a dependency rule that nothing but a registry ever loads content/ and content/ holds zero code. Today that is not true: one enemy costs up to 10 files in 9 folders, a third skill touches at least 7 files including code because the pawn has two hard-wired attack slots, all words and the sword unlock are literals in main.gd/hud.gd, and four docs describe a node-era game that is gone. The target replaces hand-wired boot code with EntityDefinition (base + parts[]) files, which is the same design as Flecs prefabs, Caves of Qud blueprints, Unity authoring+baking and GECS component lists, and it makes skills, progression, story beats and cutscenes first-class data with one file each. Of 19 common owner changes, 15 become zero-code and 11 become a single file; the 4 that still need code add new files without editing existing ones.\n\nMigration is staged, each step its own commit and green on the 7 existing test scripts: stamp UIDs in the editor first (85% of references are path-only today, which is what makes moves unsafe), fix the docs, add report-only architecture tests, move code, move content, introduce ContentDb/EntityBuilder behind an old-vs-new golden test, then words, skills, progression, main.gd split.\n\nOwner decisions needed: (1) keep entity art beside its definition in content/ (recommended) or in a mirrored assets/ tree; (2) parked views versus EntitySpawn markers; (3) whether to converge the three attack schemas into SkillDefinition (largest refactor, last, optional); (4) progression as an unlock route only (matches GP.7 and the soulslike plan, no XP grind) or with currency; (5) Dialogue Manager addon yes/no (recommend built-in CSV first); (6) fate of the legacy 72x40 kingdom zone; (7) Vietnamese as the source language of text.csv. GECS and any addon are deliberately not adopted without approval.\n\nNot verified (read-only run, nothing executed): that the editor's folder Duplicate keeps internal references pointing at the copy, whether editor drags rewrite project.godot autoload paths, where the UID upgrade tool sits in the menu, and the headless-resave warning (one third-party PR). Verify each on a throwaway branch before relying on it. No repository file was changed."
+}
