@@ -164,6 +164,18 @@ func dump_room(tree: SceneTree, room_id: String, tick_count := DEFAULT_TICK_COUN
 	return text
 
 
+## The "[entities at boot]" lines for a world that some other tool booted (tools/actor_dumper.gd
+## describes one actor at a time): every entity, every component, every script variable, printed
+## exactly as the room dumps print them. `dump_root` is the node that node paths are written
+## relative to, so a `view_ref` reads `node(Actor)` and not an engine path.
+func describe_world_entities(world: EcsWorld, dump_root: Node) -> PackedStringArray:
+	_dump_root = dump_root
+	var lines := PackedStringArray()
+	_append_entity_details(lines, world)
+	_dump_root = null
+	return lines
+
+
 ## The cell of the entry marker named "start", else the first marker, like game_root.gd._find_entry_cell.
 func _find_entry_cell(world: EcsWorld, room: Node) -> Vector2i:
 	var fallback := NO_ENTRY_CELL
