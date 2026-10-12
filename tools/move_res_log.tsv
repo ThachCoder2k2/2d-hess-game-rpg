@@ -106,3 +106,6 @@ assets/sprites/generated/health_pip_empty.png	assets/ui/actor_view/health_pip_em
 assets/sprites/generated/health_pip_full.png	assets/ui/actor_view/health_pip_full.png
 assets/sprites/generated/warning_aura.png	assets/ui/actor_view/warning_aura.png
 objects/actors	presentation/views/actors
+assets/tiles/kingdom_tiles.svg	assets/tiles/kingdom/atlas.svg
+resources/tiles/kingdom_tileset.tres	content/tilesets/kingdom/tileset.tres
+objects/world/kingdom_tilemap.tscn	content/tilesets/kingdom/tilemap.tscn

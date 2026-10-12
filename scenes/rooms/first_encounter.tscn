@@ -11,7 +11,7 @@
 [ext_resource type="PackedScene" uid="uid://dy23jflk5mhj" path="res://presentation/views/actors/black_pawn.tscn" id="11"]
 [ext_resource type="PackedScene" uid="uid://dg1d0ijcmumbp" path="res://presentation/views/actors/knight_enemy.tscn" id="12"]
 [ext_resource type="PackedScene" uid="uid://ce54gwd1277gf" path="res://presentation/views/weapon_pickup_visual.tscn" id="15"]
-[ext_resource type="PackedScene" uid="uid://bps3hxs0hyrgq" path="res://objects/world/kingdom_tilemap.tscn" id="18"]
+[ext_resource type="PackedScene" uid="uid://bps3hxs0hyrgq" path="res://content/tilesets/kingdom/tilemap.tscn" id="18"]
 
 [node name="FirstEncounter" instance=ExtResource("1")]
 room_message = "First clash: read the warning cells, deny the weapons, break the black line."

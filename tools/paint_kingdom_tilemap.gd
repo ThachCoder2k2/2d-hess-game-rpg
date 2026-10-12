@@ -26,7 +26,7 @@ const TILE_BANNER := Vector2i(6, 0)
 
 
 func _init() -> void:
-	var tile_set := load("res://resources/tiles/kingdom_tileset.tres") as TileSet
+	var tile_set := load("res://content/tilesets/kingdom/tileset.tres") as TileSet
 	if tile_set == null:
 		push_error("kingdom_tileset.tres failed to load (run an editor import first).")
 		quit(1)
@@ -58,7 +58,7 @@ func _init() -> void:
 		push_error("Failed to pack kingdom tilemap: %d" % pack_err)
 		quit(1)
 		return
-	var save_err := SaveKeepingUids.save_keeping_uid(packed, "res://objects/world/kingdom_tilemap.tscn")
+	var save_err := SaveKeepingUids.save_keeping_uid(packed, "res://content/tilesets/kingdom/tilemap.tscn")
 	print("KINGDOM TILEMAP: %s (pack=%d save=%d)" % ["OK" if save_err == OK else "FAIL", pack_err, save_err])
 	var stamped := save_err == OK and SaveKeepingUids.stamp_uids_last()
 	quit(0 if stamped else 1)
