@@ -59,15 +59,16 @@ Steps:
    - `visual.tres` (`VisualDefinition`) — `piece_type` (a row of `piece_sizes.tres`: pawn, knight,
      bishop, rook, queen, king, or a boss row), `body_texture` (this enemy's `body.png`),
      `anchor_offset` (a nudge, normally zero), `clip_speed_scales` (clip name to a multiple of the
-     base tempo: `{idle: 1.25}` plays idle 25 % faster; unlisted clips play at 1.0). Its
-     `telegraph_color`, `impact_color` and `weapon_anchor` are fields nothing reads yet (the telegraph tint is
-     `telegraph_modulate` on the actor view, the hand is `weapon_anchor` on the actor view), so tuning them
-     changes nothing. The base scene reads the rest: the body appears on the base line with no
+     base tempo: `{idle: 1.25}` plays idle 25 % faster; unlisted clips play at 1.0). It holds only what the
+     game reads (the telegraph tint is `telegraph_modulate` on the actor view, the hand is `weapon_anchor`
+     on the actor view). The base scene reads it: the body appears on the base line with no
      scene edit, and the clips run at the stated speed. A piece several enemies share goes in
      `_shared/visuals/` (the black pawns share `pawn_compatibility.tres`).
-   - `body.png` — the enemy's picture, drawn at scale 1, no larger than its kind's box (pawn 18 x 22,
-     knight, bishop, rook 20 x 24, queen 22 x 26, king 22 x 28; the whole PNG counts, transparent padding
-     too). A first pass may name an existing enemy's `body.png` in `visual.tres` (the black pawns share
+   - `body.png` — the enemy's picture, drawn at scale 1 on the 32 x 32 canvas of `docs/assets` (base rim on
+     row 30, two empty rows under it) with the drawn pixels inside its kind's box (pawn 18 x 22,
+     knight, bishop, rook 20 x 24, queen 22 x 26, king 22 x 28; transparent padding is free). The canvas lands
+     exactly on the cell, so no scene needs a position. A smaller picture that fits the box also runs, its
+     bottom edge on the base line. A first pass may name an existing enemy's `body.png` in `visual.tres` (the black pawns share
      `content/enemies/pawn_recruit/body.png`), or the generator can paint a stand-in
      (`tools/generate_chess_sprites.gd` reads the size table and refuses a piece that does not fit):
      add a `GENERATED_SEEDS` row to `tools/seed_placeholders.gd` (kind `body`, id `<id>`), or, for a copy of a
@@ -113,12 +114,14 @@ Steps:
      `expected_definitions` in `tests/run_tests.gd` (it then asserts the view has a definition,
      validates, owns sprites, telegraph and defeat clips, an audio player and a state graph) and to
      `ENEMY_SCENE_PATHS` in `tests/architecture/test_pieces_inside_cell.gd`. The in-cell test already
-     puts EVERY enemy of `content/enemies/` on `actor_view_base.tscn` and measures it facing every
-     way, armed and telegraphing, so the new enemy's body, pips, arrow, weapon and aura are checked
+     puts EVERY enemy of `content/enemies/` on `actor_view_base.tscn`, and every actor a room scene places
+     as the room placed it (a scale or a turn on the instance fails by room and name), and measures each
+     facing every way, armed, telegraphing and shoved by a hit, so the new enemy's body, pips, arrow, weapon and aura are checked
      inside the cell with no edit, and a failure names the enemy (`test_pawn on actor_view_base.tscn ...`).
      `assets/_generated/previews/pieces_in_cells.png` (`tools/render_actor_preview.gd`, drawn by
      `tools/bootstrap_worktree.sh`) shows the hero and the three thin scenes (black pawn, knight, bishop);
-     an enemy that only has a `definition` is checked by the test but is not a row of that picture;
+     an enemy that only has a `definition` is checked by the test but is not a row of that picture (once a room
+     places it, it is a row of `pieces_placed_in_rooms.png`);
    - add a data block asserting the movement offsets, the attack cells for a known origin
      and facing, and the decision role come from the `.tres` (assertion labels read as a
      spec). If the enemy has behavior worth proving, add a case to `tests/ecs_enemy_test.gd`
@@ -176,7 +179,7 @@ afterwards. The enemy was `test_pawn`, 5 health, reusing the shared pawn pieces:
 | Put the instance in the real T3 room | the strict runner went red on exactly two suites: `test_dump_baselines` (t3's dump changed) and `test_bridge_travel` ("T3 holds its single living pawn") |
 | Made `content/rooms/scratch_test_pawn/room.tscn` instead | four suites red: not in `world.tres`, names `presentation/board/` (so: scratch scene in the project root, not under `content/`) |
 | Gave it its own `visual.tres` and `body.png` (a copy of the pawn's; 3 files) and ran import, stamp, import, check | one stamp pass filled 2 header uids and 2 path-only lines (the picture's uid and the new visual's); `stamp_uids --check` CLEAN; the dump shows `BodySprite -> res://content/enemies/test_pawn/body.png`; the strict runner GREEN (35 suites, 235 of 235 labels) |
-| Replaced `body.png` with a 26 x 32 picture | `test_validate_all` red with "its body picture is 26 x 32 px but a pawn may be drawn at most 18 x 22 px"; `test_pieces_inside_cell` red with 17 FAIL lines naming `test_pawn` (the narrowest margin is -2.00 px) |
+| Replaced `body.png` with a 26 x 32 picture | `test_validate_all` red with "its body picture is 26 x 32 px but a pawn may be drawn at most 18 x 22 px, or on the 32 x 32 canvas of the art spec with its drawn pixels inside that box"; `test_pieces_inside_cell` red with 17 FAIL lines naming `test_pawn` (the narrowest margin is -2.00 px) |
 | Added an `ADOPTED_PLACEHOLDERS` row and ran `seed_placeholders.gd` | `_placeholders.json` 26 to 27 entries; `list_placeholders.gd` showed `content/enemies/test_pawn/body.png` |
 | Overwrote the picture with a 12 x 16 one (the owner's swap) | "27 recorded, 26 still to replace, 1 replaced by you"; both suites green again |
 | Deleted `content/enemies/test_pawn/`, restored the seed file and manifest, import pass | strict runner GREEN, working tree clean |

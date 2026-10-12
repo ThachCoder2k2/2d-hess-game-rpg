@@ -294,10 +294,10 @@ shortcuts `player()`, `world()` and `piece_sizes()`. Everything comes from `Reso
 `duplicate()` before changing a resource. Two validators return readable sentences and are empty when all is well;
 tests and tools call them and nothing calls them at game start. `validate()` checks each entry: the main file exists,
 loads and is the right class, the class's own `validate()` is empty, the folder is lowercase snake_case, an `id`
-property equals the folder and no two entries claim one id. `validate_cross_refs()` checks the references between
+property equals the folder and no two entries claim one id, and every property a `.tres` assigns a resource to holds one (Godot leaves a property empty, with no message, when the named resource is of another class). `validate_cross_refs()` checks the references between
 entries: a Book page's `piece_id` is an enemy, an enemy's difficulty, default weapon and weapon preferences are
 registered, the player's two attacks are skills, **every actor's `piece_type` is a row of the size table and its body
-picture is no larger than that row's box**, the world graph and the room folders agree, every door leads to a zone and an
+picture fits that row (a tight picture inside the box, or the 32 x 32 canvas of the art spec with its drawn pixels inside the box)**, the world graph and the room folders agree, every door leads to a zone and an
 entry marker that exist, every room's `zone_id` equals its folder and every enemy parked in a room is a registered
 enemy. `tests/content/test_validate_all.gd` runs both over the real tree; `test_content_db_detects_problems` runs them
 over a deliberately broken tree under `user://` and requires each defect to be named. A new kind is one
@@ -323,19 +323,19 @@ without touching the shared file. A class default equals the pre-M2 hero, so a v
 |---|---|---|
 | the body picture and where it stands | `VisualDefinition.body_texture`, `piece_type`, `anchor_offset` and the size table's `PieceSizeTable.body_top_left()` | `BodySprite.texture` and `.position`, at scale 1 |
 | how fast each clip plays | `VisualDefinition.clip_speed_scales` (clip name to a multiple, default 1.0) | the `TimeScale` node of each graph state, parameter `parameters/<state>/TimeScale/scale` |
-| the telegraph tint | `ActorView.telegraph_modulate` (a thin scene may set its own; `VisualDefinition.telegraph_color`, `impact_color` and `weapon_anchor` are fields nothing reads yet) | the aura |
-| the facing arrow, the held weapon's size and place, the pips | `ActorView.facing_mark_distance` (10 px out on the facing side), `weapon_held_scale` (0.16), `weapon_anchor`, `weapon_rest_length`; pips are placed by the base scene along the top edge | the arrow, the weapon, the pips |
+| the telegraph tint | `ActorView.telegraph_modulate` (a thin scene may set its own; `VisualDefinition` has no tint field: a field is added when a system reads it) | the aura |
+| the facing arrow, the held weapon's size and place, the pips | `ActorView.facing_mark_distance` (10 px out on the facing side), `weapon_held_scale` (0.16), `weapon_anchor`, `weapon_rest_length`; pips are placed by the base scene along the top margin line (a queen and a king stand up into that row, so theirs are drawn over the crown; the in-cell test names those two kinds) | the arrow, the weapon, the pips |
 
 **The size table and who reads it.** `content/feel/piece_sizes.tres` (`PieceSizeTable`, one `PieceSize` row per kind: `body_box`,
 `base_offset_y`, `footprint_cells`) is the owner's rule that a piece is smaller than its cell, written as data
 (`docs/owner-decisions.md`, 2026-10-12). `PieceSizeTable.validate()` holds the 2 px margin and the chess height order.
-Six readers keep to it: `ViewSyncSystem` (places the body), `ContentDb.validate_cross_refs()` (a picture larger than its
-box is a problem), `tools/generate_chess_sprites.gd` (refuses to draw a piece that does not fit), `test_piece_size_table`
+Six readers keep to it: `ViewSyncSystem` (places the body, and limits a hit's drawn shove to the margin), `ContentDb.validate_cross_refs()` (a picture
+that does not fit its row, by `PieceSizeTable.picture_problems()`, is a problem), `tools/generate_chess_sprites.gd` (refuses to draw a piece that does not fit), `test_piece_size_table`
 (the table's own rules), `tests/architecture/test_pieces_inside_cell.gd` (boots the hero, the three thin scenes and every
-enemy of `content/enemies/` through the real `EcsBoot` and `ViewSyncSystem`, in every facing, armed, telegraphing and at
-about 600 clip poses, and measures the opaque pixels each actor draws against its cell: 2 px from every edge) and
-`tools/render_actor_preview.gd` (draws the hero, a black pawn, the knight and the bishop in their cells at 4x into
-`assets/_generated/previews/pieces_in_cells.png`, composed on the CPU with `Image`, no renderer needed). A new
+enemy of `content/enemies/`, and every actor a room scene places as the room places it, through the real `EcsBoot` and `ViewSyncSystem`, in every facing, armed, telegraphing, shoved by a hit and at
+about 600 clip poses, and measures the opaque pixels each actor draws against its cell, in the cell's own frame so a scale shows: 2 px from every edge) and
+`tools/render_actor_preview.gd` (draws the hero, a black pawn, the knight and the bishop, and every actor the rooms place, in their cells at 4x with a gutter into
+`assets/_generated/previews/pieces_in_cells.png` and `pieces_placed_in_rooms.png`, composed on the CPU with `Image`, no renderer needed; pixels in the margin band are magenta and counted). A new
 kind of piece is a row; a boss is a row with a bigger footprint. `tools/actor_stage.gd` and `tools/actor_cell_probe.gd`
 are the shared helpers of the last two.
 
@@ -391,7 +391,8 @@ Presentation consumes `drain_events()` and never decides gameplay.
   procedural (`MovementSystem` progress -> `ViewSyncSystem` position) so the dodge window is
   gameplay timing, never keyframed.
 - **A piece is smaller than its cell** (owner, 2026-10-12). `ViewSyncSystem` writes the body
-  picture (`VisualDefinition.body_texture`, scale 1) so its bottom edge is on the kind's base line
+  picture (`VisualDefinition.body_texture`, scale 1) so its base is on the kind's base line (a tight
+  picture's bottom edge; the 32 x 32 canvas of the art spec lands exactly on the cell)
   (`PieceSizeTable.body_top_left`), puts the facing arrow on the facing side of the cell, scales the
   held weapon to `weapon_held_scale`, and leaves the aura's size to the telegraph clip. The base
   scene places the pips along the top edge and sizes the aura so that everything an actor draws is

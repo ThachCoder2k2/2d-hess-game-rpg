@@ -217,7 +217,7 @@ cách làm thật một lần), đổi cảm giác con tốt, đổi sprite (the
 | Thêm NPC hoặc cuộc giải cứu (rescue) (Add an NPC or rescue) | a prop with an `InteractComponent`, a beat, a flag in `flags.tres`, `room.tscn`, `.po` rows | 5 | no | available after M6 |
 | Thêm một boss (Add a boss) | `boss.tres`, `enemy.tres`, `body.png`, the arena `room.tscn`, beats + `.po` rows, a milestone row, a `music_cues` row | 7-10 | no, if its attacks use existing kinds | available after M8b |
 | Thêm hoặc chỉnh một phase của boss (Add or retune a boss phase) | `boss.tres` (a new windup clip also edits the boss's actor scene) | 1-2 | no | available after M8b |
-| Đổi sprite (Swap a sprite) | overwrite `body.png`, drawn at scale 1 and no larger than the box of its kind in `content/feel/piece_sizes.tres` (the game stands its bottom edge on the kind's base line; `VisualDefinition.anchor_offset` nudges it); the placeholder flag clears by hash | 1-2 | no | **available now** for `content/player/body.png` (white pawn) and the enemies' (`pawn_recruit` is every black pawn, `knight_tracker`, `bishop_zoner`); `ContentDb.validate_cross_refs()` fails a picture larger than its box; `assets/_generated/previews/pieces_in_cells.png` (`tools/render_actor_preview.gd`) shows the hero, a black pawn, the knight and the bishop in their cells, and section 6 reads it |
+| Đổi sprite (Swap a sprite) | overwrite `body.png`, drawn at scale 1 on the 32x32 canvas of `docs/assets` with the drawn pixels inside the box of its kind in `content/feel/piece_sizes.tres` (the canvas lands exactly on the cell; `VisualDefinition.anchor_offset` nudges it); the placeholder flag clears by hash | 1-2 | no | **available now** for `content/player/body.png` (white pawn) and the enemies' (`pawn_recruit` is every black pawn, `knight_tracker`, `bishop_zoner`); `ContentDb.validate_cross_refs()` fails a picture whose drawn pixels leave the box; `assets/_generated/previews/pieces_in_cells.png` and `pieces_placed_in_rooms.png` (`tools/render_actor_preview.gd`) show the hero and the enemies in their cells, and section 6 reads them |
 | Đổi kích thước quân trong ô (Change how big a kind of piece is inside its cell) | `content/feel/piece_sizes.tres`: one row per kind with the largest picture (`body_box`), the base line (`base_offset_y`, px below the cell's centre) and a footprint in cells. `validate()` keeps every box 2 px from the cell's edges and the heights as in a real chess set (pawn < knight, bishop, rook < queen < king) | 1 | no | **available now**; the placeholder pieces come from `tools/generate_chess_sprites.gd`, which reads the same file and refuses a piece that does not fit |
 | Đổi art của một phòng (Swap a room's art) | overwrite its single tile and prop PNGs (one file per thing, see `docs/assets/`); a tool assembles the room. The painted `background.png` of T1/T2 is a legacy placeholder, not something to redraw | 1 per thing | no | tiles and props: after the assembly tool lands; T1/T2 backgrounds: overwrite now if wanted |
 | Đổi portrait, skin UI hoặc font (Swap a portrait, UI skin or font) | overwrite the file in `content/story/characters/`, `content/ui/theme/`, `assets/fonts/` | 1 | no | available after M4 (skin UI, font), M6 (portrait) |
@@ -271,19 +271,27 @@ máu, mũi tên hướng nhìn, vũ khí cầm tay, vòng cảnh báo khi sắp 
 Bảng tự giữ luật: hàm `validate()` của nó báo lỗi nếu một hộp để lề dưới 2 px, nếu một loại bị liệt kê hai
 lần, hoặc nếu thứ tự độ cao sai (tốt < mã, tượng, xe < hậu < vua).
 
-**Vẽ thế nào.** Vẽ ở tỉ lệ 1:1 (một pixel của file PNG là một pixel của game, không phóng to hay thu nhỏ), PNG không lớn hơn
-hộp của loại quân, chân quân sát đáy PNG. Game tự đặt đáy PNG lên vạch cách tâm ô 14 px và căn giữa theo chiều
-ngang (nên chọn bề rộng chẵn); bạn không phải chỉnh vị trí trong scene. Muốn xê dịch một chút cho riêng một
-quân: `anchor_offset` trong `visual.tres` của nó. Thay hình = ghi đè `content/player/body.png` hoặc
-`content/enemies/<id>/body.png` (hàng "Đổi sprite" ở mục 5). Nếu hình lớn hơn hộp, bài kiểm tra báo đỏ và nói rõ
-hình nào, cỡ hình, cỡ hộp.
+**Vẽ thế nào.** Vẽ ở tỉ lệ 1:1 (một pixel của file PNG là một pixel của game, không phóng to hay thu nhỏ), **trên canvas
+32×32 đúng bằng một ô, như danh sách yêu cầu trong `docs/assets`**: vành đế dưới chân quân nằm ở hàng 30 (hai hàng dưới
+cùng để trống), thân quân nằm trong hộp của loại quân (Tốt 18×22 chiếm cột 7–24 và hàng 8–29; Mã, Tượng, Xe 20×24;
+Hậu 22×26; Vua 22×28), phần còn lại của canvas để trong suốt. Canvas được đặt trùng khít lên ô: điểm ảnh (x, y) của
+PNG hiện đúng ở điểm (x, y) của ô, nên bạn không phải chỉnh vị trí trong scene. (Một PNG nhỏ hơn, chỉ vừa hộp, cũng
+chạy trong game, đáy PNG đặt lên vạch cách tâm ô 14 px; nhưng cảnh trong editor chỉ hiện đúng chỗ với canvas 32×32.)
+Muốn xê dịch một chút cho riêng một quân: `anchor_offset` trong `visual.tres` của nó. Thay hình = ghi đè
+`content/player/body.png` hoặc `content/enemies/<id>/body.png` (hàng "Đổi sprite" ở mục 5). Nếu thân quân lấn ra
+ngoài hộp, bài kiểm tra báo đỏ và nói rõ hình nào, thân chiếm vùng nào, hộp nằm ở đâu.
 
-**Xem kết quả mà không cần mở editor: `assets/_generated/previews/pieces_in_cells.png`.** Đó là một ảnh 1336×568
+**Xem kết quả mà không cần mở editor: `assets/_generated/previews/pieces_in_cells.png`.** Đó là một ảnh 1768×760
 (phóng 4 lần, số nguyên, không làm mờ): bốn hàng, chín cột. Hàng là HERO (con tốt trắng của bạn), BLACK PAWN,
 KNIGHT, BISHOP. Cột là AT REST (đứng yên) nhìn xuống, phải, lên, trái; ARMED (đang cầm vũ khí, hoặc con tốt
 đang đâm bút chì) nhìn bốn hướng; ALERT (đang báo trước đòn đánh, vòng cảnh báo hiện ra). Mỗi ô vuông là một ô
-game 32×32: đường lưới xám là mép ô, **khung đỏ mờ là vạch lề 2 px**; quân phải nằm gọn trong khung đỏ. Ô ALERT
-của hero để trống vì con tốt của bạn không bao giờ báo đòn. Thư mục `assets/_generated/` không nằm trong git, nên
+game 32×32 có một dải trống 6 px bao quanh (để thấy nếu quân lấn ra ngoài ô): đường lưới xám là mép ô, **khung đỏ mờ là vạch
+lề 2 px** (vẽ dưới quân, không bao giờ đè lên điểm ảnh của quân); quân phải nằm gọn trong khung đỏ. **Điểm ảnh nào của quân
+nằm trong dải lề hoặc ngoài ô được tô hồng đậm (magenta)**, và công cụ in số lượng (`0 pixel(s) outside the margin` là
+ổn). Ô ALERT của hero để trống vì con tốt của bạn không bao giờ báo đòn. **Ảnh thứ hai, `pieces_placed_in_rooms.png`,
+có mỗi hàng là một enemy mà các phòng thật sự đặt** (7 hàng hiện nay, ghi tên phòng và tên node), vẽ đúng như phòng đặt,
+kể cả khi một phòng chỉnh scale. Muốn thấy một lỗi trông ra sao: `-- --stretch=1.5` vẽ bốn nhân vật phóng to 1,5 lần vào
+`overflow_demo.png`. Thư mục `assets/_generated/` không nằm trong git, nên
 ảnh có sẵn sau `tools/bootstrap_worktree.sh`; vẽ lại bất cứ lúc nào (không cần cửa sổ, vài giây):
 
 ```bash
@@ -292,11 +300,12 @@ của hero để trống vì con tốt của bạn không bao giờ báo đòn. 
 
 Ảnh này vẽ đúng chỗ game vẽ: công cụ chạy chính `ViewSyncSystem` thật lên chính cảnh actor thật rồi
 đọc lại điểm ảnh, chứ không phải một bản vẽ tay của bố cục. Cổng kiểm thật là
-`tests/architecture/test_pieces_inside_cell.gd`: nó đặt con tốt, ba cảnh enemy mỏng và **cả bảy enemy** của `content/enemies/` lên cảnh actor, cho nhìn bốn
-hướng, cầm từng loại vũ khí, đang báo đòn, và lấy mẫu mọi clip animation (khoảng 600 tư thế); mọi điểm ảnh phải
-cách mép ô ít nhất 2 px ở trạng thái đứng yên (hẹp nhất đo được đúng 2,0 px). Ảnh chỉ có bốn hàng: một enemy
-mới chỉ có `definition` (không có cảnh riêng) không có hàng riêng trong ảnh, nhưng bài kiểm vẫn đo nó và nêu tên
-nó nếu lấn ra ngoài.
+`tests/architecture/test_pieces_inside_cell.gd`: nó đặt con tốt, ba cảnh enemy mỏng, **cả bảy enemy** của `content/enemies/` và **mọi enemy mà các phòng đặt** (đúng như
+phòng đặt: một phòng kéo giãn một quân là báo đỏ, nêu tên phòng và tên node) lên cảnh actor, cho nhìn bốn hướng, cầm từng
+loại vũ khí, đang báo đòn, bị đánh bật lùi, và lấy mẫu mọi clip animation (khoảng 600 tư thế); mọi điểm ảnh phải
+cách mép ô ít nhất 2 px ở trạng thái đứng yên (hẹp nhất đo được đúng 2,0 px), và cú đánh bật chỉ được dùng hết lề đó
+(chạm mép ô, không vượt qua). Ảnh thứ nhất chỉ có bốn hàng: một enemy mới chỉ có `definition` (không có cảnh riêng)
+không có hàng riêng ở đó, nhưng bài kiểm vẫn đo nó, và nếu một phòng đặt nó thì nó có hàng trong ảnh thứ hai.
 
 **Đổi cỡ.** Muốn một loại quân to hơn hay nhỏ hơn: sửa `body_box` của loại đó trong `piece_sizes.tres` (1 file,
 không cần code), rồi vẽ lại hình cho vừa hộp mới. Hộp lớn hơn mà không còn lề 2 px thì `validate()` từ chối. Hình
@@ -311,20 +320,28 @@ tạm do `tools/generate_chess_sprites.gd` sinh đọc chính file này và khô
   đó là một sửa đổi trên hình bạn đã duyệt, được ghi ở `THIRD_PARTY_NOTICES.md`; bạn có thể vẽ lại hoàn toàn.
   **Tốt đen và tượng** là hình tạm mới (tốt đen là hình con tốt, đổi sang màu đen bóng; tượng là hình mới) đang
   chờ bạn duyệt hoặc vẽ lại.
+- Dải máu (pip) nằm sát lề trên của ô. Hậu và Vua cao tới mức không còn chỗ phía trên đầu trong ô, nên dải máu của
+  chúng được vẽ đè lên vương miện; bài kiểm gọi tên hai loại đó, và một loại mới cao tới dải máu (một boss) sẽ báo đỏ cho
+  tới khi bạn quyết định.
+- Mã và Tượng đang cùng một bậc chiều cao trong bảng, và hình tạm của Tượng (22 px) thấp hơn Mã (24 px). Bộ cờ thật có
+  Tượng cao hơn Mã; muốn vậy phải tách bậc trong bảng và vẽ lại, một quyết định của bạn.
 - Vũ khí cầm tay được vẽ nhỏ (0,16 lần) để vừa ô 32 px; tầm đánh được thể hiện bằng lớp phủ trên bàn cờ, không phải
   bằng độ dài của hình vũ khí.
 
 *EN: A piece is smaller than its 32 x 32 cell (owner, 2026-10-12): at least a 2 px margin on every side, never
 cell-sized, never taller, heights as in a real chess set. The rule lives in the data: `content/feel/piece_sizes.tres`
-has one row per kind with the largest picture (`body_box`, whole PNG), the base line (`base_offset_y`, 14 px below the
+has one row per kind with the largest body (`body_box`), the base line (`base_offset_y`, 14 px below the
 cell's centre, so the bottom margin is 2 px) and a footprint in cells; `validate()` holds the margin and the height
-order. Draw at scale 1, no larger than the box, feet at the bottom of the PNG: the game stands the bottom edge on the
-base line and centres the picture sideways. To see the result without the editor open
-`assets/_generated/previews/pieces_in_cells.png` (made by `tools/bootstrap_worktree.sh`, or run
+order. Draw at scale 1 on the 32 x 32 canvas of `docs/assets` (base rim on row 30, two empty rows under it), the drawn
+pixels inside the kind's box (pawn 18 x 22 at x 7-24, y 8-29): the canvas lands exactly on the cell and the scene needs
+no edit; a smaller PNG that fits the box also runs in the game, its bottom edge on the base line. To see the result
+without the editor open `assets/_generated/previews/pieces_in_cells.png` (made by `tools/bootstrap_worktree.sh`, or run
 `tools/render_actor_preview.gd`): four rows (hero, black pawn, knight, bishop) by nine cells (at rest facing four
-ways, armed facing four ways, alert), 4x, with the cell edge as a grey line and the 2 px margin as a faint red frame.
-`tests/architecture/test_pieces_inside_cell.gd` is the real gate and measures the hero, the three thin enemy scenes and all seven enemies of `content/enemies/`, in every
-facing and about 600 clip poses; an enemy that is only a `definition` is measured but is not a row of the picture.
+ways, armed facing four ways, alert), 4x, each cell with a 6 px gutter, the cell edge as a grey line and the 2 px margin
+as a faint red frame, both under the pieces; any piece pixel in the margin band or outside the cell is magenta and
+counted. `pieces_placed_in_rooms.png` has one row per actor the rooms place, as placed.
+`tests/architecture/test_pieces_inside_cell.gd` is the real gate and measures the hero, the three thin enemy scenes, all seven enemies of `content/enemies/` and every actor a room places (as the room places it; a stretched piece fails by room and name), in every
+facing, shoved by a hit and about 600 clip poses; an enemy that is only a `definition` is measured but is not a row of the first picture.
 Not yet: rook, queen, king and boss pictures exist only as table rows; the four bodies are placeholders (the knight was
 retraced on 15 rows to fit its box, an edit to an approved shape recorded in `THIRD_PARTY_NOTICES.md`).*
 
