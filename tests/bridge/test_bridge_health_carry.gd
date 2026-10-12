@@ -1,4 +1,4 @@
-extends SceneTree
+extends UnboundTest
 
 ## Bridge characterization (M1a): the health carry across zone changes.
 ## main._travel_to writes the hero's current health into WorldState, and
@@ -13,19 +13,8 @@ const T1 := &"t1_white_kings_fall"
 const T2 := &"t2_fallen_sword_tile"
 const T3 := &"t3_first_pawn_clash"
 
-var failures := 0
-
-
-func _expect(condition: bool, label: String) -> void:
-	if condition:
-		print("PASS: %s" % label)
-	else:
-		failures += 1
-		printerr("FAIL: %s" % label)
-
-
 func _init() -> void:
-	Support.arm_watchdog(self, "BRIDGE HEALTH CARRY TEST")
+	suite_title = "BRIDGE HEALTH CARRY TEST"
 	call_deferred("_run")
 
 
@@ -111,8 +100,4 @@ func _run() -> void:
 	world_state.call("load_state")
 	_expect(world_state.get("player_health_carry") == -1, "a save/load round trip leaves no carry behind")
 
-	Support.release_all_actions()
-	Support.remove_isolated_save(world_state)
-	var succeeded := failures == 0
-	print("BRIDGE HEALTH CARRY TEST: %s" % ["PASS" if succeeded else "FAIL (%d)" % failures])
-	quit(0 if succeeded else 1)
+	Support.end_suite(self, world_state)

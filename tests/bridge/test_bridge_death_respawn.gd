@@ -1,4 +1,4 @@
-extends SceneTree
+extends UnboundTest
 
 ## Bridge characterization (M1a): death and respawn through scripts/main.gd.
 ## The hero is killed through the real damage path (HealthSystem consuming
@@ -13,19 +13,8 @@ const SUITE_NAME := "death_respawn"
 const T1 := &"t1_white_kings_fall"
 const T2 := &"t2_fallen_sword_tile"
 
-var failures := 0
-
-
-func _expect(condition: bool, label: String) -> void:
-	if condition:
-		print("PASS: %s" % label)
-	else:
-		failures += 1
-		printerr("FAIL: %s" % label)
-
-
 func _init() -> void:
-	Support.arm_watchdog(self, "BRIDGE DEATH RESPAWN TEST")
+	suite_title = "BRIDGE DEATH RESPAWN TEST"
 	call_deferred("_run")
 
 
@@ -129,8 +118,4 @@ func tree_current_scene_is(candidate: Node) -> bool:
 
 
 func _finish(world_state: Node) -> void:
-	Support.release_all_actions()
-	Support.remove_isolated_save(world_state)
-	var succeeded := failures == 0
-	print("BRIDGE DEATH RESPAWN TEST: %s" % ["PASS" if succeeded else "FAIL (%d)" % failures])
-	quit(0 if succeeded else 1)
+	Support.end_suite(self, world_state)

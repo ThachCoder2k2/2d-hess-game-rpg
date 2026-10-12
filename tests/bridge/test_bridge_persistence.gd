@@ -1,4 +1,4 @@
-extends SceneTree
+extends UnboundTest
 
 ## Bridge characterization (M1a): what the world remembers.
 ## main.gd translates three kinds of simulation events into WorldState writes
@@ -22,20 +22,11 @@ const T4 := &"t4_broken_rule_yard"
 const KINGDOM := &"kingdom"
 const SPEAR_KEY := "t4_broken_rule_yard/PencilSpearPickup"
 
-var failures := 0
 var world_state: Node
 
 
-func _expect(condition: bool, label: String) -> void:
-	if condition:
-		print("PASS: %s" % label)
-	else:
-		failures += 1
-		printerr("FAIL: %s" % label)
-
-
 func _init() -> void:
-	Support.arm_watchdog(self, "BRIDGE PERSISTENCE TEST")
+	suite_title = "BRIDGE PERSISTENCE TEST"
 	call_deferred("_run")
 
 
@@ -48,11 +39,7 @@ func _run() -> void:
 	await _check_opened_gate(main)
 	main = await _check_relaunch(main)
 
-	Support.release_all_actions()
-	Support.remove_isolated_save(world_state)
-	var succeeded := failures == 0
-	print("BRIDGE PERSISTENCE TEST: %s" % ["PASS" if succeeded else "FAIL (%d)" % failures])
-	quit(0 if succeeded else 1)
+	Support.end_suite(self, world_state)
 
 
 ## --- Player unlock: the T2 wooden sword ------------------------------------

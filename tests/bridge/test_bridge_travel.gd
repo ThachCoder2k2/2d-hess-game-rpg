@@ -1,4 +1,4 @@
-extends SceneTree
+extends UnboundTest
 
 ## Bridge characterization (M1a): zone travel through scripts/main.gd.
 ## zone_travel_runtime_test.gd covers the simulation side (a door cell emits
@@ -15,19 +15,8 @@ const T1 := &"t1_white_kings_fall"
 const T2 := &"t2_fallen_sword_tile"
 const T3 := &"t3_first_pawn_clash"
 
-var failures := 0
-
-
-func _expect(condition: bool, label: String) -> void:
-	if condition:
-		print("PASS: %s" % label)
-	else:
-		failures += 1
-		printerr("FAIL: %s" % label)
-
-
 func _init() -> void:
-	Support.arm_watchdog(self, "BRIDGE TRAVEL TEST")
+	suite_title = "BRIDGE TRAVEL TEST"
 	call_deferred("_run")
 
 
@@ -161,8 +150,4 @@ func _run() -> void:
 	_expect(String(hud.get("objective_label").text).begins_with("The captain still holds the rug edge"), "the bridge answers a locked door with the captain message")
 	_expect(world_state.get("current_zone_id") == T3, "a locked door leaves WorldState on the current zone")
 
-	Support.release_all_actions()
-	Support.remove_isolated_save(world_state)
-	var succeeded := failures == 0
-	print("BRIDGE TRAVEL TEST: %s" % ["PASS" if succeeded else "FAIL (%d)" % failures])
-	quit(0 if succeeded else 1)
+	Support.end_suite(self, world_state)

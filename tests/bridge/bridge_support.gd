@@ -18,28 +18,20 @@ extends RefCounted
 ## - The WorldState autoload is replaced by a test double that starts empty and
 ##   saves to a throwaway file in the OS temp folder, so no suite writes the
 ##   player's real save (user://world_state.cfg) or inherits state from it.
+##
+## Every suite extends UnboundTest, which supplies the checks, the 30 s watchdog
+## (a script error inside a coroutine otherwise leaves Godot waiting forever) and
+## the verdict line. The main scene's path comes from TestPaths, so the folder
+## migration edits it in tests/support/paths.gd only.
 
-const MAIN_SCENE_PATH := "res://scenes/main.tscn"
 const IsolatedWorldState := preload("res://tests/bridge/isolated_world_state.gd")
 
-## Hard limit for a whole suite; the watchdog quits 1 so a hang cannot stall a gate.
-const WATCHDOG_SECONDS := 30.0
 ## Delta handed to each manual main._process call. Smaller than a 0.18 s step.
 const SIM_STEP_SECONDS := 0.05
 ## Real-time ceiling for waits that depend on tweens or timers.
 const REAL_TIME_WAIT_CAP_MSEC := 6000
 
 const MOVE_ACTIONS: Array[StringName] = [&"move_up", &"move_down", &"move_left", &"move_right"]
-
-
-## Quits the whole process with exit code 1 if the suite is still running after
-## WATCHDOG_SECONDS. A script error inside a coroutine otherwise leaves Godot
-## waiting forever.
-static func arm_watchdog(tree: SceneTree, suite_name: String) -> void:
-	var timer := tree.create_timer(WATCHDOG_SECONDS)
-	timer.timeout.connect(func() -> void:
-		printerr("FAIL: %s watchdog fired after %d s (suite hung)" % [suite_name, int(WATCHDOG_SECONDS)])
-		tree.quit(1))
 
 
 ## Swaps the WorldState autoload for the throwaway-save test double and returns it.
@@ -63,10 +55,20 @@ static func remove_isolated_save(world_state: Node) -> void:
 		DirAccess.remove_absolute(path)
 
 
-## Instantiates scenes/main.tscn under the root, makes it the current scene and
+## The last call of a bridge suite: lets go of any held input action, deletes the
+## throwaway save, then prints the verdict and quits through UnboundTest.finish().
+static func end_suite(suite: UnboundTest, world_state: Node) -> void:
+	release_all_actions()
+	remove_isolated_save(world_state)
+	suite.finish()
+
+
+## Instantiates the main scene under the root, makes it the current scene and
 ## switches its automatic _process off (see the design notes above).
-static func boot_main(tree: SceneTree) -> Node:
-	var main := (load(MAIN_SCENE_PATH) as PackedScene).instantiate()
+static func boot_main(suite: UnboundTest) -> Node:
+	var paths := TestPaths.new(suite)
+	var main := paths.load_scene(paths.main_scene()).instantiate()
+	var tree: SceneTree = suite
 	tree.root.add_child(main)
 	tree.current_scene = main
 	# Two frames: the engine's frame counter only starts advancing after the

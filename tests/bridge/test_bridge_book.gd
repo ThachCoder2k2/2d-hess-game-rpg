@@ -1,4 +1,4 @@
-extends SceneTree
+extends UnboundTest
 
 ## Bridge characterization (M1a): the Book of House Rules and player control.
 ## main._toggle_rule_book flips the Book's visibility and sets
@@ -19,19 +19,8 @@ const T1 := &"t1_white_kings_fall"
 const T2 := &"t2_fallen_sword_tile"
 const SENTINEL_STATUS := "sentinel: nothing has reacted to input"
 
-var failures := 0
-
-
-func _expect(condition: bool, label: String) -> void:
-	if condition:
-		print("PASS: %s" % label)
-	else:
-		failures += 1
-		printerr("FAIL: %s" % label)
-
-
 func _init() -> void:
-	Support.arm_watchdog(self, "BRIDGE BOOK TEST")
+	suite_title = "BRIDGE BOOK TEST"
 	call_deferred("_run")
 
 
@@ -136,11 +125,7 @@ func _run() -> void:
 	main._toggle_rule_book()
 	_expect(not book.visible and Support.player_tag(main).control_enabled, "the Book closes normally afterwards")
 
-	Support.release_all_actions()
-	Support.remove_isolated_save(world_state)
-	var succeeded := failures == 0
-	print("BRIDGE BOOK TEST: %s" % ["PASS" if succeeded else "FAIL (%d)" % failures])
-	quit(0 if succeeded else 1)
+	Support.end_suite(self, world_state)
 
 
 ## Puts the hero back at rest on a known cell with no queued input.
