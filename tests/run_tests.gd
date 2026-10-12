@@ -229,7 +229,7 @@ func _init() -> void:
 	_expect(t2_world.grid.is_walkable(Vector2i(6, 5)), "T2 sword unlock cell is walkable")
 
 	# --- WorldState survives a save/load round trip ---
-	var world_state_script := load("res://scripts/world/world_state.gd")
+	var world_state_script := load("res://shell/save/world_state.gd")
 	var saved_state: Node = world_state_script.new()
 	saved_state.current_zone_id = &"bookshelf_pass"
 	saved_state.last_entry_id = &"from_yard"

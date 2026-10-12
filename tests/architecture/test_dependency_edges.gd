@@ -44,7 +44,7 @@ const LEGACY_LAYER_RULES: Array = [
 	["res://presentation/board/prototype_board.gd", "presentation"],
 	["res://presentation/board/grid_lines_overlay.gd", "presentation"],
 	["res://presentation/views/weapon_pickup.gd", "presentation"],
-	["res://scripts/world/world_state.gd", "shell"],
+	["res://shell/save/world_state.gd", "shell"],
 	["res://scripts/main.gd", "shell"],
 	["res://scripts/world/", "authoring"],
 ]

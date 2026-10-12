@@ -68,7 +68,7 @@ func main_script() -> String:
 
 
 func world_state_script() -> String:
-	return _existing_file("res://scripts/world/world_state.gd")
+	return _existing_file("res://shell/save/world_state.gd")
 
 
 func actor_view_script() -> String:

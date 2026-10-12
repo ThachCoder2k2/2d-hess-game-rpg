@@ -26,7 +26,7 @@ func _run() -> void:
 	# (the live travel path that shipped broken once).
 	var world_state: Node = root.get_node_or_null("/root/WorldState")
 	if world_state == null:
-		world_state = load("res://scripts/world/world_state.gd").new()
+		world_state = load("res://shell/save/world_state.gd").new()
 		world_state.name = "WorldState"
 		root.add_child(world_state)
 	world_state.set("current_zone_id", &"")

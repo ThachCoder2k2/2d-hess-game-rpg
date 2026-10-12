@@ -59,3 +59,4 @@ scripts/world/camera_rig.gd	presentation/camera/camera_rig.gd
 scripts/world/prototype_board.gd	presentation/board/prototype_board.gd
 objects/world/prototype_board.tscn	presentation/board/prototype_board.tscn
 scripts/world/grid_lines_overlay.gd	presentation/board/grid_lines_overlay.gd
+scripts/world/world_state.gd	shell/save/world_state.gd

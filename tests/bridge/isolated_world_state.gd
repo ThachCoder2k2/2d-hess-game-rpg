@@ -1,4 +1,4 @@
-extends "res://scripts/world/world_state.gd"
+extends "res://shell/save/world_state.gd"
 
 ## Test double for the WorldState autoload used by the test_bridge_* suites.
 ## scripts/main.gd calls save_state() with no argument, so the real autoload
