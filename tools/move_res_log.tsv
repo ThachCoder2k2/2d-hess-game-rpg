@@ -18,3 +18,6 @@ scripts/combat/attack_profile.gd	schema/attacks/attack_profile.gd
 scripts/combat/enemy_weapon.gd	schema/attacks/enemy_weapon.gd
 scripts/ai/attack_pattern.gd	schema/attacks/attack_pattern.gd
 scripts/ai/enemy_intent.gd	ecs/systems/decide/enemy_intent.gd
+scripts/ecs/ecs_world.gd	ecs/core/ecs_world.gd
+scripts/ecs/ecs_grid.gd	ecs/core/ecs_grid.gd
+scripts/ecs/ecs_system.gd	ecs/core/ecs_system.gd
