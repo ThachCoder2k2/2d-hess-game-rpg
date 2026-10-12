@@ -22,3 +22,8 @@ assets/_generated/
 
 # Parallel agent worktrees (git worktree add), never part of the project.
 .claude/worktrees/
+
+# Asset request prompts: about 200 MB, regenerated from docs/assets/spec by
+# python3 tools/asset_requests/build_requests.py
+docs/assets/requests/
+docs/assets/asset-manifest.json
