@@ -53,3 +53,5 @@ scripts/visuals/pickup_visual.gd	presentation/views/pickup_visual.gd
 objects/visuals/weapon_pickup_visual.tscn	presentation/views/weapon_pickup_visual.tscn
 scripts/world/weapon_pickup.gd	presentation/views/weapon_pickup.gd
 objects/world/weapon_pickup.tscn	presentation/views/weapon_pickup.tscn
+scripts/audio/sfx_manager.gd	presentation/audio/sfx_manager.gd
+objects/audio/sfx_manager.tscn	presentation/audio/sfx_manager.tscn

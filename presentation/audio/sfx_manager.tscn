@@ -1,6 +1,6 @@
 [gd_scene load_steps=6 format=3 uid="uid://tidmjquaruel"]
 
-[ext_resource type="Script" uid="uid://dd6sq1es62exu" path="res://scripts/audio/sfx_manager.gd" id="1"]
+[ext_resource type="Script" uid="uid://dd6sq1es62exu" path="res://presentation/audio/sfx_manager.gd" id="1"]
 [ext_resource type="AudioStream" uid="uid://k04on76l7yds" path="res://assets/sfx/pickup_chime.wav" id="2"]
 [ext_resource type="AudioStream" uid="uid://clvd7rsscuqgy" path="res://assets/sfx/room_clear.wav" id="3"]
 [ext_resource type="AudioStream" uid="uid://bvy47pp1i5ra5" path="res://assets/sfx/defeat_jingle.wav" id="4"]

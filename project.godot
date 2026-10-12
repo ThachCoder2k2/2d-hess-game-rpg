@@ -21,7 +21,7 @@ buses/default_bus_layout="res://default_bus_layout.tres"
 
 [autoload]
 
-SfxManager="*res://objects/audio/sfx_manager.tscn"
+SfxManager="*res://presentation/audio/sfx_manager.tscn"
 WorldState="*res://scripts/world/world_state.gd"
 
 [display]

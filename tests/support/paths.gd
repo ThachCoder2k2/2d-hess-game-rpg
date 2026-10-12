@@ -99,7 +99,7 @@ func actor_scene(actor_id: StringName) -> String:
 
 ## The SfxManager autoload's scene (its player pool is built in code).
 func sfx_manager_scene() -> String:
-	return _existing_resource("res://objects/audio/sfx_manager.tscn")
+	return _existing_resource("res://presentation/audio/sfx_manager.tscn")
 
 
 # --- Directories (list them with `list_files`) ---
@@ -108,14 +108,11 @@ func rooms_directory() -> String:
 	return _existing_directory("res://scenes/rooms")
 
 
-## Entry, room and UI scenes (the `scenes/` folder).
-func scenes_directory() -> String:
-	return _existing_directory("res://scenes")
-
-
-## Reusable prefabs: actors, pickups, audio, and so on (the `objects/` folder).
-func objects_directory() -> String:
-	return _existing_directory("res://objects")
+## The whole project, for scans that must see every scene or script wherever the
+## folder migration puts it (M1b moved scenes out of `scenes/` and `objects/`
+## into the code folders): list from here with `recursive` true.
+func project_directory() -> String:
+	return _existing_directory("res://")
 
 
 ## The actor scenes: player, pawns, knight, bishop, and so on.
@@ -125,10 +122,6 @@ func actors_directory() -> String:
 
 func enemy_definitions_directory() -> String:
 	return _existing_directory("res://resources/enemies")
-
-
-func scripts_directory() -> String:
-	return _existing_directory("res://scripts")
 
 
 # --- Test fixtures (tests/fixtures is never discovered as a suite) ---

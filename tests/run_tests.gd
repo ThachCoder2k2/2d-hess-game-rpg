@@ -170,7 +170,7 @@ func _init() -> void:
 	# --- The sound structure: bus layout + event-sound registry ---
 	var bus_layout := load("res://default_bus_layout.tres") as AudioBusLayout
 	_expect(bus_layout != null, "the audio bus layout loads")
-	var sfx_scene := load("res://objects/audio/sfx_manager.tscn") as PackedScene
+	var sfx_scene := load("res://presentation/audio/sfx_manager.tscn") as PackedScene
 	var sfx_manager := sfx_scene.instantiate()
 	root.add_child(sfx_manager)
 	var registry: Dictionary = sfx_manager.get("streams")

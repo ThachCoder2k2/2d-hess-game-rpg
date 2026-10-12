@@ -17,9 +17,10 @@ const REQUIRED_BUS_NAMES: Array[StringName] = [&"Master", &"SFX", &"Music", &"UI
 const ROOT_BUS_NAME := &"Master"
 const ROOT_BUS_INDEX := 0
 
-## Scenes are scanned in scenes/ (entry, rooms, ui) and objects/ (reusable
-## prefabs, including every actor), recursively, so a new actor or room is
-## covered without touching this test. Where those folders are is TestPaths' job.
+## Every scene in the project is scanned (the whole tree, recursively), so a new
+## actor, room or widget is covered wherever it lives and moving scenes between
+## folders (the M1b migration did) cannot make the scan blind. The minimums
+## below catch a scan that found too little.
 const BUS_LAYOUT_SETTING := "audio/buses/default_bus_layout"
 
 ## The scenes known today hold five actor AudioPlayers and main's MusicPlayer.
@@ -76,9 +77,8 @@ func _init() -> void:
 
 	# --- Every audio player in the scenes names a bus that exists ---
 	var scene_paths: Array[String] = []
-	for folder_path in [paths.objects_directory(), paths.scenes_directory()]:
-		for scene_path in paths.list_files(folder_path, "tscn", 1, true):
-			scene_paths.append(scene_path)
+	for scene_path in paths.list_files(paths.project_directory(), "tscn", 1, true):
+		scene_paths.append(scene_path)
 	scene_paths.sort()
 	var actor_folder_prefix := paths.actors_directory() + "/"
 	var main_scene_path := paths.main_scene()
