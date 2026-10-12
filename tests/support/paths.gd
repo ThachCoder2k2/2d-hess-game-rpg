@@ -81,14 +81,20 @@ func main_scene() -> String:
 	return _existing_resource("res://shell/game_root.tscn")
 
 
+## The 72x40 kingdom: a test fixture, not game content (plan D-02).
 func kingdom_scene() -> String:
 	return _existing_resource("res://tests/fixtures/the_kingdom.tscn")
 
 
-## `room_id` is the room's file name without extension, for example
-## `t1_white_kings_fall` or `h1_chess_rug_hub`.
+## The first-encounter demo room: a test fixture, not game content (plan D-02).
+func first_encounter_scene() -> String:
+	return _existing_resource("res://tests/fixtures/first_encounter.tscn")
+
+
+## `room_id` is the room's folder name (its id), for example
+## `t1_white_kings_fall` or `h1_chess_rug_hub`; the scene is `room.tscn` inside it.
 func room_scene(room_id: StringName) -> String:
-	return _existing_resource("res://scenes/rooms/%s.tscn" % room_id)
+	return _existing_resource("res://content/rooms/%s/room.tscn" % room_id)
 
 
 ## `actor_id` is the actor scene's file name without extension, for example
@@ -104,8 +110,10 @@ func sfx_manager_scene() -> String:
 
 # --- Directories (list them with `list_files`) ---
 
+## The room folders (one per room id, each holding `room.tscn`): list the scenes
+## with `list_files(rooms_directory(), "tscn", 6, true)`.
 func rooms_directory() -> String:
-	return _existing_directory("res://scenes/rooms")
+	return _existing_directory("res://content/rooms")
 
 
 ## The whole project, for scans that must see every scene or script wherever the
@@ -120,8 +128,9 @@ func actors_directory() -> String:
 	return _existing_directory("res://presentation/views/actors")
 
 
+## The enemy folders (one per enemy id, each holding `enemy.tres`; `_shared` is not an enemy).
 func enemy_definitions_directory() -> String:
-	return _existing_directory("res://resources/enemies")
+	return _existing_directory("res://content/enemies")
 
 
 # --- Test fixtures (tests/fixtures is never discovered as a suite) ---

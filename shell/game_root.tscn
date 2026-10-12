@@ -3,7 +3,7 @@
 [ext_resource type="Script" uid="uid://cm5l012ltefe4" path="res://shell/game_root.gd" id="1"]
 [ext_resource type="PackedScene" uid="uid://bkykcsmrn0wyv" path="res://presentation/board/prototype_board.tscn" id="4"]
 [ext_resource type="PackedScene" uid="uid://ccqe76typpaaq" path="res://presentation/views/actors/player.tscn" id="5"]
-[ext_resource type="PackedScene" uid="uid://clh36vjegdepp" path="res://scenes/rooms/t1_white_kings_fall.tscn" id="6"]
+[ext_resource type="PackedScene" uid="uid://clh36vjegdepp" path="res://content/rooms/t1_white_kings_fall/room.tscn" id="6"]
 [ext_resource type="PackedScene" uid="uid://hk5me2mhmwb8" path="res://presentation/ui/hud/hud.tscn" id="7"]
 [ext_resource type="AudioStream" uid="uid://dk0dutjkvtq4y" path="res://assets/music/unbound_march.wav" id="8"]
 [ext_resource type="Resource" uid="uid://cq5g8vgd1g6fx" path="res://resources/world/world_graph.tres" id="9"]

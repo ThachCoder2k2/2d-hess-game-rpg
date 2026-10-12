@@ -56,7 +56,7 @@ func _init() -> void:
 	_expect(_has_line(stale, "FAIL: scene exists: res://scenes/a_scene_that_was_moved.tscn"), "loading a moved scene fails without calling load()")
 	_expect(_has_line(stale, "STALE PATHS FIXTURE: FAIL (4)"), "each stale lookup is exactly one failure")
 
-	_expect(paths.list_files(paths.rooms_directory(), "tscn", 6).size() >= 6, "list_files finds the Stage 1 room scenes")
+	_expect(paths.list_files(paths.rooms_directory(), "tscn", 6, true).size() >= 6, "list_files finds the Stage 1 room scenes")
 	_expect(not paths.read_text(paths.requirements_json()).is_empty(), "read_text returns the content of a real file")
 
 	finish()

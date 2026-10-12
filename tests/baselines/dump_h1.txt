@@ -1,6 +1,6 @@
 # dump_world v1: deterministic world dump. Regenerate with tools/dump_world.gd (see tools/README.md).
 room: h1_chess_rug_hub
-scene: res://scenes/rooms/h1_chess_rug_hub.tscn
+scene: res://content/rooms/h1_chess_rug_hub/room.tscn
 ticks: 120 x 0.0167 s, player idle (no input)
 entry_cell: (1, 5)
 cast: player=1 enemies=[] pickups=0

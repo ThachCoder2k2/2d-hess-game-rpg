@@ -1,6 +1,6 @@
 # dump_world v1: deterministic world dump. Regenerate with tools/dump_world.gd (see tools/README.md).
 room: t4_broken_rule_yard
-scene: res://scenes/rooms/t4_broken_rule_yard.tscn
+scene: res://content/rooms/t4_broken_rule_yard/room.tscn
 ticks: 120 x 0.0167 s, player idle (no input)
 entry_cell: (1, 5)
 cast: player=1 enemies=[2, 3, 4] pickups=1

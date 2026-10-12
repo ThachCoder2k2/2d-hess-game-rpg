@@ -118,3 +118,9 @@ scenes/zones/the_kingdom.tscn	tests/fixtures/the_kingdom.tscn
 objects/world/kingdom_world_tilemap.tscn	tests/fixtures/the_kingdom/tilemap.tscn
 resources/tiles/playground_world_tileset.tres	tests/fixtures/the_kingdom/tileset.tres
 assets/tiles/playground_world_tiles.svg	tests/fixtures/the_kingdom/tiles.svg
+scenes/rooms/t1_white_kings_fall.tscn	content/rooms/t1_white_kings_fall/room.tscn
+scenes/rooms/t2_fallen_sword_tile.tscn	content/rooms/t2_fallen_sword_tile/room.tscn
+scenes/rooms/t3_first_pawn_clash.tscn	content/rooms/t3_first_pawn_clash/room.tscn
+scenes/rooms/t4_broken_rule_yard.tscn	content/rooms/t4_broken_rule_yard/room.tscn
+scenes/rooms/b1_black_pawn_captain.tscn	content/rooms/b1_black_pawn_captain/room.tscn
+scenes/rooms/h1_chess_rug_hub.tscn	content/rooms/h1_chess_rug_hub/room.tscn
