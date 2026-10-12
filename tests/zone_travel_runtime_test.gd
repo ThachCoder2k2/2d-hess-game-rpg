@@ -17,7 +17,7 @@ func _expect(condition: bool, label: String) -> void:
 
 
 func _boot_kingdom(player_cell: Vector2i, opened_gates: Array = [], with_ai := false) -> Dictionary:
-	var zone := (load("res://scenes/zones/the_kingdom.tscn") as PackedScene).instantiate()
+	var zone := (load("res://tests/fixtures/the_kingdom.tscn") as PackedScene).instantiate()
 	root.add_child(zone)
 	var world := EcsWorld.new()
 	world.manual_tick = true

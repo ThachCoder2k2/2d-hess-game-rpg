@@ -10,7 +10,7 @@ extends SceneTree
 ## The camera zooms out to fit all 72x40 cells in the window; the last frame
 ## written is the finished map.
 
-const MAP_SCENE := "res://objects/world/kingdom_world_tilemap.tscn"
+const MAP_SCENE := "res://tests/fixtures/the_kingdom/tilemap.tscn"
 const BOARD_SIZE := Vector2i(72, 40)
 const CELL_SIZE := 32
 const GRID_ORIGIN := Vector2(64, 36)

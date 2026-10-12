@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://kofeorjmk0yq"
-path="res://.godot/imported/playground_world_tiles.svg-27371722e47f07c697b742f7ead401f0.ctex"
+path="res://.godot/imported/tiles.svg-fd9c9040d4e8fb9ca07d551b988351e7.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/tiles/playground_world_tiles.svg"
-dest_files=["res://.godot/imported/playground_world_tiles.svg-27371722e47f07c697b742f7ead401f0.ctex"]
+source_file="res://tests/fixtures/the_kingdom/tiles.svg"
+dest_files=["res://.godot/imported/tiles.svg-fd9c9040d4e8fb9ca07d551b988351e7.ctex"]
 
 [params]
 

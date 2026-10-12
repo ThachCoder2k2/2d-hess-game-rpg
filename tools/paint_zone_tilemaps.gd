@@ -177,7 +177,7 @@ const REQUIRED_OPEN := [
 
 
 func _init() -> void:
-	var tile_set := load("res://resources/tiles/playground_world_tileset.tres") as TileSet
+	var tile_set := load("res://tests/fixtures/the_kingdom/tileset.tres") as TileSet
 	if tile_set == null:
 		push_error("playground_world_tileset.tres failed to load (run an editor import first).")
 		quit(1)
@@ -397,4 +397,4 @@ func _paint(open: Dictionary, tile_set: TileSet) -> bool:
 	var packed := PackedScene.new()
 	if packed.pack(layer) != OK:
 		return false
-	return SaveKeepingUids.save_keeping_uid(packed, "res://objects/world/kingdom_world_tilemap.tscn") == OK
+	return SaveKeepingUids.save_keeping_uid(packed, "res://tests/fixtures/the_kingdom/tilemap.tscn") == OK

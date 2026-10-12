@@ -114,3 +114,7 @@ resources/tiles/playground_tileset.tres	content/tilesets/playground/tileset.tres
 objects/world/playground_tilemap.tscn	content/tilesets/playground/tilemap.tscn
 scenes/rooms/first_encounter.tscn	tests/fixtures/first_encounter.tscn
 resources/objectives/first_encounter_clear_all.tres	tests/fixtures/first_encounter/objective.tres
+scenes/zones/the_kingdom.tscn	tests/fixtures/the_kingdom.tscn
+objects/world/kingdom_world_tilemap.tscn	tests/fixtures/the_kingdom/tilemap.tscn
+resources/tiles/playground_world_tileset.tres	tests/fixtures/the_kingdom/tileset.tres
+assets/tiles/playground_world_tiles.svg	tests/fixtures/the_kingdom/tiles.svg

@@ -82,7 +82,7 @@ func main_scene() -> String:
 
 
 func kingdom_scene() -> String:
-	return _existing_resource("res://scenes/zones/the_kingdom.tscn")
+	return _existing_resource("res://tests/fixtures/the_kingdom.tscn")
 
 
 ## `room_id` is the room's file name without extension, for example
