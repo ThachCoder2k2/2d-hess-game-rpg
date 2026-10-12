@@ -161,7 +161,7 @@ are later work, and nothing in the tree blocks them.*
 | Chỉnh một enemy (máu, tốc độ, AI, kiểu tấn công) | `content/enemies/<id>/enemy.tres` và các `.tres` nó trỏ tới: `movement.tres`, `decision.tres`, `unarmed_attack.tres`, `visual.tres` nằm cạnh nó, hoặc `content/enemies/_shared/{movement,attacks,decisions,visuals}/` nếu nhiều pawn dùng chung |
 | Thêm một enemy mới không cần code | lệnh `/new-enemy` (xem `.claude/commands/new-enemy.md`; tạo thư mục `content/enemies/<id>/`) |
 | Đổi bố cục phòng hoặc chỗ đứng của enemy | mở `content/rooms/<id>/room.tscn`, kéo node (enemy là node `ActorView` đậu trên một ô) |
-| Chỉnh cảm giác con tốt (bước, courage, invulnerability, kiếm) | các node `MovementComponent`, `InputComponent`, `CombatComponent`, `HealthComponent` trong `presentation/views/actors/player.tscn`, và `content/skills/wooden_sword/wooden_sword.tres`, `content/skills/pencil_thrust/pencil_thrust.tres` |
+| Chỉnh cảm giác con tốt (thời gian bước, thời gian giữ phím để lặp bước, courage, invulnerability, hồi chiêu kỹ năng, có kiếm ngay từ đầu hay không) | `content/player/player.tres` (một file). Hai đòn đánh của nó là `content/skills/wooden_sword/wooden_sword.tres` và `content/skills/pencil_thrust/pencil_thrust.tres`. Muốn một phòng riêng khác đi thì kéo node `HealthComponent`/`MovementComponent`/... vào con tốt; node đó thắng file |
 | Đổi sprite (con tốt, enemy, icon, pickup) | ghi đè `body.png` / `icon.png` / `pickup.png` trong thư mục của nó: `content/player/`, `content/enemies/<id>/`, `content/skills/<id>/`, `content/pickups/<id>/` (xem mục 4). Tới M2, mọi pawn dùng chung hình `pawn_recruit` và bishop dùng hình `knight_tracker` (chúng chưa có hình riêng) |
 | Đổi hình bàn đồ vẽ tay | `assets/map_pieces/` (hình bạn vẽ tay, được track; thay thế bản sinh tự động) |
 | Đổi hình nền của phòng T1 hoặc T2 | **Tạm thời:** ghi đè `content/rooms/t1_white_kings_fall/background.png` hoặc `content/rooms/t2_fallen_sword_tile/background.png`. Hai tấm nền vẽ sẵn này là đồ cũ: theo quyết định của bạn (vẽ từng thứ một, `docs/owner-decisions.md`), phòng sẽ được ghép từ từng tile và từng đồ vật riêng, nên đừng vẽ lại cả tấm — hãy vẽ theo danh sách trong `docs/assets/`. |
@@ -178,7 +178,7 @@ are later work, and nothing in the tree blocks them.*
 **Bảng đích** (từ `docs/game-base-plan.md` §13.5). Các thư mục `content/enemies`, `rooms`, `rules`,
 `skills`, `pickups`, `player`, `difficulty`, `world`, `tilesets` **đã tồn tại** từ M1b; các đường dẫn
 khác trong bảng (`content/story`, `audio`, `feel`, `progression`, `ui`, `bosses`, `props`, các file
-`skill.tres`, `pickup.tres`, `player.tres`, `.po`...) **chưa có** cho tới milestone ghi ở cột cuối.
+`skill.tres`, `pickup.tres`, `.po`...) **chưa có** cho tới milestone ghi ở cột cuối.
 Cột cuối ("available after Mx") là milestone sau đó hàng ấy mới đúng. Plan không ghi milestone cho
 từng hàng, nên cột này là cách đọc của docs lane từ §15 và sẽ được kiểm lại ở mỗi milestone. Khi một
 milestone xong, nó phải kiểm đường dẫn thật của các hàng thuộc về mình và xoá chữ "available after Mx" ở
@@ -221,7 +221,7 @@ bố cục phòng, đổi sprite, đổi art nền phòng.
 | Đổi bố cục HUD (Change the HUD layout) | the widget scene in `presentation/ui/hud/` | 1 | no | available after M4 |
 | Chỉnh độ khó hoặc assist (Tune difficulty or assists) | `content/difficulty/<profile>.tres` (global health and damage multipliers live here); for one enemy, its `enemy.tres` | 1 | no | available after M8a |
 | Chỉnh cảm giác chơi (rung, nháy, hit-stop, màu telegraph, chord window) (Tune game feel (shake, flash, hit-stop, telegraph colours, chord window)) | `content/feel/feel_profile.tres` | 1 | no | available after M7b |
-| Đổi cảm giác của con tốt (thời gian mỗi bước, courage, invulnerability) (Change how the pawn feels (step time, courage, invulnerability)) | `content/player/player.tres` | 1 | no | available after M2 |
+| Đổi cảm giác của con tốt (thời gian mỗi bước, courage, invulnerability) (Change how the pawn feels (step time, courage, invulnerability)) | `content/player/player.tres` | 1 | no | **available now** (M2) |
 | Đổi luật kinh tế (Believe, shard, stagger, ngưỡng assist) (Change economy rules (Believe, shards, stagger, assist thresholds)) | `content/progression/rules.tres` | 1 | no | available after M7c |
 | Đổi phím mặc định (Change input defaults) | the `[input]` section of `project.godot` | 1 | no | available after M4 |
 | Đổi chữ ở màn title hoặc credits (Change title text or credits) | `credits.tres` + `.po` rows | 2 | no | available after M4 |

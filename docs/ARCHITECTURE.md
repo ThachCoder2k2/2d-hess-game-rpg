@@ -109,7 +109,7 @@ docs/                    this file, coding-standards.md, OWNER_GUIDE.md, plans, 
 ```
 
 Not built yet (the plan's later milestones): `ecs/events/`, `ecs/schedule/`, `schema/skills`,
-`schema/progression`, `schema/story`, `schema/audio`, `shell/content/` (`ContentDb`),
+`schema/progression`, `schema/story`, `schema/audio`,
 `shell/title|pause|settings|credits`, `presentation/story|vfx|bridges`, `content/story|audio|feel|ui|bosses|props|progression`,
 `authoring/markers/` beyond today's, and the single `actor_view_base.tscn` (M2) that will replace the five
 copies in `presentation/views/actors/`.
@@ -220,10 +220,11 @@ dictionaries are all documented in the file:
 
 | Piece | File | What it does |
 |---|---|---|
-| `ActorView` | `presentation/views/actor_view.gd` | the puppet and spawn marker. `definition: EnemyDefinition` (null on the player) plus appearance exports (tints, weapon anchor, pip textures). No logic. |
-| `EntityComponent` nodes | `authoring/entity_components/` | Inspector-draggable children of an `ActorView`; `EcsBoot` calls `apply(world, entity_id)` at spawn. Six exist: `CombatComponent`, `HealthComponent`, `InputComponent`, `MovementComponent` (the player's kit; `HealthComponent` and `MovementComponent` also work as per-instance overrides) and `AIComponent`/`WeaponComponent` (per-instance enemy overrides). A node on an instance beats the definition. Zero logic. |
-| `EcsBoot` | `authoring/ecs_boot.gd` | static `boot(...)`: sizes the grid from `RoomEncounter.board_size`, bakes solid tiles, `ZoneExitMarker`, `PlayerUnlockMarker` and `GateMarker`; spawns the player, then every `ActorView` child of the room that has a `definition`, then pickups. Returns the cast dictionary (`player`, `enemies`, `view_by_entity`, `piece_name_by_entity`, pickup maps). |
-| `EcsActorFactory` | `authoring/ecs_actor_factory.gd` | `spawn_player`, `spawn_enemy`, `spawn_pickup`: assemble an entity's components from the `.tres` data and apply the difficulty multipliers. |
+| `ActorView` | `presentation/views/actor_view.gd` | the puppet and spawn marker. Spawn data: `definition: EnemyDefinition` (null on the player) or `player_definition: PlayerDefinition` (null on an enemy, `content/player/player.tres`); plus appearance exports (tints, weapon anchor, pip textures). No logic. |
+| `EntityComponent` nodes | `authoring/entity_components/` | Inspector-draggable children of an `ActorView`; `EcsBoot` calls `apply(world, entity_id)` at spawn. Six exist: `CombatComponent`, `HealthComponent`, `InputComponent`, `MovementComponent` (overrides of the player's `PlayerDefinition`; the player scene carries none, so `content/player/player.tres` is the only source) and `AIComponent`/`WeaponComponent` (per-instance enemy overrides). A node on an instance beats the definition, field by field. Zero logic. |
+| `EcsBoot` | `authoring/ecs_boot.gd` | static `boot(...)`: sizes the grid from `RoomEncounter.board_size`, bakes solid tiles, `ZoneExitMarker`, `PlayerUnlockMarker` and `GateMarker`; spawns the player from the view's `PlayerDefinition` (class defaults when it names none) and applies its `EntityComponent` nodes, then every `ActorView` child of the room that has a `definition`, then pickups. Returns the cast dictionary (`player`, `enemies`, `view_by_entity`, `piece_name_by_entity`, pickup maps). |
+| `EcsActorFactory` | `authoring/ecs_actor_factory.gd` | `spawn_player` (bare hero, kept), `spawn_player_from_definition` (what `EcsBoot` calls), `spawn_enemy`, `spawn_pickup`: assemble an entity's components from the `.tres` data and apply the difficulty multipliers. |
+| `ContentDb` | `shell/content/content_db.gd` (+ `content_kind.gd`) | the content registry, a static class (no autoload, so it works inside a suite's `_init()`). Ids are folder names under `content/<kind>/`, listed lazily once per kind. `ids(kind)`, `fetch(kind, id)`, `all(kind)`, `player()`, `world()`, `validate()`, `validate_cross_refs()`. Nine kinds registered (one line each in `_ensure_kinds()`). Only the shell may name it; tests and tools call the two validators, nothing calls them at game start. |
 | `RoomEncounter` | `authoring/room_encounter.gd` | a room scene root: `board_size`, `zone_id`, prose, and a `RoomObjective`. It carries data only. |
 | Markers | `authoring/markers/` | `GridMarker` base (drag to snap, writes `grid_cell`). `ZoneEntryMarker`/`ZoneExitMarker` (doors), `GateMarker`, `PlayerUnlockMarker`, `PickupSpawnPoint`. `BlockerMarker` is a legacy marker `EcsBoot` no longer bakes; walls are painted tiles. |
 | Walls | `RoomArt/TileMap` | any tile whose custom data `solid = true` becomes a blocked cell. Paint = collision. |
@@ -239,8 +240,10 @@ and override `definition` to vary it. What the editor shows is what spawns.
 `DifficultyProfile` and an optional default `EnemyWeapon`. The pieces several pawns share are
 in `content/enemies/_shared/{movement,attacks,decisions,visuals}/`; an enemy's own are beside
 its `enemy.tres`, named for the `EnemyDefinition` export they fill (`movement.tres`,
-`decision.tres`, `unarmed_attack.tres`, `visual.tres`). The player's kit uses `AttackProfile`
-`.tres` files (`content/skills/wooden_sword/`, `content/skills/pencil_thrust/`).
+`decision.tres`, `unarmed_attack.tres`, `visual.tres`). The player has one `PlayerDefinition`
+(`content/player/player.tres`: Courage, invulnerability, step time, hold-repeat delay, skill cooldown,
+whether the sword starts unlocked, and the two `AttackProfile` `.tres` files
+`content/skills/wooden_sword/` and `content/skills/pencil_thrust/`).
 `RuleBook`/`RuleEntry` (the Book of House Rules, `content/rules/`), `RoomObjective` and
 `WorldGraph` (`content/world/world.tres`: zone id -> room scene) are the other schemas. Shared
 Resources are treated as immutable at runtime; instances `duplicate(true)` before mutating (a
@@ -379,8 +382,8 @@ HOME=/tmp/unbound-pawn-godot ../Godot.app/Contents/MacOS/Godot --headless --path
 
 The tree above is the part of `docs/game-base-plan.md` §13 that M1b built: the folders, the
 moves, the guards that keep code and content where they belong, and the placeholder tools.
-The ECS contract is kept as it was. Still to come, in plan order: `ContentDb` and the actor
-collapse (M2), the runtime seams — commands, the input snapshot, the `HudSnapshot`, the
+The ECS contract is kept as it was. M2 has landed `ContentDb` and `PlayerDefinition`; still to come, in plan
+order: the actor collapse (the one `actor_view_base.tscn`, rest of M2), the runtime seams — commands, the input snapshot, the `HudSnapshot`, the
 schedule files, `events.gd` (M3a) — the split of `game_root.gd` and the save service (M3b),
 then the shell, input, text, story, skills, bosses and the other five districts. The
 owner-facing "how do I change X" table, with real paths for what exists today, is

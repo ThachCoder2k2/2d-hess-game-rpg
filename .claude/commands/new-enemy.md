@@ -75,7 +75,11 @@ Steps:
    one fails.
 
 5. Run the editor import once (new class refs, new resources, and the `.import` of a new PNG),
-   then run `/verify`. All green, and `stamp_uids.gd --check` CLEAN.
+   then run `/verify`. All green, and `stamp_uids.gd --check` CLEAN. `ContentDb` finds the new
+   folder by its name with no registration; `tests/content/test_validate_all.gd` then fails if the
+   folder name is not lowercase snake_case, if `enemy.tres`' `id` differs from the folder name, or
+   if `validate()` reports anything. A Book page whose `piece_id` names a missing enemy fails
+   `ContentDb.validate_cross_refs()`.
 
 6. To play it: instance the new `.tscn` directly in a room scene under
    `content/rooms/<room id>/room.tscn` and park it on a cell. `EcsBoot` spawns an entity for every

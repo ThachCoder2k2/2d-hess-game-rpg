@@ -162,6 +162,15 @@ These are the rules `CLAUDE.md` makes binding, with the reasoning.
   copy (a picked-up `EnemyWeapon`).
 - Enemy locomotion is data: `MovementConfig.allowed_directions` lists the offsets of one
   move. Never encode a piece's movement in a system.
+- **Look content up by id, through `ContentDb`** (`shell/content/`, a static class): the id is the
+  folder name under `content/<kind>/` and is spelled in one place. Code outside the shell does not
+  load `content/` by path; a scene names what it needs by uid. Adding a kind is one line in
+  `ContentDb._ensure_kinds()`, a `validate()` on its schema class, and a minimum count in
+  `tests/content/test_validate_all.gd`. A reference between entries goes by id, and
+  `ContentDb.validate_cross_refs()` fails on one that points at nothing.
+- The hero's numbers are `content/player/player.tres` (`PlayerDefinition`), baked by `EcsBoot` like an
+  enemy's definition; an `EntityComponent` node on the instance beats it field by field. Do not put a
+  tuning value on the player scene.
 
 ## Folder placement
 
@@ -303,8 +312,6 @@ Deliberately not used (do not add them without a real need and the owner's say):
 ## What the plan adds next
 
 `docs/game-base-plan.md` §13.3 lists conventions that M1b did not need and later milestones add:
-a `validate()` on every schema class run by a test over every file `ContentDb` finds, ids derived
-from folder names by `ContentDb` (M2), systems grouped by phase with the order kept as data in
-`ecs/schedule/` (M3a), the file-naming suffixes `*_effect.gd`, `*_handler.gd`, `*_bridge.gd` as
+systems grouped by phase with the order kept as data in `ecs/schedule/` (M3a), the file-naming suffixes `*_effect.gd`, `*_handler.gd`, `*_bridge.gd` as
 those kinds appear, and `.po` text keys instead of literal strings. Those are targets, not rules
 yet; the rules above are the ones the code and the guards already hold.

@@ -18,6 +18,10 @@ nothing you change here touches code.*
   *File names are roles. To swap art, overwrite the file with the same name; nothing else changes.*
 - **Mỗi thứ một file.** Một PNG cho một tile, một prop, một icon, một khung hình; không gộp sheet.
   *One file per thing: one PNG per tile, prop, icon or animation frame; no sheets or atlases.*
+- Mọi thứ trong đây tra theo id qua `ContentDb`; thêm hoặc sửa xong, `tests/content/test_validate_all.gd` kiểm
+  mọi file có hợp lệ và mọi tham chiếu có trỏ tới một id có thật không.
+  *Everything here is looked up by id through `ContentDb`; after an edit, `tests/content/test_validate_all.gd`
+  checks that every file is valid and every reference points at an id that exists.*
 - File nào còn là hình/tiếng tạm: `tools/list_placeholders.gd` in ra, dựa trên `_placeholders.json`.
   *Which files are still stand-ins: `tools/list_placeholders.gd` prints them, from `_placeholders.json`.*
 
@@ -26,6 +30,7 @@ nothing you change here touches code.*
 | Bạn muốn... (You want to...) | Mở (Open) |
 |---|---|
 | Chỉnh máu, tốc độ, AI hoặc đòn đánh của một enemy | `enemies/<id>/enemy.tres` và các `.tres` cạnh nó (`movement`, `decision`, `unarmed_attack`, `visual`); dùng chung: `enemies/_shared/` |
+| Chỉnh cảm giác con tốt (thời gian bước, courage, invulnerability, hồi chiêu kỹ năng) | `player/player.tres` (một file) |
 | Đổi hình của con tốt hoặc một enemy | ghi đè `player/body.png` hoặc `enemies/<id>/body.png` |
 | Đổi icon kiếm, bút chì, vũ khí | ghi đè `skills/<id>/icon.png` hoặc `pickups/<id>/icon.png` |
 | Chỉnh bố cục phòng, chỗ đứng enemy, cửa | mở `rooms/<id>/room.tscn` trong Godot và kéo node |
@@ -36,7 +41,8 @@ nothing you change here touches code.*
 | Đổi bộ tile | `tilesets/<bộ>/tileset.tres`, atlas ở `../assets/tiles/<bộ>/` (đừng sửa tay `tile_map_data`) |
 | Đổi tiếng động, nhạc | ghi đè file trong `../assets/sfx/` hoặc `../assets/music/` (cùng tên) |
 
-*EN: Enemy stats, AI and attacks: `enemies/<id>/enemy.tres` and the `.tres` beside it (shared pieces in
+*EN: The pawn's feel (step time, Courage, invulnerability, skill cooldown): `player/player.tres`, one file.
+Enemy stats, AI and attacks: `enemies/<id>/enemy.tres` and the `.tres` beside it (shared pieces in
 `enemies/_shared/`). Pictures: overwrite `player/body.png`, `enemies/<id>/body.png`, `skills/<id>/icon.png`,
 `pickups/<id>/icon.png`, `rooms/<id>/background.png`. Room layout: open `rooms/<id>/room.tscn`. Book pages:
 `rules/<id>/page.tres`. Difficulty: `difficulty/standard.tres`. Which room connects to which:

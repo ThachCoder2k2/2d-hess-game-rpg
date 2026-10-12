@@ -1020,3 +1020,60 @@ Fourth and last M1b step, branch `base/m1b-4` from `base/m1b-3`. No gameplay cha
   `content/<kind>/<id>/anim/<clip>/<NN>.png`); `docs/design/*` specs and the production checklists still name old
   paths in prose (planning documents, not rewritten); other kinds of placeholder (prose, tuning numbers) are not
   covered by a file hash.
+
+## M2 step 1 - the content registry and the player definition - 2026-10-13
+
+First of three M2 steps ("Content registry and actor collapse", `docs/game-base-plan.md` 15), branch `base/m2-1` from
+`game-base` (`8731597`). Steps 2 and 3 (the one actor view, the in-cell piece sizes, the previews) are not in this
+branch. No gameplay rule changed: movement, combat timings and AI are untouched.
+
+- **`PlayerDefinition` (`schema/entity/`) and `content/player/player.tres`.** Courage (`max_courage`), invulnerability,
+  step time, hold-repeat delay, skill cooldown, `starts_with_sword`, the two attack profiles and `piece_name` were
+  Inspector values on four `EntityComponent` nodes inside the player scene. They are one resource now; the player view
+  names it (`ActorView.player_definition`) and `EcsBoot` bakes it (`EcsActorFactory.spawn_player_from_definition`),
+  then applies any `EntityComponent` node on the instance, so a node still wins field by field. The player scene lost
+  its four component nodes (text edit, uids untouched) because they would otherwise always beat the file. A view that
+  names no definition plays on the class defaults, which equal the old values. `EcsActorFactory.spawn_player` is
+  unchanged. The `"Pawn Hero"` string literal in `EcsBoot` is now `PlayerDefinition.piece_name`.
+- **`ContentDb` (`shell/content/content_db.gd`, `content_kind.gd`).** A static class, no autoload, lazy id cache per
+  kind, ids from folder names (file names for `difficulty`; an underscore folder is not an id). `ids`, `has_id`,
+  `fetch`, `all`, `path_of`, `player()`, `world()`, `validate()`, `validate_cross_refs()`, plus `configure_root()` and
+  `clear_cache()` for tests. Nine kinds: `player`, `world`, `enemies`, `rooms`, `rules`, `skills`, `pickups`,
+  `difficulty`, `tilesets` (28 entries today). The method is `fetch`, not the plan's `get`, because a static `get`
+  would override `Object.get` and GDScript rejects that. Not built: the `content/_index.json` fallback for an exported
+  build (plan 14.1); `ResourceLoader.list_directory` lists folders inside a `.pck`, and there is no export here to try.
+- **`validate()` added to `AttackProfile`, `EnemyWeapon`, `DifficultyProfile`** so that every definition class answers it
+  (the registry flags a script class without one).
+- **One real inconsistency found by the registry:** `content/pickups/toy_weapon/` held only the shared pickup sprite, so
+  the folder was an id with no definition. It now has `toy_weapon.tres` (the `EnemyWeapon` class defaults written out).
+  Nothing places it, so no room, dump or behaviour changes.
+- **`tools/world_dumper.gd`** asks `ContentDb.world()` instead of keeping its own copy of the `world.tres` path.
+- **Deterministic dumps.** `[entities at boot]` is byte-identical in all six (`t1 t2 t3 t4 b1 h1`): the player still has
+  Courage 3/3, invulnerability 0.7, step 0.18, hold 0.22, cooldown 1.25, sword unlocked, the same two profiles. The only
+  change is the intended one: each baseline loses the four `PawnHero/{Combat,Health,Input,Movement}Component` lines and
+  its `[nodes] N` header drops by 4 (t1 35 to 31, t2 35 to 31, t3 43 to 39, t4 80 to 76, b1 80 to 76, h1 28 to 24).
+  Mutation check: setting `max_courage = 4` makes `test_dump_baselines` fail on exactly the `health:` and the summary
+  line, so the baselines are the byte-for-byte proof.
+- **Tests added (4 suites, 26 to 30).** `test_content_db_in_init` (registry inside `_init()` with no autoload; asserts
+  that premise), `test_validate_all` (110 checks: minimum count per kind, ids equal folders through a plain folder
+  listing, no id claimed twice, `validate()` called on at least 20 definitions, both validators empty),
+  `test_content_db_detects_problems` (a throwaway tree under `user://`, one named defect per entry, each required to be
+  reported with its exact sentence, a clean control entry required to stay silent, the lazy cache), and
+  `test_player_definition` (every field bakes, a retuned definition changes the entity, a node on the instance wins, a
+  view with no definition uses the defaults, the old factory call still works, `validate()` names each broken field).
+  Mutation checks on the real content: `step_duration = 0` fails `test_validate_all`; a Book page with
+  `piece_id = ghost` fails it through `validate_cross_refs()`.
+- **Baseline labels.** Three `tests/run_tests.gd` checks looked for the four nodes; they now look at the definition and
+  the three renames are in `tests/label_renames.txt`. 235 of 235 still PASS (3 through renames).
+- **Docs.** `docs/ARCHITECTURE.md` (ActorView, EntityComponent, EcsBoot, EcsActorFactory, ContentDb rows),
+  `docs/OWNER_GUIDE.md` (the pawn row is "available now"), `docs/coding-standards.md` (look content up by id, no
+  tuning on the player scene), `content/README.md`, `AGENTS.md`, `CLAUDE.md` (one rule: content by id through
+  `ContentDb`), `.claude/commands/new-enemy.md`. `task_plan.md` gets its M2 row from the integrator once the three
+  steps are merged, as for M1a and M1b.
+- **Verification.** Both `--self-test` runs report 0 failures; `run_all_tests.py --strict`: 30 suites, 0 failed, 0
+  warnings, GREEN, 235 of 235 labels; `stamp_uids.gd --check` CLEAN; `git diff --check` clean. Every commit of the
+  step was verified green on its own.
+- **Not done here (steps 2 and 3, and later):** the single `actor_view_base.tscn` with thin inherited scenes and
+  `test_actor_collapse_golden`; `VisualDefinition` body texture and anchor; the in-cell piece size table, the scene
+  geometry for the owner's 2026-10-12 decision (a piece is smaller than its cell), the chess placeholder bodies and
+  `tools/render_actor_preview.gd`; the `/new-enemy` rewrite; the exported-build index.

@@ -49,6 +49,11 @@ session. Read `AGENTS.md` for the full workflow, and `docs/ARCHITECTURE.md` +
 	drained events. Systems never play audio. The registry will be keyed from
 	`content/audio/sound_bank.tres` (not built yet; today the keys are
 	Inspector exports on `presentation/audio/sfx_manager.tscn`). Recipe: `/new-sound`.
+- **Content is looked up by id.** `ContentDb` (`shell/content/`, a static class, no autoload) lists
+  `content/<kind>/` folders; the folder name is the id. Do not load `content/` by path from `ecs/`,
+  `authoring/` or `presentation/`: a scene names a resource by uid, the shell asks `ContentDb`. A new
+  kind is one line in `ContentDb._ensure_kinds()`, a `validate()` on its class and a minimum in
+  `tests/content/test_validate_all.gd`. The hero's tuning is `content/player/player.tres`.
 - **Research before building any new mechanic.** Mandatory order:
   1. Search Godot's built-in nodes/engine features for the capability
 	 (Timer, Tween, AnimationPlayer, Area2D signals, TileMapLayer, AStarGrid2D,

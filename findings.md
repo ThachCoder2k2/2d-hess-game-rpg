@@ -394,3 +394,25 @@ June note).
 - The owner's one-file-per-thing direction (2026-10-12) fits the tree without building anything: single tiles go in
   `assets/tiles/<district>/<tile_id>.png` (the atlas is `assets/tiles/<district>/atlas.*` until a tool assembles one) and
   animation frames in `content/<kind>/<id>/anim/<clip>/<NN>.png`. The assembly tools are later work.
+
+## Content Registry and Player Definition Facts (M2 step 1, 2026-10-13)
+
+- `ContentDb` is the only code that should load `content/` by id. It is a static class (`shell/content/`), because an
+  autoload does not exist while a suite's `_init()` runs (it is added to the tree after `_init()` returns), and
+  `test_content_db_in_init` asserts that premise so a Godot upgrade cannot make it vacuous.
+- A static method cannot be called `get` in GDScript: it would override `Object.get`. The lookup is `ContentDb.fetch`.
+- The id of a thing is its folder name; an `id` property inside the resource must equal it (`validate()` checks), and a
+  Book page's `piece_id` or a door's `target_zone` must name an id that exists (`validate_cross_refs()` checks). The
+  `kingdom` zone is the one world entry with no room folder (a test fixture the graph keeps until M5):
+  `ContentDb.FIXTURE_ZONE_IDS`.
+- A `.tres` omits every property equal to the script default, so a hand-written `player.tres` that lists all values is
+  rewritten shorter the first time the editor saves it. The values are the same; the class defaults equal the
+  pre-M2 hero, which is also why a view with no definition plays unchanged.
+- The player scene carries no `EntityComponent` node on purpose: a node on the instance always beats the definition, so
+  a leftover `HealthComponent` with default values would silently shadow `player.tres`. A node there now means "this
+  scene overrides the file".
+- Adding or removing an `EntityComponent` node under a view changes only the `[nodes]` section of the dump; the
+  `[entities at boot]` section depends on the baked values alone, which is what makes it the proof that a bake
+  refactor changed nothing.
+- Fixture trees for a validator test belong under `user://`, written at run time: `tests/fixtures/` is scanned by the
+  stamper and by `test_no_path_only_ext_resource`, and a deliberately broken `.tres` there would fail both.

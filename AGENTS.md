@@ -170,9 +170,8 @@ Room and encounter review:
 - Play the room at least three times: cautious, aggressive and intentionally sloppy.
 
 Player feel review:
-- Tune the player's step duration, repeat delay, attack recovery, skill cooldown and
-  invulnerability (the `MovementComponent`, `InputComponent`, `CombatComponent` and
-  `HealthComponent` nodes on `presentation/views/actors/player.tscn`, and the `AttackProfile`
+- Tune the player's step duration, repeat delay, skill cooldown, Courage and invulnerability
+  (`content/player/player.tres`, a `PlayerDefinition`) and the attack recovery (the `AttackProfile`
   `.tres` files in `content/skills/`).
 - Confirm `Shift + direction`, `Space` and `Q` still feel natural.
 - Decide whether the pawn should feel heavier, sharper or more frantic.
