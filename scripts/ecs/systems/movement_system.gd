@@ -18,6 +18,7 @@ func tick(delta: float) -> void:
 				grid_pos.cell = move.to_cell
 				move.moving = false
 				world.emit_event({"type": &"step_finished", "entity": entity_id, "cell": move.to_cell})
+				_check_player_unlock(entity_id, move.to_cell)
 				_check_zone_exit(entity_id, move.to_cell)
 			continue
 
@@ -70,9 +71,41 @@ func _check_zone_exit(entity_id: int, cell: Vector2i) -> void:
 	var exit: Dictionary = world.grid.exit_by_cell.get(cell, {})
 	if exit.is_empty():
 		return
+	if bool(exit.get("requires_room_clear", false)) and not _room_is_clear():
+		world.emit_event({
+			"type": &"zone_exit_locked",
+			"entity": entity_id,
+			"zone": exit.get("zone", &""),
+			"entry": exit.get("entry", &"start"),
+			"cell": cell,
+		})
+		return
 	world.emit_event({
 		"type": &"zone_exit",
 		"entity": entity_id,
 		"zone": exit.get("zone", &""),
 		"entry": exit.get("entry", &"start"),
 	})
+
+
+func _check_player_unlock(entity_id: int, cell: Vector2i) -> void:
+	if world.get_component(entity_id, EcsComponents.PLAYER_TAG) == null:
+		return
+	var unlock: Dictionary = world.grid.player_unlock_by_cell.get(cell, {})
+	if unlock.is_empty():
+		return
+	world.emit_event({
+		"type": &"player_unlock",
+		"entity": entity_id,
+		"id": unlock.get("id", &""),
+		"message": unlock.get("message", ""),
+	})
+
+
+func _room_is_clear() -> bool:
+	for enemy_id in world.query([EcsComponents.ENEMY_AI, EcsComponents.HEALTH]):
+		var health: EcsComponents.Health = world.get_component(enemy_id, EcsComponents.HEALTH)
+		var ai: EcsComponents.EnemyAI = world.get_component(enemy_id, EcsComponents.ENEMY_AI)
+		if health != null and health.current > 0 and ai != null and ai.state != EcsComponents.EnemyAI.STATE_DEFEATED:
+			return false
+	return true

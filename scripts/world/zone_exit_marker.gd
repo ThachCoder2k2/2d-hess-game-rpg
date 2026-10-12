@@ -10,6 +10,9 @@ extends Marker2D
 @export var target_zone: StringName = &""
 ## ZoneEntryMarker id inside the target zone where the player appears.
 @export var target_entry: StringName = &"start"
+## If true, this exit only works after every enemy in the current room falls.
+## Use this for boss exits and mastery gates, not ordinary backtracking doors.
+@export var requires_room_clear := false
 
 
 func _get_configuration_warnings() -> PackedStringArray:

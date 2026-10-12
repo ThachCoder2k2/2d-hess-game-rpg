@@ -26,6 +26,7 @@ static func boot(world: EcsWorld, player_view: ActorView, room_root: Node, fallb
 		_apply_board_size(world, room_root)
 		apply_solid_tiles(world, room_root)
 		_bake_zone_exits(world, room_root)
+		_bake_player_unlocks(world, room_root)
 		_bake_gates(world, room_root, opened_gate_ids)
 
 	if player_view != null:
@@ -91,6 +92,19 @@ static func _bake_zone_exits(world: EcsWorld, room_root: Node) -> void:
 		world.grid.exit_by_cell[cell] = {
 			"zone": exit_marker.target_zone,
 			"entry": exit_marker.target_entry,
+			"requires_room_clear": exit_marker.requires_room_clear,
+		}
+
+
+static func _bake_player_unlocks(world: EcsWorld, room_root: Node) -> void:
+	for child in room_root.get_children():
+		var unlock_marker := child as PlayerUnlockMarker
+		if unlock_marker == null:
+			continue
+		var cell := world.grid.world_to_cell(unlock_marker.position)
+		world.grid.player_unlock_by_cell[cell] = {
+			"id": unlock_marker.unlock_id,
+			"message": unlock_marker.message,
 		}
 
 

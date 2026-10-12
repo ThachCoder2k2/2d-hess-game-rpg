@@ -83,6 +83,57 @@ func _init() -> void:
 	world.tick(0.016)
 	_expect(pawn_move.moving, "freed cell accepts the step")
 
+	var exit_world := EcsWorld.new()
+	exit_world.manual_tick = true
+	root.add_child(exit_world)
+	exit_world.add_system(MovementSystem.new())
+	var exit_player := exit_world.create_entity()
+	var exit_pos: EcsComponents.GridPos = exit_world.add_component(exit_player, EcsComponents.GRID_POS, EcsComponents.GridPos.new())
+	exit_pos.cell = Vector2i(1, 1)
+	exit_world.add_component(exit_player, EcsComponents.PLAYER_TAG, EcsComponents.PlayerTag.new())
+	var exit_intent: EcsComponents.MoveIntent = exit_world.add_component(exit_player, EcsComponents.MOVE_INTENT, EcsComponents.MoveIntent.new())
+	var exit_move: EcsComponents.MoveState = exit_world.add_component(exit_player, EcsComponents.MOVE_STATE, EcsComponents.MoveState.new())
+	exit_world.grid.register_entity(exit_player, exit_pos.cell)
+	exit_world.grid.exit_by_cell[Vector2i(2, 1)] = {"zone": &"boss_clear", "entry": &"start", "requires_room_clear": true}
+	var guard := exit_world.create_entity()
+	var guard_pos: EcsComponents.GridPos = exit_world.add_component(guard, EcsComponents.GRID_POS, EcsComponents.GridPos.new())
+	guard_pos.cell = Vector2i(4, 4)
+	exit_world.add_component(guard, EcsComponents.ENEMY_AI, EcsComponents.EnemyAI.new())
+	var guard_health: EcsComponents.Health = exit_world.add_component(guard, EcsComponents.HEALTH, EcsComponents.Health.new())
+	guard_health.current = 2
+	exit_world.grid.register_entity(guard, guard_pos.cell)
+	exit_intent.direction = Vector2i.RIGHT
+	exit_world.tick(0.016)
+	for _i in range(20):
+		exit_world.tick(0.016)
+	var locked_events := exit_world.drain_events()
+	var saw_locked_exit := false
+	var saw_unlocked_exit_too_early := false
+	for event in locked_events:
+		if event.get("type") == &"zone_exit_locked":
+			saw_locked_exit = true
+		if event.get("type") == &"zone_exit":
+			saw_unlocked_exit_too_early = true
+	_expect(saw_locked_exit and not saw_unlocked_exit_too_early, "room-clear exit stays locked while enemies live")
+	guard_health.current = 0
+	var guard_ai: EcsComponents.EnemyAI = exit_world.get_component(guard, EcsComponents.ENEMY_AI)
+	guard_ai.state = EcsComponents.EnemyAI.STATE_DEFEATED
+	exit_intent.direction = Vector2i.LEFT
+	exit_world.tick(0.016)
+	for _i in range(20):
+		exit_world.tick(0.016)
+	exit_world.drain_events()
+	exit_intent.direction = Vector2i.RIGHT
+	exit_world.tick(0.016)
+	for _i in range(20):
+		exit_world.tick(0.016)
+	var clear_exit_events := exit_world.drain_events()
+	var saw_clear_exit := false
+	for event in clear_exit_events:
+		if event.get("type") == &"zone_exit" and event.get("zone") == &"boss_clear":
+			saw_clear_exit = true
+	_expect(saw_clear_exit, "room-clear exit opens after enemies fall")
+
 	var succeeded := failures == 0
 	print("ECS RUNTIME TEST: %s" % ["PASS" if succeeded else "FAIL (%d)" % failures])
 	quit(0 if succeeded else 1)

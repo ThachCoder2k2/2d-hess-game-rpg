@@ -24,6 +24,9 @@ var move_reservations: Dictionary = {}
 ## cell -> {"zone": StringName, "entry": StringName}. Door cells baked from
 ## ZoneExitMarkers; the player landing here triggers a zone travel.
 var exit_by_cell: Dictionary = {}
+## cell -> {"id": StringName, "message": String}. Player-only unlock cells
+## baked from PlayerUnlockMarker nodes; the player landing here gains a flag.
+var player_unlock_by_cell: Dictionary = {}
 ## cell -> {"id": StringName, "opens_from": Vector2i}. Closed shortcut gates
 ## (also present in blocked_cells); the player moving in opens_from's
 ## direction onto the cell opens the gate permanently.

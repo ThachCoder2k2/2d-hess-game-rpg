@@ -18,9 +18,12 @@ var taken_pickup_ids: Dictionary = {}
 var opened_gate_ids: Dictionary = {}
 ## "piece_id" -> true. Book of House Rules pages read (first meeting).
 var unlocked_rule_ids: Dictionary = {}
+## Player verbs unlocked by authored room markers, e.g. "wooden_sword".
+var player_unlock_ids: Dictionary = {}
 
 
 const SAVE_PATH := "user://world_state.cfg"
+const SAVE_VERSION := 2
 
 
 func _ready() -> void:
@@ -34,6 +37,7 @@ func reset() -> void:
 	taken_pickup_ids.clear()
 	opened_gate_ids.clear()
 	unlocked_rule_ids.clear()
+	player_unlock_ids.clear()
 
 
 func pickup_id(zone_id: StringName, marker_name: String) -> String:
@@ -45,17 +49,22 @@ func pickup_id(zone_id: StringName, marker_name: String) -> String:
 ## the current zone fresh.
 func save_state(path := SAVE_PATH) -> void:
 	var file := ConfigFile.new()
+	file.set_value("meta", "version", SAVE_VERSION)
 	file.set_value("world", "current_zone_id", current_zone_id)
 	file.set_value("world", "last_entry_id", last_entry_id)
 	file.set_value("world", "taken_pickup_ids", taken_pickup_ids.keys())
 	file.set_value("world", "opened_gate_ids", opened_gate_ids.keys())
 	file.set_value("world", "unlocked_rule_ids", unlocked_rule_ids.keys())
+	file.set_value("world", "player_unlock_ids", player_unlock_ids.keys())
 	file.save(path)
 
 
 func load_state(path := SAVE_PATH) -> void:
 	var file := ConfigFile.new()
 	if file.load(path) != OK:
+		return
+	if int(file.get_value("meta", "version", 0)) != SAVE_VERSION:
+		reset()
 		return
 	current_zone_id = StringName(String(file.get_value("world", "current_zone_id", "")))
 	last_entry_id = StringName(String(file.get_value("world", "last_entry_id", "start")))
@@ -68,3 +77,6 @@ func load_state(path := SAVE_PATH) -> void:
 	unlocked_rule_ids.clear()
 	for key in file.get_value("world", "unlocked_rule_ids", []):
 		unlocked_rule_ids[String(key)] = true
+	player_unlock_ids.clear()
+	for key in file.get_value("world", "player_unlock_ids", []):
+		player_unlock_ids[String(key)] = true

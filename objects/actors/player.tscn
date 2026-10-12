@@ -4,7 +4,7 @@
 [ext_resource type="Resource" uid="uid://byvw26cd7u12f" path="res://resources/attacks/wooden_sword.tres" id="2"]
 [ext_resource type="Resource" uid="uid://bog2k4gpe6yi4" path="res://resources/attacks/pencil_thrust.tres" id="3"]
 [ext_resource type="Script" uid="uid://d22stukg2rlbf" path="res://scripts/world/camera_rig.gd" id="5"]
-[ext_resource type="Texture2D" uid="uid://dmt84lc321uq" path="res://assets/sprites/generated/hero_pawn.png" id="6"]
+[ext_resource type="Texture2D" path="res://assets/sprites/generated/hero_pawn_unarmed.png" id="6"]
 [ext_resource type="Texture2D" uid="uid://6hr88wvg8w12" path="res://assets/sprites/generated/toy_sword.png" id="7"]
 [ext_resource type="Script" uid="uid://wtat33gah5lr" path="res://scripts/ecs/components/health_component.gd" id="8"]
 [ext_resource type="Script" uid="uid://b747qwpo66rih" path="res://scripts/ecs/components/combat_component.gd" id="9"]

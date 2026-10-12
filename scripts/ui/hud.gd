@@ -21,9 +21,9 @@ var _damage_flash_tween: Tween
 
 func setup(initial_courage: int) -> void:
 	set_courage(initial_courage)
-	set_skill_cooldown(0.0, 1.0)
+	set_skill_cooldown(0.0, 1.0, false)
 	set_encounter_count(0, 0)
-	set_token_owner("")
+	set_token_owner("", false)
 	set_status("")
 	if damage_flash != null:
 		damage_flash.visible = false
@@ -41,23 +41,30 @@ func set_courage(value: int) -> void:
 	courage_label.add_theme_color_override("font_color", color)
 
 
-func set_skill_cooldown(time_left: float, cooldown_duration: float) -> void:
+func set_skill_cooldown(time_left: float, cooldown_duration: float, unlocked := true) -> void:
 	if skill_label != null:
-		skill_label.text = "Q THRUST READY" if time_left <= 0.0 else "Q THRUST %.1f" % time_left
+		if not unlocked:
+			skill_label.text = "FIND SWORD"
+		else:
+			skill_label.text = "Q THRUST READY" if time_left <= 0.0 else "Q THRUST %.1f" % time_left
 	if skill_fill == null:
 		return
 	var ratio := 1.0
-	if time_left > 0.0:
+	if not unlocked:
+		ratio = 0.0
+	elif time_left > 0.0:
 		ratio = clampf(1.0 - time_left / maxf(cooldown_duration, 0.001), 0.0, 1.0)
 	skill_fill.size.x = SKILL_BAR_WIDTH * ratio
-	skill_fill.color = Color("#8ec8e8", 0.9) if time_left <= 0.0 else Color("#e8b83f", 0.82)
+	skill_fill.color = Color("#5d5360", 0.45) if not unlocked else Color("#8ec8e8", 0.9) if time_left <= 0.0 else Color("#e8b83f", 0.82)
 
 
 ## Empty name = the token is free (any enemy may strike next).
-func set_token_owner(owner_piece_name := "") -> void:
+func set_token_owner(owner_piece_name := "", active := true) -> void:
 	if token_label == null:
 		return
-	if owner_piece_name.is_empty():
+	if not active:
+		token_label.text = ""
+	elif owner_piece_name.is_empty():
 		token_label.text = "ENEMY STRIKE READY"
 	else:
 		token_label.text = "STRIKE: " + owner_piece_name.to_upper()

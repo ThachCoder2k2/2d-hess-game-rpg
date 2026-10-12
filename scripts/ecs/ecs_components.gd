@@ -70,6 +70,7 @@ class AttackIntent:
 class PlayerCombat:
 	var wooden_sword: AttackProfile
 	var pencil_thrust: AttackProfile
+	var sword_unlocked := true
 	var skill_cooldown_duration := 1.25
 	var attack_on_cooldown := false
 	var active_attack: AttackProfile

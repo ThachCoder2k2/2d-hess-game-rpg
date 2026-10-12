@@ -32,6 +32,7 @@ func _run() -> void:
 	world_state.set("current_zone_id", &"")
 	world_state.set("last_entry_id", &"start")
 	world_state.set("player_health_carry", 2)
+	world_state.get("player_unlock_ids").clear()
 
 	var main := (load("res://scenes/main.tscn") as PackedScene).instantiate()
 	root.add_child(main)
@@ -43,14 +44,18 @@ func _run() -> void:
 	_expect(player_id != 0, "main spawns the player entity")
 	var player_pos: EcsComponents.GridPos = ecs.get_component(player_id, EcsComponents.GRID_POS)
 	_expect(player_pos != null and player_pos.cell == _parked_cell(ecs, main), "player entity stands on the parked view's cell")
-	_expect(int(main.get("total_enemies")) == 17, "main counts the kingdom's seventeen inhabitants")
+	_expect(int(main.get("total_enemies")) == 0, "main starts in the quiet T1 opening room")
 	var player_health: EcsComponents.Health = ecs.get_component(player_id, EcsComponents.HEALTH)
 	_expect(player_health != null and player_health.current == 2, "a pending health carry applies to the booted player")
 	_expect(int(world_state.get("player_health_carry")) == -1, "the health carry is consumed by the boot")
+	var player_combat: EcsComponents.PlayerCombat = ecs.get_component(player_id, EcsComponents.PLAYER_COMBAT)
+	_expect(player_combat != null and not player_combat.sword_unlocked, "world-mode combat starts locked before T2 sword pickup")
+	var weapon_pivot := main.get_node_or_null("PawnHero/MotionRoot/SpriteRoot/WeaponPivot") as Node2D
+	_expect(weapon_pivot != null and not weapon_pivot.visible, "locked sword is not visible on the hero before pickup")
 
 	var hud := main.get("hud") as GameHud
 	_expect(hud != null and hud.courage_label.text.begins_with("COURAGE"), "HUD binds and shows courage")
-	_expect(String(hud.objective_label.text).begins_with("The Kingdom"), "HUD shows the world's start message")
+	_expect(String(hud.objective_label.text).begins_with("The king has fallen"), "HUD shows the T1 start message")
 
 	var board := main.get("board") as PrototypeBoard
 	_expect(board != null and board.grid_world == ecs.grid and board.ecs == ecs, "board overlay reads the ECS world")
@@ -62,12 +67,11 @@ func _run() -> void:
 		main._process(0.016)
 	_expect(String(hud.status_label.text).begins_with("CELL"), "bridge feeds the cell status line each frame")
 
-	var enemies: Array = main.get("cast")["enemies"]
-	ecs.damage_events.append({"target": int(enemies[0]), "amount": 99, "direction": Vector2i.LEFT})
+	var attack_intent: EcsComponents.AttackIntent = ecs.get_component(player_id, EcsComponents.ATTACK_INTENT)
+	attack_intent.kind = &"sword"
 	main._process(0.016)
 	main._process(0.016)
-	_expect(int(main.get("remaining_enemies")) == 16, "a defeat event updates the encounter count")
-	_expect(hud.encounter_label.text == "ENEMIES 16/17", "HUD shows the updated enemy count")
+	_expect(String(hud.objective_label.text).begins_with("The pawn has no weapon yet"), "locked attack gives sword-search feedback")
 
 	var succeeded := failures == 0
 	print("ENCOUNTER HUD TEST: %s" % ["PASS" if succeeded else "FAIL (%d)" % failures])

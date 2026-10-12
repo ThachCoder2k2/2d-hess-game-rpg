@@ -213,6 +213,18 @@ func _init() -> void:
 				var exit_label := "%s/%s" % [zone_id, child.name]
 				_expect(world_graph.has_zone(child.target_zone), "door %s targets a zone in the graph" % exit_label)
 				_expect(child.target_entry in entry_ids_by_zone.get(child.target_zone, []), "door %s lands on a real entry marker" % exit_label)
+				if zone_id == &"t3_first_pawn_clash" and child.name == "Exit_To_T4":
+					_expect(child.requires_room_clear, "first duel forward exit requires clearing the room")
+				if zone_id == &"t4_broken_rule_yard" and child.name == "Exit_To_B1":
+					_expect(child.requires_room_clear, "rule-break forward exit requires clearing the room")
+				if zone_id == &"b1_black_pawn_captain" and child.name == "Exit_To_Hub":
+					_expect(child.requires_room_clear, "boss hub exit requires clearing the boss room")
+
+	var t2_world := EcsWorld.new()
+	EcsBoot.boot(t2_world, null, zone_roots[&"t2_fallen_sword_tile"])
+	var t2_unlock: Dictionary = t2_world.grid.player_unlock_by_cell.get(Vector2i(6, 5), {})
+	_expect(not t2_unlock.is_empty() and t2_unlock.get("id") == &"wooden_sword", "T2 sword unlock sits on the obvious reachable sword cell")
+	_expect(t2_world.grid.is_walkable(Vector2i(6, 5)), "T2 sword unlock cell is walkable")
 
 	# --- WorldState survives a save/load round trip ---
 	var world_state_script := load("res://scripts/world/world_state.gd")
@@ -227,8 +239,21 @@ func _init() -> void:
 	_expect(loaded_state.current_zone_id == &"bookshelf_pass" and loaded_state.last_entry_id == &"from_yard" \
 		and loaded_state.taken_pickup_ids.has("toybox_yard/PencilSpearPickup") \
 		and loaded_state.opened_gate_ids.has("pass_home_gate"), "WorldState survives a save/load round trip")
+	loaded_state.player_unlock_ids["wooden_sword"] = true
+	loaded_state.save_state("user://test_world_state_unlock.cfg")
+	var unlock_state: Node = world_state_script.new()
+	unlock_state.load_state("user://test_world_state_unlock.cfg")
+	_expect(unlock_state.player_unlock_ids.has("wooden_sword"), "WorldState remembers player weapon unlocks")
+	var old_file := ConfigFile.new()
+	old_file.set_value("world", "current_zone_id", "kingdom")
+	old_file.save("user://test_world_state_old.cfg")
+	var old_state: Node = world_state_script.new()
+	old_state.load_state("user://test_world_state_old.cfg")
+	_expect(old_state.current_zone_id == &"" and old_state.last_entry_id == &"start", "WorldState resets obsolete save versions")
 	saved_state.free()
 	loaded_state.free()
+	unlock_state.free()
+	old_state.free()
 
 	# --- Pawn variants stay pure data ---
 	var backstep := load("res://resources/enemies/backstep_pawn.tres") as EnemyDefinition

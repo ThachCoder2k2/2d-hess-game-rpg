@@ -55,6 +55,13 @@ func _init() -> void:
 	dummy_health.max_value = 2
 	world.grid.register_entity(dummy, dummy_pos.cell)
 
+	hero_combat.sword_unlocked = false
+	hero_attack.kind = &"sword"
+	world.tick(0.016)
+	var locked_types := _drain_types(world)
+	_expect(&"attack_locked" in locked_types and not hero_combat.attack_on_cooldown, "locked sword refuses attacks before the unlock")
+	hero_combat.sword_unlocked = true
+
 	hero_attack.kind = &"sword"
 	world.tick(0.016)
 	_expect(hero_combat.attack_on_cooldown and hero_combat.pending_cells == [Vector2i(4, 5)], "sword swing locks the facing cell")

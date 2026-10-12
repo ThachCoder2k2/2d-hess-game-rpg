@@ -38,6 +38,9 @@ func tick(delta: float) -> void:
 
 		if kind == &"none" or not _can_start_attack(entity_id):
 			continue
+		if not combat.sword_unlocked:
+			world.emit_event({"type": &"attack_locked", "entity": entity_id})
+			continue
 
 		var profile: AttackProfile = combat.wooden_sword
 		if kind == &"skill":

@@ -139,7 +139,7 @@ func _sync_weapon(entity_id: int, appearance: ActorView, combat: EcsComponents.P
 	var reach := 1.0
 	var visible := false
 	if combat != null:
-		visible = attacking and facing_direction != Vector2i.ZERO
+		visible = combat.sword_unlocked and attacking and facing_direction != Vector2i.ZERO
 		if combat.active_attack != null:
 			if combat.active_attack.texture != null:
 				weapon_texture = combat.active_attack.texture

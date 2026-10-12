@@ -74,11 +74,12 @@ func _boot_zone(entry_id: StringName) -> void:
 	_hide_opened_gate_visuals()
 	_unlock_met_rules()
 	player_id = int(cast.get("player", 0))
+	_apply_player_unlocks()
 	total_enemies = cast.get("enemies", []).size()
 	remaining_enemies = total_enemies
 	defeated_enemies = 0
 	room_ending = false
-	_last_token_owner = 0
+	_last_token_owner = -1
 	current_zone_id = _zone_id_of(current_room)
 
 	var world_state := _world_state()
@@ -141,6 +142,8 @@ func _setup_hud() -> void:
 	var player_health: EcsComponents.Health = ecs.get_component(player_id, EcsComponents.HEALTH)
 	hud.setup(player_health.current if player_health != null else 3)
 	hud.set_encounter_count(remaining_enemies, total_enemies)
+	_update_skill_cooldown(0.0)
+	_update_token_hud()
 	var room_message := "Break the black line."
 	if current_room != null and current_room.has_method("get_start_message"):
 		room_message = String(current_room.call("get_start_message"))
@@ -162,6 +165,8 @@ func _handle_events(events: Array[Dictionary]) -> void:
 					board.show_enemy_attack(event.get("cells", []))
 			&"attack_landed":
 				_on_player_attack_landed(event)
+			&"attack_locked":
+				_update_status("The pawn has no weapon yet. Find the fallen sword.")
 			&"intent_changed":
 				if board != null and event.get("intent") is EnemyIntent:
 					board.set_enemy_intent(entity, event.get("intent"))
@@ -175,10 +180,14 @@ func _handle_events(events: Array[Dictionary]) -> void:
 				_record_pickup_taken(int(event.get("item", 0)))
 				_play_sfx(&"pickup")
 				_free_pickup_view(int(event.get("item", 0)))
+			&"player_unlock":
+				_on_player_unlock(StringName(event.get("id", &"")), String(event.get("message", "")))
 			&"defeated":
 				_on_defeated(entity)
 			&"zone_exit":
 				_travel_to(StringName(event.get("zone", &"")), StringName(event.get("entry", &"start")))
+			&"zone_exit_locked":
+				_on_zone_exit_locked()
 			&"gate_opened":
 				_on_gate_opened(StringName(event.get("gate", &"")))
 
@@ -297,7 +306,9 @@ func _update_token_hud() -> void:
 	if hud == null or ecs.attack_token_owner == _last_token_owner:
 		return
 	_last_token_owner = ecs.attack_token_owner
-	if _last_token_owner == 0:
+	if total_enemies <= 0:
+		hud.set_token_owner("", false)
+	elif _last_token_owner == 0:
 		hud.set_token_owner("")
 	else:
 		hud.set_token_owner(String(cast.get("piece_name_by_entity", {}).get(_last_token_owner, "Enemy")))
@@ -316,7 +327,7 @@ func _update_skill_cooldown(time_left: float) -> void:
 	if hud == null:
 		return
 	var combat: EcsComponents.PlayerCombat = ecs.get_component(player_id, EcsComponents.PLAYER_COMBAT)
-	hud.set_skill_cooldown(time_left, combat.skill_cooldown_duration if combat != null else 1.0)
+	hud.set_skill_cooldown(time_left, combat.skill_cooldown_duration if combat != null else 1.0, combat != null and combat.sword_unlocked)
 
 
 func _set_player_control(value: bool) -> void:
@@ -386,6 +397,42 @@ func _travel_to(zone_id: StringName, entry_id: StringName) -> void:
 	await _fade_to(0.0)
 	_set_player_control(true)
 	travel_in_progress = false
+
+
+func _on_zone_exit_locked() -> void:
+	_update_status("The captain still holds the rug edge. Break the black line first.")
+
+
+func _apply_player_unlocks() -> void:
+	var combat: EcsComponents.PlayerCombat = ecs.get_component(player_id, EcsComponents.PLAYER_COMBAT)
+	if combat == null:
+		return
+	var world_state := _world_state()
+	if world_graph != null and world_state != null:
+		combat.sword_unlocked = world_state.player_unlock_ids.has("wooden_sword")
+	_hide_taken_player_unlocks()
+
+
+func _on_player_unlock(unlock_id: StringName, message: String) -> void:
+	if unlock_id == &"":
+		return
+	var world_state := _world_state()
+	if world_state != null:
+		world_state.player_unlock_ids[String(unlock_id)] = true
+		world_state.save_state()
+	_apply_player_unlocks()
+	_play_sfx(&"pickup")
+	_update_status(message if not message.is_empty() else "The pawn grips the sword. The rules crack.")
+
+
+func _hide_taken_player_unlocks() -> void:
+	var world_state := _world_state()
+	if world_state == null or current_room == null:
+		return
+	for child in current_room.get_children():
+		var marker := child as PlayerUnlockMarker
+		if marker != null and world_state.player_unlock_ids.has(String(marker.unlock_id)):
+			marker.visible = false
 
 
 ## Replaces the current zone node with the target zone's scene, keeping the
