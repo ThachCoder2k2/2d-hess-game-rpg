@@ -11,7 +11,7 @@ extends RefCounted
 ## There is no class_name on purpose: callers preload() this script, which keeps
 ## it usable on a fresh checkout before the editor import pass has run.
 ##
-## The boot path mirrors scripts/main.gd (_make_world + _boot_zone): the same six
+## The boot path mirrors shell/game_root.gd (_make_world + _boot_zone): the same six
 ## systems in the same order, the player view placed on the "start" entry marker,
 ## then EcsBoot.boot with no taken pickups and no opened gates (a fresh save).
 ## It deliberately skips WorldState, the HUD, the board overlay and audio: they
@@ -26,7 +26,7 @@ extends RefCounted
 
 ## The world graph that names every room (zone id -> scene). move_res.py rewrites this path.
 const WORLD_GRAPH_PATH := "res://resources/world/world_graph.tres"
-## The player's puppet view, the same scene scenes/main.tscn instances as PawnHero.
+## The player's puppet view, the same scene shell/game_root.tscn instances as PawnHero.
 const PLAYER_VIEW_SCENE_PATH := "res://objects/actors/player.tscn"
 const BASELINE_DIRECTORY := "res://tests/baselines"
 ## Short room codes with a recorded baseline: the six Stage-1 rooms (docs/game-base-plan.md 15 M1a item 6).
@@ -37,7 +37,7 @@ const DUMP_FORMAT_VERSION := 1
 ## Seeds the global RNG so a future system that rolls dice still dumps the same text.
 const DUMP_RANDOM_SEED := 20260712
 const START_ENTRY_ID: StringName = &"start"
-## Where scenes/main.tscn parks PawnHero when a room has no entry marker.
+## Where shell/game_root.tscn parks PawnHero when a room has no entry marker.
 const DEFAULT_PLAYER_POSITION := Vector2(144, 212)
 const FALLBACK_PLAYER_CELL := Vector2i(3, 7)
 const NO_ENTRY_CELL := Vector2i(-1, -1)
@@ -166,7 +166,7 @@ func dump_room(tree: SceneTree, room_id: String, tick_count := DEFAULT_TICK_COUN
 	return text
 
 
-## The cell of the entry marker named "start", else the first marker, like main.gd._find_entry_cell.
+## The cell of the entry marker named "start", else the first marker, like game_root.gd._find_entry_cell.
 func _find_entry_cell(world: EcsWorld, room: Node) -> Vector2i:
 	var fallback := NO_ENTRY_CELL
 	for child in room.get_children():

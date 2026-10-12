@@ -1,6 +1,6 @@
 extends SceneTree
 
-## Full main-scene boot: main.gd builds the EcsWorld from the authored scene,
+## Full main-scene boot: game_root.gd builds the EcsWorld from the authored scene,
 ## binds HUD/board/camera, and the bridge answers events. Drives main._process
 ## by hand (headless _init has no frame loop).
 

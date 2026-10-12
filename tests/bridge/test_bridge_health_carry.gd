@@ -4,7 +4,7 @@ extends UnboundTest
 ## main._travel_to writes the hero's current health into WorldState, and
 ## main._boot_zone applies it to the freshly spawned player and then consumes
 ## it. This suite pins that contract, including its sharp edges, because the
-## planned main.gd split moves exactly this write/apply/consume ordering.
+## planned game_root.gd split moves exactly this write/apply/consume ordering.
 
 const Support := preload("res://tests/bridge/bridge_support.gd")
 const SUITE_NAME := "health_carry"

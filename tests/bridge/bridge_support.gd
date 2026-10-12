@@ -5,14 +5,14 @@ extends RefCounted
 ## so it needs no import pass and registers no global. Suites load it with
 ##   const Support := preload("res://tests/bridge/bridge_support.gd")
 ##
-## The suites pin what scripts/main.gd (the presentation bridge) does TODAY, so
-## the planned split of main.gd cannot silently change travel, death, carry,
+## The suites pin what shell/game_root.gd (the presentation bridge) does TODAY, so
+## the planned split of game_root.gd cannot silently change travel, death, carry,
 ## persistence or Book behaviour. Nothing in here may change gameplay.
 ##
 ## Design notes shared by every suite:
-## - The real scenes/main.tscn is instantiated and made the tree's current
+## - The real shell/game_root.tscn is instantiated and made the tree's current
 ##   scene (death reloads it through SceneTree.reload_current_scene()).
-## - main.gd's own _process is switched off after boot and driven by hand in
+## - game_root.gd's own _process is switched off after boot and driven by hand in
 ##   fixed steps (pump), so a run is deterministic and has no real-time races.
 ##   Only the fade tweens and the death timer use real engine time.
 ## - The WorldState autoload is replaced by a test double that starts empty and
@@ -36,7 +36,7 @@ const MOVE_ACTIONS: Array[StringName] = [&"move_up", &"move_down", &"move_left",
 
 ## Swaps the WorldState autoload for the throwaway-save test double and returns it.
 ## The real autoload node is only renamed and left idle (nothing in the project
-## names the autoload as a script global; main.gd finds it by node path).
+## names the autoload as a script global; game_root.gd finds it by node path).
 static func install_isolated_world_state(tree: SceneTree, suite_name: String) -> Node:
 	var real_autoload := tree.root.get_node_or_null("WorldState")
 	if real_autoload != null:

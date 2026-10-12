@@ -1,7 +1,7 @@
 extends Node
 
 ## WorldState autoload: the permanent memory of the world. Pure data — no
-## gameplay decisions live here. The main.gd bridge writes travel/pickup
+## gameplay decisions live here. The game_root.gd bridge writes travel/pickup
 ## facts; the bridge feeds them back into EcsBoot so the world reboots into
 ## the state the player left it in. Survives scene reloads because it is an
 ## autoload; save-to-disk arrives with the gates milestone.

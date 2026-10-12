@@ -3,7 +3,7 @@ extends Node
 ## Layer 3 of the sound structure (see CLAUDE.md): pooled one-shot playback
 ## for EVENT sounds that belong to no animation clip (pickups, room clear,
 ## jingles, UI). The registry is editor-owned — add sounds in the Inspector of
-## presentation/audio/sfx_manager.tscn, never in code. Only the main.gd bridge
+## presentation/audio/sfx_manager.tscn, never in code. Only the game_root.gd bridge
 ## calls play(); systems never touch audio. Pooling means rapid sounds never
 ## cut each other off and never die with a freed node.
 
