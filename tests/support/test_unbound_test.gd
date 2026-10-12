@@ -53,7 +53,7 @@ func _init() -> void:
 	_expect(_has_line(stale, "FAIL: file exists: res://docs/a_file_that_was_moved.md"), "reading a moved file fails instead of returning an empty string")
 	_expect(_has_line(stale, "FAIL: file has content: res://tests/fixtures/harness/empty.txt"), "reading a blank file fails")
 	_expect(_has_line_starting(stale, "FAIL: at least 1 .an_extension_nothing_has file(s)"), "a listing that finds fewer files than the minimum fails")
-	_expect(_has_line(stale, "FAIL: scene exists: res://scenes/a_scene_that_was_moved.tscn"), "loading a moved scene fails without calling load()")
+	_expect(_has_line(stale, "FAIL: scene exists: res://content/a_scene_that_was_moved.tscn"), "loading a moved scene fails without calling load()")
 	_expect(_has_line(stale, "STALE PATHS FIXTURE: FAIL (4)"), "each stale lookup is exactly one failure")
 
 	_expect(paths.list_files(paths.rooms_directory(), "tscn", 6, true).size() >= 6, "list_files finds the Stage 1 room scenes")

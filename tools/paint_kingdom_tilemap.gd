@@ -1,7 +1,7 @@
 extends SceneTree
 
 ## Build tool: paints the first room's floor as a throne-room kingdom and saves it
-## as objects/world/kingdom_tilemap.tscn. Run headless:
+## as content/tilesets/kingdom/tilemap.tscn. Run headless:
 ##   Godot --headless --path . -s tools/paint_kingdom_tilemap.gd
 ## Rerun after changing the layout or the kingdom tileset.
 ## Saves through SaveKeepingUids and stamps uids last, so the scene keeps the uid

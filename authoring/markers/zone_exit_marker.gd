@@ -6,7 +6,7 @@ extends Marker2D
 ## Pure spawn data — EcsBoot bakes it into EcsGrid.exit_by_cell, MovementSystem
 ## emits the zone_exit event, the game_root.gd bridge performs the swap. Zero logic.
 
-## Zone id in resources/world/world_graph.tres this door leads to.
+## Zone id in content/world/world.tres this door leads to.
 @export var target_zone: StringName = &""
 ## ZoneEntryMarker id inside the target zone where the player appears.
 @export var target_entry: StringName = &"start"

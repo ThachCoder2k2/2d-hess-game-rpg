@@ -12,5 +12,5 @@ func _init() -> void:
 	paths.read_text("res://docs/a_file_that_was_moved.md")
 	paths.read_text("res://tests/fixtures/harness/empty.txt")
 	paths.list_files("res://tests/fixtures/harness", "an_extension_nothing_has")
-	paths.load_scene("res://scenes/a_scene_that_was_moved.tscn")
+	paths.load_scene("res://content/a_scene_that_was_moved.tscn")
 	finish()

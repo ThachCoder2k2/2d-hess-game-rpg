@@ -60,8 +60,8 @@ change). Without the fix Godot falls back to the path and prints a warning.
 | `generate_demo_map.gd` | Draws the pawn-scale bedroom demo world with the kingdom tiles into `assets/_generated/maps/` and re-exports the paintable piece templates to `assets/_generated/piece_templates/`. |
 | `generate_stage1_room_art.gd` | Paints the Stage-1 room backgrounds (T1, T2, ...) into `assets/_generated/rooms/`. |
 | `generate_playground_tilemap.gd` | Builds the playground tile set and tilemap scene. Saves through `save_keeping_uids.gd` and stamps uids last. |
-| `paint_kingdom_tilemap.gd` | Paints the first room's throne-room floor into `objects/world/kingdom_tilemap.tscn`. Saves through `save_keeping_uids.gd` and stamps uids last. |
-| `paint_zone_tilemaps.gd` | Carves the 72x40 kingdom board into `objects/world/kingdom_world_tilemap.tscn`. Saves through `save_keeping_uids.gd` and stamps uids last. |
+| `paint_kingdom_tilemap.gd` | Paints the first room's throne-room floor into `content/tilesets/kingdom/tilemap.tscn`. Saves through `save_keeping_uids.gd` and stamps uids last. |
+| `paint_zone_tilemaps.gd` | Carves the 72x40 kingdom board into `tests/fixtures/the_kingdom/tilemap.tscn`. Saves through `save_keeping_uids.gd` and stamps uids last. |
 | `render_kingdom_map.gd` | Renders the whole kingdom to one image for review; needs a real renderer (no `--headless`) and `--write-movie`. |
 | `generate_sfx.py` | Generates the placeholder SFX as mono WAV files into `assets/sfx/`. |
 | `generate_music.py` | Generates the placeholder A-minor march loop into `assets/music/`. |

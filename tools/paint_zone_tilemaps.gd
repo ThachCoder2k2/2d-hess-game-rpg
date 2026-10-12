@@ -2,7 +2,7 @@ extends SceneTree
 
 ## Build tool: carves THE KINGDOM — one continuous 72x40 semi-open board
 ## (Hyper Light Drifter / Dark Souls structure, docs/soulslike-world-plan.md)
-## — and saves it as objects/world/kingdom_world_tilemap.tscn.
+## — and saves it as tests/fixtures/the_kingdom/tilemap.tscn.
 ##
 ## The world starts as solid rock. Two kinds of space are carved out of it:
 ## organic bowls (the village, the hills, the gardens) and straight halls
@@ -163,7 +163,7 @@ const MOAT_OUTER := 10.4
 ## fill, which keeps the far fields from reading as one flat texture.
 const DISTRICT_ROCK_DEPTH := 6
 
-## Cells scenes/zones/the_kingdom.tscn spawns on: the player entry, every
+## Cells tests/fixtures/the_kingdom.tscn spawns on: the player entry, every
 ## enemy, every pickup, both gates. Carving must leave all of them open.
 const REQUIRED_OPEN := [
 	Vector2i(4, 35),

@@ -6,7 +6,7 @@ extends RefCounted
 ## Why: ResourceSaver.save() on an existing .tscn/.tres writes a file with NO
 ## uid in its header and NO uid on its [ext_resource] lines (measured on
 ## tools/paint_kingdom_tilemap.gd: the header uid and the TileSet reference's uid
-## both vanished). Seven room scenes name objects/world/kingdom_tilemap.tscn by
+## both vanished). Seven room scenes name content/tilesets/kingdom/tilemap.tscn by
 ## that header uid, so a plain re-save leaves them pointing at an id that no
 ## longer exists. Stamping afterwards would invent a NEW header uid, which does
 ## not help. So the contract (docs/game-base-plan.md 13.7) is two steps:
