@@ -1,6 +1,6 @@
-[gd_scene format=4]
+[gd_scene format=4 uid="uid://25b4e20s5dsk"]
 
-[ext_resource type="TileSet" path="res://resources/tiles/playground_world_tileset.tres" id="1_fxek0"]
+[ext_resource type="TileSet" uid="uid://bwmkjpa3xhmhu" path="res://resources/tiles/playground_world_tileset.tres" id="1_fxek0"]
 
 [node name="TileMap" type="TileMapLayer" unique_id=1752952124]
 position = Vector2(64, 36)

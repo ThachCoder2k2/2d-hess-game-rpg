@@ -1,12 +1,12 @@
-[gd_scene load_steps=7 format=3]
+[gd_scene load_steps=7 format=3 uid="uid://b0j75epjvjhp7"]
 
-[ext_resource type="PackedScene" path="res://objects/world/room_encounter.tscn" id="1_room"]
-[ext_resource type="PackedScene" path="res://objects/world/kingdom_tilemap.tscn" id="2_tilemap"]
-[ext_resource type="Script" path="res://scripts/world/grid_lines_overlay.gd" id="3_grid"]
-[ext_resource type="Script" path="res://scripts/world/zone_entry_marker.gd" id="4_entry"]
-[ext_resource type="Script" path="res://scripts/world/zone_exit_marker.gd" id="5_exit"]
-[ext_resource type="PackedScene" path="res://objects/markers/player_unlock_marker.tscn" id="6_unlock"]
-[ext_resource type="Texture2D" path="res://assets/sprites/generated/rooms/t2_fallen_sword_tile_room.png" id="7_room"]
+[ext_resource type="PackedScene" uid="uid://cxwxrf8td7kh1" path="res://objects/world/room_encounter.tscn" id="1_room"]
+[ext_resource type="PackedScene" uid="uid://bps3hxs0hyrgq" path="res://objects/world/kingdom_tilemap.tscn" id="2_tilemap"]
+[ext_resource type="Script" uid="uid://drrg761p361t0" path="res://scripts/world/grid_lines_overlay.gd" id="3_grid"]
+[ext_resource type="Script" uid="uid://ctn0g5fqvworr" path="res://scripts/world/zone_entry_marker.gd" id="4_entry"]
+[ext_resource type="Script" uid="uid://dwvm3p3vlf0py" path="res://scripts/world/zone_exit_marker.gd" id="5_exit"]
+[ext_resource type="PackedScene" uid="uid://bd85sjax3pwns" path="res://objects/markers/player_unlock_marker.tscn" id="6_unlock"]
+[ext_resource type="Texture2D" uid="uid://dyvjc0oki75l5" path="res://assets/sprites/generated/rooms/t2_fallen_sword_tile_room.png" id="7_room"]
 
 [node name="T2_FallenSwordTile" instance=ExtResource("1_room")]
 room_message = "A weapon waits among the broken squares."

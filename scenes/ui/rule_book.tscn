@@ -1,7 +1,7 @@
-[gd_scene load_steps=3 format=3]
+[gd_scene load_steps=3 format=3 uid="uid://cw2yq7mnvc1md"]
 
-[ext_resource type="Script" path="res://scripts/ui/rule_book_ui.gd" id="1"]
-[ext_resource type="Resource" path="res://resources/rules/rule_book.tres" id="2"]
+[ext_resource type="Script" uid="uid://bud7g0fqy3dbc" path="res://scripts/ui/rule_book_ui.gd" id="1"]
+[ext_resource type="Resource" uid="uid://cnudcw0i3w2hh" path="res://resources/rules/rule_book.tres" id="2"]
 
 [node name="RuleBookUI" type="CanvasLayer"]
 layer = 5
