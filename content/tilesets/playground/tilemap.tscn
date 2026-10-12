@@ -1,6 +1,6 @@
 [gd_scene load_steps=2 format=4 uid="uid://d2poefftdgvaw"]
 
-[ext_resource type="TileSet" uid="uid://c42063bsbuu7m" path="res://resources/tiles/playground_tileset.tres" id="1_5mqwa"]
+[ext_resource type="TileSet" uid="uid://c42063bsbuu7m" path="res://content/tilesets/playground/tileset.tres" id="1_5mqwa"]
 
 [node name="PlaygroundTileMap" type="TileMapLayer" unique_id=1036445842]
 position = Vector2(64, 36)

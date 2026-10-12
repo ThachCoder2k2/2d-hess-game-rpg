@@ -109,3 +109,6 @@ objects/actors	presentation/views/actors
 assets/tiles/kingdom_tiles.svg	assets/tiles/kingdom/atlas.svg
 resources/tiles/kingdom_tileset.tres	content/tilesets/kingdom/tileset.tres
 objects/world/kingdom_tilemap.tscn	content/tilesets/kingdom/tilemap.tscn
+assets/tiles/playground_tiles.svg	assets/tiles/playground/atlas.svg
+resources/tiles/playground_tileset.tres	content/tilesets/playground/tileset.tres
+objects/world/playground_tilemap.tscn	content/tilesets/playground/tilemap.tscn

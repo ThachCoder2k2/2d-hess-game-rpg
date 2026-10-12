@@ -9,9 +9,9 @@ extends SceneTree
 
 const SaveKeepingUids := preload("res://tools/save_keeping_uids.gd")
 
-const TILESET_PATH := "res://resources/tiles/playground_tileset.tres"
-const TILEMAP_SCENE_PATH := "res://objects/world/playground_tilemap.tscn"
-const TILE_ATLAS_PATH := "res://assets/tiles/playground_tiles.svg"
+const TILESET_PATH := "res://content/tilesets/playground/tileset.tres"
+const TILEMAP_SCENE_PATH := "res://content/tilesets/playground/tilemap.tscn"
+const TILE_ATLAS_PATH := "res://assets/tiles/playground/atlas.svg"
 const BOARD_SIZE := Vector2i(16, 9)
 const CELL_SIZE := Vector2i(32, 32)
 

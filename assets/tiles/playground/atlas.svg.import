@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://g8wbq4ptalkl"
-path="res://.godot/imported/playground_tiles.svg-45343c8958efee64712f432f19b6a077.ctex"
+path="res://.godot/imported/atlas.svg-9c10ad1a09cfe18ca49c81764b485f2e.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/tiles/playground_tiles.svg"
-dest_files=["res://.godot/imported/playground_tiles.svg-45343c8958efee64712f432f19b6a077.ctex"]
+source_file="res://assets/tiles/playground/atlas.svg"
+dest_files=["res://.godot/imported/atlas.svg-9c10ad1a09cfe18ca49c81764b485f2e.ctex"]
 
 [params]
 
