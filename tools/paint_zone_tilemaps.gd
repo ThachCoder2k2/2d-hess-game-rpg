@@ -2,7 +2,7 @@ extends SceneTree
 
 ## Build tool: carves THE KINGDOM — one continuous 72x40 semi-open board
 ## (Hyper Light Drifter / Dark Souls structure, docs/soulslike-world-plan.md)
-## — and saves it as objects/world/kingdom_world_tilemap.tscn.
+## — and saves it as tests/fixtures/the_kingdom/tilemap.tscn.
 ##
 ## The world starts as solid rock. Two kinds of space are carved out of it:
 ## organic bowls (the village, the hills, the gardens) and straight halls
@@ -20,6 +20,11 @@ extends SceneTree
 ## The tool validates itself twice: a BFS from the spawn must reach every
 ## carved cell, and every cell the zone scene spawns something on must be open.
 ##   Godot --headless --path . -s tools/paint_zone_tilemaps.gd
+##
+## Saves through SaveKeepingUids and stamps uids last, so the scene keeps the uid
+## the_kingdom.tscn names it by (see tools/save_keeping_uids.gd).
+
+const SaveKeepingUids := preload("res://tools/save_keeping_uids.gd")
 
 const SIZE := Vector2i(72, 40)
 const START_CELL := Vector2i(4, 35)
@@ -158,7 +163,7 @@ const MOAT_OUTER := 10.4
 ## fill, which keeps the far fields from reading as one flat texture.
 const DISTRICT_ROCK_DEPTH := 6
 
-## Cells scenes/zones/the_kingdom.tscn spawns on: the player entry, every
+## Cells tests/fixtures/the_kingdom.tscn spawns on: the player entry, every
 ## enemy, every pickup, both gates. Carving must leave all of them open.
 const REQUIRED_OPEN := [
 	Vector2i(4, 35),
@@ -172,7 +177,7 @@ const REQUIRED_OPEN := [
 
 
 func _init() -> void:
-	var tile_set := load("res://resources/tiles/playground_world_tileset.tres") as TileSet
+	var tile_set := load("res://tests/fixtures/the_kingdom/tileset.tres") as TileSet
 	if tile_set == null:
 		push_error("playground_world_tileset.tres failed to load (run an editor import first).")
 		quit(1)
@@ -199,7 +204,8 @@ func _init() -> void:
 	_print_preview()
 	print("KINGDOM TILEMAP: %s (%d open cells, all reachable, %d spawn cells clear)" % [
 		"OK" if success else "FAIL", open.size(), REQUIRED_OPEN.size()])
-	quit(0 if success else 1)
+	var stamped := success and SaveKeepingUids.stamp_uids_last()
+	quit(0 if stamped else 1)
 
 
 ## One character per tile, so the kingdom can be read without the editor.
@@ -391,4 +397,4 @@ func _paint(open: Dictionary, tile_set: TileSet) -> bool:
 	var packed := PackedScene.new()
 	if packed.pack(layer) != OK:
 		return false
-	return ResourceSaver.save(packed, "res://objects/world/kingdom_world_tilemap.tscn") == OK
+	return SaveKeepingUids.save_keeping_uid(packed, "res://tests/fixtures/the_kingdom/tilemap.tscn") == OK

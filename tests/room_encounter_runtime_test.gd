@@ -26,9 +26,9 @@ func _init() -> void:
 	world.add_system(HealthSystem.new())
 	world.add_system(ViewSyncSystem.new())
 
-	var room := (load("res://scenes/rooms/first_encounter.tscn") as PackedScene).instantiate()
+	var room := (load("res://tests/fixtures/first_encounter.tscn") as PackedScene).instantiate()
 	root.add_child(room)
-	var player_view := (load("res://objects/actors/player.tscn") as PackedScene).instantiate() as ActorView
+	var player_view := (load("res://presentation/views/actors/player.tscn") as PackedScene).instantiate() as ActorView
 	player_view.position = Vector2(110, 229)
 	root.add_child(player_view)
 
@@ -78,13 +78,13 @@ func _init() -> void:
 	spec_world.manual_tick = true
 	root.add_child(spec_world)
 	var spec_view := ActorView.new()
-	spec_view.definition = load("res://resources/enemies/pawn_recruit.tres")
+	spec_view.definition = load("res://content/enemies/pawn_recruit/enemy.tres")
 	spec_view.position = spec_world.grid.cell_to_world(Vector2i(3, 3))
 	var health_spec := HealthComponent.new()
 	health_spec.max_health = 5
 	spec_view.add_child(health_spec)
 	var weapon_spec := WeaponComponent.new()
-	weapon_spec.weapon = load("res://resources/weapons/ruler_blade.tres")
+	weapon_spec.weapon = load("res://content/pickups/ruler_blade/ruler_blade.tres")
 	spec_view.add_child(weapon_spec)
 	var spec_room := Node2D.new()
 	spec_room.add_child(spec_view)

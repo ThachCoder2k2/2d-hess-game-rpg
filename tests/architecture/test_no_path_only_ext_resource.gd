@@ -1,18 +1,20 @@
 extends UnboundTest
 
-## Architecture guard (REPORT-ONLY until M1b stamps the tree): counts [ext_resource]
-## lines that name a file by path only. A scene or resource that references a file
-## by path alone breaks the moment that file moves; one that also carries its
-## uid="..." keeps resolving (docs/game-base-plan.md 13.6, 13.7, risk 2).
+## Architecture guard (ENFORCING since M1b stamped the tree): counts [ext_resource]
+## lines that name a file by path only, and fails while any remain. A scene or
+## resource that references a file by path alone breaks the moment that file moves;
+## one that also carries its uid="..." keeps resolving (docs/game-base-plan.md
+## 13.6, 13.7, risk 2).
 ##
-## Today the count is high on purpose: M1b runs tools/stamp_uids.gd over the whole
-## tree and flips ENFORCING to true, after which a single path-only line fails.
-## tools/stamp_uids.gd --check is the same measurement from the command line.
+## If this fails after you added or edited a scene, run tools/stamp_uids.gd (it adds
+## the missing uid="..." text and touches nothing else). Never fix it by loading and
+## re-saving scenes: that drops uids. tools/stamp_uids.gd --check is the same
+## measurement from the command line.
 
 const ProjectFiles := preload("res://tests/architecture/project_files.gd")
 
 ## false = print REPORT lines and pass. true = fail while any path-only line remains.
-const ENFORCING := false
+const ENFORCING := true
 ## Fewer files than this means the walk is broken (a stale path), not that the tree is clean.
 const MINIMUM_FILES_SCANNED := 20
 const MAX_FILES_LISTED := 15
@@ -53,7 +55,7 @@ func _init() -> void:
 		print("REPORT   %3d  %s" % [path_only_count_by_file[listed_paths[index]], listed_paths[index]])
 	if listed_paths.size() > MAX_FILES_LISTED:
 		print("REPORT   ... and %d more file(s)" % (listed_paths.size() - MAX_FILES_LISTED))
-	print("REPORT fix: run tools/stamp_uids.gd (M1b stamps; M1a only ships the tool). Mode: %s" % ("ENFORCING" if ENFORCING else "report-only"))
+	print("REPORT fix: run tools/stamp_uids.gd, then the editor import pass. Mode: %s" % ("ENFORCING" if ENFORCING else "report-only"))
 
 	if ENFORCING:
 		_expect(path_only_total == 0, "no ext_resource line names a file by path only (%d remain)" % path_only_total)

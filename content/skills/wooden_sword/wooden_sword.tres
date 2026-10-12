@@ -1,0 +1,10 @@
+[gd_resource type="Resource" script_class="AttackProfile" format=3 uid="uid://byvw26cd7u12f"]
+
+[ext_resource type="Script" uid="uid://kp0wge5nj2h5" path="res://schema/attacks/attack_profile.gd" id="1"]
+[ext_resource type="Texture2D" uid="uid://6hr88wvg8w12" path="res://content/skills/wooden_sword/icon.png" id="2"]
+
+[resource]
+script = ExtResource("1")
+display_name = "Wooden Sword"
+color = Color(1, 0.94902, 0.658824, 1)
+texture = ExtResource("2")

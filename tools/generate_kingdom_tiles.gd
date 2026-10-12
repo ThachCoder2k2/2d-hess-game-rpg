@@ -23,7 +23,7 @@ extends SceneTree
 ##     HOME=/tmp/unbound-pawn-godot ../Godot.app/Contents/MacOS/Godot \
 ##         --headless --path . -s tools/generate_kingdom_tiles.gd
 
-const OUTPUT_DIR := "res://assets/sprites/generated/tiles"
+const OUTPUT_DIR := "res://assets/_generated/tiles"
 const BLOCK_SIZE_IN_WORLD_PIXELS := 2
 const TILE_SIZE_IN_BLOCKS := 16
 const PATCH_SIZE_IN_BLOCKS := 4

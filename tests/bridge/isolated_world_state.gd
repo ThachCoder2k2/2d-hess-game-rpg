@@ -1,7 +1,7 @@
-extends "res://scripts/world/world_state.gd"
+extends "res://shell/save/world_state.gd"
 
 ## Test double for the WorldState autoload used by the test_bridge_* suites.
-## scripts/main.gd calls save_state() with no argument, so the real autoload
+## shell/game_root.gd calls save_state() with no argument, so the real autoload
 ## would write the player's own save file (user://world_state.cfg) every time
 ## a bridge test travels, dies or picks something up. This subclass redirects
 ## every default-path save and load to a throwaway file instead. The bridge

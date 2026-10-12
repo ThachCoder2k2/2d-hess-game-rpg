@@ -32,10 +32,15 @@ yet. Please say how each was produced and whether it will ship.
 - `assets/concept-art/*.png` (five images) and `docs/design/concept-art/` (a pathway map).
   `docs/design/gdd.md` calls such images exploratory concept art "rather than the final
   rendering method", so they are references, not shipped game art.
-- The 12 source sprites sitting directly in `assets/sprites/generated/` (`hero_pawn.png`,
-  `toy_sword.png`, `black_pawn.png`, ...). No script draws them (`README.md`), and
-  `docs/where-we-are.md` calls the character sprites temporary July placeholders.
-- `assets/art/pieces/bed.png` and `bed_height.png`. `README.md` treats this folder as hand-drawn
+- The 12 source sprites that used to sit directly in `assets/sprites/generated/`: now
+  `content/player/icon.png` (was `hero_pawn.png`) and `body.png` (was `hero_pawn_unarmed.png`),
+  `content/skills/wooden_sword/icon.png` (`toy_sword.png`), `content/enemies/pawn_recruit/body.png`
+  (`black_pawn.png`), `content/enemies/knight_tracker/body.png` (`black_knight.png`),
+  `content/pickups/{pencil_spear,ruler_blade}/icon.png`, `content/pickups/toy_weapon/pickup.png`
+  and `assets/ui/actor_view/{facing_arrow,health_pip_full,health_pip_empty,warning_aura}.png`.
+  No script draws them (`README.md`), and `docs/where-we-are.md` calls the character sprites
+  temporary July placeholders.
+- `assets/map_pieces/bed.png` and `bed_height.png`. `README.md` treats this folder as hand-drawn
   source art; please confirm these two are your own work.
 
 ## Third-party software that ships or is required

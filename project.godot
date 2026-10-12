@@ -11,9 +11,9 @@ config_version=5
 [application]
 
 config/name="The Unbound Pawn"
-run/main_scene="res://scenes/main.tscn"
+run/main_scene="res://shell/game_root.tscn"
 config/features=PackedStringArray("4.6")
-config/icon="res://assets/sprites/generated/hero_pawn.png"
+config/icon="res://content/player/icon.png"
 
 [audio]
 
@@ -21,8 +21,8 @@ buses/default_bus_layout="res://default_bus_layout.tres"
 
 [autoload]
 
-SfxManager="*res://objects/audio/sfx_manager.tscn"
-WorldState="*res://scripts/world/world_state.gd"
+SfxManager="*res://presentation/audio/sfx_manager.tscn"
+WorldState="*res://shell/save/world_state.gd"
 
 [display]
 

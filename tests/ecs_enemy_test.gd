@@ -31,9 +31,9 @@ func _init() -> void:
 	world.add_system(CombatSystem.new())
 	world.add_system(HealthSystem.new())
 
-	var definition := load("res://resources/enemies/pawn_recruit.tres") as EnemyDefinition
-	var sword := load("res://resources/attacks/wooden_sword.tres") as AttackProfile
-	var thrust := load("res://resources/attacks/pencil_thrust.tres") as AttackProfile
+	var definition := load("res://content/enemies/pawn_recruit/enemy.tres") as EnemyDefinition
+	var sword := load("res://content/skills/wooden_sword/wooden_sword.tres") as AttackProfile
+	var thrust := load("res://content/skills/pencil_thrust/pencil_thrust.tres") as AttackProfile
 
 	var hero := EcsActorFactory.spawn_player(world, Vector2i(2, 3), sword, thrust)
 	# Distance 7 = exactly the default aggro radius; the leash (zone_travel
@@ -99,7 +99,7 @@ func _init() -> void:
 	world.attack_token_owner = 0
 
 	# Pickup: a weaponless enemy standing on a spear takes it.
-	var spear := (load("res://resources/weapons/pencil_spear.tres") as EnemyWeapon).duplicate(true)
+	var spear := (load("res://content/pickups/pencil_spear/pencil_spear.tres") as EnemyWeapon).duplicate(true)
 	EcsActorFactory.spawn_pickup(world, spear, pawn_pos.cell)
 	pawn_ai.state = EcsComponents.EnemyAI.STATE_OBSERVE
 	pawn_ai.state_time_left = 0.01

@@ -1,6 +1,6 @@
 # dump_world v1: deterministic world dump. Regenerate with tools/dump_world.gd (see tools/README.md).
 room: t1_white_kings_fall
-scene: res://scenes/rooms/t1_white_kings_fall.tscn
+scene: res://content/rooms/t1_white_kings_fall/room.tscn
 ticks: 120 x 0.0167 s, player idle (no input)
 entry_cell: (2, 5)
 cast: player=1 enemies=[] pickups=0
@@ -30,7 +30,7 @@ items: 0
 
 [entities at boot]
 entity 1 player cell=(2,5)
-  player_combat: active_attack=null attack_on_cooldown=false attack_visual_time=0.0000 impact_left=0.0000 pencil_thrust=AttackProfile@res://resources/attacks/pencil_thrust.tres pending_cells=[] recovery_left=0.0000 skill_cooldown_duration=1.2500 skill_cooldown_left=0.0000 sword_unlocked=true wooden_sword=AttackProfile@res://resources/attacks/wooden_sword.tres
+  player_combat: active_attack=null attack_on_cooldown=false attack_visual_time=0.0000 impact_left=0.0000 pencil_thrust=AttackProfile@res://content/skills/pencil_thrust/pencil_thrust.tres pending_cells=[] recovery_left=0.0000 skill_cooldown_duration=1.2500 skill_cooldown_left=0.0000 sword_unlocked=true wooden_sword=AttackProfile@res://content/skills/wooden_sword/wooden_sword.tres
   view_ref: node=node(PawnHero) was_attacking=false was_dead=false was_hurt=false was_telegraphing=false
   player_input: buffered_direction=(0, 0) held_repeat_delay=0.2200 hold_time=0.0000 last_held_direction=(0, 0)
   player_tag: control_enabled=true
@@ -46,13 +46,13 @@ entity 1 player cell=(2,5) facing=(0,1) moving=false health=3/3
 events drained: 0
 
 [nodes] 35
-CurrentZone Node2D script=res://scripts/world/room_encounter.gd position=(0.00,0.00)
-CurrentZone/Entry_From_T2 Marker2D script=res://scripts/world/zone_entry_marker.gd position=(496.00,84.00)
-CurrentZone/Entry_Start Marker2D script=res://scripts/world/zone_entry_marker.gd position=(144.00,212.00)
-CurrentZone/Exit_To_T2 Marker2D script=res://scripts/world/zone_exit_marker.gd position=(528.00,84.00)
+CurrentZone Node2D script=res://authoring/room_encounter.gd position=(0.00,0.00)
+CurrentZone/Entry_From_T2 Marker2D script=res://authoring/markers/zone_entry_marker.gd position=(496.00,84.00)
+CurrentZone/Entry_Start Marker2D script=res://authoring/markers/zone_entry_marker.gd position=(144.00,212.00)
+CurrentZone/Exit_To_T2 Marker2D script=res://authoring/markers/zone_exit_marker.gd position=(528.00,84.00)
 CurrentZone/RoomArt Node2D position=(0.00,0.00) z_index=-20
 CurrentZone/RoomArt/Frame Polygon2D visible=false position=(52.00,24.00)
-CurrentZone/RoomArt/GridLines Node2D script=res://scripts/world/grid_lines_overlay.gd visible=false position=(0.00,0.00)
+CurrentZone/RoomArt/GridLines Node2D script=res://presentation/board/grid_lines_overlay.gd visible=false position=(0.00,0.00)
 CurrentZone/RoomArt/ProductionBackground Sprite2D position=(320.00,180.00)
 CurrentZone/RoomArt/SetDressing Node2D visible=false position=(0.00,0.00)
 CurrentZone/RoomArt/SetDressing/BlackRetreatMarkA Line2D position=(0.00,0.00)
@@ -66,24 +66,24 @@ CurrentZone/RoomArt/SetDressing/FallenWhiteKing Polygon2D position=(296.00,128.0
 CurrentZone/RoomArt/SetDressing/FallenWhiteKingShadow Polygon2D position=(300.00,158.00)
 CurrentZone/RoomArt/SetDressing/PaperScrapLeft Polygon2D position=(78.00,266.00)
 CurrentZone/RoomArt/SetDressing/RugDamageNearKing Line2D position=(0.00,0.00)
-CurrentZone/RoomArt/TileMap TileMapLayer visible=false position=(64.00,36.00) used_cells=144 tile_set=res://resources/tiles/kingdom_tileset.tres
-PawnHero Node2D script=res://scripts/ecs/actor_view.gd position=(144.00,212.00) z_index=7
+CurrentZone/RoomArt/TileMap TileMapLayer visible=false position=(64.00,36.00) used_cells=144 tile_set=res://content/tilesets/kingdom/tileset.tres
+PawnHero Node2D script=res://presentation/views/actor_view.gd position=(144.00,212.00) z_index=7
 PawnHero/AnimationPlayer AnimationPlayer
 PawnHero/AnimationTree AnimationTree
 PawnHero/AudioPlayer AudioStreamPlayer
-PawnHero/Camera2D Camera2D script=res://scripts/world/camera_rig.gd
-PawnHero/CombatComponent Node script=res://scripts/ecs/components/combat_component.gd
-PawnHero/HealthComponent Node script=res://scripts/ecs/components/health_component.gd
-PawnHero/InputComponent Node script=res://scripts/ecs/components/input_component.gd
+PawnHero/Camera2D Camera2D script=res://presentation/camera/camera_rig.gd
+PawnHero/CombatComponent Node script=res://authoring/entity_components/combat_component.gd
+PawnHero/HealthComponent Node script=res://authoring/entity_components/health_component.gd
+PawnHero/InputComponent Node script=res://authoring/entity_components/input_component.gd
 PawnHero/MotionRoot Node2D
 PawnHero/MotionRoot/SpriteRoot Node2D
 PawnHero/MotionRoot/SpriteRoot/BodySprite Sprite2D
 PawnHero/MotionRoot/SpriteRoot/WeaponPivot Node2D
 PawnHero/MotionRoot/SpriteRoot/WeaponPivot/WeaponSprite Sprite2D
-PawnHero/MovementComponent Node script=res://scripts/ecs/components/movement_component.gd
+PawnHero/MovementComponent Node script=res://authoring/entity_components/movement_component.gd
 
 [textures] 4
-CurrentZone/RoomArt/ProductionBackground -> res://assets/sprites/generated/rooms/t1_white_kings_fall_room.png
-CurrentZone/RoomArt/TileMap#tile_set_source0 -> res://assets/tiles/kingdom_tiles.svg
-PawnHero/MotionRoot/SpriteRoot/BodySprite -> res://assets/sprites/generated/hero_pawn_unarmed.png
-PawnHero/MotionRoot/SpriteRoot/WeaponPivot/WeaponSprite -> res://assets/sprites/generated/toy_sword.png
+CurrentZone/RoomArt/ProductionBackground -> res://content/rooms/t1_white_kings_fall/background.png
+CurrentZone/RoomArt/TileMap#tile_set_source0 -> res://assets/tiles/kingdom/atlas.svg
+PawnHero/MotionRoot/SpriteRoot/BodySprite -> res://content/player/body.png
+PawnHero/MotionRoot/SpriteRoot/WeaponPivot/WeaponSprite -> res://content/skills/wooden_sword/icon.png

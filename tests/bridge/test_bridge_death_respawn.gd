@@ -1,6 +1,6 @@
 extends UnboundTest
 
-## Bridge characterization (M1a): death and respawn through scripts/main.gd.
+## Bridge characterization (M1a): death and respawn through shell/game_root.gd.
 ## The hero is killed through the real damage path (HealthSystem consuming
 ## world.damage_events, exactly like an enemy strike). main._on_defeated then
 ## calls _on_player_defeated, which freezes the room, resets the carry, saves,
@@ -39,7 +39,7 @@ func _run() -> void:
 	Support.remove_isolated_save(world_state)
 	var hud := main.get("hud") as GameHud
 	# The boot consumes the carry, so it is already -1 here and "death clears it"
-	# would hold even if main.gd never cleared anything. Plant a pending carry (what a
+	# would hold even if game_root.gd never cleared anything. Plant a pending carry (what a
 	# hero killed mid-fade-out of a travel would have left behind) so the assertion
 	# below can only pass if the death handler really resets it.
 	world_state.set("player_health_carry", 2)

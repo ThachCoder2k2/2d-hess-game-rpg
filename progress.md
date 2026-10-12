@@ -864,3 +864,159 @@ An independent review of `base/m1a` found no blocker; these are the fixes (branc
   (the owner or architect decides at OG0); the Tier B CI workflow file; the mixed commit trailers.
 - Verification: `python3 tools/run_all_tests.py --strict` is green (20 suites, 235 of 235 baseline labels,
   0 warnings); both `--self-test` runs report 0 failures; `git diff --check` clean.
+
+## M1b step 1 - uid stamp and generated output - 2026-10-12
+
+First of four M1b steps (`docs/game-base-plan.md` 13.6, 15 "M1b"), branch `base/m1b-1` from `game-base`. No
+gameplay change, no scene structure change, no code or content folder moved yet.
+
+- **Stamp.** `tools/stamp_uids.gd` over the whole tree, committed alone: 54 files, 49 headers and 213
+  `ext_resource` lines (251 total), 0 unresolved, one changed line per stamped line. Then
+  `test_no_path_only_ext_resource` flipped to ENFORCING in its own commit (mutation check: one path-only line
+  makes it fail and name the file).
+- **Generated output.** `assets/sprites/generated/{chess,tiles,maps,rooms}` and `assets/art/piece_templates`
+  moved to `assets/_generated/` with `tools/move_res.py` (log committed). Every generator constant, the two
+  room scenes, `.gitignore` (now `assets/_generated/` only; the 12 tracked root sprites stay tracked), the
+  READMEs and the authoring docs follow. The T1/T2 room-PNG uids changed with the path, so those two scene
+  lines were re-pointed. `dump_t1`/`dump_t2` changed only by the texture path string; the other four dumps are
+  byte-identical.
+- **Tools that save scenes.** `paint_kingdom_tilemap`, `paint_zone_tilemaps` and `generate_playground_tilemap`
+  now save through `tools/save_keeping_uids.gd` and stamp last; running each on the committed tree leaves only
+  the random node `unique_id` in the diff. `generate_playground_tilemap` also stopped embedding a second copy of
+  its tile set (it now references `playground_tileset.tres` like the tracked scene). The other generators write
+  `.png`/`.wav`/`.json` only, so they never touch a scene. `tests/architecture/test_tools_keep_uids.gd` guards it.
+- **Verification.** After each commit: `python3 tools/run_all_tests.py --strict` green (21 suites after the new
+  guard, 235 of 235 baseline labels, 0 warnings), both `--self-test` runs 0 failures, `git diff --check` clean,
+  `stamp_uids.gd --check` CLEAN. A real `git clone` of the branch plus `tools/bootstrap_worktree.sh` came out
+  green with a clean `git status` and the room-PNG uids matching the scenes.
+- **Not done here (later steps):** code and content folder moves, tracked-sprite move, `project.godot` paths,
+  `CLAUDE.md` amendments, `test_sidecars_tracked` ENFORCING (it still reports), `task_plan.md` M1b row.
+
+## M1b step 2 - the code moves - 2026-10-12
+
+Second of four M1b steps, branch `base/m1b-2` from `base/m1b-1`. No gameplay change, no script body edited, no
+`class_name` renamed, no scene changed except the `path=` text of `ext_resource` lines.
+
+- **What moved.** All 51 scripts outside `tests/` and `tools/` left `scripts/` (which is gone) for the plan's
+  code tree, plus the scenes that belong to them: `schema/{entity,attacks,world,feel}/`, `ecs/core/`,
+  `ecs/components/ecs_components.gd`, `ecs/systems/{input,decide,move,act,resolve,view}/`, `authoring/` (the
+  baker, `authoring/entity_components/`, `authoring/markers/`, `room_encounter`), `presentation/{views,ui/hud,
+  ui/codex,audio,camera,board}/` and `shell/{game_root.gd/.tscn, save/world_state.gd}`. `project.godot`
+  (`run/main_scene`, the `SfxManager` and `WorldState` autoloads) followed. Every move went through
+  `tools/move_res.py`; the old-to-new table and the eleven judgement calls are in `docs/migration-notes.md`.
+- **One commit per folder or coherent group** (19 move commits, leaf-first in the order of plan 13.6), the strict
+  runner after each. The dump baselines changed in 85 lines in total and every change is only the `script=res://`
+  path a moved script prints (proved line by line against the step-1 baselines).
+- **EnemyIntent moved twice.** First put in `ecs/systems/decide/` (it is a `RefCounted`, not a Resource), then back
+  to `schema/entity/` as the plan says: the dependency report showed the first placement adds a presentation to
+  ecs/systems edge, because the board's F3 overlay and `game_root.gd` also name it. The report on the final tree
+  equals the one printed on the step-1 tree (5 NOT ALLOWED edges, 1 documented exception).
+- **Guards.** `test_dependency_edges.gd` dropped its `LEGACY_LAYER_RULES` table (a layer is the top folder) and now
+  fails on a script outside the layer folders. `test_audio_buses.gd` scans every scene in the project instead of
+  `scenes/` and `objects/` (they are being emptied), through the new `TestPaths.project_directory()`.
+- **Verification.** `python3 tools/run_all_tests.py --strict` green after every commit (21 suites, 235 of 235
+  baseline labels, 0 warnings, none renamed); both `--self-test` runs 0 failures; `stamp_uids.gd --check` CLEAN;
+  `git diff --check` clean; a fresh `git clone` of the branch plus `tools/bootstrap_worktree.sh` came out green
+  with a clean `git status`.
+- **Not done here (later steps):** content and fixtures (`objects/actors`, tilemaps, `scenes/rooms`,
+  `scenes/zones`, `resources/*`, the 12 tracked sprites), `CLAUDE.md` amendments and the prose docs (they still
+  describe the old layout), `test_sidecars_tracked` ENFORCING (clean today: 96 `.gd`, 0 missing sidecars),
+  `task_plan.md` M1b row.
+
+## M1b step 3 - the content moves - 2026-10-12
+
+Third of four M1b steps, branch `base/m1b-3` from `base/m1b-2`. No gameplay change, no scene changed except the
+`path=` text of `ext_resource` lines, no `ResourceSaver` re-save, no uid changed.
+
+- **What moved.** Everything under `resources/`, `objects/` and `scenes/`, the 12 tracked sprites of
+  `assets/sprites/generated/`, the three tile atlases of `assets/tiles/` and `assets/art/pieces/`. The six Stage 1
+  rooms are `content/rooms/<id>/room.tscn`; the seven enemies are `content/enemies/<id>/enemy.tres` with their own
+  sub-resources beside them and the shared pawn pieces in `content/enemies/_shared/`; the world graph is
+  `content/world/world.tres`; the Book pages are `content/rules/<id>/page.tres`; the difficulty profile is
+  `content/difficulty/`; the player's pictures are `content/player/{body,icon}.png`; the sword and pencil attack
+  profiles are `content/skills/<id>/`; the floor weapons are `content/pickups/<id>/`; the tile kits are
+  `content/tilesets/{kingdom,playground}/` with atlases in `assets/tiles/<kit>/atlas.svg`; the five actor scenes are
+  `presentation/views/actors/` (not collapsed: M2); the kingdom and first_encounter are fixtures under
+  `tests/fixtures/` with their parts; the hand-drawn bedroom pieces are `assets/map_pieces/`. The old folders are
+  gone. The old-to-new tables and every judgement call are in `docs/migration-notes.md`; the exact list is
+  `tools/move_res_log.tsv`.
+- **One commit per folder or coherent group** (29 commits: 21 moves, one cleanup, three guard commits, one
+  notes commit, one sidecar repair and its guard, one record update), the strict runner after every one. Two groups had to be one commit because a test lists a folder
+  (the seven enemy definitions, the six rooms); one attempt was thrown away and redone when the Book check turned
+  out to straddle two layouts.
+- **Dumps.** The six baselines changed in 101 lines in total; every change is only a `res://` path a moved file
+  prints (same line count, equal line by line after replacing path tokens, checked against the step-2 baselines).
+- **Guards.** `test_sidecars_tracked` and `test_dependency_edges` are ENFORCING; the dependency guard fails on any
+  edge outside the table, the documented exception and an explicit report-only `UNDECIDED_EDGES` list (the 5 edges
+  nobody decided), and fails when a list entry goes stale. New: `test_content_has_no_gd` (zero `.gd`, at least 40
+  files, folder = id), `test_content_references` (the content row of 13.1, 137 `ext_resource` lines, 0 violations,
+  1 documented exception, 6 undecided room references), `test_fixtures_present` (requirement 116) and
+  `test_no_old_res_paths` (the M1b grep acceptance). Each was mutation-checked.
+- **Verification.** `python3 tools/run_all_tests.py --strict` green after every commit; both `--self-test` runs
+  0 failures; `git diff --check` clean; `tools/bootstrap_worktree.sh` still runs all four generators clean with the
+  moved hand art; `paint_kingdom_tilemap.gd` re-run on the new paths changes only the harmless node `unique_id`.
+  A fresh `git clone` plus bootstrap found one stale `.import` (the pawn body's imported-cache path, left behind when
+  that move was redone after a discarded attempt); it was repaired and `test_sidecars_tracked` now fails on any
+  stale or orphan sidecar.
+- **Not done here (the next step):** `CLAUDE.md` amendments and the prose docs, `tools/seed_placeholders.gd`,
+  `content/_placeholders.json`, `content/README.md`, `task_plan.md` M1b row; the owner decides the 5 undecided edges
+  and the room-overlay reference before `allowed_edges.txt` is frozen.
+
+## M1b step 4 - finish and document - 2026-10-12
+
+Fourth and last M1b step, branch `base/m1b-4` from `base/m1b-3`. No gameplay change; the only scene edits are two
+`ext_resource` lines (below).
+
+- **Placeholders (plan section 12).** `tools/seed_placeholders.gd` copies a generator's picture into `content/` only
+  when the target is absent and records the sha256 of every stand-in in `content/_placeholders.json`;
+  `tools/list_placeholders.gd` prints the owner's TODO by kind; `tools/placeholder_manifest.gd` is the helper both
+  and `tests/content/test_placeholders_manifest.gd` share. A file is a placeholder if and only if its hash still
+  equals the recorded one, so overwriting it clears the flag with no extra edit; the seed tool never re-records an
+  already-listed file, so running it after the owner replaced a picture cannot turn the owner's art into a
+  "placeholder". 25 files are listed (3 bodies, 4 icons, 1 pickup, 2 room backgrounds, 1 tile atlas, 4 interface
+  pictures, 9 sound effects, 1 music loop). Left out on purpose: `assets/map_pieces/` and `assets/tiles/playground/`
+  (the owner's own art).
+- **The T1 and T2 backgrounds are tracked now.** The two rooms named gitignored generator output, so the owner could
+  not swap their art without fighting the generator. The seed tool copied the two pictures to
+  `content/rooms/<id>/background.png` (same bytes, own `.import` uid) and the two scenes name the copies (only the
+  `ext_resource` path and uid change). `dump_t1` and `dump_t2` each changed by exactly one line (the texture path);
+  the other four dumps are byte-identical. No tracked scene names `assets/_generated/` any more (a test fails if one
+  does), and a strict runner on a clone with `assets/_generated/` deleted is green.
+- **Mutation checks.** Appending one byte to a listed file moved the TODO from 25 to 24 ("1 replaced by you"); moving
+  a listed file away failed the manifest suite and made `list_placeholders.gd` exit 1 and print it as missing.
+- **`CLAUDE.md` amendments A-1 to A-9 applied** (the owner approved the move and the amendment at OG0, recorded above).
+  Every other rule is word for word. Where the plan's text names something that does not exist yet (`HudSnapshot`,
+  `world.commands`, `ecs/schedule/`, `sound_bank.tres`, `/new-skill`, `/new-room`, `/new-beat`) the rule says which
+  milestone builds it. `docs/claude-md-diff.md` is marked applied and lists each difference.
+- **Prose follows the move.** `docs/ARCHITECTURE.md` (tree, layer table, system-order table with phase folders, test
+  folders), `docs/coding-standards.md` (folder placement, component/system/marker rules, sidecars, move rule),
+  `AGENTS.md`, `README.md`, `docs/OWNER_GUIDE.md` (section 5 with real paths; four target rows marked "available
+  now"), new `content/README.md`, `tools/README.md`, `.claude/commands/{verify,new-enemy,new-sound,milestone}.md`,
+  `docs/design/room-authoring-guide.md`, `docs/ecs-conversion-plan.md` (3 paths), a note in `docs/where-we-are.md`.
+  `docs/room-generator*.md` already named only `tools/` and `assets/` paths and needed no edit.
+- **Acceptance of plan section 15 "M1b" (measured on the final tree):**
+
+| Acceptance line | Result |
+|---|---|
+| `run_all_tests.py --strict` green, every baseline label passing or renamed | 26 suites, 0 failed, 0 warnings, GREEN; 235 of 235 labels still PASS, 0 renamed (`label_renames.txt` is empty) |
+| import clean (no ERROR or Parse) | the editor import pass prints no `ERROR`, `SCRIPT ERROR` or `Parse Error` line |
+| `grep` for the four old folder prefixes under `res://` (scripts, objects, scenes, resources) returns 0 outside `docs/archive` | `test_no_old_res_paths` passes (200+ text files read, 0 lines). A raw `git grep` for those prefixes still finds 4 files, all on purpose and all skipped by that test: `docs/game-base-plan.md` (quotes the acceptance line), `docs/research/organisation.json` (a record of the old codebase), `tools/move_res.py` (its self-test builds a fake old-layout project) and the test itself |
+| zero path-only `ext_resource` lines | `stamp_uids.gd --check` CLEAN (251 lines, 0 missing, 0 stale); `test_no_path_only_ext_resource` PASS |
+| sidecars tracked | `test_sidecars_tracked` ENFORCING: 104 tracked `.gd` all with a `.gd.uid`, 37 imported assets all with an `.import`, 0 orphans, 0 stale |
+| `content/` contains 0 `.gd` with a minimum file count | 0 `.gd`; 54 data/art files counted (minimum 40), 65 tracked files in total; 7 enemy, 6 room and 5 rule-page folders each hold their role file |
+| the dump equals the baseline for each Stage 1 room and H1 | `test_dump_baselines` PASS (31 checks) for T1, T2, T3, T4, B1, H1. Over the whole of M1b the six baselines changed only in `res://` path strings (85 lines in step 2, 101 in step 3, 2 in step 4) |
+| a fresh clone is green | `git clone` of the branch to `/tmp`, `tools/bootstrap_worktree.sh` (exit 0, the warm-up pass printed no error), the strict runner GREEN (26 suites, 235 of 235), `git status` clean, `stamp_uids.gd --check` CLEAN; again GREEN after deleting `assets/_generated/` |
+
+- **Verification.** Both `--self-test` runs report 0 failures; `git diff --check` is clean.
+- **Commits (step 4):** `a93c473` the placeholder tools, `32685a6` the room backgrounds as tracked stand-ins and the
+  25-file manifest, `14ff578` `CLAUDE.md`, `40bedf8` ARCHITECTURE/coding-standards/AGENTS, `3278128` README, owner guide,
+  `content/README.md`, status page and room guide, `a13299f` the slash commands and `tools/README.md`, `6e6b344` the
+  ECS conversion plan, then this record commit (tagged `m1b-done`).
+- **Not done, and why:** `content/audio/` (`sound_bank.tres`, `music_cues.tres` do not exist yet: the
+  `SfxManager` registry is Inspector exports, M4/M6); `ContentDb`, `actor_view_base.tscn` and the thin inherited actor
+  scenes (M2); `/new-skill` (M7a), `/new-room` and `/new-beat` (M14); `tests/architecture/allowed_edges.txt` is not
+  frozen (five dependency edges and six room references wait for the owner); the tile and animation-frame assembly
+  tools the owner's one-file-per-thing direction implies (the tree leaves room: `assets/tiles/<district>/<tile_id>.png`,
+  `content/<kind>/<id>/anim/<clip>/<NN>.png`); `docs/design/*` specs and the production checklists still name old
+  paths in prose (planning documents, not rewritten); other kinds of placeholder (prose, tuning numbers) are not
+  covered by a file hash.

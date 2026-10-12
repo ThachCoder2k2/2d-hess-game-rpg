@@ -82,7 +82,7 @@ func _init() -> void:
 	_expect(grid.world_to_cell(Vector2(110, 229)) == Vector2i(1, 6), "world positions floor to their containing cell")
 
 	# --- The player scene is a pure view + spawn data ---
-	var hero_view := _view("res://objects/actors/player.tscn")
+	var hero_view := _view("res://presentation/views/actors/player.tscn")
 	_expect(hero_view != null, "player scene root is an ActorView (no gameplay script)")
 	_expect(_actor_is_sprite_animated(hero_view), "player view owns its sprites and AnimationPlayer")
 	_expect(_actor_has_clip(hero_view, &"step") and _actor_has_clip(hero_view, &"attack"), "player view owns step/attack clips")
@@ -100,16 +100,16 @@ func _init() -> void:
 	_expect(hero_view.get_node_or_null("MovementComponent") is MovementComponent \
 		and hero_view.get_node_or_null("InputComponent") is InputComponent, "player view carries movement and input component nodes")
 	_expect(_actor_has_state_graph(hero_view), "player animation transitions live in an editor AnimationTree graph")
-	var view_source := FileAccess.get_file_as_string("res://scripts/ecs/actor_view.gd")
+	var view_source := FileAccess.get_file_as_string("res://presentation/views/actor_view.gd")
 	# A moved file reads as "", which would make the "does not contain" check pass for nothing.
 	_expect(not view_source.is_empty() and not view_source.contains("func _draw") and not view_source.contains("func _process"), "actor views hold no logic at all")
 
 	# --- Enemy scenes are views + definitions ---
 	var expected_definitions := {
-		"res://objects/actors/black_pawn.tscn": &"pawn_recruit",
-		"res://objects/actors/knight_enemy.tscn": &"knight_tracker",
-		"res://objects/actors/bishop_enemy.tscn": &"bishop_zoner",
-		"res://objects/actors/enemy_base.tscn": &"pawn_recruit",
+		"res://presentation/views/actors/black_pawn.tscn": &"pawn_recruit",
+		"res://presentation/views/actors/knight_enemy.tscn": &"knight_tracker",
+		"res://presentation/views/actors/bishop_enemy.tscn": &"bishop_zoner",
+		"res://presentation/views/actors/enemy_base.tscn": &"pawn_recruit",
 	}
 	for scene_path: String in expected_definitions:
 		var enemy_view := _view(scene_path)
@@ -122,22 +122,22 @@ func _init() -> void:
 		_expect(_actor_has_state_graph(enemy_view), "%s animation transitions live in an editor AnimationTree graph" % scene_name)
 
 	# --- Editor-authored combat data (the .tres stays the truth) ---
-	var pawn_definition := load("res://resources/enemies/pawn_recruit.tres") as EnemyDefinition
+	var pawn_definition := load("res://content/enemies/pawn_recruit/enemy.tres") as EnemyDefinition
 	var pattern_cells := pawn_definition.unarmed_attack.get_attack_cells(grid, Vector2i(6, 3), Vector2i.DOWN)
 	_expect(Vector2i(5, 4) in pattern_cells and Vector2i(7, 4) in pattern_cells, "pawn pattern threatens both forward diagonals")
 	pattern_cells = pawn_definition.unarmed_attack.get_attack_cells(grid, Vector2i(6, 3), Vector2i.RIGHT)
 	_expect(Vector2i(7, 4) in pattern_cells and Vector2i(7, 2) in pattern_cells, "pawn diagonal attack rotates with facing")
 
-	var armed_definition := load("res://resources/enemies/pawn_armed.tres") as EnemyDefinition
+	var armed_definition := load("res://content/enemies/pawn_armed/enemy.tres") as EnemyDefinition
 	_expect(armed_definition.validate().is_empty(), "armed Pawn definition has no missing configuration")
 	_expect(armed_definition.default_weapon != null and armed_definition.default_weapon.display_name == "Pencil Spear", "armed Pawn default weapon is Inspector-configured")
 
-	var knight_definition := load("res://resources/enemies/knight_tracker.tres") as EnemyDefinition
+	var knight_definition := load("res://content/enemies/knight_tracker/enemy.tres") as EnemyDefinition
 	_expect(knight_definition.movement.allowed_directions.size() == 8, "knight movement config exposes eight L-shaped offsets")
 	_expect(Vector2i(2, 1) in knight_definition.movement.allowed_directions and Vector2i.RIGHT not in knight_definition.movement.allowed_directions, "knight movement does not fall back to cardinal steps")
 	_expect(knight_definition.decision.role_policy == &"flanker", "knight definition configures a flanker")
 
-	var bishop_definition := load("res://resources/enemies/bishop_zoner.tres") as EnemyDefinition
+	var bishop_definition := load("res://content/enemies/bishop_zoner/enemy.tres") as EnemyDefinition
 	_expect(bishop_definition.movement.allowed_directions.has(Vector2i(1, 1)) and not bishop_definition.movement.allowed_directions.has(Vector2i.RIGHT), "Bishop moves diagonally from its MovementConfig")
 	var bishop_cells := bishop_definition.unarmed_attack.get_attack_cells(grid, Vector2i(8, 4), Vector2i.DOWN)
 	_expect(bishop_cells.size() == 8 and Vector2i(10, 6) in bishop_cells and Vector2i(9, 5) in bishop_cells, "Bishop unarmed attack threatens diagonal beams from data")
@@ -147,13 +147,13 @@ func _init() -> void:
 	var second_spear := EnemyWeapon.pencil_spear()
 	_expect(spear.resource_path.is_empty() and spear != second_spear, "weapon factory returns independent instances from the editor asset")
 	_expect(spear.range_cells == 2 and spear.telegraph_time == 0.62, "Pencil Spear values load from its Resource")
-	_expect(spear.texture != null and spear.texture.resource_path.ends_with("pencil_spear.png"), "Pencil Spear carries its sprite as data")
+	_expect(spear.texture != null and spear.texture.resource_path.ends_with("pickups/pencil_spear/icon.png"), "Pencil Spear carries its sprite as data")
 
 	var attack_profile := AttackProfile.new()
 	attack_profile.range_cells = 2
 	_expect(attack_profile.get_target_cells(Vector2i(4, 4), Vector2i.RIGHT) == [Vector2i(5, 4), Vector2i(6, 4)], "attack profile produces ordered range cells")
 
-	var objective_script := load("res://scripts/data/room_objective.gd")
+	var objective_script := load("res://schema/world/room_objective.gd")
 	var clear_objective: Resource = objective_script.new()
 	_expect(not bool(clear_objective.call("is_complete", 1, 3, 2)), "clear-all objective waits while enemies remain")
 	_expect(bool(clear_objective.call("is_complete", 3, 3, 0)), "clear-all objective completes when all enemies fall")
@@ -163,14 +163,14 @@ func _init() -> void:
 	_expect(not bool(count_objective.call("is_complete", 1, 3, 2)), "defeat-count objective waits for its configured count")
 	_expect(bool(count_objective.call("is_complete", 2, 3, 1)), "defeat-count objective can complete before all enemies fall")
 
-	var pickup_visual_source := FileAccess.get_file_as_string("res://scripts/visuals/pickup_visual.gd")
+	var pickup_visual_source := FileAccess.get_file_as_string("res://presentation/views/pickup_visual.gd")
 	# Same guard as above: an empty read (a moved file) must fail, not pass vacuously.
 	_expect(not pickup_visual_source.is_empty() and not pickup_visual_source.contains("func _draw") and not pickup_visual_source.contains("draw_"), "pickup visuals use Sprite2D nodes instead of script drawing")
 
 	# --- The sound structure: bus layout + event-sound registry ---
 	var bus_layout := load("res://default_bus_layout.tres") as AudioBusLayout
 	_expect(bus_layout != null, "the audio bus layout loads")
-	var sfx_scene := load("res://objects/audio/sfx_manager.tscn") as PackedScene
+	var sfx_scene := load("res://presentation/audio/sfx_manager.tscn") as PackedScene
 	var sfx_manager := sfx_scene.instantiate()
 	root.add_child(sfx_manager)
 	var registry: Dictionary = sfx_manager.get("streams")
@@ -178,7 +178,7 @@ func _init() -> void:
 	_expect(StringName(sfx_manager.get("bus")) == &"SFX", "SfxManager routes to the SFX bus")
 
 	# Music: an editor-owned looping AudioStreamPlayer in the main scene, no code.
-	var main_scene := (load("res://scenes/main.tscn") as PackedScene).instantiate()
+	var main_scene := (load("res://shell/game_root.tscn") as PackedScene).instantiate()
 	var music_player := main_scene.get_node_or_null("MusicPlayer") as AudioStreamPlayer
 	_expect(music_player != null and music_player.autoplay, "main scene carries an autoplaying MusicPlayer")
 	_expect(music_player != null and music_player.bus == &"Music", "MusicPlayer routes to the Music bus")
@@ -192,7 +192,7 @@ func _init() -> void:
 	main_scene.free()
 
 	# --- The world graph: every zone loads, every door resolves ---
-	var world_graph := load("res://resources/world/world_graph.tres") as WorldGraph
+	var world_graph := load("res://content/world/world.tres") as WorldGraph
 	_expect(world_graph != null and world_graph.validate().is_empty(), "the world graph loads with zones")
 	var entry_ids_by_zone := {}
 	var zone_roots := {}
@@ -229,7 +229,7 @@ func _init() -> void:
 	_expect(t2_world.grid.is_walkable(Vector2i(6, 5)), "T2 sword unlock cell is walkable")
 
 	# --- WorldState survives a save/load round trip ---
-	var world_state_script := load("res://scripts/world/world_state.gd")
+	var world_state_script := load("res://shell/save/world_state.gd")
 	var saved_state: Node = world_state_script.new()
 	saved_state.current_zone_id = &"bookshelf_pass"
 	saved_state.last_entry_id = &"from_yard"
@@ -258,24 +258,27 @@ func _init() -> void:
 	old_state.free()
 
 	# --- Pawn variants stay pure data ---
-	var backstep := load("res://resources/enemies/backstep_pawn.tres") as EnemyDefinition
+	var backstep := load("res://content/enemies/backstep_pawn/enemy.tres") as EnemyDefinition
 	_expect(backstep != null and backstep.validate().is_empty(), "Backstep Pawn definition has no missing configuration")
-	var charging := load("res://resources/enemies/charging_pawn.tres") as EnemyDefinition
+	var charging := load("res://content/enemies/charging_pawn/enemy.tres") as EnemyDefinition
 	_expect(charging != null and charging.validate().is_empty(), "Charging Pawn definition has no missing configuration")
 	_expect(charging.movement.allowed_directions.has(Vector2i(0, 2)) and not charging.movement.allowed_directions.has(Vector2i.UP), "Charging Pawn only ever leaps two squares")
 
 	# --- The Book of House Rules: every page names a real piece, UI renders ---
-	var rule_book := load("res://resources/rules/rule_book.tres") as RuleBook
+	var rule_book := load("res://content/rules/rule_book.tres") as RuleBook
 	_expect(rule_book != null and rule_book.validate().is_empty(), "the rule book loads with complete pages")
 	var definition_ids: Array = []
-	for file_name in DirAccess.get_files_at("res://resources/enemies"):
-		if file_name.ends_with(".tres"):
-			var definition := load("res://resources/enemies/%s" % file_name) as EnemyDefinition
-			if definition != null:
-				definition_ids.append(definition.id)
+	# One folder per enemy id; a leading underscore (_shared) is not an enemy (plan 13.3).
+	for folder_name in DirAccess.get_directories_at("res://content/enemies"):
+		if folder_name.begins_with("_"):
+			continue
+		var definition := load("res://content/enemies/%s/enemy.tres" % folder_name) as EnemyDefinition
+		if definition != null:
+			definition_ids.append(definition.id)
+	_expect(definition_ids.size() >= 7, "content/enemies holds at least seven enemy definitions (a missing folder cannot pass the book check below vacuously)")
 	for entry in rule_book.entries:
 		_expect(entry.piece_id in definition_ids, "book page '%s' names a real piece" % entry.title)
-	var book_ui := (load("res://scenes/ui/rule_book.tscn") as PackedScene).instantiate() as RuleBookUI
+	var book_ui := (load("res://presentation/ui/codex/rule_book.tscn") as PackedScene).instantiate() as RuleBookUI
 	root.add_child(book_ui)
 	book_ui.refresh([&"pawn_recruit"])
 	_expect(book_ui.entry_list.item_count == rule_book.entries.size(), "book UI lists every page")

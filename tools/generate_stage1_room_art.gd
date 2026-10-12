@@ -1,6 +1,6 @@
 extends SceneTree
 
-const OUT_DIR := "res://assets/sprites/generated/rooms"
+const OUT_DIR := "res://assets/_generated/rooms"
 const OUT_T1 := OUT_DIR + "/t1_white_kings_fall_room.png"
 const OUT_T2 := OUT_DIR + "/t2_fallen_sword_tile_room.png"
 

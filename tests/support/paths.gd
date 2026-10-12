@@ -64,71 +64,73 @@ func default_bus_layout() -> String:
 # --- Scripts that tests read as text or inspect ---
 
 func main_script() -> String:
-	return _existing_file("res://scripts/main.gd")
+	return _existing_file("res://shell/game_root.gd")
 
 
 func world_state_script() -> String:
-	return _existing_file("res://scripts/world/world_state.gd")
+	return _existing_file("res://shell/save/world_state.gd")
 
 
 func actor_view_script() -> String:
-	return _existing_file("res://scripts/ecs/actor_view.gd")
+	return _existing_file("res://presentation/views/actor_view.gd")
 
 
 # --- Scenes ---
 
 func main_scene() -> String:
-	return _existing_resource("res://scenes/main.tscn")
+	return _existing_resource("res://shell/game_root.tscn")
 
 
+## The 72x40 kingdom: a test fixture, not game content (plan D-02).
 func kingdom_scene() -> String:
-	return _existing_resource("res://scenes/zones/the_kingdom.tscn")
+	return _existing_resource("res://tests/fixtures/the_kingdom.tscn")
 
 
-## `room_id` is the room's file name without extension, for example
-## `t1_white_kings_fall` or `h1_chess_rug_hub`.
+## The first-encounter demo room: a test fixture, not game content (plan D-02).
+func first_encounter_scene() -> String:
+	return _existing_resource("res://tests/fixtures/first_encounter.tscn")
+
+
+## `room_id` is the room's folder name (its id), for example
+## `t1_white_kings_fall` or `h1_chess_rug_hub`; the scene is `room.tscn` inside it.
 func room_scene(room_id: StringName) -> String:
-	return _existing_resource("res://scenes/rooms/%s.tscn" % room_id)
+	return _existing_resource("res://content/rooms/%s/room.tscn" % room_id)
 
 
 ## `actor_id` is the actor scene's file name without extension, for example
 ## `player`, `black_pawn` or `knight_enemy`.
 func actor_scene(actor_id: StringName) -> String:
-	return _existing_resource("res://objects/actors/%s.tscn" % actor_id)
+	return _existing_resource("res://presentation/views/actors/%s.tscn" % actor_id)
 
 
 ## The SfxManager autoload's scene (its player pool is built in code).
 func sfx_manager_scene() -> String:
-	return _existing_resource("res://objects/audio/sfx_manager.tscn")
+	return _existing_resource("res://presentation/audio/sfx_manager.tscn")
 
 
 # --- Directories (list them with `list_files`) ---
 
+## The room folders (one per room id, each holding `room.tscn`): list the scenes
+## with `list_files(rooms_directory(), "tscn", 6, true)`.
 func rooms_directory() -> String:
-	return _existing_directory("res://scenes/rooms")
+	return _existing_directory("res://content/rooms")
 
 
-## Entry, room and UI scenes (the `scenes/` folder).
-func scenes_directory() -> String:
-	return _existing_directory("res://scenes")
-
-
-## Reusable prefabs: actors, pickups, audio, and so on (the `objects/` folder).
-func objects_directory() -> String:
-	return _existing_directory("res://objects")
+## The whole project, for scans that must see every scene or script wherever the
+## folder migration puts it (M1b moved scenes out of `scenes/` and `objects/`
+## into the code folders): list from here with `recursive` true.
+func project_directory() -> String:
+	return _existing_directory("res://")
 
 
 ## The actor scenes: player, pawns, knight, bishop, and so on.
 func actors_directory() -> String:
-	return _existing_directory("res://objects/actors")
+	return _existing_directory("res://presentation/views/actors")
 
 
+## The enemy folders (one per enemy id, each holding `enemy.tres`; `_shared` is not an enemy).
 func enemy_definitions_directory() -> String:
-	return _existing_directory("res://resources/enemies")
-
-
-func scripts_directory() -> String:
-	return _existing_directory("res://scripts")
+	return _existing_directory("res://content/enemies")
 
 
 # --- Test fixtures (tests/fixtures is never discovered as a suite) ---

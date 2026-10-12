@@ -1,7 +1,7 @@
 extends UnboundTest
 
 ## Bridge characterization (M1a): what the world remembers.
-## main.gd translates three kinds of simulation events into WorldState writes
+## game_root.gd translates three kinds of simulation events into WorldState writes
 ## (pickup_taken, gate_opened, player_unlock) and feeds WorldState back into
 ## every _boot_zone (taken pickups never respawn, opened gates boot as floor,
 ## the sword unlock re-applies). This suite drives each of them through the

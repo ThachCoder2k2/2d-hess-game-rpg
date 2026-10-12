@@ -1,0 +1,7 @@
+[gd_resource type="Resource" script_class="DifficultyProfile" load_steps=2 format=3 uid="uid://cq15s5oalg3r5"]
+
+[ext_resource type="Script" uid="uid://cbwu5v7okbmuc" path="res://schema/feel/difficulty_profile.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"standard"

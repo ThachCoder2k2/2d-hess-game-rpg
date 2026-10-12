@@ -294,3 +294,103 @@ June note).
   `resources/enemies` turns three suites red; with stamped uids a bare move of scene-referenced resources stays
   green, which is why M1b stamps first. Never use `ResourceSaver` to "fix" uids: it adds none and drops the
   header uid of `scenes/main.tscn`.
+
+## Uid And Generated-Art Facts (M1b step 1, 2026-10-12)
+
+- The tree is stamped: every scene and resource header has a `uid=` and every `ext_resource` line names its
+  target by uid as well as path. `test_no_path_only_ext_resource` is ENFORCING, so a scene saved without uids
+  fails the suite. `tools/stamp_uids.gd --check` is the same measurement from the command line.
+- `ResourceSaver.save()` on an existing `.tscn`/`.tres` drops the header uid and every `ext_resource` uid
+  (measured on `kingdom_tilemap.tscn`, which seven room scenes name by uid) and writes a new random node
+  `unique_id`. Stamping afterwards would invent a different header uid, so tools that save scenes go through
+  `tools/save_keeping_uids.gd` (restores the old header uid with `ResourceSaver.set_uid()`, then runs the
+  stamper last). `FLAG_CHANGE_PATH` does not set `resource_path` in 4.6; use `take_over_path()`.
+- All generator output lives under `assets/_generated/` (gitignored): `chess/ tiles/ maps/ rooms/
+  piece_templates/`. The 12 PNGs directly in `assets/sprites/generated/` and `assets/art/pieces/` are tracked
+  source art and no tool writes them.
+- Godot 4.6.3 gives a freshly imported file a uid derived from the project name and its path (deleting
+  `.godot/` and `assets/_generated/` and re-bootstrapping twice gave identical uids; a fresh clone matches the
+  uids stamped in the T1/T2 room scenes). Moving generated output, or renaming the project, changes those uids:
+  re-point the two scene lines (`stamp_uids.gd --check` lists the mismatch as `STALE`). An unmatched uid is only
+  a warning (`ext_resource, invalid UID ... using text path instead`), never an error.
+- Cosmetic, not fixed: the bootstrap warm-up import pass prints that same warning for the two room PNGs on a
+  fresh clone, because the art does not exist yet; the pass after the generators is clean.
+
+## Code Layout Facts (M1b step 2, 2026-10-12)
+
+- The code lives in `schema/`, `ecs/`, `authoring/`, `presentation/`, `shell/` (plan 13.2); `scripts/` does not
+  exist. A script's layer is its top folder, and `test_dependency_edges.gd` fails on a `.gd` outside them.
+  `docs/migration-notes.md` has the old-to-new table and every place the plan's table needed a judgement call;
+  `tools/move_res_log.tsv` is the exact move list.
+- `EnemyIntent` (a `RefCounted`) is in `schema/entity/` on purpose: the system builds it, the board draws it and
+  the bridge forwards it in an event, so `schema` is the only layer all three may name. Putting it in
+  `ecs/systems/decide/` added a new presentation to ecs/systems edge to the dependency report.
+- Phase folders (`ecs/systems/<phase>/`) exist, but the tick order is still the list in `game_root.gd` and
+  `tools/world_dumper.gd`; `ecs/schedule/`, the `PHASE` const and `ecs/events/` are M3a. `main.tscn` is now
+  `shell/game_root.tscn` (root node still named `Main`) and `project.godot` starts it directly; `app_root` is
+  M3b/M4. `WorldState` is `shell/save/world_state.gd` until M3b rewrites it as `SaveService`.
+- `move_res.py` moves a folder or a file, not a regrouping: when one old folder fans out to several new ones
+  (`scripts/data` to `schema/{entity,world,feel}`, `scripts/ecs/systems` to six phases) call it once per file in
+  the same commit. It does not touch prose paths (docs, comments); grep for the old names afterwards.
+- After a commit that changes an AUTOLOAD path, the first editor import pass on an old checkout prints
+  `Failed to create an autoload` for the old path (stale editor state under `.godot/`) and the strict runner
+  goes red on that pass; run the import pass once more and it is clean. Moving the main scene or any other file
+  does not do this, and a fresh clone never does.
+- Scans that must see every scene or script wherever it lives use `TestPaths.project_directory()` with the
+  recursive listing, not `scenes/` or `objects/` (the audio-bus test used to, and would have gone blind).
+
+## Content Layout Facts (M1b step 3, 2026-10-12)
+
+- Content lives in `content/` (zero `.gd`, test-enforced): `enemies/<id>/enemy.tres` with `_shared/{movement,attacks,
+  decisions,visuals}/` for pieces several enemies use, `rooms/<id>/room.tscn`, `rules/<id>/page.tres` plus
+  `rules/rule_book.tres`, `skills/<id>/` and `pickups/<id>/` (the AttackProfile and EnemyWeapon data under their own
+  names until the plan's `skill.tres` / `pickup.tres` exist), `player/{body,icon}.png`, `difficulty/`, `world/world.tres`,
+  `tilesets/<kit>/{tileset.tres,tilemap.tscn}`. A leading underscore folder is not an id. `docs/migration-notes.md`
+  has the tables and the calls.
+- Art follows the owner's one-file-per-thing direction: the atlases are `assets/tiles/<kit>/atlas.svg` (single tile
+  PNGs and a tool that assembles them are later), shared actor overlay art is `assets/ui/actor_view/`, the hand-drawn
+  bedroom pieces are `assets/map_pieces/<piece>.png` + `<piece>_height.png`. Nothing hand-made is in a gitignored or
+  `.gdignore` folder.
+- The kingdom (72x40) and `first_encounter` are fixtures, not content: `tests/fixtures/<name>.tscn` with a folder of
+  the same name for its parts. The world graph still lists the `kingdom` zone (the H1 exit targets it) and names the
+  fixture scene, which is the one documented content-to-tests reference; M5 removes it.
+- Actor view scenes are interim copies in `presentation/views/actors/` until M2 collapses them. The bishop's scene
+  draws the knight's `body.png` (it has no art of its own).
+- Dump baselines print the path of every resource an entity holds (`EnemyDefinition@<path>`, texture paths, `scene:`),
+  so a content move changes baseline lines. `move_res.py` rewrites them; the proof that nothing else changed is
+  "same line count, equal after replacing every `res://` token" (a plain `git diff` of the baselines is not enough).
+- `move_res.py` rewrites whole paths only: a format string such as `".../%s.tscn"` or a directory listing that depended
+  on a flat layout (`TestPaths.rooms_directory()`, the Book check in `run_tests.gd`) has to be edited by hand, and
+  `TestPaths.enemy_definitions_directory()` went stale unnoticed for one commit for exactly that reason. A test that
+  lists a folder forces the whole folder into one commit.
+- `.import` sidecars of moved images change content (the imported-cache path is a hash of the source path); commit
+  them with the move. The `uid=` inside does not change, which is what keeps scenes resolving.
+- `UNDECIDED_EDGES` / `UNDECIDED_REFERENCES` are the owner's open questions, in code, with a stale-entry check so
+  a fixed edge forces the line out. Add an entry only with the owner's say-so.
+
+## Placeholder and Documentation Facts (M1b step 4, 2026-10-12)
+
+- A placeholder is a FILE whose sha256 still equals the one recorded in `content/_placeholders.json` when
+  `tools/seed_placeholders.gd` seeded it. The owner overwrites the file (same name, same role) and the flag clears by
+  itself; a flag kept anywhere else would go stale. The seed tool never overwrites a file and never re-records an
+  already-listed one, and a file that exists but is in neither of its two lists (`GENERATED_SEEDS`,
+  `ADOPTED_PLACEHOLDERS`) is treated as the owner's. A new stand-in (a copied `body.png`, a generated sound) adds its
+  row to one of those lists, or `test_placeholders_manifest` stays red only for the rows already there: it checks that
+  every row is recorded, every listed file exists and a tracked scene never names `assets/_generated/`.
+- Hand-drawn or owner-made art is not a placeholder: `assets/map_pieces/` and `assets/tiles/playground/` are left out of the
+  list on purpose. Prose and tuning numbers are not covered (no file to hash).
+- `assets/_generated/` is now consumed by nothing in the game: the T1 and T2 backgrounds were its last two users and are
+  tracked copies in `content/rooms/<id>/background.png` (their own `.import` and uid). It is only the source the seed
+  tool copies from for a new room. A strict runner on a clone with the folder deleted is green. This also removes the
+  old fragility where a scene named a generated PNG by a uid derived from its path.
+- A text copy of a `.tres` or `.tscn` copies its header `uid="..."`, and two files must not share one: delete the
+  `uid="..."` of the copy and run `tools/stamp_uids.gd` (the editor's Duplicate does it for you). `/new-enemy` says so.
+- The `CLAUDE.md` rules that name a thing that does not exist yet say which milestone builds it (`HudSnapshot` and
+  `world.commands`, `ecs/schedule/`, `content/audio/sound_bank.tres`, `/new-skill`, `/new-room`, `/new-beat`). Until M3a the
+  system order is the list in `shell/game_root.gd`, mirrored in `tools/world_dumper.gd`: a new system is added to both.
+- `docs/design/*`, the production checklists and the older plans still name the old folders in prose; they are planning
+  documents, not rewritten (`docs/migration-notes.md` has the old-to-new tables). `test_no_old_res_paths` only reads
+  `res://`-prefixed paths, so a prose path in a doc is the author's to keep current.
+- The owner's one-file-per-thing direction (2026-10-12) fits the tree without building anything: single tiles go in
+  `assets/tiles/<district>/<tile_id>.png` (the atlas is `assets/tiles/<district>/atlas.*` until a tool assembles one) and
+  animation frames in `content/<kind>/<id>/anim/<clip>/<NN>.png`. The assembly tools are later work.

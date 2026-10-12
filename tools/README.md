@@ -18,13 +18,27 @@ needs one `--headless --editor --quit` import pass before headless scripts can u
 tools/bootstrap_worktree.sh                    # or: GODOT_BIN=/path/to/Godot BOOTSTRAP_HOME=/tmp/x tools/bootstrap_worktree.sh
 ```
 
-Generated art is gitignored, so a new checkout has scenes whose textures do not exist yet and no
-class registry. The script imports once as a warm-up (so the audio autoload loads; on a fresh clone it
-prints "Failed loading resource" for the room art that does not exist yet, which it reports but
-tolerates), runs the four generators, imports again, and exits non-zero on any `ERROR`,
+A new checkout has no class registry (`.godot/`), so strict-typed scripts do not parse until an import
+pass has run, and it has none of the generated art (gitignored). No tracked scene names generated art
+any more (the room backgrounds are tracked stand-ins in `content/`, see "Placeholders" below), but the
+generated pictures are still what `seed_placeholders.gd` copies from for a new room. The script imports
+once as a warm-up (so the audio autoload loads; it reports any error that pass printed but tolerates
+it), runs the four generators, imports again, and exits non-zero on any `ERROR`,
 `SCRIPT ERROR` or `Parse Error` from the generators or from that second import. About 50 s.
 Verified on a brand-new `git clone` of the branch: after the script, the whole suite and every new
 test pass and `git status` is clean.
+
+### Where generator output goes
+
+Everything a generator writes lives under `assets/_generated/` (gitignored, never hand-edited):
+`chess/`, `tiles/`, `maps/`, `rooms/` and `piece_templates/` (the paintable templates
+`generate_demo_map.gd` re-exports on every run). The output folder is one `const` at the top of
+each generator (`OUT_DIR`, `OUTPUT_DIR`, `TILE_DIR`, `PIECE_TEMPLATE_DIR`). Hand-drawn source art
+is never written by a tool: `assets/map_pieces/` and the 12 tracked sprites that used to sit in
+`assets/sprites/generated/` (now `content/<kind>/<id>/body.png|icon.png` and `assets/ui/actor_view/`).
+
+No tracked scene names a generated PNG (`tests/content/test_placeholders_manifest.gd` fails if one does). A generated picture reaches the game only by being copied into
+`content/` (tracked) by `seed_placeholders.gd`; the copy gets its own `.import` uid, which the scene names.
 
 ## Every tool, one line each
 
@@ -33,16 +47,20 @@ test pass and `git status` is clean.
 | `bootstrap_worktree.sh` | Makes a fresh clone or worktree test-ready: import pass, the four generators below, import pass. |
 | `run_all_tests.py` | The verification gate (`/verify`): import pass, every suite in its own bounded process, baseline-label check. `--strict`, `--only`, `--list`, `--verbose`. `--self-test` checks the gate itself (canned hangs, script errors, FAIL lines, missing verdicts, vanished labels, a fake Godot) in about 5 s with no Godot. |
 | `stamp_uids.gd` | Text-level UID stamper (never calls `ResourceSaver`): adds `uid=` to uid-less scene/resource headers and to path-only `ext_resource` lines. `-- --check` only reports and exits 1 if anything would change. Idempotent. |
+| `save_keeping_uids.gd` | The helper every tool that would call `ResourceSaver` uses instead (a helper, not a command; no `class_name`): `save_keeping_uid()` puts the file's previous header uid back after a save, `stamp_uids_last()` runs the stamper in a child Godot process. `tests/architecture/test_tools_keep_uids.gd` fails if a tool calls `ResourceSaver.save()` itself. |
 | `move_res.py` | `git mv` a file or folder with its `.uid`/`.import` sidecars and rewrite every `res://` string that pointed at it. `--dry-run`, `--rewrite-only`, `--rename-action`, `--import-pass`, `--self-test`. |
 | `dump_world.gd` | Boots a room headless, runs N manual ticks, prints the sorted node paths, texture paths and entity cells/components. `--room=t1`, `--write-baselines`, `--list`. |
 | `world_dumper.gd` | The dump logic, shared by `dump_world.gd` and `tests/architecture/test_dump_baselines.gd` (a helper, not a command; no `class_name`). |
-| `generate_chess_sprites.gd` | Bakes the chess-piece sprites (art language v13) to `assets/sprites/generated/chess/`. |
-| `generate_kingdom_tiles.gd` | Bakes the room materials as pixel tiles, a contact sheet and a manifest (same art language as the pieces). |
-| `generate_demo_map.gd` | Draws the pawn-scale bedroom demo world with the kingdom tiles into `assets/sprites/generated/maps/`. |
-| `generate_stage1_room_art.gd` | Paints the Stage-1 room backgrounds (T1, T2, ...) into `assets/sprites/generated/rooms/`. |
-| `generate_playground_tilemap.gd` | Builds the playground tile set and tilemap scene. Uses `ResourceSaver`: run `stamp_uids.gd` after it. |
-| `paint_kingdom_tilemap.gd` | Paints the first room's throne-room floor into `objects/world/kingdom_tilemap.tscn`. Uses `ResourceSaver`: run `stamp_uids.gd` after it. |
-| `paint_zone_tilemaps.gd` | Carves the 72x40 kingdom board into `objects/world/kingdom_world_tilemap.tscn`. Uses `ResourceSaver`: run `stamp_uids.gd` after it. |
+| `seed_placeholders.gd` | Copies a generator's stand-in picture into `content/` only when the target is absent, and records the sha256 of every placeholder in `content/_placeholders.json`. `-- --check` changes nothing and exits 1 if there is work to do. Never re-records a file already listed. |
+| `list_placeholders.gd` | Prints the owner's art and audio TODO by kind: every listed file whose sha256 still equals the recorded one. Overwriting a file clears its flag by itself. Exit 1 if a listed file is gone. |
+| `placeholder_manifest.gd` | The manifest logic shared by the two tools above and `tests/content/test_placeholders_manifest.gd` (a helper, not a command; no `class_name`). |
+| `generate_chess_sprites.gd` | Bakes the chess-piece sprites (art language v13) to `assets/_generated/chess/`. |
+| `generate_kingdom_tiles.gd` | Bakes the room materials as pixel tiles, a contact sheet and a manifest (same art language as the pieces) into `assets/_generated/tiles/`. |
+| `generate_demo_map.gd` | Draws the pawn-scale bedroom demo world with the kingdom tiles into `assets/_generated/maps/` and re-exports the paintable piece templates to `assets/_generated/piece_templates/`. |
+| `generate_stage1_room_art.gd` | Paints the Stage-1 room backgrounds (T1, T2, ...) into `assets/_generated/rooms/`. |
+| `generate_playground_tilemap.gd` | Builds the playground tile set and tilemap scene. Saves through `save_keeping_uids.gd` and stamps uids last. |
+| `paint_kingdom_tilemap.gd` | Paints the first room's throne-room floor into `content/tilesets/kingdom/tilemap.tscn`. Saves through `save_keeping_uids.gd` and stamps uids last. |
+| `paint_zone_tilemaps.gd` | Carves the 72x40 kingdom board into `tests/fixtures/the_kingdom/tilemap.tscn`. Saves through `save_keeping_uids.gd` and stamps uids last. |
 | `render_kingdom_map.gd` | Renders the whole kingdom to one image for review; needs a real renderer (no `--headless`) and `--write-movie`. |
 | `generate_sfx.py` | Generates the placeholder SFX as mono WAV files into `assets/sfx/`. |
 | `generate_music.py` | Generates the placeholder A-minor march loop into `assets/music/`. |
@@ -51,6 +69,50 @@ test pass and `git status` is clean.
 Never use the editor UID tool, the `update_project_uids` MCP tool, or a `ResourceLoader.load` plus
 `ResourceSaver.save` loop to "fix" uids: on this project it added 0 uids, turned 38 more
 references path-only and rewrote 587 non-uid lines (`docs/game-base-plan.md` 13.7).
+
+## Placeholders: seed them, then list what is left
+
+The owner supplies art and audio one file per thing (plan section 12 and the owner's direction of
+2026-10-12), by overwriting a file whose name and role never change. Two tools and one manifest
+make that safe:
+
+```bash
+"$G" --headless --path . -s tools/seed_placeholders.gd -- --check   # report what would be copied or recorded
+"$G" --headless --path . -s tools/seed_placeholders.gd              # copy what is absent, record what is new
+"$G" --headless --path . --editor --quit                            # import the copies, then commit them with their .import
+"$G" --headless --path . -s tools/list_placeholders.gd              # the owner's TODO, by kind
+```
+
+`content/_placeholders.json` holds one line per stand-in with its `path`, `kind`, `id`, `sha256` and
+`origin`. **A file is a placeholder if and only if its sha256 still equals the recorded one**, so overwriting
+the file clears the flag with no other edit (a flag kept anywhere else would go stale). The seed tool
+never overwrites a file and never re-records one that is already listed, so running it again after the
+owner replaced a picture cannot turn the owner's art back into a "placeholder". A file that exists but
+is in neither seed list is the owner's and is never recorded. To add a stand-in (a new room background,
+a new enemy body, a new sound), add its row to `GENERATED_SEEDS` or `ADOPTED_PLACEHOLDERS` at the top of
+`seed_placeholders.gd`, run the tool, import, and commit; `tests/content/test_placeholders_manifest.gd`
+fails if a row is not recorded, a listed file is gone, or a tracked scene names `assets/_generated/`.
+Measured on this tree at M1b: 25 placeholders (3 bodies, 4 icons, 1 pickup, 2 room backgrounds, 1 tile
+atlas, 4 interface pictures, 9 sound effects, 1 music loop); overwriting one file moved the count from 25
+to 24 still to replace and put "1 replaced by you" in the summary.
+
+## Tools that save scenes: keep the uids
+
+`ResourceSaver.save()` on an existing `.tscn`/`.tres` drops the header uid and the uid on every
+`[ext_resource]` line (measured when the three tools below were migrated: seven room scenes name
+`kingdom_tilemap.tscn` by its header uid). Running the stamper afterwards would not repair that: it
+invents a NEW header uid. So `paint_kingdom_tilemap.gd`, `paint_zone_tilemaps.gd` and
+`generate_playground_tilemap.gd` save through `save_keeping_uids.gd`
+(`save_keeping_uid()` restores the previous header uid with `ResourceSaver.set_uid()`) and call
+`stamp_uids_last()` once, last (it adds the `[ext_resource]` uids from their targets). Checked by
+running each tool on the committed tree: the only diff left is the node's `unique_id` (Godot picks a
+new random one on every save; harmless) and, for the playground scene, the dropped `load_steps` and a
+renumbered `ext_resource` id. Run the editor import pass afterwards. A new tool that saves a scene
+must do the same; `tests/architecture/test_tools_keep_uids.gd` fails if it calls
+`ResourceSaver.save()` directly or forgets `stamp_uids_last()`.
+
+`generate_sfx.py`, `generate_music.py` and the PNG generators never touch a scene or resource (they
+write `.wav` and `.png` only), so they need no stamping.
 
 ## stamp_uids.gd
 
@@ -83,16 +145,16 @@ Measured on a scratch copy of the tree at M1a (the numbers the plan quotes):
 
 (Plain `git diff --numstat` reports 273 because git's default diff pairs up the blank line between
 the header and the first `ext_resource` block; `--minimal` and `--patience` give 262.)
-M1a ships only the tool; M1b commits the stamped tree.
+M1a shipped the tool; M1b step 1 ran it over the real tree (the numbers above, exactly) and committed the result alone. `tests/architecture/test_no_path_only_ext_resource.gd` now enforces zero path-only lines, so a scene saved without the stamper fails the suite.
 
 ## move_res.py
 
 ```bash
-tools/move_res.py --dry-run resources/difficulty content/difficulty   # print every change, touch nothing
-tools/move_res.py resources/difficulty content/difficulty             # git mv + rewrite + log
+tools/move_res.py --dry-run content/enemies/old_id content/enemies/new_id   # print every change, touch nothing
+tools/move_res.py content/enemies/old_id content/enemies/new_id             # git mv + rewrite + log
 tools/move_res.py --import-pass SRC DST                               # then run the import pass (GODOT_BIN)
 tools/move_res.py --rewrite-only SRC DST                              # the move was already done by hand
-tools/move_res.py --rewrite-only scenes/owner_edit.tscn               # replay the whole move log onto a late file
+tools/move_res.py --rewrite-only path/to/owner_edit.tscn              # replay the whole move log onto a late file
 tools/move_res.py --rename-action skill_1 skill_slot_1                # InputMap action rename
 tools/move_res.py --self-test                                         # 27 checks in a throwaway git repo
 ```
@@ -100,8 +162,11 @@ tools/move_res.py --self-test                                         # 27 check
 * Rewrites `res://` strings in `*.gd *.tscn *.tres *.cfg *.md project.godot`, and also `*.import`
   (`source_file=`), `*.gdshader`, `*.json`, `*.sh`, `*.yml` and `tests/baselines/*.txt` (the dump
   baselines name texture and script paths, so they follow a move). `uid://` is never touched.
-* Matches whole path segments: moving `res://resources/difficulty` leaves `res://resources/difficulty_old/`
-  and `res://resources/difficulty.tres` alone. CRLF files keep their line endings.
+  A move that renames the folder an id lives in (`content/enemies/<id>/`) also changes what a test
+  that builds a path from the id sees: grep for format strings (`"%s"` paths) afterwards, because only
+  whole `res://` paths are rewritten.
+* Matches whole path segments: moving `res://old/folder` leaves `res://old/folder_old/`
+  and `res://old/folder.tres` alone. CRLF files keep their line endings.
 * Not rewritten on purpose: `docs/archive/`, `.godot/`, `.git/`, `addons/`, nested `.claude/worktrees/`,
   `move_res.py` itself and its log. Prose that names paths without `res://` is not touched.
 * Each real move appends `old<TAB>new` to `tools/move_res_log.tsv` (created on first use; commit it with
@@ -110,7 +175,10 @@ tools/move_res.py --self-test                                         # 27 check
 * Refuses an existing destination, a missing source, a sidecar on its own, `.git`/`.godot`/`addons`,
   and moving a folder into itself.
 
-Proven on a scratch copy (a separate throwaway git repo, never the worktree), stamped tree:
+M1b's real moves (130 lines, oldest first) are in `tools/move_res_log.tsv`, and
+`docs/migration-notes.md` explains them. The paths in the next table are the pre-migration ones: it
+records the proof made at M1a on a scratch copy (a separate throwaway git repo, never the worktree),
+stamped tree:
 
 | Step | Result |
 |---|---|
@@ -129,7 +197,7 @@ Proven on a scratch copy (a separate throwaway git repo, never the worktree), st
 "$G" --headless --path . -s tests/architecture/test_dump_baselines.gd                 # compare (enforcing)
 ```
 
-The dump mirrors `scripts/main.gd` (`_make_world` + `_boot_zone`): the same six systems in the same order,
+The dump mirrors `shell/game_root.gd` (`_make_world` + `_boot_zone`): the same six systems in the same order,
 the player view on the room's `start` entry marker, then `EcsBoot.boot` with no taken pickups and no
 opened gates, then 120 manual ticks of 1/60 s with the player idle. It skips `WorldState`, the HUD, the
 board overlay and audio on purpose: they depend on the save file or on real time. Output sections:

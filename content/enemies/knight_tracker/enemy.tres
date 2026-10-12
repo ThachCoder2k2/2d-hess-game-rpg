@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="EnemyDefinition" format=3 uid="uid://dnn7ikejfxp11"]
+
+[ext_resource type="Script" uid="uid://bmdisg36ew8g5" path="res://schema/entity/enemy_definition.gd" id="1"]
+[ext_resource type="Resource" uid="uid://ciw15ix770vpl" path="res://content/enemies/knight_tracker/movement.tres" id="2"]
+[ext_resource type="Resource" uid="uid://bw8d037o5k3m6" path="res://content/enemies/knight_tracker/decision.tres" id="3"]
+[ext_resource type="Resource" uid="uid://bh0jw0k6pi6ii" path="res://content/enemies/knight_tracker/unarmed_attack.tres" id="4"]
+[ext_resource type="Resource" uid="uid://co4ghkjp42f0w" path="res://content/enemies/knight_tracker/visual.tres" id="5"]
+[ext_resource type="Resource" uid="uid://cq15s5oalg3r5" path="res://content/difficulty/standard.tres" id="6"]
+
+[resource]
+script = ExtResource("1")
+id = &"knight_tracker"
+display_name = "Tracker Knight"
+piece_name = "Knight"
+role = &"flanker"
+movement = ExtResource("2")
+decision = ExtResource("3")
+unarmed_attack = ExtResource("4")
+allowed_weapon_tags = Array[StringName]([&"melee", &"reach"])
+weapon_preferences = {
+&"pencil_spear": 0.7,
+&"ruler_blade": 0.85
+}
+visual = ExtResource("5")
+difficulty = ExtResource("6")

@@ -1,0 +1,23 @@
+[gd_resource type="Resource" script_class="EnemyDefinition" load_steps=8 format=3 uid="uid://dufopkr811e7m"]
+
+[ext_resource type="Script" uid="uid://bmdisg36ew8g5" path="res://schema/entity/enemy_definition.gd" id="1"]
+[ext_resource type="Resource" uid="uid://bi5lushtlitch" path="res://content/enemies/bishop_zoner/movement.tres" id="2"]
+[ext_resource type="Resource" uid="uid://bym46kf4lsn6w" path="res://content/enemies/bishop_zoner/decision.tres" id="3"]
+[ext_resource type="Resource" uid="uid://d3uumcyp51arn" path="res://content/enemies/bishop_zoner/unarmed_attack.tres" id="4"]
+[ext_resource type="Resource" uid="uid://d2ob0tl030xqm" path="res://content/enemies/bishop_zoner/visual.tres" id="5"]
+[ext_resource type="Resource" uid="uid://cq15s5oalg3r5" path="res://content/difficulty/standard.tres" id="6"]
+
+[resource]
+script = ExtResource("1")
+id = &"bishop_zoner"
+display_name = "Diagonal Bishop"
+piece_name = "Bishop"
+role = &"sniper"
+max_health = 2
+movement = ExtResource("2")
+decision = ExtResource("3")
+unarmed_attack = ExtResource("4")
+allowed_weapon_tags = Array[StringName]([&"melee", &"reach"])
+weapon_preferences = {}
+visual = ExtResource("5")
+difficulty = ExtResource("6")

@@ -1,9 +1,17 @@
 @tool
 extends SceneTree
 
-const TILESET_PATH := "res://resources/tiles/playground_tileset.tres"
-const TILEMAP_SCENE_PATH := "res://objects/world/playground_tilemap.tscn"
-const TILE_ATLAS_PATH := "res://assets/tiles/playground_tiles.svg"
+## Builds the playground tile set and tilemap scene. Saves through SaveKeepingUids
+## and stamps uids last (see tools/save_keeping_uids.gd). After saving, the tile set
+## takes over its own path so the tilemap scene REFERENCES playground_tileset.tres
+## instead of embedding a second copy of it (ResourceSaver.FLAG_CHANGE_PATH does not
+## do this in 4.6: the resource_path stays empty).
+
+const SaveKeepingUids := preload("res://tools/save_keeping_uids.gd")
+
+const TILESET_PATH := "res://content/tilesets/playground/tileset.tres"
+const TILEMAP_SCENE_PATH := "res://content/tilesets/playground/tilemap.tscn"
+const TILE_ATLAS_PATH := "res://assets/tiles/playground/atlas.svg"
 const BOARD_SIZE := Vector2i(16, 9)
 const CELL_SIZE := Vector2i(32, 32)
 
@@ -24,11 +32,12 @@ func _init() -> void:
 	var tile_set := TileSet.new()
 	tile_set.tile_size = CELL_SIZE
 	tile_set.add_source(atlas_source, 0)
-	var tile_save := ResourceSaver.save(tile_set, TILESET_PATH)
+	var tile_save := SaveKeepingUids.save_keeping_uid(tile_set, TILESET_PATH)
 	if tile_save != OK:
 		push_error("Could not save TileSet: " + str(tile_save))
 		quit(1)
 		return
+	tile_set.take_over_path(TILESET_PATH)
 
 	var floor_layer := TileMapLayer.new()
 	floor_layer.name = "PlaygroundTileMap"
@@ -47,11 +56,11 @@ func _init() -> void:
 		push_error("Could not pack TileMap scene: " + str(pack_result))
 		quit(1)
 		return
-	var scene_save := ResourceSaver.save(scene, TILEMAP_SCENE_PATH)
+	var scene_save := SaveKeepingUids.save_keeping_uid(scene, TILEMAP_SCENE_PATH)
 	if scene_save != OK:
 		push_error("Could not save TileMap scene: " + str(scene_save))
 		quit(1)
 		return
 
 	print("Generated TileMap resources.")
-	quit()
+	quit(0 if SaveKeepingUids.stamp_uids_last() else 1)

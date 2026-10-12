@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="WorldGraph" load_steps=9 format=3 uid="uid://cq5g8vgd1g6fx"]
+
+[ext_resource type="Script" uid="uid://bdljqs4d3rq8v" path="res://schema/world/world_graph.gd" id="1"]
+[ext_resource type="PackedScene" uid="uid://dcky3f3xqn4eo" path="res://tests/fixtures/the_kingdom.tscn" id="2"]
+[ext_resource type="PackedScene" uid="uid://clh36vjegdepp" path="res://content/rooms/t1_white_kings_fall/room.tscn" id="3_t1"]
+[ext_resource type="PackedScene" uid="uid://b0j75epjvjhp7" path="res://content/rooms/t2_fallen_sword_tile/room.tscn" id="4_t2"]
+[ext_resource type="PackedScene" uid="uid://deol181510fne" path="res://content/rooms/t3_first_pawn_clash/room.tscn" id="5_t3"]
+[ext_resource type="PackedScene" uid="uid://dgkw4dtw6mu8d" path="res://content/rooms/t4_broken_rule_yard/room.tscn" id="6_t4"]
+[ext_resource type="PackedScene" uid="uid://c4e70yo1o6tf2" path="res://content/rooms/b1_black_pawn_captain/room.tscn" id="7_b1"]
+[ext_resource type="PackedScene" uid="uid://8vrgrtjl3y20" path="res://content/rooms/h1_chess_rug_hub/room.tscn" id="8_h1"]
+
+[resource]
+script = ExtResource("1")
+zone_scene_by_id = Dictionary[StringName, PackedScene]({
+&"b1_black_pawn_captain": ExtResource("7_b1"),
+&"h1_chess_rug_hub": ExtResource("8_h1"),
+&"kingdom": ExtResource("2"),
+&"t1_white_kings_fall": ExtResource("3_t1"),
+&"t2_fallen_sword_tile": ExtResource("4_t2"),
+&"t3_first_pawn_clash": ExtResource("5_t3"),
+&"t4_broken_rule_yard": ExtResource("6_t4")
+})

@@ -9,6 +9,12 @@ một agent cuối đi tìm phần còn sót. Không file nào bị sửa trong 
 Trang này trả lời hai câu: **làm việc theo quy trình nào**, và **mỗi mảng của game
 đang ở bước nào**. Các doc khác giữ chi tiết; trạng thái đọc ở đây.
 
+> **Ghi chú cuối M1b (2026-10-12):** các mục dưới đây là ảnh chụp trạng thái ngày 2026-10-12 trước khi
+> dựng bản base, và không đổi về gameplay. Chỉ có **đường dẫn** là đã đổi: cây thư mục mới
+> (`content/`, `schema/`, `ecs/`, `authoring/`, `presentation/`, `shell/`) nằm trong
+> `docs/ARCHITECTURE.md`; cảnh chính nay là `shell/game_root.tscn` (trước đây `main.tscn`); bảng cũ → mới
+> nằm trong `docs/migration-notes.md`. Tiến độ xây bản base: `docs/game-base-plan.md` và `task_plan.md`.
+
 ---
 
 ## 1. Tóm tắt trong 30 giây

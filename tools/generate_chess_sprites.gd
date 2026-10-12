@@ -24,7 +24,7 @@ extends SceneTree
 ##   HOME=/tmp/unbound-pawn-godot ../Godot.app/Contents/MacOS/Godot \
 ##     --headless --path . -s tools/generate_chess_sprites.gd
 
-const OUT_DIR := "res://assets/sprites/generated/chess"
+const OUT_DIR := "res://assets/_generated/chess"
 
 ## Every palette is exactly four entries: [outline, dark, mid, light].
 ## Index 0 is a real drawn colour (the ring), not a shading stop.

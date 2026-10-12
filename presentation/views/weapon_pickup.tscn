@@ -1,0 +1,12 @@
+[gd_scene load_steps=3 format=3 uid="uid://cd0pt6lb10mqe"]
+
+[ext_resource type="Script" uid="uid://c85b2dfecht70" path="res://presentation/views/weapon_pickup.gd" id="1"]
+[ext_resource type="PackedScene" uid="uid://ce54gwd1277gf" path="res://presentation/views/weapon_pickup_visual.tscn" id="2"]
+
+[node name="WeaponPickup" type="Node2D"]
+z_index = 1
+script = ExtResource("1")
+
+[node name="Visual" parent="." instance=ExtResource("2")]
+
+[editable path="Visual"]

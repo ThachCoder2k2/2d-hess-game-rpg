@@ -1,6 +1,6 @@
 # dump_world v1: deterministic world dump. Regenerate with tools/dump_world.gd (see tools/README.md).
 room: b1_black_pawn_captain
-scene: res://scenes/rooms/b1_black_pawn_captain.tscn
+scene: res://content/rooms/b1_black_pawn_captain/room.tscn
 ticks: 120 x 0.0167 s, player idle (no input)
 entry_cell: (1, 5)
 cast: player=1 enemies=[2, 3, 4] pickups=1
@@ -32,7 +32,7 @@ XP.....#e...e..#
 
 [entities at boot]
 entity 1 player cell=(1,5)
-  player_combat: active_attack=null attack_on_cooldown=false attack_visual_time=0.0000 impact_left=0.0000 pencil_thrust=AttackProfile@res://resources/attacks/pencil_thrust.tres pending_cells=[] recovery_left=0.0000 skill_cooldown_duration=1.2500 skill_cooldown_left=0.0000 sword_unlocked=true wooden_sword=AttackProfile@res://resources/attacks/wooden_sword.tres
+  player_combat: active_attack=null attack_on_cooldown=false attack_visual_time=0.0000 impact_left=0.0000 pencil_thrust=AttackProfile@res://content/skills/pencil_thrust/pencil_thrust.tres pending_cells=[] recovery_left=0.0000 skill_cooldown_duration=1.2500 skill_cooldown_left=0.0000 sword_unlocked=true wooden_sword=AttackProfile@res://content/skills/wooden_sword/wooden_sword.tres
   view_ref: node=node(PawnHero) was_attacking=false was_dead=false was_hurt=false was_telegraphing=false
   player_input: buffered_direction=(0, 0) held_repeat_delay=0.2200 hold_time=0.0000 last_held_direction=(0, 0)
   player_tag: control_enabled=true
@@ -43,8 +43,8 @@ entity 1 player cell=(1,5)
   facing: direction=(0, 1)
   grid_pos: cell=(1, 5)
 entity 2 enemy:Pawn Captain cell=(10,3)
-  weapon_slot: weapon=EnemyWeapon{color=#e8b83fff damage=1 display_name="Ruler Blade" id=&"ruler_blade" range_cells=1 recovery_time=0.6200 shape=1 tags=[&"melee"] telegraph_time=0.5600 texture=CompressedTexture2D@res://assets/sprites/generated/ruler_blade.png}
-  enemy_ai: action_memory=[] allowed_directions=[(0, -1), (0, 1), (-1, 0), (1, 0)] attack_pattern=AttackPattern@res://resources/attacks/pawn_diagonal.tres committed_goal=(-999, -999) committed_goal_kind=&"none" committed_target_snapshot=(-999, -999) decision_profile=DecisionConfig@res://resources/decisions/pawn_skirmisher.tres definition=EnemyDefinition@res://resources/enemies/black_pawn_captain.tres goal_commitment_decisions=2 goal_decisions_left=0 last_move_direction=(0, 0) locked_attack_cells=[] move_recovery_time=0.1800 observe_delay=0.4200 path_memory_size=6 recent_cells=[] state=0 state_time_left=0.4200 telegraph_duration=0.0000 unarmed_recovery_time=0.4800 unarmed_telegraph_time=0.5800
+  weapon_slot: weapon=EnemyWeapon{color=#e8b83fff damage=1 display_name="Ruler Blade" id=&"ruler_blade" range_cells=1 recovery_time=0.6200 shape=1 tags=[&"melee"] telegraph_time=0.5600 texture=CompressedTexture2D@res://content/pickups/ruler_blade/icon.png}
+  enemy_ai: action_memory=[] allowed_directions=[(0, -1), (0, 1), (-1, 0), (1, 0)] attack_pattern=AttackPattern@res://content/enemies/_shared/attacks/pawn_diagonal.tres committed_goal=(-999, -999) committed_goal_kind=&"none" committed_target_snapshot=(-999, -999) decision_profile=DecisionConfig@res://content/enemies/_shared/decisions/pawn_skirmisher.tres definition=EnemyDefinition@res://content/enemies/black_pawn_captain/enemy.tres goal_commitment_decisions=2 goal_decisions_left=0 last_move_direction=(0, 0) locked_attack_cells=[] move_recovery_time=0.1800 observe_delay=0.4200 path_memory_size=6 recent_cells=[] state=0 state_time_left=0.4200 telegraph_duration=0.0000 unarmed_recovery_time=0.4800 unarmed_telegraph_time=0.5800
   view_ref: node=node(CurrentZone/BlackPawnCaptain) was_attacking=false was_dead=false was_hurt=false was_telegraphing=false
   move_state: duration=0.1800 from_cell=(0, 0) moving=false progress=0.0000 to_cell=(0, 0)
   move_intent: direction=(0, 0)
@@ -53,7 +53,7 @@ entity 2 enemy:Pawn Captain cell=(10,3)
   grid_pos: cell=(10, 3)
 entity 3 enemy:Pawn cell=(8,5)
   weapon_slot: weapon=null
-  enemy_ai: action_memory=[] allowed_directions=[(0, -1), (0, 1), (-1, 0), (1, 0)] attack_pattern=AttackPattern@res://resources/attacks/pawn_diagonal.tres committed_goal=(-999, -999) committed_goal_kind=&"none" committed_target_snapshot=(-999, -999) decision_profile=DecisionConfig@res://resources/decisions/pawn_skirmisher.tres definition=EnemyDefinition@res://resources/enemies/pawn_recruit.tres goal_commitment_decisions=2 goal_decisions_left=0 last_move_direction=(0, 0) locked_attack_cells=[] move_recovery_time=0.1800 observe_delay=0.4200 path_memory_size=6 recent_cells=[] state=0 state_time_left=0.4200 telegraph_duration=0.0000 unarmed_recovery_time=0.4800 unarmed_telegraph_time=0.5800
+  enemy_ai: action_memory=[] allowed_directions=[(0, -1), (0, 1), (-1, 0), (1, 0)] attack_pattern=AttackPattern@res://content/enemies/_shared/attacks/pawn_diagonal.tres committed_goal=(-999, -999) committed_goal_kind=&"none" committed_target_snapshot=(-999, -999) decision_profile=DecisionConfig@res://content/enemies/_shared/decisions/pawn_skirmisher.tres definition=EnemyDefinition@res://content/enemies/pawn_recruit/enemy.tres goal_commitment_decisions=2 goal_decisions_left=0 last_move_direction=(0, 0) locked_attack_cells=[] move_recovery_time=0.1800 observe_delay=0.4200 path_memory_size=6 recent_cells=[] state=0 state_time_left=0.4200 telegraph_duration=0.0000 unarmed_recovery_time=0.4800 unarmed_telegraph_time=0.5800
   view_ref: node=node(CurrentZone/CaptainGuardA) was_attacking=false was_dead=false was_hurt=false was_telegraphing=false
   move_state: duration=0.1800 from_cell=(0, 0) moving=false progress=0.0000 to_cell=(0, 0)
   move_intent: direction=(0, 0)
@@ -61,8 +61,8 @@ entity 3 enemy:Pawn cell=(8,5)
   facing: direction=(0, 1)
   grid_pos: cell=(8, 5)
 entity 4 enemy:Pawn cell=(12,5)
-  weapon_slot: weapon=EnemyWeapon{color=#8ec8e8ff damage=1 display_name="Pencil Spear" id=&"pencil_spear" range_cells=2 recovery_time=0.6800 shape=0 tags=[&"melee", &"reach"] telegraph_time=0.6200 texture=CompressedTexture2D@res://assets/sprites/generated/pencil_spear.png}
-  enemy_ai: action_memory=[] allowed_directions=[(0, -1), (0, 1), (-1, 0), (1, 0)] attack_pattern=AttackPattern@res://resources/attacks/pawn_diagonal.tres committed_goal=(-999, -999) committed_goal_kind=&"none" committed_target_snapshot=(-999, -999) decision_profile=DecisionConfig@res://resources/decisions/pawn_skirmisher.tres definition=EnemyDefinition@res://resources/enemies/pawn_armed.tres goal_commitment_decisions=2 goal_decisions_left=0 last_move_direction=(0, 0) locked_attack_cells=[] move_recovery_time=0.1800 observe_delay=0.4200 path_memory_size=6 recent_cells=[] state=0 state_time_left=0.4200 telegraph_duration=0.0000 unarmed_recovery_time=0.4800 unarmed_telegraph_time=0.5800
+  weapon_slot: weapon=EnemyWeapon{color=#8ec8e8ff damage=1 display_name="Pencil Spear" id=&"pencil_spear" range_cells=2 recovery_time=0.6800 shape=0 tags=[&"melee", &"reach"] telegraph_time=0.6200 texture=CompressedTexture2D@res://content/pickups/pencil_spear/icon.png}
+  enemy_ai: action_memory=[] allowed_directions=[(0, -1), (0, 1), (-1, 0), (1, 0)] attack_pattern=AttackPattern@res://content/enemies/_shared/attacks/pawn_diagonal.tres committed_goal=(-999, -999) committed_goal_kind=&"none" committed_target_snapshot=(-999, -999) decision_profile=DecisionConfig@res://content/enemies/_shared/decisions/pawn_skirmisher.tres definition=EnemyDefinition@res://content/enemies/pawn_armed/enemy.tres goal_commitment_decisions=2 goal_decisions_left=0 last_move_direction=(0, 0) locked_attack_cells=[] move_recovery_time=0.1800 observe_delay=0.4200 path_memory_size=6 recent_cells=[] state=0 state_time_left=0.4200 telegraph_duration=0.0000 unarmed_recovery_time=0.4800 unarmed_telegraph_time=0.5800
   view_ref: node=node(CurrentZone/CaptainGuardB) was_attacking=false was_dead=false was_hurt=false was_telegraphing=false
   move_state: duration=0.1800 from_cell=(0, 0) moving=false progress=0.0000 to_cell=(0, 0)
   move_intent: direction=(0, 0)
@@ -70,7 +70,7 @@ entity 4 enemy:Pawn cell=(12,5)
   facing: direction=(0, 1)
   grid_pos: cell=(12, 5)
 entity 5 pickup:Ruler Blade cell=(8,6)
-  pickup_item: weapon=EnemyWeapon{color=#e8b83fff damage=1 display_name="Ruler Blade" id=&"ruler_blade" range_cells=1 recovery_time=0.6200 shape=1 tags=[&"melee"] telegraph_time=0.5600 texture=CompressedTexture2D@res://assets/sprites/generated/ruler_blade.png}
+  pickup_item: weapon=EnemyWeapon{color=#e8b83fff damage=1 display_name="Ruler Blade" id=&"ruler_blade" range_cells=1 recovery_time=0.6200 shape=1 tags=[&"melee"] telegraph_time=0.5600 texture=CompressedTexture2D@res://content/pickups/ruler_blade/icon.png}
   grid_pos: cell=(8, 6)
 
 [entities after 120 ticks]
@@ -82,8 +82,8 @@ entity 5 pickup:Ruler Blade cell=(8,6)
 events drained: 3
 
 [nodes] 80
-CurrentZone Node2D script=res://scripts/world/room_encounter.gd position=(0.00,0.00)
-CurrentZone/BlackPawnCaptain Node2D script=res://scripts/ecs/actor_view.gd position=(400.00,148.00) scale=(1.18,1.18) z_index=5
+CurrentZone Node2D script=res://authoring/room_encounter.gd position=(0.00,0.00)
+CurrentZone/BlackPawnCaptain Node2D script=res://presentation/views/actor_view.gd position=(400.00,148.00) scale=(1.18,1.18) z_index=5
 CurrentZone/BlackPawnCaptain/AnimationPlayer AnimationPlayer
 CurrentZone/BlackPawnCaptain/AnimationTree AnimationTree
 CurrentZone/BlackPawnCaptain/AudioPlayer AudioStreamPlayer
@@ -98,7 +98,7 @@ CurrentZone/BlackPawnCaptain/MotionRoot/SpriteRoot/HealthPips/Pip2 Sprite2D
 CurrentZone/BlackPawnCaptain/MotionRoot/SpriteRoot/WeaponPivot Node2D
 CurrentZone/BlackPawnCaptain/MotionRoot/SpriteRoot/WeaponPivot/WeaponSprite Sprite2D
 CurrentZone/BlackPawnCaptain/TelegraphAura Sprite2D
-CurrentZone/CaptainGuardA Node2D script=res://scripts/ecs/actor_view.gd position=(336.00,244.00) z_index=8
+CurrentZone/CaptainGuardA Node2D script=res://presentation/views/actor_view.gd position=(336.00,244.00) z_index=8
 CurrentZone/CaptainGuardA/AnimationPlayer AnimationPlayer
 CurrentZone/CaptainGuardA/AnimationTree AnimationTree
 CurrentZone/CaptainGuardA/AudioPlayer AudioStreamPlayer
@@ -113,7 +113,7 @@ CurrentZone/CaptainGuardA/MotionRoot/SpriteRoot/HealthPips/Pip2 Sprite2D
 CurrentZone/CaptainGuardA/MotionRoot/SpriteRoot/WeaponPivot Node2D
 CurrentZone/CaptainGuardA/MotionRoot/SpriteRoot/WeaponPivot/WeaponSprite Sprite2D
 CurrentZone/CaptainGuardA/TelegraphAura Sprite2D
-CurrentZone/CaptainGuardB Node2D script=res://scripts/ecs/actor_view.gd position=(464.00,212.00) z_index=7
+CurrentZone/CaptainGuardB Node2D script=res://presentation/views/actor_view.gd position=(464.00,212.00) z_index=7
 CurrentZone/CaptainGuardB/AnimationPlayer AnimationPlayer
 CurrentZone/CaptainGuardB/AnimationTree AnimationTree
 CurrentZone/CaptainGuardB/AudioPlayer AudioStreamPlayer
@@ -128,65 +128,65 @@ CurrentZone/CaptainGuardB/MotionRoot/SpriteRoot/HealthPips/Pip2 Sprite2D
 CurrentZone/CaptainGuardB/MotionRoot/SpriteRoot/WeaponPivot Node2D
 CurrentZone/CaptainGuardB/MotionRoot/SpriteRoot/WeaponPivot/WeaponSprite Sprite2D
 CurrentZone/CaptainGuardB/TelegraphAura Sprite2D
-CurrentZone/Entry_From_Hub Marker2D script=res://scripts/world/zone_entry_marker.gd position=(496.00,84.00)
-CurrentZone/Entry_West Marker2D script=res://scripts/world/zone_entry_marker.gd position=(112.00,212.00)
-CurrentZone/Exit_To_Hub Marker2D script=res://scripts/world/zone_exit_marker.gd position=(528.00,84.00)
-CurrentZone/Exit_To_T4 Marker2D script=res://scripts/world/zone_exit_marker.gd position=(80.00,212.00)
+CurrentZone/Entry_From_Hub Marker2D script=res://authoring/markers/zone_entry_marker.gd position=(496.00,84.00)
+CurrentZone/Entry_West Marker2D script=res://authoring/markers/zone_entry_marker.gd position=(112.00,212.00)
+CurrentZone/Exit_To_Hub Marker2D script=res://authoring/markers/zone_exit_marker.gd position=(528.00,84.00)
+CurrentZone/Exit_To_T4 Marker2D script=res://authoring/markers/zone_exit_marker.gd position=(80.00,212.00)
 CurrentZone/RoomArt Node2D position=(0.00,0.00) z_index=-20
 CurrentZone/RoomArt/Frame Polygon2D position=(52.00,24.00)
-CurrentZone/RoomArt/GridLines Node2D script=res://scripts/world/grid_lines_overlay.gd position=(0.00,0.00)
+CurrentZone/RoomArt/GridLines Node2D script=res://presentation/board/grid_lines_overlay.gd position=(0.00,0.00)
 CurrentZone/RoomArt/SetDressing Node2D position=(0.00,0.00)
 CurrentZone/RoomArt/SetDressing/BannerMark Line2D position=(0.00,0.00)
 CurrentZone/RoomArt/SetDressing/CaptainBanner Polygon2D position=(438.00,48.00)
 CurrentZone/RoomArt/SetDressing/RugEdgeTear Line2D position=(0.00,0.00)
-CurrentZone/RoomArt/TileMap TileMapLayer position=(64.00,36.00) used_cells=144 tile_set=res://resources/tiles/kingdom_tileset.tres
-CurrentZone/RulerBladePickup Node2D script=res://scripts/world/pickup_spawn_point.gd position=(336.00,244.00)
-CurrentZone/WeaponPickup Node2D script=res://scripts/world/weapon_pickup.gd position=(336.00,244.00) z_index=1
-CurrentZone/WeaponPickup/Visual Node2D script=res://scripts/visuals/pickup_visual.gd position=(0.00,0.00)
+CurrentZone/RoomArt/TileMap TileMapLayer position=(64.00,36.00) used_cells=144 tile_set=res://content/tilesets/kingdom/tileset.tres
+CurrentZone/RulerBladePickup Node2D script=res://authoring/markers/pickup_spawn_point.gd position=(336.00,244.00)
+CurrentZone/WeaponPickup Node2D script=res://presentation/views/weapon_pickup.gd position=(336.00,244.00) z_index=1
+CurrentZone/WeaponPickup/Visual Node2D script=res://presentation/views/pickup_visual.gd position=(0.00,0.00)
 CurrentZone/WeaponPickup/Visual/AnimationPlayer AnimationPlayer
 CurrentZone/WeaponPickup/Visual/GlowSprite Sprite2D position=(0.00,0.00) scale=(0.62,0.62) z_index=-1
 CurrentZone/WeaponPickup/Visual/MotionRoot Node2D position=(0.00,0.00)
 CurrentZone/WeaponPickup/Visual/MotionRoot/SpriteRoot Node2D position=(0.00,0.00)
 CurrentZone/WeaponPickup/Visual/MotionRoot/SpriteRoot/PickupSprite Sprite2D position=(0.00,0.00) scale=(0.42,0.42)
-PawnHero Node2D script=res://scripts/ecs/actor_view.gd position=(112.00,212.00) z_index=7
+PawnHero Node2D script=res://presentation/views/actor_view.gd position=(112.00,212.00) z_index=7
 PawnHero/AnimationPlayer AnimationPlayer
 PawnHero/AnimationTree AnimationTree
 PawnHero/AudioPlayer AudioStreamPlayer
-PawnHero/Camera2D Camera2D script=res://scripts/world/camera_rig.gd
-PawnHero/CombatComponent Node script=res://scripts/ecs/components/combat_component.gd
-PawnHero/HealthComponent Node script=res://scripts/ecs/components/health_component.gd
-PawnHero/InputComponent Node script=res://scripts/ecs/components/input_component.gd
+PawnHero/Camera2D Camera2D script=res://presentation/camera/camera_rig.gd
+PawnHero/CombatComponent Node script=res://authoring/entity_components/combat_component.gd
+PawnHero/HealthComponent Node script=res://authoring/entity_components/health_component.gd
+PawnHero/InputComponent Node script=res://authoring/entity_components/input_component.gd
 PawnHero/MotionRoot Node2D
 PawnHero/MotionRoot/SpriteRoot Node2D
 PawnHero/MotionRoot/SpriteRoot/BodySprite Sprite2D
 PawnHero/MotionRoot/SpriteRoot/WeaponPivot Node2D
 PawnHero/MotionRoot/SpriteRoot/WeaponPivot/WeaponSprite Sprite2D
-PawnHero/MovementComponent Node script=res://scripts/ecs/components/movement_component.gd
+PawnHero/MovementComponent Node script=res://authoring/entity_components/movement_component.gd
 
 [textures] 26
-CurrentZone/BlackPawnCaptain/MotionRoot/SpriteRoot/BodySprite -> res://assets/sprites/generated/black_pawn.png
-CurrentZone/BlackPawnCaptain/MotionRoot/SpriteRoot/FacingArrow -> res://assets/sprites/generated/facing_arrow.png
-CurrentZone/BlackPawnCaptain/MotionRoot/SpriteRoot/HealthPips/Pip0 -> res://assets/sprites/generated/health_pip_full.png
-CurrentZone/BlackPawnCaptain/MotionRoot/SpriteRoot/HealthPips/Pip1 -> res://assets/sprites/generated/health_pip_full.png
-CurrentZone/BlackPawnCaptain/MotionRoot/SpriteRoot/HealthPips/Pip2 -> res://assets/sprites/generated/health_pip_full.png
-CurrentZone/BlackPawnCaptain/MotionRoot/SpriteRoot/WeaponPivot/WeaponSprite -> res://assets/sprites/generated/ruler_blade.png
-CurrentZone/BlackPawnCaptain/TelegraphAura -> res://assets/sprites/generated/warning_aura.png
-CurrentZone/CaptainGuardA/MotionRoot/SpriteRoot/BodySprite -> res://assets/sprites/generated/black_pawn.png
-CurrentZone/CaptainGuardA/MotionRoot/SpriteRoot/FacingArrow -> res://assets/sprites/generated/facing_arrow.png
-CurrentZone/CaptainGuardA/MotionRoot/SpriteRoot/HealthPips/Pip0 -> res://assets/sprites/generated/health_pip_full.png
-CurrentZone/CaptainGuardA/MotionRoot/SpriteRoot/HealthPips/Pip1 -> res://assets/sprites/generated/health_pip_full.png
-CurrentZone/CaptainGuardA/MotionRoot/SpriteRoot/HealthPips/Pip2 -> res://assets/sprites/generated/health_pip_empty.png
-CurrentZone/CaptainGuardA/MotionRoot/SpriteRoot/WeaponPivot/WeaponSprite -> res://assets/sprites/generated/toy_sword.png
-CurrentZone/CaptainGuardA/TelegraphAura -> res://assets/sprites/generated/warning_aura.png
-CurrentZone/CaptainGuardB/MotionRoot/SpriteRoot/BodySprite -> res://assets/sprites/generated/black_pawn.png
-CurrentZone/CaptainGuardB/MotionRoot/SpriteRoot/FacingArrow -> res://assets/sprites/generated/facing_arrow.png
-CurrentZone/CaptainGuardB/MotionRoot/SpriteRoot/HealthPips/Pip0 -> res://assets/sprites/generated/health_pip_full.png
-CurrentZone/CaptainGuardB/MotionRoot/SpriteRoot/HealthPips/Pip1 -> res://assets/sprites/generated/health_pip_full.png
-CurrentZone/CaptainGuardB/MotionRoot/SpriteRoot/HealthPips/Pip2 -> res://assets/sprites/generated/health_pip_empty.png
-CurrentZone/CaptainGuardB/MotionRoot/SpriteRoot/WeaponPivot/WeaponSprite -> res://assets/sprites/generated/pencil_spear.png
-CurrentZone/CaptainGuardB/TelegraphAura -> res://assets/sprites/generated/warning_aura.png
-CurrentZone/RoomArt/TileMap#tile_set_source0 -> res://assets/tiles/kingdom_tiles.svg
-CurrentZone/WeaponPickup/Visual/GlowSprite -> res://assets/sprites/generated/warning_aura.png
-CurrentZone/WeaponPickup/Visual/MotionRoot/SpriteRoot/PickupSprite -> res://assets/sprites/generated/toy_weapon_pickup.png
-PawnHero/MotionRoot/SpriteRoot/BodySprite -> res://assets/sprites/generated/hero_pawn_unarmed.png
-PawnHero/MotionRoot/SpriteRoot/WeaponPivot/WeaponSprite -> res://assets/sprites/generated/toy_sword.png
+CurrentZone/BlackPawnCaptain/MotionRoot/SpriteRoot/BodySprite -> res://content/enemies/pawn_recruit/body.png
+CurrentZone/BlackPawnCaptain/MotionRoot/SpriteRoot/FacingArrow -> res://assets/ui/actor_view/facing_arrow.png
+CurrentZone/BlackPawnCaptain/MotionRoot/SpriteRoot/HealthPips/Pip0 -> res://assets/ui/actor_view/health_pip_full.png
+CurrentZone/BlackPawnCaptain/MotionRoot/SpriteRoot/HealthPips/Pip1 -> res://assets/ui/actor_view/health_pip_full.png
+CurrentZone/BlackPawnCaptain/MotionRoot/SpriteRoot/HealthPips/Pip2 -> res://assets/ui/actor_view/health_pip_full.png
+CurrentZone/BlackPawnCaptain/MotionRoot/SpriteRoot/WeaponPivot/WeaponSprite -> res://content/pickups/ruler_blade/icon.png
+CurrentZone/BlackPawnCaptain/TelegraphAura -> res://assets/ui/actor_view/warning_aura.png
+CurrentZone/CaptainGuardA/MotionRoot/SpriteRoot/BodySprite -> res://content/enemies/pawn_recruit/body.png
+CurrentZone/CaptainGuardA/MotionRoot/SpriteRoot/FacingArrow -> res://assets/ui/actor_view/facing_arrow.png
+CurrentZone/CaptainGuardA/MotionRoot/SpriteRoot/HealthPips/Pip0 -> res://assets/ui/actor_view/health_pip_full.png
+CurrentZone/CaptainGuardA/MotionRoot/SpriteRoot/HealthPips/Pip1 -> res://assets/ui/actor_view/health_pip_full.png
+CurrentZone/CaptainGuardA/MotionRoot/SpriteRoot/HealthPips/Pip2 -> res://assets/ui/actor_view/health_pip_empty.png
+CurrentZone/CaptainGuardA/MotionRoot/SpriteRoot/WeaponPivot/WeaponSprite -> res://content/skills/wooden_sword/icon.png
+CurrentZone/CaptainGuardA/TelegraphAura -> res://assets/ui/actor_view/warning_aura.png
+CurrentZone/CaptainGuardB/MotionRoot/SpriteRoot/BodySprite -> res://content/enemies/pawn_recruit/body.png
+CurrentZone/CaptainGuardB/MotionRoot/SpriteRoot/FacingArrow -> res://assets/ui/actor_view/facing_arrow.png
+CurrentZone/CaptainGuardB/MotionRoot/SpriteRoot/HealthPips/Pip0 -> res://assets/ui/actor_view/health_pip_full.png
+CurrentZone/CaptainGuardB/MotionRoot/SpriteRoot/HealthPips/Pip1 -> res://assets/ui/actor_view/health_pip_full.png
+CurrentZone/CaptainGuardB/MotionRoot/SpriteRoot/HealthPips/Pip2 -> res://assets/ui/actor_view/health_pip_empty.png
+CurrentZone/CaptainGuardB/MotionRoot/SpriteRoot/WeaponPivot/WeaponSprite -> res://content/pickups/pencil_spear/icon.png
+CurrentZone/CaptainGuardB/TelegraphAura -> res://assets/ui/actor_view/warning_aura.png
+CurrentZone/RoomArt/TileMap#tile_set_source0 -> res://assets/tiles/kingdom/atlas.svg
+CurrentZone/WeaponPickup/Visual/GlowSprite -> res://assets/ui/actor_view/warning_aura.png
+CurrentZone/WeaponPickup/Visual/MotionRoot/SpriteRoot/PickupSprite -> res://content/pickups/toy_weapon/pickup.png
+PawnHero/MotionRoot/SpriteRoot/BodySprite -> res://content/player/body.png
+PawnHero/MotionRoot/SpriteRoot/WeaponPivot/WeaponSprite -> res://content/skills/wooden_sword/icon.png
