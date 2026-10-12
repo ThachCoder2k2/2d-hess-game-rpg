@@ -118,10 +118,11 @@ others. The suites live in `tests/` (the older ones at the top, plus `architectu
 ## Design
 
 The GDD, pixel-art bible, per-area specs and vertical-slice design live in `docs/design/`.
-`docs/design/room-authoring-guide.md` explains editing a room in Godot; it predates the ECS
-conversion and is being rewritten, so where it disagrees with `docs/ARCHITECTURE.md`, trust
-`docs/ARCHITECTURE.md`. Old Obsidian notes from the node era are archived in
-`docs/archive/vault/`.
+`docs/design/room-authoring-guide.md` explains editing a room in Godot (rewritten for the ECS
+runtime in the M1a fix; it also covers wall painting and art/audio import). The other specs in
+`docs/design/` are planning documents and were not rewritten, so where one disagrees with
+`docs/ARCHITECTURE.md`, trust `docs/ARCHITECTURE.md`. Old Obsidian notes from the node era are
+archived in `docs/archive/vault/`.
 
 ## Project Structure
 
