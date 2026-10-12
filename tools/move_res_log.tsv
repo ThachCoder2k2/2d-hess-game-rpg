@@ -16,3 +16,5 @@ scripts/data/rule_entry.gd	schema/world/rule_entry.gd
 scripts/data/difficulty_profile.gd	schema/feel/difficulty_profile.gd
 scripts/combat/attack_profile.gd	schema/attacks/attack_profile.gd
 scripts/combat/enemy_weapon.gd	schema/attacks/enemy_weapon.gd
+scripts/ai/attack_pattern.gd	schema/attacks/attack_pattern.gd
+scripts/ai/enemy_intent.gd	ecs/systems/decide/enemy_intent.gd

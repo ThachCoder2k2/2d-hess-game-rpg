@@ -1,6 +1,6 @@
 [gd_resource type="Resource" script_class="AttackPattern" format=3 uid="uid://bh0jw0k6pi6ii"]
 
-[ext_resource type="Script" uid="uid://dia1hkly2tk2v" path="res://scripts/ai/attack_pattern.gd" id="1"]
+[ext_resource type="Script" uid="uid://dia1hkly2tk2v" path="res://schema/attacks/attack_pattern.gd" id="1"]
 
 [resource]
 script = ExtResource("1")
