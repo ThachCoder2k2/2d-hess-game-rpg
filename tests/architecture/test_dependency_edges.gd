@@ -8,10 +8,10 @@ extends UnboundTest
 ##
 ## An edge is "file A names class B": A's code (comments and string literals removed)
 ## contains the identifier of a class_name or autoload defined in file B, or
-## preload()/load()s B's .gd by path. Layers come from the folder: the target layout
-## (schema/, ecs/core|components|systems|events, authoring/, presentation/, shell/) once
-## M1b has moved the code, and TODAY'S layout (scripts/...) mapped by LEGACY_LAYER_RULES
-## following the 13.6 migration table. Tests and tools are not sources.
+## preload()/load()s B's .gd by path. A file's layer is its top folder: schema/,
+## ecs/core|components|systems|events|schedule, authoring/, presentation/ or shell/
+## (the layout M1b moved the code into). A script in any other folder is UNMAPPED and
+## fails the suite, so code cannot drift back into scripts/. Tests and tools are not sources.
 
 const ProjectFiles := preload("res://tests/architecture/project_files.gd")
 
@@ -23,31 +23,6 @@ const MINIMUM_SYMBOLS := 10
 
 const TARGET_LAYER_FOLDERS: Array[String] = ["schema", "authoring", "presentation", "shell", "content"]
 const TARGET_ECS_SUBLAYERS: Array[String] = ["core", "components", "systems", "events", "schedule"]
-## [res:// path prefix or exact file, layer], first match wins. Today's folders -> 13.6 targets.
-const LEGACY_LAYER_RULES: Array = [
-	["res://scripts/data/", "schema"],
-	["res://scripts/combat/", "schema"],
-	["res://scripts/ai/", "schema"],
-	["res://scripts/ecs/systems/", "ecs/systems"],
-	["res://authoring/entity_components/", "authoring"],
-	["res://ecs/components/ecs_components.gd", "ecs/components"],
-	["res://ecs/core/ecs_world.gd", "ecs/core"],
-	["res://ecs/core/ecs_grid.gd", "ecs/core"],
-	["res://ecs/core/ecs_system.gd", "ecs/core"],
-	["res://authoring/ecs_boot.gd", "authoring"],
-	["res://authoring/ecs_actor_factory.gd", "authoring"],
-	["res://presentation/views/actor_view.gd", "presentation"],
-	["res://scripts/ui/", "presentation"],
-	["res://scripts/visuals/", "presentation"],
-	["res://scripts/audio/", "presentation"],
-	["res://presentation/camera/camera_rig.gd", "presentation"],
-	["res://presentation/board/prototype_board.gd", "presentation"],
-	["res://presentation/board/grid_lines_overlay.gd", "presentation"],
-	["res://presentation/views/weapon_pickup.gd", "presentation"],
-	["res://shell/save/world_state.gd", "shell"],
-	["res://shell/game_root.gd", "shell"],
-	["res://scripts/world/", "authoring"],
-]
 ## source layer -> target layers it may depend on, besides itself (13.1 starting point).
 ## Every "ecs/*" sublayer may use every other ecs sublayer; the shell may use everything.
 const ALLOWED_TARGET_LAYERS := {
@@ -123,6 +98,7 @@ func _init() -> void:
 		_collect_edges(script_path, String(code_by_path[script_path]), load_paths_by_path[script_path])
 
 	_print_report(source_paths.size(), unmapped_files)
+	_expect(unmapped_files.is_empty(), "every source script lives in a layer folder: schema, ecs, authoring, presentation or shell (%d do not)" % unmapped_files.size())
 	if ENFORCING:
 		_expect(violation_lines.is_empty(), "every cross-layer edge is allowed by the 13.1 table (%d are not)" % violation_lines.size())
 	finish()
@@ -162,10 +138,6 @@ func _layer_of(script_path: String) -> String:
 	if first_segment == "ecs":
 		var sublayer := relative_path.get_slice("/", 1)
 		return "ecs/" + sublayer if sublayer in TARGET_ECS_SUBLAYERS else "ecs/core"
-	for rule: Array in LEGACY_LAYER_RULES:
-		var rule_path := String(rule[0])
-		if script_path == rule_path or (rule_path.ends_with("/") and script_path.begins_with(rule_path)):
-			return String(rule[1])
 	return "unmapped"
 
 
@@ -208,9 +180,9 @@ func _is_allowed(from_layer: String, to_layer: String) -> bool:
 
 
 func _print_report(source_file_count: int, unmapped_files: Array[String]) -> void:
-	print("REPORT dependency graph: %d source files, %d class_name/autoload symbols, layers from today's folders (13.6) or the target folders" % [source_file_count, symbol_file_by_name.size()])
+	print("REPORT dependency graph: %d source files, %d class_name/autoload symbols, layers from the top folder (schema, ecs/*, authoring, presentation, shell)" % [source_file_count, symbol_file_by_name.size()])
 	for unmapped_file in unmapped_files:
-		print("REPORT   UNMAPPED file (add it to LEGACY_LAYER_RULES): %s" % unmapped_file)
+		print("REPORT   UNMAPPED file (move it into a layer folder): %s" % unmapped_file)
 	var layer_pairs: Array = edge_lines_by_layer_pair.keys()
 	layer_pairs.sort()
 	print("REPORT layer-to-layer edges (unique file -> class pairs), %d layer pair(s) cross a layer:" % layer_pairs.size())
