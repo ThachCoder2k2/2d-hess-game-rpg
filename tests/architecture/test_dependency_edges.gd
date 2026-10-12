@@ -45,7 +45,7 @@ const LEGACY_LAYER_RULES: Array = [
 	["res://presentation/board/grid_lines_overlay.gd", "presentation"],
 	["res://presentation/views/weapon_pickup.gd", "presentation"],
 	["res://shell/save/world_state.gd", "shell"],
-	["res://scripts/main.gd", "shell"],
+	["res://shell/game_root.gd", "shell"],
 	["res://scripts/world/", "authoring"],
 ]
 ## source layer -> target layers it may depend on, besides itself (13.1 starting point).

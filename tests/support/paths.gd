@@ -64,7 +64,7 @@ func default_bus_layout() -> String:
 # --- Scripts that tests read as text or inspect ---
 
 func main_script() -> String:
-	return _existing_file("res://scripts/main.gd")
+	return _existing_file("res://shell/game_root.gd")
 
 
 func world_state_script() -> String:
@@ -78,7 +78,7 @@ func actor_view_script() -> String:
 # --- Scenes ---
 
 func main_scene() -> String:
-	return _existing_resource("res://scenes/main.tscn")
+	return _existing_resource("res://shell/game_root.tscn")
 
 
 func kingdom_scene() -> String:

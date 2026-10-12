@@ -178,7 +178,7 @@ func _init() -> void:
 	_expect(StringName(sfx_manager.get("bus")) == &"SFX", "SfxManager routes to the SFX bus")
 
 	# Music: an editor-owned looping AudioStreamPlayer in the main scene, no code.
-	var main_scene := (load("res://scenes/main.tscn") as PackedScene).instantiate()
+	var main_scene := (load("res://shell/game_root.tscn") as PackedScene).instantiate()
 	var music_player := main_scene.get_node_or_null("MusicPlayer") as AudioStreamPlayer
 	_expect(music_player != null and music_player.autoplay, "main scene carries an autoplaying MusicPlayer")
 	_expect(music_player != null and music_player.bus == &"Music", "MusicPlayer routes to the Music bus")

@@ -34,7 +34,7 @@ func _run() -> void:
 	world_state.set("player_health_carry", 2)
 	world_state.get("player_unlock_ids").clear()
 
-	var main := (load("res://scenes/main.tscn") as PackedScene).instantiate()
+	var main := (load("res://shell/game_root.tscn") as PackedScene).instantiate()
 	root.add_child(main)
 	await process_frame
 
