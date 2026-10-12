@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://cwjf56oelxo4s"
-path="res://.godot/imported/health_pip_full.png-8779690038574c2ac17edbebe7f8862b.ctex"
+uid="uid://bs64j61xywio8"
+path="res://.godot/imported/warning_aura.png-62053dd4c77172fa6e1fe4715a1dbdfc.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/sprites/generated/health_pip_full.png"
-dest_files=["res://.godot/imported/health_pip_full.png-8779690038574c2ac17edbebe7f8862b.ctex"]
+source_file="res://assets/ui/actor_view/warning_aura.png"
+dest_files=["res://.godot/imported/warning_aura.png-62053dd4c77172fa6e1fe4715a1dbdfc.ctex"]
 
 [params]
 

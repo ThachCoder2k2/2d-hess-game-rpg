@@ -4,7 +4,7 @@
 [ext_resource type="Texture2D" uid="uid://d3rkqhe4nag3s" path="res://content/pickups/toy_weapon/pickup.png" id="2"]
 [ext_resource type="Texture2D" uid="uid://bork3o5rtutb0" path="res://content/pickups/pencil_spear/icon.png" id="3"]
 [ext_resource type="Texture2D" uid="uid://cwfqcxn8ifl0r" path="res://content/pickups/ruler_blade/icon.png" id="4"]
-[ext_resource type="Texture2D" uid="uid://bs64j61xywio8" path="res://assets/sprites/generated/warning_aura.png" id="5"]
+[ext_resource type="Texture2D" uid="uid://bs64j61xywio8" path="res://assets/ui/actor_view/warning_aura.png" id="5"]
 
 [sub_resource type="Animation" id="Animation_reset"]
 length = 0.001

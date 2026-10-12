@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://cxpkyp4qmxeo5"
-path="res://.godot/imported/facing_arrow.png-0dc71b6f19090cbbe70e0e5483aebbe6.ctex"
+path="res://.godot/imported/facing_arrow.png-d52eb7df41fedf5f4376a34a4f4ed91b.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/sprites/generated/facing_arrow.png"
-dest_files=["res://.godot/imported/facing_arrow.png-0dc71b6f19090cbbe70e0e5483aebbe6.ctex"]
+source_file="res://assets/ui/actor_view/facing_arrow.png"
+dest_files=["res://.godot/imported/facing_arrow.png-d52eb7df41fedf5f4376a34a4f4ed91b.ctex"]
 
 [params]
 

@@ -101,3 +101,7 @@ resources/movement/bishop_diagonal.tres	content/enemies/bishop_zoner/movement.tr
 resources/decisions/bishop_sniper.tres	content/enemies/bishop_zoner/decision.tres
 resources/attacks/bishop_diagonal.tres	content/enemies/bishop_zoner/unarmed_attack.tres
 resources/visuals/bishop_compatibility.tres	content/enemies/bishop_zoner/visual.tres
+assets/sprites/generated/facing_arrow.png	assets/ui/actor_view/facing_arrow.png
+assets/sprites/generated/health_pip_empty.png	assets/ui/actor_view/health_pip_empty.png
+assets/sprites/generated/health_pip_full.png	assets/ui/actor_view/health_pip_full.png
+assets/sprites/generated/warning_aura.png	assets/ui/actor_view/warning_aura.png
