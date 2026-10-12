@@ -92,8 +92,9 @@ scenes/main.tscn  ->  Main (scripts/main.gd)
 
 Death and `R` reload the scene; `WorldState` (an autoload) remembers the zone and entry
 so the reload boots in the right place. Zone travel (`zone_exit` event) fades out,
-swaps the zone scene node, **rebuilds the whole `EcsWorld`**, and fades in; only the
-player view node and `WorldState` survive.
+swaps the zone scene node, **rebuilds the whole `EcsWorld`**, and fades in. No entity
+survives. What carries over is the player view node, `WorldState` (including the carried
+health), and the HUD, board and camera nodes, which are re-bound by `setup()`.
 
 ### System order (the schedule, set in `Main._make_world`)
 
