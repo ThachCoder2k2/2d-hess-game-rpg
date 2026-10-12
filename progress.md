@@ -961,3 +961,62 @@ Third of four M1b steps, branch `base/m1b-3` from `base/m1b-2`. No gameplay chan
 - **Not done here (the next step):** `CLAUDE.md` amendments and the prose docs, `tools/seed_placeholders.gd`,
   `content/_placeholders.json`, `content/README.md`, `task_plan.md` M1b row; the owner decides the 5 undecided edges
   and the room-overlay reference before `allowed_edges.txt` is frozen.
+
+## M1b step 4 - finish and document - 2026-10-12
+
+Fourth and last M1b step, branch `base/m1b-4` from `base/m1b-3`. No gameplay change; the only scene edits are two
+`ext_resource` lines (below).
+
+- **Placeholders (plan section 12).** `tools/seed_placeholders.gd` copies a generator's picture into `content/` only
+  when the target is absent and records the sha256 of every stand-in in `content/_placeholders.json`;
+  `tools/list_placeholders.gd` prints the owner's TODO by kind; `tools/placeholder_manifest.gd` is the helper both
+  and `tests/content/test_placeholders_manifest.gd` share. A file is a placeholder if and only if its hash still
+  equals the recorded one, so overwriting it clears the flag with no extra edit; the seed tool never re-records an
+  already-listed file, so running it after the owner replaced a picture cannot turn the owner's art into a
+  "placeholder". 25 files are listed (3 bodies, 4 icons, 1 pickup, 2 room backgrounds, 1 tile atlas, 4 interface
+  pictures, 9 sound effects, 1 music loop). Left out on purpose: `assets/map_pieces/` and `assets/tiles/playground/`
+  (the owner's own art).
+- **The T1 and T2 backgrounds are tracked now.** The two rooms named gitignored generator output, so the owner could
+  not swap their art without fighting the generator. The seed tool copied the two pictures to
+  `content/rooms/<id>/background.png` (same bytes, own `.import` uid) and the two scenes name the copies (only the
+  `ext_resource` path and uid change). `dump_t1` and `dump_t2` each changed by exactly one line (the texture path);
+  the other four dumps are byte-identical. No tracked scene names `assets/_generated/` any more (a test fails if one
+  does), and a strict runner on a clone with `assets/_generated/` deleted is green.
+- **Mutation checks.** Appending one byte to a listed file moved the TODO from 25 to 24 ("1 replaced by you"); moving
+  a listed file away failed the manifest suite and made `list_placeholders.gd` exit 1 and print it as missing.
+- **`CLAUDE.md` amendments A-1 to A-9 applied** (the owner approved the move and the amendment at OG0, recorded above).
+  Every other rule is word for word. Where the plan's text names something that does not exist yet (`HudSnapshot`,
+  `world.commands`, `ecs/schedule/`, `sound_bank.tres`, `/new-skill`, `/new-room`, `/new-beat`) the rule says which
+  milestone builds it. `docs/claude-md-diff.md` is marked applied and lists each difference.
+- **Prose follows the move.** `docs/ARCHITECTURE.md` (tree, layer table, system-order table with phase folders, test
+  folders), `docs/coding-standards.md` (folder placement, component/system/marker rules, sidecars, move rule),
+  `AGENTS.md`, `README.md`, `docs/OWNER_GUIDE.md` (section 5 with real paths; four target rows marked "available
+  now"), new `content/README.md`, `tools/README.md`, `.claude/commands/{verify,new-enemy,new-sound,milestone}.md`,
+  `docs/design/room-authoring-guide.md`, `docs/ecs-conversion-plan.md` (3 paths), a note in `docs/where-we-are.md`.
+  `docs/room-generator*.md` already named only `tools/` and `assets/` paths and needed no edit.
+- **Acceptance of plan section 15 "M1b" (measured on the final tree):**
+
+| Acceptance line | Result |
+|---|---|
+| `run_all_tests.py --strict` green, every baseline label passing or renamed | 26 suites, 0 failed, 0 warnings, GREEN; 235 of 235 labels still PASS, 0 renamed (`label_renames.txt` is empty) |
+| import clean (no ERROR or Parse) | the editor import pass prints no `ERROR`, `SCRIPT ERROR` or `Parse Error` line |
+| `grep` for the four old folder prefixes under `res://` (scripts, objects, scenes, resources) returns 0 outside `docs/archive` | `test_no_old_res_paths` passes (200+ text files read, 0 lines). A raw `git grep` for those prefixes still finds 4 files, all on purpose and all skipped by that test: `docs/game-base-plan.md` (quotes the acceptance line), `docs/research/organisation.json` (a record of the old codebase), `tools/move_res.py` (its self-test builds a fake old-layout project) and the test itself |
+| zero path-only `ext_resource` lines | `stamp_uids.gd --check` CLEAN (251 lines, 0 missing, 0 stale); `test_no_path_only_ext_resource` PASS |
+| sidecars tracked | `test_sidecars_tracked` ENFORCING: 104 tracked `.gd` all with a `.gd.uid`, 37 imported assets all with an `.import`, 0 orphans, 0 stale |
+| `content/` contains 0 `.gd` with a minimum file count | 0 `.gd`; 54 data/art files counted (minimum 40), 65 tracked files in total; 7 enemy, 6 room and 5 rule-page folders each hold their role file |
+| the dump equals the baseline for each Stage 1 room and H1 | `test_dump_baselines` PASS (31 checks) for T1, T2, T3, T4, B1, H1. Over the whole of M1b the six baselines changed only in `res://` path strings (85 lines in step 2, 101 in step 3, 2 in step 4) |
+| a fresh clone is green | `git clone` of the branch to `/tmp`, `tools/bootstrap_worktree.sh` (exit 0, the warm-up pass printed no error), the strict runner GREEN (26 suites, 235 of 235), `git status` clean, `stamp_uids.gd --check` CLEAN; again GREEN after deleting `assets/_generated/` |
+
+- **Verification.** Both `--self-test` runs report 0 failures; `git diff --check` is clean.
+- **Commits (step 4):** `a93c473` the placeholder tools, `32685a6` the room backgrounds as tracked stand-ins and the
+  25-file manifest, `14ff578` `CLAUDE.md`, `40bedf8` ARCHITECTURE/coding-standards/AGENTS, `3278128` README, owner guide,
+  `content/README.md`, status page and room guide, `a13299f` the slash commands and `tools/README.md`, `6e6b344` the
+  ECS conversion plan, then this record commit (tagged `m1b-done`).
+- **Not done, and why:** `content/audio/` (`sound_bank.tres`, `music_cues.tres` do not exist yet: the
+  `SfxManager` registry is Inspector exports, M4/M6); `ContentDb`, `actor_view_base.tscn` and the thin inherited actor
+  scenes (M2); `/new-skill` (M7a), `/new-room` and `/new-beat` (M14); `tests/architecture/allowed_edges.txt` is not
+  frozen (five dependency edges and six room references wait for the owner); the tile and animation-frame assembly
+  tools the owner's one-file-per-thing direction implies (the tree leaves room: `assets/tiles/<district>/<tile_id>.png`,
+  `content/<kind>/<id>/anim/<clip>/<NN>.png`); `docs/design/*` specs and the production checklists still name old
+  paths in prose (planning documents, not rewritten); other kinds of placeholder (prose, tuning numbers) are not
+  covered by a file hash.

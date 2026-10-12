@@ -216,3 +216,41 @@ Documented exceptions (decided): `view_sync_system.gd -> ActorView` (plan 13.1) 
 * `ContentDb`, `actor_view_base.tscn` and the thin inherited actor scenes are M2; `content/audio/`, `content/feel/`,
   `content/progression/` and the other plan folders appear with the milestones that need them.
 * `task_plan.md` M1b row: the integrator adds it once the four steps are merged, as in steps 1 and 2.
+
+## Step 4: placeholders, `CLAUDE.md` and the docs
+
+Same rules (the strict runner green after every commit; only two scene lines edited, by hand, as text). This step
+closes the "not done" lists of steps 2 and 3: the `CLAUDE.md` amendments, the prose docs, the placeholder tools,
+`content/_placeholders.json` and `content/README.md`.
+
+### What changed
+
+| Was | Now |
+|---|---|
+| T1 and T2 backgrounds named `assets/_generated/rooms/<room>_room.png` (gitignored generator output) | `content/rooms/<id>/background.png`, tracked copies made by `tools/seed_placeholders.gd`; the two scenes name them by new uid and path |
+| no record of which art and audio are stand-ins | `content/_placeholders.json`: 25 files with their sha256; `tools/list_placeholders.gd` prints the TODO by kind |
+| `CLAUDE.md` described `scenes/ objects/ resources/ scripts/` | the amended text of `docs/claude-md-diff.md` (A-1 to A-9), marked applied there |
+| the prose docs described the old layout | `ARCHITECTURE`, `coding-standards`, `AGENTS`, `README`, `OWNER_GUIDE`, `content/README.md`, `tools/README`, `.claude/commands/*`, `docs/design/room-authoring-guide.md`, three paths in `docs/ecs-conversion-plan.md`, a note in `docs/where-we-are.md` |
+
+### Decisions where the plan needed a call
+
+| Case | Plan says | What was done | Why |
+|---|---|---|---|
+| What is a placeholder | "every placeholder file currently standing in for owner art" | 25 files: the eight tracked content sprites, the four shared actor-view pictures, the kingdom tile atlas, the nine generated sound effects, the music loop, and the two seeded room backgrounds. Not listed: `assets/map_pieces/` and `assets/tiles/playground/` | the owner drew those two; the rest are stand-ins by the plan's own definition. Prose and tuning numbers have no file to hash |
+| How the list is kept | `seed_placeholders.gd` "copies into `content/` only when a file is absent, and records the hashes" | two explicit lists in the tool: `GENERATED_SEEDS` (copy when absent, then record) and `ADOPTED_PLACEHOLDERS` (record where it stands); a file already in the manifest is never re-recorded; a file in neither list is never recorded | a glob over role names (`body.png`, ...) would record the owner's own art as a placeholder the day the tool is re-run |
+| Room backgrounds | `content/rooms/<id>/background.png`, "512x288 for 16x9" | seeded from the generator's 640x360 picture unchanged | changing the picture is the owner's art decision; the bytes are identical, so nothing looks different |
+| Manifest shape | a JSON of hashes | `{format, about, placeholders: [{path, kind, id, sha256, origin}]}`, one entry per line, sorted by kind then path | a diff names the file that changed; `kind` groups the TODO |
+| `content/README.md` | listed in the tree (13.2) and scheduled for M14 | written now, short and bilingual, the table of the files that exist | the owner asked to browse `content/`; the fuller table stays in `OWNER_GUIDE.md` |
+| Amendments that name unbuilt things | exact text of 2.4 | the same text plus a parenthesis saying which milestone builds `HudSnapshot`, `world.commands`, `ecs/schedule/`, `sound_bank.tres`, `/new-skill`, `/new-room`, `/new-beat` | `CLAUDE.md` is loaded every session; a rule that names a file that is not there sends an agent looking for it |
+| `/new-enemy` | "rewritten in M2" | rewritten now for `content/enemies/<id>/` | the old recipe named folders that no longer exist |
+| Commit trailer | the task text said `Claude Opus 5.5` | `Claude Sonnet 5.5`, as steps 2 and 3 and this session's attribution | one trailer for the whole milestone |
+
+### Still undecided (the owner's, unchanged from step 3)
+
+The five dependency edges and six room references listed under step 3 stay report-only. `allowed_edges.txt` is not frozen.
+
+### Not done in step 4
+
+`content/audio/` and `sound_bank.tres` (the registry is still Inspector exports on `sfx_manager.tscn`), `ContentDb` and the
+actor collapse (M2), `/new-skill` (M7a), `/new-room` and `/new-beat` (M14), the tile and animation-frame assembly tools, and
+prose paths in `docs/design/*` and the production checklists (planning documents).

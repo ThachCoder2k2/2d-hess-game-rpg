@@ -367,3 +367,30 @@ June note).
   them with the move. The `uid=` inside does not change, which is what keeps scenes resolving.
 - `UNDECIDED_EDGES` / `UNDECIDED_REFERENCES` are the owner's open questions, in code, with a stale-entry check so
   a fixed edge forces the line out. Add an entry only with the owner's say-so.
+
+## Placeholder and Documentation Facts (M1b step 4, 2026-10-12)
+
+- A placeholder is a FILE whose sha256 still equals the one recorded in `content/_placeholders.json` when
+  `tools/seed_placeholders.gd` seeded it. The owner overwrites the file (same name, same role) and the flag clears by
+  itself; a flag kept anywhere else would go stale. The seed tool never overwrites a file and never re-records an
+  already-listed one, and a file that exists but is in neither of its two lists (`GENERATED_SEEDS`,
+  `ADOPTED_PLACEHOLDERS`) is treated as the owner's. A new stand-in (a copied `body.png`, a generated sound) adds its
+  row to one of those lists, or `test_placeholders_manifest` stays red only for the rows already there: it checks that
+  every row is recorded, every listed file exists and a tracked scene never names `assets/_generated/`.
+- Hand-drawn or owner-made art is not a placeholder: `assets/map_pieces/` and `assets/tiles/playground/` are left out of the
+  list on purpose. Prose and tuning numbers are not covered (no file to hash).
+- `assets/_generated/` is now consumed by nothing in the game: the T1 and T2 backgrounds were its last two users and are
+  tracked copies in `content/rooms/<id>/background.png` (their own `.import` and uid). It is only the source the seed
+  tool copies from for a new room. A strict runner on a clone with the folder deleted is green. This also removes the
+  old fragility where a scene named a generated PNG by a uid derived from its path.
+- A text copy of a `.tres` or `.tscn` copies its header `uid="..."`, and two files must not share one: delete the
+  `uid="..."` of the copy and run `tools/stamp_uids.gd` (the editor's Duplicate does it for you). `/new-enemy` says so.
+- The `CLAUDE.md` rules that name a thing that does not exist yet say which milestone builds it (`HudSnapshot` and
+  `world.commands`, `ecs/schedule/`, `content/audio/sound_bank.tres`, `/new-skill`, `/new-room`, `/new-beat`). Until M3a the
+  system order is the list in `shell/game_root.gd`, mirrored in `tools/world_dumper.gd`: a new system is added to both.
+- `docs/design/*`, the production checklists and the older plans still name the old folders in prose; they are planning
+  documents, not rewritten (`docs/migration-notes.md` has the old-to-new tables). `test_no_old_res_paths` only reads
+  `res://`-prefixed paths, so a prose path in a doc is the author's to keep current.
+- The owner's one-file-per-thing direction (2026-10-12) fits the tree without building anything: single tiles go in
+  `assets/tiles/<district>/<tile_id>.png` (the atlas is `assets/tiles/<district>/atlas.*` until a tool assembles one) and
+  animation frames in `content/<kind>/<id>/anim/<clip>/<NN>.png`. The assembly tools are later work.
