@@ -1,0 +1,118 @@
+extends SceneTree
+
+## Bridge characterization (M1a): the health carry across zone changes.
+## main._travel_to writes the hero's current health into WorldState, and
+## main._boot_zone applies it to the freshly spawned player and then consumes
+## it. This suite pins that contract, including its sharp edges, because the
+## planned main.gd split moves exactly this write/apply/consume ordering.
+
+const Support := preload("res://tests/bridge/bridge_support.gd")
+const SUITE_NAME := "health_carry"
+
+const T1 := &"t1_white_kings_fall"
+const T2 := &"t2_fallen_sword_tile"
+const T3 := &"t3_first_pawn_clash"
+
+var failures := 0
+
+
+func _expect(condition: bool, label: String) -> void:
+	if condition:
+		print("PASS: %s" % label)
+	else:
+		failures += 1
+		printerr("FAIL: %s" % label)
+
+
+func _init() -> void:
+	Support.arm_watchdog(self, "BRIDGE HEALTH CARRY TEST")
+	call_deferred("_run")
+
+
+func _run() -> void:
+	var world_state := Support.install_isolated_world_state(self, SUITE_NAME)
+	var main := await Support.boot_main(self)
+	var max_courage := Support.player_health(main).max_value
+	_expect(max_courage == 3 and Support.player_health(main).current == max_courage, "boot starts the hero at full courage")
+
+	# --- A full-health hero crosses a door at full health ---
+	var health_before_trip := Support.player_health(main).current
+	_expect(await Support.walk_through_exit(self, main, T2, Vector2i.RIGHT), "T1 -> T2 through the real exit")
+	_expect(Support.player_health(main).current == health_before_trip, "health after the trip equals health before it (full)")
+	_expect(world_state.get("player_health_carry") == -1, "the carry is consumed after the full-health trip")
+
+	# --- A wounded hero keeps the wound across two consecutive doors ---
+	Support.damage_player(main, 2)
+	_expect(Support.player_health(main).current == 1, "setup: a strike of 2 leaves 1 courage")
+	Support.wait_out_invulnerability(main)
+	health_before_trip = Support.player_health(main).current
+	var door_to_t3 := Support.exit_cell(main, main.get("current_room"), T3)
+	Support.teleport_player(main, door_to_t3 + Vector2i.LEFT)
+	var intent: EcsComponents.MoveIntent = Support.ecs_of(main).get_component(Support.player_id_of(main), EcsComponents.MOVE_INTENT)
+	intent.direction = Vector2i.RIGHT
+	Support.pump_until(main, func() -> bool: return bool(main.get("travel_in_progress")), 1.0)
+	_expect(world_state.get("player_health_carry") == health_before_trip, "mid-trip the carry equals the health before travel")
+	await Support.wait_for_travel(self, main)
+	_expect(main.get("current_zone_id") == T3, "T2 -> T3 through the real exit")
+	_expect(Support.player_health(main).current == health_before_trip, "carried health equals health before travel (wounded)")
+	_expect(world_state.get("player_health_carry") == -1, "the carry is consumed after the wounded trip")
+	_expect(Support.hud_courage_pips(main) == health_before_trip, "the HUD courage matches the carried health")
+
+	await main._travel_to(T2, &"from_t3")
+	_expect(main.get("current_zone_id") == T2, "T3 -> T2 through the bridge entry point")
+	_expect(Support.player_health(main).current == health_before_trip, "a second hop keeps the same health (travel never heals)")
+	_expect(world_state.get("player_health_carry") == -1, "the carry is consumed again after the second hop")
+
+	# --- A plain re-boot with no pending carry restores full health ---
+	# (T2 has no enemies, so re-booting its already-booted node is safe here.)
+	main._boot_zone(&"west_entry")
+	_expect(Support.player_health(main).current == max_courage, "CHARACTERIZATION: _boot_zone without a pending carry heals to full (health only survives via travel)")
+
+	# --- Carry edge values, applied by a plain _boot_zone ---
+	world_state.set("player_health_carry", 99)
+	main._boot_zone(&"west_entry")
+	_expect(Support.player_health(main).current == max_courage, "a carry above max is clamped to max courage")
+	_expect(world_state.get("player_health_carry") == -1, "the clamped carry is consumed too")
+	world_state.set("player_health_carry", 2)
+	main._boot_zone(&"west_entry")
+	_expect(Support.player_health(main).current == 2 and Support.hud_courage_pips(main) == 2, "a pending carry of 2 is applied and the HUD follows")
+	world_state.set("player_health_carry", 0)
+	main._boot_zone(&"west_entry")
+	_expect(Support.player_health(main).current == max_courage, "CHARACTERIZATION: a carry of 0 is not applied (only a carry above 0 counts)")
+	_expect(world_state.get("player_health_carry") == -1, "a carry of 0 is consumed too")
+
+	# --- CHARACTERIZATION: the carry is a snapshot taken when the trip starts ---
+	# A hit that lands during the fade-out reaches only the old world's hero; the
+	# new hero boots with the health recorded at travel start.
+	_expect(Support.player_health(main).current == max_courage, "setup: the hero starts the snapshot trip at full courage")
+	var door_again := Support.exit_cell(main, main.get("current_room"), T3)
+	Support.teleport_player(main, door_again + Vector2i.LEFT)
+	var snapshot_intent: EcsComponents.MoveIntent = Support.ecs_of(main).get_component(Support.player_id_of(main), EcsComponents.MOVE_INTENT)
+	snapshot_intent.direction = Vector2i.RIGHT
+	Support.pump_until(main, func() -> bool: return bool(main.get("travel_in_progress")), 1.0)
+	_expect(world_state.get("player_health_carry") == max_courage, "the snapshot trip recorded a full-health carry")
+	Support.damage_player(main, 1)
+	_expect(Support.player_health(main).current == max_courage - 1, "setup: the old world's hero took a hit during the fade-out")
+	await Support.wait_for_travel(self, main)
+	_expect(main.get("current_zone_id") == T3, "setup: the snapshot trip reached T3")
+	_expect(Support.player_health(main).current == max_courage, "CHARACTERIZATION: a hit taken after travel started is not carried (the start-of-trip snapshot wins)")
+
+	# --- Health is never written to disk ---
+	Support.damage_player(main, 1)
+	world_state.call("save_state")
+	var saved := Support.read_save_file(world_state)
+	var mentions_health := false
+	for section in saved.get_sections():
+		for key in saved.get_section_keys(section):
+			if key.contains("health") or key.contains("carry") or key.contains("courage"):
+				mentions_health = true
+	_expect(not saved.get_sections().is_empty() and not mentions_health, "the save file stores no health or carry (every launch starts the zone fresh)")
+	world_state.call("reset")
+	world_state.call("load_state")
+	_expect(world_state.get("player_health_carry") == -1, "a save/load round trip leaves no carry behind")
+
+	Support.release_all_actions()
+	Support.remove_isolated_save(world_state)
+	var succeeded := failures == 0
+	print("BRIDGE HEALTH CARRY TEST: %s" % ["PASS" if succeeded else "FAIL (%d)" % failures])
+	quit(0 if succeeded else 1)
