@@ -6,11 +6,18 @@ export_presets.cfg
 build/
 docs/vault/.obsidian/
 
-# Generated art. Every file under here is rebuilt from scratch by a script in
-# tools/, so the repo carries the generator and not its output — otherwise one
+# Generated art. Every file in these folders is rebuilt from scratch by a script
+# in tools/, so the repo carries the generator and not its output — otherwise one
 # tweaked constant churns hundreds of binary files in the diff.
-assets/sprites/generated/
+assets/sprites/generated/chess/
+assets/sprites/generated/tiles/
+assets/sprites/generated/maps/
+assets/sprites/generated/rooms/
 assets/art/piece_templates/
+
+# NOT ignored, on purpose: the PNGs sitting directly in assets/sprites/generated/
+# (hero_pawn.png, toy_sword.png, black_pawn.png, ...). Despite the folder name no
+# script draws them, so they are source art and a fresh clone needs them.
 
 # NOT ignored, on purpose: assets/art/pieces/. That is hand-drawn source art.
 # Nothing regenerates it and losing it loses the work.
