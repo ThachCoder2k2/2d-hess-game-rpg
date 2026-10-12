@@ -1146,3 +1146,95 @@ combat timings and AI are untouched; the six deterministic dumps still say the s
   knight redrawn by the owner replaces the placeholders by overwriting the PNGs. The other black pawn definitions
   (armed, backstep, charging, captain) share `pawn_recruit/body.png` through `pawn_compatibility.tres`: one picture per
   enemy is a visual.tres edit away. Rook, queen, king and boss bodies do not exist yet (rows of the table, not art).
+
+
+## M2 step 3 - docs, commands and records - 2026-10-13
+
+Third of three M2 steps, branch `base/m2-3` from `base/m2-2`. No code changed except one comment (`content_kind.gd` named a
+function `_build_kinds` that does not exist; it is `_ensure_kinds`). The step is the prose, the commands and the records,
+plus one real walk of `/new-enemy`.
+
+- **`/new-enemy` walked for real** on a scratch clone of the branch (bootstrapped, nothing committed, everything deleted
+  afterwards, the strict runner GREEN on a clean tree at the end). `test_pawn`, 5 health, reusing the shared pawn pieces:
+  - `content/enemies/test_pawn/enemy.tres` alone (a text copy of `pawn_recruit`'s with the header uid removed, `id`,
+    `display_name`, `max_health = 5`) and `stamp_uids.gd`: `test_validate_all` finds 8 enemies (was 7), four `enemies/test_pawn`
+    lines PASS, `TEST VALIDATE ALL: PASS`. **1 file** for a re-skin.
+  - Spawned from a throwaway room scene in the project root with `tools/dump_world.gd --room=res://<scene>`: `entity 3
+    enemy:Pawn cell=(7,3) health=5/5` beside the real pawn's `health=2/2`.
+  - Its own picture (`visual.tres` and `body.png`, a copy of the pawn's): **3 files** (the editor adds `body.png.import`).
+    The uid recipe that works, in one order: files with no header uid and a path-only reference to files just made, import,
+    `stamp_uids.gd` (it filled 2 header uids and 2 path-only lines), import again, `--check` CLEAN. Stamping before the
+    import cannot fill the picture's uid; a scene that names a stamped uid before the import pass prints `invalid UID ...
+    using text path instead` until it has run.
+  - Where it fails, by name: in the real T3 room the strict runner went red on exactly `test_dump_baselines` (t3's dump) and
+    `test_bridge_travel` ("T3 holds its single living pawn"); a scratch room under `content/rooms/` went red on four suites
+    (not in `world.tres`; names `presentation/board/`), so a throwaway scene belongs in the project root; a 26 x 32 picture
+    failed `test_validate_all` ("its body picture is 26 x 32 px but a pawn may be drawn at most 18 x 22 px") and
+    `test_pieces_inside_cell` (17 FAIL lines, narrowest margin -2.00 px).
+  - Placeholder flag: an `ADOPTED_PLACEHOLDERS` row moved `_placeholders.json` from 26 to 27 entries; overwriting the
+    picture gave "27 recorded, 26 still to replace, 1 replaced by you" and both suites went green.
+  - What the walk corrected in the command: the uid order, the real-room failures, that a throwaway scene boots with the dump
+    tool, that `dev_sandbox` does not exist (M6), and that the preview picture does not show a definition-only enemy.
+- **Docs.** `docs/OWNER_GUIDE.md`: rows for retuning an enemy, a variant enemy (1 file), an enemy with its own picture (3),
+  retuning the pawn (1, `content/player/player.tres`, with its three Inspector groups), swapping a sprite (1 or 2) now give
+  exact paths and file counts; **section 6 is new, in Vietnamese** (the owner's sentence, the rule, where the size table lives
+  and each field, the margins that follow from it, how to draw a body, how to read `assets/_generated/previews/
+  pieces_in_cells.png`, what is still missing); the glossary moved to 7 and gained `ContentDb`, the one actor view,
+  `PlayerDefinition` and the base line; placeholder count 26. `docs/ARCHITECTURE.md` has one section for the registry, the hero
+  and the actor view (the ten kinds, both validators, the bake, a table of what `ViewSyncSystem` writes from which field, and
+  the six readers of the size table). `docs/coding-standards.md`, `tools/README.md` (the preview, `supersedes_stand_in`),
+  `content/README.md`, `README.md`, `AGENTS.md`, `docs/migration-notes.md` (an M2 section: nothing moved, one scene
+  deleted, what M1b left undone) and `docs/where-we-are.md` (a dated note) follow.
+- **Spec records.** `docs/game-base-plan.md` section 12 states the new rule with the numbers and cites `docs/owner-decisions.md`
+  (it no longer says 32x40, 48x48, 64-96 px), the paths say `presentation/views/actors/`, the change table has the row for the
+  size of a kind of piece, and section 15's M2 says what else was built and where it differs from its text.
+  `docs/design/pixel-art-bible.md` section 6 and `docs/design/gdd.md` carry a dated "superseded" note. `task_plan.md`: phase 66
+  is marked superseded and row 81 is M2, `human_review`.
+- **Loose ends found, none changed (they are not M2's to decide).** `VisualDefinition.telegraph_color`, `impact_color` and
+  `weapon_anchor` are read by nothing (the tint is `ActorView.telegraph_modulate`, the hand is `ActorView.weapon_anchor`), and
+  the actor scenes and the `.tres` disagree about the tint: wire them or delete them, later. The preview picture draws the
+  hero and the three thin scenes, so an enemy that is only a `definition` is measured by `test_pieces_inside_cell` but is not a
+  row of the picture. `test_bridge_travel` asserts T3's pawn count, so adding an enemy to a real room means touching it.
+  `docs/research/*` and the older design specs still carry the old sizes (the two the owner reads, the GDD and the pixel-art
+  bible, now say so).
+- **Commits** (trailer `Co-Authored-By: Claude Sonnet 5.5`, as in steps 1 and 2, following the session's attribution rather than
+  the Opus line of the task text): the walked `/new-enemy`; the owner guide with the Vietnamese section; the architecture,
+  standards, tools and content docs; the plan and design-doc amendments with the task-plan row; the records (this entry,
+  `findings.md`, `where-we-are.md`).
+
+### M2 as a whole - 2026-10-13
+
+Branches `base/m2-1`, `base/m2-2`, `base/m2-3` (each from the one before; 15 commits, nothing pushed), tag `m2-done` on the last. No
+gameplay rule changed: movement, combat timings and AI are untouched; every entity and cell of the six deterministic dumps equals
+the pre-port dump (the golden fingerprints the head of each), and the only dump lines that moved are the hero's six new view
+nodes and five textures (the collapse) per room.
+
+| M2 acceptance (plan section 15) | Where it is proved |
+|---|---|
+| per actor, node paths and every baked component field equal the old scene's; per-room entity set and cells equal the pre-port dump | `tests/architecture/test_actor_collapse_golden.gd` against `tests/baselines/actor_collapse_golden.txt` (captured from `base/m2-1` before the collapse); `test_dump_baselines` |
+| every definition passes `validate()`, ids equal folders, no duplicates, a minimum count | `tests/content/test_validate_all.gd` (116 checks) and `test_content_db_detects_problems` (each defect named) |
+| the registry works inside a `_init`-time suite with no autoloads | `tests/content/test_content_db_in_init.gd` |
+| baseline labels intact | 235 of 235 PASS, 9 through `tests/label_renames.txt` |
+| the owner's size decision: a piece inside its cell with at least 2 px margin | `tests/architecture/test_pieces_inside_cell.gd` (the hero, the three thin scenes and all seven enemies; every facing, armed, telegraphing, about 600 clip poses; narrowest margin at rest exactly 2.0 px); `tests/content/test_piece_size_table.gd`; `tests/architecture/test_actor_preview_tool.gd` |
+| the owner can try: a variant enemy, swap `body.png` | walked on a scratch copy (above); `dev_sandbox` is M6, so the walk uses a room |
+
+- **Final verification.** `python3 tools/run_all_tests.py --self-test` and `python3 tools/move_res.py --self-test`: 0 failures
+  each. `python3 tools/run_all_tests.py --strict` on the worktree and on a **fresh `git clone` of the branch into `/tmp` plus
+  `tools/bootstrap_worktree.sh`**: 35 suites (was 30 at the end of step 1 and 26 at M1b), 1,284 PASS lines, 0 failed, 0
+  warnings, GREEN; baseline labels 235 recorded, 235 still PASS; `stamp_uids.gd -- --check` CLEAN; `git diff --check` clean;
+  the clone's `git status` is clean after bootstrap and the run, and the bootstrap drew `pieces_in_cells.png`.
+- **What the owner should look at (Open / Tune / Goal / Try / Tell me).**
+  - Open: `assets/_generated/previews/pieces_in_cells.png` (made by `tools/bootstrap_worktree.sh`, or run
+    `tools/render_actor_preview.gd`), then `content/feel/piece_sizes.tres` in the Inspector, then play T1 to H1.
+  - Tune: each kind's `body_box` and `base_offset_y` in `piece_sizes.tres` if a piece should be smaller or stand lower; the
+    four stand-in bodies (`content/player/body.png`, `content/enemies/{pawn_recruit,knight_tracker,bishop_zoner}/body.png`).
+  - Goal: pieces that read as chess pieces standing in their squares, heights like a real set, nothing reaching into the row
+    above; the pawn and the knight still readable at 32 px.
+  - Try: a room with a knight and a bishop beside black pawns; the hero's wake clip; an armed pawn facing every way.
+  - Tell me: are the sizes right (pawn 18 x 22 up to king 22 x 28, base line 14 px below the centre), do you want the
+    retraced knight kept or redrawn, do the black pawn and bishop stand-ins read, and which of rook, queen, king and the
+    first boss should get pictures next.
+- **Not done, and why.** Rook, queen, king and boss bodies do not exist (table rows only; no such actor exists and the art is the
+  owner's). The exported-build fallback `content/_index.json` (no export to try). The sprite-sheet block and sound ids in
+  `VisualDefinition` (Tier B). The preview picture's rows are fixed (hero, black pawn, knight, bishop). The five dependency edges
+  and six room references of M1b are still the owner's to decide.

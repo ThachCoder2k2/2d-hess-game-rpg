@@ -449,3 +449,44 @@ June note).
   a few milliseconds. If that ever matters, lower `weapon_held_scale`, not the margin.
 - The hero's pivot and the 14 px base line are the table's numbers: if the owner changes the hero's height, the wake
   clip's position keys (authored for a 20 px body) need a new pivot; the in-cell test will say how far out it goes.
+
+## Walk and Docs Facts (M2 step 3, 2026-10-13)
+
+- The uid stamper fills a path-only `[ext_resource]` line from the target file's own uid, and a picture has none until an
+  import pass has written its `.import`. So a new enemy's files go in this order: write them with no header uid and a path-only
+  reference to the files just made, import, `stamp_uids.gd`, import again, `stamp_uids.gd -- --check`. A text copy of a `.tres`
+  keeps the source's header uid, which two files must not share; duplicating in the editor's FileSystem dock does that part
+  itself.
+- A uid the stamper just wrote is unknown to the editor until the next import pass: a scene that names it logs `ext_resource,
+  invalid UID ... using text path instead` and loads by path. Harmless, and gone after the import.
+- `max_health` has a default (2) and a `.tres` omits every property equal to its default, so a copy of `pawn_recruit/enemy.tres`
+  has no `max_health` line to edit: add one.
+- Adding an enemy to a real room changes more than the room. That room's baseline (`tests/baselines/dump_<room>.txt`) fails until
+  it is regenerated with `tools/dump_world.gd -- --write-baselines`, and tests that count a room's contents fail too: T3's pawn
+  count is asserted by `test_bridge_travel` ("T3 holds its single living pawn").
+- To see that a definition spawns without touching a room, put a throwaway scene in the **project root** and boot it with
+  `tools/dump_world.gd --room=res://<scene>` (it accepts any scene path). Under `content/rooms/` the same scene fails four suites
+  (`ContentDb.validate_cross_refs()`: "no zone of content/world/world.tres leads here"; `test_content_references`: it names
+  `presentation/board/`; and the two registry suites that assert the whole tree is healthy), so delete it before running the
+  runner.
+- `dev_sandbox` (the room the plan's M2 "owner can try" names) is an M6 deliverable; until then the only place to play a new enemy
+  is a real room.
+- `VisualDefinition.telegraph_color`, `impact_color` and `weapon_anchor` exist in the schema and in the `.tres` files, and nothing
+  reads them: the telegraph tint is `ActorView.telegraph_modulate` and the hand is `ActorView.weapon_anchor`. Two homes for one
+  value, with different numbers (`pawn_compatibility.tres` says 0.35/0.13/0.15, `black_pawn.tscn` says 0.85/0.31/0.35). Tuning the
+  `.tres` fields changes nothing. Decide later: wire them, or delete them.
+- `tools/render_actor_preview.gd` draws a fixed list of rows (`ACTORS`: the hero and the player, black pawn, knight and bishop scenes),
+  while `test_pieces_inside_cell` boots every enemy folder through `actor_view_base.tscn`. So the picture is for the owner's eye and
+  the test is the gate; an enemy with its own body will not appear in the picture until a row is added (a row needs only a scene or
+  a `definition` passed to `ActorStage.boot`, and `test_actor_preview_tool` reads the row count from the same constant).
+- The preview picture's size is `(46 + 9 x 32) x 4` by `(14 + 4 x 32) x 4` = 1336 x 568: a name strip, nine cells, a header strip and
+  four rows, each cell 32 px, at whole-number 4x.
+- Moving a file is the only thing that edits `tools/move_res_log.tsv`; M2 added files and deleted one and renamed none (`git diff -M`
+  shows no rename), so the log has no M2 line.
+- A scratch copy of a checkout for a destructive walk must be a `git clone`, not `cp -R`: a worktree's `.git` is a file that points at
+  the main repository's worktree metadata, so git commands in a copied worktree would act on the original. A clone plus
+  `tools/bootstrap_worktree.sh` is ready in about a minute.
+- From a worktree-isolated agent session the sandbox refuses a command that sets `HOME=` in front of Godot and compound commands
+  that mix git with another directory. What works: a tiny wrapper script that exports `HOME` and `exec`s Godot, `GODOT` and
+  `UNBOUND_GODOT_HOME` for `tools/run_all_tests.py`, `BOOTSTRAP_HOME` and `GODOT_BIN` for the bootstrap script, plain separate `git
+  clone` and `git -C <dir>` calls.
