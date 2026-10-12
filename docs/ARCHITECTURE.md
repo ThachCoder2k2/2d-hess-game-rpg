@@ -286,7 +286,8 @@ HOME=/tmp/unbound-pawn-godot ../Godot.app/Contents/MacOS/Godot --headless --path
 A new `class_name` needs one `--headless --editor --quit` import pass before strict-typed
 scripts that reference it parse headlessly. A script error in a test's `_init` can hang the
 Godot process, so bound runs with `perl -e 'alarm shift; exec @ARGV' 120 ...` (macOS has no
-`timeout`). `python3 tools/run_all_tests.py` becomes the canonical runner in M1a.
+`timeout`). `python3 tools/run_all_tests.py --strict` is the canonical runner: it adds the
+timeout, the import pass and the baseline-label check for you.
 
 ## Where this is going
 

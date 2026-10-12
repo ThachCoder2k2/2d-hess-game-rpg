@@ -204,7 +204,7 @@ def evaluate_import(outcome: RunOutcome) -> SuiteResult:
         result.detail_lines = [line for line in lines if "ERROR" in line or "Parse" in line][:MAX_DETAIL_LINES]
         result.detail_lines.append(
             "on a fresh clone or worktree the usual cause is missing generated art: run "
-            "tools/bootstrap_worktree.sh (M1a item 9) or the tools/generate_*.gd scripts, then retry"
+            "tools/bootstrap_worktree.sh (or the tools/generate_*.gd scripts), then retry"
         )
     return result
 

@@ -216,8 +216,17 @@ Collision is cell-based through `EcsGrid`, not physics.
   no real keys, so write `MoveIntent` / `AttackIntent` exactly as `PlayerInputSystem` would.
 - A test that reads a file must also assert the content is non-empty; a stale `res://` path
   otherwise reads `""` and passes vacuously.
-- Keep the playable slice green: the logic suite, the six runtime tests, an editor import
-  and `git diff --check` after meaningful changes (`/verify`).
+- New suites extend `UnboundTest` (`tests/support/unbound_test.gd`): it has a watchdog so a
+  script error cannot hang the run, it fails a suite that asserted nothing, and it prints
+  `PASS:` / `FAIL:` lines the runner reads. A suite named `test_*.gd` anywhere under `tests/`
+  is found by `tools/run_all_tests.py` without editing it. Every suite must print at least one
+  `PASS:` line, even a report-only guard (assert that its scan saw enough files).
+- A new test names a `res://` file through `TestPaths` (`tests/support/paths.gd`), which asserts
+  the file exists. Folder moves then edit one file instead of every suite.
+- Never rename or delete a `PASS:` label that is in `tests/baseline_labels.txt`; if a label
+  must change, record `old label -> new label` in `tests/label_renames.txt`.
+- Keep the playable slice green: `python3 tools/run_all_tests.py --strict` and `git diff --check`
+  after meaningful changes (`/verify`).
 
 ## Patterns in use, and ones we deliberately do not use
 

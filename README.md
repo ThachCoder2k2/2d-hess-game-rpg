@@ -68,9 +68,11 @@ Hand-drawn art is different: `assets/art/pieces/` is source, is committed, and i
 never regenerated. Anything you draw and drop in there replaces the procedural
 version of that piece on the next build.
 
-Milestone M1a of `docs/game-base-plan.md` adds `tools/bootstrap_worktree.sh` to run all of
-the steps above in one command (useful for a fresh clone or a parallel worktree). Until that
-script exists, run them by hand.
+`tools/bootstrap_worktree.sh` runs all of the steps above in one command (an import pass,
+the four generators, a second import pass). Use it for a fresh clone or a parallel
+worktree: `tools/bootstrap_worktree.sh`, with `GODOT_BIN` and `BOOTSTRAP_HOME` to override
+the Godot binary and the private `HOME`. It exits 0 only when every step came out clean.
+`tools/README.md` describes it and the other build tools.
 
 ## Run
 
@@ -82,18 +84,23 @@ Open `project.godot` in Godot 4.6 or run:
 
 ## Test
 
-The canonical runner is `python3 tools/run_all_tests.py` (added in M1a of
-`docs/game-base-plan.md`): it does the import pass, runs every suite in its own bounded
-subprocess and fails on any script error. Until it exists, run `/verify` (see
-`.claude/commands/verify.md`) or the suites by hand, each with an isolated `HOME`:
+The canonical runner is `python3 tools/run_all_tests.py --strict` (this is what `/verify`
+runs, see `.claude/commands/verify.md`). It does the import pass, finds every suite by
+name (`tests/run_tests.gd`, `tests/*_test.gd`, `tests/**/test_*.gd`), runs each in its own
+bounded subprocess, fails on any script error, `FAIL:` line or missing `PASS:` line, and
+checks that every `PASS:` label recorded in `tests/baseline_labels.txt` still passes.
+The last lines must read `0 failed` and `GREEN`. Set `GODOT` to the Godot binary and
+`UNBOUND_GODOT_HOME` to a private `HOME` if the defaults do not fit your machine.
+
+To run one suite by hand, with an isolated `HOME`:
 
 ```bash
 HOME=/tmp/unbound-pawn-godot ../Godot.app/Contents/MacOS/Godot --headless --path . -s tests/run_tests.gd
 ```
 
-Then each runtime test the same way (`-s tests/<name>_test.gd`): `ecs_runtime`, `ecs_combat`,
-`ecs_enemy`, `room_encounter_runtime`, `encounter_hud_runtime`, `zone_travel_runtime`. Expect
-`TESTS COMPLETE: 0 failure(s)` and `... TEST: PASS` from each.
+Expect `TESTS COMPLETE: 0 failure(s)` from that one and `... TEST: PASS` from each of the
+others. The suites live in `tests/` (the older ones at the top, plus `architecture/`,
+`audio/`, `bridge/`, `content/` and `support/`).
 
 ## Controls
 

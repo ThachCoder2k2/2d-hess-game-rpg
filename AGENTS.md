@@ -396,11 +396,16 @@ Gate 12: Release polish
 
 ## Testing And Verification
 
-Run `/verify` (see `.claude/commands/verify.md`) after every behavior change. The suite is
-`tests/run_tests.gd` plus six runtime tests (`ecs_runtime`, `ecs_combat`, `ecs_enemy`,
-`room_encounter_runtime`, `encounter_hud_runtime`, `zone_travel_runtime`), the editor import
-pass and `git diff --check`. `python3 tools/run_all_tests.py` becomes the one-command canonical
-runner in M1a. By hand:
+Run `/verify` (see `.claude/commands/verify.md`) after every behavior change. `/verify` is
+`python3 tools/run_all_tests.py --strict` plus `git diff --check`. The runner does the
+editor import pass, then runs every suite it finds by name: `tests/run_tests.gd`, the older
+runtime tests (`ecs_runtime`, `ecs_combat`, `ecs_enemy`, `room_encounter_runtime`,
+`encounter_hud_runtime`, `zone_travel_runtime`) and everything under `tests/` named
+`test_*.gd` (`architecture/`, `audio/`, `bridge/`, `content/`, `support/`). A new suite needs
+no edit to the runner. Never edit `tests/baseline_labels.txt` to turn the runner green: a
+vanished label means a check disappeared; a renamed one goes in `tests/label_renames.txt`.
+The other build tools (`stamp_uids.gd`, `move_res.py`, `dump_world.gd`,
+`bootstrap_worktree.sh`) are described in `tools/README.md`. By hand:
 
 ```bash
 G="../Godot.app/Contents/MacOS/Godot"
