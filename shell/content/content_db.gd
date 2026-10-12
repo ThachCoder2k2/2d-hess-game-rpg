@@ -161,7 +161,8 @@ static func validate() -> PackedStringArray:
 ## Book pages name an enemy that exists; an enemy's default weapon, difficulty and
 ## weapon preferences name pickups and difficulty profiles that exist; the player's
 ## attacks are skills; every visual's piece type is a row of the size table and its body
-## picture fits that row's box; the world graph and the room folders agree; every door
+## picture fits that row (a tight picture inside the box, or the art spec's cell canvas with
+## its drawn pixels inside the box); the world graph and the room folders agree; every door
 ## leads to a zone of the graph and to an entry marker that exists there; every room's
 ## zone_id equals its folder; every enemy parked in a room is a registered enemy.
 static func validate_cross_refs() -> PackedStringArray:
@@ -296,7 +297,9 @@ static func _check_player_references(problems: PackedStringArray) -> void:
 
 
 ## Every actor's VisualDefinition names a kind of piece the size table has a row for, and its body
-## picture is no larger than that row's box (the owner's rule: a piece is smaller than its cell).
+## picture fits that row (the owner's rule: a piece is smaller than its cell): no larger than the
+## row's box, or the cell-sized canvas of the art spec with its drawn pixels inside the box
+## (PieceSizeTable.picture_problems).
 static func _check_visual_references(problems: PackedStringArray) -> void:
 	var table := piece_sizes()
 	if table == null:
@@ -321,9 +324,8 @@ static func _check_visual_references(problems: PackedStringArray) -> void:
 			problems.append("%s: its visual's piece_type '%s' is not a row of content/feel/piece_sizes.tres (rows: %s)." % [owner_label, visual.piece_type, ", ".join(kinds)])
 			continue
 		if visual.body_texture != null:
-			var picture := Vector2i(visual.body_texture.get_size())
-			if picture.x > row.body_box.x or picture.y > row.body_box.y:
-				problems.append("%s: its body picture is %d x %d px but a %s may be drawn at most %d x %d px (content/feel/piece_sizes.tres)." % [owner_label, picture.x, picture.y, visual.piece_type, row.body_box.x, row.body_box.y])
+			for sentence in table.picture_problems_of_texture(visual.piece_type, visual.body_texture):
+				problems.append("%s: %s" % [owner_label, sentence])
 
 
 static func _check_world_and_rooms(problems: PackedStringArray) -> void:

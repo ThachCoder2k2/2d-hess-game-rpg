@@ -68,13 +68,15 @@ func _init() -> void:
 		var enemy_definition := ContentDb.fetch(&"enemies", enemy_id) as EnemyDefinition
 		_check_actor_at_rest(BASE_SCENE_PATH, ActorStage.ROLE_ENEMY, enemy_definition, "%s on actor_view_base.tscn" % enemy_id)
 	_check_chess_heights(heights_by_piece_type)
+	_check_a_spec_canvas_stands_in_the_cell()
 	await _check_every_actor_placed_in_a_room()
 	await _check_every_clip()
 	finish()
 
 
 # --------------------------------------------------------------------------- data
-## Every body picture is within its kind's box, and its kind has a row.
+## Every body picture fits its kind's row (a tight picture inside the box, or the art spec's
+## cell-sized canvas with its drawn pixels inside the box), and its kind has a row.
 func _check_pictures_fit_their_boxes() -> void:
 	var visuals: Array[VisualDefinition] = [ContentDb.player().visual]
 	for enemy_id in ContentDb.ids(&"enemies"):
@@ -88,13 +90,12 @@ func _check_pictures_fit_their_boxes() -> void:
 			continue
 		if not _expect(visual.body_texture != null, "%s: it has a body picture" % label):
 			continue
-		var picture := Vector2i(visual.body_texture.get_size())
-		_expect(picture.x <= row.body_box.x and picture.y <= row.body_box.y,
-			"%s: the body picture is %s, no larger than the %s box" % [label, picture, row.body_box])
+		var problems := table.picture_problems_of_texture(visual.piece_type, visual.body_texture)
+		_expect(problems.is_empty(), "%s: the body picture fits the %s row (%s)" % [label, visual.piece_type, " ".join(problems)])
 		var opaque := probe.opaque_rect_of(visual.body_texture)
 		_expect(opaque.size.x <= row.body_box.x and opaque.size.y <= row.body_box.y,
 			"%s: its drawn pixels are %s, no larger than the %s box" % [label, opaque.size, row.body_box])
-		_expect(picture.x < cell_size and picture.y < cell_size, "%s: the picture is smaller than the %d px cell in both directions" % [label, cell_size])
+		_expect(opaque.size.x < cell_size and opaque.size.y < cell_size, "%s: the drawn pixels are smaller than the %d px cell in both directions" % [label, cell_size])
 
 
 ## The scene file the editor shows is what the game draws: the body's static position, picture and
@@ -184,6 +185,42 @@ func _check_chess_heights(heights_by_piece_type: Dictionary) -> void:
 		var height := int(heights_by_piece_type.get(piece_type, 0))
 		_expect(height > pawn_height, "a %s is drawn taller than a pawn (%d px against %d), as in a real chess set" % [piece_type, height, pawn_height])
 	_expect(pawn_height < int(table.row_for(&"pawn").body_box.y) + 1, "the pawn is drawn within its box")
+
+
+# --------------------------------------------------------------------------- the art spec's canvas
+## The owner will draw every piece on the art spec's cell-sized canvas (docs/assets: 32 x 32, the
+## base rim on row 30, the body box inside it with 2 px of margin). Such a picture must stand
+## exactly where it was drawn: canvas pixel (x, y) shows at cell pixel (x, y), so the body lands on
+## the rectangle the table says, and the whole piece keeps its margin. The pictures are made here
+## (a solid body filling its kind's box), so no file has to exist for the check.
+func _check_a_spec_canvas_stands_in_the_cell() -> void:
+	for piece_type: StringName in [&"pawn", &"knight", &"bishop", &"rook", &"queen", &"king"]:
+		var row := table.row_for(piece_type)
+		var canvas_image := Image.create_empty(cell_size, cell_size, false, Image.FORMAT_RGBA8)
+		var body_on_canvas := table.box_on_cell_canvas(row)
+		canvas_image.fill_rect(body_on_canvas, Color("#2a2a35"))
+		var canvas := ImageTexture.create_from_image(canvas_image)
+		var label := "a %s drawn on the %d x %d canvas of the art spec" % [piece_type, cell_size, cell_size]
+
+		_expect(table.picture_problems_of_texture(piece_type, canvas).is_empty(), "%s fits its row" % label)
+		_expect(table.body_top_left(piece_type, canvas.get_size()) == Vector2(-cell_size / 2.0, -cell_size / 2.0),
+			"%s is placed exactly on the cell (its top-left corner is the cell's)" % label)
+
+		var definition := (ContentDb.fetch(&"enemies", &"pawn_recruit") as EnemyDefinition).duplicate() as EnemyDefinition
+		var visual := definition.visual.duplicate() as VisualDefinition
+		visual.piece_type = piece_type
+		visual.body_texture = canvas
+		definition.visual = visual
+		var stage := ActorStage.boot(self, load(BASE_SCENE_PATH) as PackedScene, ActorStage.ROLE_ENEMY, definition)
+		ActorStage.set_facing(stage, Vector2i.DOWN)
+		ActorStage.tick(stage)
+		var parts := probe.drawn_parts(stage["view"] as ActorView)
+		for part in parts:
+			if part["part"] == ActorCellProbe.PART_BODY:
+				var expected := Rect2(Vector2(body_on_canvas.position) - Vector2(cell_size, cell_size) / 2.0, Vector2(body_on_canvas.size))
+				_expect((part["rect"] as Rect2).is_equal_approx(expected), "%s is drawn at %s in the cell (it is %s)" % [label, expected, part["rect"]])
+		_expect_inside_cell(parts, margin, label)
+		ActorStage.free_stage(self, stage)
 
 
 # --------------------------------------------------------------------------- rooms

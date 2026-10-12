@@ -18,6 +18,7 @@ func _init() -> void:
 		return
 	_check_shipped_table(table)
 	_check_validation_bites(table)
+	_check_pictures_against_rows(table)
 	finish()
 
 
@@ -96,6 +97,52 @@ func _check_validation_bites(shipped: PieceSizeTable) -> void:
 
 	_expect(not PieceSizeTable.new().validate().is_empty(), "an empty table is reported")
 	_expect(shipped.row_for(&"dragon") == null, "row_for() answers null for a kind the table does not have")
+
+
+## How a body picture is judged and placed. Two shapes are allowed: a tight picture no larger than
+## the kind's box, its bottom edge on the base line; or the art spec's cell-sized canvas (32 x 32,
+## base rim on row 30) whose drawn pixels lie inside the box on that canvas. Sizes and pixel boxes
+## are given directly, so no picture file is needed.
+func _check_pictures_against_rows(table: PieceSizeTable) -> void:
+	var canvas := Vector2i(table.cell_size, table.cell_size)
+	_expect(table.cell_canvas_base_row == table.cell_size - 2, "the art spec's base row is %d of %d: two empty rows under the rim, the spec's anchor (16, 30)" % [table.cell_canvas_base_row, table.cell_size])
+	_expect(table.is_cell_canvas(Vector2(canvas)) and not table.is_cell_canvas(Vector2(32, 40)) and not table.is_cell_canvas(Vector2(18, 22)), "only a picture exactly one cell big is the canvas of the art spec")
+
+	# The boxes on the spec's canvas are the rectangles docs/assets prints: top at y=8 for the pawn,
+	# 6 for knight, bishop and rook, 4 for the queen, 2 for the king, 2 px of margin at the sides.
+	var expected_canvas_boxes := {&"pawn": Rect2i(7, 8, 18, 22), &"knight": Rect2i(6, 6, 20, 24), &"bishop": Rect2i(6, 6, 20, 24), &"rook": Rect2i(6, 6, 20, 24), &"queen": Rect2i(5, 4, 22, 26), &"king": Rect2i(5, 2, 22, 28)}
+	for piece_type: StringName in expected_canvas_boxes:
+		_expect(table.box_on_cell_canvas(table.row_for(piece_type)) == expected_canvas_boxes[piece_type], "the %s box on the spec's canvas is %s" % [piece_type, expected_canvas_boxes[piece_type]])
+
+	# A tight picture: fits at the box, not a pixel over, placed on the base line.
+	_expect(table.picture_problems(&"pawn", Vector2i(18, 22), Rect2i(0, 0, 18, 22)).is_empty(), "a tight 18 x 22 pawn fits its box")
+	_expect(not table.picture_problems(&"pawn", Vector2i(19, 22), Rect2i(0, 0, 19, 22)).is_empty(), "a tight pawn one pixel too wide is reported")
+	_expect("\n".join(table.picture_problems(&"pawn", Vector2i(26, 32), Rect2i(0, 0, 26, 32))).contains("its body picture is 26 x 32 px but a pawn may be drawn at most 18 x 22 px"), "an oversized tight picture is reported with both sizes")
+	_expect(not table.picture_problems(&"pawn", Vector2i(32, 40), Rect2i(7, 8, 18, 22)).is_empty(), "the old 32 x 40 pawn picture is reported: it is not the cell-sized canvas")
+	_expect(table.body_top_left(&"pawn", Vector2(18, 20)) == Vector2(-9, -6), "a tight 18 x 20 pawn stands with its bottom edge on the base line (top-left (-9, -6))")
+	_expect(table.body_top_left(&"pawn", Vector2(18, 20), Vector2(1, -2)) == Vector2(-8, -8), "the visual's own anchor_offset nudges it from there")
+
+	# The spec's canvas: the body box fits, anything outside it is reported, and it lands on the cell.
+	_expect(table.picture_problems(&"pawn", canvas, Rect2i(7, 8, 18, 22)).is_empty(), "a pawn on the spec's canvas, its body exactly the box, fits")
+	_expect(table.picture_problems(&"pawn", canvas, Rect2i(9, 12, 10, 14)).is_empty(), "a smaller body anywhere inside the box fits")
+	_expect(table.picture_problems(&"knight", canvas, Rect2i(6, 6, 20, 24)).is_empty(), "a knight on the spec's canvas fits its 20 x 24 box")
+	_expect(not table.picture_problems(&"pawn", canvas, Rect2i(6, 6, 20, 24)).is_empty(), "a pawn drawn as big as a knight on the canvas is reported")
+	_expect("\n".join(table.picture_problems(&"pawn", canvas, Rect2i(7, 10, 18, 22))).contains("leave the 18 x 22 box of a pawn"), "a pawn body that sinks below the base rim is reported, naming the kind and the box")
+	_expect(not table.picture_problems(&"pawn", canvas, Rect2i(8, 8, 18, 22)).is_empty(), "a pawn body shifted two pixels sideways is reported")
+	_expect(table.picture_problems(&"pawn", canvas, Rect2i()).is_empty(), "a fully transparent canvas has nothing outside the box")
+	_expect(table.picture_problems(&"dragon", canvas, Rect2i(0, 0, 32, 32)).is_empty(), "a kind with no row is for ContentDb to report, not this check")
+	_expect(table.body_top_left(&"pawn", Vector2(canvas)) == Vector2(-16, -16), "the spec's canvas lands exactly on the cell: its top-left is the cell's")
+	_expect(table.body_top_left(&"king", Vector2(canvas)) == Vector2(-16, -16), "...for a king too, whatever the box")
+	_expect(table.body_top_left(&"pawn", Vector2(canvas), Vector2(0, 1)) == Vector2(-16, -15), "...and anchor_offset still nudges it")
+
+	# A picture read from real pixels: the body box is found from the drawn pixels, not the png size.
+	var image := Image.create_empty(canvas.x, canvas.y, false, Image.FORMAT_RGBA8)
+	image.fill_rect(Rect2i(7, 8, 18, 22), Color.WHITE)
+	var texture := ImageTexture.create_from_image(image)
+	_expect(PieceSizeTable.opaque_rect_of(texture) == Rect2i(7, 8, 18, 22), "the drawn pixels of a canvas are found (7, 8, 18 x 22)")
+	_expect(table.picture_problems_of_texture(&"pawn", texture).is_empty(), "a real 32 x 32 canvas with an 18 x 22 body passes for a pawn")
+	image.fill_rect(Rect2i(7, 30, 18, 2), Color.WHITE)
+	_expect(not table.picture_problems_of_texture(&"pawn", ImageTexture.create_from_image(image)).is_empty(), "the same canvas with feet in the two rows under the rim is reported")
 
 
 func _complaints(table: PieceSizeTable) -> String:

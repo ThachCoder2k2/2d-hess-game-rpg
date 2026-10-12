@@ -68,20 +68,12 @@ static func smallest_margin(rect: Rect2, cell_size: int) -> float:
 	return minf(minf(margins.x, margins.y), minf(margins.z, margins.w))
 
 
-## The opaque pixels of a picture, as a rectangle in the picture's own pixels. A picture whose
-## pixels cannot be read counts as filled edge to edge, the cautious answer.
+## The opaque pixels of a picture, as a rectangle in the picture's own pixels, measured once per
+## picture (PieceSizeTable.opaque_rect_of reads them).
 func opaque_rect_of(texture: Texture2D) -> Rect2i:
-	if _opaque_rect_by_texture.has(texture):
-		return _opaque_rect_by_texture[texture]
-	var size := Vector2i(texture.get_size())
-	var used := Rect2i(Vector2i.ZERO, size)
-	var image := texture.get_image()
-	if image != null:
-		if image.is_compressed():
-			image.decompress()
-		used = image.get_used_rect()
-	_opaque_rect_by_texture[texture] = used
-	return used
+	if not _opaque_rect_by_texture.has(texture):
+		_opaque_rect_by_texture[texture] = PieceSizeTable.opaque_rect_of(texture)
+	return _opaque_rect_by_texture[texture]
 
 
 func _collect(node: Node, view: Node2D, cell_from_world: Transform2D, parts: Array[Dictionary]) -> void:
