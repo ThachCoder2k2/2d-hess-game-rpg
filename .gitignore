@@ -22,3 +22,6 @@ assets/art/piece_templates/
 
 # NOT ignored, on purpose: assets/art/pieces/. That is hand-drawn source art.
 # Nothing regenerates it and losing it loses the work.
+
+# Parallel agent worktrees (git worktree add), never part of the project.
+.claude/worktrees/
