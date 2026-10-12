@@ -31,7 +31,7 @@ func _init() -> void:
 	world.add_system(CombatSystem.new())
 	world.add_system(HealthSystem.new())
 
-	var definition := load("res://resources/enemies/pawn_recruit.tres") as EnemyDefinition
+	var definition := load("res://content/enemies/pawn_recruit/enemy.tres") as EnemyDefinition
 	var sword := load("res://content/skills/wooden_sword/wooden_sword.tres") as AttackProfile
 	var thrust := load("res://content/skills/pencil_thrust/pencil_thrust.tres") as AttackProfile
 

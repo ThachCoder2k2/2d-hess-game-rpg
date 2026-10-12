@@ -78,7 +78,7 @@ func _init() -> void:
 	spec_world.manual_tick = true
 	root.add_child(spec_world)
 	var spec_view := ActorView.new()
-	spec_view.definition = load("res://resources/enemies/pawn_recruit.tres")
+	spec_view.definition = load("res://content/enemies/pawn_recruit/enemy.tres")
 	spec_view.position = spec_world.grid.cell_to_world(Vector2i(3, 3))
 	var health_spec := HealthComponent.new()
 	health_spec.max_health = 5

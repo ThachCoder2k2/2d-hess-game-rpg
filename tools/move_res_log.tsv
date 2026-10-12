@@ -82,3 +82,10 @@ resources/movement/pawn_standard.tres	content/enemies/_shared/movement/pawn_stan
 resources/attacks/pawn_diagonal.tres	content/enemies/_shared/attacks/pawn_diagonal.tres
 resources/decisions/pawn_skirmisher.tres	content/enemies/_shared/decisions/pawn_skirmisher.tres
 resources/visuals/pawn_compatibility.tres	content/enemies/_shared/visuals/pawn_compatibility.tres
+resources/enemies/backstep_pawn.tres	content/enemies/backstep_pawn/enemy.tres
+resources/enemies/bishop_zoner.tres	content/enemies/bishop_zoner/enemy.tres
+resources/enemies/black_pawn_captain.tres	content/enemies/black_pawn_captain/enemy.tres
+resources/enemies/charging_pawn.tres	content/enemies/charging_pawn/enemy.tres
+resources/enemies/knight_tracker.tres	content/enemies/knight_tracker/enemy.tres
+resources/enemies/pawn_armed.tres	content/enemies/pawn_armed/enemy.tres
+resources/enemies/pawn_recruit.tres	content/enemies/pawn_recruit/enemy.tres

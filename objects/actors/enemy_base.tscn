@@ -1,7 +1,7 @@
 [gd_scene load_steps=33 format=3 uid="uid://d38lrm1et2a17"]
 
 [ext_resource type="Script" uid="uid://16la5b2fanxj" path="res://presentation/views/actor_view.gd" id="1"]
-[ext_resource type="Resource" uid="uid://btn64l3ek5ovi" path="res://resources/enemies/pawn_recruit.tres" id="2"]
+[ext_resource type="Resource" uid="uid://btn64l3ek5ovi" path="res://content/enemies/pawn_recruit/enemy.tres" id="2"]
 [ext_resource type="Texture2D" uid="uid://cbkfsux0rk0ja" path="res://assets/sprites/generated/black_pawn.png" id="3"]
 [ext_resource type="Texture2D" uid="uid://6hr88wvg8w12" path="res://content/skills/wooden_sword/icon.png" id="4"]
 [ext_resource type="Texture2D" uid="uid://bs64j61xywio8" path="res://assets/sprites/generated/warning_aura.png" id="5"]

@@ -122,22 +122,22 @@ func _init() -> void:
 		_expect(_actor_has_state_graph(enemy_view), "%s animation transitions live in an editor AnimationTree graph" % scene_name)
 
 	# --- Editor-authored combat data (the .tres stays the truth) ---
-	var pawn_definition := load("res://resources/enemies/pawn_recruit.tres") as EnemyDefinition
+	var pawn_definition := load("res://content/enemies/pawn_recruit/enemy.tres") as EnemyDefinition
 	var pattern_cells := pawn_definition.unarmed_attack.get_attack_cells(grid, Vector2i(6, 3), Vector2i.DOWN)
 	_expect(Vector2i(5, 4) in pattern_cells and Vector2i(7, 4) in pattern_cells, "pawn pattern threatens both forward diagonals")
 	pattern_cells = pawn_definition.unarmed_attack.get_attack_cells(grid, Vector2i(6, 3), Vector2i.RIGHT)
 	_expect(Vector2i(7, 4) in pattern_cells and Vector2i(7, 2) in pattern_cells, "pawn diagonal attack rotates with facing")
 
-	var armed_definition := load("res://resources/enemies/pawn_armed.tres") as EnemyDefinition
+	var armed_definition := load("res://content/enemies/pawn_armed/enemy.tres") as EnemyDefinition
 	_expect(armed_definition.validate().is_empty(), "armed Pawn definition has no missing configuration")
 	_expect(armed_definition.default_weapon != null and armed_definition.default_weapon.display_name == "Pencil Spear", "armed Pawn default weapon is Inspector-configured")
 
-	var knight_definition := load("res://resources/enemies/knight_tracker.tres") as EnemyDefinition
+	var knight_definition := load("res://content/enemies/knight_tracker/enemy.tres") as EnemyDefinition
 	_expect(knight_definition.movement.allowed_directions.size() == 8, "knight movement config exposes eight L-shaped offsets")
 	_expect(Vector2i(2, 1) in knight_definition.movement.allowed_directions and Vector2i.RIGHT not in knight_definition.movement.allowed_directions, "knight movement does not fall back to cardinal steps")
 	_expect(knight_definition.decision.role_policy == &"flanker", "knight definition configures a flanker")
 
-	var bishop_definition := load("res://resources/enemies/bishop_zoner.tres") as EnemyDefinition
+	var bishop_definition := load("res://content/enemies/bishop_zoner/enemy.tres") as EnemyDefinition
 	_expect(bishop_definition.movement.allowed_directions.has(Vector2i(1, 1)) and not bishop_definition.movement.allowed_directions.has(Vector2i.RIGHT), "Bishop moves diagonally from its MovementConfig")
 	var bishop_cells := bishop_definition.unarmed_attack.get_attack_cells(grid, Vector2i(8, 4), Vector2i.DOWN)
 	_expect(bishop_cells.size() == 8 and Vector2i(10, 6) in bishop_cells and Vector2i(9, 5) in bishop_cells, "Bishop unarmed attack threatens diagonal beams from data")
@@ -258,9 +258,9 @@ func _init() -> void:
 	old_state.free()
 
 	# --- Pawn variants stay pure data ---
-	var backstep := load("res://resources/enemies/backstep_pawn.tres") as EnemyDefinition
+	var backstep := load("res://content/enemies/backstep_pawn/enemy.tres") as EnemyDefinition
 	_expect(backstep != null and backstep.validate().is_empty(), "Backstep Pawn definition has no missing configuration")
-	var charging := load("res://resources/enemies/charging_pawn.tres") as EnemyDefinition
+	var charging := load("res://content/enemies/charging_pawn/enemy.tres") as EnemyDefinition
 	_expect(charging != null and charging.validate().is_empty(), "Charging Pawn definition has no missing configuration")
 	_expect(charging.movement.allowed_directions.has(Vector2i(0, 2)) and not charging.movement.allowed_directions.has(Vector2i.UP), "Charging Pawn only ever leaps two squares")
 
@@ -268,11 +268,14 @@ func _init() -> void:
 	var rule_book := load("res://content/rules/rule_book.tres") as RuleBook
 	_expect(rule_book != null and rule_book.validate().is_empty(), "the rule book loads with complete pages")
 	var definition_ids: Array = []
-	for file_name in DirAccess.get_files_at("res://resources/enemies"):
-		if file_name.ends_with(".tres"):
-			var definition := load("res://resources/enemies/%s" % file_name) as EnemyDefinition
-			if definition != null:
-				definition_ids.append(definition.id)
+	# One folder per enemy id; a leading underscore (_shared) is not an enemy (plan 13.3).
+	for folder_name in DirAccess.get_directories_at("res://content/enemies"):
+		if folder_name.begins_with("_"):
+			continue
+		var definition := load("res://content/enemies/%s/enemy.tres" % folder_name) as EnemyDefinition
+		if definition != null:
+			definition_ids.append(definition.id)
+	_expect(definition_ids.size() >= 7, "content/enemies holds at least seven enemy definitions (a missing folder cannot pass the book check below vacuously)")
 	for entry in rule_book.entries:
 		_expect(entry.piece_id in definition_ids, "book page '%s' names a real piece" % entry.title)
 	var book_ui := (load("res://presentation/ui/codex/rule_book.tscn") as PackedScene).instantiate() as RuleBookUI
