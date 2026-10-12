@@ -1,0 +1,82 @@
+# dump_world v1: deterministic world dump. Regenerate with tools/dump_world.gd (see tools/README.md).
+room: h1_chess_rug_hub
+scene: res://scenes/rooms/h1_chess_rug_hub.tscn
+ticks: 120 x 0.0167 s, player idle (no input)
+entry_cell: (1, 5)
+cast: player=1 enemies=[] pickups=0
+
+[grid]
+bounds: position=(0, 0) size=(16, 9)
+cell_size: 32
+grid_origin: (64.00,36.00)
+blocked_cells: 50
+  (0,0) (1,0) (2,0) (3,0) (4,0) (5,0) (6,0) (7,0) (8,0) (9,0) (10,0) (11,0) (12,0) (13,0) (14,0) (15,0) (0,1) (15,1) (0,2) (7,2) (15,2) (0,3) (7,3) (15,3) (0,4) (15,4) (0,5) (7,5) (15,5) (0,6) (7,6) (15,6) (0,7) (15,7) (0,8) (1,8) (2,8) (3,8) (4,8) (5,8) (6,8) (7,8) (8,8) (9,8) (10,8) (11,8) (12,8) (13,8) (14,8) (15,8)
+exits: 2
+  (2,0) {"entry": &"start", "requires_room_clear": false, "zone": &"kingdom"}
+  (0,5) {"entry": &"from_hub", "requires_room_clear": false, "zone": &"b1_black_pawn_captain"}
+gates: 0
+player_unlocks: 0
+items: 0
+
+[board] P player, e enemy, i item, X exit, G gate, U unlock, # wall, . floor
+##X#############
+#..............#
+#......#.......#
+#......#.......#
+#..............#
+XP.....#.......#
+#......#.......#
+#..............#
+################
+
+[entities at boot]
+entity 1 player cell=(1,5)
+  player_combat: active_attack=null attack_on_cooldown=false attack_visual_time=0.0000 impact_left=0.0000 pencil_thrust=AttackProfile@res://resources/attacks/pencil_thrust.tres pending_cells=[] recovery_left=0.0000 skill_cooldown_duration=1.2500 skill_cooldown_left=0.0000 sword_unlocked=true wooden_sword=AttackProfile@res://resources/attacks/wooden_sword.tres
+  view_ref: node=node(PawnHero) was_attacking=false was_dead=false was_hurt=false was_telegraphing=false
+  player_input: buffered_direction=(0, 0) held_repeat_delay=0.2200 hold_time=0.0000 last_held_direction=(0, 0)
+  player_tag: control_enabled=true
+  move_state: duration=0.1800 from_cell=(0, 0) moving=false progress=0.0000 to_cell=(0, 0)
+  move_intent: direction=(0, 0)
+  attack_intent: kind=&"none"
+  health: current=3 flash_left=0.0000 hurt_visual_time=0.0000 invulnerability_duration=0.7000 invulnerable_left=0.0000 max_value=3 recoil=(0.0000, 0.0000)
+  facing: direction=(0, 1)
+  grid_pos: cell=(1, 5)
+
+[entities after 120 ticks]
+entity 1 player cell=(1,5) facing=(0,1) moving=false health=3/3
+events drained: 0
+
+[nodes] 28
+CurrentZone Node2D script=res://scripts/world/room_encounter.gd position=(0.00,0.00)
+CurrentZone/Entry_FromBoss Marker2D script=res://scripts/world/zone_entry_marker.gd position=(112.00,212.00)
+CurrentZone/Entry_FromToybox Marker2D script=res://scripts/world/zone_entry_marker.gd position=(144.00,84.00)
+CurrentZone/Exit_To_Act2Toybox Marker2D script=res://scripts/world/zone_exit_marker.gd position=(144.00,52.00)
+CurrentZone/Exit_To_Boss Marker2D script=res://scripts/world/zone_exit_marker.gd position=(80.00,212.00)
+CurrentZone/RoomArt Node2D position=(0.00,0.00) z_index=-20
+CurrentZone/RoomArt/Frame Polygon2D position=(52.00,24.00)
+CurrentZone/RoomArt/GridLines Node2D script=res://scripts/world/grid_lines_overlay.gd position=(0.00,0.00)
+CurrentZone/RoomArt/SetDressing Node2D position=(0.00,0.00)
+CurrentZone/RoomArt/SetDressing/ChildHandShadow Polygon2D position=(388.00,72.00)
+CurrentZone/RoomArt/SetDressing/OpenRugPath Line2D position=(0.00,0.00)
+CurrentZone/RoomArt/SetDressing/ToyboxPreview Polygon2D position=(106.00,78.00)
+CurrentZone/RoomArt/SetDressing/TrainTrackForeshadow Line2D position=(0.00,0.00)
+CurrentZone/RoomArt/TileMap TileMapLayer position=(64.00,36.00) used_cells=144 tile_set=res://resources/tiles/kingdom_tileset.tres
+PawnHero Node2D script=res://scripts/ecs/actor_view.gd position=(112.00,212.00) z_index=7
+PawnHero/AnimationPlayer AnimationPlayer
+PawnHero/AnimationTree AnimationTree
+PawnHero/AudioPlayer AudioStreamPlayer
+PawnHero/Camera2D Camera2D script=res://scripts/world/camera_rig.gd
+PawnHero/CombatComponent Node script=res://scripts/ecs/components/combat_component.gd
+PawnHero/HealthComponent Node script=res://scripts/ecs/components/health_component.gd
+PawnHero/InputComponent Node script=res://scripts/ecs/components/input_component.gd
+PawnHero/MotionRoot Node2D
+PawnHero/MotionRoot/SpriteRoot Node2D
+PawnHero/MotionRoot/SpriteRoot/BodySprite Sprite2D
+PawnHero/MotionRoot/SpriteRoot/WeaponPivot Node2D
+PawnHero/MotionRoot/SpriteRoot/WeaponPivot/WeaponSprite Sprite2D
+PawnHero/MovementComponent Node script=res://scripts/ecs/components/movement_component.gd
+
+[textures] 3
+CurrentZone/RoomArt/TileMap#tile_set_source0 -> res://assets/tiles/kingdom_tiles.svg
+PawnHero/MotionRoot/SpriteRoot/BodySprite -> res://assets/sprites/generated/hero_pawn_unarmed.png
+PawnHero/MotionRoot/SpriteRoot/WeaponPivot/WeaponSprite -> res://assets/sprites/generated/toy_sword.png
