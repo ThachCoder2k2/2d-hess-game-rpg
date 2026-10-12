@@ -922,3 +922,39 @@ Second of four M1b steps, branch `base/m1b-2` from `base/m1b-1`. No gameplay cha
   `scenes/zones`, `resources/*`, the 12 tracked sprites), `CLAUDE.md` amendments and the prose docs (they still
   describe the old layout), `test_sidecars_tracked` ENFORCING (clean today: 96 `.gd`, 0 missing sidecars),
   `task_plan.md` M1b row.
+
+## M1b step 3 - the content moves - 2026-10-12
+
+Third of four M1b steps, branch `base/m1b-3` from `base/m1b-2`. No gameplay change, no scene changed except the
+`path=` text of `ext_resource` lines, no `ResourceSaver` re-save, no uid changed.
+
+- **What moved.** Everything under `resources/`, `objects/` and `scenes/`, the 12 tracked sprites of
+  `assets/sprites/generated/`, the three tile atlases of `assets/tiles/` and `assets/art/pieces/`. The six Stage 1
+  rooms are `content/rooms/<id>/room.tscn`; the seven enemies are `content/enemies/<id>/enemy.tres` with their own
+  sub-resources beside them and the shared pawn pieces in `content/enemies/_shared/`; the world graph is
+  `content/world/world.tres`; the Book pages are `content/rules/<id>/page.tres`; the difficulty profile is
+  `content/difficulty/`; the player's pictures are `content/player/{body,icon}.png`; the sword and pencil attack
+  profiles are `content/skills/<id>/`; the floor weapons are `content/pickups/<id>/`; the tile kits are
+  `content/tilesets/{kingdom,playground}/` with atlases in `assets/tiles/<kit>/atlas.svg`; the five actor scenes are
+  `presentation/views/actors/` (not collapsed: M2); the kingdom and first_encounter are fixtures under
+  `tests/fixtures/` with their parts; the hand-drawn bedroom pieces are `assets/map_pieces/`. The old folders are
+  gone. The old-to-new tables and every judgement call are in `docs/migration-notes.md`; the exact list is
+  `tools/move_res_log.tsv`.
+- **One commit per folder or coherent group** (26 commits: 21 moves, one cleanup, three guard commits, one
+  notes commit), the strict runner after every one. Two groups had to be one commit because a test lists a folder
+  (the seven enemy definitions, the six rooms); one attempt was thrown away and redone when the Book check turned
+  out to straddle two layouts.
+- **Dumps.** The six baselines changed in 101 lines in total; every change is only a `res://` path a moved file
+  prints (same line count, equal line by line after replacing path tokens, checked against the step-2 baselines).
+- **Guards.** `test_sidecars_tracked` and `test_dependency_edges` are ENFORCING; the dependency guard fails on any
+  edge outside the table, the documented exception and an explicit report-only `UNDECIDED_EDGES` list (the 5 edges
+  nobody decided), and fails when a list entry goes stale. New: `test_content_has_no_gd` (zero `.gd`, at least 40
+  files, folder = id), `test_content_references` (the content row of 13.1, 137 `ext_resource` lines, 0 violations,
+  1 documented exception, 6 undecided room references), `test_fixtures_present` (requirement 116) and
+  `test_no_old_res_paths` (the M1b grep acceptance). Each was mutation-checked.
+- **Verification.** `python3 tools/run_all_tests.py --strict` green after every commit; both `--self-test` runs
+  0 failures; `git diff --check` clean; `tools/bootstrap_worktree.sh` still runs all four generators clean with the
+  moved hand art; `paint_kingdom_tilemap.gd` re-run on the new paths changes only the harmless node `unique_id`.
+- **Not done here (the next step):** `CLAUDE.md` amendments and the prose docs, `tools/seed_placeholders.gd`,
+  `content/_placeholders.json`, `content/README.md`, `task_plan.md` M1b row; the owner decides the 5 undecided edges
+  and the room-overlay reference before `allowed_edges.txt` is frozen.

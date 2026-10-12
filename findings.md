@@ -338,3 +338,32 @@ June note).
   does not do this, and a fresh clone never does.
 - Scans that must see every scene or script wherever it lives use `TestPaths.project_directory()` with the
   recursive listing, not `scenes/` or `objects/` (the audio-bus test used to, and would have gone blind).
+
+## Content Layout Facts (M1b step 3, 2026-10-12)
+
+- Content lives in `content/` (zero `.gd`, test-enforced): `enemies/<id>/enemy.tres` with `_shared/{movement,attacks,
+  decisions,visuals}/` for pieces several enemies use, `rooms/<id>/room.tscn`, `rules/<id>/page.tres` plus
+  `rules/rule_book.tres`, `skills/<id>/` and `pickups/<id>/` (the AttackProfile and EnemyWeapon data under their own
+  names until the plan's `skill.tres` / `pickup.tres` exist), `player/{body,icon}.png`, `difficulty/`, `world/world.tres`,
+  `tilesets/<kit>/{tileset.tres,tilemap.tscn}`. A leading underscore folder is not an id. `docs/migration-notes.md`
+  has the tables and the calls.
+- Art follows the owner's one-file-per-thing direction: the atlases are `assets/tiles/<kit>/atlas.svg` (single tile
+  PNGs and a tool that assembles them are later), shared actor overlay art is `assets/ui/actor_view/`, the hand-drawn
+  bedroom pieces are `assets/map_pieces/<piece>.png` + `<piece>_height.png`. Nothing hand-made is in a gitignored or
+  `.gdignore` folder.
+- The kingdom (72x40) and `first_encounter` are fixtures, not content: `tests/fixtures/<name>.tscn` with a folder of
+  the same name for its parts. The world graph still lists the `kingdom` zone (the H1 exit targets it) and names the
+  fixture scene, which is the one documented content-to-tests reference; M5 removes it.
+- Actor view scenes are interim copies in `presentation/views/actors/` until M2 collapses them. The bishop's scene
+  draws the knight's `body.png` (it has no art of its own).
+- Dump baselines print the path of every resource an entity holds (`EnemyDefinition@<path>`, texture paths, `scene:`),
+  so a content move changes baseline lines. `move_res.py` rewrites them; the proof that nothing else changed is
+  "same line count, equal after replacing every `res://` token" (a plain `git diff` of the baselines is not enough).
+- `move_res.py` rewrites whole paths only: a format string such as `".../%s.tscn"` or a directory listing that depended
+  on a flat layout (`TestPaths.rooms_directory()`, the Book check in `run_tests.gd`) has to be edited by hand, and
+  `TestPaths.enemy_definitions_directory()` went stale unnoticed for one commit for exactly that reason. A test that
+  lists a folder forces the whole folder into one commit.
+- `.import` sidecars of moved images change content (the imported-cache path is a hash of the source path); commit
+  them with the move. The `uid=` inside does not change, which is what keeps scenes resolving.
+- `UNDECIDED_EDGES` / `UNDECIDED_REFERENCES` are the owner's open questions, in code, with a stale-entry check so
+  a fixed edge forces the line out. Add an entry only with the owner's say-so.
