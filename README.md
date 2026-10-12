@@ -2,6 +2,11 @@
 
 A Godot 4 top-down grid action adventure about a white pawn that breaks free from the rules of chess.
 
+**Where things stand:** `docs/where-we-are.md` (status of every area and the decisions waiting
+for the owner). **What is being built:** `docs/game-base-plan.md` (the complete-base plan and its
+milestones). **How the code works:** `docs/ARCHITECTURE.md`. **Rules for contributors:** `CLAUDE.md`
+and `AGENTS.md`.
+
 ## Current Milestone
 
 The first playable foundation includes:
@@ -13,7 +18,7 @@ The first playable foundation includes:
 - One-cell Wooden Sword attacks.
 - Two-cell Pencil Thrust skill on `Q`.
 - Black Pawn AI with diagonal attack telegraphs.
-- Free cardinal enemy movement.
+- Enemies move by their own chess law, as data (`MovementConfig.allowed_directions`): Pawn cardinal, Bishop diagonal, Knight L-step.
 - Knight enemy with L-shaped unarmed attacks.
 - Enemy weapon pickups and pre-armed variants.
 - Pencil Spear and Ruler Blade replacement attack patterns.
@@ -63,6 +68,10 @@ Hand-drawn art is different: `assets/art/pieces/` is source, is committed, and i
 never regenerated. Anything you draw and drop in there replaces the procedural
 version of that piece on the next build.
 
+Milestone M1a of `docs/game-base-plan.md` adds `tools/bootstrap_worktree.sh` to run all of
+the steps above in one command (useful for a fresh clone or a parallel worktree). Until that
+script exists, run them by hand.
+
 ## Run
 
 Open `project.godot` in Godot 4.6 or run:
@@ -73,9 +82,18 @@ Open `project.godot` in Godot 4.6 or run:
 
 ## Test
 
+The canonical runner is `python3 tools/run_all_tests.py` (added in M1a of
+`docs/game-base-plan.md`): it does the import pass, runs every suite in its own bounded
+subprocess and fails on any script error. Until it exists, run `/verify` (see
+`.claude/commands/verify.md`) or the suites by hand, each with an isolated `HOME`:
+
 ```bash
-../Godot.app/Contents/MacOS/Godot --headless --path . -s tests/run_tests.gd
+HOME=/tmp/unbound-pawn-godot ../Godot.app/Contents/MacOS/Godot --headless --path . -s tests/run_tests.gd
 ```
+
+Then each runtime test the same way (`-s tests/<name>_test.gd`): `ecs_runtime`, `ecs_combat`,
+`ecs_enemy`, `room_encounter_runtime`, `encounter_hud_runtime`, `zone_travel_runtime`. Expect
+`TESTS COMPLETE: 0 failure(s)` and `... TEST: PASS` from each.
 
 ## Controls
 
@@ -84,15 +102,32 @@ Open `project.godot` in Godot 4.6 or run:
 - `Space` or `K`: Wooden Sword.
 - `Q`: Pencil Thrust.
 - `R`: reset the room.
+- `B`: open the Book of House Rules.
+- `F3`: toggle the debug view. `F11`: fullscreen.
 
 ## Design
 
-The approved GDD, pixel-art bible, and vertical-slice design live in `docs/design/`.
-For editing the current room in Godot, use `docs/design/room-authoring-guide.md`.
+The GDD, pixel-art bible, per-area specs and vertical-slice design live in `docs/design/`.
+`docs/design/room-authoring-guide.md` explains editing a room in Godot; it predates the ECS
+conversion and is being rewritten, so where it disagrees with `docs/ARCHITECTURE.md`, trust
+`docs/ARCHITECTURE.md`. Old Obsidian notes from the node era are archived in
+`docs/archive/vault/`.
 
 ## Project Structure
 
-- `scenes/`: main playable scenes, authored rooms, and UI scenes.
-- `objects/`: reusable editable object templates such as actors, pickups, markers, components, visuals, and helper world nodes.
-- `scripts/`: reusable behavior only; avoid putting room content directly in scripts.
-- `resources/`: Inspector-tunable data for attacks, enemies, movement, weapons, objectives, visuals, and tiles.
+The simulation is a full ECS (`docs/ARCHITECTURE.md` has the details). Today's folders:
+
+- `scenes/`: the main scene, authored rooms (`rooms/`), the kingdom zone, and UI scenes.
+- `objects/`: reusable prefabs: actor views (`ActorView` puppets), markers, world helpers, audio.
+- `resources/`: Inspector-tunable `.tres` data for enemies, movement, decisions, attacks, weapons, visuals, difficulty, objectives, Book of House Rules, tiles and the world graph.
+- `scripts/ecs/`: the simulation: `EcsWorld`, `EcsGrid`, components, systems, `EcsBoot`, `EcsActorFactory`, `ActorView`, and the `EntityComponent` nodes.
+- `scripts/data/`, `scripts/ai/`, `scripts/combat/`: Resource schemas (`EnemyDefinition`, `MovementConfig`, `AttackPattern`, `EnemyWeapon`, ...).
+- `scripts/world/`, `scripts/ui/`, `scripts/visuals/`, `scripts/audio/`, `scripts/main.gd`: room markers, board overlay, camera, `WorldState`, HUD, sound, and the bridge from the ECS to presentation.
+- `tests/`: headless tests. `tools/`: generators and build scripts (never shipped). `assets/`: raw art and audio.
+- `docs/`: architecture, coding standards, the build plan (`game-base-plan.md`), status (`where-we-are.md`), design specs, and `archive/` for superseded documents.
+
+`docs/game-base-plan.md` section 13 describes a planned re-organisation (`content/`, `schema/`, `ecs/`, `authoring/`, `presentation/`, `shell/`). It is a target and is not built yet.
+
+## License
+
+See `LICENSE` (all rights reserved by default; the owner may replace it) and `THIRD_PARTY_NOTICES.md`.

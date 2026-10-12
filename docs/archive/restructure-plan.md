@@ -1,3 +1,5 @@
+> Superseded by docs/game-base-plan.md §13
+
 # Restructure Plan — type-based → feature-based (future reference)
 
 **Status: not scheduled.** The project is type-based today and that is the right

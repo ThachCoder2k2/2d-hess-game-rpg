@@ -5,6 +5,7 @@
 export_presets.cfg
 build/
 docs/vault/.obsidian/
+docs/archive/vault/.obsidian/
 
 # Generated art. Every file in these folders is rebuilt from scratch by a script
 # in tools/, so the repo carries the generator and not its output — otherwise one
