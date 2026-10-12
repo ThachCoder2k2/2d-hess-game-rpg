@@ -811,3 +811,28 @@ Gate OG0 answers (owner picked each option in chat, 2026-10-12):
 | Cleared rooms on return (plan §2.3 T-5, reverses the 2026-07-28 Souls respawn rule) | "Giữ sạch" — cleared rooms stay cleared |
 
 Tag `pre-restructure` (f96a12c) marks the last commit before the restructure.
+
+## M1a Safety net and tooling - 2026-10-12
+
+Milestone M1a of `docs/game-base-plan.md` (no gameplay change, no file moved). Five lanes built it in
+separate worktrees and the integrator merged them on `base/m1a`.
+
+- Harness: `UnboundTest` (watchdog, no vacuous pass), `TestPaths`, `tools/run_all_tests.py` (import pass,
+  every suite as its own bounded process, baseline-label check), `tests/baseline_labels.txt` (235 labels from
+  the seven original suites), `tests/label_renames.txt`, `docs/requirements_ledger.md` and its test.
+  `/verify` now runs `python3 tools/run_all_tests.py --strict` and `git diff --check`.
+- Bridge: five characterization suites in `tests/bridge/` that pin `scripts/main.gd` as it is today
+  (zone travel, health carry, death and restart, persistence of pickups/gates/unlocks, the Book), so the
+  M3b split can be checked against them.
+- Tools: `bootstrap_worktree.sh`, `stamp_uids.gd` (+ `--check`), `move_res.py`, `dump_world.gd` with six
+  room baselines (T1-T4, B1, H1), and three report-only architecture guards in `tests/architecture/`.
+- Audio: `default_bus_layout.tres` now has Master as bus 0, then SFX, Music, UI, Voice; `test_audio_buses`.
+- Docs: `ARCHITECTURE.md`, `coding-standards.md`, `AGENTS.md`, `README.md` and `.claude/commands/*`
+  rewritten against the code; `restructure-plan.md` and the vault archived; `OWNER_GUIDE.md`,
+  `claude-md-diff.md` (waits for gate OG0), `LICENSE`, `THIRD_PARTY_NOTICES.md`.
+- Integration fix: the three report-only architecture guards printed no `PASS:` line, so the runner rejected
+  them as having checked nothing; each now prints a PASS for its non-vacuity check.
+- Verification on the merged tree: `python3 tools/run_all_tests.py --strict` is green (19 suites, 235 of 235
+  baseline labels, 0 warnings); import pass has no `ERROR`/`Parse` line; `git diff --check` clean. A scratch
+  copy stamped by `stamp_uids.gd` (49 headers + 213 `ext_resource` lines, 0 missing, one changed line per
+  stamped line) stays green after an import pass.

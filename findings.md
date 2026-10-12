@@ -262,3 +262,33 @@ June note).
 - A traced span table sets its own width. The knight's traced neck is 14 blocks in x 6..19, which forced the pedestal from width 22 to 24 — the lathe's `centre = width / 2.0` has to reach the head, or the neck floats over a narrower base.
 - Material bands are palette swaps on lathe rows, never drawn decals. A collar, a gold belt or the double-step's red band is one row entry — so a new enemy variant is a row table, no new art asset and no new script.
 - GDScript typing gotcha hit here: indexing an untyped `Array` yields Variant, so `var x := arr[i] + 1` fails to parse with "Cannot infer the type". Extract through an explicitly typed local (`var start: int = arr[i]`) before doing float math on it.
+
+## Test And Tooling Facts (M1a, 2026-10-12)
+
+- The audio bus layout was broken until M1a: bus 0 was defined as `SFX` with no `Master`, so at runtime
+  `get_bus_index(&"SFX")` was -1 and every actor `AudioPlayer` and the `SfxManager` pool silently played on
+  Master. `tests/audio/test_audio_buses.gd` now fails if any audio player names a bus that does not exist.
+- A script error in the `_init()` of a `SceneTree` suite leaves the Godot process running forever, and a
+  `Parse Error` still exits 0. Only a watchdog plus the runner's `SCRIPT ERROR` / `Parse Error` scan and its
+  "verdict line required" rule catch both. Suites extending `UnboundTest` get the watchdog for free.
+- GDScript does not call a base class `_init()` once the subclass defines its own, so `UnboundTest` arms its
+  watchdog from `_initialize()`; a suite must not define `_initialize()` itself.
+- The headless `--editor --quit` import does not parse-check a script that no suite loads, so a broken
+  `class_name` script in an untested file prints nothing. M1b should add a "load every `.gd`" test.
+- A real-renderer boot works in the agent sandbox (`--quit-after 180`, Metal on Apple silicon, about 7 s) but
+  the game opens fullscreen, so each run flashes the owner's screen. Exact command: `tools/README.md`.
+- `main.gd` today: the Book of House Rules blocks keys but does not pause the world; a zone trip that ends
+  under an open Book turns control back on while the Book stays visible (fix with the M4 pause work); the
+  health carry is a snapshot taken when the trip starts, so a hit during the fade-out is lost; the zone node is
+  named after the room (`T2_FallenSwordTile`), not `CurrentZone`. All pinned by `tests/bridge/`.
+- Content defects found by the bridge suites (not fixed in M1a): T2's `Exit_To_T1` at cell (0,5) sits on a
+  solid wall tile, so the hero cannot walk back to T1 (ledger req 110 "backtracking works" is only true through
+  `_travel_to`); T4's `PencilSpearPickup` at (7,6) is on a solid cell, so a pawn cannot walk to the spear.
+- Dependency edges the plan's 13.1 starting table does not allow today (report only): `EcsBoot`,
+  `EntityComponent` and `PickupSpawnPoint` name `ActorView` / `WeaponPickup`, and `PrototypeBoard` reads
+  `EcsWorld` and `EcsComponents`. Decide what to freeze in `tests/architecture/allowed_edges.txt` before M1b
+  turns the guard on.
+- Folder moves must go through `tools/move_res.py`, after `tools/stamp_uids.gd`: a bare `git mv` of
+  `resources/enemies` turns three suites red; with stamped uids a bare move of scene-referenced resources stays
+  green, which is why M1b stamps first. Never use `ResourceSaver` to "fix" uids: it adds none and drops the
+  header uid of `scenes/main.tscn`.
