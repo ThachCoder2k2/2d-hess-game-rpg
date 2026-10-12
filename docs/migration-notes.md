@@ -184,7 +184,8 @@ The 12 tracked sprites of `assets/sprites/generated/`:
   `README.md`, `THIRD_PARTY_NOTICES.md`, `tools/README.md`, `.gitignore`, the three room-generator docs) were fixed by
   hand. Not touched: `docs/OWNER_GUIDE.md`, `docs/ARCHITECTURE.md`, `docs/coding-standards.md`, `AGENTS.md`,
   `README.md`'s folder list, `.claude/commands/*` (the docs step), and the history files.
-* Guards now enforcing: `test_sidecars_tracked` (96 `.gd`, 35 imported assets, 0 missing, 0 orphans),
+* Guards now enforcing: `test_sidecars_tracked` (96 `.gd`, 35 imported assets, 0 missing, 0 orphans, 0 stale `.import`:
+  it also fails when a tracked `.import` still names the file's old path or cache name, which a fresh clone found once),
   `test_dependency_edges` (everything except an explicit `UNDECIDED_EDGES` list, below),
   and three new ones: `test_content_has_no_gd` (zero `.gd`, at least 40 files, folder = id), `test_fixtures_present`
   (ledger requirement 116) and `test_content_references` (the `content` row of 13.1). `test_no_old_res_paths` is the

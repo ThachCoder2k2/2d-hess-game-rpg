@@ -940,8 +940,8 @@ Third of four M1b steps, branch `base/m1b-3` from `base/m1b-2`. No gameplay chan
   `tests/fixtures/` with their parts; the hand-drawn bedroom pieces are `assets/map_pieces/`. The old folders are
   gone. The old-to-new tables and every judgement call are in `docs/migration-notes.md`; the exact list is
   `tools/move_res_log.tsv`.
-- **One commit per folder or coherent group** (26 commits: 21 moves, one cleanup, three guard commits, one
-  notes commit), the strict runner after every one. Two groups had to be one commit because a test lists a folder
+- **One commit per folder or coherent group** (29 commits: 21 moves, one cleanup, three guard commits, one
+  notes commit, one sidecar repair and its guard, one record update), the strict runner after every one. Two groups had to be one commit because a test lists a folder
   (the seven enemy definitions, the six rooms); one attempt was thrown away and redone when the Book check turned
   out to straddle two layouts.
 - **Dumps.** The six baselines changed in 101 lines in total; every change is only a `res://` path a moved file
@@ -955,6 +955,9 @@ Third of four M1b steps, branch `base/m1b-3` from `base/m1b-2`. No gameplay chan
 - **Verification.** `python3 tools/run_all_tests.py --strict` green after every commit; both `--self-test` runs
   0 failures; `git diff --check` clean; `tools/bootstrap_worktree.sh` still runs all four generators clean with the
   moved hand art; `paint_kingdom_tilemap.gd` re-run on the new paths changes only the harmless node `unique_id`.
+  A fresh `git clone` plus bootstrap found one stale `.import` (the pawn body's imported-cache path, left behind when
+  that move was redone after a discarded attempt); it was repaired and `test_sidecars_tracked` now fails on any
+  stale or orphan sidecar.
 - **Not done here (the next step):** `CLAUDE.md` amendments and the prose docs, `tools/seed_placeholders.gd`,
   `content/_placeholders.json`, `content/README.md`, `task_plan.md` M1b row; the owner decides the 5 undecided edges
   and the room-overlay reference before `allowed_edges.txt` is frozen.
