@@ -10,7 +10,7 @@
 [ext_resource type="Resource" uid="uid://bbnwqg8n5v14g" path="res://resources/enemies/backstep_pawn.tres" id="8_backstep"]
 [ext_resource type="PackedScene" uid="uid://bfu3s8us3gcqd" path="res://authoring/markers/pickup_spawn_point.tscn" id="9_pickup"]
 [ext_resource type="PackedScene" uid="uid://cd0pt6lb10mqe" path="res://presentation/views/weapon_pickup.tscn" id="10_pickup_scene"]
-[ext_resource type="Resource" uid="uid://d0qxvb8xdjbov" path="res://resources/weapons/pencil_spear.tres" id="11_spear"]
+[ext_resource type="Resource" uid="uid://d0qxvb8xdjbov" path="res://content/pickups/pencil_spear/pencil_spear.tres" id="11_spear"]
 
 [node name="T4_BrokenRuleYard" instance=ExtResource("1_room")]
 room_message = "They broke the rules first. Armed pawns reach farther than chess allows."

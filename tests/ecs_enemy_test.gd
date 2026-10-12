@@ -99,7 +99,7 @@ func _init() -> void:
 	world.attack_token_owner = 0
 
 	# Pickup: a weaponless enemy standing on a spear takes it.
-	var spear := (load("res://resources/weapons/pencil_spear.tres") as EnemyWeapon).duplicate(true)
+	var spear := (load("res://content/pickups/pencil_spear/pencil_spear.tres") as EnemyWeapon).duplicate(true)
 	EcsActorFactory.spawn_pickup(world, spear, pawn_pos.cell)
 	pawn_ai.state = EcsComponents.EnemyAI.STATE_OBSERVE
 	pawn_ai.state_time_left = 0.01

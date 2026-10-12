@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://bork3o5rtutb0"
-path="res://.godot/imported/pencil_spear.png-b61691063a925e3f126e9faf52487615.ctex"
+uid="uid://cwfqcxn8ifl0r"
+path="res://.godot/imported/icon.png-33bba57162663a71a368383c589c23ab.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/sprites/generated/pencil_spear.png"
-dest_files=["res://.godot/imported/pencil_spear.png-b61691063a925e3f126e9faf52487615.ctex"]
+source_file="res://content/pickups/ruler_blade/icon.png"
+dest_files=["res://.godot/imported/icon.png-33bba57162663a71a368383c589c23ab.ctex"]
 
 [params]
 

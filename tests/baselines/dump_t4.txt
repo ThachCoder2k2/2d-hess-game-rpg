@@ -52,7 +52,7 @@ entity 2 enemy:Pawn cell=(9,2)
   facing: direction=(0, 1)
   grid_pos: cell=(9, 2)
 entity 3 enemy:Pawn cell=(12,4)
-  weapon_slot: weapon=EnemyWeapon{color=#8ec8e8ff damage=1 display_name="Pencil Spear" id=&"pencil_spear" range_cells=2 recovery_time=0.6800 shape=0 tags=[&"melee", &"reach"] telegraph_time=0.6200 texture=CompressedTexture2D@res://assets/sprites/generated/pencil_spear.png}
+  weapon_slot: weapon=EnemyWeapon{color=#8ec8e8ff damage=1 display_name="Pencil Spear" id=&"pencil_spear" range_cells=2 recovery_time=0.6800 shape=0 tags=[&"melee", &"reach"] telegraph_time=0.6200 texture=CompressedTexture2D@res://content/pickups/pencil_spear/icon.png}
   enemy_ai: action_memory=[] allowed_directions=[(0, -1), (0, 1), (-1, 0), (1, 0)] attack_pattern=AttackPattern@res://resources/attacks/pawn_diagonal.tres committed_goal=(-999, -999) committed_goal_kind=&"none" committed_target_snapshot=(-999, -999) decision_profile=DecisionConfig@res://resources/decisions/pawn_skirmisher.tres definition=EnemyDefinition@res://resources/enemies/pawn_armed.tres goal_commitment_decisions=2 goal_decisions_left=0 last_move_direction=(0, 0) locked_attack_cells=[] move_recovery_time=0.1800 observe_delay=0.4200 path_memory_size=6 recent_cells=[] state=0 state_time_left=0.4200 telegraph_duration=0.0000 unarmed_recovery_time=0.4800 unarmed_telegraph_time=0.5800
   view_ref: node=node(CurrentZone/ArmedPawn) was_attacking=false was_dead=false was_hurt=false was_telegraphing=false
   move_state: duration=0.1800 from_cell=(0, 0) moving=false progress=0.0000 to_cell=(0, 0)
@@ -70,7 +70,7 @@ entity 4 enemy:Backstep Pawn cell=(7,6)
   facing: direction=(0, 1)
   grid_pos: cell=(7, 6)
 entity 5 pickup:Pencil Spear cell=(7,6)
-  pickup_item: weapon=EnemyWeapon{color=#8ec8e8ff damage=1 display_name="Pencil Spear" id=&"pencil_spear" range_cells=2 recovery_time=0.6800 shape=0 tags=[&"melee", &"reach"] telegraph_time=0.6200 texture=CompressedTexture2D@res://assets/sprites/generated/pencil_spear.png}
+  pickup_item: weapon=EnemyWeapon{color=#8ec8e8ff damage=1 display_name="Pencil Spear" id=&"pencil_spear" range_cells=2 recovery_time=0.6800 shape=0 tags=[&"melee", &"reach"] telegraph_time=0.6200 texture=CompressedTexture2D@res://content/pickups/pencil_spear/icon.png}
   grid_pos: cell=(7, 6)
 
 [entities after 120 ticks]
@@ -168,14 +168,14 @@ CurrentZone/ArmedPawn/MotionRoot/SpriteRoot/FacingArrow -> res://assets/sprites/
 CurrentZone/ArmedPawn/MotionRoot/SpriteRoot/HealthPips/Pip0 -> res://assets/sprites/generated/health_pip_full.png
 CurrentZone/ArmedPawn/MotionRoot/SpriteRoot/HealthPips/Pip1 -> res://assets/sprites/generated/health_pip_full.png
 CurrentZone/ArmedPawn/MotionRoot/SpriteRoot/HealthPips/Pip2 -> res://assets/sprites/generated/health_pip_empty.png
-CurrentZone/ArmedPawn/MotionRoot/SpriteRoot/WeaponPivot/WeaponSprite -> res://assets/sprites/generated/pencil_spear.png
+CurrentZone/ArmedPawn/MotionRoot/SpriteRoot/WeaponPivot/WeaponSprite -> res://content/pickups/pencil_spear/icon.png
 CurrentZone/ArmedPawn/TelegraphAura -> res://assets/sprites/generated/warning_aura.png
 CurrentZone/BackstepPawn/MotionRoot/SpriteRoot/BodySprite -> res://assets/sprites/generated/black_pawn.png
 CurrentZone/BackstepPawn/MotionRoot/SpriteRoot/FacingArrow -> res://assets/sprites/generated/facing_arrow.png
 CurrentZone/BackstepPawn/MotionRoot/SpriteRoot/HealthPips/Pip0 -> res://assets/sprites/generated/health_pip_full.png
 CurrentZone/BackstepPawn/MotionRoot/SpriteRoot/HealthPips/Pip1 -> res://assets/sprites/generated/health_pip_full.png
 CurrentZone/BackstepPawn/MotionRoot/SpriteRoot/HealthPips/Pip2 -> res://assets/sprites/generated/health_pip_empty.png
-CurrentZone/BackstepPawn/MotionRoot/SpriteRoot/WeaponPivot/WeaponSprite -> res://assets/sprites/generated/pencil_spear.png
+CurrentZone/BackstepPawn/MotionRoot/SpriteRoot/WeaponPivot/WeaponSprite -> res://content/pickups/pencil_spear/icon.png
 CurrentZone/BackstepPawn/TelegraphAura -> res://assets/sprites/generated/warning_aura.png
 CurrentZone/PawnRecruit/MotionRoot/SpriteRoot/BodySprite -> res://assets/sprites/generated/black_pawn.png
 CurrentZone/PawnRecruit/MotionRoot/SpriteRoot/FacingArrow -> res://assets/sprites/generated/facing_arrow.png
@@ -186,6 +186,6 @@ CurrentZone/PawnRecruit/MotionRoot/SpriteRoot/WeaponPivot/WeaponSprite -> res://
 CurrentZone/PawnRecruit/TelegraphAura -> res://assets/sprites/generated/warning_aura.png
 CurrentZone/RoomArt/TileMap#tile_set_source0 -> res://assets/tiles/kingdom_tiles.svg
 CurrentZone/WeaponPickup/Visual/GlowSprite -> res://assets/sprites/generated/warning_aura.png
-CurrentZone/WeaponPickup/Visual/MotionRoot/SpriteRoot/PickupSprite -> res://assets/sprites/generated/toy_weapon_pickup.png
+CurrentZone/WeaponPickup/Visual/MotionRoot/SpriteRoot/PickupSprite -> res://content/pickups/toy_weapon/pickup.png
 PawnHero/MotionRoot/SpriteRoot/BodySprite -> res://assets/sprites/generated/hero_pawn_unarmed.png
 PawnHero/MotionRoot/SpriteRoot/WeaponPivot/WeaponSprite -> res://content/skills/wooden_sword/icon.png

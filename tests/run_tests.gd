@@ -147,7 +147,7 @@ func _init() -> void:
 	var second_spear := EnemyWeapon.pencil_spear()
 	_expect(spear.resource_path.is_empty() and spear != second_spear, "weapon factory returns independent instances from the editor asset")
 	_expect(spear.range_cells == 2 and spear.telegraph_time == 0.62, "Pencil Spear values load from its Resource")
-	_expect(spear.texture != null and spear.texture.resource_path.ends_with("pencil_spear.png"), "Pencil Spear carries its sprite as data")
+	_expect(spear.texture != null and spear.texture.resource_path.ends_with("pickups/pencil_spear/icon.png"), "Pencil Spear carries its sprite as data")
 
 	var attack_profile := AttackProfile.new()
 	attack_profile.range_cells = 2

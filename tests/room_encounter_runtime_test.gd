@@ -84,7 +84,7 @@ func _init() -> void:
 	health_spec.max_health = 5
 	spec_view.add_child(health_spec)
 	var weapon_spec := WeaponComponent.new()
-	weapon_spec.weapon = load("res://resources/weapons/ruler_blade.tres")
+	weapon_spec.weapon = load("res://content/pickups/ruler_blade/ruler_blade.tres")
 	spec_view.add_child(weapon_spec)
 	var spec_room := Node2D.new()
 	spec_room.add_child(spec_view)

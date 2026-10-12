@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://cwfqcxn8ifl0r"
-path="res://.godot/imported/ruler_blade.png-d10a5a708ded4aa32ae02bcbe6af82f2.ctex"
+uid="uid://bork3o5rtutb0"
+path="res://.godot/imported/icon.png-68a09a22f833e1d668b6d120516f8084.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/sprites/generated/ruler_blade.png"
-dest_files=["res://.godot/imported/ruler_blade.png-d10a5a708ded4aa32ae02bcbe6af82f2.ctex"]
+source_file="res://content/pickups/pencil_spear/icon.png"
+dest_files=["res://.godot/imported/icon.png-68a09a22f833e1d668b6d120516f8084.ctex"]
 
 [params]
 

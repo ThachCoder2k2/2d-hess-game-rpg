@@ -32,8 +32,8 @@ func get_attack_cells(origin: Vector2i, facing: Vector2i) -> Array[Vector2i]:
 
 
 static func pencil_spear() -> EnemyWeapon:
-	return (load("res://resources/weapons/pencil_spear.tres") as EnemyWeapon).duplicate(true)
+	return (load("res://content/pickups/pencil_spear/pencil_spear.tres") as EnemyWeapon).duplicate(true)
 
 
 static func ruler_blade() -> EnemyWeapon:
-	return (load("res://resources/weapons/ruler_blade.tres") as EnemyWeapon).duplicate(true)
+	return (load("res://content/pickups/ruler_blade/ruler_blade.tres") as EnemyWeapon).duplicate(true)

@@ -1,7 +1,7 @@
 [gd_resource type="Resource" script_class="AttackProfile" format=3 uid="uid://bog2k4gpe6yi4"]
 
 [ext_resource type="Script" uid="uid://kp0wge5nj2h5" path="res://schema/attacks/attack_profile.gd" id="1"]
-[ext_resource type="Texture2D" uid="uid://bork3o5rtutb0" path="res://assets/sprites/generated/pencil_spear.png" id="2"]
+[ext_resource type="Texture2D" uid="uid://bork3o5rtutb0" path="res://content/pickups/pencil_spear/icon.png" id="2"]
 
 [resource]
 script = ExtResource("1")

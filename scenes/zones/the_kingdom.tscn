@@ -9,8 +9,8 @@
 [ext_resource type="Resource" uid="uid://d0tvo4bod6o5q" path="res://resources/enemies/charging_pawn.tres" id="7"]
 [ext_resource type="PackedScene" uid="uid://dpl1xchpnp5nh" path="res://authoring/markers/gate_marker.tscn" id="8"]
 [ext_resource type="PackedScene" uid="uid://bfu3s8us3gcqd" path="res://authoring/markers/pickup_spawn_point.tscn" id="9"]
-[ext_resource type="Resource" uid="uid://d0qxvb8xdjbov" path="res://resources/weapons/pencil_spear.tres" id="10"]
-[ext_resource type="Resource" uid="uid://po15384k0voh" path="res://resources/weapons/ruler_blade.tres" id="11"]
+[ext_resource type="Resource" uid="uid://d0qxvb8xdjbov" path="res://content/pickups/pencil_spear/pencil_spear.tres" id="10"]
+[ext_resource type="Resource" uid="uid://po15384k0voh" path="res://content/pickups/ruler_blade/ruler_blade.tres" id="11"]
 [ext_resource type="PackedScene" uid="uid://cd0pt6lb10mqe" path="res://presentation/views/weapon_pickup.tscn" id="12"]
 
 [node name="TheKingdom" instance=ExtResource("1")]

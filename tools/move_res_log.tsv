@@ -73,3 +73,8 @@ resources/rules/rule_book.tres	content/rules/rule_book.tres
 resources/attacks/wooden_sword.tres	content/skills/wooden_sword/wooden_sword.tres
 assets/sprites/generated/toy_sword.png	content/skills/wooden_sword/icon.png
 resources/attacks/pencil_thrust.tres	content/skills/pencil_thrust/pencil_thrust.tres
+resources/weapons/pencil_spear.tres	content/pickups/pencil_spear/pencil_spear.tres
+assets/sprites/generated/pencil_spear.png	content/pickups/pencil_spear/icon.png
+resources/weapons/ruler_blade.tres	content/pickups/ruler_blade/ruler_blade.tres
+assets/sprites/generated/ruler_blade.png	content/pickups/ruler_blade/icon.png
+assets/sprites/generated/toy_weapon_pickup.png	content/pickups/toy_weapon/pickup.png
