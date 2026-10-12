@@ -51,6 +51,7 @@ change). Without the fix Godot falls back to the path and prints a warning.
 | `bootstrap_worktree.sh` | Makes a fresh clone or worktree test-ready: import pass, the four generators below, import pass. |
 | `run_all_tests.py` | The verification gate (`/verify`): import pass, every suite in its own bounded process, baseline-label check. `--strict`, `--only`, `--list`, `--verbose`. `--self-test` checks the gate itself (canned hangs, script errors, FAIL lines, missing verdicts, vanished labels, a fake Godot) in about 5 s with no Godot. |
 | `stamp_uids.gd` | Text-level UID stamper (never calls `ResourceSaver`): adds `uid=` to uid-less scene/resource headers and to path-only `ext_resource` lines. `-- --check` only reports and exits 1 if anything would change. Idempotent. |
+| `save_keeping_uids.gd` | The helper every tool that would call `ResourceSaver` uses instead (a helper, not a command; no `class_name`): `save_keeping_uid()` puts the file's previous header uid back after a save, `stamp_uids_last()` runs the stamper in a child Godot process. `tests/architecture/test_tools_keep_uids.gd` fails if a tool calls `ResourceSaver.save()` itself. |
 | `move_res.py` | `git mv` a file or folder with its `.uid`/`.import` sidecars and rewrite every `res://` string that pointed at it. `--dry-run`, `--rewrite-only`, `--rename-action`, `--import-pass`, `--self-test`. |
 | `dump_world.gd` | Boots a room headless, runs N manual ticks, prints the sorted node paths, texture paths and entity cells/components. `--room=t1`, `--write-baselines`, `--list`. |
 | `world_dumper.gd` | The dump logic, shared by `dump_world.gd` and `tests/architecture/test_dump_baselines.gd` (a helper, not a command; no `class_name`). |
@@ -58,9 +59,9 @@ change). Without the fix Godot falls back to the path and prints a warning.
 | `generate_kingdom_tiles.gd` | Bakes the room materials as pixel tiles, a contact sheet and a manifest (same art language as the pieces) into `assets/_generated/tiles/`. |
 | `generate_demo_map.gd` | Draws the pawn-scale bedroom demo world with the kingdom tiles into `assets/_generated/maps/` and re-exports the paintable piece templates to `assets/_generated/piece_templates/`. |
 | `generate_stage1_room_art.gd` | Paints the Stage-1 room backgrounds (T1, T2, ...) into `assets/_generated/rooms/`. |
-| `generate_playground_tilemap.gd` | Builds the playground tile set and tilemap scene. Uses `ResourceSaver`: run `stamp_uids.gd` after it. |
-| `paint_kingdom_tilemap.gd` | Paints the first room's throne-room floor into `objects/world/kingdom_tilemap.tscn`. Uses `ResourceSaver`: run `stamp_uids.gd` after it. |
-| `paint_zone_tilemaps.gd` | Carves the 72x40 kingdom board into `objects/world/kingdom_world_tilemap.tscn`. Uses `ResourceSaver`: run `stamp_uids.gd` after it. |
+| `generate_playground_tilemap.gd` | Builds the playground tile set and tilemap scene. Saves through `save_keeping_uids.gd` and stamps uids last. |
+| `paint_kingdom_tilemap.gd` | Paints the first room's throne-room floor into `objects/world/kingdom_tilemap.tscn`. Saves through `save_keeping_uids.gd` and stamps uids last. |
+| `paint_zone_tilemaps.gd` | Carves the 72x40 kingdom board into `objects/world/kingdom_world_tilemap.tscn`. Saves through `save_keeping_uids.gd` and stamps uids last. |
 | `render_kingdom_map.gd` | Renders the whole kingdom to one image for review; needs a real renderer (no `--headless`) and `--write-movie`. |
 | `generate_sfx.py` | Generates the placeholder SFX as mono WAV files into `assets/sfx/`. |
 | `generate_music.py` | Generates the placeholder A-minor march loop into `assets/music/`. |
@@ -69,6 +70,24 @@ change). Without the fix Godot falls back to the path and prints a warning.
 Never use the editor UID tool, the `update_project_uids` MCP tool, or a `ResourceLoader.load` plus
 `ResourceSaver.save` loop to "fix" uids: on this project it added 0 uids, turned 38 more
 references path-only and rewrote 587 non-uid lines (`docs/game-base-plan.md` 13.7).
+
+## Tools that save scenes: keep the uids
+
+`ResourceSaver.save()` on an existing `.tscn`/`.tres` drops the header uid and the uid on every
+`[ext_resource]` line (measured when the three tools below were migrated: seven room scenes name
+`kingdom_tilemap.tscn` by its header uid). Running the stamper afterwards would not repair that: it
+invents a NEW header uid. So `paint_kingdom_tilemap.gd`, `paint_zone_tilemaps.gd` and
+`generate_playground_tilemap.gd` save through `save_keeping_uids.gd`
+(`save_keeping_uid()` restores the previous header uid with `ResourceSaver.set_uid()`) and call
+`stamp_uids_last()` once, last (it adds the `[ext_resource]` uids from their targets). Checked by
+running each tool on the committed tree: the only diff left is the node's `unique_id` (Godot picks a
+new random one on every save; harmless) and, for the playground scene, the dropped `load_steps` and a
+renumbered `ext_resource` id. Run the editor import pass afterwards. A new tool that saves a scene
+must do the same; `tests/architecture/test_tools_keep_uids.gd` fails if it calls
+`ResourceSaver.save()` directly or forgets `stamp_uids_last()`.
+
+`generate_sfx.py`, `generate_music.py` and the PNG generators never touch a scene or resource (they
+write `.wav` and `.png` only), so they need no stamping.
 
 ## stamp_uids.gd
 
@@ -101,7 +120,7 @@ Measured on a scratch copy of the tree at M1a (the numbers the plan quotes):
 
 (Plain `git diff --numstat` reports 273 because git's default diff pairs up the blank line between
 the header and the first `ext_resource` block; `--minimal` and `--patience` give 262.)
-M1a ships only the tool; M1b commits the stamped tree.
+M1a shipped the tool; M1b step 1 ran it over the real tree (the numbers above, exactly) and committed the result alone. `tests/architecture/test_no_path_only_ext_resource.gd` now enforces zero path-only lines, so a scene saved without the stamper fails the suite.
 
 ## move_res.py
 

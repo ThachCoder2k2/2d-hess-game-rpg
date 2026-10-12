@@ -4,6 +4,10 @@ extends SceneTree
 ## as objects/world/kingdom_tilemap.tscn. Run headless:
 ##   Godot --headless --path . -s tools/paint_kingdom_tilemap.gd
 ## Rerun after changing the layout or the kingdom tileset.
+## Saves through SaveKeepingUids and stamps uids last, so the scene keeps the uid
+## that seven room scenes name it by (see tools/save_keeping_uids.gd).
+
+const SaveKeepingUids := preload("res://tools/save_keeping_uids.gd")
 
 const COLUMNS := 16
 const ROWS := 9
@@ -54,6 +58,7 @@ func _init() -> void:
 		push_error("Failed to pack kingdom tilemap: %d" % pack_err)
 		quit(1)
 		return
-	var save_err := ResourceSaver.save(packed, "res://objects/world/kingdom_tilemap.tscn")
+	var save_err := SaveKeepingUids.save_keeping_uid(packed, "res://objects/world/kingdom_tilemap.tscn")
 	print("KINGDOM TILEMAP: %s (pack=%d save=%d)" % ["OK" if save_err == OK else "FAIL", pack_err, save_err])
-	quit(0 if save_err == OK else 1)
+	var stamped := save_err == OK and SaveKeepingUids.stamp_uids_last()
+	quit(0 if stamped else 1)
