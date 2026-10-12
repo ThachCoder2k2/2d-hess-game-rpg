@@ -160,14 +160,16 @@ static func validate() -> PackedStringArray:
 ## Problems with references between entries, one sentence each (empty = healthy):
 ## Book pages name an enemy that exists; an enemy's default weapon, difficulty and
 ## weapon preferences name pickups and difficulty profiles that exist; the player's
-## attacks are skills; the world graph and the room folders agree; every door leads to
-## a zone of the graph and to an entry marker that exists there; every room's zone_id
-## equals its folder; every enemy parked in a room is a registered enemy.
+## attacks are skills; every visual's piece type is a row of the size table and its body
+## picture fits that row's box; the world graph and the room folders agree; every door
+## leads to a zone of the graph and to an entry marker that exists there; every room's
+## zone_id equals its folder; every enemy parked in a room is a registered enemy.
 static func validate_cross_refs() -> PackedStringArray:
 	var problems := PackedStringArray()
 	_check_rule_pages(problems)
 	_check_enemy_references(problems)
 	_check_player_references(problems)
+	_check_visual_references(problems)
 	_check_world_and_rooms(problems)
 	return problems
 
@@ -291,6 +293,37 @@ static func _check_player_references(problems: PackedStringArray) -> void:
 		return
 	_expect_registered(problems, "player/player", "wooden_sword", definition.wooden_sword, &"skills")
 	_expect_registered(problems, "player/player", "pencil_thrust", definition.pencil_thrust, &"skills")
+
+
+## Every actor's VisualDefinition names a kind of piece the size table has a row for, and its body
+## picture is no larger than that row's box (the owner's rule: a piece is smaller than its cell).
+static func _check_visual_references(problems: PackedStringArray) -> void:
+	var table := piece_sizes()
+	if table == null:
+		return
+	var visual_by_owner: Dictionary[String, VisualDefinition] = {}
+	var player_definition := player()
+	if player_definition != null and player_definition.visual != null:
+		visual_by_owner["player/player"] = player_definition.visual
+	for enemy_id in ids(&"enemies"):
+		var enemy := fetch(&"enemies", enemy_id) as EnemyDefinition
+		if enemy != null and enemy.visual != null:
+			visual_by_owner["enemies/%s" % enemy_id] = enemy.visual
+	for owner_label in visual_by_owner:
+		var visual: VisualDefinition = visual_by_owner[owner_label]
+		if visual.piece_type == &"":
+			continue
+		var row := table.row_for(visual.piece_type)
+		if row == null:
+			var kinds := PackedStringArray()
+			for piece_type in table.piece_types():
+				kinds.append(String(piece_type))
+			problems.append("%s: its visual's piece_type '%s' is not a row of content/feel/piece_sizes.tres (rows: %s)." % [owner_label, visual.piece_type, ", ".join(kinds)])
+			continue
+		if visual.body_texture != null:
+			var picture := Vector2i(visual.body_texture.get_size())
+			if picture.x > row.body_box.x or picture.y > row.body_box.y:
+				problems.append("%s: its body picture is %d x %d px but a %s may be drawn at most %d x %d px (content/feel/piece_sizes.tres)." % [owner_label, picture.x, picture.y, visual.piece_type, row.body_box.x, row.body_box.y])
 
 
 static func _check_world_and_rooms(problems: PackedStringArray) -> void:

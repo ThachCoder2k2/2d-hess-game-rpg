@@ -15,10 +15,12 @@ extends UnboundTest
 ##   - a node path that the new description has and the golden has not, unless ADDED_NODES lists it;
 ##   - any difference in the baked entity (the "entity" block): there is no allowance for those,
 ##     because "every baked component field equal the old scene's" is the whole point.
-## Geometry (where the body, pips, arrow, weapon and aura sit) is compared like everything else
-## until the owner's decision of 2026-10-12 (a piece is smaller than its cell) moves it; the commit
-## that moves it lists the lines in GEOMETRY_LINE_PREFIXES, and test_pieces_inside_cell asserts the
-## new geometry instead.
+## Geometry is the one thing the owner's decision of 2026-10-12 (a piece is smaller than its cell)
+## moves on purpose: where the body, pips, facing arrow, weapon and aura sit and how big they are.
+## For those nodes the position, scale and centring are not compared (GEOMETRY_NODE_PATHS,
+## GEOMETRY_TOKENS), nor are the two ActorView values that place the weapon
+## (GEOMETRY_LINE_PREFIXES); test_pieces_inside_cell asserts the new geometry instead. What the nodes
+## ARE (class, script, visibility, which picture) is still compared, and so is everything else.
 ##
 ## Per-room entity sets and cells: the golden also records a fingerprint of everything each world
 ## dump baseline says before its "[nodes]" section. Those heads must not change by a byte.
@@ -38,6 +40,8 @@ const REMOVED_ACTORS := {
 	"enemy_base": "it was black_pawn.tscn byte for byte under another node name; no room, fixture or test instanced it, and a new enemy now starts from actor_view_base.tscn",
 }
 
+const BISHOP_BODY_BEFORE := "node MotionRoot/SpriteRoot/BodySprite Sprite2D z=0 texture=res://content/enemies/knight_tracker/body.png"
+const BISHOP_BODY_NOW := "node MotionRoot/SpriteRoot/BodySprite Sprite2D z=0 texture=res://content/enemies/bishop_zoner/body.png"
 const START_TO_IDLE := "transition Start -> idle switch=0 advance=2 condition= xfade=0.0000"
 const START_TO_IDLE_NOW := "transition Start -> idle switch=0 advance=2 condition=boots_awake xfade=0.0000"
 
@@ -47,7 +51,8 @@ const REPLACED_LINES := {
 	# each edge now waits for a condition that the scene sets (base: awake; the hero's scene: asleep).
 	"black_pawn": {START_TO_IDLE: START_TO_IDLE_NOW},
 	"knight_enemy": {START_TO_IDLE: START_TO_IDLE_NOW},
-	"bishop_enemy": {START_TO_IDLE: START_TO_IDLE_NOW},
+	# The bishop borrowed the knight's picture; it has its own body now (content/enemies/bishop_zoner/body.png).
+	"bishop_enemy": {START_TO_IDLE: START_TO_IDLE_NOW, BISHOP_BODY_BEFORE: BISHOP_BODY_NOW},
 	"player": {
 		"transition Start -> wake switch=0 advance=2 condition= xfade=0.0000": "transition Start -> wake switch=0 advance=2 condition=boots_asleep xfade=0.0000",
 		# The hero inherits the pips and the facing arrow, so it names their pictures and switches them
@@ -69,8 +74,24 @@ const ADDED_NODES := {
 		"MotionRoot/SpriteRoot/HealthPips/Pip2": "inherited from the base, hidden with its parent",
 	},
 }
-## Line prefixes whose differences belong to the in-cell geometry decision (not compared here).
-const GEOMETRY_LINE_PREFIXES: Array[String] = []
+## Line prefixes whose differences belong to the in-cell geometry decision (not compared here): the
+## hand and the length of the held weapon, now the same for every piece and measured in pixels
+## inside the cell.
+const GEOMETRY_LINE_PREFIXES: Array[String] = ["view weapon_anchor=", "view weapon_rest_length="]
+## The nodes the in-cell geometry places. Their "position=", "scale=" and "centered=" are dropped
+## from a node line before it is compared.
+const GEOMETRY_NODE_PATHS: Array[String] = [
+	"TelegraphAura",
+	"MotionRoot/SpriteRoot/BodySprite",
+	"MotionRoot/SpriteRoot/FacingArrow",
+	"MotionRoot/SpriteRoot/WeaponPivot",
+	"MotionRoot/SpriteRoot/WeaponPivot/WeaponSprite",
+	"MotionRoot/SpriteRoot/HealthPips",
+	"MotionRoot/SpriteRoot/HealthPips/Pip0",
+	"MotionRoot/SpriteRoot/HealthPips/Pip1",
+	"MotionRoot/SpriteRoot/HealthPips/Pip2",
+]
+const GEOMETRY_TOKENS: Array[String] = ["position", "scale", "centered"]
 
 var dumper := ActorDumper.new()
 
@@ -102,7 +123,9 @@ func _init() -> void:
 	finish()
 
 
-func _compare_actor(actor_id: String, golden_lines: PackedStringArray, new_lines: PackedStringArray) -> void:
+func _compare_actor(actor_id: String, recorded_lines: PackedStringArray, current_lines: PackedStringArray) -> void:
+	var golden_lines := _without_geometry(recorded_lines)
+	var new_lines := _without_geometry(current_lines)
 	var replaced: Dictionary = REPLACED_LINES.get(actor_id, {})
 	var new_line_set := {}
 	for line in new_lines:
@@ -141,6 +164,25 @@ func _compare_actor(actor_id: String, golden_lines: PackedStringArray, new_lines
 	_expect(added_nodes.is_empty(), "%s: no node appeared that was not declared (%s)" % [actor_id, ", ".join(added_nodes)])
 	for node_path: String in allowed_added:
 		_expect(new_line_set.keys().any(func(line: String) -> bool: return line.begins_with("node %s " % node_path)), "%s: the declared new node %s exists (%s)" % [actor_id, node_path, allowed_added[node_path]])
+
+
+## The lines with the in-cell geometry taken out: for a node in GEOMETRY_NODE_PATHS, its position,
+## scale and centring. Both the recorded and the current lines go through this, so what is left is
+## compared exactly.
+func _without_geometry(lines: PackedStringArray) -> PackedStringArray:
+	var kept := PackedStringArray()
+	for line in lines:
+		var parts := line.split(" ")
+		if parts.size() > 2 and parts[0] == "node" and parts[1] in GEOMETRY_NODE_PATHS:
+			var remaining: Array[String] = []
+			for part in parts:
+				var token_name := part.get_slice("=", 0)
+				if not (part.contains("=") and token_name in GEOMETRY_TOKENS):
+					remaining.append(part)
+			kept.append(" ".join(remaining))
+		else:
+			kept.append(line)
+	return kept
 
 
 func _golden_has_node_path(golden_lines: PackedStringArray, node_path: String) -> bool:

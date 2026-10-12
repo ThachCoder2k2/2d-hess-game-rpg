@@ -46,15 +46,45 @@ const GENERATED_SEEDS: Array[Dictionary] = [
 		"kind": "background",
 		"id": "t2_fallen_sword_tile",
 	},
+	# The bodies: the owner-approved generated chess family, drawn to the size table
+	# (content/feel/piece_sizes.tres) by tools/generate_chess_sprites.gd. The first three replace
+	# the M1b stand-ins (sprites from before the owner decided a piece is smaller than its cell,
+	# 64 to 96 px pictures drawn at a scale in the scene); the bishop had none of its own and
+	# borrowed the knight's. The white pawn is the hero, the black pawn is the whole pawn family.
+	{
+		"source": "res://assets/_generated/chess/pawn_idle.png",
+		"target": "res://content/player/body.png",
+		"kind": "body",
+		"id": "player",
+		"supersedes_stand_in": true,
+	},
+	{
+		"source": "res://assets/_generated/chess/black_pawn_idle.png",
+		"target": "res://content/enemies/pawn_recruit/body.png",
+		"kind": "body",
+		"id": "pawn_recruit",
+		"supersedes_stand_in": true,
+	},
+	{
+		"source": "res://assets/_generated/chess/knight_idle.png",
+		"target": "res://content/enemies/knight_tracker/body.png",
+		"kind": "body",
+		"id": "knight_tracker",
+		"supersedes_stand_in": true,
+	},
+	{
+		"source": "res://assets/_generated/chess/bishop_idle.png",
+		"target": "res://content/enemies/bishop_zoner/body.png",
+		"kind": "body",
+		"id": "bishop_zoner",
+		"supersedes_stand_in": true,
+	},
 ]
 
 ## Files that already stand in the tree as placeholders and are recorded exactly where they are.
 ## Left out on purpose: assets/map_pieces/ (the owner drew those) and assets/tiles/playground/
 ## (the owner's first tile kit); both are the owner's art, not stand-ins.
 const ADOPTED_PLACEHOLDERS: Array[Dictionary] = [
-	{"path": "res://content/player/body.png", "kind": "body", "id": "player", "origin": "tracked sprite adopted at M1b (was hero_pawn_unarmed.png); provenance in THIRD_PARTY_NOTICES.md"},
-	{"path": "res://content/enemies/pawn_recruit/body.png", "kind": "body", "id": "pawn_recruit", "origin": "tracked sprite adopted at M1b (was black_pawn.png); provenance in THIRD_PARTY_NOTICES.md"},
-	{"path": "res://content/enemies/knight_tracker/body.png", "kind": "body", "id": "knight_tracker", "origin": "tracked sprite adopted at M1b (was black_knight.png); traced from a font glyph, see THIRD_PARTY_NOTICES.md"},
 	{"path": "res://content/player/icon.png", "kind": "icon", "id": "player", "origin": "tracked sprite adopted at M1b (was hero_pawn.png); also the project icon"},
 	{"path": "res://content/skills/wooden_sword/icon.png", "kind": "icon", "id": "wooden_sword", "origin": "tracked sprite adopted at M1b (was toy_sword.png)"},
 	{"path": "res://content/pickups/pencil_spear/icon.png", "kind": "icon", "id": "pencil_spear", "origin": "tracked sprite adopted at M1b (was pencil_spear.png)"},

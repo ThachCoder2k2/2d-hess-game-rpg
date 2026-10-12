@@ -46,6 +46,17 @@ func piece_types() -> Array[StringName]:
 	return kinds
 
 
+## Where the top-left corner of a body picture goes, in pixels from the cell's centre: the picture
+## is centred sideways (rounded down for an odd width, so it stays on whole pixels) and its bottom
+## edge stands on the kind's base line, then `anchor_offset` (a VisualDefinition's own nudge) is
+## added. A kind with no row stands its picture's bottom edge on the cell's centre, the way the
+## old art did. The one formula the view, the preview tool and the tests all use.
+func body_top_left(piece_type: StringName, picture_size: Vector2, anchor_offset := Vector2.ZERO) -> Vector2:
+	var row := row_for(piece_type)
+	var base_line := float(row.base_offset_y) if row != null else 0.0
+	return Vector2(-floorf(picture_size.x / 2.0), base_line - picture_size.y) + anchor_offset
+
+
 ## The vertical extent of a row's picture relative to the cell's centre: [top, bottom], pixels,
 ## negative upward. The picture is `body_box.y` tall and its bottom edge is at `base_offset_y`.
 static func vertical_extent_of(row: PieceSize) -> Vector2i:

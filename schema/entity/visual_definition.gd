@@ -9,6 +9,16 @@ const MINIMUM_CLIP_SPEED_SCALE := 0.1
 const MAXIMUM_CLIP_SPEED_SCALE := 10.0
 
 @export var id: StringName
+## Which row of the size table (content/feel/piece_sizes.tres) the body is drawn to: pawn, knight,
+## bishop, rook, queen, king, or a boss row. It decides the largest picture and the base line.
+@export var piece_type: StringName = &""
+## The body picture, drawn at scale 1 and no larger than the kind's box. The enemy's own
+## body.png (content/enemies/<id>/body.png), or content/player/body.png for the hero. Null keeps
+## the view's stand-in picture.
+@export var body_texture: Texture2D
+## A nudge of the body from where the size table puts it, in pixels (x right, y down). Zero
+## stands the picture centred on the cell's centre line with its bottom edge on the base line.
+@export var anchor_offset := Vector2.ZERO
 @export var telegraph_color := Color("#ff665e")
 @export var impact_color := Color("#ff9a75")
 @export var weapon_anchor := Vector2(5, -2)
@@ -24,6 +34,10 @@ const MAXIMUM_CLIP_SPEED_SCALE := 10.0
 
 func validate() -> PackedStringArray:
 	var warnings := PackedStringArray()
+	if piece_type == &"":
+		warnings.append("Visual definition '%s' needs a piece_type (a row of content/feel/piece_sizes.tres)." % id)
+	if body_texture == null:
+		warnings.append("Visual definition '%s' needs a body_texture (its body.png)." % id)
 	for clip_name in clip_speed_scales:
 		var speed_scale: float = clip_speed_scales[clip_name]
 		if speed_scale < MINIMUM_CLIP_SPEED_SCALE or speed_scale > MAXIMUM_CLIP_SPEED_SCALE:

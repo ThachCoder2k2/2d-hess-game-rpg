@@ -73,8 +73,8 @@ func _sync_appearance(entity_id: int, view: EcsComponents.ViewRef, appearance: A
 	if aura != null:
 		aura.visible = telegraphing
 		if telegraphing:
+			# The telegraph clip owns the aura's size (it pulses inside the cell); this only fades it in.
 			var progress := clampf(1.0 - ai.state_time_left / maxf(ai.telegraph_duration, 0.001), 0.0, 1.0)
-			aura.scale = Vector2.ONE * (0.92 + progress * 0.25)
 			aura.modulate.a = 0.55 + progress * 0.35
 
 	var arrow := appearance.get_node_or_null("MotionRoot/SpriteRoot/FacingArrow") as Sprite2D
@@ -82,6 +82,8 @@ func _sync_appearance(entity_id: int, view: EcsComponents.ViewRef, appearance: A
 		arrow.visible = appearance.show_facing_mark and facing_direction != Vector2i.ZERO
 		if arrow.visible:
 			arrow.rotation = Vector2(facing_direction).angle() + PI / 2.0
+			# On the facing side, inside the cell: the mark that used to float above a tall piece.
+			arrow.position = Vector2(facing_direction).normalized() * appearance.facing_mark_distance
 
 	_sync_weapon(entity_id, appearance, combat, facing_direction, attacking)
 	_sync_health_pips(appearance, health)
@@ -100,7 +102,23 @@ func _apply_visual_definition(appearance: ActorView) -> void:
 	if visual == null or (appearance.has_meta(APPLIED_VISUAL_META) and appearance.get_meta(APPLIED_VISUAL_META) == visual):
 		return
 	appearance.set_meta(APPLIED_VISUAL_META, visual)
+	_apply_body(appearance, visual)
 	_apply_clip_speed_scales(appearance, visual)
+
+
+## Stands the definition's body picture on its kind's base line (content/feel/piece_sizes.tres):
+## centred sideways, its bottom edge `base_offset_y` below the cell's centre, plus the definition's
+## own anchor_offset. The picture is drawn at scale 1, so what the owner draws is what is shown.
+## A definition without a picture leaves the view's stand-in body alone.
+func _apply_body(appearance: ActorView, visual: VisualDefinition) -> void:
+	var body_sprite := appearance.get_node_or_null("MotionRoot/SpriteRoot/BodySprite") as Sprite2D
+	if body_sprite == null or visual.body_texture == null:
+		return
+	body_sprite.texture = visual.body_texture
+	body_sprite.centered = false
+	body_sprite.scale = Vector2.ONE
+	var piece_sizes := appearance.piece_sizes if appearance.piece_sizes != null else PieceSizeTable.new()
+	body_sprite.position = piece_sizes.body_top_left(visual.piece_type, visual.body_texture.get_size(), visual.anchor_offset)
 
 
 ## An enemy view names its EnemyDefinition, the hero's view its PlayerDefinition; either may
@@ -200,7 +218,7 @@ func _sync_weapon(entity_id: int, appearance: ActorView, combat: EcsComponents.P
 	pivot.position = appearance.weapon_anchor + Vector2(facing_direction) * 4.0
 	pivot.rotation = Vector2(facing_direction).angle() + PI / 2.0
 	sprite.position = Vector2(0.0, -appearance.weapon_rest_length * (1.0 + (reach - 1.0) * 0.28))
-	sprite.scale = Vector2.ONE * (1.12 if combat != null else 1.0)
+	sprite.scale = Vector2.ONE * appearance.weapon_held_scale * (1.12 if combat != null else 1.0)
 
 
 func _sync_health_pips(appearance: ActorView, health: EcsComponents.Health) -> void:

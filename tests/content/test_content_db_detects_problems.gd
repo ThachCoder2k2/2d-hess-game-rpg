@@ -59,6 +59,8 @@ func _init() -> void:
 	_expect_no_problem_about(registry_problems, "enemies/_shared", "the underscore folder raises no registry complaint")
 
 	# validate_cross_refs(): one complaint per dangling reference.
+	_expect_problem(reference_problems, "enemies/unknown_kind: its visual's piece_type 'dragon' is not a row of content/feel/piece_sizes.tres (rows: pawn)", "a visual naming a kind the size table lacks is reported, with the kinds it has")
+	_expect_problem(reference_problems, "enemies/oversized_body: its body picture is 80 x 80 px but a pawn may be drawn at most 18 x 22 px", "a body picture larger than its kind's box is reported, with both sizes")
 	_expect_problem(reference_problems, "rules/orphan: piece_id 'ghost_piece' is not an enemy", "a Book page naming a missing enemy is reported")
 	_expect_problem(reference_problems, "enemies/ghost_hunter: weapon_preferences names 'ghost_weapon', which is not a pickup", "a weapon preference naming a missing pickup is reported")
 	_expect_problem(reference_problems, "world/world: zone 'nowhere' has no folder content/rooms/nowhere/", "a world zone without a room folder is reported")
@@ -117,6 +119,14 @@ func _write_fixture_tree() -> void:
 	_write(FIXTURE_ROOT.path_join("enemies/twin_b/enemy.tres"), _enemy_text("twin_b", ""))
 	_write(FIXTURE_ROOT.path_join("enemies/_shared/readme.txt"), "not an id\n")
 
+	# the size table (one pawn row) and two enemies whose visuals break it: a picture bigger than
+	# the pawn's box, and a kind the table has no row for. The clean pawn uses the real pawn visual.
+	_write(FIXTURE_ROOT.path_join("feel/piece_sizes.tres"), _piece_sizes_text())
+	_write(FIXTURE_ROOT.path_join("enemies/oversized_body/visual.tres"), _visual_text("oversized_body", "pawn", "res://assets/ui/actor_view/warning_aura.png"))
+	_write(FIXTURE_ROOT.path_join("enemies/oversized_body/enemy.tres"), _enemy_text("oversized_body", "").replace("res://content/enemies/_shared/visuals/pawn_compatibility.tres", "user://content_db_fixture/enemies/oversized_body/visual.tres"))
+	_write(FIXTURE_ROOT.path_join("enemies/unknown_kind/visual.tres"), _visual_text("unknown_kind", "dragon", "res://content/enemies/pawn_recruit/body.png"))
+	_write(FIXTURE_ROOT.path_join("enemies/unknown_kind/enemy.tres"), _enemy_text("unknown_kind", "").replace("res://content/enemies/_shared/visuals/pawn_compatibility.tres", "user://content_db_fixture/enemies/unknown_kind/visual.tres"))
+
 	# rules: a page whose piece does not exist.
 	_write(FIXTURE_ROOT.path_join("rules/orphan/page.tres"), _rule_page_text("ghost_piece"))
 
@@ -153,6 +163,14 @@ func _difficulty_text(id: String) -> String:
 
 func _enemy_text(claimed_id: String, extra_fields: String) -> String:
 	return "[gd_resource type=\"Resource\" script_class=\"EnemyDefinition\" format=3]\n\n[ext_resource type=\"Script\" path=\"%s\" id=\"1\"]\n%s\n[resource]\nscript = ExtResource(\"1\")\nid = &\"%s\"\n%s%s" % [ENEMY_SCRIPT, SHARED_ENEMY_PARTS, claimed_id, SHARED_ENEMY_FIELDS, extra_fields]
+
+
+func _piece_sizes_text() -> String:
+	return "[gd_resource type=\"Resource\" script_class=\"PieceSizeTable\" format=3]\n\n[ext_resource type=\"Script\" path=\"res://schema/feel/piece_size_table.gd\" id=\"1\"]\n[ext_resource type=\"Script\" path=\"res://schema/feel/piece_size.gd\" id=\"2\"]\n\n[sub_resource type=\"Resource\" id=\"Resource_pawn\"]\nscript = ExtResource(\"2\")\npiece_type = &\"pawn\"\nbody_box = Vector2i(18, 22)\nbase_offset_y = 14\n\n[resource]\nscript = ExtResource(\"1\")\nrows = Array[ExtResource(\"2\")]([SubResource(\"Resource_pawn\")])\n"
+
+
+func _visual_text(id: String, piece_type: String, body_path: String) -> String:
+	return "[gd_resource type=\"Resource\" script_class=\"VisualDefinition\" format=3]\n\n[ext_resource type=\"Script\" path=\"res://schema/entity/visual_definition.gd\" id=\"1\"]\n[ext_resource type=\"Texture2D\" path=\"%s\" id=\"2\"]\n\n[resource]\nscript = ExtResource(\"1\")\nid = &\"%s\"\npiece_type = &\"%s\"\nbody_texture = ExtResource(\"2\")\n" % [body_path, id, piece_type]
 
 
 func _rule_page_text(piece_id: String) -> String:

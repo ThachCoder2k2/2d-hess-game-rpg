@@ -9,7 +9,6 @@ z_index = 3
 player_definition = ExtResource("2")
 show_facing_mark = false
 show_health = false
-weapon_anchor = Vector2(4, -14)
 
 [node name="AnimationTree" parent="." index="3"]
 parameters/conditions/boots_asleep = true

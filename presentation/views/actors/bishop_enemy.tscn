@@ -2,19 +2,16 @@
 
 [ext_resource type="PackedScene" uid="uid://dpqgd231wmnde" path="res://presentation/views/actors/actor_view_base.tscn" id="1"]
 [ext_resource type="Resource" uid="uid://dufopkr811e7m" path="res://content/enemies/bishop_zoner/enemy.tres" id="2"]
-[ext_resource type="Texture2D" uid="uid://doa640710y5up" path="res://content/enemies/knight_tracker/body.png" id="3"]
+[ext_resource type="Texture2D" uid="uid://nm3joitkgxx8" path="res://content/enemies/bishop_zoner/body.png" id="3"]
 
 [node name="BishopEnemy" instance=ExtResource("1")]
 definition = ExtResource("2")
 telegraph_modulate = Color(0.86, 0.34, 0.39, 1)
 show_facing_mark = false
 
-[node name="TelegraphAura" parent="." index="0"]
-scale = Vector2(0.75, 0.75)
-
 [node name="BodySprite" parent="MotionRoot/SpriteRoot" index="0"]
+position = Vector2(-9, -8)
 texture = ExtResource("3")
 
 [node name="FacingArrow" parent="MotionRoot/SpriteRoot" index="1"]
 visible = false
-scale = Vector2(0.42, 0.42)

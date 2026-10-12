@@ -12,7 +12,11 @@ by design: milestone M4 adds the pixel font and M14 completes the file
 
 - **What:** the Knight sprite's silhouette. `tools/trace_knight_glyph.py` renders the chess
   glyph U+265E (BLACK CHESS KNIGHT) from a system font, measures its outline row by row, and
-  prints the span tables that `tools/generate_chess_sprites.gd` uses to draw the Knight.
+  prints the span tables that `tools/generate_chess_sprites.gd` uses to draw the Knight. Since
+  M2 the tables are traced on 15 rows instead of 21 (the owner decided a piece is smaller than its
+  cell; the same glyph, the same script, `--rows 15`), and that knight is now also the body of the
+  enemy `knight_tracker` (`content/enemies/knight_tracker/body.png`, a copy of the generator's
+  `knight_idle.png`, recorded as a placeholder).
 - **Source font:** the script's `FONT_PATH` is `/System/Library/Fonts/Apple Symbols.ttf`
   (Apple Symbols, shipped with macOS), with Arial Unicode named as a fallback in its comments.
   Which font produced the span tables now committed in `tools/generate_chess_sprites.gd` is not
@@ -33,11 +37,14 @@ yet. Please say how each was produced and whether it will ship.
   `docs/design/gdd.md` calls such images exploratory concept art "rather than the final
   rendering method", so they are references, not shipped game art.
 - The 12 source sprites that used to sit directly in `assets/sprites/generated/`: now
-  `content/player/icon.png` (was `hero_pawn.png`) and `body.png` (was `hero_pawn_unarmed.png`),
-  `content/skills/wooden_sword/icon.png` (`toy_sword.png`), `content/enemies/pawn_recruit/body.png`
-  (`black_pawn.png`), `content/enemies/knight_tracker/body.png` (`black_knight.png`),
-  `content/pickups/{pencil_spear,ruler_blade}/icon.png`, `content/pickups/toy_weapon/pickup.png`
-  and `assets/ui/actor_view/{facing_arrow,health_pip_full,health_pip_empty,warning_aura}.png`.
+  `content/player/icon.png` (was `hero_pawn.png`), `content/skills/wooden_sword/icon.png`
+  (`toy_sword.png`), `content/pickups/{pencil_spear,ruler_blade}/icon.png`,
+  `content/pickups/toy_weapon/pickup.png` and
+  `assets/ui/actor_view/{facing_arrow,health_pip_full,health_pip_empty,warning_aura}.png`. (Three
+  more, the bodies `content/player/body.png` (was `hero_pawn_unarmed.png`),
+  `content/enemies/pawn_recruit/body.png` (`black_pawn.png`) and
+  `content/enemies/knight_tracker/body.png` (`black_knight.png`), were replaced at M2 by the
+  generator's own pieces, so they are no longer in this list; the old files are in git history.)
   No script draws them (`README.md`), and `docs/where-we-are.md` calls the character sprites
   temporary July placeholders.
 - `assets/map_pieces/bed.png` and `bed_height.png`. `README.md` treats this folder as hand-drawn
@@ -89,7 +96,10 @@ SOFTWARE.
   synthesised from scratch by `tools/generate_sfx.py` and `tools/generate_music.py`, which import
   only the Python standard library.
 - The generated chess pieces, kingdom tiles, maps and Stage 1 room backgrounds are drawn by the
-  `tools/generate_*.gd` scripts (output is gitignored; the scripts are the source).
+  `tools/generate_*.gd` scripts (output is gitignored; the scripts are the source). The bodies of
+  the hero, the black pawns, the knight and the bishop in `content/*/body.png` are copies of that
+  output (placeholders in `content/_placeholders.json`); the knight's shape is the traced glyph
+  above, the others are lathe rows written in the generator.
 - There are no addons (`addons/` does not exist) and no bundled fonts in the repository today.
   The default Godot font is the engine's. The pixel font for the final UI is chosen in M4 and
   must be listed here.

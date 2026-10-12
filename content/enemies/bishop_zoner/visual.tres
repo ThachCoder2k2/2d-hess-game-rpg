@@ -1,9 +1,12 @@
 [gd_resource type="Resource" script_class="VisualDefinition" load_steps=2 format=3 uid="uid://d2ob0tl030xqm"]
 
 [ext_resource type="Script" uid="uid://whbf5imveje" path="res://schema/entity/visual_definition.gd" id="1"]
+[ext_resource type="Texture2D" uid="uid://nm3joitkgxx8" path="res://content/enemies/bishop_zoner/body.png" id="2"]
 
 [resource]
 script = ExtResource("1")
+piece_type = &"bishop"
+body_texture = ExtResource("2")
 id = &"bishop"
 telegraph_color = Color(0.68, 0.42, 0.95, 1)
 impact_color = Color(0.78, 0.55, 1, 1)
