@@ -43,7 +43,7 @@ entity 1 player cell=(1,5)
   grid_pos: cell=(1, 5)
 entity 2 enemy:Pawn cell=(10,3)
   weapon_slot: weapon=null
-  enemy_ai: action_memory=[] allowed_directions=[(0, -1), (0, 1), (-1, 0), (1, 0)] attack_pattern=AttackPattern@res://resources/attacks/pawn_diagonal.tres committed_goal=(-999, -999) committed_goal_kind=&"none" committed_target_snapshot=(-999, -999) decision_profile=DecisionConfig@res://resources/decisions/pawn_skirmisher.tres definition=EnemyDefinition@res://resources/enemies/pawn_recruit.tres goal_commitment_decisions=2 goal_decisions_left=0 last_move_direction=(0, 0) locked_attack_cells=[] move_recovery_time=0.1800 observe_delay=0.4200 path_memory_size=6 recent_cells=[] state=0 state_time_left=0.4200 telegraph_duration=0.0000 unarmed_recovery_time=0.4800 unarmed_telegraph_time=0.5800
+  enemy_ai: action_memory=[] allowed_directions=[(0, -1), (0, 1), (-1, 0), (1, 0)] attack_pattern=AttackPattern@res://content/enemies/_shared/attacks/pawn_diagonal.tres committed_goal=(-999, -999) committed_goal_kind=&"none" committed_target_snapshot=(-999, -999) decision_profile=DecisionConfig@res://content/enemies/_shared/decisions/pawn_skirmisher.tres definition=EnemyDefinition@res://resources/enemies/pawn_recruit.tres goal_commitment_decisions=2 goal_decisions_left=0 last_move_direction=(0, 0) locked_attack_cells=[] move_recovery_time=0.1800 observe_delay=0.4200 path_memory_size=6 recent_cells=[] state=0 state_time_left=0.4200 telegraph_duration=0.0000 unarmed_recovery_time=0.4800 unarmed_telegraph_time=0.5800
   view_ref: node=node(CurrentZone/PawnRecruit) was_attacking=false was_dead=false was_hurt=false was_telegraphing=false
   move_state: duration=0.1800 from_cell=(0, 0) moving=false progress=0.0000 to_cell=(0, 0)
   move_intent: direction=(0, 0)

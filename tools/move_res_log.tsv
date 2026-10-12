@@ -78,3 +78,7 @@ assets/sprites/generated/pencil_spear.png	content/pickups/pencil_spear/icon.png
 resources/weapons/ruler_blade.tres	content/pickups/ruler_blade/ruler_blade.tres
 assets/sprites/generated/ruler_blade.png	content/pickups/ruler_blade/icon.png
 assets/sprites/generated/toy_weapon_pickup.png	content/pickups/toy_weapon/pickup.png
+resources/movement/pawn_standard.tres	content/enemies/_shared/movement/pawn_standard.tres
+resources/attacks/pawn_diagonal.tres	content/enemies/_shared/attacks/pawn_diagonal.tres
+resources/decisions/pawn_skirmisher.tres	content/enemies/_shared/decisions/pawn_skirmisher.tres
+resources/visuals/pawn_compatibility.tres	content/enemies/_shared/visuals/pawn_compatibility.tres

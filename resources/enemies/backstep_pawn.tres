@@ -2,9 +2,9 @@
 
 [ext_resource type="Script" uid="uid://bmdisg36ew8g5" path="res://schema/entity/enemy_definition.gd" id="1"]
 [ext_resource type="Resource" uid="uid://b52tp8bw5omi0" path="res://resources/movement/pawn_backstep.tres" id="2"]
-[ext_resource type="Resource" uid="uid://cq4qwwrl876l2" path="res://resources/decisions/pawn_skirmisher.tres" id="3"]
-[ext_resource type="Resource" uid="uid://bm6n2c37cl4g1" path="res://resources/attacks/pawn_diagonal.tres" id="4"]
-[ext_resource type="Resource" uid="uid://c8p1h1f6xmjoq" path="res://resources/visuals/pawn_compatibility.tres" id="5"]
+[ext_resource type="Resource" uid="uid://cq4qwwrl876l2" path="res://content/enemies/_shared/decisions/pawn_skirmisher.tres" id="3"]
+[ext_resource type="Resource" uid="uid://bm6n2c37cl4g1" path="res://content/enemies/_shared/attacks/pawn_diagonal.tres" id="4"]
+[ext_resource type="Resource" uid="uid://c8p1h1f6xmjoq" path="res://content/enemies/_shared/visuals/pawn_compatibility.tres" id="5"]
 [ext_resource type="Resource" uid="uid://cq15s5oalg3r5" path="res://content/difficulty/standard.tres" id="6"]
 
 [resource]
