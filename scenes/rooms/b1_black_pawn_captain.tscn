@@ -9,7 +9,7 @@
 [ext_resource type="Resource" uid="uid://dsusdlqg0riqr" path="res://resources/enemies/black_pawn_captain.tres" id="7_captain"]
 [ext_resource type="Resource" uid="uid://corglo0dhnjbc" path="res://resources/enemies/pawn_armed.tres" id="8_armed"]
 [ext_resource type="PackedScene" uid="uid://bfu3s8us3gcqd" path="res://authoring/markers/pickup_spawn_point.tscn" id="9_pickup"]
-[ext_resource type="PackedScene" uid="uid://cd0pt6lb10mqe" path="res://objects/world/weapon_pickup.tscn" id="10_pickup_scene"]
+[ext_resource type="PackedScene" uid="uid://cd0pt6lb10mqe" path="res://presentation/views/weapon_pickup.tscn" id="10_pickup_scene"]
 [ext_resource type="Resource" uid="uid://po15384k0voh" path="res://resources/weapons/ruler_blade.tres" id="11_ruler"]
 
 [node name="B1_BlackPawnCaptain" instance=ExtResource("1_room")]

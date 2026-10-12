@@ -163,7 +163,7 @@ func _init() -> void:
 	_expect(not bool(count_objective.call("is_complete", 1, 3, 2)), "defeat-count objective waits for its configured count")
 	_expect(bool(count_objective.call("is_complete", 2, 3, 1)), "defeat-count objective can complete before all enemies fall")
 
-	var pickup_visual_source := FileAccess.get_file_as_string("res://scripts/visuals/pickup_visual.gd")
+	var pickup_visual_source := FileAccess.get_file_as_string("res://presentation/views/pickup_visual.gd")
 	# Same guard as above: an empty read (a moved file) must fail, not pass vacuously.
 	_expect(not pickup_visual_source.is_empty() and not pickup_visual_source.contains("func _draw") and not pickup_visual_source.contains("draw_"), "pickup visuals use Sprite2D nodes instead of script drawing")
 

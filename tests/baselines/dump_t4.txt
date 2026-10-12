@@ -140,8 +140,8 @@ CurrentZone/RoomArt/SetDressing/BrokenRulePaper Polygon2D position=(300.00,76.00
 CurrentZone/RoomArt/SetDressing/RuleBreakSlashA Line2D position=(0.00,0.00)
 CurrentZone/RoomArt/SetDressing/RuleBreakSlashB Line2D position=(0.00,0.00)
 CurrentZone/RoomArt/TileMap TileMapLayer position=(64.00,36.00) used_cells=144 tile_set=res://resources/tiles/kingdom_tileset.tres
-CurrentZone/WeaponPickup Node2D script=res://scripts/world/weapon_pickup.gd position=(304.00,244.00) z_index=1
-CurrentZone/WeaponPickup/Visual Node2D script=res://scripts/visuals/pickup_visual.gd position=(0.00,0.00)
+CurrentZone/WeaponPickup Node2D script=res://presentation/views/weapon_pickup.gd position=(304.00,244.00) z_index=1
+CurrentZone/WeaponPickup/Visual Node2D script=res://presentation/views/pickup_visual.gd position=(0.00,0.00)
 CurrentZone/WeaponPickup/Visual/AnimationPlayer AnimationPlayer
 CurrentZone/WeaponPickup/Visual/GlowSprite Sprite2D position=(0.00,0.00) scale=(0.62,0.62) z_index=-1
 CurrentZone/WeaponPickup/Visual/MotionRoot Node2D position=(0.00,0.00)

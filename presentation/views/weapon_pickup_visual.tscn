@@ -1,6 +1,6 @@
 [gd_scene load_steps=8 format=3 uid="uid://ce54gwd1277gf"]
 
-[ext_resource type="Script" uid="uid://do3qevn3lixkx" path="res://scripts/visuals/pickup_visual.gd" id="1"]
+[ext_resource type="Script" uid="uid://do3qevn3lixkx" path="res://presentation/views/pickup_visual.gd" id="1"]
 [ext_resource type="Texture2D" uid="uid://d3rkqhe4nag3s" path="res://assets/sprites/generated/toy_weapon_pickup.png" id="2"]
 [ext_resource type="Texture2D" uid="uid://bork3o5rtutb0" path="res://assets/sprites/generated/pencil_spear.png" id="3"]
 [ext_resource type="Texture2D" uid="uid://cwfqcxn8ifl0r" path="res://assets/sprites/generated/ruler_blade.png" id="4"]

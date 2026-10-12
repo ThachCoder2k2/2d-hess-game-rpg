@@ -43,7 +43,7 @@ const LEGACY_LAYER_RULES: Array = [
 	["res://scripts/world/camera_rig.gd", "presentation"],
 	["res://scripts/world/prototype_board.gd", "presentation"],
 	["res://scripts/world/grid_lines_overlay.gd", "presentation"],
-	["res://scripts/world/weapon_pickup.gd", "presentation"],
+	["res://presentation/views/weapon_pickup.gd", "presentation"],
 	["res://scripts/world/world_state.gd", "shell"],
 	["res://scripts/main.gd", "shell"],
 	["res://scripts/world/", "authoring"],
