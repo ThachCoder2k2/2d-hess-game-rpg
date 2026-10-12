@@ -1,10 +1,17 @@
 extends UnboundTest
 
-## Architecture guard (REPORT-ONLY in M1a): derives the real class_name dependency
-## graph from the code and prints every edge that crosses a layer of
-## docs/game-base-plan.md 13.1, marking the ones the starting-point table does not
-## allow. M1a only measures; the allowed edges are then frozen as
-## tests/architecture/allowed_edges.txt and this test starts enforcing (set ENFORCING).
+## Architecture guard (ENFORCING since M1b step 3): derives the real class_name
+## dependency graph from the code and checks every edge that crosses a layer against
+## the starting-point table of docs/game-base-plan.md 13.1. An edge the table does not
+## allow FAILS the suite, except the ones listed below:
+##   DOCUMENTED_EXCEPTIONS  13.1 itself names them (view_sync_system -> ActorView).
+##   UNDECIDED_EDGES        edges the table does not allow and nobody has decided yet
+##                          (the owner has not frozen tests/architecture/allowed_edges.txt).
+##                          Report-only: printed on every run so they cannot be
+##                          forgotten, and they do not fail the suite.
+## Both lists are exact: an entry no edge uses any more fails the suite, so a fixed
+## edge is deleted from its list instead of rotting there. A NEW unallowed edge is not
+## in either list and fails. No agent adds an entry ad hoc (13.1).
 ##
 ## An edge is "file A names class B": A's code (comments and string literals removed)
 ## contains the identifier of a class_name or autoload defined in file B, or
@@ -12,11 +19,14 @@ extends UnboundTest
 ## ecs/core|components|systems|events|schedule, authoring/, presentation/ or shell/
 ## (the layout M1b moved the code into). A script in any other folder is UNMAPPED and
 ## fails the suite, so code cannot drift back into scripts/. Tests and tools are not sources.
+## What content/ may reference (scenes and resources, not scripts) is checked by
+## test_content_references.gd, and content/ holding no .gd by test_content_has_no_gd.gd.
 
 const ProjectFiles := preload("res://tests/architecture/project_files.gd")
 
-## false = print REPORT lines and pass. true = fail on any edge the table does not allow.
-const ENFORCING := false
+## false = print REPORT lines and pass. true = fail on any edge the table does not allow
+## (the documented exceptions and the undecided edges below excepted).
+const ENFORCING := true
 ## Fewer source files than this means the walk is broken (a stale path), not a clean graph.
 const MINIMUM_SOURCE_FILES := 20
 const MINIMUM_SYMBOLS := 10
@@ -37,6 +47,24 @@ const ALLOWED_TARGET_LAYERS := {
 }
 ## Edges 13.1 documents as exceptions: "<source file basename> -> <target class>".
 const DOCUMENTED_EXCEPTIONS: Array[String] = ["view_sync_system.gd -> ActorView"]
+## Edges the table does not allow and nobody has decided: "<source file basename> -> <target class>".
+## Report-only. The question each one asks the owner is the comment above it.
+const UNDECIDED_EDGES: Array[String] = [
+	# The baker reads ActorView instances out of a room scene and the base EntityComponent finds
+	# its parent ActorView. 13.1 row 1 says an entity is assembled from "an ActorView instance",
+	# but the authoring row lists no presentation target. Open: allow authoring -> presentation/views
+	# for ActorView, or give the contract a base class in schema.
+	"ecs_boot.gd -> ActorView",
+	"entity_component.gd -> ActorView",
+	# The pickup spawn marker instantiates the WeaponPickup view. Open: allow authoring ->
+	# presentation/views, or let the marker name a PackedScene export instead of the class.
+	"pickup_spawn_point.gd -> WeaponPickup",
+	# The board overlay reads the EcsWorld for telegraph progress and each enemy's EnemyAI
+	# component for the F3 intent paths. 13.1 says presentation never touches ecs/components.
+	# Open: feed the overlay from the HudSnapshot and events (M3a/M3b) or allow this one reader.
+	"prototype_board.gd -> EcsComponents",
+	"prototype_board.gd -> EcsWorld",
+]
 const SHELL_LAYER := "shell"
 
 var symbol_file_by_name: Dictionary = {}
@@ -45,6 +73,9 @@ var layer_by_file: Dictionary = {}
 var edge_lines_by_layer_pair: Dictionary = {}
 var violation_lines: Array[String] = []
 var documented_exception_lines: Array[String] = []
+var undecided_edge_lines: Array[String] = []
+## "<file> -> <Class>" keys of the documented exceptions and undecided edges that an edge used.
+var used_exception_keys: Dictionary = {}
 
 var class_name_regex := RegEx.new()
 var identifier_regex := RegEx.new()
@@ -100,7 +131,12 @@ func _init() -> void:
 	_print_report(source_paths.size(), unmapped_files)
 	_expect(unmapped_files.is_empty(), "every source script lives in a layer folder: schema, ecs, authoring, presentation or shell (%d do not)" % unmapped_files.size())
 	if ENFORCING:
-		_expect(violation_lines.is_empty(), "every cross-layer edge is allowed by the 13.1 table (%d are not)" % violation_lines.size())
+		_expect(violation_lines.is_empty(), "every cross-layer edge is allowed by the 13.1 table, a documented exception or the undecided list (%d are not)" % violation_lines.size())
+		var stale_entries: Array[String] = []
+		for listed_key in DOCUMENTED_EXCEPTIONS + UNDECIDED_EDGES:
+			if not used_exception_keys.has(listed_key):
+				stale_entries.append(listed_key)
+		_expect(stale_entries.is_empty(), "every documented exception and undecided edge is still used by a real edge (stale, delete the line: %s)" % "; ".join(stale_entries))
 	finish()
 
 
@@ -168,7 +204,11 @@ func _collect_edges(script_path: String, code: String, load_paths: Array) -> voi
 		if not _is_allowed(own_layer, target_layer):
 			var exception_key := "%s -> %s" % [script_path.get_file(), symbol]
 			if exception_key in DOCUMENTED_EXCEPTIONS:
+				used_exception_keys[exception_key] = true
 				documented_exception_lines.append("%s  %s  [documented exception]" % [pair_key, edge_line])
+			elif exception_key in UNDECIDED_EDGES:
+				used_exception_keys[exception_key] = true
+				undecided_edge_lines.append("%s  %s  [undecided, report-only]" % [pair_key, edge_line])
 			else:
 				violation_lines.append("%s  %s" % [pair_key, edge_line])
 
@@ -191,10 +231,13 @@ func _print_report(source_file_count: int, unmapped_files: Array[String]) -> voi
 		var from_layer := layer_pair.get_slice(" -> ", 0)
 		var to_layer := layer_pair.get_slice(" -> ", 1)
 		print("REPORT   %-34s %3d edge(s)  %s" % [layer_pair, edge_lines.size(), "allowed by 13.1" if _is_allowed(from_layer, to_layer) else "NOT ALLOWED by 13.1 (see below)"])
-	print("REPORT edges the 13.1 starting-point table does NOT allow: %d (+%d documented exception(s))" % [violation_lines.size(), documented_exception_lines.size()])
+	print("REPORT edges the 13.1 starting-point table does NOT allow: %d (+%d documented exception(s), +%d undecided report-only)" % [violation_lines.size(), documented_exception_lines.size(), undecided_edge_lines.size()])
 	violation_lines.sort()
 	for violation_line in violation_lines:
 		print("REPORT   NOT ALLOWED  %s" % violation_line)
 	for exception_line in documented_exception_lines:
 		print("REPORT   EXCEPTION    %s" % exception_line)
-	print("REPORT next: freeze the edges you accept as tests/architecture/allowed_edges.txt (one 'from -> to  # why' line each), then set ENFORCING. Mode: %s" % ("ENFORCING" if ENFORCING else "report-only"))
+	undecided_edge_lines.sort()
+	for undecided_line in undecided_edge_lines:
+		print("REPORT   UNDECIDED    %s" % undecided_line)
+	print("REPORT next: the owner decides each UNDECIDED edge; the accepted ones are then frozen as tests/architecture/allowed_edges.txt (one 'from -> to  # why' line each) and leave UNDECIDED_EDGES. Mode: %s" % ("ENFORCING (all but the undecided list)" if ENFORCING else "report-only"))
