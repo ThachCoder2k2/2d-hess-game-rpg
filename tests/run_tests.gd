@@ -265,7 +265,7 @@ func _init() -> void:
 	_expect(charging.movement.allowed_directions.has(Vector2i(0, 2)) and not charging.movement.allowed_directions.has(Vector2i.UP), "Charging Pawn only ever leaps two squares")
 
 	# --- The Book of House Rules: every page names a real piece, UI renders ---
-	var rule_book := load("res://resources/rules/rule_book.tres") as RuleBook
+	var rule_book := load("res://content/rules/rule_book.tres") as RuleBook
 	_expect(rule_book != null and rule_book.validate().is_empty(), "the rule book loads with complete pages")
 	var definition_ids: Array = []
 	for file_name in DirAccess.get_files_at("res://resources/enemies"):

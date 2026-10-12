@@ -64,3 +64,9 @@ scripts/main.gd	shell/game_root.gd
 scenes/main.tscn	shell/game_root.tscn
 ecs/systems/decide/enemy_intent.gd	schema/entity/enemy_intent.gd
 resources/difficulty	content/difficulty
+resources/rules/armed_pawn.tres	content/rules/armed_pawn/page.tres
+resources/rules/backstep_pawn.tres	content/rules/backstep_pawn/page.tres
+resources/rules/charging_pawn.tres	content/rules/charging_pawn/page.tres
+resources/rules/first_law.tres	content/rules/first_law/page.tres
+resources/rules/knight_errant.tres	content/rules/knight_errant/page.tres
+resources/rules/rule_book.tres	content/rules/rule_book.tres

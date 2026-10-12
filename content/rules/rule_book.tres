@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="RuleBook" load_steps=8 format=3 uid="uid://cnudcw0i3w2hh"]
+
+[ext_resource type="Script" uid="uid://bjp5b5j83nilx" path="res://schema/world/rule_book.gd" id="1"]
+[ext_resource type="Script" uid="uid://b0oj3ltvh7pca" path="res://schema/world/rule_entry.gd" id="2"]
+[ext_resource type="Resource" uid="uid://dhexw8rojybdp" path="res://content/rules/first_law/page.tres" id="3"]
+[ext_resource type="Resource" uid="uid://dsfwnvoaqqdn6" path="res://content/rules/armed_pawn/page.tres" id="4"]
+[ext_resource type="Resource" uid="uid://cwjkvjk1em7j1" path="res://content/rules/backstep_pawn/page.tres" id="5"]
+[ext_resource type="Resource" uid="uid://jjkfdmiat0yc" path="res://content/rules/charging_pawn/page.tres" id="6"]
+[ext_resource type="Resource" uid="uid://dcfam4v7q8bvo" path="res://content/rules/knight_errant/page.tres" id="7"]
+
+[resource]
+script = ExtResource("1")
+entries = Array[ExtResource("2")]([ExtResource("3"), ExtResource("4"), ExtResource("5"), ExtResource("6"), ExtResource("7")])
