@@ -1,15 +1,10 @@
 [gd_scene format=3 uid="uid://ccqe76typpaaq"]
 
 [ext_resource type="Script" uid="uid://16la5b2fanxj" path="res://presentation/views/actor_view.gd" id="1"]
-[ext_resource type="Resource" uid="uid://byvw26cd7u12f" path="res://content/skills/wooden_sword/wooden_sword.tres" id="2"]
-[ext_resource type="Resource" uid="uid://bog2k4gpe6yi4" path="res://content/skills/pencil_thrust/pencil_thrust.tres" id="3"]
+[ext_resource type="Resource" uid="uid://c4e52miayhw6k" path="res://content/player/player.tres" id="2"]
 [ext_resource type="Script" uid="uid://d22stukg2rlbf" path="res://presentation/camera/camera_rig.gd" id="5"]
 [ext_resource type="Texture2D" uid="uid://h38rg0optq8b" path="res://content/player/body.png" id="6"]
 [ext_resource type="Texture2D" uid="uid://6hr88wvg8w12" path="res://content/skills/wooden_sword/icon.png" id="7"]
-[ext_resource type="Script" uid="uid://wtat33gah5lr" path="res://authoring/entity_components/health_component.gd" id="8"]
-[ext_resource type="Script" uid="uid://b747qwpo66rih" path="res://authoring/entity_components/combat_component.gd" id="9"]
-[ext_resource type="Script" uid="uid://b75f8h6xf31fg" path="res://authoring/entity_components/movement_component.gd" id="10"]
-[ext_resource type="Script" uid="uid://upbidox0dhdq" path="res://authoring/entity_components/input_component.gd" id="11"]
 [ext_resource type="AudioStream" uid="uid://b2panfygxfrkm" path="res://assets/sfx/sword_whoosh.wav" id="12"]
 [ext_resource type="AudioStream" uid="uid://df37iqtb0lyvc" path="res://assets/sfx/hurt_thud.wav" id="13"]
 [ext_resource type="AudioStream" uid="uid://dpan0cjntr6dy" path="res://assets/sfx/defeat_crumple.wav" id="14"]
@@ -348,6 +343,7 @@ transitions = ["Start", "wake", SubResource("T_start"), "wake", "idle", SubResou
 [node name="PawnHero" type="Node2D" unique_id=860054415]
 z_index = 3
 script = ExtResource("1")
+player_definition = ExtResource("2")
 weapon_anchor = Vector2(4, -14)
 default_weapon_texture = ExtResource("7")
 
@@ -370,20 +366,6 @@ texture = ExtResource("7")
 
 [node name="AnimationPlayer" type="AnimationPlayer" parent="." unique_id=1067127119]
 libraries/ = SubResource("AnimationLibrary_hero")
-
-[node name="HealthComponent" type="Node" parent="." unique_id=1937133876]
-script = ExtResource("8")
-
-[node name="CombatComponent" type="Node" parent="." unique_id=782913554]
-script = ExtResource("9")
-wooden_sword = ExtResource("2")
-pencil_thrust = ExtResource("3")
-
-[node name="MovementComponent" type="Node" parent="." unique_id=75190364]
-script = ExtResource("10")
-
-[node name="InputComponent" type="Node" parent="." unique_id=170311077]
-script = ExtResource("11")
 
 [node name="Camera2D" type="Camera2D" parent="." unique_id=1157041373]
 script = ExtResource("5")

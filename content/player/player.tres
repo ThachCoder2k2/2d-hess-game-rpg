@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="PlayerDefinition" format=3 uid="uid://c4e52miayhw6k"]
+
+[ext_resource type="Script" uid="uid://bndif34uqpm6" path="res://schema/entity/player_definition.gd" id="1"]
+[ext_resource type="Resource" uid="uid://byvw26cd7u12f" path="res://content/skills/wooden_sword/wooden_sword.tres" id="2"]
+[ext_resource type="Resource" uid="uid://bog2k4gpe6yi4" path="res://content/skills/pencil_thrust/pencil_thrust.tres" id="3"]
+
+[resource]
+script = ExtResource("1")
+piece_name = "Pawn Hero"
+max_courage = 3
+invulnerability_duration = 0.7
+step_duration = 0.18
+held_repeat_delay = 0.22
+wooden_sword = ExtResource("2")
+pencil_thrust = ExtResource("3")
+starts_with_sword = true
+skill_cooldown_duration = 1.25

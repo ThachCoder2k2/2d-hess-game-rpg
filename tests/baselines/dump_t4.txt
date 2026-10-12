@@ -80,7 +80,7 @@ entity 3 enemy:Pawn cell=(12,4) facing=(0,1) moving=false health=2/2 ai_state=0
 entity 4 enemy:Backstep Pawn cell=(7,6) facing=(0,-1) moving=false health=2/2 ai_state=0
 events drained: 5
 
-[nodes] 80
+[nodes] 76
 CurrentZone Node2D script=res://authoring/room_encounter.gd position=(0.00,0.00)
 CurrentZone/ArmedPawn Node2D script=res://presentation/views/actor_view.gd position=(464.00,180.00) z_index=6
 CurrentZone/ArmedPawn/AnimationPlayer AnimationPlayer
@@ -152,15 +152,11 @@ PawnHero/AnimationPlayer AnimationPlayer
 PawnHero/AnimationTree AnimationTree
 PawnHero/AudioPlayer AudioStreamPlayer
 PawnHero/Camera2D Camera2D script=res://presentation/camera/camera_rig.gd
-PawnHero/CombatComponent Node script=res://authoring/entity_components/combat_component.gd
-PawnHero/HealthComponent Node script=res://authoring/entity_components/health_component.gd
-PawnHero/InputComponent Node script=res://authoring/entity_components/input_component.gd
 PawnHero/MotionRoot Node2D
 PawnHero/MotionRoot/SpriteRoot Node2D
 PawnHero/MotionRoot/SpriteRoot/BodySprite Sprite2D
 PawnHero/MotionRoot/SpriteRoot/WeaponPivot Node2D
 PawnHero/MotionRoot/SpriteRoot/WeaponPivot/WeaponSprite Sprite2D
-PawnHero/MovementComponent Node script=res://authoring/entity_components/movement_component.gd
 
 [textures] 26
 CurrentZone/ArmedPawn/MotionRoot/SpriteRoot/BodySprite -> res://content/enemies/pawn_recruit/body.png

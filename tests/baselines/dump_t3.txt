@@ -56,7 +56,7 @@ entity 1 player cell=(1,5) facing=(0,1) moving=false health=3/3
 entity 2 enemy:Pawn cell=(10,3) facing=(0,1) moving=false health=2/2 ai_state=0
 events drained: 0
 
-[nodes] 43
+[nodes] 39
 CurrentZone Node2D script=res://authoring/room_encounter.gd position=(0.00,0.00)
 CurrentZone/Entry_From_T4 Marker2D script=res://authoring/markers/zone_entry_marker.gd position=(496.00,84.00)
 CurrentZone/Entry_West Marker2D script=res://authoring/markers/zone_entry_marker.gd position=(112.00,212.00)
@@ -91,15 +91,11 @@ PawnHero/AnimationPlayer AnimationPlayer
 PawnHero/AnimationTree AnimationTree
 PawnHero/AudioPlayer AudioStreamPlayer
 PawnHero/Camera2D Camera2D script=res://presentation/camera/camera_rig.gd
-PawnHero/CombatComponent Node script=res://authoring/entity_components/combat_component.gd
-PawnHero/HealthComponent Node script=res://authoring/entity_components/health_component.gd
-PawnHero/InputComponent Node script=res://authoring/entity_components/input_component.gd
 PawnHero/MotionRoot Node2D
 PawnHero/MotionRoot/SpriteRoot Node2D
 PawnHero/MotionRoot/SpriteRoot/BodySprite Sprite2D
 PawnHero/MotionRoot/SpriteRoot/WeaponPivot Node2D
 PawnHero/MotionRoot/SpriteRoot/WeaponPivot/WeaponSprite Sprite2D
-PawnHero/MovementComponent Node script=res://authoring/entity_components/movement_component.gd
 
 [textures] 10
 CurrentZone/PawnRecruit/MotionRoot/SpriteRoot/BodySprite -> res://content/enemies/pawn_recruit/body.png

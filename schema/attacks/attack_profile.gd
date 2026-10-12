@@ -18,3 +18,16 @@ func get_target_cells(origin: Vector2i, facing: Vector2i) -> Array[Vector2i]:
 		cells.append(origin + facing * distance)
 	return cells
 
+
+## Problems that would make this attack unplayable, as readable sentences (empty = fine).
+func validate() -> PackedStringArray:
+	var warnings := PackedStringArray()
+	if range_cells < 1:
+		warnings.append("Attack '%s' needs a range of at least 1 cell." % display_name)
+	if damage < 1:
+		warnings.append("Attack '%s' needs damage of at least 1." % display_name)
+	if impact_delay <= 0.0:
+		warnings.append("Attack '%s' needs an impact_delay above 0." % display_name)
+	if recovery <= 0.0:
+		warnings.append("Attack '%s' needs a recovery above 0." % display_name)
+	return warnings

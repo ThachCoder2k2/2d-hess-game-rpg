@@ -7,10 +7,12 @@ extends Node2D
 ## driving the sprites. No logic, no input, no state — systems own all of it
 ## (docs/ecs-conversion-plan.md).
 
-## Enemy spawn data (null on the player view; the player's kit lives on its
-## CombatComponent / HealthComponent / MovementComponent / InputComponent
-## child nodes instead).
+## Enemy spawn data (null on the player view).
 @export var definition: EnemyDefinition
+## Player spawn data (null on enemy views): the pawn's tuning, content/player/player.tres.
+## EcsBoot bakes it first; a HealthComponent / MovementComponent / InputComponent /
+## CombatComponent child node placed on this view still beats it, field by field.
+@export var player_definition: PlayerDefinition
 
 @export_group("Appearance")
 @export var hurt_modulate := Color("#ff8170")
