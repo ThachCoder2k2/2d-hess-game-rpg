@@ -1643,7 +1643,7 @@ Existing: 10 generated chiptune SFX and `unbound_march.wav` (embedded loop point
 
 | Replace | File to overwrite | Size and rules |
 |---|---|---|
-| Pawn, enemies, bosses | `content/<kind>/<id>/body.png` | Cell 32 px. Pawn 32x40, Knight 48x48, bosses 64-96 px (`gdd:465-476`). Feet anchor at the cell centre by default (`VisualDefinition.anchor_offset` overrides). Optional `body_n.png/e.png/w.png`; if missing the view rotates or flips as today. Nearest filtering. |
+| Pawn, enemies, bosses | `content/<kind>/<id>/body.png` (the pawn's is `content/player/body.png`) | **A piece is smaller than its 32 px cell** (owner decision 2026-10-12, `docs/owner-decisions.md`; it replaces the sizes this row used to give, a 32x40 pawn, a 48x48 knight and 64-96 px bosses from `gdd:465-476`, which let a piece rise into the row above). Drawn at scale 1 inside the box of its kind in `content/feel/piece_sizes.tres`: pawn 18x22, knight, bishop and rook 20x24, queen 22x26, king 22x28 (the whole PNG counts, padding included). The base line is 14 px below the cell centre, so every piece keeps 2 px below it and the king keeps 2 px above; heights follow a real chess set (pawn lowest, king tallest). A boss is one more row of the table with a bigger `footprint_cells` (and a box that grows with it): it stays inside the cells it stands on. `VisualDefinition.anchor_offset` nudges the picture from the base line. Optional `body_n.png/e.png/w.png`; if missing the view rotates or flips as today. Nearest filtering. |
 | Skill and item icons | `content/skills/<id>/icon.png` | 16x16 |
 | Pickups and props | `content/pickups/<id>/pickup.png`, `content/props/<id>/prop.png` | any, feet-anchored |
 | Room art | `content/rooms/<id>/background.png` (+ optional `foreground.png`) | 512x288 for 16x9, 576x288 for 18x9 |
@@ -1654,14 +1654,15 @@ Existing: 10 generated chiptune SFX and `unbound_march.wav` (embedded loop point
 | VFX | `content/feel/vfx/<id>.png` | small sprite sheets |
 | Painted vistas (awe slots) | `content/story/vistas/<act>.png` | one per act, shown at integer scale (R25) |
 
-- **Templates**: `tools/export_art_templates.gd` writes guide PNGs (cell grid, anchor, safe area) into `assets/_templates/` for each role.
+- **In-cell rule (built in M2)**: everything an actor draws stays inside its own cell: the body from the size table, the health pips along the top edge, the facing arrow 10 px out on the facing side, the held weapon at 0.16 scale, the telegraph aura 22 to 27 px, all within 14 px of the cell centre and 2 px from every edge, and every clip caps its hops and shakes at the 2 px margin. `PieceSizeTable.validate()` holds the margin and the height order; `ContentDb.validate_cross_refs()` fails a picture larger than its box; `tests/architecture/test_pieces_inside_cell.gd` measures the hero and every enemy facing every way, armed, telegraphing and across every clip; `tools/render_actor_preview.gd` writes `assets/_generated/previews/pieces_in_cells.png` for the owner. **`task_plan.md` phase 66 (pieces 1.5 cells tall, `BodySprite` at (0,-8), the top half in the row above) is superseded.** Row-based depth (`z_index` by row) is kept and nothing needs it any more.
+- **Templates**: `tools/export_art_templates.gd` (not built yet; it will read `piece_sizes.tres`) writes guide PNGs (cell grid, the box and base line of each kind of piece, the 2 px margin) into `assets/_templates/` for each role.
 - **Masters**: layered sources go in `assets/_source/` (`.gdignore` so Godot never imports them).
 - **Sprite sheets (Tier B)**: `VisualDefinition` takes an optional `hframes/vframes/clip_frames` block so a frame-animated sprite needs no scene edit. Today `body.png` is one static image with transform-only clips.
 - **Contract test**: `tools/art_contract_check.gd` run by `tests/content/test_art_contract.gd` verifies that every actor derives from `actor_view_base.tscn`, that every clip of the animation manifest (§12.1) exists on every actor of that role, that `MotionRoot/SpriteRoot/BodySprite`, `WeaponPivot`, `HealthPips`, `TelegraphAura`, `FacingArrow` and `AudioPlayer` exist, that the telegraph-to-attack transition exists in the `AnimationTree` graph, that every `body.png` exists, that every room has a `background.png`, and that every placeholder is listed.
 - **The owner's TODO**: `tools/list_placeholders.gd` prints remaining placeholders by room and kind. A file is a placeholder if and only if its sha256 still equals the hash recorded in `content/_placeholders.json` when `tools/seed_placeholders.gd` seeded it. Overwriting the file clears the flag with no extra edit; a sidecar flag would go stale.
-- **Placeholder generators** (`tools/generate_chess_sprites.gd`, `generate_stage1_room_art.gd`) write only to `assets/_generated/`. `tools/seed_placeholders.gd` copies into `content/` only when a file is absent, and records the hashes.
-- **Provenance**: the Knight silhouette was traced from a system font glyph (`where:178`). The base records this in `THIRD_PARTY_NOTICES.md` and flags the sprite for redraw or replacement before any release.
-- **Editing a clip or the `AnimationTree`** is an editor task in `presentation/views/actor_view_base.tscn` (and thin inherited scenes). It changes every actor that inherits it. The telegraph-to-attack edge is added once, in the base, after the M2 collapse.
+- **Placeholder generators** (`tools/generate_chess_sprites.gd`, `generate_stage1_room_art.gd`) write only to `assets/_generated/`; the chess generator reads the size table and refuses a piece that does not fit its box. `tools/seed_placeholders.gd` copies into `content/` only when a file is absent (or, for a row marked `supersedes_stand_in`, replaces an earlier stand-in that is provably still the recorded one), and records the hashes.
+- **Provenance**: the Knight silhouette was traced from a system font glyph (`where:178`); M2 retraced the same glyph on 15 rows so it fits its 20x24 box. The base records this in `THIRD_PARTY_NOTICES.md` and flags the sprite for redraw or replacement before any release.
+- **Editing a clip or the `AnimationTree`** is an editor task in `presentation/views/actors/actor_view_base.tscn` (and thin inherited scenes). It changes every actor that inherits it. The telegraph-to-attack edge is added once, in the base, after the M2 collapse.
 
 ### 12.1 Animation manifest (required clips per role)
 
@@ -1771,7 +1772,7 @@ res://
 │  └─ room_encounter.gd/.tscn
 │
 ├─ presentation/            HOW THE WORLD IS SHOWN: reads events and the HudSnapshot, never decides
-│  ├─ views/                actor_view.gd, actor_view_base.tscn, pickup view, vfx scenes
+│  ├─ views/                actor_view.gd, actors/ (actor_view_base.tscn and the thin inherited scenes), pickup view, vfx scenes
 │  ├─ ui/                   hud/ (ONE SCENE PER WIDGET: courage, rank tally, skill slots, believe, objective,
 │  │                        boss bar), dialogue_box/, prompt/, codex/ (Book)
 │  ├─ board/ camera/ audio/ text/ (text_service.gd is the only tr() caller)
@@ -1867,12 +1868,13 @@ One file per phase stops six milestones editing one list. `schedule.gd` concaten
 | Add an NPC or rescue | a prop with an `InteractComponent`, a beat, a flag in `flags.tres`, `room.tscn`, `.po` rows | 5 | no |
 | Add a boss | `boss.tres`, `enemy.tres`, `body.png`, the arena `room.tscn`, beats + `.po` rows, a milestone row, a `music_cues` row | 7-10 | no, if its attacks use existing kinds |
 | Add or retune a boss phase | `boss.tres` (a new windup clip also edits the boss's actor scene) | 1-2 | no |
-| Swap a sprite | overwrite `body.png` (+ `VisualDefinition.anchor_offset` if the frame size changes); the placeholder flag clears by hash | 1-2 | no |
+| Swap a sprite | overwrite `body.png`, drawn at scale 1 and no larger than the box of its kind in `content/feel/piece_sizes.tres` (+ `VisualDefinition.anchor_offset` to nudge it from the base line); the placeholder flag clears by hash | 1-2 | no |
+| Change how big a kind of piece is inside its cell | `content/feel/piece_sizes.tres` (a row's `body_box`, `base_offset_y`, `footprint_cells`); `validate()` keeps the 2 px margin and the chess height order | 1 | no |
 | Swap a room's art | overwrite `background.png` | 1 | no |
 | Swap a portrait, UI skin or font | overwrite the file in `content/story/characters/`, `content/ui/theme/`, `assets/fonts/` | 1 | no |
 | Add music or change which track plays | drop the file in `assets/music/` + a row in `music_cues.tres` | 2 | no |
 | Add or swap an event sound (pickup, jingle, UI) | drop the file + a row in `sound_bank.tres` | 2 | no |
-| Swap a motion sound or edit an animation clip | an **editor task** in `presentation/views/actor_view_base.tscn` (changes every actor that inherits it) or in a bespoke inherited view | 1 scene | no |
+| Swap a motion sound or edit an animation clip | an **editor task** in `presentation/views/actors/actor_view_base.tscn` (changes every actor that inherits it) or in a bespoke inherited view; how fast a clip plays for one kind of piece is `clip_speed_scales` in its `visual.tres`, no scene edit | 1 scene | no |
 | Change the HUD layout | the widget scene in `presentation/ui/hud/` | 1 | no |
 | Tune difficulty or assists | `content/difficulty/<profile>.tres` (global health and damage multipliers live here); for one enemy, its `enemy.tres` | 1 | no |
 | Tune game feel (shake, flash, hit-stop, telegraph colours, chord window) | `content/feel/feel_profile.tres` | 1 | no |
@@ -1900,7 +1902,7 @@ One file per phase stops six milestones editing one list. `schedule.gd` concaten
 | `resources/enemies/*`, `movement`, `attacks`, `decisions`, `visuals`, `difficulty` | `content/enemies/<id>/`, `content/enemies/_shared/`, `content/difficulty/` | M1b, regrouped in M2 |
 | `resources/rules/*` | `content/rules/<id>/page.tres` | M1b, M7c |
 | `resources/world/world_graph.tres` | `content/world/world.tres` | M5 |
-| `objects/actors/*.tscn` (4 copies of 353 lines) | `presentation/views/actor_view_base.tscn` + thin inherited `content/enemies/<id>/actor.tscn` | M2 |
+| `objects/actors/*.tscn` (4 copies of 353 lines) | `presentation/views/actors/actor_view_base.tscn` + four thin inherited scenes beside it (as built in M2; a new enemy needs no scene, and `content/enemies/<id>/actor.tscn` is the home of one only if a piece ever needs its own) | M2 |
 | `scenes/rooms/*.tscn` | `content/rooms/<id>/room.tscn` (`first_encounter` moves to `tests/fixtures/`) | M1b |
 | `scenes/zones/the_kingdom.tscn` | `tests/fixtures/the_kingdom.tscn` (with its tilemaps and tilesets) | M1b |
 | `scenes/ui/*`, `objects/audio/sfx_manager.tscn` | `presentation/ui/`, `presentation/audio/` | M1b |
@@ -2047,6 +2049,8 @@ Order: tooling and approval first (M1a, OG0), the scripted folder migration (M1b
 - **Acceptance**: `test_actor_collapse_golden.gd` (per actor, the node paths and every baked component field equal the old scene's, and the per-room entity set and cells equal the pre-port dump); `test_validate_all.gd` (every definition passes `validate()`, ids equal folders, no duplicates, minimum count); `test_content_db_in_init.gd` (the registry works inside a `_init`-time suite with no autoloads); baseline labels intact.
 - **Owner can try**: add `content/enemies/test_pawn/enemy.tres` reusing `_shared` (HP 5), instance `actor_view_base.tscn` into `dev_sandbox` and set `definition`; swap `body.png`. A playable checkpoint: T1 to H1 equals the baseline.
 - **Dependencies**: M1b.
+- **Also built in M2 (the owner's decision of 2026-10-12, `docs/owner-decisions.md`)**: a piece is smaller than its cell. The size table `content/feel/piece_sizes.tres` (`PieceSizeTable` and `PieceSize` in `schema/feel/`, `ContentDb.piece_sizes()`), the placement and the in-cell geometry of `actor_view_base.tscn`, the owner-approved generated chess family drawn to the table and seeded into `content/<kind>/<id>/body.png` as placeholders, `tools/render_actor_preview.gd`, `test_pieces_inside_cell`. It reverses `task_plan.md` phase 66, and §12 states the new rule.
+- **As built, where it differs from the text above**: the thin actor scenes stay in `presentation/views/actors/` beside the base (not in `content/enemies/<id>/`, which keeps scene uids and test labels intact); the registry method is `fetch`, not `get` (a static `get` would override `Object.get`); `dev_sandbox` does not exist before M6, so the owner tries a new enemy by instancing `actor_view_base.tscn` in a room (the walk is recorded in `.claude/commands/new-enemy.md`, and a throwaway scene in the project root boots with `tools/dump_world.gd --room=res://<scene>`); the `content/_index.json` export fallback of §14.1 is not built. Counted by doing it: a re-skin that reuses `_shared` is 1 file, with a picture of its own 3 (`enemy.tres`, `visual.tres`, `body.png`), plus the room edit that places it.
 
 ### M3a: Runtime seams (L)
 
