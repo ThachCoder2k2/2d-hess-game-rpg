@@ -191,12 +191,12 @@ func _draw_parts(cell: Image, view: Node2D, parts: Array[Dictionary]) -> void:
 	ordered.sort_custom(func(first: Dictionary, second: Dictionary) -> bool:
 		return first["z"] < second["z"] or (first["z"] == second["z"] and first["order"] < second["order"]))
 
-	var view_from_world := view.get_global_transform().affine_inverse()
+	var cell_from_world := ActorCellProbe.cell_frame_of(view).affine_inverse()
 	var half_cell := cell_size / 2
 	for part in ordered:
 		var sprite := part["node"] as Sprite2D
 		var picture := _image_of(sprite.texture)
-		var sprite_from_view := (view_from_world * sprite.get_global_transform()).affine_inverse()
+		var sprite_from_cell := (cell_from_world * sprite.get_global_transform()).affine_inverse()
 		var local_origin := sprite.get_rect().position
 		var rect: Rect2 = part["rect"]
 		for y in range(floori(rect.position.y) - 1, ceili(rect.end.y) + 1):
@@ -205,7 +205,7 @@ func _draw_parts(cell: Image, view: Node2D, parts: Array[Dictionary]) -> void:
 				var cell_y := y + half_cell
 				if cell_x < 0 or cell_y < 0 or cell_x >= cell_size or cell_y >= cell_size:
 					continue
-				var texel := (sprite_from_view * Vector2(x + 0.5, y + 0.5) - local_origin).floor()
+				var texel := (sprite_from_cell * Vector2(x + 0.5, y + 0.5) - local_origin).floor()
 				if texel.x < 0 or texel.y < 0 or texel.x >= picture.get_width() or texel.y >= picture.get_height():
 					continue
 				var color := picture.get_pixel(int(texel.x), int(texel.y)) * sprite.modulate

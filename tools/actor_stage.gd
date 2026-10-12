@@ -26,10 +26,28 @@ const FACINGS: Array[Vector2i] = [Vector2i.DOWN, Vector2i.RIGHT, Vector2i.UP, Ve
 ## "view": the ActorView, "world": the EcsWorld, "entity": its entity id }.
 ## `definition` replaces the scene's own EnemyDefinition when given (an enemy role only).
 static func boot(tree: SceneTree, scene: PackedScene, role: String, definition: EnemyDefinition = null) -> Dictionary:
+	var view := scene.instantiate() as ActorView
+	if role == ROLE_ENEMY and definition != null:
+		view.definition = definition
+	return _boot_view(tree, view, role)
+
+
+## Boots an ActorView exactly as a room scene placed it: its own scale, rotation, definition and
+## exports stay, and only its position is replaced by ACTOR_POSITION. The view is taken out of its
+## room first (the room scene itself is never added to a tree, the way ContentDb's RoomScan reads
+## it). This is how a test measures the actors the game really ships, with whatever the room
+## scene did to them. An enemy role only: a room parks enemies, never the hero.
+static func boot_placed(tree: SceneTree, placed_view: ActorView) -> Dictionary:
+	if placed_view.get_parent() != null:
+		placed_view.get_parent().remove_child(placed_view)
+	placed_view.owner = null
+	return _boot_view(tree, placed_view, ROLE_ENEMY)
+
+
+static func _boot_view(tree: SceneTree, view: ActorView, role: String) -> Dictionary:
 	var host := Node2D.new()
 	host.name = "ActorStage"
 	tree.root.add_child(host)
-	var view := scene.instantiate() as ActorView
 	view.position = ACTOR_POSITION
 	var room: Node2D = null
 	if role == ROLE_PLAYER:
@@ -39,8 +57,6 @@ static func boot(tree: SceneTree, scene: PackedScene, role: String, definition: 
 		room.name = "Room"
 		host.add_child(room)
 		room.add_child(view)
-		if definition != null:
-			view.definition = definition
 	var world := EcsWorld.new()
 	world.name = "EcsWorld"
 	world.manual_tick = true

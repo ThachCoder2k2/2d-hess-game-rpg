@@ -14,7 +14,11 @@ extends UnboundTest
 ##   - at every keyframe of every clip it stays inside the cell (the margin is spent on the motion);
 ##   - every body picture is no larger than its kind's box, and the pieces are as tall as a real
 ##     chess set says: a pawn is lower than a bishop and a knight;
-##   - the static scene shows what the game will draw (the editor and the game agree).
+##   - the static scene shows what the game will draw (the editor and the game agree);
+##   - every actor a ROOM scene places is measured as placed, with the room's own scale, rotation and
+##     exports: a captain a room scene stretched to 1.18x would cross the cell edge and fails here
+##     by room and name (the owner's rule holds for every actor the game ships, not only the four
+##     thin scenes at their defaults).
 
 const ActorStage := preload("res://tools/actor_stage.gd")
 const ActorCellProbe := preload("res://tools/actor_cell_probe.gd")
@@ -64,6 +68,7 @@ func _init() -> void:
 		var enemy_definition := ContentDb.fetch(&"enemies", enemy_id) as EnemyDefinition
 		_check_actor_at_rest(BASE_SCENE_PATH, ActorStage.ROLE_ENEMY, enemy_definition, "%s on actor_view_base.tscn" % enemy_id)
 	_check_chess_heights(heights_by_piece_type)
+	await _check_every_actor_placed_in_a_room()
 	await _check_every_clip()
 	finish()
 
@@ -112,8 +117,12 @@ func _check_static_scenes_show_what_the_game_draws() -> void:
 # --------------------------------------------------------------------------- at rest
 ## Boots the actor and measures it in every state a player can see it in. Returns the body's
 ## drawn height in pixels (the pawn family's first pose, facing down).
-func _check_actor_at_rest(scene_path: String, role: String, definition: EnemyDefinition, label: String) -> int:
-	var stage := ActorStage.boot(self, load(scene_path) as PackedScene, role, definition)
+func _check_actor_at_rest(scene_path: String, role: String, definition: EnemyDefinition, label: String, placed_view: ActorView = null) -> int:
+	var stage: Dictionary
+	if placed_view != null:
+		stage = ActorStage.boot_placed(self, placed_view)
+	else:
+		stage = ActorStage.boot(self, load(scene_path) as PackedScene, role, definition)
 	var view := stage["view"] as ActorView
 	var body_height := 0
 
@@ -175,6 +184,31 @@ func _check_chess_heights(heights_by_piece_type: Dictionary) -> void:
 		var height := int(heights_by_piece_type.get(piece_type, 0))
 		_expect(height > pawn_height, "a %s is drawn taller than a pawn (%d px against %d), as in a real chess set" % [piece_type, height, pawn_height])
 	_expect(pawn_height < int(table.row_for(&"pawn").body_box.y) + 1, "the pawn is drawn within its box")
+
+
+# --------------------------------------------------------------------------- rooms
+## Every enemy a room scene parks is booted as placed (its instance scale, rotation, definition and
+## exports kept) and measured like the actors above. The static facts are asserted by name first,
+## so a stretched or turned instance says what is wrong and where.
+func _check_every_actor_placed_in_a_room() -> void:
+	var placed_actors := 0
+	for room_id in ContentDb.ids(&"rooms"):
+		var room_scene := ContentDb.fetch(&"rooms", room_id) as PackedScene
+		if not _expect(room_scene != null and room_scene.can_instantiate(), "room %s loads" % room_id):
+			continue
+		var room := room_scene.instantiate()
+		for child in room.get_children():
+			var view := child as ActorView
+			if view == null or view.definition == null:
+				continue
+			var label := "room %s, %s (%s)" % [room_id, view.name, view.definition.id]
+			placed_actors += 1
+			_expect(view.scale == Vector2.ONE and is_zero_approx(view.rotation) and is_zero_approx(view.skew),
+				"%s: placed at scale 1 and unturned (it is scale %s, rotation %.2f): a piece is smaller than its cell, so a room never stretches one" % [label, view.scale, view.rotation])
+			_check_actor_at_rest("", ActorStage.ROLE_ENEMY, null, label, view)
+		room.free()
+		await wait_frames(1)
+	_expect(placed_actors >= 5, "the actors the rooms place were really measured (%d of them)" % placed_actors)
 
 
 # --------------------------------------------------------------------------- clips

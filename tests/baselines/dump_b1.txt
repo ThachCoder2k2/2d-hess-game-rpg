@@ -83,7 +83,7 @@ events drained: 3
 
 [nodes] 82
 CurrentZone Node2D script=res://authoring/room_encounter.gd position=(0.00,0.00)
-CurrentZone/BlackPawnCaptain Node2D script=res://presentation/views/actor_view.gd position=(400.00,148.00) scale=(1.18,1.18) z_index=5
+CurrentZone/BlackPawnCaptain Node2D script=res://presentation/views/actor_view.gd position=(400.00,148.00) z_index=5
 CurrentZone/BlackPawnCaptain/AnimationPlayer AnimationPlayer
 CurrentZone/BlackPawnCaptain/AnimationTree AnimationTree
 CurrentZone/BlackPawnCaptain/AudioPlayer AudioStreamPlayer
