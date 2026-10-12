@@ -31,7 +31,7 @@ test pass and `git status` is clean.
 ### Where generator output goes
 
 Everything a generator writes lives under `assets/_generated/` (gitignored, never hand-edited):
-`chess/`, `tiles/`, `maps/`, `rooms/` and `piece_templates/` (the paintable templates
+`chess/`, `tiles/`, `maps/`, `rooms/`, `previews/` and `piece_templates/` (the paintable templates
 `generate_demo_map.gd` re-exports on every run). The output folder is one `const` at the top of
 each generator (`OUT_DIR`, `OUTPUT_DIR`, `TILE_DIR`, `PIECE_TEMPLATE_DIR`). Hand-drawn source art
 is never written by a tool: `assets/map_pieces/` and the 12 tracked sprites that used to sit in
@@ -44,7 +44,7 @@ No tracked scene names a generated PNG (`tests/content/test_placeholders_manifes
 
 | Tool | What it does |
 |---|---|
-| `bootstrap_worktree.sh` | Makes a fresh clone or worktree test-ready: import pass, the four generators below, import pass. |
+| `bootstrap_worktree.sh` | Makes a fresh clone or worktree test-ready: import pass, the four generators below, import pass, then the actor preview picture. |
 | `run_all_tests.py` | The verification gate (`/verify`): import pass, every suite in its own bounded process, baseline-label check. `--strict`, `--only`, `--list`, `--verbose`. `--self-test` checks the gate itself (canned hangs, script errors, FAIL lines, missing verdicts, vanished labels, a fake Godot) in about 5 s with no Godot. |
 | `stamp_uids.gd` | Text-level UID stamper (never calls `ResourceSaver`): adds `uid=` to uid-less scene/resource headers and to path-only `ext_resource` lines. `-- --check` only reports and exits 1 if anything would change. Idempotent. |
 | `save_keeping_uids.gd` | The helper every tool that would call `ResourceSaver` uses instead (a helper, not a command; no `class_name`): `save_keeping_uid()` puts the file's previous header uid back after a save, `stamp_uids_last()` runs the stamper in a child Godot process. `tests/architecture/test_tools_keep_uids.gd` fails if a tool calls `ResourceSaver.save()` itself. |
@@ -56,6 +56,9 @@ No tracked scene names a generated PNG (`tests/content/test_placeholders_manifes
 | `seed_placeholders.gd` | Copies a generator's stand-in picture into `content/` only when the target is absent, and records the sha256 of every placeholder in `content/_placeholders.json`. `-- --check` changes nothing and exits 1 if there is work to do. Never re-records a file already listed. |
 | `list_placeholders.gd` | Prints the owner's art and audio TODO by kind: every listed file whose sha256 still equals the recorded one. Overwriting a file clears its flag by itself. Exit 1 if a listed file is gone. |
 | `placeholder_manifest.gd` | The manifest logic shared by the two tools above and `tests/content/test_placeholders_manifest.gd` (a helper, not a command; no `class_name`). |
+| `render_actor_preview.gd` | Headless. Draws the hero, a black pawn, a knight and a bishop in their 32 x 32 cells, facing every way, armed and telegraphing, with the cell edges and the 2 px margin marked, at 4x whole-number zoom, into `assets/_generated/previews/pieces_in_cells.png`: how the owner sees that a piece is smaller than its cell without opening the editor. Composed on the CPU with `Image`, so it needs no renderer. |
+| `actor_stage.gd` | Boots one actor view into a throwaway ECS world with only `ViewSyncSystem` and sets its facing, weapon or telegraph (a helper, not a command; no `class_name`). Used by the preview tool and `tests/architecture/test_pieces_inside_cell.gd`. |
+| `actor_cell_probe.gd` | Measures what an actor view draws, in pixels from its cell's centre, from the opaque pixels of every visible sprite (a helper, not a command; no `class_name`). |
 | `generate_chess_sprites.gd` | Bakes the chess-piece sprites (art language v13) to `assets/_generated/chess/`: the white pawn (the hero), the black pawn, the bishop, the knight, and the double-step and promoted pawns, six states each. One block is one world pixel, and it reads the size table (`content/feel/piece_sizes.tres`) and refuses to write a piece that does not fit its box. |
 | `generate_kingdom_tiles.gd` | Bakes the room materials as pixel tiles, a contact sheet and a manifest (same art language as the pieces) into `assets/_generated/tiles/`. |
 | `generate_demo_map.gd` | Draws the pawn-scale bedroom demo world with the kingdom tiles into `assets/_generated/maps/` and re-exports the paintable piece templates to `assets/_generated/piece_templates/`. |
