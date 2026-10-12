@@ -21,3 +21,4 @@ scripts/ai/enemy_intent.gd	ecs/systems/decide/enemy_intent.gd
 scripts/ecs/ecs_world.gd	ecs/core/ecs_world.gd
 scripts/ecs/ecs_grid.gd	ecs/core/ecs_grid.gd
 scripts/ecs/ecs_system.gd	ecs/core/ecs_system.gd
+scripts/ecs/ecs_components.gd	ecs/components/ecs_components.gd
