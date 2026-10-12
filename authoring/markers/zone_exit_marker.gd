@@ -18,5 +18,5 @@ extends Marker2D
 func _get_configuration_warnings() -> PackedStringArray:
 	var warnings := PackedStringArray()
 	if target_zone == &"":
-		warnings.append("Set target_zone to a zone id from world_graph.tres.")
+		warnings.append("Set target_zone to a zone id from content/world/world.tres.")
 	return warnings
