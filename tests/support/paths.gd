@@ -103,6 +103,11 @@ func actor_scene(actor_id: StringName) -> String:
 	return _existing_resource("res://presentation/views/actors/%s.tscn" % actor_id)
 
 
+## The one base every actor scene inherits (M2): the nodes, the clips and the animation graph.
+func actor_view_base_scene() -> String:
+	return _existing_resource("res://presentation/views/actors/actor_view_base.tscn")
+
+
 ## The SfxManager autoload's scene (its player pool is built in code).
 func sfx_manager_scene() -> String:
 	return _existing_resource("res://presentation/audio/sfx_manager.tscn")

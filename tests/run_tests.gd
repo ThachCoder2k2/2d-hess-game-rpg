@@ -115,7 +115,6 @@ func _init() -> void:
 		"res://presentation/views/actors/black_pawn.tscn": &"pawn_recruit",
 		"res://presentation/views/actors/knight_enemy.tscn": &"knight_tracker",
 		"res://presentation/views/actors/bishop_enemy.tscn": &"bishop_zoner",
-		"res://presentation/views/actors/enemy_base.tscn": &"pawn_recruit",
 	}
 	for scene_path: String in expected_definitions:
 		var enemy_view := _view(scene_path)

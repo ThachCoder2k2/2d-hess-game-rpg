@@ -24,3 +24,13 @@
 player view carries an editor-tunable HealthComponent node -> player view names content/player/player.tres, which carries the courage and invulnerability
 CombatComponent node carries the attack loadout -> PlayerDefinition carries the attack loadout
 player view carries movement and input component nodes -> PlayerDefinition carries the step and hold timings, so the view carries no component nodes
+
+# M2 step 2: enemy_base.tscn was black_pawn.tscn byte for byte under another node name (no room, fixture
+# or test instanced it), so the collapse into actor_view_base.tscn removed it. The six checks it had
+# are the same six checks black_pawn.tscn already prints; nothing is asserted less.
+enemy_base.tscn animation transitions live in an editor AnimationTree graph -> black_pawn.tscn animation transitions live in an editor AnimationTree graph
+enemy_base.tscn carries its own EnemyDefinition -> black_pawn.tscn carries its own EnemyDefinition
+enemy_base.tscn definition has no missing configuration -> black_pawn.tscn definition has no missing configuration
+enemy_base.tscn is an ActorView with a definition -> black_pawn.tscn is an ActorView with a definition
+enemy_base.tscn owns defeat clip + audio player -> black_pawn.tscn owns defeat clip + audio player
+enemy_base.tscn owns sprites + telegraph clip -> black_pawn.tscn owns sprites + telegraph clip

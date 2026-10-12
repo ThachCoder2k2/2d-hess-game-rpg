@@ -15,6 +15,10 @@ extends Resource
 
 ## Label shown in status text (for example when the hero picks something up).
 @export var piece_name := "Pawn Hero"
+## How the hero looks and how fast its clips play (content/player/visual.tres). The player
+## view reads it exactly as an enemy view reads EnemyDefinition.visual. Null shows the
+## view's built-in stand-in body at the base's tempo.
+@export var visual: VisualDefinition
 
 @export_group("Courage")
 ## Starting and maximum Courage (the hero's health). The entity spawns full.
@@ -61,4 +65,8 @@ func validate() -> PackedStringArray:
 		warnings.append("Player definition requires the pencil_thrust AttackProfile.")
 	else:
 		warnings.append_array(pencil_thrust.validate())
+	if visual == null:
+		warnings.append("Player definition requires a VisualDefinition (content/player/visual.tres).")
+	else:
+		warnings.append_array(visual.validate())
 	return warnings

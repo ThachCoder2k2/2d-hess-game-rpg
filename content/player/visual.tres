@@ -1,0 +1,10 @@
+[gd_resource type="Resource" script_class="VisualDefinition" format=3 uid="uid://bduu2o3vkj4lf"]
+
+[ext_resource type="Script" uid="uid://whbf5imveje" path="res://schema/entity/visual_definition.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"player"
+clip_speed_scales = Dictionary[StringName, float]({
+&"idle": 1.125
+})

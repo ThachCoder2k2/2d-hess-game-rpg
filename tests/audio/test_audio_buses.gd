@@ -23,9 +23,10 @@ const ROOT_BUS_INDEX := 0
 ## below catch a scan that found too little.
 const BUS_LAYOUT_SETTING := "audio/buses/default_bus_layout"
 
-## The scenes known today hold five actor AudioPlayers and main's MusicPlayer.
+## The scenes known today declare the one actor AudioPlayer of actor_view_base.tscn (every thin
+## actor scene inherits it and declares none of its own since M2) and main's MusicPlayer.
 ## Finding fewer means the scan went blind (a moved folder), not that audio is gone.
-const MIN_AUDIO_PLAYERS_EXPECTED := 6
+const MIN_AUDIO_PLAYERS_EXPECTED := 2
 const MIN_ACTOR_SCENES_EXPECTED := 5
 
 ## Node types that play audio and therefore carry a `bus` property.

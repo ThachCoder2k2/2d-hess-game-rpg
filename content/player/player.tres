@@ -3,10 +3,12 @@
 [ext_resource type="Script" uid="uid://bndif34uqpm6" path="res://schema/entity/player_definition.gd" id="1"]
 [ext_resource type="Resource" uid="uid://byvw26cd7u12f" path="res://content/skills/wooden_sword/wooden_sword.tres" id="2"]
 [ext_resource type="Resource" uid="uid://bog2k4gpe6yi4" path="res://content/skills/pencil_thrust/pencil_thrust.tres" id="3"]
+[ext_resource type="Resource" uid="uid://bduu2o3vkj4lf" path="res://content/player/visual.tres" id="4"]
 
 [resource]
 script = ExtResource("1")
 piece_name = "Pawn Hero"
+visual = ExtResource("4")
 max_courage = 3
 invulnerability_duration = 0.7
 step_duration = 0.18

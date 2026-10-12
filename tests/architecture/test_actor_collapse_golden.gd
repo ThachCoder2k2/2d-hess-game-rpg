@@ -15,9 +15,10 @@ extends UnboundTest
 ##   - a node path that the new description has and the golden has not, unless ADDED_NODES lists it;
 ##   - any difference in the baked entity (the "entity" block): there is no allowance for those,
 ##     because "every baked component field equal the old scene's" is the whole point.
-## The in-cell geometry (where the body, pips, arrow, weapon and aura sit) is changed on purpose by
-## the owner's decision of 2026-10-12 and is therefore excluded from the comparison here; it is
-## asserted by test_pieces_inside_cell instead.
+## Geometry (where the body, pips, arrow, weapon and aura sit) is compared like everything else
+## until the owner's decision of 2026-10-12 (a piece is smaller than its cell) moves it; the commit
+## that moves it lists the lines in GEOMETRY_LINE_PREFIXES, and test_pieces_inside_cell asserts the
+## new geometry instead.
 ##
 ## Per-room entity sets and cells: the golden also records a fingerprint of everything each world
 ## dump baseline says before its "[nodes]" section. Those heads must not change by a byte.
@@ -33,11 +34,41 @@ const EXPECTED_ACTOR_COUNT := 5
 const MINIMUM_LINES_PER_ACTOR := 40
 
 ## Actors whose scene was removed on purpose: id -> why nothing is lost.
-const REMOVED_ACTORS := {}
+const REMOVED_ACTORS := {
+	"enemy_base": "it was black_pawn.tscn byte for byte under another node name; no room, fixture or test instanced it, and a new enemy now starts from actor_view_base.tscn",
+}
+
+const START_TO_IDLE := "transition Start -> idle switch=0 advance=2 condition= xfade=0.0000"
+const START_TO_IDLE_NOW := "transition Start -> idle switch=0 advance=2 condition=boots_awake xfade=0.0000"
+
 ## actor id -> { recorded line -> the line that replaces it }, one entry per intended difference.
-const REPLACED_LINES := {}
+const REPLACED_LINES := {
+	# Every actor boots through the graph's Start edges; the one graph serves both kinds of boot, so
+	# each edge now waits for a condition that the scene sets (base: awake; the hero's scene: asleep).
+	"black_pawn": {START_TO_IDLE: START_TO_IDLE_NOW},
+	"knight_enemy": {START_TO_IDLE: START_TO_IDLE_NOW},
+	"bishop_enemy": {START_TO_IDLE: START_TO_IDLE_NOW},
+	"player": {
+		"transition Start -> wake switch=0 advance=2 condition= xfade=0.0000": "transition Start -> wake switch=0 advance=2 condition=boots_asleep xfade=0.0000",
+		# The hero inherits the pips and the facing arrow, so it names their pictures and switches them
+		# off here (it never showed a facing arrow or pips, and still does not).
+		"view pip_empty_texture=null": "view pip_empty_texture=res://assets/ui/actor_view/health_pip_empty.png",
+		"view pip_full_texture=null": "view pip_full_texture=res://assets/ui/actor_view/health_pip_full.png",
+		"view show_facing_mark=true": "view show_facing_mark=false",
+		"view show_health=true": "view show_health=false",
+	},
+}
 ## actor id -> node paths the new scene has that the old one had not (path -> why).
-const ADDED_NODES := {}
+const ADDED_NODES := {
+	"player": {
+		"TelegraphAura": "inherited from the base, hidden: the hero never telegraphs",
+		"MotionRoot/SpriteRoot/FacingArrow": "inherited from the base, hidden: show_facing_mark is off on the hero",
+		"MotionRoot/SpriteRoot/HealthPips": "inherited from the base, hidden: show_health is off on the hero",
+		"MotionRoot/SpriteRoot/HealthPips/Pip0": "inherited from the base, hidden with its parent",
+		"MotionRoot/SpriteRoot/HealthPips/Pip1": "inherited from the base, hidden with its parent",
+		"MotionRoot/SpriteRoot/HealthPips/Pip2": "inherited from the base, hidden with its parent",
+	},
+}
 ## Line prefixes whose differences belong to the in-cell geometry decision (not compared here).
 const GEOMETRY_LINE_PREFIXES: Array[String] = []
 

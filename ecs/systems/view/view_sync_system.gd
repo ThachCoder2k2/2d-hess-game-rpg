@@ -8,6 +8,12 @@ extends EcsSystem
 ## facing arrow, weapon sprite, health pips, and edge-detected clips.
 ## No other system may touch a node; no view reads game state.
 
+## Metadata key on a view: the VisualDefinition whose values were last written into its nodes.
+const APPLIED_VISUAL_META := &"applied_visual_definition"
+## The AnimationTree parameter that scales one state's clip speed: every state of the graph is a
+## small blend tree (Animation -> TimeScale -> output), so the scale is a parameter of the state.
+const CLIP_SPEED_PARAMETER_FORMAT := "parameters/%s/TimeScale/scale"
+
 
 func tick(_delta: float) -> void:
 	for entity_id in world.query([EcsComponents.GRID_POS, EcsComponents.VIEW_REF]):
@@ -34,6 +40,7 @@ func tick(_delta: float) -> void:
 
 
 func _sync_appearance(entity_id: int, view: EcsComponents.ViewRef, appearance: ActorView, moving: bool) -> void:
+	_apply_visual_definition(appearance)
 	var health: EcsComponents.Health = world.get_component(entity_id, EcsComponents.HEALTH)
 	var ai: EcsComponents.EnemyAI = world.get_component(entity_id, EcsComponents.ENEMY_AI)
 	var combat: EcsComponents.PlayerCombat = world.get_component(entity_id, EcsComponents.PLAYER_COMBAT)
@@ -83,6 +90,42 @@ func _sync_appearance(entity_id: int, view: EcsComponents.ViewRef, appearance: A
 	view.was_hurt = hurt
 	view.was_attacking = attacking
 	view.was_telegraphing = telegraphing
+
+
+## Writes what the actor's VisualDefinition says into the view's nodes. It happens once per
+## definition, not every tick: the view remembers which definition it last applied, so giving
+## a view another definition applies that one and nothing repeats.
+func _apply_visual_definition(appearance: ActorView) -> void:
+	var visual := _visual_of(appearance)
+	if visual == null or (appearance.has_meta(APPLIED_VISUAL_META) and appearance.get_meta(APPLIED_VISUAL_META) == visual):
+		return
+	appearance.set_meta(APPLIED_VISUAL_META, visual)
+	_apply_clip_speed_scales(appearance, visual)
+
+
+## An enemy view names its EnemyDefinition, the hero's view its PlayerDefinition; either may
+## carry the VisualDefinition (null when the view names no definition).
+func _visual_of(appearance: ActorView) -> VisualDefinition:
+	if appearance.definition != null:
+		return appearance.definition.visual
+	if appearance.player_definition != null:
+		return appearance.player_definition.visual
+	return null
+
+
+## Every state of the actor's graph plays its clip through a TimeScale node (see
+## actor_view_base.tscn); this sets each one from the definition, 1.0 where it names no scale.
+func _apply_clip_speed_scales(appearance: ActorView, visual: VisualDefinition) -> void:
+	var tree := appearance.get_node_or_null("AnimationTree") as AnimationTree
+	if tree == null:
+		return
+	var state_machine := tree.tree_root as AnimationNodeStateMachine
+	if state_machine == null:
+		return
+	for state_name in state_machine.get_node_list():
+		if state_name == &"Start" or state_name == &"End":
+			continue
+		tree.set(CLIP_SPEED_PARAMETER_FORMAT % state_name, visual.clip_speed_scales.get(state_name, 1.0))
 
 
 ## The animation state graph lives on each actor's AnimationTree (editor-owned:
