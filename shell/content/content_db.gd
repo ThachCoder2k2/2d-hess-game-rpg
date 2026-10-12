@@ -10,6 +10,7 @@ extends RefCounted
 ##   ContentDb.fetch(&"enemies", &"pawn_recruit") -> the EnemyDefinition (null when unknown)
 ##   ContentDb.all(&"rules")                      -> {id: RuleEntry}
 ##   ContentDb.player()                           -> content/player/player.tres
+##   ContentDb.piece_sizes()                      -> content/feel/piece_sizes.tres
 ##
 ## The id of a thing is its folder name (or its file name for flat kinds), spelled in
 ## one place; ids are found by listing the folders, once per kind, on first use.
@@ -116,6 +117,11 @@ static func world() -> WorldGraph:
 	return fetch(&"world", &"world") as WorldGraph
 
 
+## content/feel/piece_sizes.tres: how big each kind of piece is drawn inside its cell.
+static func piece_sizes() -> PieceSizeTable:
+	return fetch(&"piece_sizes", &"piece_sizes") as PieceSizeTable
+
+
 ## Points the registry at another content folder (a throwaway tree under user:// in a
 ## test) and forgets everything it listed. Pass DEFAULT_CONTENT_ROOT to go back.
 static func configure_root(content_root: String) -> void:
@@ -172,6 +178,7 @@ static func _ensure_kinds() -> void:
 		return
 	_add_kind(ContentKind.new(&"player", ContentKind.IdSource.KIND_ITSELF, "player.tres", PlayerDefinition))
 	_add_kind(ContentKind.new(&"world", ContentKind.IdSource.KIND_ITSELF, "world.tres", WorldGraph))
+	_add_kind(ContentKind.new(&"piece_sizes", ContentKind.IdSource.KIND_ITSELF, "piece_sizes.tres", PieceSizeTable, &"feel"))
 	_add_kind(ContentKind.new(&"enemies", ContentKind.IdSource.FOLDER_NAME, "{id}/enemy.tres", EnemyDefinition))
 	_add_kind(ContentKind.new(&"rooms", ContentKind.IdSource.FOLDER_NAME, "{id}/room.tscn", PackedScene))
 	_add_kind(ContentKind.new(&"rules", ContentKind.IdSource.FOLDER_NAME, "{id}/page.tres", RuleEntry))

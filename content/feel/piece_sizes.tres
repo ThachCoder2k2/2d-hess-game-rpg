@@ -1,0 +1,46 @@
+[gd_resource type="Resource" script_class="PieceSizeTable" format=3 uid="uid://c036lr1yfryoe"]
+
+[ext_resource type="Script" uid="uid://cfkr3p8lkl53s" path="res://schema/feel/piece_size_table.gd" id="1"]
+[ext_resource type="Script" uid="uid://c0y0sud5bwkfn" path="res://schema/feel/piece_size.gd" id="2"]
+
+[sub_resource type="Resource" id="Resource_pawn"]
+script = ExtResource("2")
+piece_type = &"pawn"
+body_box = Vector2i(18, 22)
+base_offset_y = 14
+
+[sub_resource type="Resource" id="Resource_knight"]
+script = ExtResource("2")
+piece_type = &"knight"
+body_box = Vector2i(20, 24)
+base_offset_y = 14
+
+[sub_resource type="Resource" id="Resource_bishop"]
+script = ExtResource("2")
+piece_type = &"bishop"
+body_box = Vector2i(20, 24)
+base_offset_y = 14
+
+[sub_resource type="Resource" id="Resource_rook"]
+script = ExtResource("2")
+piece_type = &"rook"
+body_box = Vector2i(20, 24)
+base_offset_y = 14
+
+[sub_resource type="Resource" id="Resource_queen"]
+script = ExtResource("2")
+piece_type = &"queen"
+body_box = Vector2i(22, 26)
+base_offset_y = 14
+
+[sub_resource type="Resource" id="Resource_king"]
+script = ExtResource("2")
+piece_type = &"king"
+body_box = Vector2i(22, 28)
+base_offset_y = 14
+
+[resource]
+script = ExtResource("1")
+cell_size = 32
+minimum_margin = 2
+rows = Array[ExtResource("2")]([SubResource("Resource_pawn"), SubResource("Resource_knight"), SubResource("Resource_bishop"), SubResource("Resource_rook"), SubResource("Resource_queen"), SubResource("Resource_king")])

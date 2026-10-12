@@ -15,6 +15,7 @@ extends UnboundTest
 const MINIMUM_IDS_BY_KIND := {
 	&"player": 1,
 	&"world": 1,
+	&"piece_sizes": 1,
 	&"enemies": 7,
 	&"rooms": 6,
 	&"rules": 5,
@@ -23,9 +24,12 @@ const MINIMUM_IDS_BY_KIND := {
 	&"difficulty": 1,
 	&"tilesets": 2,
 }
-## Entries whose class is a script class and so must answer validate(): player, world,
-## 7 enemies, 5 rules, 2 skills, 3 pickups and 1 difficulty profile.
-const MINIMUM_VALIDATED_DEFINITIONS := 20
+## Kinds that are one file with the kind's own name as its only id (content/player/player.tres,
+## content/feel/piece_sizes.tres): they have no id property to compare with a folder.
+const ONE_OF_A_KIND_KINDS: Array[StringName] = [&"player", &"world", &"piece_sizes"]
+## Entries whose class is a script class and so must answer validate(): player, world, the piece
+## size table, 7 enemies, 5 rules, 2 skills, 3 pickups and 1 difficulty profile.
+const MINIMUM_VALIDATED_DEFINITIONS := 21
 
 
 func _init() -> void:
@@ -51,7 +55,7 @@ func _init() -> void:
 					printerr("  %s/%s: %s" % [kind_name, id, warning])
 				_expect(warnings.is_empty(), "%s/%s passes its own validate()" % [kind_name, id])
 				validated_definition_count += 1
-			if kind_name != &"player" and kind_name != &"world" and &"id" in resource:
+			if kind_name not in ONE_OF_A_KIND_KINDS and &"id" in resource:
 				var claimed_id := String(resource.get(&"id"))
 				_expect(claimed_id == String(id), "%s/%s: its id property '%s' equals its folder" % [kind_name, id, claimed_id])
 				_expect(not claimed_owner_by_id.has(claimed_id), "%s/%s: the id '%s' is claimed once" % [kind_name, id, claimed_id])
@@ -85,9 +89,9 @@ func _ids_are_unique(entry_ids: Array[StringName]) -> bool:
 ## Lists the kind's folder with DirAccess (not ResourceLoader.list_directory, which the
 ## registry uses) and compares. A one-of-a-kind file has the kind's own name as its id.
 func _ids_match_a_plain_listing(kind_name: StringName, entry_ids: Array[StringName]) -> bool:
+	if kind_name in ONE_OF_A_KIND_KINDS:
+		return entry_ids == [kind_name] and FileAccess.file_exists(ContentDb.path_of(kind_name, kind_name))
 	var directory := "res://content/%s" % kind_name
-	if kind_name == &"player" or kind_name == &"world":
-		return entry_ids == [kind_name] and FileAccess.file_exists(directory.path_join("%s.tres" % kind_name))
 	var on_disk: Array[StringName] = []
 	if kind_name == &"difficulty":
 		for file_name in DirAccess.get_files_at(directory):
