@@ -16,8 +16,8 @@ func _init() -> void:
 	suite_title = "TEST PLAYER DEFINITION"
 	paths = TestPaths.new(self)
 
-	var definition := load(PLAYER_DEFINITION_PATH) as PlayerDefinition
-	_expect(definition != null, "content/player/player.tres loads as a PlayerDefinition")
+	var definition := ContentDb.player()
+	_expect(definition != null and definition.resource_path == PLAYER_DEFINITION_PATH, "the registry finds the player at content/player/player.tres")
 	if definition == null:
 		finish()
 		return
