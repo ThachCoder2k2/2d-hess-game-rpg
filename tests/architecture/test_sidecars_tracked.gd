@@ -39,6 +39,8 @@ func _init() -> void:
 	if tracked_files.size() < MINIMUM_TRACKED_FILES:
 		printerr("FAIL: git lists only %d tracked files (expected at least %d)" % [tracked_files.size(), MINIMUM_TRACKED_FILES])
 		failures += 1
+	else:
+		print("PASS: git lists %d tracked files (at least %d, so the walk is not empty)" % [tracked_files.size(), MINIMUM_TRACKED_FILES])
 
 	var tracked_gd_count := 0
 	var tracked_imported_count := 0
@@ -68,9 +70,17 @@ func _init() -> void:
 	_list("  orphan sidecar", orphan_sidecars)
 	print("REPORT fix: run the import pass (godot --headless --editor --quit) and commit the new sidecars. Mode: %s" % ("ENFORCING" if ENFORCING else "report-only"))
 
-	if ENFORCING and (not gd_missing_uid.is_empty() or not imported_missing_import.is_empty()):
-		printerr("FAIL: %d .gd and %d asset(s) lack a tracked sidecar" % [gd_missing_uid.size(), imported_missing_import.size()])
+	if tracked_gd_count > 0 and tracked_imported_count > 0:
+		print("PASS: the scan saw %d tracked .gd files and %d tracked imported assets" % [tracked_gd_count, tracked_imported_count])
+	else:
+		printerr("FAIL: the scan saw %d tracked .gd files and %d tracked imported assets; it checked nothing" % [tracked_gd_count, tracked_imported_count])
 		failures += 1
+	if ENFORCING:
+		if gd_missing_uid.is_empty() and imported_missing_import.is_empty():
+			print("PASS: every tracked .gd and imported asset has a tracked sidecar")
+		else:
+			printerr("FAIL: %d .gd and %d asset(s) lack a tracked sidecar" % [gd_missing_uid.size(), imported_missing_import.size()])
+			failures += 1
 	print("ARCHITECTURE SIDECARS TRACKED TEST: %s" % ("PASS" if failures == 0 else "FAIL"))
 	quit(1 if failures > 0 else 0)
 

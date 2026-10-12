@@ -45,6 +45,8 @@ func _init() -> void:
 	if resource_paths.size() < MINIMUM_FILES_SCANNED:
 		printerr("FAIL: only %d scene/resource files found (expected at least %d); the walk is broken" % [resource_paths.size(), MINIMUM_FILES_SCANNED])
 		failures += 1
+	else:
+		print("PASS: the scan read %d scene/resource files (at least %d) and %d ext_resource lines" % [resource_paths.size(), MINIMUM_FILES_SCANNED, total_reference_count])
 
 	print("REPORT path-only ext_resource lines: %d of %d in %d of %d scene/resource files" % [path_only_total, total_reference_count, path_only_count_by_file.size(), resource_paths.size()])
 	print("REPORT scene/resource headers without uid: %d of %d" % [headers_without_uid, resource_paths.size()])
@@ -57,8 +59,11 @@ func _init() -> void:
 		print("REPORT   ... and %d more file(s)" % (listed_paths.size() - MAX_FILES_LISTED))
 	print("REPORT fix: run tools/stamp_uids.gd (M1b stamps; M1a only ships the tool). Mode: %s" % ("ENFORCING" if ENFORCING else "report-only"))
 
-	if ENFORCING and path_only_total > 0:
-		printerr("FAIL: %d path-only ext_resource line(s) remain" % path_only_total)
-		failures += 1
+	if ENFORCING:
+		if path_only_total == 0:
+			print("PASS: no ext_resource line names a file by path only")
+		else:
+			printerr("FAIL: %d path-only ext_resource line(s) remain" % path_only_total)
+			failures += 1
 	print("ARCHITECTURE NO PATH-ONLY EXT_RESOURCE TEST: %s" % ("PASS" if failures == 0 else "FAIL"))
 	quit(1 if failures > 0 else 0)
