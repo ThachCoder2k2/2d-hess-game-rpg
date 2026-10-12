@@ -1,10 +1,12 @@
 #!/usr/bin/env bash
 # Make a fresh clone or a fresh git worktree test-ready in one command.
 #
-# Why this exists: generated art (everything under assets/_generated/) is
-# gitignored, so a new checkout has scenes that point at textures that are not
-# there yet, and the global-class cache (.godot/) does not exist, so strict-typed
-# scripts do not parse. This script runs three steps:
+# Why this exists: the global-class cache (.godot/) does not exist in a new
+# checkout, so strict-typed scripts do not parse until an import pass has run, and
+# generated art (everything under assets/_generated/) is gitignored, so it does not
+# exist either. No tracked scene names generated art any more (the room backgrounds
+# are tracked stand-ins in content/), but the generated pictures are what
+# tools/seed_placeholders.gd copies from for a new room. This script runs three steps:
 #   1. an editor import pass, to import the tracked audio and art and register
 #      every class_name (the SfxManager autoload loads imported .wav files, so the
 #      generators print resource errors if they run before this);
@@ -88,7 +90,7 @@ run_import_pass() {
 	# Teardown noise (RID leaks, ObjectDB, CanvasLayer) is expected; real errors are not.
 	if grep -E "^(ERROR|SCRIPT ERROR)|Parse Error" "$HOME/$label.log" | grep -v -E "RID|ObjectDB|CanvasLayer" >"$HOME/$label.errors"; then
 		if [ "$mode" = "warmup" ]; then
-			echo "bootstrap: note: the warm-up pass saw $(wc -l <"$HOME/$label.errors" | tr -d ' ') error line(s), expected on a fresh clone (the generated art does not exist yet); the pass after the generators decides"
+			echo "bootstrap: note: the warm-up pass saw $(wc -l <"$HOME/$label.errors" | tr -d ' ') error line(s), tolerated on a bare clone (nothing is imported yet); the pass after the generators decides"
 			return 0
 		fi
 		echo "bootstrap: import pass '$label' printed errors:" >&2
@@ -101,8 +103,8 @@ run_import_pass() {
 failed=0
 
 # 1. warm the import cache so the generators can load the audio autoload and every class_name.
-#    On a fresh clone this pass prints "Failed loading resource" for the generated room art that
-#    does not exist yet, so it only reports; step 3 is the one that must come out clean.
+#    A pass on a bare clone may print resource errors (nothing is imported yet), so this one
+#    only reports; step 3 is the one that must come out clean.
 run_import_pass import_before_generators warmup
 
 # 2. generators. Order matters: chess sprites first (the demo map and room art read them),

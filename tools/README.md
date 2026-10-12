@@ -18,10 +18,12 @@ needs one `--headless --editor --quit` import pass before headless scripts can u
 tools/bootstrap_worktree.sh                    # or: GODOT_BIN=/path/to/Godot BOOTSTRAP_HOME=/tmp/x tools/bootstrap_worktree.sh
 ```
 
-Generated art is gitignored, so a new checkout has scenes whose textures do not exist yet and no
-class registry. The script imports once as a warm-up (so the audio autoload loads; on a fresh clone it
-prints "Failed loading resource" for the room art that does not exist yet, which it reports but
-tolerates), runs the four generators, imports again, and exits non-zero on any `ERROR`,
+A new checkout has no class registry (`.godot/`), so strict-typed scripts do not parse until an import
+pass has run, and it has none of the generated art (gitignored). No tracked scene names generated art
+any more (the room backgrounds are tracked stand-ins in `content/`, see "Placeholders" below), but the
+generated pictures are still what `seed_placeholders.gd` copies from for a new room. The script imports
+once as a warm-up (so the audio autoload loads; it reports any error that pass printed but tolerates
+it), runs the four generators, imports again, and exits non-zero on any `ERROR`,
 `SCRIPT ERROR` or `Parse Error` from the generators or from that second import. About 50 s.
 Verified on a brand-new `git clone` of the branch: after the script, the whole suite and every new
 test pass and `git status` is clean.
@@ -35,14 +37,8 @@ each generator (`OUT_DIR`, `OUTPUT_DIR`, `TILE_DIR`, `PIECE_TEMPLATE_DIR`). Hand
 is never written by a tool: `assets/map_pieces/` and the 12 tracked sprites that used to sit in
 `assets/sprites/generated/` (now `content/<kind>/<id>/body.png|icon.png` and `assets/ui/actor_view/`).
 
-A tracked scene that names a generated PNG (today only the T1 and T2 room backgrounds) carries that
-PNG's uid. Godot 4.6.3 derives the uid of a freshly imported file from the project name and the
-file's path (measured: deleting `.godot/` and `assets/_generated/` and re-running
-`bootstrap_worktree.sh` twice gave the same two uids both times), so a fresh clone gets the uid the
-scene names. Moving or renaming generated output, or renaming the project, changes that uid: edit
-the scene line by hand to the new `uid=` from the PNG's `.import` file and confirm with
-`stamp_uids.gd --check`, which lists the mismatch as a `STALE` warning (the exit code does not
-change). Without the fix Godot falls back to the path and prints a warning.
+No tracked scene names a generated PNG (`tests/content/test_placeholders_manifest.gd` fails if one does). A generated picture reaches the game only by being copied into
+`content/` (tracked) by `seed_placeholders.gd`; the copy gets its own `.import` uid, which the scene names.
 
 ## Every tool, one line each
 
@@ -55,6 +51,9 @@ change). Without the fix Godot falls back to the path and prints a warning.
 | `move_res.py` | `git mv` a file or folder with its `.uid`/`.import` sidecars and rewrite every `res://` string that pointed at it. `--dry-run`, `--rewrite-only`, `--rename-action`, `--import-pass`, `--self-test`. |
 | `dump_world.gd` | Boots a room headless, runs N manual ticks, prints the sorted node paths, texture paths and entity cells/components. `--room=t1`, `--write-baselines`, `--list`. |
 | `world_dumper.gd` | The dump logic, shared by `dump_world.gd` and `tests/architecture/test_dump_baselines.gd` (a helper, not a command; no `class_name`). |
+| `seed_placeholders.gd` | Copies a generator's stand-in picture into `content/` only when the target is absent, and records the sha256 of every placeholder in `content/_placeholders.json`. `-- --check` changes nothing and exits 1 if there is work to do. Never re-records a file already listed. |
+| `list_placeholders.gd` | Prints the owner's art and audio TODO by kind: every listed file whose sha256 still equals the recorded one. Overwriting a file clears its flag by itself. Exit 1 if a listed file is gone. |
+| `placeholder_manifest.gd` | The manifest logic shared by the two tools above and `tests/content/test_placeholders_manifest.gd` (a helper, not a command; no `class_name`). |
 | `generate_chess_sprites.gd` | Bakes the chess-piece sprites (art language v13) to `assets/_generated/chess/`. |
 | `generate_kingdom_tiles.gd` | Bakes the room materials as pixel tiles, a contact sheet and a manifest (same art language as the pieces) into `assets/_generated/tiles/`. |
 | `generate_demo_map.gd` | Draws the pawn-scale bedroom demo world with the kingdom tiles into `assets/_generated/maps/` and re-exports the paintable piece templates to `assets/_generated/piece_templates/`. |
@@ -70,6 +69,32 @@ change). Without the fix Godot falls back to the path and prints a warning.
 Never use the editor UID tool, the `update_project_uids` MCP tool, or a `ResourceLoader.load` plus
 `ResourceSaver.save` loop to "fix" uids: on this project it added 0 uids, turned 38 more
 references path-only and rewrote 587 non-uid lines (`docs/game-base-plan.md` 13.7).
+
+## Placeholders: seed them, then list what is left
+
+The owner supplies art and audio one file per thing (plan section 12 and the owner's direction of
+2026-10-12), by overwriting a file whose name and role never change. Two tools and one manifest
+make that safe:
+
+```bash
+"$G" --headless --path . -s tools/seed_placeholders.gd -- --check   # report what would be copied or recorded
+"$G" --headless --path . -s tools/seed_placeholders.gd              # copy what is absent, record what is new
+"$G" --headless --path . --editor --quit                            # import the copies, then commit them with their .import
+"$G" --headless --path . -s tools/list_placeholders.gd              # the owner's TODO, by kind
+```
+
+`content/_placeholders.json` holds one line per stand-in with its `path`, `kind`, `id`, `sha256` and
+`origin`. **A file is a placeholder if and only if its sha256 still equals the recorded one**, so overwriting
+the file clears the flag with no other edit (a flag kept anywhere else would go stale). The seed tool
+never overwrites a file and never re-records one that is already listed, so running it again after the
+owner replaced a picture cannot turn the owner's art back into a "placeholder". A file that exists but
+is in neither seed list is the owner's and is never recorded. To add a stand-in (a new room background,
+a new enemy body, a new sound), add its row to `GENERATED_SEEDS` or `ADOPTED_PLACEHOLDERS` at the top of
+`seed_placeholders.gd`, run the tool, import, and commit; `tests/content/test_placeholders_manifest.gd`
+fails if a row is not recorded, a listed file is gone, or a tracked scene names `assets/_generated/`.
+Measured on this tree at M1b: 25 placeholders (3 bodies, 4 icons, 1 pickup, 2 room backgrounds, 1 tile
+atlas, 4 interface pictures, 9 sound effects, 1 music loop); overwriting one file moved the count from 25
+to 24 still to replace and put "1 replaced by you" in the summary.
 
 ## Tools that save scenes: keep the uids
 
