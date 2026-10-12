@@ -25,9 +25,13 @@ const MAX_LISTED := 25
 func _init() -> void:
 	var tracked_result := ProjectFiles.git_tracked_files()
 	if not String(tracked_result["error"]).is_empty():
-		print("REPORT skipped: %s" % tracked_result["error"])
-		print("ARCHITECTURE SIDECARS TRACKED TEST: PASS (skipped)")
-		quit(0)
+		# Without git there is nothing to compare the disk against, so the guard has
+		# checked nothing. Say so as a failure (like every other "the scan saw zero
+		# files" case below) instead of printing PASS: a skipped gate that claims PASS
+		# is rejected by the runner anyway ("no verdict line"), with a confusing reason.
+		printerr("FAIL: sidecars were not checked: %s" % tracked_result["error"])
+		print("ARCHITECTURE SIDECARS TRACKED TEST: FAIL (1)")
+		quit(1)
 		return
 	var tracked_files: Array[String] = []
 	tracked_files.assign(tracked_result["files"])
@@ -81,7 +85,7 @@ func _init() -> void:
 		else:
 			printerr("FAIL: %d .gd and %d asset(s) lack a tracked sidecar" % [gd_missing_uid.size(), imported_missing_import.size()])
 			failures += 1
-	print("ARCHITECTURE SIDECARS TRACKED TEST: %s" % ("PASS" if failures == 0 else "FAIL"))
+	print("ARCHITECTURE SIDECARS TRACKED TEST: %s" % ("PASS" if failures == 0 else "FAIL (%d)" % failures))
 	quit(1 if failures > 0 else 0)
 
 
