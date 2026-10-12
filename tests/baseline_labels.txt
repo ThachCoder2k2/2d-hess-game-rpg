@@ -1,0 +1,252 @@
+# Baseline PASS labels: the proof that "the tests are unchanged".
+# docs/game-base-plan.md section 13.7 and section 15 (M1a); read by tools/run_all_tests.py.
+#
+# Every `PASS: <label>` line printed by the suites that existed when M1a started
+# (branch game-base, f96a12c, 2026-10-12: 7 suites, 235 distinct labels), one per
+# line as `<suite> | <label>`, sorted by suite and then label. Lines starting
+# with # and blank lines are ignored.
+#
+# The runner fails when a recorded label no longer prints PASS in its suite (or in
+# the suite with the same file name after a folder move), or is not listed in
+# tests/label_renames.txt as `old label -> new label` with the new label printing
+# PASS. A milestone may retarget a suite's setup and call sites, but it may not
+# make a check disappear quietly. Deleting a line here deletes the check: only do
+# that on purpose, and say why in the commit message.
+#
+# Suites added after M1a are not listed here: UnboundTest fails any suite that
+# asserts nothing, and the runner fails any suite that prints no verdict.
+tests/ecs_combat_test.gd | cooldown swallows a second swing
+tests/ecs_combat_test.gd | damage applies again after invulnerability decays
+tests/ecs_combat_test.gd | defeat emits its event
+tests/ecs_combat_test.gd | defeated non-player leaves the grid
+tests/ecs_combat_test.gd | impact emits attack_landed + damaged events
+tests/ecs_combat_test.gd | impact resolves damage once against the locked cell
+tests/ecs_combat_test.gd | invulnerability window swallows the second hit
+tests/ecs_combat_test.gd | locked sword refuses attacks before the unlock
+tests/ecs_combat_test.gd | recovery releases the cooldown
+tests/ecs_combat_test.gd | second swing after recovery lands
+tests/ecs_combat_test.gd | stepping off the locked cell dodges the hit
+tests/ecs_combat_test.gd | swing locks the runner's cell
+tests/ecs_combat_test.gd | sword swing locks the facing cell
+tests/ecs_enemy_test.gd | AI pursuit closes the path distance (7 -> 2)
+tests/ecs_enemy_test.gd | a dodged strike still releases the token
+tests/ecs_enemy_test.gd | a held token blocks a new telegraph
+tests/ecs_enemy_test.gd | adjacent diagonal hero triggers a telegraph
+tests/ecs_enemy_test.gd | defeat releases a held attack token
+tests/ecs_enemy_test.gd | defeated enemy frees its cell
+tests/ecs_enemy_test.gd | enemy AI profile comes from the definition
+tests/ecs_enemy_test.gd | enemy health comes from the definition
+tests/ecs_enemy_test.gd | hero dodges the telegraphed strike
+tests/ecs_enemy_test.gd | lethal damage defeats the enemy
+tests/ecs_enemy_test.gd | pawn pattern threatens both forward diagonals
+tests/ecs_enemy_test.gd | taken pickup leaves the grid
+tests/ecs_enemy_test.gd | telegraph emits its event
+tests/ecs_enemy_test.gd | telegraph takes the attack token
+tests/ecs_enemy_test.gd | unarmed pattern comes from the definition
+tests/ecs_enemy_test.gd | weaponless enemy picks up the local spear
+tests/ecs_runtime_test.gd | blocked cell rejects the step
+tests/ecs_runtime_test.gd | blocked step emits a step_blocked event
+tests/ecs_runtime_test.gd | committed move emits step_finished
+tests/ecs_runtime_test.gd | destroying an entity frees its cell
+tests/ecs_runtime_test.gd | empty cell accepts a block
+tests/ecs_runtime_test.gd | entity registers on its cell
+tests/ecs_runtime_test.gd | free step starts a reserve -> commit move
+tests/ecs_runtime_test.gd | freed cell accepts the step
+tests/ecs_runtime_test.gd | grid resolves the entity by cell
+tests/ecs_runtime_test.gd | move commits at the destination cell
+tests/ecs_runtime_test.gd | occupancy transfers origin -> destination
+tests/ecs_runtime_test.gd | occupied cell rejects the step
+tests/ecs_runtime_test.gd | origin stays occupied while sliding
+tests/ecs_runtime_test.gd | puppet view lands on the destination cell center
+tests/ecs_runtime_test.gd | reserved destination rejects a spawner mid-move
+tests/ecs_runtime_test.gd | room-clear exit opens after enemies fall
+tests/ecs_runtime_test.gd | room-clear exit stays locked while enemies live
+tests/ecs_runtime_test.gd | second entity registers
+tests/ecs_runtime_test.gd | view depth follows the row
+tests/encounter_hud_runtime_test.gd | HUD binds and shows courage
+tests/encounter_hud_runtime_test.gd | HUD shows the T1 start message
+tests/encounter_hud_runtime_test.gd | a pending health carry applies to the booted player
+tests/encounter_hud_runtime_test.gd | board overlay reads the ECS world
+tests/encounter_hud_runtime_test.gd | bridge feeds the cell status line each frame
+tests/encounter_hud_runtime_test.gd | camera rig clamps to the ECS board
+tests/encounter_hud_runtime_test.gd | locked attack gives sword-search feedback
+tests/encounter_hud_runtime_test.gd | locked sword is not visible on the hero before pickup
+tests/encounter_hud_runtime_test.gd | main boots the world with all six systems
+tests/encounter_hud_runtime_test.gd | main spawns the player entity
+tests/encounter_hud_runtime_test.gd | main starts in the quiet T1 opening room
+tests/encounter_hud_runtime_test.gd | player entity stands on the parked view's cell
+tests/encounter_hud_runtime_test.gd | the health carry is consumed by the boot
+tests/encounter_hud_runtime_test.gd | world-mode combat starts locked before T2 sword pickup
+tests/room_encounter_runtime_test.gd | ArmedPawn spawns at its parked cell
+tests/room_encounter_runtime_test.gd | HealthComponent node overrides the definition's health at boot
+tests/room_encounter_runtime_test.gd | KnightTracker spawns at its parked cell
+tests/room_encounter_runtime_test.gd | PawnRecruit spawns at its parked cell
+tests/room_encounter_runtime_test.gd | WeaponComponent node arms the entity at boot
+tests/room_encounter_runtime_test.gd | all three parked enemies spawn
+tests/room_encounter_runtime_test.gd | armed pawn carries its definition's default weapon
+tests/room_encounter_runtime_test.gd | both pickup markers register floor weapons
+tests/room_encounter_runtime_test.gd | cast knows each entity's piece name
+tests/room_encounter_runtime_test.gd | knight entity moves by its L-shaped MovementConfig
+tests/room_encounter_runtime_test.gd | lethal damage defeats every enemy with an event each
+tests/room_encounter_runtime_test.gd | objective completes when the whole cast falls
+tests/room_encounter_runtime_test.gd | open floor stays walkable
+tests/room_encounter_runtime_test.gd | painted solid tiles block the border and thrones
+tests/room_encounter_runtime_test.gd | parked player spawns on its containing cell
+tests/room_encounter_runtime_test.gd | pickups get floating views
+tests/room_encounter_runtime_test.gd | room clear message resolves
+tests/room_encounter_runtime_test.gd | room start message comes from the objective data
+tests/run_tests.gd | A* path routes around blocked cells
+tests/run_tests.gd | A* returns a path on the open board
+tests/run_tests.gd | Backstep Pawn definition has no missing configuration
+tests/run_tests.gd | Bishop AI personality is a pure DecisionConfig .tres
+tests/run_tests.gd | Bishop moves diagonally from its MovementConfig
+tests/run_tests.gd | Bishop unarmed attack threatens diagonal beams from data
+tests/run_tests.gd | Charging Pawn definition has no missing configuration
+tests/run_tests.gd | Charging Pawn only ever leaps two squares
+tests/run_tests.gd | CombatComponent node carries the attack loadout
+tests/run_tests.gd | MusicPlayer routes to the Music bus
+tests/run_tests.gd | Pencil Spear carries its sprite as data
+tests/run_tests.gd | Pencil Spear values load from its Resource
+tests/run_tests.gd | SfxManager registry carries the four event sounds
+tests/run_tests.gd | SfxManager routes to the SFX bus
+tests/run_tests.gd | T2 sword unlock cell is walkable
+tests/run_tests.gd | T2 sword unlock sits on the obvious reachable sword cell
+tests/run_tests.gd | WorldState remembers player weapon unlocks
+tests/run_tests.gd | WorldState resets obsolete save versions
+tests/run_tests.gd | WorldState survives a save/load round trip
+tests/run_tests.gd | actor views hold no logic at all
+tests/run_tests.gd | armed Pawn default weapon is Inspector-configured
+tests/run_tests.gd | armed Pawn definition has no missing configuration
+tests/run_tests.gd | attack profile produces ordered range cells
+tests/run_tests.gd | bishop_enemy.tscn animation transitions live in an editor AnimationTree graph
+tests/run_tests.gd | bishop_enemy.tscn carries its own EnemyDefinition
+tests/run_tests.gd | bishop_enemy.tscn definition has no missing configuration
+tests/run_tests.gd | bishop_enemy.tscn is an ActorView with a definition
+tests/run_tests.gd | bishop_enemy.tscn owns defeat clip + audio player
+tests/run_tests.gd | bishop_enemy.tscn owns sprites + telegraph clip
+tests/run_tests.gd | black_pawn.tscn animation transitions live in an editor AnimationTree graph
+tests/run_tests.gd | black_pawn.tscn carries its own EnemyDefinition
+tests/run_tests.gd | black_pawn.tscn definition has no missing configuration
+tests/run_tests.gd | black_pawn.tscn is an ActorView with a definition
+tests/run_tests.gd | black_pawn.tscn owns defeat clip + audio player
+tests/run_tests.gd | black_pawn.tscn owns sprites + telegraph clip
+tests/run_tests.gd | blocked cell rejects movement
+tests/run_tests.gd | book UI counts known amendments
+tests/run_tests.gd | book UI lists every page
+tests/run_tests.gd | book page 'The armed pawn' names a real piece
+tests/run_tests.gd | book page 'The backstep pawn' names a real piece
+tests/run_tests.gd | book page 'The charging pawn' names a real piece
+tests/run_tests.gd | book page 'The first law' names a real piece
+tests/run_tests.gd | book page 'The knight' names a real piece
+tests/run_tests.gd | boss hub exit requires clearing the boss room
+tests/run_tests.gd | cell centers derive from grid origin + half cell
+tests/run_tests.gd | clear-all objective completes when all enemies fall
+tests/run_tests.gd | clear-all objective waits while enemies remain
+tests/run_tests.gd | debug overlay ships off (Inspector checkbox on Main)
+tests/run_tests.gd | defeat-count objective can complete before all enemies fall
+tests/run_tests.gd | defeat-count objective waits for its configured count
+tests/run_tests.gd | door b1_black_pawn_captain/Exit_To_Hub lands on a real entry marker
+tests/run_tests.gd | door b1_black_pawn_captain/Exit_To_Hub targets a zone in the graph
+tests/run_tests.gd | door b1_black_pawn_captain/Exit_To_T4 lands on a real entry marker
+tests/run_tests.gd | door b1_black_pawn_captain/Exit_To_T4 targets a zone in the graph
+tests/run_tests.gd | door h1_chess_rug_hub/Exit_To_Act2Toybox lands on a real entry marker
+tests/run_tests.gd | door h1_chess_rug_hub/Exit_To_Act2Toybox targets a zone in the graph
+tests/run_tests.gd | door h1_chess_rug_hub/Exit_To_Boss lands on a real entry marker
+tests/run_tests.gd | door h1_chess_rug_hub/Exit_To_Boss targets a zone in the graph
+tests/run_tests.gd | door t1_white_kings_fall/Exit_To_T2 lands on a real entry marker
+tests/run_tests.gd | door t1_white_kings_fall/Exit_To_T2 targets a zone in the graph
+tests/run_tests.gd | door t2_fallen_sword_tile/Exit_To_T1 lands on a real entry marker
+tests/run_tests.gd | door t2_fallen_sword_tile/Exit_To_T1 targets a zone in the graph
+tests/run_tests.gd | door t2_fallen_sword_tile/Exit_To_T3 lands on a real entry marker
+tests/run_tests.gd | door t2_fallen_sword_tile/Exit_To_T3 targets a zone in the graph
+tests/run_tests.gd | door t3_first_pawn_clash/Exit_To_T2 lands on a real entry marker
+tests/run_tests.gd | door t3_first_pawn_clash/Exit_To_T2 targets a zone in the graph
+tests/run_tests.gd | door t3_first_pawn_clash/Exit_To_T4 lands on a real entry marker
+tests/run_tests.gd | door t3_first_pawn_clash/Exit_To_T4 targets a zone in the graph
+tests/run_tests.gd | door t4_broken_rule_yard/Exit_To_B1 lands on a real entry marker
+tests/run_tests.gd | door t4_broken_rule_yard/Exit_To_B1 targets a zone in the graph
+tests/run_tests.gd | door t4_broken_rule_yard/Exit_To_T3 lands on a real entry marker
+tests/run_tests.gd | door t4_broken_rule_yard/Exit_To_T3 targets a zone in the graph
+tests/run_tests.gd | empty cell accepts a block
+tests/run_tests.gd | enemy_base.tscn animation transitions live in an editor AnimationTree graph
+tests/run_tests.gd | enemy_base.tscn carries its own EnemyDefinition
+tests/run_tests.gd | enemy_base.tscn definition has no missing configuration
+tests/run_tests.gd | enemy_base.tscn is an ActorView with a definition
+tests/run_tests.gd | enemy_base.tscn owns defeat clip + audio player
+tests/run_tests.gd | enemy_base.tscn owns sprites + telegraph clip
+tests/run_tests.gd | entity registers on an empty cell
+tests/run_tests.gd | finish_move transfers occupancy and releases origin
+tests/run_tests.gd | first duel forward exit requires clearing the room
+tests/run_tests.gd | free cell accepts a reservation
+tests/run_tests.gd | game window ships fullscreen
+tests/run_tests.gd | knight definition configures a flanker
+tests/run_tests.gd | knight movement config exposes eight L-shaped offsets
+tests/run_tests.gd | knight movement does not fall back to cardinal steps
+tests/run_tests.gd | knight_enemy.tscn animation transitions live in an editor AnimationTree graph
+tests/run_tests.gd | knight_enemy.tscn carries its own EnemyDefinition
+tests/run_tests.gd | knight_enemy.tscn definition has no missing configuration
+tests/run_tests.gd | knight_enemy.tscn is an ActorView with a definition
+tests/run_tests.gd | knight_enemy.tscn owns defeat clip + audio player
+tests/run_tests.gd | knight_enemy.tscn owns sprites + telegraph clip
+tests/run_tests.gd | main scene carries an autoplaying MusicPlayer
+tests/run_tests.gd | music track loops from its embedded WAV loop points
+tests/run_tests.gd | next path cell never enters a blocker
+tests/run_tests.gd | occupied cell rejects a block
+tests/run_tests.gd | occupied cell rejects a second entity
+tests/run_tests.gd | pawn diagonal attack rotates with facing
+tests/run_tests.gd | pawn pattern threatens both forward diagonals
+tests/run_tests.gd | pickup visuals use Sprite2D nodes instead of script drawing
+tests/run_tests.gd | player animation transitions live in an editor AnimationTree graph
+tests/run_tests.gd | player scene root is an ActorView (no gameplay script)
+tests/run_tests.gd | player view carries an editor-tunable HealthComponent node
+tests/run_tests.gd | player view carries movement and input component nodes
+tests/run_tests.gd | player view carries the camera rig
+tests/run_tests.gd | player view carries the clip-keyed audio player
+tests/run_tests.gd | player view has no enemy definition
+tests/run_tests.gd | player view owns an editor-authored defeat clip
+tests/run_tests.gd | player view owns its sprites and AnimationPlayer
+tests/run_tests.gd | player view owns step/attack clips
+tests/run_tests.gd | reserved cell rejects a spawner
+tests/run_tests.gd | rule-break forward exit requires clearing the room
+tests/run_tests.gd | the audio bus layout loads
+tests/run_tests.gd | the hero boots into the wake clip, then falls through to idle
+tests/run_tests.gd | the rule book loads with complete pages
+tests/run_tests.gd | the world graph loads with zones
+tests/run_tests.gd | unmet pieces stay unread ink
+tests/run_tests.gd | weapon factory returns independent instances from the editor asset
+tests/run_tests.gd | world positions floor to their containing cell
+tests/run_tests.gd | zone 'b1_black_pawn_captain' board is at least an arena
+tests/run_tests.gd | zone 'b1_black_pawn_captain' carries its own zone_id
+tests/run_tests.gd | zone 'b1_black_pawn_captain' has at least one entry marker
+tests/run_tests.gd | zone 'h1_chess_rug_hub' board is at least an arena
+tests/run_tests.gd | zone 'h1_chess_rug_hub' carries its own zone_id
+tests/run_tests.gd | zone 'h1_chess_rug_hub' has at least one entry marker
+tests/run_tests.gd | zone 'kingdom' board is at least an arena
+tests/run_tests.gd | zone 'kingdom' carries its own zone_id
+tests/run_tests.gd | zone 'kingdom' has at least one entry marker
+tests/run_tests.gd | zone 't1_white_kings_fall' board is at least an arena
+tests/run_tests.gd | zone 't1_white_kings_fall' carries its own zone_id
+tests/run_tests.gd | zone 't1_white_kings_fall' has at least one entry marker
+tests/run_tests.gd | zone 't2_fallen_sword_tile' board is at least an arena
+tests/run_tests.gd | zone 't2_fallen_sword_tile' carries its own zone_id
+tests/run_tests.gd | zone 't2_fallen_sword_tile' has at least one entry marker
+tests/run_tests.gd | zone 't3_first_pawn_clash' board is at least an arena
+tests/run_tests.gd | zone 't3_first_pawn_clash' carries its own zone_id
+tests/run_tests.gd | zone 't3_first_pawn_clash' has at least one entry marker
+tests/run_tests.gd | zone 't4_broken_rule_yard' board is at least an arena
+tests/run_tests.gd | zone 't4_broken_rule_yard' carries its own zone_id
+tests/run_tests.gd | zone 't4_broken_rule_yard' has at least one entry marker
+tests/zone_travel_runtime_test.gd | a door cell still emits zone_exit (future interiors)
+tests/zone_travel_runtime_test.gd | all five treasures spawn with stable names
+tests/zone_travel_runtime_test.gd | all seventeen inhabitants spawn across the districts
+tests/zone_travel_runtime_test.gd | an enemy across the world never stirs
+tests/zone_travel_runtime_test.gd | an enemy inside the aggro radius wakes and acts
+tests/zone_travel_runtime_test.gd | an enemy just past the aggro radius stays idle
+tests/zone_travel_runtime_test.gd | both shortcut gates start closed
+tests/zone_travel_runtime_test.gd | opened gates stay open forever
+tests/zone_travel_runtime_test.gd | pushing from the pass side opens the home gate
+tests/zone_travel_runtime_test.gd | pushing the pass gate from the court side stays a wall
+tests/zone_travel_runtime_test.gd | the gardens shortcut opens from above
+tests/zone_travel_runtime_test.gd | the kingdom is one 72x40 board
+tests/zone_travel_runtime_test.gd | the opened gate cell is ordinary floor
+tests/zone_travel_runtime_test.gd | the pass gate cell starts blocked

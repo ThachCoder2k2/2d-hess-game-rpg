@@ -1,0 +1,18 @@
+# Label renames for tests/baseline_labels.txt (docs/game-base-plan.md section 13.7).
+#
+# tools/run_all_tests.py requires every label recorded in tests/baseline_labels.txt
+# to keep printing PASS. When a milestone retargets a check and its label has to
+# change (a class was renamed, a path moved, a signal was replaced), keep the old
+# line in tests/baseline_labels.txt and add the replacement here, one rename per line:
+#
+#     old label -> new label
+#
+# Both sides are the text after `PASS: ` exactly as the suite prints it, with the
+# separator ` -> ` (space, arrow, space). A label may itself contain ` -> `; the
+# runner takes the first split whose left side is a recorded baseline label. The
+# new label must print PASS in the same suite as the old one did (or in the suite
+# of the same file name after a folder move). A rename that names no baseline
+# label is reported as a warning, and fails the run under --strict.
+#
+# Lines starting with # and blank lines are ignored. The file is empty (apart from
+# this header) at M1a, because nothing has been renamed yet.
