@@ -1,6 +1,6 @@
 [gd_resource type="Resource" script_class="DecisionConfig" load_steps=2 format=3 uid="uid://bym46kf4lsn6w"]
 
-[ext_resource type="Script" uid="uid://daw05sbsoxere" path="res://scripts/data/decision_config.gd" id="1"]
+[ext_resource type="Script" uid="uid://daw05sbsoxere" path="res://schema/entity/decision_config.gd" id="1"]
 
 [resource]
 script = ExtResource("1")

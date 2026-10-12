@@ -5,3 +5,12 @@ assets/sprites/generated/maps	assets/_generated/maps
 assets/sprites/generated/tiles	assets/_generated/tiles
 assets/sprites/generated/chess	assets/_generated/chess
 assets/art/piece_templates	assets/_generated/piece_templates
+scripts/data/enemy_definition.gd	schema/entity/enemy_definition.gd
+scripts/data/visual_definition.gd	schema/entity/visual_definition.gd
+scripts/data/movement_config.gd	schema/entity/movement_config.gd
+scripts/data/decision_config.gd	schema/entity/decision_config.gd
+scripts/data/room_objective.gd	schema/world/room_objective.gd
+scripts/data/world_graph.gd	schema/world/world_graph.gd
+scripts/data/rule_book.gd	schema/world/rule_book.gd
+scripts/data/rule_entry.gd	schema/world/rule_entry.gd
+scripts/data/difficulty_profile.gd	schema/feel/difficulty_profile.gd

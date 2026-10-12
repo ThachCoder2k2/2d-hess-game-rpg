@@ -1,6 +1,6 @@
 [gd_resource type="Resource" script_class="EnemyDefinition" format=3 uid="uid://bbnwqg8n5v14g"]
 
-[ext_resource type="Script" uid="uid://bmdisg36ew8g5" path="res://scripts/data/enemy_definition.gd" id="1"]
+[ext_resource type="Script" uid="uid://bmdisg36ew8g5" path="res://schema/entity/enemy_definition.gd" id="1"]
 [ext_resource type="Resource" uid="uid://b52tp8bw5omi0" path="res://resources/movement/pawn_backstep.tres" id="2"]
 [ext_resource type="Resource" uid="uid://cq4qwwrl876l2" path="res://resources/decisions/pawn_skirmisher.tres" id="3"]
 [ext_resource type="Resource" uid="uid://bm6n2c37cl4g1" path="res://resources/attacks/pawn_diagonal.tres" id="4"]

@@ -153,7 +153,7 @@ func _init() -> void:
 	attack_profile.range_cells = 2
 	_expect(attack_profile.get_target_cells(Vector2i(4, 4), Vector2i.RIGHT) == [Vector2i(5, 4), Vector2i(6, 4)], "attack profile produces ordered range cells")
 
-	var objective_script := load("res://scripts/data/room_objective.gd")
+	var objective_script := load("res://schema/world/room_objective.gd")
 	var clear_objective: Resource = objective_script.new()
 	_expect(not bool(clear_objective.call("is_complete", 1, 3, 2)), "clear-all objective waits while enemies remain")
 	_expect(bool(clear_objective.call("is_complete", 3, 3, 0)), "clear-all objective completes when all enemies fall")

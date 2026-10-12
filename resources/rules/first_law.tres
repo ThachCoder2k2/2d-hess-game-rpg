@@ -1,6 +1,6 @@
 [gd_resource type="Resource" script_class="RuleEntry" load_steps=2 format=3 uid="uid://dhexw8rojybdp"]
 
-[ext_resource type="Script" uid="uid://b0oj3ltvh7pca" path="res://scripts/data/rule_entry.gd" id="1"]
+[ext_resource type="Script" uid="uid://b0oj3ltvh7pca" path="res://schema/world/rule_entry.gd" id="1"]
 
 [resource]
 script = ExtResource("1")

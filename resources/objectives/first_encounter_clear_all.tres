@@ -1,6 +1,6 @@
 [gd_resource type="Resource" script_class="RoomObjective" load_steps=2 format=3 uid="uid://dy60n24xkjpgl"]
 
-[ext_resource type="Script" uid="uid://cugws3pm0ciks" path="res://scripts/data/room_objective.gd" id="1"]
+[ext_resource type="Script" uid="uid://cugws3pm0ciks" path="res://schema/world/room_objective.gd" id="1"]
 
 [resource]
 script = ExtResource("1")

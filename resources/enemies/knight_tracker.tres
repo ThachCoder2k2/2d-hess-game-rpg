@@ -1,6 +1,6 @@
 [gd_resource type="Resource" script_class="EnemyDefinition" format=3 uid="uid://dnn7ikejfxp11"]
 
-[ext_resource type="Script" uid="uid://bmdisg36ew8g5" path="res://scripts/data/enemy_definition.gd" id="1"]
+[ext_resource type="Script" uid="uid://bmdisg36ew8g5" path="res://schema/entity/enemy_definition.gd" id="1"]
 [ext_resource type="Resource" uid="uid://ciw15ix770vpl" path="res://resources/movement/knight_standard.tres" id="2"]
 [ext_resource type="Resource" uid="uid://bw8d037o5k3m6" path="res://resources/decisions/knight_flanker.tres" id="3"]
 [ext_resource type="Resource" uid="uid://bh0jw0k6pi6ii" path="res://resources/attacks/knight_leap.tres" id="4"]
