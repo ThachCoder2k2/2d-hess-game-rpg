@@ -10,7 +10,6 @@ telegraph_modulate = Color(0.86, 0.34, 0.39, 1)
 show_facing_mark = false
 
 [node name="BodySprite" parent="MotionRoot/SpriteRoot" index="0"]
-position = Vector2(-10, -10)
 texture = ExtResource("3")
 
 [node name="FacingArrow" parent="MotionRoot/SpriteRoot" index="1"]

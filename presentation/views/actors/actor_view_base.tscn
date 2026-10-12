@@ -501,7 +501,7 @@ texture = ExtResource("4")
 [node name="SpriteRoot" type="Node2D" parent="MotionRoot"]
 
 [node name="BodySprite" type="Sprite2D" parent="MotionRoot/SpriteRoot"]
-position = Vector2(-9, -6)
+position = Vector2(-16, -16)
 texture = ExtResource("2")
 centered = false
 

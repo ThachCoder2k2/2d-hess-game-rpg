@@ -106,8 +106,15 @@ const SEED_OWNERS_FILE := "owners_file"
 
 
 ## The origin text a seeded file is recorded with. Also how the tool recognises a row it already ran.
+## A row may carry a `revision` (a few words on what changed in the picture): the same generator
+## output, redrawn, is then a different origin, so a still-unchanged stand-in is replaced by the
+## better one once, and the owner's overwritten file never is.
 static func seed_origin(seed_row: Dictionary) -> String:
-	return "copied from %s by tools/seed_placeholders.gd" % String(seed_row["source"]).trim_prefix("res://")
+	var origin := "copied from %s by tools/seed_placeholders.gd" % String(seed_row["source"]).trim_prefix("res://")
+	var revision := String(seed_row.get("revision", ""))
+	if not revision.is_empty():
+		origin += " (%s)" % revision
+	return origin
 
 
 ## The decision, from the row, whether the target file exists and the manifest entry for it (empty

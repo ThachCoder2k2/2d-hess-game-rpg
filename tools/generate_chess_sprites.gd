@@ -22,6 +22,10 @@ extends SceneTree
 ##     the cell's centre (content/feel/piece_sizes.tres, the PieceSizeTable). The
 ##     same table gives every kind its largest box; the generator reads it and
 ##     refuses to write a piece that does not fit.
+##   - A piece of a kind that has a row is WRITTEN on the cell-sized canvas of the
+##     owner's art spec (32 x 32, base rim on row 30): the files the owner will
+##     draw have that shape, so the stand-ins have it too. The pixels are the same;
+##     they only gain a transparent border and show in the same screen pixels.
 ##
 ## Run:
 ##   HOME=/tmp/unbound-pawn-godot ../Godot.app/Contents/MacOS/Godot \
@@ -122,10 +126,7 @@ func _init() -> void:
 	for piece_id: String in _pieces:
 		var frames: Array[Image] = []
 		for state: String in STATE_ORDER:
-			var frame := _raster(piece_id, state)
-			frames.append(frame)
-			_save(frame, "%s/%s_%s.png" % [OUT_DIR, piece_id, state])
-		_save(_strip(frames), "%s/%s_states.png" % [OUT_DIR, piece_id])
+			frames.append(_raster(piece_id, state))
 
 		var frame_width := frames[0].get_width()
 		var frame_height := frames[0].get_height()
@@ -136,6 +137,7 @@ func _init() -> void:
 			"sheet": "%s_states.png" % piece_id,
 		}
 		var box_note := "no size row yet"
+		var on_cell_canvas := false
 		if PIECE_TYPE_BY_PIECE.has(piece_id):
 			var piece_type := StringName(PIECE_TYPE_BY_PIECE[piece_id])
 			var row := size_table.row_for(piece_type)
@@ -149,8 +151,21 @@ func _init() -> void:
 				box_note = "box %d x %d %s" % [row.body_box.x, row.body_box.y, "ok" if fits else "TOO BIG"]
 				if not fits:
 					pieces_that_do_not_fit.append("%s is %d x %d but a %s may be at most %d x %d" % [piece_id, frame_width, frame_height, piece_type, row.body_box.x, row.body_box.y])
+				else:
+					# The owner's art spec (docs/assets) draws every piece on the cell-sized canvas, so the
+					# stand-ins do too: the same pixels, on the same screen pixels as a tight picture would
+					# be, but the file is the shape the owner's own files will be.
+					on_cell_canvas = true
+					for index in frames.size():
+						frames[index] = _on_cell_canvas(frames[index], size_table)
+					entry["canvas_width"] = size_table.cell_size
+					entry["canvas_height"] = size_table.cell_size
+					entry["canvas_base_row"] = size_table.cell_canvas_base_row
 		manifest[piece_id] = entry
-		print("  %-12s %2d x %-2d   %s" % [piece_id, frame_width, frame_height, box_note])
+		for index in frames.size():
+			_save(frames[index], "%s/%s_%s.png" % [OUT_DIR, piece_id, STATE_ORDER[index]])
+		_save(_strip(frames), "%s/%s_states.png" % [OUT_DIR, piece_id])
+		print("  %-12s %2d x %-2d   %s%s" % [piece_id, frame_width, frame_height, box_note, ", on the %d x %d cell canvas" % [size_table.cell_size, size_table.cell_size] if on_cell_canvas else ""])
 
 	if not pieces_that_do_not_fit.is_empty():
 		for line in pieces_that_do_not_fit:
@@ -468,6 +483,17 @@ func _dilate_outline(image: Image, occupied: Array[Array], colour: Color) -> voi
 					break
 			if touches_body:
 				image.set_pixel(x, y, colour)
+
+
+## A tight frame placed on the art spec's cell-sized canvas (docs/assets): centred on the cell's
+## centre line the way a tight picture is (PieceSizeTable.body_top_left), its bottom edge on the
+## canvas's base row. Nothing is resampled; the frame is only given the transparent border.
+func _on_cell_canvas(frame: Image, size_table: PieceSizeTable) -> Image:
+	var canvas := Image.create_empty(size_table.cell_size, size_table.cell_size, false, Image.FORMAT_RGBA8)
+	canvas.fill(Color(0, 0, 0, 0))
+	var top_left := Vector2i(floori(size_table.cell_size / 2.0) - floori(frame.get_width() / 2.0), size_table.cell_canvas_base_row - frame.get_height())
+	canvas.blit_rect(frame, Rect2i(Vector2i.ZERO, frame.get_size()), top_left)
+	return canvas
 
 
 ## The six states laid out left to right in STATE_ORDER, one frame per cell.

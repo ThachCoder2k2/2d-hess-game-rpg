@@ -51,8 +51,12 @@ const GENERATED_SEEDS: Array[Dictionary] = [
 	# the M1b stand-ins (sprites from before the owner decided a piece is smaller than its cell,
 	# 64 to 96 px pictures drawn at a scale in the scene); the bishop had none of its own and
 	# borrowed the knight's. The white pawn is the hero, the black pawn is the whole pawn family.
+	# `revision` marks the second drawing of the same four files: the generator now writes them on
+	# the owner's art-spec canvas (32 x 32, base rim on row 30), so a stand-in that is still the
+	# first drawing is replaced once.
 	{
 		"source": "res://assets/_generated/chess/pawn_idle.png",
+		"revision": "on the 32 x 32 cell canvas",
 		"target": "res://content/player/body.png",
 		"kind": "body",
 		"id": "player",
@@ -60,6 +64,7 @@ const GENERATED_SEEDS: Array[Dictionary] = [
 	},
 	{
 		"source": "res://assets/_generated/chess/black_pawn_idle.png",
+		"revision": "on the 32 x 32 cell canvas",
 		"target": "res://content/enemies/pawn_recruit/body.png",
 		"kind": "body",
 		"id": "pawn_recruit",
@@ -67,6 +72,7 @@ const GENERATED_SEEDS: Array[Dictionary] = [
 	},
 	{
 		"source": "res://assets/_generated/chess/knight_idle.png",
+		"revision": "on the 32 x 32 cell canvas",
 		"target": "res://content/enemies/knight_tracker/body.png",
 		"kind": "body",
 		"id": "knight_tracker",
@@ -74,6 +80,7 @@ const GENERATED_SEEDS: Array[Dictionary] = [
 	},
 	{
 		"source": "res://assets/_generated/chess/bishop_idle.png",
+		"revision": "on the 32 x 32 cell canvas",
 		"target": "res://content/enemies/bishop_zoner/body.png",
 		"kind": "body",
 		"id": "bishop_zoner",
