@@ -76,9 +76,10 @@ toward it outside the scripted M1b migration, which waits for gate OG0.
 
 ## Current Priority
 
-The base is built milestone by milestone from `docs/game-base-plan.md` section 15. The first
-step is **M1a: safety net and tooling** (tests, runner, scripts and docs; no gameplay change,
-no file moves), followed by owner gate **OG0**, then the scripted folder migration (M1b).
+The base is built milestone by milestone from `docs/game-base-plan.md` section 15.
+**M1a (safety net and tooling) is done and waits in `human_review`**: tests, runner, scripts and
+docs, with no gameplay change and no code, scene or resource moves. Next is owner gate **OG0**,
+then the scripted folder migration (M1b).
 Current status of every area, and what is waiting on the owner, lives in
 `docs/where-we-are.md`. Do not start a broad new phase while the current one has a broken
 playable slice.

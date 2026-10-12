@@ -274,7 +274,9 @@ June note).
 - GDScript does not call a base class `_init()` once the subclass defines its own, so `UnboundTest` arms its
   watchdog from `_initialize()`; a suite must not define `_initialize()` itself.
 - The headless `--editor --quit` import does not parse-check a script that no suite loads, so a broken
-  `class_name` script in an untested file prints nothing. M1b should add a "load every `.gd`" test.
+  `class_name` script in an untested file prints nothing (checked: a planted type error and a stale preload
+  path both passed the import pass silently). `tests/architecture/test_all_scripts_load.gd` now `load()`s
+  every `.gd` outside `tests/fixtures/`, so such a script fails the run before M1b moves anything.
 - A real-renderer boot works in the agent sandbox (`--quit-after 180`, Metal on Apple silicon, about 7 s) but
   the game opens fullscreen, so each run flashes the owner's screen. Exact command: `tools/README.md`.
 - `main.gd` today: the Book of House Rules blocks keys but does not pause the world; a zone trip that ends

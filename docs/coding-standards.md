@@ -220,7 +220,11 @@ Collision is cell-based through `EcsGrid`, not physics.
   script error cannot hang the run, it fails a suite that asserted nothing, and it prints
   `PASS:` / `FAIL:` lines the runner reads. A suite named `test_*.gd` anywhere under `tests/`
   is found by `tools/run_all_tests.py` without editing it. Every suite must print at least one
-  `PASS:` line, even a report-only guard (assert that its scan saw enough files).
+  `PASS:` line, even a report-only guard (assert that its scan saw enough files). All current
+  `test_*.gd` suites follow this; only the older `run_tests.gd` and `*_test.gd` suites still
+  extend `SceneTree` directly. A guard that cannot run (for example no git) must FAIL, never
+  print PASS (skipped). `tests/architecture/test_all_scripts_load.gd` compiles every script, which
+  the import pass does not.
 - A new test names a `res://` file through `TestPaths` (`tests/support/paths.gd`), which asserts
   the file exists. Folder moves then edit one file instead of every suite.
 - Never rename or delete a `PASS:` label that is in `tests/baseline_labels.txt`; if a label

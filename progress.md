@@ -836,3 +836,31 @@ separate worktrees and the integrator merged them on `base/m1a`.
   baseline labels, 0 warnings); import pass has no `ERROR`/`Parse` line; `git diff --check` clean. A scratch
   copy stamped by `stamp_uids.gd` (49 headers + 213 `ext_resource` lines, 0 missing, one changed line per
   stamped line) stays green after an import pass.
+
+### M1a review fixes - 2026-10-12
+
+An independent review of `base/m1a` found no blocker; these are the fixes (branch `base/m1a-fix`, tag
+`m1a-done` moved to its tip). Each was checked by breaking the thing it guards.
+
+- **Every script is compiled by a test.** `tests/architecture/test_all_scripts_load.gd` loads each `.gd`
+  outside `tests/fixtures/` (the import pass does not). A planted type error and a stale preload path passed
+  the import pass silently and failed this suite.
+- **The death test is no longer vacuous.** It plants a pending health carry before the fatal blow; deleting
+  the reset from `main.gd` `_on_player_defeated` now fails two assertions (it failed none before).
+- **The sidecar guard no longer prints `PASS (skipped)`** when git is unavailable; it fails and says why.
+- **The 10 newer suites extend `UnboundTest`** (five bridge, audio, four architecture guards), with the main
+  scene and audio folders resolved through `TestPaths`. Output was diffed before and after: labels unchanged.
+- **The runner has a `--self-test`** (35 checks: hang kill of the whole process group, SCRIPT ERROR, FAIL
+  line, missing verdict, vanished label, renames, discovery). Ten single-line weakenings of the runner were
+  all caught. `/verify` runs it and `move_res.py --self-test` first.
+- **Two legacy checks** (`actor views hold no logic at all`, `pickup visuals use Sprite2D nodes`) now also
+  require a non-empty source, so a moved file fails them. Labels unchanged.
+- **Ledger honesty.** New status `partial: <gap>`; rows 110, 235, 246, 247, 248 use it (the test rejects a
+  partial row with no gap and prints the count). Rows 231 and 232 stay covered because the guide exists now.
+- **`docs/design/room-authoring-guide.md` rewritten** against the ECS code (it also answers TOOL.3 and TOOL.4).
+  `docs/room-generator*.md` were audited and kept: they document tools that still exist.
+- `LICENSE` is a marked placeholder until the owner names the holder; `AGENTS.md` says M1a is done.
+- **Not fixed, on purpose:** the five undecided dependency edges and `tests/architecture/allowed_edges.txt`
+  (the owner or architect decides at OG0); the Tier B CI workflow file; the mixed commit trailers.
+- Verification: `python3 tools/run_all_tests.py --strict` is green (20 suites, 235 of 235 baseline labels,
+  0 warnings); both `--self-test` runs report 0 failures; `git diff --check` clean.
