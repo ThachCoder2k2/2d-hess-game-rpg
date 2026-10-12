@@ -864,3 +864,30 @@ An independent review of `base/m1a` found no blocker; these are the fixes (branc
   (the owner or architect decides at OG0); the Tier B CI workflow file; the mixed commit trailers.
 - Verification: `python3 tools/run_all_tests.py --strict` is green (20 suites, 235 of 235 baseline labels,
   0 warnings); both `--self-test` runs report 0 failures; `git diff --check` clean.
+
+## M1b step 1 - uid stamp and generated output - 2026-10-12
+
+First of four M1b steps (`docs/game-base-plan.md` 13.6, 15 "M1b"), branch `base/m1b-1` from `game-base`. No
+gameplay change, no scene structure change, no code or content folder moved yet.
+
+- **Stamp.** `tools/stamp_uids.gd` over the whole tree, committed alone: 54 files, 49 headers and 213
+  `ext_resource` lines (251 total), 0 unresolved, one changed line per stamped line. Then
+  `test_no_path_only_ext_resource` flipped to ENFORCING in its own commit (mutation check: one path-only line
+  makes it fail and name the file).
+- **Generated output.** `assets/sprites/generated/{chess,tiles,maps,rooms}` and `assets/art/piece_templates`
+  moved to `assets/_generated/` with `tools/move_res.py` (log committed). Every generator constant, the two
+  room scenes, `.gitignore` (now `assets/_generated/` only; the 12 tracked root sprites stay tracked), the
+  READMEs and the authoring docs follow. The T1/T2 room-PNG uids changed with the path, so those two scene
+  lines were re-pointed. `dump_t1`/`dump_t2` changed only by the texture path string; the other four dumps are
+  byte-identical.
+- **Tools that save scenes.** `paint_kingdom_tilemap`, `paint_zone_tilemaps` and `generate_playground_tilemap`
+  now save through `tools/save_keeping_uids.gd` and stamp last; running each on the committed tree leaves only
+  the random node `unique_id` in the diff. `generate_playground_tilemap` also stopped embedding a second copy of
+  its tile set (it now references `playground_tileset.tres` like the tracked scene). The other generators write
+  `.png`/`.wav`/`.json` only, so they never touch a scene. `tests/architecture/test_tools_keep_uids.gd` guards it.
+- **Verification.** After each commit: `python3 tools/run_all_tests.py --strict` green (21 suites after the new
+  guard, 235 of 235 baseline labels, 0 warnings), both `--self-test` runs 0 failures, `git diff --check` clean,
+  `stamp_uids.gd --check` CLEAN. A real `git clone` of the branch plus `tools/bootstrap_worktree.sh` came out
+  green with a clean `git status` and the room-PNG uids matching the scenes.
+- **Not done here (later steps):** code and content folder moves, tracked-sprite move, `project.godot` paths,
+  `CLAUDE.md` amendments, `test_sidecars_tracked` ENFORCING (it still reports), `task_plan.md` M1b row.

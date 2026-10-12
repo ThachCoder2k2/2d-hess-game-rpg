@@ -294,3 +294,24 @@ June note).
   `resources/enemies` turns three suites red; with stamped uids a bare move of scene-referenced resources stays
   green, which is why M1b stamps first. Never use `ResourceSaver` to "fix" uids: it adds none and drops the
   header uid of `scenes/main.tscn`.
+
+## Uid And Generated-Art Facts (M1b step 1, 2026-10-12)
+
+- The tree is stamped: every scene and resource header has a `uid=` and every `ext_resource` line names its
+  target by uid as well as path. `test_no_path_only_ext_resource` is ENFORCING, so a scene saved without uids
+  fails the suite. `tools/stamp_uids.gd --check` is the same measurement from the command line.
+- `ResourceSaver.save()` on an existing `.tscn`/`.tres` drops the header uid and every `ext_resource` uid
+  (measured on `kingdom_tilemap.tscn`, which seven room scenes name by uid) and writes a new random node
+  `unique_id`. Stamping afterwards would invent a different header uid, so tools that save scenes go through
+  `tools/save_keeping_uids.gd` (restores the old header uid with `ResourceSaver.set_uid()`, then runs the
+  stamper last). `FLAG_CHANGE_PATH` does not set `resource_path` in 4.6; use `take_over_path()`.
+- All generator output lives under `assets/_generated/` (gitignored): `chess/ tiles/ maps/ rooms/
+  piece_templates/`. The 12 PNGs directly in `assets/sprites/generated/` and `assets/art/pieces/` are tracked
+  source art and no tool writes them.
+- Godot 4.6.3 gives a freshly imported file a uid derived from the project name and its path (deleting
+  `.godot/` and `assets/_generated/` and re-bootstrapping twice gave identical uids; a fresh clone matches the
+  uids stamped in the T1/T2 room scenes). Moving generated output, or renaming the project, changes those uids:
+  re-point the two scene lines (`stamp_uids.gd --check` lists the mismatch as `STALE`). An unmatched uid is only
+  a warning (`ext_resource, invalid UID ... using text path instead`), never an error.
+- Cosmetic, not fixed: the bootstrap warm-up import pass prints that same warning for the two room PNGs on a
+  fresh clone, because the art does not exist yet; the pass after the generators is clean.
