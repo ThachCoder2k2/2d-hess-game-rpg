@@ -1,3 +1,5 @@
+> Archived 2026-10-12: this note describes the retired node-era architecture (GridWorld, FreeEnemy, PawnHero, EnemyActor). Superseded by docs/ARCHITECTURE.md (the code as built) and docs/game-base-plan.md §13 (the target).
+
 # World and Rooms
 
 How a room is authored (draggable markers) and assembled at runtime, and how `Main`

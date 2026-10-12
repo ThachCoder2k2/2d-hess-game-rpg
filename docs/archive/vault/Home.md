@@ -1,3 +1,5 @@
+> Archived 2026-10-12: this note describes the retired node-era architecture (GridWorld, FreeEnemy, PawnHero, EnemyActor). Superseded by docs/ARCHITECTURE.md (the code as built) and docs/game-base-plan.md §13 (the target).
+
 # 🏰 The Unbound Pawn — Code Vault
 
 Open this folder (`docs/vault/`) as an Obsidian vault. Every note links to related
