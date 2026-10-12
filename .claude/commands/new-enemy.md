@@ -10,15 +10,26 @@ view; the shared systems (`EnemyAISystem`, `MovementSystem`, `HealthSystem`, `Vi
 do the rest. Follow the Bishop (commit `6831b6a`; today `content/enemies/bishop_zoner/` and the thin
 scene `presentation/views/actors/bishop_enemy.tscn`) as the template.
 
-The enemy is a folder under `content/` (zero `.gd` files there, the folder name is the id). There is
-ONE actor view, `presentation/views/actors/actor_view_base.tscn` (the nodes, the clips, the
-animation graph); an enemy needs no scene of its own: instance the base in a room and set its
-`definition` (step 3). Do not copy an actor scene, and do not move files by hand: only
-`tools/move_res.py` moves a file.
+An enemy is a folder under `content/enemies/<id>/` (zero `.gd` files there, the folder name is the id,
+lowercase snake_case). The smallest enemy is **one file**, `enemy.tres`, that points at pieces in
+`content/enemies/_shared/` (a re-skin of a pawn with other health, speed or weapon); a new picture adds
+`visual.tres` and `body.png` (three files, plus the `.import` sidecar the editor writes). There is ONE
+actor view, `presentation/views/actors/actor_view_base.tscn` (the nodes, the clips, the animation
+graph); an enemy needs no scene of its own: instance the base in a room and set its `definition`
+(step 3). Do not copy an actor scene, and do not move files by hand: only `tools/move_res.py` moves a
+file.
 
 A piece is smaller than its cell (the owner's decision of 2026-10-12): its body picture may be no
 larger than the box `content/feel/piece_sizes.tres` gives its kind, and the game stands it on that
 kind's base line. Heights follow a real chess set (pawn lowest, king tallest).
+
+Shell used below (project root; the path has a space, so quote it; from a git worktree the binary is
+`../../../../Godot.app/Contents/MacOS/Godot`):
+
+```bash
+G="../Godot.app/Contents/MacOS/Godot"
+export HOME=/tmp/unbound-pawn-godot        # a private HOME: Godot writes its user:// data and editor settings there
+```
 
 Steps:
 
@@ -28,14 +39,16 @@ Steps:
    existing sprite as a placeholder and say so.
 
 2. Create the folder `content/enemies/<id>/` (`<id>` is the `EnemyDefinition.id`, snake_case)
-   with these `.tres`. Copy the closest existing enemy's file and edit values; never duplicate a
-   value in code. (A text copy of a `.tres` or `.tscn` also copies its header `uid="..."`, and two
-   files must not share one: delete the `uid="..."` part of the copy's first line and run
-   `tools/stamp_uids.gd`, which gives every uid-less file a fresh uid. Duplicating in the editor
-   does this for you. Never re-save a file with a headless `ResourceSaver`: it drops uids.) A piece several enemies would share (a movement, attack or decision a pawn
+   with these files. Copy the closest existing enemy's file and edit values; never duplicate a
+   value in code. A piece several enemies would share (a movement, attack or decision a pawn
    variant reuses) belongs in `content/enemies/_shared/{movement,attacks,decisions,visuals}/`
    instead, and the enemy's `enemy.tres` points at it; the Bishop and Knight keep their own pieces
    beside `enemy.tres`, named for the `EnemyDefinition` export they fill:
+   - `enemy.tres` (`EnemyDefinition`) — `id`, `display_name`, `piece_name`, `role`, `max_health`
+     (default 2, between 1 and 100), and refs to the four below plus the shared
+     `content/difficulty/standard.tres`. Optional: `default_weapon`, `allowed_weapon_tags`.
+     `validate()` must return no warnings. The smallest useful enemy is this file alone, pointing at
+     `_shared/` (see the worked example below).
    - `movement.tres` (`MovementConfig`) — `allowed_directions` is the list of **offsets of
      one move**, the piece's own chess law (Pawn: four cardinal; Bishop: four diagonals; Knight:
      the eight L offsets). Plus `step_duration`, `move_recovery`, `preferred_distance`.
@@ -50,18 +63,33 @@ Steps:
      telegraph and impact colors. The base scene reads it: the body appears on the base line with no
      scene edit, and the clips run at the stated speed. A piece several enemies share goes in
      `_shared/visuals/` (the black pawns share `pawn_compatibility.tres`).
-   - `enemy.tres` (`EnemyDefinition`) — `id`, `display_name`, `piece_name`, `role`, `max_health`,
-     and refs to the four above plus the shared `content/difficulty/standard.tres`. Optional:
-     `default_weapon`, `allowed_weapon_tags`. `validate()` must return no warnings.
-   - `body.png` — the enemy's picture, drawn at scale 1, no larger than its kind's box. A first
-     pass may name an existing enemy's `body.png` in `visual.tres` (the black pawns share
+   - `body.png` — the enemy's picture, drawn at scale 1, no larger than its kind's box (pawn 18 x 22,
+     knight, bishop, rook 20 x 24, queen 22 x 26, king 22 x 28; the whole PNG counts, transparent padding
+     too). A first pass may name an existing enemy's `body.png` in `visual.tres` (the black pawns share
      `content/enemies/pawn_recruit/body.png`), or the generator can paint a stand-in
      (`tools/generate_chess_sprites.gd` reads the size table and refuses a piece that does not fit):
-     add a `GENERATED_SEEDS` row to `tools/seed_placeholders.gd` (kind `body`, id `<id>`), run the
-     generator, the seed tool and the import pass, and commit `content/_placeholders.json`, so
-     `tools/list_placeholders.gd` shows the owner it is still to draw. The owner swaps it by
-     overwriting `body.png`; `ContentDb.validate_cross_refs()` fails if a picture is larger than
-     the box.
+     add a `GENERATED_SEEDS` row to `tools/seed_placeholders.gd` (kind `body`, id `<id>`), or, for a copy of a
+     picture that already exists, an `ADOPTED_PLACEHOLDERS` row with the file's path; run
+     `"$G" --headless --path . -s tools/seed_placeholders.gd` and commit `content/_placeholders.json`, so
+     `tools/list_placeholders.gd` shows the owner it is still to draw. The owner swaps it by overwriting
+     `body.png`; `ContentDb.validate_cross_refs()` fails (and names the picture, its size and the box) if a
+     picture is larger than the box.
+
+   **The uid dance (do it in this order, once, after the files exist).** A text copy of a `.tres` also
+   copies its header `uid="..."`, and two files must not share one: delete the ` uid="..."` part of the
+   copy's first line, and in a reference to a file you just made (`visual.tres`, `body.png`) leave the
+   `[ext_resource ...]` line **path-only** (no `uid=`). Then:
+
+   ```bash
+   "$G" --headless --path . --editor --quit                   # 1. import: gives body.png its .import and uid
+   "$G" --headless --path . -s tools/stamp_uids.gd            # 2. gives every uid-less header a uid and fills the path-only lines
+   "$G" --headless --path . --editor --quit                   # 3. import again, so the new uids are registered
+   "$G" --headless --path . -s tools/stamp_uids.gd -- --check # 4. must print CLEAN
+   ```
+
+   Skip step 3 and a scene that names the new file prints `ext_resource, invalid UID ... using text path
+   instead`; the game still loads it, the warning goes away after the import. Never re-save a file with a
+   headless `ResourceSaver`: it drops uids.
 
 3. The view. Usually nothing to create: in a room (or any scene) instance
    `presentation/views/actors/actor_view_base.tscn`, set its `definition` to
@@ -84,8 +112,10 @@ Steps:
      `ENEMY_SCENE_PATHS` in `tests/architecture/test_pieces_inside_cell.gd`. The in-cell test already
      puts EVERY enemy of `content/enemies/` on `actor_view_base.tscn` and measures it facing every
      way, armed and telegraphing, so the new enemy's body, pips, arrow, weapon and aura are checked
-     inside the cell with no edit; look at `assets/_generated/previews/pieces_in_cells.png`
-     (`tools/render_actor_preview.gd`) to see it;
+     inside the cell with no edit, and a failure names the enemy (`test_pawn on actor_view_base.tscn ...`).
+     `assets/_generated/previews/pieces_in_cells.png` (`tools/render_actor_preview.gd`, drawn by
+     `tools/bootstrap_worktree.sh`) shows the hero and the three thin scenes (black pawn, knight, bishop);
+     an enemy that only has a `definition` is checked by the test but is not a row of that picture;
    - add a data block asserting the movement offsets, the attack cells for a known origin
      and facing, and the decision role come from the `.tres` (assertion labels read as a
      spec). If the enemy has behavior worth proving, add a case to `tests/ecs_enemy_test.gd`
@@ -94,21 +124,30 @@ Steps:
    `enemy.tres` and the Book check in `run_tests.gd` loads every enemy folder, so a folder without
    one fails.
 
-5. Run the editor import once (new class refs, new resources, and the `.import` of a new PNG),
-   then run `/verify`. All green, and `stamp_uids.gd --check` CLEAN. `ContentDb` finds the new
-   folder by its name with no registration; `tests/content/test_validate_all.gd` then fails if the
-   folder name is not lowercase snake_case, if `enemy.tres`' `id` differs from the folder name, or
-   if `validate()` reports anything (a `visual.tres` without a `piece_type` and a `body_texture`
-   fails too). A Book page whose `piece_id` names a missing enemy fails
-   `ContentDb.validate_cross_refs()`.
+5. Run the import pass and the stamper as above, then `/verify`. All green, and `stamp_uids.gd --check`
+   CLEAN. `ContentDb` finds the new folder by its name with no registration; `tests/content/test_validate_all.gd`
+   then fails if the folder name is not lowercase snake_case, if `enemy.tres`' `id` differs from the folder
+   name, or if `validate()` reports anything (a `visual.tres` without a `piece_type` and a `body_texture`
+   fails too). A Book page whose `piece_id` names a missing enemy fails `ContentDb.validate_cross_refs()`.
+   To run just that suite: `"$G" --headless --path . -s tests/content/test_validate_all.gd` (look for
+   `enemies/<id> loads`, `passes its own validate()` and `TEST VALIDATE ALL: PASS`).
 
-6. To play it: instance the actor scene (the base with `definition` set, or your thin scene) in a room scene under
-   `content/rooms/<room id>/room.tscn` and park it on a cell. `EcsBoot` spawns an entity for every
-   `ActorView` child of the room that has a `definition`, at the cell containing its parked
-   position, and keeps the node as the puppet. Override `definition` on the instance for a
-   variant. Exact placement is the human's editor call. A room edit changes
-   `tests/baselines/dump_<room>.txt`: regenerate it with `tools/dump_world.gd --write-baselines`
-   in the same commit and say what changed.
+6. To see it spawn without committing a room, put a throwaway scene in the project root (not in `content/`),
+   instance the base in it, set `definition`, and boot it with the dump tool:
+   `"$G" --headless --path . -s tools/dump_world.gd -- --room=res://scratch_room.tscn --ticks=2`. The dump
+   lists the entity (`entity 3 enemy:Pawn cell=(7,3) health=5/5`) and the body texture the view got. Delete the scene
+   afterwards: a room folder under `content/rooms/` that the world graph does not name fails
+   `test_validate_all` ("no zone of content/world/world.tres leads here"), and a scene under `content/` that names
+   `presentation/board/` fails `test_content_references`.
+   To place it for real, instance the actor scene (the base with `definition` set, or your thin scene) in
+   `content/rooms/<room id>/room.tscn` and park it on a cell. `EcsBoot` spawns an entity for every `ActorView`
+   child of the room that has a `definition`, at the cell containing its parked position, and keeps the node
+   as the puppet. Override `definition` on the instance for a variant. Exact placement is the human's
+   editor call. A room edit changes `tests/baselines/dump_<room>.txt` (`test_dump_baselines` fails until you
+   regenerate it with `"$G" --headless --path . -s tools/dump_world.gd -- --write-baselines`, in the same commit,
+   saying what changed), and a test that counts a room's pawns can fail too: adding a pawn to T3 fails
+   `tests/bridge/test_bridge_travel.gd` ("T3 holds its single living pawn"). There is no `dev_sandbox` room yet
+   (it arrives with M6), so a real room is the only place to play it.
 
 7. Optional: if the enemy should add a page to the Book of House Rules, author a `RuleEntry`
    `.tres` at `content/rules/<page id>/page.tres` whose `piece_id` equals the
@@ -118,6 +157,32 @@ Steps:
 8. Update `progress.md` + `task_plan.md`, commit (stage explicit paths, one logical change,
    include any new `.gd.uid` and every new image's `.import`; exclude the human's dirty files),
    push.
+
+## Walked once for real (2026-10-13, M2 step 3)
+
+On a scratch clone of the M2 branch (bootstrap, then the steps above), nothing committed, all of it deleted
+afterwards. The enemy was `test_pawn`, 5 health, reusing the shared pawn pieces:
+
+| What I did | What happened |
+|---|---|
+| Copied `pawn_recruit/enemy.tres` to `test_pawn/enemy.tres`; removed the header uid; set `id = &"test_pawn"`, `display_name`, `max_health = 5` | one file; `max_health` is a line to add (the default 2 is not written in the source file) |
+| `tools/stamp_uids.gd` | "headers without uid: 1 stamped" |
+| `tests/content/test_validate_all.gd` | `content/enemies holds at least 7 entries (found 8)`, four `enemies/test_pawn ...` lines PASS, `TEST VALIDATE ALL: PASS` |
+| Instanced `actor_view_base.tscn` in a scratch room scene, set `definition` to the file, dumped it | `entity 3 enemy:Pawn cell=(7,3) health=5/5`; the same room with the real pawn showed `health=2/2` |
+| Edited the stamped uid into a scene before any import | `invalid UID ... using text path instead` until the import pass ran; after it, no warning |
+| Put the instance in the real T3 room | the strict runner went red on exactly two suites: `test_dump_baselines` (t3's dump changed) and `test_bridge_travel` ("T3 holds its single living pawn") |
+| Made `content/rooms/scratch_test_pawn/room.tscn` instead | four suites red: not in `world.tres`, names `presentation/board/` (so: scratch scene in the project root, not under `content/`) |
+| Gave it its own `visual.tres` and `body.png` (a copy of the pawn's; 3 files) and ran import, stamp, import, check | one stamp pass filled 2 header uids and 2 path-only lines (the picture's uid and the new visual's); `stamp_uids --check` CLEAN; the dump shows `BodySprite -> res://content/enemies/test_pawn/body.png`; the strict runner GREEN (35 suites, 235 of 235 labels) |
+| Replaced `body.png` with a 26 x 32 picture | `test_validate_all` red with "its body picture is 26 x 32 px but a pawn may be drawn at most 18 x 22 px"; `test_pieces_inside_cell` red with 17 FAIL lines naming `test_pawn` (the narrowest margin is -2.00 px) |
+| Added an `ADOPTED_PLACEHOLDERS` row and ran `seed_placeholders.gd` | `_placeholders.json` 26 to 27 entries; `list_placeholders.gd` showed `content/enemies/test_pawn/body.png` |
+| Overwrote the picture with a 12 x 16 one (the owner's swap) | "27 recorded, 26 still to replace, 1 replaced by you"; both suites green again |
+| Deleted `content/enemies/test_pawn/`, restored the seed file and manifest, import pass | strict runner GREEN, working tree clean |
+
+Counted for the owner (`docs/OWNER_GUIDE.md` section 5): a re-skin that reuses `_shared` is **1 file**
+(`enemy.tres`) plus the room edit that places it; with a picture of its own it is **3 files** (`enemy.tres`,
+`visual.tres`, `body.png`; the editor adds `body.png.import`), plus the room edit, and one
+`_placeholders.json` row if the owner should see it on the to-draw list. The name row in a `.po` file arrives
+with M4.
 
 Note the placeholder art: reusing an existing sprite is fine for a first pass; flag that a
 bespoke sprite is a later art-pass item for the human to approve (`tools/list_placeholders.gd`
