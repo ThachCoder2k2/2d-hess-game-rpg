@@ -49,11 +49,17 @@ func _run() -> void:
 	# --- The fatal blow, through the real damage path ---
 	Support.remove_isolated_save(world_state)
 	var hud := main.get("hud") as GameHud
+	# The boot consumes the carry, so it is already -1 here and "death clears it"
+	# would hold even if main.gd never cleared anything. Plant a pending carry (what a
+	# hero killed mid-fade-out of a travel would have left behind) so the assertion
+	# below can only pass if the death handler really resets it.
+	world_state.set("player_health_carry", 2)
+	_expect(world_state.get("player_health_carry") == 2, "setup: a stale health carry of 2 is pending when the fatal blow lands")
 	Support.damage_player(main, 99)
 	_expect(Support.player_health(main).current == 0, "the damage path takes the hero to 0 courage")
 	_expect(bool(main.get("room_ending")), "death marks the room as ending")
 	_expect(not Support.player_tag(main).control_enabled, "control is off after the fatal blow")
-	_expect(world_state.get("player_health_carry") == -1, "death clears the health carry")
+	_expect(world_state.get("player_health_carry") == -1, "death clears the pending health carry")
 	_expect(FileAccess.file_exists(String(world_state.get("isolated_save_path"))), "death saves WorldState before the reload")
 	_expect(hud.result_panel.visible and hud.result_label.text.begins_with("THE PAWN FALLS"), "the result panel shows the defeat message")
 	_expect(hud.result_label.text.contains("THE CHILD RESETS THE BOARD"), "the result panel shows the reset subtitle")
