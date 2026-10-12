@@ -166,7 +166,7 @@ Proven on a scratch copy (a separate throwaway git repo, never the worktree), st
 "$G" --headless --path . -s tests/architecture/test_dump_baselines.gd                 # compare (enforcing)
 ```
 
-The dump mirrors `scripts/main.gd` (`_make_world` + `_boot_zone`): the same six systems in the same order,
+The dump mirrors `shell/game_root.gd` (`_make_world` + `_boot_zone`): the same six systems in the same order,
 the player view on the room's `start` entry marker, then `EcsBoot.boot` with no taken pickups and no
 opened gates, then 120 manual ticks of 1/60 s with the player idle. It skips `WorldState`, the HUD, the
 board overlay and audio on purpose: they depend on the save file or on real time. Output sections:
