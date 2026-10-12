@@ -192,7 +192,7 @@ func _init() -> void:
 	main_scene.free()
 
 	# --- The world graph: every zone loads, every door resolves ---
-	var world_graph := load("res://resources/world/world_graph.tres") as WorldGraph
+	var world_graph := load("res://content/world/world.tres") as WorldGraph
 	_expect(world_graph != null and world_graph.validate().is_empty(), "the world graph loads with zones")
 	var entry_ids_by_zone := {}
 	var zone_roots := {}

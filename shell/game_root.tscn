@@ -6,7 +6,7 @@
 [ext_resource type="PackedScene" uid="uid://clh36vjegdepp" path="res://content/rooms/t1_white_kings_fall/room.tscn" id="6"]
 [ext_resource type="PackedScene" uid="uid://hk5me2mhmwb8" path="res://presentation/ui/hud/hud.tscn" id="7"]
 [ext_resource type="AudioStream" uid="uid://dk0dutjkvtq4y" path="res://assets/music/unbound_march.wav" id="8"]
-[ext_resource type="Resource" uid="uid://cq5g8vgd1g6fx" path="res://resources/world/world_graph.tres" id="9"]
+[ext_resource type="Resource" uid="uid://cq5g8vgd1g6fx" path="res://content/world/world.tres" id="9"]
 [ext_resource type="PackedScene" uid="uid://cw2yq7mnvc1md" path="res://presentation/ui/codex/rule_book.tscn" id="10"]
 
 [node name="Main" type="Node2D" unique_id=1651252280]

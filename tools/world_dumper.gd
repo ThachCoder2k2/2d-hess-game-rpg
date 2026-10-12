@@ -25,7 +25,7 @@ extends RefCounted
 ## drive their transforms, which depend on frame timing.
 
 ## The world graph that names every room (zone id -> scene). move_res.py rewrites this path.
-const WORLD_GRAPH_PATH := "res://resources/world/world_graph.tres"
+const WORLD_GRAPH_PATH := "res://content/world/world.tres"
 ## The player's puppet view, the same scene shell/game_root.tscn instances as PawnHero.
 const PLAYER_VIEW_SCENE_PATH := "res://presentation/views/actors/player.tscn"
 const BASELINE_DIRECTORY := "res://tests/baselines"

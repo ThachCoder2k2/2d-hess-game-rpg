@@ -124,3 +124,4 @@ scenes/rooms/t3_first_pawn_clash.tscn	content/rooms/t3_first_pawn_clash/room.tsc
 scenes/rooms/t4_broken_rule_yard.tscn	content/rooms/t4_broken_rule_yard/room.tscn
 scenes/rooms/b1_black_pawn_captain.tscn	content/rooms/b1_black_pawn_captain/room.tscn
 scenes/rooms/h1_chess_rug_hub.tscn	content/rooms/h1_chess_rug_hub/room.tscn
+resources/world/world_graph.tres	content/world/world.tres
