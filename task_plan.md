@@ -1,4 +1,124 @@
-# The Unbound Pawn - Implementation Plan
+# The Unbound Pawn - Active Project Plan
+
+## Active Stage 1 Tutorial Spine
+
+The owner asked to compare the opening against commercial first stages like
+*Prince of Persia: The Lost Crown* and proceed beyond a thin technical slice.
+
+Current status:
+
+```text
+first playable Stage 1 spine implemented; structural review loop complete;
+owner polish review still needed
+```
+
+Implemented route:
+
+```text
+T1_WhiteKingsFall
+-> T2_FallenSwordTile
+-> T3_FirstPawnClash
+-> T4_BrokenRuleYard
+-> B1_BlackPawnCaptain
+-> H1_ChessRugHub
+```
+
+Scene files:
+
+- `scenes/rooms/t1_white_kings_fall.tscn`
+- `scenes/rooms/t2_fallen_sword_tile.tscn`
+- `scenes/rooms/t3_first_pawn_clash.tscn`
+- `scenes/rooms/t4_broken_rule_yard.tscn`
+- `scenes/rooms/b1_black_pawn_captain.tscn`
+- `scenes/rooms/h1_chess_rug_hub.tscn`
+
+Verification:
+
+- Godot import passes.
+- `tests/run_tests.gd` passes.
+- `git diff --check` passes.
+
+Remaining owner-review gates:
+
+- S1.1: T1/T2 opening readability.
+- S1.2: T3 first duel feel.
+- S1.3: T4 rule-break escalation.
+- S1.4: B1 first boss quality.
+- S1.5: H1 Toybox/world-opening clarity.
+
+Completed self-review improvements:
+
+- Boss exit to Hub is locked until the boss room is cleared.
+- T3 and T4 forward exits are locked until their tutorial fights are cleared.
+- The wooden sword is now a real T2 unlock; attacks are unavailable before it.
+
+Known limitation:
+
+- The structure is now enforceable, but room layout, difficulty, art clarity,
+  and child-narration tone still need in-editor play review.
+
+---
+
+## Current Planning State
+
+The project is currently in **production planning / owner review**, not active
+implementation.
+
+The owner has set the working rule:
+
+```text
+plan -> owner approval -> implementation -> verification -> owner review -> accepted
+```
+
+No new Godot implementation should start from the current planning docs until
+the owner explicitly approves the relevant batch or task.
+
+Current active planning files:
+
+- `docs/production-checklist.md`
+- `docs/production-approval-board.md`
+- `docs/production-review-dashboard.md`
+- `docs/game-production-aspects-checklist.md`
+- `docs/game-production-aspect-specs.md`
+- `docs/review-batch-1-foundation.md`
+- `docs/review-batch-2-first-playable-feel.md`
+- `docs/review-batch-3-first-chain-production-rules.md`
+- `docs/review-batch-4-vertical-slice-expansion.md`
+- `docs/review-batch-5-full-game-expansion.md`
+- `docs/production/t1-white-kings-fall-production-spec.md`
+- `docs/production/act-1-opening-to-first-boss-flow-map.md`
+
+Current batch status:
+
+| Batch | Status | Next Action |
+|---|---|---|
+| Batch 1 - Foundation | approved | T1 initial build in progress |
+| Batch 2 - First Playable Feel | draft | owner review / revise / approve |
+| Batch 3 - First Chain Production Rules | draft | owner review / revise / approve |
+| Batch 4 - Vertical Slice Expansion | draft | owner review / revise / approve |
+| Batch 5 - Full Game Expansion | draft | owner review / revise / approve |
+
+Recommended next owner-facing step:
+
+```text
+Build and verify the approved initial `T1_WhiteKingsFall` editable Godot room,
+then hand it to the owner for in-editor review.
+```
+
+Recommended next Codex-only step, if the owner says "continue" but does not
+approve implementation:
+
+```text
+Improve review clarity, cross-links, and acceptance checklists. Do not build.
+```
+
+---
+
+# Historical Implementation Plan
+
+The sections below are historical implementation context and editor-first
+technical decisions. They are useful background, but they do not override the
+current approval workflow above.
 
 ## Goal
 

@@ -219,6 +219,36 @@
 - Expanded tests to verify player attack Resource ownership and scene-backed room spawns.
 - Verified `run_tests.gd`, `attack_runtime_test.gd`, component movement/equipment/Knight tests, room encounter runtime, encounter HUD runtime, 1,200-frame headless launch, editor import, MCP project info, and `git diff --check`.
 
+## Act 1 Opening Room Build - 2026-09-30
+
+- Redesigned Act 1 as a self-contained tutorial chapter before Toybox, ending at the Black Pawn Captain and opening the Chess Rug Hub.
+- Added editor-owned `T1_WhiteKingsFall` as the new starting room with visible room art nodes, tilemap, grid overlay, set dressing, entry marker, and exit marker.
+- Pointed `scenes/main.tscn` at `T1_WhiteKingsFall` and placed the player at the intended opening entry.
+- Added a thin editor-owned `T2_FallenSwordTile` route skeleton so T1's exit lands on a real scene and future map work has a valid next room to edit.
+- Registered T1 and T2 in `resources/world/world_graph.tres`.
+- Verified Godot import, `tests/run_tests.gd`, and `git diff --check` after connecting the route.
+
+## Stage 1 Commercial Tutorial Spine - 2026-10-02
+
+- Reframed Stage 1 against commercial tutorial openings such as *Prince of Persia: The Lost Crown*: battlefield context, teach/test rooms, first boss, then wider world opening.
+- Added `docs/production/stage-1-commercial-tutorial-redesign.md` to lock the new standard and separate playable-spine completion from polish approval.
+- Expanded the editable Act 1 route from T1/T2 into the full first-stage chain: `T1_WhiteKingsFall -> T2_FallenSwordTile -> T3_FirstPawnClash -> T4_BrokenRuleYard -> B1_BlackPawnCaptain -> H1_ChessRugHub`.
+- Added editor-owned room scenes for T3, T4, B1, and H1, each with visible room art, grid overlay, entry markers, exit markers, and gameplay actors where appropriate.
+- Added `resources/enemies/black_pawn_captain.tres` as a data-driven first boss definition using existing pawn behavior with stronger health and ruler weapon pressure.
+- Registered every Stage 1 room in `resources/world/world_graph.tres`.
+- Verified Godot import, `tests/run_tests.gd`, and `git diff --check`.
+
+## Stage 1 Review Loop - 2026-10-05
+
+- Added `docs/production/stage-1-review-loop.md` to record the self-review passes and remaining human review items.
+- Review pass 1 fixed the biggest structural issue: clear-gated exits now exist, and `B1_BlackPawnCaptain/Exit_To_Hub` requires clearing the boss room.
+- Review pass 2 made the story-critical sword moment real: added `PlayerUnlockMarker`, placed `FallenSwordUnlock` in T2, persisted `wooden_sword` in `WorldState`, and locked player attacks in world mode until the sword is collected.
+- Review pass 3 locked the forward exits in T3 and T4 until their tutorial encounters are cleared, while keeping backtracking open.
+- Review pass 4 added a `WorldState` save version so obsolete development saves reset to the new Stage 1 opening instead of booting into an old zone.
+- Added tests for locked exits, sword-lock combat, player unlock persistence, and Stage 1 forward-gate validation.
+- Updated `tests/encounter_hud_runtime_test.gd` from the old kingdom-start assumption to the new T1 Stage 1 start.
+- Verified targeted combat/runtime tests, `tests/run_tests.gd`, `tests/encounter_hud_runtime_test.gd`, and Godot import.
+
 ## Editor-Owned Actor Visuals - 2026-07-06
 
 - Added reusable visual scenes for the hero pawn, black pawn, knight, and weapon pickup.
@@ -567,3 +597,195 @@ Researched the AI-focused editor surface at the owner's request. Found `EnemyBra
 - The traced neck is 14 blocks across sitting in x 6..19, so the pedestal had to grow to carry it: knight width 22 -> 24, frame 24x32 with the outline ring, `anchor_row` 29. The pawn, double-step and promoted are byte-identical — "keep the design of the pawn" held through every revision.
 - The generator's doc comment now forbids hand-editing a single row: to change the shape, retrace and paste both arrays wholesale. That is the guard against this loop happening again.
 - Verified: `tools/trace_knight_glyph.py` re-emits the exact arrays that are in the generator, generator runs clean headless (4 pieces x 6 states), `--editor --quit` exit 0, `TESTS COMPLETE: 0 failure(s)`, all six runtime tests PASS, `git diff --check` clean. Owner reviewed the result and said keep it. No scene, tilemap or ECS file was touched.
+
+## Production checklist added - 2026-09-29
+
+- Added `docs/production-checklist.md` as the professional gate-based production checklist.
+- Owner rule captured: plan small part, get approval, implement only that part, verify, owner reviews in Godot, then move on.
+- No room implementation started. Next gate is M0.4: confirm first room production order.
+
+## Gameplay research and parallel production lanes - 2026-09-29
+
+- Researched recent/relevant gameplay references for real-time grid action, tactical telegraphs, weapon rhythm, and childlike physical-world adventure.
+- Added `docs/design/gameplay-reference-research.md`.
+- Updated `docs/production-checklist.md` with the Parallel Production Rule, lane board, and Milestone G for General Gameplay Design.
+- No implementation started. Next gates are M0.4, M0.5, and G0.2.
+
+## Full gameplay design V2 - 2026-09-29
+
+- Added `docs/design/full-gameplay-design-v2.md` with a complete start-to-end gameplay design, Mermaid graphs, ASCII room/world drawings, boss progression, unlock arc, child intervention arc, risks, and vertical-slice recommendation.
+- Updated `docs/production-checklist.md` so G0.2 now tracks approval of the full gameplay design V2.
+- No implementation started. This is pending owner review.
+
+## Game production aspects checklist - 2026-09-29
+
+- Added `docs/game-production-aspects-checklist.md`, a discipline-by-discipline checklist for gameplay, level design, enemy/boss design, art direction, animation, VFX, audio, UI/UX, narrative, technical architecture, tools, QA, and release.
+- Linked the aspects checklist from `docs/production-checklist.md`.
+- This supports parallel production while preserving plan/approval/review gates per task.
+
+## Clarified aspects checklist as parallel lanes - 2026-09-29
+
+- Owner correctly pointed out the aspects checklist still looked sequential because headings were numbered and the bottom used priority numbers.
+- Updated `docs/game-production-aspects-checklist.md`: removed numbered lane headings, added a parallel lane dashboard, clarified IDs are labels not order, and replaced Current Parallel Priorities with Current Active Parallel Gates.
+- Production model is now explicit: all disciplines can move together, but each task still requires its own approval gate.
+
+## Production aspect specs added - 2026-09-29
+
+- Owner clarified that checklists are not enough: every aspect needs a completion spec and hard requirements.
+- Added `docs/game-production-aspect-specs.md` defining purpose, required deliverables, completion requirements, and cannot-complete conditions for each lane: gameplay, level/world, enemy/boss, art, animation, VFX, audio, UI/UX, narrative, technical, tools, QA, and release.
+- Linked the spec from `docs/game-production-aspects-checklist.md` and `docs/production-checklist.md`.
+- From now on, no aspect can be marked accepted unless it satisfies its spec.
+
+## GP.1 + LD.2 draft spec - 2026-09-29
+
+- Added `docs/design/gp1-ld2-core-loop-first-chain-spec.md` as the combined approval spec for the core gameplay loop and first playable room chain.
+- Linked GP.1 and LD.2 in `docs/game-production-aspects-checklist.md` to that spec.
+- Status remains planning/draft. Nothing is approved or implemented until owner review.
+
+## ART.1 TECH.2 NAR.1 draft specs - 2026-09-29
+
+- Added `docs/design/art1-visual-target-spec.md` for the visual target lock gate.
+- Added `docs/design/tech2-room-transition-system-spec.md` for the room transition architecture gate.
+- Added `docs/design/nar1-story-outline-spec.md` for the story outline gate.
+- Updated `docs/game-production-aspects-checklist.md` so ART.1, TECH.2, and NAR.1 point to their draft specs.
+- These specs are pending owner review; no implementation started.
+
+## Expanded first-gate specs across production lanes - 2026-09-29
+
+- Added draft specs for EN.1, AN.1, FX.1, AU.1, UI.1, TOOL.2, and QA.1 under `docs/design/`.
+- Updated `docs/game-production-aspects-checklist.md` so those gates now point to their spec files and are marked planning.
+- These are review specs only; no implementation started.
+
+## Foundation second-layer specs - 2026-09-29
+
+- Added draft specs for LD.1 bedroom world layout, LD.3 room template, ART.2 tile palette list, GP.2 movement feel, GP.3 basic sword combat, and TECH.4 gameplay sandbox.
+- Updated `docs/game-production-aspects-checklist.md` so those gates point to the spec files and are marked planning.
+- Still no implementation started; this is expanding the reviewable planning set.
+
+## Gameplay and level design planning specs filled - 2026-09-29
+
+- Added draft specs for GP.4 skill system, GP.5 child intervention, GP.6 failure/checkpoints, GP.7 progression pacing.
+- Added draft specs for LD.4 room formula, LD.5 Chess Rug Hub, LD.6 district layout plans, LD.7 shortcuts and locks.
+- Updated `docs/game-production-aspects-checklist.md` so those rows point to their spec files and are marked planning.
+- Still planning-only; no implementation started.
+
+## Enemy and boss planning specs filled - 2026-09-29
+
+- Added draft specs for EN.2 Knight, EN.3 Bishop, EN.4 Rook, EN.5 Queen, EN.6 King, and EN.7 encounter recipes.
+- Updated `docs/game-production-aspects-checklist.md` so every enemy/boss row points to a spec file and is marked planning.
+- Enemy lane is now fully spec-drafted; still pending owner review and not implemented.
+
+## Art and animation planning specs filled - 2026-09-29
+
+- Added ART.3-ART.7 draft specs for district art targets, character sprite list, prop list, readability audit, and final polish pass.
+- Added AN.2-AN.6 draft specs for enemy animations, boss animation plans, weapon animations, child intervention animation, and AnimationTree QA.
+- Updated `docs/game-production-aspects-checklist.md` so art and animation rows point to spec files and are marked planning.
+- Still planning-only; no implementation started.
+
+## VFX audio UI narrative specs filled - 2026-09-29
+
+- Added draft specs for FX.2-FX.6, AU.2-AU.6, UI.2-UI.6, and NAR.2-NAR.6 under `docs/design/`.
+- Updated `docs/game-production-aspects-checklist.md` so those rows point to spec files and are marked planning.
+- Remaining unplanned areas are mainly technical support, tools/workflow, QA, and release. No implementation started.
+
+## Full production aspects board spec-backed - 2026-09-29
+
+- Added final support/release planning specs: TECH.3, TECH.5, TECH.6, TOOL.3-TOOL.5, QA.2-QA.5, REL.1-REL.5.
+- Updated `docs/game-production-aspects-checklist.md` so every production row now points to a spec file or accepted existing gate; no actionable row remains `not_started`.
+- Verified with `rg`: only the status-key definition contains `not_started`.
+- There are now 76 `*-spec.md` files under `docs/design/`.
+- Planning coverage is complete at the aspect/spec level; next step is owner review/approval of specs before implementation.
+
+## Production review dashboard added - 2026-09-29
+
+- Added `docs/production-review-dashboard.md` to group all specs into review batches instead of asking the owner to approve every spec blindly.
+- Linked the dashboard from `docs/production-checklist.md`.
+- Recommended next gate is Batch 1: GP.1, LD.2, LD.1, ART.1, NAR.1, TECH.2.
+- If Batch 1 is approved, next task is to create the `T1_WhiteKingsFall` production spec.
+
+## Batch 1 foundation review package - 2026-09-29
+
+- Added `docs/review-batch-1-foundation.md`, a single owner-facing approval package for GP.1, LD.2, LD.1, ART.1, NAR.1, and TECH.2.
+- Linked it from `docs/production-review-dashboard.md`.
+- Next owner decision: approve/revise Batch 1. If approved, next task is `T1_WhiteKingsFall` production spec.
+
+## Batch 2 first playable feel review package - 2026-09-29
+
+- Added `docs/review-batch-2-first-playable-feel.md`, a single owner-facing approval package for GP.2, GP.3, EN.1, FX.1, FX.2, AU.2, and UI.1.
+- Linked it from `docs/production-review-dashboard.md`.
+- If Batch 1 and Batch 2 are approved, next likely planning task is the gameplay sandbox production spec.
+
+## Batch 3 first chain production rules review package - 2026-09-29
+
+- Added `docs/review-batch-3-first-chain-production-rules.md`, a single owner-facing approval package for LD.3, ART.2, TOOL.2, TOOL.3, TOOL.4, QA.1, and QA.2.
+- Linked it from `docs/production-review-dashboard.md`.
+- If Batches 1-3 are approved, first concrete production planning can start with `T1_WhiteKingsFall` production spec.
+
+## Batch 4 vertical slice expansion review package - 2026-09-29
+
+- Added `docs/review-batch-4-vertical-slice-expansion.md`, a single owner-facing approval package for LD.4, LD.5, LD.6, LD.7, EN.2, GP.7, and QA.5.
+- Linked it from `docs/production-review-dashboard.md`.
+- Batch 4 defines the first demo expansion: Chess Rug Hub -> Toybox Knight district -> Knight Captain -> Rule Step -> return to hub.
+
+## Batch 5 full game expansion review package - 2026-09-29
+
+- Added `docs/review-batch-5-full-game-expansion.md`, a single owner-facing approval package for the remaining full-game lanes.
+- Linked it from `docs/production-review-dashboard.md`.
+- Batch 5 defines long-term guardrails for later bosses, advanced skills, child intervention, full art/animation/VFX/audio/UI/narrative work, technical support, QA, and release preparation.
+- Still planning-only; no Godot implementation started.
+
+## Production approval board added - 2026-09-29
+
+- Added `docs/production-approval-board.md` to separate owner approval state from implementation progress.
+- Linked it from `docs/production-checklist.md` and `docs/production-review-dashboard.md`.
+- The board lists all five review batches, dependencies, unlocks, owner review questions, and the approval command format.
+- Current state remains: no batch is approved, and no new Godot implementation should start until the owner approves the relevant batch or task.
+
+## Active plan realigned to approval workflow - 2026-09-29
+
+- Updated `task_plan.md` with a current production-planning overlay before the historical implementation plan.
+- The root plan now states that the project is in owner-review planning, lists the active planning files, shows all five batches as draft, and names Batch 1 review as the next owner-facing step.
+- Updated `docs/production-checklist.md` with the active five-batch approval path and linked approval board.
+- Verified edited files with `git diff --check`.
+
+## Owner review template added - 2026-09-29
+
+- Added `docs/owner-review-template.md` with structured forms for design review, editor scene review, gameplay feel review, art/animation review, audio review, and final approval wording.
+- Linked the template from `docs/production-approval-board.md`, `docs/production-checklist.md`, and `docs/design/tool5-review-checklist-template-spec.md`.
+- Expanded TOOL.5 completion requirements so feedback must identify approve/revise/block/accept decisions clearly.
+
+## Batch 1 approved and T1 room spec drafted - 2026-09-30
+
+- Owner approved Batch 1 Foundation after reviewing the active recommendation.
+- Marked Batch 1 approved in `docs/review-batch-1-foundation.md`, `docs/production-approval-board.md`, and `docs/production-review-dashboard.md`.
+- Marked Batch 1 gates approved: GP.1, LD.2, LD.1, ART.1, NAR.1, and TECH.2.
+- Added `docs/production/t1-white-kings-fall-production-spec.md` as the next owner-review room spec.
+- Updated `task_plan.md` and `docs/production-checklist.md` so the next step is review of the T1 spec, not implementation.
+- Cleaned stale "Batch 1 is still draft" guidance in the GP.1/LD.2 spec and review dashboard.
+- No Godot scene implementation started.
+
+## Act 1 flow and kid-room map drafted - 2026-09-30
+
+- Owner clarified the game should be split into acts, with Batch 1's foundation informing Act 1.
+- Added `docs/production/act-1-opening-to-knight-boss-flow-map.md`.
+- The Act 1 draft covers the full player route from White King's fall through Knight Captain, using a kid-room logical layout: chess rug hub, nearby toybox first district, visible future bedroom routes, and Rule Step as first boss reward.
+- Updated `task_plan.md`, `docs/production-checklist.md`, and `docs/production-approval-board.md` so Act 1 flow review is now part of the owner-facing planning path.
+- No Godot scene implementation started.
+
+## Act 1 revised to end before Toybox - 2026-09-30
+
+- Owner clarified that Toybox should not be part of Act 1. Act 1 needs its own tutorial arc and small boss first, similar to an action-adventure opening before the first major district.
+- Replaced `docs/production/act-1-opening-to-knight-boss-flow-map.md` with `docs/production/act-1-opening-to-first-boss-flow-map.md`.
+- New Act 1 route: T1 White King's Fall -> T2 Fallen Sword Tile -> T3 First Pawn Clash -> T4 Broken Rule Yard -> B1 Black Pawn Captain -> H1 Chess Rug Hub Opens.
+- Toybox/Knight Captain is now Act 2, with Rule Step kept as the Act 2/Knight reward instead of the tutorial boss reward.
+- Updated `task_plan.md`, `docs/production-checklist.md`, and `docs/production-approval-board.md` to point at the revised Act 1 plan.
+- No Godot scene implementation started.
+
+## T1 White King's Fall initial build started - 2026-09-30
+
+- Owner asked to redesign and start building.
+- Marked the revised Act 1 flow and T1 production spec approved for the initial build.
+- Added editable room scene `scenes/rooms/t1_white_kings_fall.tscn`.
+- Registered `t1_white_kings_fall` in `resources/world/world_graph.tres`.
+- Updated `scenes/main.tscn` so the game starts in T1 with the pawn parked at the approved starting cell.
+- T1 currently contains scene-owned TileMap, grid overlay, set dressing props, entry markers, and a future exit marker toward T2.
