@@ -416,3 +416,36 @@ June note).
   refactor changed nothing.
 - Fixture trees for a validator test belong under `user://`, written at run time: `tests/fixtures/` is scanned by the
   stamper and by `test_no_path_only_ext_resource`, and a deliberately broken `.tres` there would fail both.
+
+## Actor View and In-Cell Facts (M2 step 2, 2026-10-13)
+
+- `AnimationPlayer.speed_scale` is ignored once an `AnimationTree` drives the clips. Per-clip speed is a `TimeScale` node
+  inside the state (a small blend tree: Animation, TimeScale, output) and the parameter `parameters/<state>/TimeScale/
+  scale`; measured 0.52 s for a 1.0 s clip at scale 2 and 2.01 s at 0.5, and the `at_end` transition back to idle still
+  fires at the scaled end.
+- A state machine's `Start` edge may wait for an `advance_condition`: with two Start edges and one condition true, it
+  takes that one; with both false it stays in Start. That is how one graph serves the hero (boots asleep into `wake`)
+  and everyone else (boots awake into `idle`). Driving a fresh tree with `AnimationTree.advance()` from `_init()` is not a
+  faithful test (an `at_end` edge fires on the first call); tests wait real frames.
+- A suite or tool that runs `_init()`-time code has no running tree: a sprite is not "visible in the tree" and has no
+  global transform until a frame has passed. `ActorStage.boot` documents that its callers await one frame first. Autoloads
+  are null there too: a scratch script that reads `WorldState` in `_init()` dies and the process then hangs.
+- `Texture2D.get_image()` works headless (the dummy renderer keeps the picture), so the cell probe reads opaque pixels
+  without a renderer; `Image.get_used_rect()` is the drawn box of a picture, which is why a transparent border in the
+  owner's PNG does not count as drawing. The size table's box limits the whole PNG; the probe measures what is opaque.
+- Pivot arithmetic: a body that stands 14 px below the cell centre swings its bottom corners outside the cell when a
+  clip rotates `SpriteRoot` about the centre. A rotating clip must turn about the body's middle (position keys
+  x = r sin a, y = r - r cos a for a pivot r px below the centre); the wake clip is authored for the 20 px hero (r = 4).
+- A held weapon is the one thing that cannot be both readable and inside a 32 px cell at its icon size (24 x 56 to
+  28 x 64): it is drawn at 0.16 scale. Reach is shown by the board overlay, not by the length of the picture.
+- The generated chess family was drawn at two world pixels per block (pawn 36 x 40, knight 52 x 64: taller than the
+  cell). At one pixel per block the pawns fit; the knight (26 x 32) could not, and a half-scale (13 x 16) would be lower
+  than the pawn, which the chess ladder forbids. Retracing the same glyph on fewer rows is the generator's own sanctioned
+  way to change the knight; the old arrays are kept in its comment.
+- A placeholder swap needs the manifest rule "provably still the old stand-in": `PlaceholderManifest.seed_decision`
+  replaces a listed file only while its sha256 equals the recorded one, so the owner's art is never overwritten.
+- `tests/architecture/test_pieces_inside_cell.gd` leaves the held weapon out of clips other than the hero's attack: a hurt
+  clip squashes the whole actor 12 % and shakes it 2 px, which pushes a 13 px spear tip about a pixel over the edge for
+  a few milliseconds. If that ever matters, lower `weapon_held_scale`, not the margin.
+- The hero's pivot and the 14 px base line are the table's numbers: if the owner changes the hero's height, the wake
+  clip's position keys (authored for a 20 px body) need a new pivot; the in-cell test will say how far out it goes.

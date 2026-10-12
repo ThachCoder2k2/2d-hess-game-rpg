@@ -1077,3 +1077,72 @@ branch. No gameplay rule changed: movement, combat timings and AI are untouched.
   `test_actor_collapse_golden`; `VisualDefinition` body texture and anchor; the in-cell piece size table, the scene
   geometry for the owner's 2026-10-12 decision (a piece is smaller than its cell), the chess placeholder bodies and
   `tools/render_actor_preview.gd`; the `/new-enemy` rewrite; the exported-build index.
+
+
+## M2 step 2 - one actor view, and the pieces inside their cells - 2026-10-13
+
+Second of three M2 steps, branch `base/m2-2` from `base/m2-1`. Implements the collapse of the actor scenes AND the
+owner's decision of 2026-10-12 ("a piece is smaller than its cell"; `docs/owner-decisions.md`), which reverses
+`task_plan.md` phase 66 (pieces 1.5 cells tall, the top half in the row above). No gameplay rule changed: movement,
+combat timings and AI are untouched; the six deterministic dumps still say the same about every entity and cell.
+
+- **The golden oracle comes first** (`tools/actor_dumper.gd`, `tools/dump_actor_golden.gd`,
+  `tests/baselines/actor_collapse_golden.txt`, `tests/architecture/test_actor_collapse_golden.gd`): how every old
+  actor scene looked (nodes with class, script, visibility, transform, texture; every ActorView value; clips; graph
+  states and transitions; the entity `EcsBoot` bakes) captured from `base/m2-1` before anything moved, plus a
+  fingerprint of the head of each world dump. `--write` refuses to overwrite it. Mutation checks: a telegraph colour off
+  by 0.01 and `max_courage = 4` each fail it by name.
+- **One actor view.** `presentation/views/actors/actor_view_base.tscn` holds the nodes, the union of the hero's and the
+  enemies' clips (idle, step, hurt, telegraph, attack, defeat, wake) and one graph. `player`, `black_pawn`,
+  `knight_enemy` and `bishop_enemy` are thin inherited scenes (13 to 20 lines each; `test_one_actor_view` holds that and
+  that they own no sub-resource). `enemy_base.tscn` was `black_pawn.tscn` byte for byte and is deleted (its six labels
+  continue as black_pawn's, in `tests/label_renames.txt`). Two `Start` edges wait for a scene-set condition: the base
+  boots awake, the hero's scene boots asleep into `wake`. Clip differences between pieces are data:
+  `VisualDefinition.clip_speed_scales`, applied by `ViewSyncSystem` to a `TimeScale` node that every graph state plays
+  its clip through (`AnimationPlayer.speed_scale` does nothing under an `AnimationTree`; measured). Knight and bishop:
+  idle 1.25, step 0.9, telegraph 1.1667; hero idle 1.125.
+- **The golden's intended differences, line for line:** `Start -> idle` (pawn, knight, bishop) and `Start -> wake`
+  (hero) gain their `boots_awake` / `boots_asleep` condition; the hero's `show_facing_mark` and `show_health` go true to
+  false and its two pip textures null to the pip pictures (it inherits the arrow and pips and shows neither); six new
+  hidden hero nodes (`TelegraphAura`, `FacingArrow`, `HealthPips`, `Pip0..2`); the bishop's body texture is its own;
+  geometry (below). Every baked component field of every actor is identical.
+- **Dump baselines.** Only the hero's six new nodes and five texture lines in all six rooms (`[nodes]` 31 to 37,
+  31 to 37, 39 to 45, 76 to 82, 76 to 82, 24 to 30; `[textures]` plus 5 each); nothing before `[nodes]` moved (the golden
+  fingerprints that head: the per-room entity set and cells equal the pre-port dump). The in-cell commit changed none.
+- **In-cell size table** (`schema/feel/piece_size_table.gd`, `piece_size.gd`; `content/feel/piece_sizes.tres`): per kind
+  a body box, a base line and a footprint in cells. Pawn 18 x 22, knight, bishop and rook 20 x 24, queen 22 x 26, king
+  22 x 28, every base line 14 px below the cell centre, 2 px margin on the 32 px cell (a king reaches exactly 2 px from the
+  top). `validate()` holds the margin, a kind listed once and pawn < knight, bishop, rook < queen < king. A boss is a row
+  with a bigger footprint. `ContentDb.piece_sizes()`; a kind may live in a folder with another name (`ContentKind`).
+- **Geometry.** Body pictures drawn at scale 1 from the table (`PieceSizeTable.body_top_left`; `ViewSyncSystem` writes it
+  from `VisualDefinition.piece_type/body_texture/anchor_offset`). Pips (4 px) along the top edge, arrow (6 px) on the
+  facing side 10 px out, held weapon at 0.16 scale from the cell centre, aura 22 to 27 px (the clip owns its size now),
+  hops and shakes capped at 2 px, the wake clip re-authored to turn about the body's middle. Everything an actor draws is
+  within 14 px of the cell centre. Row-based depth kept.
+- **Art.** `tools/generate_chess_sprites.gd`: one block is one world pixel; it reads the size table and refuses a piece
+  that does not fit; added the black pawn (the pawn's rows in obsidian) and the bishop (placeholder shape). The knight
+  could not honour its 20 x 24 box (26 x 32 at one pixel per block, and no whole-number scaling fits) so the SAME glyph was
+  retraced on 15 rows with `tools/trace_knight_glyph.py --rows 15` (`--rows 21` still reproduces the approved arrays,
+  kept in a comment). That is an edit to an owner-approved shape, recorded in `THIRD_PARTY_NOTICES.md` and the commit.
+  `tools/seed_placeholders.gd` may now replace an earlier stand-in (never the owner's file; `PlaceholderManifest.
+  seed_decision` is tested): the three M1b bodies were replaced in place (hero 18 x 20, black pawn 18 x 20, knight 20 x 24)
+  and the bishop got its own (18 x 22); `content/_placeholders.json` has 26 entries.
+- **Measured.** Every actor, facing every way, armed (spear, ruler, sword, pencil) and telegraphing, at every key and every
+  25 ms of every clip it plays (599 poses): drawn inside the cell, 2.0 px from the edge at the narrowest at rest (the base
+  line), at least 0.6 px in motion. Hero and black pawn bodies are 14 x 20 drawn pixels, bishop 14 x 22, knight 18 x 24.
+- **The preview** `tools/render_actor_preview.gd` (headless, CPU compositing, no renderer):
+  `assets/_generated/previews/pieces_in_cells.png`, 1336 x 568, four rows by nine cells at 4x, grid lines and the margin
+  square; the bootstrap script draws it. A real-renderer boot of T1 and T4 (windowed, `root.get_texture()`) confirmed the
+  same picture in the running game: pieces stand inside their 64 px cells (2x window), the hero lying in `wake` for its
+  first 1.25 s.
+- **Tests added** (35 suites, was 30): `test_actor_collapse_golden`, `test_one_actor_view`, `test_piece_size_table`,
+  `test_pieces_inside_cell`, `test_actor_preview_tool`. `test_audio_buses` now expects the one actor AudioPlayer.
+  `test_content_db_detects_problems` also proves the visual cross-reference check. Mutation checks: an arrow 14 px out
+  fails `test_pieces_inside_cell` by name.
+- **Baseline labels:** 235 of 235 still PASS (9 through `label_renames.txt`: the 3 of step 1 and the 6 of `enemy_base`).
+- **Verification.** Both `--self-test` runs 0 failures; `run_all_tests.py --strict` 35 suites, 0 failed, 0 warnings,
+  GREEN; `stamp_uids.gd --check` CLEAN; `git diff --check` clean. Every commit was green on its own.
+- **Not done.** Step 3 (and the integrator): `task_plan.md`, the rest of the M2 acceptance sweep, merging. A bishop or
+  knight redrawn by the owner replaces the placeholders by overwriting the PNGs. The other black pawn definitions
+  (armed, backstep, charging, captain) share `pawn_recruit/body.png` through `pawn_compatibility.tres`: one picture per
+  enemy is a visual.tres edit away. Rook, queen, king and boss bodies do not exist yet (rows of the table, not art).

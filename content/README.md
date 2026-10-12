@@ -31,7 +31,8 @@ nothing you change here touches code.*
 |---|---|
 | Chỉnh máu, tốc độ, AI hoặc đòn đánh của một enemy | `enemies/<id>/enemy.tres` và các `.tres` cạnh nó (`movement`, `decision`, `unarmed_attack`, `visual`); dùng chung: `enemies/_shared/` |
 | Chỉnh cảm giác con tốt (thời gian bước, courage, invulnerability, hồi chiêu kỹ năng) | `player/player.tres` (một file) |
-| Đổi hình của con tốt hoặc một enemy | ghi đè `player/body.png` hoặc `enemies/<id>/body.png` |
+| Đổi hình của con tốt hoặc một enemy | ghi đè `player/body.png` hoặc `enemies/<id>/body.png` (vẽ ở tỉ lệ 1:1, không lớn hơn hộp của loại quân trong `feel/piece_sizes.tres`) |
+| Đổi quân cờ to nhỏ thế nào trong ô (quân phải nhỏ hơn ô) | `feel/piece_sizes.tres` (hộp, vạch đứng và cỡ chân đế của từng loại quân) |
 | Đổi icon kiếm, bút chì, vũ khí | ghi đè `skills/<id>/icon.png` hoặc `pickups/<id>/icon.png` |
 | Chỉnh bố cục phòng, chỗ đứng enemy, cửa | mở `rooms/<id>/room.tscn` trong Godot và kéo node |
 | Đổi hình nền phòng T1/T2 | ghi đè `rooms/<id>/background.png` |
@@ -44,14 +45,15 @@ nothing you change here touches code.*
 *EN: The pawn's feel (step time, Courage, invulnerability, skill cooldown): `player/player.tres`, one file.
 Enemy stats, AI and attacks: `enemies/<id>/enemy.tres` and the `.tres` beside it (shared pieces in
 `enemies/_shared/`). Pictures: overwrite `player/body.png`, `enemies/<id>/body.png`, `skills/<id>/icon.png`,
-`pickups/<id>/icon.png`, `rooms/<id>/background.png`. Room layout: open `rooms/<id>/room.tscn`. Book pages:
+`pickups/<id>/icon.png`, `rooms/<id>/background.png`. How big each kind of piece is inside its 32 px cell (a piece
+is smaller than its cell; a picture may be no larger than the box of its kind): `feel/piece_sizes.tres`. Room layout: open `rooms/<id>/room.tscn`. Book pages:
 `rules/<id>/page.tres`. Difficulty: `difficulty/standard.tres`. Which room connects to which:
 `world/world.tres`. Tile kits: `tilesets/<kit>/`. Sounds and music: overwrite the same-named file in
 `../assets/sfx/` or `../assets/music/`.*
 
 Bảng đầy đủ hơn, kèm những việc sẽ có ở các milestone sau (kỹ năng, truyện, boss, ngôn ngữ), nằm trong
-`../docs/OWNER_GUIDE.md` mục 5. Các thư mục trong kế hoạch mà chưa có ở đây (`story/`, `audio/`, `feel/`,
-`progression/`, `ui/`, `bosses/`, `props/`) sẽ xuất hiện cùng milestone cần chúng.
+`../docs/OWNER_GUIDE.md` mục 5. Các thư mục trong kế hoạch mà chưa có ở đây (`story/`, `audio/`,
+`progression/`, `ui/`, `bosses/`, `props/`; `feel/` mới có bảng cỡ quân) sẽ xuất hiện cùng milestone cần chúng.
 *The fuller table, including what later milestones add (skills, story, bosses, languages), is
 `../docs/OWNER_GUIDE.md` section 5. Folders the plan names that do not exist yet (`story/`, `audio/`,
-`feel/`, `progression/`, `ui/`, `bosses/`, `props/`) appear with the milestones that need them.*
+`progression/`, `ui/`, `bosses/`, `props/`; `feel/` has only the piece size table so far) appear with the milestones that need them.*

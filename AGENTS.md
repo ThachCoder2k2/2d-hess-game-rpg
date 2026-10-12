@@ -64,7 +64,8 @@ layer may name which (`tests/architecture/test_dependency_edges.gd` enforces it)
   (test-enforced). A folder name is the id; a leading underscore (`_shared`) is not an id.
   `enemies/<id>/` (`enemy.tres`, `body.png`, the enemy's own sub-resources, `_shared/` for the pieces
   several enemies use), `rooms/<id>/room.tscn`, `rules/<id>/page.tres`, `skills/<id>/`,
-  `pickups/<id>/`, `player/`, `difficulty/`, `world/world.tres`, `tilesets/<kit>/`.
+  `pickups/<id>/`, `player/`, `difficulty/`, `world/world.tres`, `tilesets/<kit>/`,
+  `feel/piece_sizes.tres` (how big each kind of piece is inside its cell).
   `content/_placeholders.json` lists which art and audio are still stand-ins.
 - `schema/` — Resource classes (`EnemyDefinition`, `MovementConfig`, `AttackPattern`, ...), one
   class per file, no behaviour beyond `validate()`-style checks.
@@ -72,8 +73,8 @@ layer may name which (`tests/architecture/test_dependency_edges.gd` enforces it)
   (`ecs_components.gd`, frozen), `systems/<phase>/`. No art, prose or tuning numbers.
 - `authoring/` — things dragged into a scene: `entity_components/` (`EntityComponent` nodes),
   `markers/`, `room_encounter`, and the baker (`ecs_boot.gd`, `ecs_actor_factory.gd`). No logic.
-- `presentation/` — how the world is shown: `views/` (`ActorView`, pickup views, the five actor
-  scenes in `views/actors/`), `ui/hud/`, `ui/codex/`, `board/`, `camera/`, `audio/`. Reads events;
+- `presentation/` — how the world is shown: `views/` (`ActorView`, pickup views, and
+  `views/actors/`: `actor_view_base.tscn`, the one actor view, plus the thin scenes inheriting it), `ui/hud/`, `ui/codex/`, `board/`, `camera/`, `audio/`. Reads events;
   never decides.
 - `shell/` — the game around the game: `game_root.tscn/.gd` (the one game scene and its bridge)
   and `save/world_state.gd`.
@@ -331,7 +332,9 @@ Gate 3: Tutorial flow
 - The human owner confirms it teaches without feeling slow.
 
 Gate 4: Enemy family
-- Pawn, Knight, Bishop, Rook, Queen and King have Resources and actor scenes.
+- Pawn, Knight, Bishop, Rook, Queen and King have Resources, a `piece_sizes.tres` row and a body picture
+  (an actor scene only when the piece needs its own telegraph colour or facing mark; otherwise the
+  one `actor_view_base.tscn` with `definition` set).
 - Each enemy has a readable attack identity and editor-tunable timing.
 - Each enemy is tested in a simple room before being mixed with others.
 
