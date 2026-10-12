@@ -97,10 +97,30 @@ func actor_scene(actor_id: StringName) -> String:
 	return _existing_resource("res://objects/actors/%s.tscn" % actor_id)
 
 
+## The SfxManager autoload's scene (its player pool is built in code).
+func sfx_manager_scene() -> String:
+	return _existing_resource("res://objects/audio/sfx_manager.tscn")
+
+
 # --- Directories (list them with `list_files`) ---
 
 func rooms_directory() -> String:
 	return _existing_directory("res://scenes/rooms")
+
+
+## Entry, room and UI scenes (the `scenes/` folder).
+func scenes_directory() -> String:
+	return _existing_directory("res://scenes")
+
+
+## Reusable prefabs: actors, pickups, audio, and so on (the `objects/` folder).
+func objects_directory() -> String:
+	return _existing_directory("res://objects")
+
+
+## The actor scenes: player, pawns, knight, bishop, and so on.
+func actors_directory() -> String:
+	return _existing_directory("res://objects/actors")
 
 
 func enemy_definitions_directory() -> String:
