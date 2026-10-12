@@ -471,16 +471,37 @@ June note).
   runner.
 - `dev_sandbox` (the room the plan's M2 "owner can try" names) is an M6 deliverable; until then the only place to play a new enemy
   is a real room.
-- `VisualDefinition.telegraph_color`, `impact_color` and `weapon_anchor` exist in the schema and in the `.tres` files, and nothing
-  reads them: the telegraph tint is `ActorView.telegraph_modulate` and the hand is `ActorView.weapon_anchor`. Two homes for one
-  value, with different numbers (`pawn_compatibility.tres` says 0.35/0.13/0.15, `black_pawn.tscn` says 0.85/0.31/0.35). Tuning the
-  `.tres` fields changes nothing. Decide later: wire them, or delete them.
-- `tools/render_actor_preview.gd` draws a fixed list of rows (`ACTORS`: the hero and the player, black pawn, knight and bishop scenes),
-  while `test_pieces_inside_cell` boots every enemy folder through `actor_view_base.tscn`. So the picture is for the owner's eye and
-  the test is the gate; an enemy with its own body will not appear in the picture until a row is added (a row needs only a scene or
-  a `definition` passed to `ActorStage.boot`, and `test_actor_preview_tool` reads the row count from the same constant).
-- The preview picture's size is `(46 + 9 x 32) x 4` by `(14 + 4 x 32) x 4` = 1336 x 568: a name strip, nine cells, a header strip and
-  four rows, each cell 32 px, at whole-number 4x.
+- **Resolved in the M2 fix round:** `VisualDefinition` had five fields nothing read (`telegraph_color`, `impact_color`,
+  `weapon_anchor`, `hurt_animation`, `defeat_animation`); they are deleted from the class and the three `.tres` that set them. The
+  tint is `ActorView.telegraph_modulate` and the hand is `ActorView.weapon_anchor`; a field is added when a system reads it.
+- `tools/render_actor_preview.gd` now writes two pictures: `pieces_in_cells.png` (the hero and the three thin scenes, the
+  `ACTORS` rows) and `pieces_placed_in_rooms.png` (one row per actor a room scene places, as placed: seven today). An enemy
+  that is only a `definition` is a row of the second picture once a room places it. `test_actor_preview_tool` reads the sizes
+  from the tool's constants.
+- The first picture is `(46 + 9 x 44) x 4` by `(14 + 4 x 44) x 4` = 1768 x 760: a name strip, nine cells of 32 px each with a
+  6 px gutter on every side (pitch 44), a header strip and four rows, at whole-number 4x. Grid and margin lines are laid only
+  on background pixels, so they sit under the pieces; a piece pixel in the margin band or outside the cell is magenta and counted.
+- **The art spec's canvas.** The owner's request list (`docs/assets`, on game-base) asks for every piece on a 32 x 32 canvas
+  (`block_px` 2: chunky 2 px art pixels), anchor (16,30), body boxes pawn 18 x 22 (top y 8), knight, bishop, rook 20 x 24 (y 6),
+  queen 22 x 26 (y 4), king 22 x 28 (y 2): the same numbers as `piece_sizes.tres`, with the base rim 14 px below the cell
+  centre. The game accepts that canvas (and a tight picture): `PieceSizeTable.cell_canvas_base_row` (30), `box_on_cell_canvas`,
+  `picture_problems`. A canvas lands exactly on the cell, so `BodySprite` in the base scene is (-16,-16) for every picture.
+- **Measuring in the cell's frame.** `ActorCellProbe` used the view's own inverse transform, which cancels a scale and made the
+  B1 captain at 1.18x look exactly as big as its picture. It now measures from the cell (the view's position only).
+- **A hit's drawn shove** (`Health.recoil`, 4 px) moved the whole piece and crossed the cell edge for about 57 ms; the drawn
+  offset is limited to the size table's margin (a piece touches the edge, never crosses it). `Health.recoil` is unchanged.
+- **Pips and tall pieces.** The pip row (4 px, on the top margin line, -14 to -10) clears the head of a pawn, knight, bishop and
+  rook (a knight's head touches it) and cannot clear a queen (26 px) or a king (28 px): a king's box fills the 28 px the margin
+  leaves. Their pips are drawn over the crown; `KINDS_WHOSE_PIPS_OVERLAP_THE_CROWN` in `test_pieces_inside_cell` names them, so a
+  boss row tall enough to reach the pips fails until the owner decides.
+- **Open between the two documents (game-base `docs/assets` and the M2 scene):** telegraph aura files of 40, 56 and 96 px
+  (against 22 to 27 px in the scene), a facing arrow 8 x 8 in a 16 x 16 canvas (about 6 px in the scene), a pip row 24 px wide
+  (14 px in the scene). The owner's rule says nothing a piece shows leaves its cell; whoever merges picks one set.
+- **Ladder.** The table puts knight, bishop and rook on one rung and the drawn bishop is 22 px against the knight's 24; a
+  real set has the bishop taller. A design call for the owner (split the rung and redraw, or keep).
+- ContentDb now reports a reference Godot drops without a word (a resource of the wrong class loads as null with no engine
+  message): `validate()` reads the `[resource]` section of each `.tres` for `name = ExtResource(...)` and compares with the
+  loaded value, and follows resource files those properties name.
 - Moving a file is the only thing that edits `tools/move_res_log.tsv`; M2 added files and deleted one and renamed none (`git diff -M`
   shows no rename), so the log has no M2 line.
 - A scratch copy of a checkout for a destructive walk must be a `git clone`, not `cp -R`: a worktree's `.git` is a file that points at

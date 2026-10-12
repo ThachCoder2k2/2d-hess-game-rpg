@@ -1238,3 +1238,35 @@ nodes and five textures (the collapse) per room.
   owner's). The exported-build fallback `content/_index.json` (no export to try). The sprite-sheet block and sound ids in
   `VisualDefinition` (Tier B). The preview picture's rows are fixed (hero, black pawn, knight, bishop). The five dependency edges
   and six room references of M1b are still the owner's to decide.
+
+## M2 fix round after the review - 2026-10-13
+
+The independent review of `base/m2-3` accepted M2 with fixes: two majors and six minors. Branch `base/m2-fix` (from `base/m2-3`),
+ten commits (the last is this record), the strict runner green after each.
+
+- **Major: the one scaled actor.** The B1 Black Pawn Captain at 1.18x drew 0.52 px past its cell, and nothing could see it (the
+  test booted enemies on the base scene at scale 1; the probe measured in the view's own frame, which cancels a scale).
+  `ActorCellProbe` now measures in the cell's frame, `ActorStage.boot_placed` boots a room's actor as placed, and
+  `test_pieces_inside_cell` measures every actor of every room (7 today) and asserts scale 1 / unturned by room and name: before the
+  fix it failed 17 times, all on the captain. The captain lost its scale (`dump_b1.txt`: that node line loses `scale=(1.18,1.18)`,
+  nothing else moved).
+- **Major: the owner's PNG convention.** `docs/assets` (game-base, merged cleanly by `git merge-tree`) asks for 32 x 32 canvases,
+  base rim on row 30, bodies of 18 x 22 to 22 x 28 inside; M2 counted the whole PNG against the box and would have failed the
+  owner's first file (and stood it 2 px too high). The table gained `cell_canvas_base_row` (30), `box_on_cell_canvas`,
+  `picture_problems`; a canvas is accepted when its drawn pixels lie inside the box on it and is placed exactly on the cell; a tight
+  picture still works. The generator writes the four stand-ins as canvases (same pixels, same screen pixels, the preview is
+  unchanged), `BodySprite` is (-16,-16) in the base scene and the knight and bishop thin scenes lost their position override,
+  `seed_placeholders` rows take a `revision` so a redrawn stand-in replaces the first drawing once (never an owner's file).
+  Tried by hand first: a real spec canvas as `pawn_recruit/body.png` passed `validate_all` and every drawn-margin check, and only the
+  thin scene's static position went red, which is why that number was removed from the scenes.
+- **Minor, fixed.** Hit shove limited to the margin (137 failures without it); the preview has a gutter, lines under the pieces, magenta
+  for crossings, a count, a `--stretch` demo and a second picture of the placed actors; the pip row is held against every kind's head
+  and names queen and king as overlapping; five unread `VisualDefinition` fields deleted and the scene's repeated numbers held
+  equal by the test; `ContentDb.validate()` reports a reference of the wrong class.
+- **Minor, not changed (a design call or an owner's yes).** Bishop 22 px against knight 24 px on one rung of the ladder. The retraced
+  knight and the new black pawn and bishop need the owner's approval. The aura, arrow and pip sizes of `docs/assets` against the scene
+  (see `findings.md`). The trailer on every commit is `Co-Authored-By: Claude Sonnet 5.5` (the session's attribution), not the
+  `Opus 5.5` line the task text named.
+- **Verification.** `python3 tools/run_all_tests.py --strict`: 35 suites, 0 failed, 0 warnings, GREEN, baseline labels 235 of 235
+  (9 through `label_renames.txt`); `--self-test` and `move_res.py --self-test` 0 failures; `stamp_uids.gd -- --check` CLEAN;
+  `git diff --check` clean. Tag `m2-done` moved to the last commit of this branch.
