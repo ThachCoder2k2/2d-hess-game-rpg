@@ -127,3 +127,4 @@ scenes/rooms/h1_chess_rug_hub.tscn	content/rooms/h1_chess_rug_hub/room.tscn
 resources/world/world_graph.tres	content/world/world.tres
 assets/sprites/generated/hero_pawn_unarmed.png	content/player/body.png
 assets/sprites/generated/hero_pawn.png	content/player/icon.png
+assets/art/pieces	assets/map_pieces

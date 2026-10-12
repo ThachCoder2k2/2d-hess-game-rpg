@@ -17,7 +17,7 @@ assets/_generated/
 # script draws them) and now live, tracked, in content/<kind>/<id>/body.png|icon.png
 # and assets/ui/actor_view/. Hand-drawn art never goes in an ignored folder.
 
-# NOT ignored, on purpose: assets/art/pieces/. That is hand-drawn source art.
+# NOT ignored, on purpose: assets/map_pieces/. That is hand-drawn source art.
 # Nothing regenerates it and losing it loses the work.
 
 # Parallel agent worktrees (git worktree add), never part of the project.

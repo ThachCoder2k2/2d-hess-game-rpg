@@ -55,7 +55,7 @@ const TILE_DIR := "res://assets/_generated/tiles"
 ##
 ## A piece is replaced on its own. Draw the bed, leave the other eighteen
 ## procedural, and the room still builds and still checks its routes.
-const PIECE_ART_DIR := "res://assets/art/pieces"
+const PIECE_ART_DIR := "res://assets/map_pieces"
 
 ## The room's shell is drawn on the same terms as a piece: "the_room.png" and
 ## "the_room_height.png", the whole map at one pixel per block, always at the

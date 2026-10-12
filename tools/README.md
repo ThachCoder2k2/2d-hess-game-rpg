@@ -32,8 +32,8 @@ Everything a generator writes lives under `assets/_generated/` (gitignored, neve
 `chess/`, `tiles/`, `maps/`, `rooms/` and `piece_templates/` (the paintable templates
 `generate_demo_map.gd` re-exports on every run). The output folder is one `const` at the top of
 each generator (`OUT_DIR`, `OUTPUT_DIR`, `TILE_DIR`, `PIECE_TEMPLATE_DIR`). Hand-drawn source art
-is never written by a tool: `assets/art/pieces/` and the 12 tracked PNGs directly in
-`assets/sprites/generated/` (which move to `content/<kind>/<id>/body.png` in a later M1b step).
+is never written by a tool: `assets/map_pieces/` and the 12 tracked sprites that used to sit in
+`assets/sprites/generated/` (now `content/<kind>/<id>/body.png|icon.png` and `assets/ui/actor_view/`).
 
 A tracked scene that names a generated PNG (today only the T1 and T2 room backgrounds) carries that
 PNG's uid. Godot 4.6.3 derives the uid of a freshly imported file from the project name and the

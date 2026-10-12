@@ -529,7 +529,7 @@ Loading is deliberately strict too (`:1667`): art without a height map, or a
 height map without art, is reported rather than half-applied, and a mismatched
 pair of sizes is reported rather than stretched.
 
-**Nothing in either script ever writes to `assets/art/pieces/`.** Templates go to
+**Nothing in either script ever writes to `assets/map_pieces/`.** Templates go to
 `assets/_generated/piece_templates/` and are overwritten every run; your work goes in
 the other folder and is never touched.
 

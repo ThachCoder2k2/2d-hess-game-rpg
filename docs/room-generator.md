@@ -168,7 +168,7 @@ them equal and every shortcut in the room stops being a shortcut.
 
 ## Hand-drawn art
 
-A piece is replaced by dropping **two** PNGs into `assets/art/pieces/`:
+A piece is replaced by dropping **two** PNGs into `assets/map_pieces/`:
 
 ```
 bed.png          the art,     one pixel per block
@@ -188,7 +188,7 @@ are identical to what the generator draws, so you paint over them rather than
 starting from nothing — and so you replace one piece at a time while everything
 else keeps building and the routes keep being checked.
 
-**Nothing in either script ever writes to `assets/art/pieces/`.**
+**Nothing in either script ever writes to `assets/map_pieces/`.**
 
 ## The things that stop the build
 
@@ -220,4 +220,4 @@ the only corridor, and a wardrobe that sealed the floor in front of the door.
 | change how far a pawn climbs | `MAX_STEP_IN_INCHES` / `MAX_DROP_IN_INCHES` |
 | add a colour or material | `MATERIALS` in the tiles script, then a character in `CODE_BY_MATERIAL` |
 | change what must be reachable | `REQUIRED_ROUTES` |
-| draw a piece by hand | nothing — drop two PNGs in `assets/art/pieces/` |
+| draw a piece by hand | nothing — drop two PNGs in `assets/map_pieces/` |

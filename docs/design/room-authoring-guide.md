@@ -148,7 +148,7 @@ and in the new room add the entry it names and an exit back. (4) Open the game a
   `assets/_generated/` (`chess/`, `tiles/`, `maps/`, `rooms/`, `piece_templates/`) is rebuilt by
   `tools/generate_*.gd` and is gitignored (run `tools/bootstrap_worktree.sh` on a fresh checkout).
   PNGs directly in `assets/sprites/generated/` are hand-kept source art and are tracked.
-  `assets/art/pieces/` is hand-drawn source art. `assets/concept-art/` is reference only, never
+  `assets/map_pieces/` is hand-drawn source art. `assets/concept-art/` is reference only, never
   production art. `assets/tiles/` holds the tile sheets, `assets/sfx/` and `assets/music/` the sounds.
 * **Sidecars are part of the asset.** Commit each `.import` file with its asset and each `.uid` with
   its script.

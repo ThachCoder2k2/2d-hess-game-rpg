@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://d3q5smxod37j"
-path="res://.godot/imported/bed.png-f3471ae4d6e79fe459f97070c66dff6f.ctex"
+uid="uid://dka70qj1dsc8x"
+path="res://.godot/imported/bed_height.png-b79ebfdaaf5bf0aa8664c4dc90a7129b.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/art/pieces/bed.png"
-dest_files=["res://.godot/imported/bed.png-f3471ae4d6e79fe459f97070c66dff6f.ctex"]
+source_file="res://assets/map_pieces/bed_height.png"
+dest_files=["res://.godot/imported/bed_height.png-b79ebfdaaf5bf0aa8664c4dc90a7129b.ctex"]
 
 [params]
 
