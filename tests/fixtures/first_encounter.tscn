@@ -6,7 +6,7 @@
 [ext_resource type="Resource" uid="uid://d0qxvb8xdjbov" path="res://content/pickups/pencil_spear/pencil_spear.tres" id="4"]
 [ext_resource type="Resource" uid="uid://po15384k0voh" path="res://content/pickups/ruler_blade/ruler_blade.tres" id="5"]
 [ext_resource type="Resource" uid="uid://corglo0dhnjbc" path="res://content/enemies/pawn_armed/enemy.tres" id="7"]
-[ext_resource type="Resource" uid="uid://dy60n24xkjpgl" path="res://resources/objectives/first_encounter_clear_all.tres" id="9"]
+[ext_resource type="Resource" uid="uid://dy60n24xkjpgl" path="res://tests/fixtures/first_encounter/objective.tres" id="9"]
 [ext_resource type="PackedScene" uid="uid://cd0pt6lb10mqe" path="res://presentation/views/weapon_pickup.tscn" id="10"]
 [ext_resource type="PackedScene" uid="uid://dy23jflk5mhj" path="res://presentation/views/actors/black_pawn.tscn" id="11"]
 [ext_resource type="PackedScene" uid="uid://dg1d0ijcmumbp" path="res://presentation/views/actors/knight_enemy.tscn" id="12"]
