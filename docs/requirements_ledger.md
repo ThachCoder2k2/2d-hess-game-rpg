@@ -13,6 +13,7 @@ Written in M1a from section 1.5 of `docs/game-base-plan.md` (v1.1, branch `game-
 - **Milestone**: the `docs/game-base-plan.md` §15 milestone that delivers or keeps it. `exists` means the current tree already does it; `n/a` marks a requirement the base does not build (a waiver or a decision replaced it).
 - **Verified by**: the test, baseline labels, tool or checklist that proves it. `n/a` marks a requirement the base does not build.
 - **Status**: `covered`; `amended D-xx` (or `T-x`), meaning the plan deliberately changed the requirement and the decision says how; `deferred W`, an owner-waivable deferral listed in plan §1.2.
+  `partial: <what is missing>` is not covered: the plan answers the requirement and something verifies part of it, but the named gap is still open (a content defect, a Tier B file that does not exist, a rule only review can check). The test fails a `partial` row that does not name its gap and prints how many rows are partial.
 
 ## Updating the ledger
 
@@ -134,7 +135,7 @@ Written in M1a from section 1.5 of `docs/game-base-plan.md` (v1.1, branch `game-
 | 107 | m | world | World graph as one resource; every door resolves to a real zone and entry (tested) | §7.1, §7.5 | M5 | test_world_graph | covered |
 | 108 | m | world | Exit data: target_zone, target_entry, requires_flag, locked_message, one_way (only requires_room_clear exists) | §7.1, §7.5 | M5 | test_world_graph | covered |
 | 109 | m | world | Fade-swap transition and spawn at the target entry | §9.1 | exists; M1a | test_bridge_travel | covered |
-| 110 | m | world | Backtracking works unless intentionally blocked | §9.1 | exists; M1a | test_bridge_travel | covered |
+| 110 | m | world | Backtracking works unless intentionally blocked | §9.1 | exists; M1a | test_bridge_travel (calls _travel_to directly) | partial: T2's Exit_To_T1 sits on a solid wall tile, so the hero cannot walk back to T1 yet (content fix, see findings.md) |
 | 111 | m | world | Each locked exit explains why it is locked (code has one hard-coded captain message for every lock) | §5.7 | M5 | test_world_graph | covered |
 | 112 | m | world | Locks are visible before they open and tied to skill, story or district completion | §5.7 | M5 | test_world_graph | covered |
 | 113 | m | world | One-way shortcut gates opened from the far side stay open forever | §5.7 | exists | gate fixture test | covered |
@@ -255,11 +256,11 @@ Written in M1a from section 1.5 of `docs/game-base-plan.md` (v1.1, branch `game-
 | 228 | m | game-flow | Complete flow: title, new game, opening, Acts 0-6, ending, credits, back to title | §1.1 D1 | M5 | test_full_route | covered |
 | 229 | m | game-flow | Automated start-to-end route test (boot to credits) | §1.1 D21 | M5 | test_full_route | covered |
 | 230 | s | game-flow | Difficulty and balance pass for every fight (standard.tres is untuned) | §6.7 | M14 | tuning pass with attempt logger | covered |
-| 231 | s | tools | Room authoring guide matching the ECS and zone markers (docs/design/room-authoring-guide.md predates the ECS flip) | §15 M1a | M1a, M14 | docs refresh checklist | covered |
-| 232 | s | tools | Asset import rules and tile-editing workflow documented | §15 M1a | M1a, M14 | docs refresh checklist | covered |
+| 231 | s | tools | Room authoring guide matching the ECS and zone markers (docs/design/room-authoring-guide.md predates the ECS flip) | §15 M1a | M1a, M14 | the rewritten docs/design/room-authoring-guide.md (checked against the code by hand; M14 re-reads it) | covered |
+| 232 | s | tools | Asset import rules and tile-editing workflow documented | §15 M1a | M1a, M14 | sections 6 and 7 of docs/design/room-authoring-guide.md (checked against project.godot and the tileset by hand; M14 re-reads them) | covered |
 | 233 | s | tools | Structured owner review template | §16.2 G8 | exists | docs/owner-review-template.md | covered |
 | 234 | m | tools | Fresh clone builds and runs; generators documented with order | §13.7 | M1a | tools/bootstrap_worktree.sh | covered |
-| 235 | s | tools | Single test runner and CI (7 test scripts, no .github) | §13.7 | M1a; CI file Tier B | run_all_tests.py | covered |
+| 235 | s | tools | Single test runner and CI (7 test scripts, no .github) | §13.7 | M1a; CI file Tier B | run_all_tests.py (pinned by its --self-test) | partial: the runner is done; the CI workflow file (Tier B, M14) does not exist |
 | 236 | s | tools | Editor handoff note per system: Open, Tune, Goal, Try, Tell me | §16.2 G8 | each milestone, M14 | handoff notes | covered |
 | 237 | s | qa | Smoke checklist, room QA checklist, combat-feel test log, bug format | §15 M14 | M14 | docs/qa templates | covered |
 | 238 | m | qa | Automated coverage: movement, combat, telegraph, graph validation, resource references, scene boot | §13.7 | M1a onward | run_all_tests.py --strict | covered |
@@ -270,9 +271,9 @@ Written in M1a from section 1.5 of `docs/game-base-plan.md` (v1.1, branch `game-
 | 243 | c | release | Screenshot plan, trailer beats, store-page text | §1.2 | n/a | n/a | deferred W |
 | 244 | c | release | Steam page and public demo plan (15-25 min demo, Next Fest) | §1.2 | n/a | n/a | deferred W |
 | 245 | s | release | LICENSE, font and asset credits | §1.1 D20 | M1a stub, M14 | LICENSE and THIRD_PARTY_NOTICES check | covered |
-| 246 | m | process | ECS rules: state in components, decisions in systems, only ViewSyncSystem touches nodes, content in .tres | §2.4, §13 | M1a onward | test_dependency_edges; run_all_tests.py | covered |
-| 247 | m | process | Verify suite green and import clean before every commit; one logical change per commit | §2.4, §13 | M1a onward | test_dependency_edges; run_all_tests.py | covered |
-| 248 | m | process | Research built-in nodes then addons (ask owner) before custom code | §2.4, §13 | M1a onward | test_dependency_edges; run_all_tests.py | covered |
+| 246 | m | process | ECS rules: state in components, decisions in systems, only ViewSyncSystem touches nodes, content in .tres | §2.4, §13 | M1a onward | test_dependency_edges (report-only; it checks layer edges, not node access) | partial: nothing yet checks that only ViewSyncSystem touches nodes; the edge guard stays report-only until the owner decides its table at OG0 |
+| 247 | m | process | Verify suite green and import clean before every commit; one logical change per commit | §2.4, §13 | M1a onward | run_all_tests.py (suites green, import clean); commit size is a review rule | partial: one logical change per commit is checked by review only |
+| 248 | m | process | Research built-in nodes then addons (ask owner) before custom code | §2.4, §13 | M1a onward | the research rule in CLAUDE.md and AGENTS.md; checked in review | partial: a review rule, no automated check exists |
 
 ## Summary
 

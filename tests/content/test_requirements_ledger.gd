@@ -19,7 +19,12 @@ const SPLIT_PARTS_PER_ROW := LEDGER_COLUMN_COUNT + 2
 
 const NOT_APPLICABLE := "n/a"
 const WAIVER_STATUS_PREFIX := "deferred W"
-const VALID_STATUS_PREFIXES: Array[String] = ["covered", "amended", WAIVER_STATUS_PREFIX]
+## "partial: <what is missing>": the plan answers the requirement and something already
+## verifies part of it, but the rest is not done or not tested yet. It is NOT covered; the
+## row says exactly what is missing so the gap cannot hide behind a green status.
+const PARTIAL_STATUS_PREFIX := "partial"
+const PARTIAL_STATUS_SEPARATOR := ":"
+const VALID_STATUS_PREFIXES: Array[String] = ["covered", "amended", WAIVER_STATUS_PREFIX, PARTIAL_STATUS_PREFIX]
 
 ## requirements.json priority word -> the one-letter code the ledger uses.
 const PRIORITY_LETTER_BY_WORD := {"must": "m", "should": "s", "could": "c"}
@@ -56,8 +61,9 @@ func _init() -> void:
 	_report(must_problems)
 
 	var status_problems := _status_problems(rows_by_index)
-	_expect(status_problems.is_empty(), "every ledger status is covered, amended or deferred W")
+	_expect(status_problems.is_empty(), "every ledger status is covered, amended, deferred W, or partial with the gap named")
 	_report(status_problems)
+	print("REPORT ledger rows marked partial (not covered): %d" % _partial_row_count(rows_by_index))
 
 	var stale_problems := _stale_row_problems(requirements, rows_by_index)
 	soft_expect(stale_problems.is_empty(), "ledger rows still match requirements.json in priority, system and wording")
@@ -147,7 +153,25 @@ func _status_problems(rows_by_index: Dictionary) -> PackedStringArray:
 				recognised = recognised or status.begins_with(prefix)
 			if not recognised:
 				problems.append("req#%d has the unknown status '%s'" % [key, status])
+			elif status.begins_with(PARTIAL_STATUS_PREFIX) and _partial_gap(status).is_empty():
+				problems.append("req#%d is 'partial' but does not say what is missing (write 'partial: <the gap>')" % key)
 	return problems
+
+
+## The text after "partial:", or "" when the status does not name its gap.
+func _partial_gap(status: String) -> String:
+	if not status.begins_with(PARTIAL_STATUS_PREFIX + PARTIAL_STATUS_SEPARATOR):
+		return ""
+	return status.trim_prefix(PARTIAL_STATUS_PREFIX + PARTIAL_STATUS_SEPARATOR).strip_edges()
+
+
+func _partial_row_count(rows_by_index: Dictionary) -> int:
+	var partial_count := 0
+	for key: int in rows_by_index:
+		for row: Dictionary in rows_by_index[key]:
+			if String(row["status"]).begins_with(PARTIAL_STATUS_PREFIX):
+				partial_count += 1
+	return partial_count
 
 
 func _stale_row_problems(requirements: Array, rows_by_index: Dictionary) -> PackedStringArray:

@@ -181,7 +181,7 @@ Lint tiers follow the same split. **Hard** checks (engine integrity: dangling id
 
 ### 1.5 Requirement ledger
 
-The ledger below lists `reqs.json` `requirements[0..248]`: `req#`, priority (m must, s should, c could), the first words of the requirement, the plan section, the milestone, the verifying test and a status (`covered`, `amended D-xx`, `deferred W` for an owner-waivable deferral in §1.2). M1a writes it to `docs/requirements_ledger.md`, and `tests/content/test_requirements_ledger.gd` parses it and fails if a `m` row has no section plus test or waiver (D25). Numbers are zero-based: `req#45` is "Place Paper Bridge over broken tiles".
+The ledger below lists `reqs.json` `requirements[0..248]`: `req#`, priority (m must, s should, c could), the first words of the requirement, the plan section, the milestone, the verifying test and a status (`covered`, `amended D-xx`, `deferred W` for an owner-waivable deferral in §1.2, or `partial: <what is missing>` for a requirement that is only partly verified yet, with the gap named). M1a writes it to `docs/requirements_ledger.md`, and `tests/content/test_requirements_ledger.gd` parses it and fails if a `m` row has no section plus test or waiver (D25). Numbers are zero-based: `req#45` is "Place Paper Bridge over broken tiles".
 
 #### Ledger, req# 0-124
 
@@ -297,7 +297,7 @@ The ledger below lists `reqs.json` `requirements[0..248]`: `req#`, priority (m m
 | 107 | m | World graph as one resource; every door resolves to a real z... | §7.1, §7.5 | M5 | test_world_graph | covered |
 | 108 | m | Exit data: target_zone, target_entry, requires_flag, locked_... | §7.1, §7.5 | M5 | test_world_graph | covered |
 | 109 | m | Fade-swap transition and spawn at the target entry | §9.1 | exists; M1a | test_bridge_travel | covered |
-| 110 | m | Backtracking works unless intentionally blocked | §9.1 | exists; M1a | test_bridge_travel | covered |
+| 110 | m | Backtracking works unless intentionally blocked | §9.1 | exists; M1a | test_bridge_travel (calls _travel_to directly) | partial: T2's Exit_To_T1 sits on a solid wall tile, so the hero cannot walk back to T1 yet (content fix, see findings.md) |
 | 111 | m | Each locked exit explains why it is locked (code has one har... | §5.7 | M5 | test_world_graph | covered |
 | 112 | m | Locks are visible before they open and tied to skill, story... | §5.7 | M5 | test_world_graph | covered |
 | 113 | m | One-way shortcut gates opened from the far side stay open fo... | §5.7 | exists | gate fixture test | covered |
@@ -422,11 +422,11 @@ The ledger below lists `reqs.json` `requirements[0..248]`: `req#`, priority (m m
 | 228 | m | Complete flow: title, new game, opening, Acts 0-6, ending, c... | §1.1 D1 | M5 | test_full_route | covered |
 | 229 | m | Automated start-to-end route test (boot to credits) | §1.1 D21 | M5 | test_full_route | covered |
 | 230 | s | Difficulty and balance pass for every fight (standard.tres i... | §6.7 | M14 | tuning pass with attempt logger | covered |
-| 231 | s | Room authoring guide matching the ECS and zone markers (docs... | §15 M1a | M1a, M14 | docs refresh checklist | covered |
-| 232 | s | Asset import rules and tile-editing workflow documented | §15 M1a | M1a, M14 | docs refresh checklist | covered |
+| 231 | s | Room authoring guide matching the ECS and zone markers (docs... | §15 M1a | M1a, M14 | the rewritten docs/design/room-authoring-guide.md (checked against the code by hand; M14 re-reads it) | covered |
+| 232 | s | Asset import rules and tile-editing workflow documented | §15 M1a | M1a, M14 | sections 6 and 7 of docs/design/room-authoring-guide.md (checked against project.godot and the tileset by hand; M14 re-reads them) | covered |
 | 233 | s | Structured owner review template | §16.2 G8 | exists | docs/owner-review-template.md | covered |
 | 234 | m | Fresh clone builds and runs; generators documented with order | §13.7 | M1a | tools/bootstrap_worktree.sh | covered |
-| 235 | s | Single test runner and CI (7 test scripts, no .github) | §13.7 | M1a; CI file Tier B | run_all_tests.py | covered |
+| 235 | s | Single test runner and CI (7 test scripts, no .github) | §13.7 | M1a; CI file Tier B | run_all_tests.py (pinned by its --self-test) | partial: the runner is done; the CI workflow file (Tier B, M14) does not exist |
 | 236 | s | Editor handoff note per system: Open, Tune, Goal, Try, Tell me | §16.2 G8 | each milestone, M14 | handoff notes | covered |
 | 237 | s | Smoke checklist, room QA checklist, combat-feel test log, bu... | §15 M14 | M14 | docs/qa templates | covered |
 | 238 | m | Automated coverage: movement, combat, telegraph, graph valid... | §13.7 | M1a onward | run_all_tests.py --strict | covered |
@@ -437,9 +437,9 @@ The ledger below lists `reqs.json` `requirements[0..248]`: `req#`, priority (m m
 | 243 | c | Screenshot plan, trailer beats, store-page text | §1.2 | n/a | n/a | deferred W |
 | 244 | c | Steam page and public demo plan (15-25 min demo, Next Fest) | §1.2 | n/a | n/a | deferred W |
 | 245 | s | LICENSE, font and asset credits | §1.1 D20 | M1a stub, M14 | LICENSE and THIRD_PARTY_NOTICES check | covered |
-| 246 | m | ECS rules: state in components, decisions in systems, only V... | §2.4, §13 | M1a onward | test_dependency_edges; run_all_tests.py | covered |
-| 247 | m | Verify suite green and import clean before every commit; one... | §2.4, §13 | M1a onward | test_dependency_edges; run_all_tests.py | covered |
-| 248 | m | Research built-in nodes then addons (ask owner) before custo... | §2.4, §13 | M1a onward | test_dependency_edges; run_all_tests.py | covered |
+| 246 | m | ECS rules: state in components, decisions in systems, only V... | §2.4, §13 | M1a onward | test_dependency_edges (report-only; it checks layer edges, not node access) | partial: nothing yet checks that only ViewSyncSystem touches nodes; the edge guard stays report-only until the owner decides its table at OG0 |
+| 247 | m | Verify suite green and import clean before every commit; one... | §2.4, §13 | M1a onward | run_all_tests.py (suites green, import clean); commit size is a review rule | partial: one logical change per commit is checked by review only |
+| 248 | m | Research built-in nodes then addons (ask owner) before custo... | §2.4, §13 | M1a onward | the research rule in CLAUDE.md and AGENTS.md; checked in review | partial: a review rule, no automated check exists |
 
 **Ledger summary.** `m` rows: 156, all with a section and a test or a waiver. Rows marked `deferred W` are the owner-waivable items of §1.2. Rows marked `amended` point to the decision or trigger that changed them.
 ## 2. Decisions taken
