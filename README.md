@@ -89,7 +89,10 @@ runs, see `.claude/commands/verify.md`). It does the import pass, finds every su
 name (`tests/run_tests.gd`, `tests/*_test.gd`, `tests/**/test_*.gd`), runs each in its own
 bounded subprocess, fails on any script error, `FAIL:` line or missing `PASS:` line, and
 checks that every `PASS:` label recorded in `tests/baseline_labels.txt` still passes.
-The last lines must read `0 failed` and `GREEN`. Set `GODOT` to the Godot binary and
+The last lines must read `0 failed` and `GREEN`. `python3 tools/run_all_tests.py --self-test`
+(and `python3 tools/move_res.py --self-test`) check that the gate itself still fails on a hang,
+a script error, a `FAIL:` line, a missing verdict or a vanished label; `/verify` runs both first.
+Set `GODOT` to the Godot binary and
 `UNBOUND_GODOT_HOME` to a private `HOME` if the defaults do not fit your machine.
 
 To run one suite by hand, with an isolated `HOME`:

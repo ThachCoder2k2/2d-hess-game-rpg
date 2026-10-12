@@ -24,6 +24,10 @@ vacuously:
 5. `--strict` promotes soft warnings to failures: `WARN:` lines from
    UnboundTest.soft_expect, engine ERROR lines inside a suite, and stale
    entries in label_renames.txt.
+6. `--self-test` checks points 1 to 5 themselves: it feeds the verdict functions
+   canned outcomes (a hang, a SCRIPT ERROR, a FAIL line, no verdict line, a vanished
+   label...) and a fake Godot script, so a later edit cannot quietly weaken the gate.
+   It needs no Godot and no project; `/verify` runs it first.
 
 Environment:
     GODOT                  path of the Godot binary. Default: ../Godot.app/Contents/MacOS/Godot
@@ -46,6 +50,7 @@ import signal
 import shutil
 import subprocess
 import sys
+import tempfile
 import time
 from dataclasses import dataclass, field
 from pathlib import Path, PurePosixPath
@@ -391,6 +396,163 @@ def print_failure_details(result: SuiteResult) -> None:
         print("          %s" % line[:200])
 
 
+# --------------------------------------------------------------------------- self-test
+def self_test() -> int:
+    """Pin the properties that make this runner a gate, without starting Godot.
+
+    The judging functions (evaluate_suite, evaluate_import, discover_suites,
+    check_baseline, run_godot) are fed canned outcomes, a throwaway tests/ tree and a
+    fake Godot shell script. A later edit that weakens one of them, for example by
+    letting a SCRIPT ERROR through or accepting a suite with no verdict, turns a check
+    here red. /verify runs this before the suites (`--self-test`)."""
+    global REPO_ROOT, BASELINE_LABELS_FILE, LABEL_RENAMES_FILE
+    failures: list[str] = []
+
+    def expect(condition: bool, label: str) -> None:
+        print(("PASS: " if condition else "FAIL: ") + label)
+        if not condition:
+            failures.append(label)
+
+    def canned(output: str, exit_code: int = 0, timed_out: bool = False) -> RunOutcome:
+        return RunOutcome(exit_code, output, 0.1, timed_out, 60)
+
+    def judged(output: str, strict: bool = False, **outcome_fields) -> SuiteResult:
+        return evaluate_suite("tests/example_test.gd", canned(output, **outcome_fields), strict)
+
+    clean = "PASS: first check\nPASS: second check\nEXAMPLE TEST: PASS\n"
+
+    # --- evaluate_suite: what makes a suite red ---
+    result = judged(clean)
+    expect(not result.failed and result.pass_count == 2 and result.pass_labels == {"first check", "second check"}, "a clean suite passes and its PASS labels are collected")
+    expect(judged(clean, exit_code=-9, timed_out=True).failed, "a timeout (hang) fails the suite")
+    expect(judged(clean, exit_code=1).failed, "a non-zero exit code fails the suite even when it printed a PASS verdict")
+    expect(judged(clean + "SCRIPT ERROR: Invalid call. Nonexistent function.\n").failed, "a SCRIPT ERROR after the verdict fails the suite")
+    expect(judged("SCRIPT ERROR: Parse Error: Identifier not declared\nPASS: a\nEXAMPLE TEST: PASS\n").failed, "a Parse Error fails the suite")
+    expect(judged("PASS: a\nParse Error: something\nEXAMPLE TEST: PASS\n").failed, "a bare Parse Error line fails the suite")
+    expect(judged("PASS: a\nFAIL: b\nEXAMPLE TEST: PASS\n").failed, "a FAIL line fails the suite even next to a PASS verdict")
+    expect(judged("PASS: a\nEXAMPLE TEST: FAIL (1)\n").failed, "a FAIL verdict fails the suite even with exit code 0")
+    expect(not judged("PASS: a\nTESTS COMPLETE: 0 failure(s)\n").failed, "the older run_tests.gd summary line counts as a PASS verdict")
+    expect(judged("PASS: a\nTESTS COMPLETE: 3 failure(s)\n").failed, "the older summary line with failures fails the suite")
+    expect(judged("PASS: a\nPASS: b\n").failed, "a suite that never prints a verdict line fails")
+    expect(judged("EXAMPLE TEST: PASS\n").failed, "a suite that prints no PASS label fails (nothing was checked)")
+    expect(judged("").failed, "a suite that prints nothing fails")
+    expect(judged("PASS: a\n  PASS: indented\nsee PASS: inline\nEXAMPLE TEST: PASS\n").pass_count == 1, "only a line that starts with 'PASS: ' counts as a PASS label")
+    soft = "PASS: a\nWARN: soft check\nEXAMPLE TEST: PASS\n"
+    expect(not judged(soft).failed and len(judged(soft).warnings) == 1, "a WARN line is a warning, not a failure, without --strict")
+    expect(judged(soft, strict=True).failed, "a WARN line fails the suite under --strict")
+    engine_error = "PASS: a\nERROR: Failed to load resource\nEXAMPLE TEST: PASS\n"
+    expect(not judged(engine_error).failed and len(judged(engine_error).warnings) == 1, "an engine ERROR line is a warning without --strict")
+    expect(judged(engine_error, strict=True).failed, "an engine ERROR line fails the suite under --strict")
+    expect(not judged("PASS: a\nERROR: 3 resources still in use at exit\nEXAMPLE TEST: PASS\n", strict=True).failed, "engine teardown noise is ignored even under --strict")
+
+    # --- evaluate_import: gate G2 ---
+    expect(not evaluate_import(canned("Godot Engine v4.6.3\n")).failed, "a quiet import pass is green")
+    expect(evaluate_import(canned("SCRIPT ERROR: Parse Error: x\n")).failed, "a SCRIPT ERROR in the import pass fails it")
+    expect(evaluate_import(canned("ERROR: Failed loading resource\n")).failed, "an engine ERROR in the import pass fails it")
+    expect(evaluate_import(canned("", exit_code=-9, timed_out=True)).failed, "a hung import pass fails")
+    expect(evaluate_import(canned("", exit_code=2)).failed, "a non-zero exit in the import pass fails")
+    expect(not evaluate_import(canned("ERROR: 2 resources still in use at exit\n")).failed, "teardown noise does not fail the import pass")
+
+    # --- run_godot: exit code, merged stderr, colour stripping, and the hang kill ---
+    with tempfile.TemporaryDirectory(prefix="run_all_tests_selftest_") as temp_name:
+        temp_root = Path(temp_name)
+        fast_godot = temp_root / "fast_godot.sh"
+        fast_godot.write_text("#!/bin/sh\nprintf '\\033[1mPASS: coloured\\033[0m\\n'\necho 'FAIL: on stderr' >&2\nexit 3\n", encoding="utf-8")
+        fast_godot.chmod(0o755)
+        fast = run_godot(fast_godot, [], temp_name, 20)
+        expect(fast.exit_code == 3 and not fast.timed_out, "run_godot reports the exit code of the process")
+        expect("PASS: coloured" in fast.output and "FAIL: on stderr" in fast.output, "run_godot merges stderr into the output and strips colour codes")
+
+        hang_godot = temp_root / "hang_godot.sh"
+        child_pid_file = temp_root / "child.pid"
+        hang_godot.write_text("#!/bin/sh\nsleep 20 &\necho $! > \"$SELFTEST_CHILD_PID_FILE\"\nwait\n", encoding="utf-8")
+        hang_godot.chmod(0o755)
+        previous_pid_file = os.environ.get("SELFTEST_CHILD_PID_FILE")
+        os.environ["SELFTEST_CHILD_PID_FILE"] = str(child_pid_file)
+        try:
+            hung = run_godot(hang_godot, [], temp_name, 2)
+        finally:
+            if previous_pid_file is None:
+                del os.environ["SELFTEST_CHILD_PID_FILE"]
+            else:
+                os.environ["SELFTEST_CHILD_PID_FILE"] = previous_pid_file
+        expect(hung.timed_out and hung.seconds < 10, "run_godot gives up on a hung process promptly after the timeout (a child that keeps the pipe open must not stall it)")
+        child_gone = False
+        if child_pid_file.is_file():
+            child_pid = int(child_pid_file.read_text(encoding="utf-8").strip())
+            for _attempt in range(30):
+                try:
+                    os.kill(child_pid, 0)
+                except ProcessLookupError:
+                    child_gone = True
+                    break
+                time.sleep(0.1)
+        expect(child_gone, "the whole process group is killed on a timeout, so no child process is left behind")
+        expect(evaluate_suite("tests/hang_test.gd", hung, True).failed, "a suite killed by the timeout is judged red")
+
+        # --- discover_suites and check_baseline against a throwaway tests/ tree ---
+        for relative in (
+            "tests/run_tests.gd", "tests/b_test.gd", "tests/a_test.gd", "tests/sub/test_z.gd", "tests/sub/test_y.gd",
+            "tests/fixtures/test_fixture.gd", "tests/baselines/test_data.gd", "tests/.hidden/test_hidden.gd",
+            "tests/support/helper.gd", "tests/bridge_support.gd", "tests/notes.txt",
+        ):
+            (temp_root / relative).parent.mkdir(parents=True, exist_ok=True)
+            (temp_root / relative).write_text("", encoding="utf-8")
+        (temp_root / "tests" / "baseline_labels.txt").write_text(
+            "# a comment line is ignored\n"
+            "tests/a_test.gd | alpha one\n"
+            "tests/a_test.gd | alpha gone\n"
+            "tests/old_folder/test_y.gd | gamma moved\n"
+            "tests/ghost_test.gd | never run\n"
+            "tests/b_test.gd | beta old name\n"
+            "tests/b_test.gd | beta other\n"
+            "tests/b_test.gd | arrow a -> b\n",
+            encoding="utf-8")
+        (temp_root / "tests" / "label_renames.txt").write_text(
+            "beta old name -> beta new name\n"
+            "beta other -> printed nowhere\n"
+            "arrow a -> b -> arrow ok\n"
+            "no such label -> something\n",
+            encoding="utf-8")
+        saved_paths = (REPO_ROOT, BASELINE_LABELS_FILE, LABEL_RENAMES_FILE)
+        REPO_ROOT = temp_root
+        BASELINE_LABELS_FILE = temp_root / "tests" / "baseline_labels.txt"
+        LABEL_RENAMES_FILE = temp_root / "tests" / "label_renames.txt"
+        try:
+            discovered = discover_suites()
+            expect(
+                discovered == ["tests/run_tests.gd", "tests/a_test.gd", "tests/b_test.gd", "tests/sub/test_y.gd", "tests/sub/test_z.gd"],
+                "discovery finds run_tests.gd first, then *_test.gd and test_*.gd, and skips fixtures, baselines, hidden folders and helpers")
+
+            def printed(*labels: str) -> SuiteResult:
+                return SuiteResult("example", pass_labels=set(labels))
+
+            results = {
+                "tests/run_tests.gd": printed(),
+                "tests/a_test.gd": printed("alpha one"),
+                "tests/b_test.gd": printed("beta new name", "arrow ok"),
+                "tests/sub/test_y.gd": printed("gamma moved"),
+                "tests/sub/test_z.gd": printed(),
+            }
+            report = check_baseline(discovered, results, filtered=False)
+            expect(report.total == 7 and report.passing == 4 and report.renamed == 2, "the baseline check counts present labels, moved suites and renamed labels as passing")
+            expect(
+                sorted(report.missing) == sorted([
+                    "tests/a_test.gd | alpha gone",
+                    "tests/ghost_test.gd | never run  (suite not found)",
+                    "tests/b_test.gd | beta other",
+                ]),
+                "a vanished label, a vanished suite and a rename to a label nobody prints are all reported missing")
+            expect(report.stale_rename_lines == ["no such label -> something"], "a rename line that names no baseline label is reported stale")
+            filtered_report = check_baseline(discovered, {"tests/a_test.gd": printed("alpha one")}, filtered=True)
+            expect(filtered_report.skipped_unselected == 4 and filtered_report.total == 3 and len(filtered_report.missing) == 2, "with --only, labels of unselected suites are skipped but a vanished suite is still missing")
+        finally:
+            REPO_ROOT, BASELINE_LABELS_FILE, LABEL_RENAMES_FILE = saved_paths
+
+    print("SELF-TEST: %d failure(s)" % len(failures))
+    return 1 if failures else 0
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(
         description="Run the import pass, then every test suite, and gate on the result.",
@@ -402,7 +564,11 @@ def main() -> int:
     parser.add_argument("--list", action="store_true", help="list the discovered suites and exit")
     parser.add_argument("--verbose", "-v", action="store_true", help="print the full output of every suite")
     parser.add_argument("--suite-timeout", type=int, default=SUITE_TIMEOUT_SECONDS, metavar="SECONDS", help="per-suite timeout (default %(default)s)")
+    parser.add_argument("--self-test", action="store_true", help="test this runner's own verdict logic with canned outcomes and a fake Godot (no project, no Godot needed), then exit")
     arguments = parser.parse_args()
+
+    if arguments.self_test:
+        return self_test()
 
     discovered = discover_suites()
     if arguments.list:

@@ -397,7 +397,9 @@ Gate 12: Release polish
 ## Testing And Verification
 
 Run `/verify` (see `.claude/commands/verify.md`) after every behavior change. `/verify` is
-`python3 tools/run_all_tests.py --strict` plus `git diff --check`. The runner does the
+the two tool self-tests (`python3 tools/run_all_tests.py --self-test` and
+`python3 tools/move_res.py --self-test`), then `python3 tools/run_all_tests.py --strict`, then
+`git diff --check`. The runner does the
 editor import pass, then runs every suite it finds by name: `tests/run_tests.gd`, the older
 runtime tests (`ecs_runtime`, `ecs_combat`, `ecs_enemy`, `room_encounter_runtime`,
 `encounter_hud_runtime`, `zone_travel_runtime`) and everything under `tests/` named

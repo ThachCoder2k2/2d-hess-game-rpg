@@ -31,6 +31,7 @@ test pass and `git status` is clean.
 | Tool | What it does |
 |---|---|
 | `bootstrap_worktree.sh` | Makes a fresh clone or worktree test-ready: import pass, the four generators below, import pass. |
+| `run_all_tests.py` | The verification gate (`/verify`): import pass, every suite in its own bounded process, baseline-label check. `--strict`, `--only`, `--list`, `--verbose`. `--self-test` checks the gate itself (canned hangs, script errors, FAIL lines, missing verdicts, vanished labels, a fake Godot) in about 5 s with no Godot. |
 | `stamp_uids.gd` | Text-level UID stamper (never calls `ResourceSaver`): adds `uid=` to uid-less scene/resource headers and to path-only `ext_resource` lines. `-- --check` only reports and exits 1 if anything would change. Idempotent. |
 | `move_res.py` | `git mv` a file or folder with its `.uid`/`.import` sidecars and rewrite every `res://` string that pointed at it. `--dry-run`, `--rewrite-only`, `--rename-action`, `--import-pass`, `--self-test`. |
 | `dump_world.gd` | Boots a room headless, runs N manual ticks, prints the sorted node paths, texture paths and entity cells/components. `--room=t1`, `--write-baselines`, `--list`. |

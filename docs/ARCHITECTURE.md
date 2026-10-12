@@ -287,7 +287,9 @@ A new `class_name` needs one `--headless --editor --quit` import pass before str
 scripts that reference it parse headlessly. A script error in a test's `_init` can hang the
 Godot process, so bound runs with `perl -e 'alarm shift; exec @ARGV' 120 ...` (macOS has no
 `timeout`). `python3 tools/run_all_tests.py --strict` is the canonical runner: it adds the
-timeout, the import pass and the baseline-label check for you.
+timeout, the import pass and the baseline-label check for you. `python3 tools/run_all_tests.py
+--self-test` tests the runner itself (canned hangs, script errors and vanished labels); `/verify`
+runs it first.
 
 ## Where this is going
 

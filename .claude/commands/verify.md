@@ -1,11 +1,22 @@
 ---
-description: Run the full Godot verification (the strict test runner, which includes the import pass, plus the diff check)
+description: Run the full Godot verification (the tools' self-tests, the strict test runner with its import pass, and the diff check)
 ---
 
-Verify the project is green. Run from the project root. `/verify` is exactly two
-commands; do not re-implement their steps by hand.
+Verify the project is green. Run from the project root. `/verify` is exactly three
+steps; do not re-implement their steps by hand.
 
-1. The strict runner (import pass, every suite, baseline labels):
+1. The tools' own self-tests (seconds, no Godot needed). They prove the gate itself
+   still gates: the runner really fails on a hang, a SCRIPT ERROR, a FAIL line, a
+   missing verdict or a vanished baseline label, and the move tool still rewrites
+   references. Run both; a red self-test means the next step's GREEN cannot be trusted.
+
+   `python3 tools/run_all_tests.py --self-test`
+   `python3 tools/move_res.py --self-test`
+
+   Expect `SELF-TEST: 0 failure(s)` from each (the `error:` lines `move_res.py` prints on the
+   way are refusals it is testing on purpose).
+
+2. The strict runner (import pass, every suite, baseline labels):
 
    `python3 tools/run_all_tests.py --strict`
 
@@ -29,9 +40,9 @@ commands; do not re-implement their steps by hand.
    should each set their own. A fresh clone or worktree needs its generated art first
    (`tools/bootstrap_worktree.sh`, or the `tools/generate_*.gd` scripts).
 
-2. Whitespace: `git diff --check`.
+3. Whitespace: `git diff --check`.
 
-Report a concise pass/fail table: the import pass, each suite (with its PASS and WARN
+Report a concise pass/fail table: the two self-tests, the import pass, each suite (with its PASS and WARN
 counts), the baseline-label line, and the diff check. A failing suite prints the
 exact `FAIL:` or `SCRIPT ERROR` line; quote it. For a quick loop while iterating,
 `python3 tools/run_all_tests.py --only <part of a suite path> --skip-import` runs
