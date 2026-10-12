@@ -17,22 +17,22 @@ rules are in `CLAUDE.md`, and the structure of the code is in `docs/ARCHITECTURE
 Authority order when documents disagree (from `docs/game-base-plan.md`):
 
 1. The owner's directions of 2026-10-12 (quoted below).
-2. `CLAUDE.md`. A change to it takes effect only after the owner approves it at gate OG0
-   (`docs/claude-md-diff.md` lists the exact lines).
+2. `CLAUDE.md`. The owner approved its amendments at gate OG0 (2026-10-12, recorded in
+   `progress.md`) and M1b applied them; `docs/claude-md-diff.md` keeps the old and new lines.
 3. `docs/ecs-conversion-plan.md`.
 4. `docs/game-base-plan.md`.
 5. Older docs. The code is the final witness of how things work today.
 
 ## Project Direction
 
-- The simulation is a **full ECS** (`scripts/ecs/`; owner decision 2026-07-19, see
+- The simulation is a **full ECS** (`ecs/`; owner decision 2026-07-19, see
   `docs/ecs-conversion-plan.md`). State is pure-data components, decisions are systems,
   scenes are spawn data plus puppet views. `docs/ARCHITECTURE.md` describes the code as built.
 - Build **editor-first**: reusable behavior in scripts; game content in scenes, Resources
   (`.tres`), AnimationPlayers/AnimationTrees, markers and Inspector fields. A new enemy,
   weapon, attack or room is a data edit, never new hardcoded content in a script.
-- `scripts/main.gd` is a thin bridge between the ECS and presentation. Do not add room
-  content or gameplay decisions to it.
+- `shell/game_root.gd` (the old `main.gd`) is a thin bridge between the ECS and presentation.
+  Do not add room content or gameplay decisions to it.
 - Preserve the current playable slice after every change.
 
 ### The owner's directions of 2026-10-12 (quoted from `docs/game-base-plan.md` section 0)
@@ -55,31 +55,46 @@ What this means for an agent: build the complete, tested, data-driven base descr
 (art, prose, music, tuning); keep code and folders arranged so the owner can change content
 without touching code.
 
-## Folder Ownership (today)
+## Folder Ownership
 
-- `scenes/` — top-level playable scenes, authored rooms and UI scenes the owner opens
-  directly.
-- `objects/` — reusable editor-owned prefabs: actors (`ActorView` scenes), markers, world
-  helpers, audio. A reusable `.tscn` that is not a room, UI or entry scene goes here.
-- `resources/` — Inspector-tunable `.tres` data: enemies, movement, decisions, attacks,
-  weapons, visuals, difficulty, objectives, rules, tiles, the world graph.
-- `scripts/` — behavior and schemas: `scripts/ecs/` (the simulation), `scripts/data|ai|combat/`
-  (Resource schemas), `scripts/world/` (markers, room, board, camera, `WorldState`),
-  presentation (`scripts/ui|visuals|audio/`) and `main.gd` (the bridge). Do not move authored
-  room layout or gameplay placement into scripts.
-- `assets/` raw art/audio · `tools/` build scripts and generators · `tests/` headless tests ·
-  `docs/` documentation.
+The top-level folders are layers; `docs/ARCHITECTURE.md` has the tree and the table of which
+layer may name which (`tests/architecture/test_dependency_edges.gd` enforces it).
 
-`docs/game-base-plan.md` section 13 describes a target tree (`content/`, `schema/`, `ecs/`,
-`authoring/`, `presentation/`, `shell/`). It is **not built**. Do not create it or move files
-toward it outside the scripted M1b migration, which waits for gate OG0.
+- `content/` — **the owner's folder**: data, art, audio and words. Zero `.gd` files
+  (test-enforced). A folder name is the id; a leading underscore (`_shared`) is not an id.
+  `enemies/<id>/` (`enemy.tres`, `body.png`, the enemy's own sub-resources, `_shared/` for the pieces
+  several enemies use), `rooms/<id>/room.tscn`, `rules/<id>/page.tres`, `skills/<id>/`,
+  `pickups/<id>/`, `player/`, `difficulty/`, `world/world.tres`, `tilesets/<kit>/`.
+  `content/_placeholders.json` lists which art and audio are still stand-ins.
+- `schema/` — Resource classes (`EnemyDefinition`, `MovementConfig`, `AttackPattern`, ...), one
+  class per file, no behaviour beyond `validate()`-style checks.
+- `ecs/` — the simulation: `core/` (`EcsWorld`, `EcsGrid`, `EcsSystem`), `components/`
+  (`ecs_components.gd`, frozen), `systems/<phase>/`. No art, prose or tuning numbers.
+- `authoring/` — things dragged into a scene: `entity_components/` (`EntityComponent` nodes),
+  `markers/`, `room_encounter`, and the baker (`ecs_boot.gd`, `ecs_actor_factory.gd`). No logic.
+- `presentation/` — how the world is shown: `views/` (`ActorView`, pickup views, the five actor
+  scenes in `views/actors/`), `ui/hud/`, `ui/codex/`, `board/`, `camera/`, `audio/`. Reads events;
+  never decides.
+- `shell/` — the game around the game: `game_root.tscn/.gd` (the one game scene and its bridge)
+  and `save/world_state.gd`.
+- `assets/` shared raw art and audio (`tiles/`, `ui/`, `sfx/`, `music/`, `map_pieces/`; the
+  gitignored `_generated/` is generator output only) · `tools/` build scripts and generators ·
+  `tests/` headless tests · `docs/` documentation.
+
+Do not move authored room layout or gameplay placement into scripts. Do not move or rename a
+file by hand: `tools/move_res.py` does it with the sidecars and every `res://` string
+(`tools/README.md`). The rest of the plan's tree (`ecs/events/`, `ecs/schedule/`, `shell/content/`,
+`content/story|audio|feel|ui|...`) appears with the milestones that need it.
 
 ## Current Priority
 
 The base is built milestone by milestone from `docs/game-base-plan.md` section 15.
-**M1a (safety net and tooling) is done and waits in `human_review`**: tests, runner, scripts and
-docs, with no gameplay change and no code, scene or resource moves. Next is owner gate **OG0**,
-then the scripted folder migration (M1b).
+**M1a (safety net and tooling) and M1b (folder migration) are done and wait in `human_review`**.
+M1b moved every script, scene and resource into the new tree with no gameplay change (the strict
+runner stayed green after every move, the six room dumps changed only by path strings), applied the
+`CLAUDE.md` amendments the owner approved at OG0, and added the placeholder tools. Next is **M2**
+(the content registry and the actor-scene collapse). The owner can browse `content/`, run
+`tools/list_placeholders.gd` for the art and audio TODO, and read `docs/OWNER_GUIDE.md`.
 Current status of every area, and what is waiting on the owner, lives in
 `docs/where-we-are.md`. Do not start a broad new phase while the current one has a broken
 playable slice.
@@ -127,12 +142,13 @@ Do not ask before:
 
 `docs/game-base-plan.md` section 2.3 lists the places where the base plan touches the "ask
 first" triggers above (core controls, scope, removed mechanics, the folder migration,
-departures from the 2026-07-28 cut). Nobody has confirmed those rows. The plan builds the
-stated defaults and gives the owner cheap vetoes at five gates:
+departures from the 2026-07-28 cut). The owner confirmed the folder migration, the control and
+rule changes and cleared rooms at OG0; the other rows stay defaults until a later gate. The plan
+gives the owner cheap vetoes at five gates:
 
 | Gate | When | The owner checks |
 |---|---|---|
-| OG0 | end of M1a, before M1b | the `CLAUDE.md` diff, the standing-rule table, the migration plan |
+| OG0 | end of M1a, before M1b | the `CLAUDE.md` diff, the standing-rule table, the migration plan (**answered 2026-10-12**: the move and the amendments, cleared rooms stay cleared, English story source, the control changes; verbatim in `progress.md`) |
 | OG1 | after M5 | plays title to credits through stub rooms: does the skeleton feel right? |
 | OG2 | after M7b | the feel: Sword, Pencil, Rule Step, movement lock, stagger, buffer expiry |
 | OG3 | after M9 | Stage 1 plus Toybox, the first complete district |
@@ -156,7 +172,8 @@ Room and encounter review:
 Player feel review:
 - Tune the player's step duration, repeat delay, attack recovery, skill cooldown and
   invulnerability (the `MovementComponent`, `InputComponent`, `CombatComponent` and
-  `HealthComponent` nodes on the player scene, and the `AttackProfile` `.tres` files).
+  `HealthComponent` nodes on `presentation/views/actors/player.tscn`, and the `AttackProfile`
+  `.tres` files in `content/skills/`).
 - Confirm `Shift + direction`, `Space` and `Q` still feel natural.
 - Decide whether the pawn should feel heavier, sharper or more frantic.
 
@@ -253,7 +270,7 @@ Do not start a broad new phase while the current phase has a broken playable sli
 - Prefer typed `.tres` Resources for configurable data: enemy definitions, movement, attacks,
   decisions, weapons, difficulty, room objectives, the Book of House Rules and the world graph.
 - Prefer exported variables for values designers tune in the Inspector.
-- Prefer `EntityComponent` nodes (`scripts/ecs/components/`) when per-instance data belongs
+- Prefer `EntityComponent` nodes (`authoring/entity_components/`) when per-instance data belongs
   to an actor and should stay visible in the scene tree. They hold Inspector data and one
   `apply()`; `EcsBoot` bakes them into the entity at spawn. They hold zero logic.
 - Prefer direct room-art nodes for first-pass room readability (`RoomArt/TileMap`,
@@ -286,7 +303,11 @@ Do not start a broad new phase while the current phase has a broken playable sli
   Overlays (board telegraphs, debug, grid lines) may use `_draw()`.
 - Never hand-edit a TileMap's `tile_map_data` (a binary blob); use a `tools/` paint script.
 - Never use `ResourceSaver` to re-save existing scenes or resources; it drops UIDs and
-  rewrites headers.
+  rewrites headers. A tool that must save a scene goes through `tools/save_keeping_uids.gd`.
+- Art and audio the owner supplies are swapped by overwriting a file whose name and role never
+  change (`body.png`, `icon.png`, `background.png`). Stand-ins are tracked files in `content/` (or
+  `assets/`), never in the gitignored `assets/_generated/`; `tools/seed_placeholders.gd` records
+  them and `tools/list_placeholders.gd` lists what is left, by file hash.
 
 ## Full Game Completion Workflow
 
@@ -298,7 +319,7 @@ gate stands is in `docs/where-we-are.md`.
 Gate 1: Editor foundation
 - Main game scene opens cleanly.
 - Player, enemy views, pickup, HUD, board and room encounter are real scenes.
-- No critical content remains trapped only in `main.gd`.
+- No critical content remains trapped only in `shell/game_root.gd`.
 
 Gate 2: First playable encounter
 - The first room is an authored room scene.
@@ -392,23 +413,26 @@ Gate 12: Release polish
   audio nodes attached in `.tscn` files.
 - Sound has three layers with one owner each: motion sounds are audio tracks inside the actor's
   clips; mixing lives in `default_bus_layout.tres`; event sounds with no clip go through the
-  `SfxManager` registry, played only by the `main.gd` bridge from drained events. Systems never
-  play audio. Recipe: `/new-sound`.
+  `SfxManager` registry, played only by the `shell/game_root.gd` bridge from drained events.
+  Systems never play audio. Recipe: `/new-sound`.
 
 ## Testing And Verification
 
 Run `/verify` (see `.claude/commands/verify.md`) after every behavior change. `/verify` is
 the two tool self-tests (`python3 tools/run_all_tests.py --self-test` and
 `python3 tools/move_res.py --self-test`), then `python3 tools/run_all_tests.py --strict`, then
-`git diff --check`. The runner does the
+`git diff --check` (and the import and `stamp_uids.gd --check` lines of `CLAUDE.md`). The runner does the
 editor import pass, then runs every suite it finds by name: `tests/run_tests.gd`, the older
 runtime tests (`ecs_runtime`, `ecs_combat`, `ecs_enemy`, `room_encounter_runtime`,
 `encounter_hud_runtime`, `zone_travel_runtime`) and everything under `tests/` named
 `test_*.gd` (`architecture/`, `audio/`, `bridge/`, `content/`, `support/`). A new suite needs
 no edit to the runner. Never edit `tests/baseline_labels.txt` to turn the runner green: a
 vanished label means a check disappeared; a renamed one goes in `tests/label_renames.txt`.
-The other build tools (`stamp_uids.gd`, `move_res.py`, `dump_world.gd`,
-`bootstrap_worktree.sh`) are described in `tools/README.md`. By hand:
+A change that moves a path a room prints (a texture, a script) changes `tests/baselines/dump_<room>.txt`:
+regenerate it in the same commit and say in the message that only a path string changed; any other
+dump change is a regression.
+The other build tools (`stamp_uids.gd`, `move_res.py`, `dump_world.gd`, `bootstrap_worktree.sh`,
+`seed_placeholders.gd`, `list_placeholders.gd`) are described in `tools/README.md`. By hand:
 
 ```bash
 G="../Godot.app/Contents/MacOS/Godot"
@@ -421,7 +445,8 @@ Environment notes: the project path contains a space (quote it). Use an isolated
 `HOME`. A new `class_name` needs one import pass before headless scripts can use it. macOS has
 no `timeout`; bound a run with `perl -e 'alarm shift; exec @ARGV' 120 ...`. The macOS
 certificate warning and the RID-leak error at the end of a `--write-movie` capture are
-harmless. A fresh clone must build its generated art first (see `README.md`).
+harmless. A fresh clone or worktree runs `tools/bootstrap_worktree.sh` first (the class
+registry and the generated art; see `tools/README.md`).
 
 ## Git Rules
 
@@ -431,10 +456,13 @@ harmless. A fresh clone must build its generated art first (see `README.md`).
 - Commit every new `.gd` together with its `.gd.uid` sidecar.
 - Commit and push completed milestones.
 - Leave unrelated untracked or generated files alone unless the task explicitly owns them.
-- Do not move or rename files by hand; the folder migration is scripted (plan section 13.3).
+- Do not move or rename files by hand; use `tools/move_res.py` (plan section 13.3), one folder per
+  commit, and commit new sidecars (`.gd.uid`, `.import`) with their files.
 
 ## Next Recommended Work
 
 Follow `docs/where-we-are.md` section 5 for the order of work and `docs/game-base-plan.md`
-section 15 for the milestone you are on. The next gate is OG0, which needs the M1a deliverables
-and the owner's reading of `docs/claude-md-diff.md`.
+section 15 for the milestone you are on. M1a and M1b are done; the next milestone is M2 (the
+content registry and the actor collapse). Five dependency edges and six room references are still
+undecided (listed in `tests/architecture/test_dependency_edges.gd` and `test_content_references.gd`);
+the owner decides them before `tests/architecture/allowed_edges.txt` is frozen.

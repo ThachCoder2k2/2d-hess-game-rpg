@@ -16,7 +16,10 @@ binding rules; where this file and `CLAUDE.md` disagree, `CLAUDE.md` wins.
   controller (`hud.tscn` -> root `HUD` -> `hud.gd` / `GameHud`).
 - Suffix by role: `*_system.gd` (an `EcsSystem`), `*_component.gd` (an editor
   `EntityComponent` node, NOT runtime data), `*_marker.gd` (an editor-draggable room
-  marker). Runtime component data classes are inner classes of `EcsComponents`.
+  marker). Runtime component data classes live in `ecs/components/`: the existing ones are inner
+  classes of `EcsComponents`, a new one is its own file with a `KEY` const. The folder tells
+  the two kinds of "component" apart: `ecs/components/` is runtime data, `authoring/entity_components/`
+  is editor nodes.
 - Event types are past-tense `snake_case` `StringName`s (`step_finished`, `attack_landed`,
   `defeated`).
 
@@ -86,9 +89,12 @@ These are the rules `CLAUDE.md` makes binding, with the reasoning.
 
 ### State is a component
 
-- A component is a **pure-data inner class** of `scripts/ecs/ecs_components.gd` plus a
-  `StringName` key const (`const HEALTH := &"health"`). No methods with decisions in them.
-  If a "component" grows a method that decides something, that method is a system.
+- A component is a **pure-data class** with a `StringName` key const (`const HEALTH :=
+  &"health"`). The 13 that exist are inner classes of `ecs/components/ecs_components.gd`,
+  which is **frozen except for edits to existing classes**; every NEW component gets its own
+  file in `ecs/components/` with a `KEY` const, so parallel work does not collide on one file.
+  No methods with decisions in them. If a "component" grows a method that decides something,
+  that method is a system.
 - A component stays small: it holds what a system needs to remember between ticks
   (timers, current state, targets), not what the designer tunes. Tuning lives in `.tres`.
 - Add a component field with a sensible default, document it with `##` when the meaning
@@ -97,9 +103,13 @@ These are the rules `CLAUDE.md` makes binding, with the reasoning.
 
 ### Decisions are systems
 
-- A system extends `EcsSystem` (`scripts/ecs/systems/`), is registered in `Main._make_world`,
-  and runs once per frame in registration order. Order is meaningful; do not reorder without
-  reading the dependencies in `docs/ARCHITECTURE.md`.
+- A system extends `EcsSystem` (`ecs/core/ecs_system.gd`), lives in `ecs/systems/<phase>/`
+  (`input`, `decide`, `move`, `act`, `resolve`, `view`, and the folders the plan adds), is
+  registered in `_make_world` of `shell/game_root.gd` (and mirrored in `tools/world_dumper.gd`,
+  which the deterministic dump uses), and runs once per frame in registration order. Order is
+  meaningful; do not reorder without reading the dependencies in `docs/ARCHITECTURE.md`. The
+  plan (M3a) moves the order into one file per phase, `ecs/schedule/<phase>.gd`, with a test
+  that fails if a system file is not listed.
 - A system reads and writes components (through `world.query`, `get_component`, ...) and the
   grid. It **never calls another system**, never reads another system's private state, and
   never touches a node. Systems talk through components, `world.damage_events` and
@@ -115,7 +125,7 @@ These are the rules `CLAUDE.md` makes binding, with the reasoning.
 ### Events go out, data comes through components
 
 - `world.emit_event({"type": &"name", ...})` is the only channel from the simulation to
-  presentation. Presentation (the `main.gd` bridge, HUD, board, camera, sound) reads
+  presentation. Presentation (the `shell/game_root.gd` bridge, HUD, board, camera, sound) reads
   `drain_events()` once per frame. Every key in the payload is documented where the event
   is emitted; see the table in `docs/ARCHITECTURE.md`.
 - Damage is a request: append `{target, amount, direction}` to `world.damage_events`;
@@ -128,10 +138,11 @@ These are the rules `CLAUDE.md` makes binding, with the reasoning.
 - A room scene is spawn data: parked `ActorView` nodes (position -> cell, `definition` and
   Inspector overrides -> component values), painted solid tiles, and grid markers. `EcsBoot`
   bakes them once; after boot the nodes are puppets.
-- An editor-draggable component extends `EntityComponent` (`scripts/ecs/components/`): it
+- An editor-draggable component extends `EntityComponent` (`authoring/entity_components/`): it
   holds Inspector `@export` data and one `apply(world, entity_id)` that writes the entity's
   components. It never runs logic. A component node on an instance beats the definition.
-- A marker extends `GridMarker` (`@tool`, drag-to-snap, `grid_cell`) and holds data only.
+- A marker extends `GridMarker` (`authoring/markers/`; `@tool`, drag-to-snap, `grid_cell`) and
+  holds data only.
 - An actor view is `Sprite2D`s under `MotionRoot/SpriteRoot`, a sibling `AnimationPlayer`
   (clips) and an `AnimationTree` (state graph). Keyframe `SpriteRoot`, never `MotionRoot`.
   Never `_draw()` an actor or pickup body; board overlays may use `_draw()`.
@@ -152,18 +163,42 @@ These are the rules `CLAUDE.md` makes binding, with the reasoning.
 - Enemy locomotion is data: `MovementConfig.allowed_directions` lists the offsets of one
   move. Never encode a piece's movement in a system.
 
-## Folder placement (today)
+## Folder placement
 
-- Entry, room and UI scenes the owner opens -> `scenes/`. Reusable prefabs -> `objects/`.
-- Tunable data -> a `.tres` in the matching `resources/` subfolder.
-- Simulation -> `scripts/ecs/` (components, systems, grid, boot, factory). Resource schemas ->
-  `scripts/data/`, `scripts/ai/`, `scripts/combat/`. Room markers and overlays ->
-  `scripts/world/`. Presentation -> `scripts/ui/`, `scripts/visuals/`, `scripts/audio/`.
-- Raw art and audio -> `assets/`. Build and one-off scripts -> `tools/`. Tests -> `tests/`.
-- Generated art goes where its generator writes it and is gitignored; never hand-edit it.
+The top-level folders are layers (`docs/ARCHITECTURE.md` has the tree and the table of which
+layer may name which; `tests/architecture/test_dependency_edges.gd` enforces it).
+
+- Anything the owner tunes, draws, records or writes -> `content/`, under the folder of its kind
+  (`enemies/<id>/`, `rooms/<id>/`, `skills/<id>/`, `pickups/<id>/`, `rules/<id>/`, `tilesets/<kit>/`,
+  `world/`, `difficulty/`, `player/`). **`content/` holds zero `.gd` files** (test-enforced). The
+  folder name is the id, written once; a leading underscore (`_shared`) is not an id. Each id
+  folder holds the role file its kind needs (`enemy.tres`, `room.tscn`, `page.tres`) and role-named
+  art (`body.png`, `icon.png`, `background.png`): art names are roles, so the owner overwrites a file
+  and nothing else changes.
+- A Resource class (the shape of content) -> `schema/<area>/`, one class per file, `##` on every
+  `@export`.
+- Simulation -> `ecs/` (`core/`, `components/`, `systems/<phase>/`). No art, prose or tuning
+  numbers in it.
+- Things dragged into a scene (`EntityComponent` nodes, markers, the room root) and the baker
+  (`EcsBoot`, `EcsActorFactory`) -> `authoring/`.
+- Views, the HUD, the board, the camera, sound playback -> `presentation/`. It reads events; it
+  never decides.
+- The game around the game (the one game scene and its bridge, save state, later the title and
+  pause flow) -> `shell/`.
+- Raw art and audio not owned by one content item -> `assets/` (`tiles/<kit>/atlas.*`,
+  `ui/`, `sfx/`, `music/`, `map_pieces/`). Hand-drawn art never goes in a gitignored folder.
+  `assets/_generated/` is generator output only: gitignored, never hand-edited, and **no tracked
+  scene may name it** (a stand-in picture is copied into `content/` by `tools/seed_placeholders.gd`).
+- Build and one-off scripts -> `tools/`. Tests -> `tests/` (see Tests below).
 - TileMap `tile_map_data` is a binary blob: never hand-edit it; use a `tools/` paint script.
-- Do not move or rename files by hand in the editor dock; the scripted migration of
-  `docs/game-base-plan.md` §13.3 will do that with UID safety.
+- **Move and rename files only with `tools/move_res.py`** (`git mv` for the file and its
+  `.uid`/`.import` sidecar, every `res://` string rewritten), never by hand or in the editor's
+  FileSystem dock; run `tools/stamp_uids.gd -- --check` and expect CLEAN.
+- **Sidecars:** commit every new `.gd` with its `.gd.uid` and every new image or audio file with
+  its `.import` (run the import pass first). `test_sidecars_tracked` fails on a missing, stale or
+  orphan sidecar.
+- A tool that saves a scene with `ResourceSaver` goes through `tools/save_keeping_uids.gd`;
+  a plain `ResourceSaver.save()` drops the uids (`tests/architecture/test_tools_keep_uids.gd`).
 
 ## Built-in nodes first
 
@@ -226,7 +261,10 @@ Collision is cell-based through `EcsGrid`, not physics.
   print PASS (skipped). `tests/architecture/test_all_scripts_load.gd` compiles every script, which
   the import pass does not.
 - A new test names a `res://` file through `TestPaths` (`tests/support/paths.gd`), which asserts
-  the file exists. Folder moves then edit one file instead of every suite.
+  the file exists. Folder moves then edit one file instead of every suite. Suites live in a
+  folder by kind: `tests/architecture/` (guards), `tests/bridge/`, `tests/audio/`,
+  `tests/content/`; the dump baselines are `tests/baselines/dump_<room>.txt` (change one in the
+  same commit as the change that explains it, and say so in the message).
 - Never rename or delete a `PASS:` label that is in `tests/baseline_labels.txt`; if a label
   must change, record `old label -> new label` in `tests/label_renames.txt`.
 - Keep the playable slice green: `python3 tools/run_all_tests.py --strict` and `git diff --check`
@@ -262,11 +300,11 @@ Deliberately not used (do not add them without a real need and the owner's say):
   `git add -A` over uncommitted editor or UID changes.
 - Commit every new `.gd` together with its `.gd.uid` sidecar.
 
-## Where this is going
+## What the plan adds next
 
-`docs/game-base-plan.md` §13.3 lists the conventions the migration will add: one Resource
-class per file with `##` docs and a `validate()`, every new component in its own file with
-a `KEY` const (`ecs_components.gd` frozen), systems grouped by phase with the order kept as
-data in `ecs/schedule/`, ids derived from folder names, and a `content/` folder with zero
-`.gd`. Those are **targets, not rules yet**: follow this file until the owner approves the
-`CLAUDE.md` changes at gate OG0 and the folders move.
+`docs/game-base-plan.md` §13.3 lists conventions that M1b did not need and later milestones add:
+a `validate()` on every schema class run by a test over every file `ContentDb` finds, ids derived
+from folder names by `ContentDb` (M2), systems grouped by phase with the order kept as data in
+`ecs/schedule/` (M3a), the file-naming suffixes `*_effect.gd`, `*_handler.gd`, `*_bridge.gd` as
+those kinds appear, and `.po` text keys instead of literal strings. Those are targets, not rules
+yet; the rules above are the ones the code and the guards already hold.
