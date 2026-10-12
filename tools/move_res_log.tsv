@@ -92,3 +92,8 @@ resources/enemies/pawn_recruit.tres	content/enemies/pawn_recruit/enemy.tres
 assets/sprites/generated/black_pawn.png	content/enemies/pawn_recruit/body.png
 resources/movement/pawn_charging.tres	content/enemies/charging_pawn/movement.tres
 resources/movement/pawn_backstep.tres	content/enemies/backstep_pawn/movement.tres
+resources/movement/knight_standard.tres	content/enemies/knight_tracker/movement.tres
+resources/decisions/knight_flanker.tres	content/enemies/knight_tracker/decision.tres
+resources/attacks/knight_leap.tres	content/enemies/knight_tracker/unarmed_attack.tres
+resources/visuals/knight_compatibility.tres	content/enemies/knight_tracker/visual.tres
+assets/sprites/generated/black_knight.png	content/enemies/knight_tracker/body.png
