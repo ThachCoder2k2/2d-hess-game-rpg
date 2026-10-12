@@ -1,6 +1,6 @@
 [gd_scene load_steps=2 format=3 uid="uid://bd85sjax3pwns"]
 
-[ext_resource type="Script" uid="uid://bd3rop7ewe721" path="res://scripts/world/player_unlock_marker.gd" id="1"]
+[ext_resource type="Script" uid="uid://bd3rop7ewe721" path="res://authoring/markers/player_unlock_marker.gd" id="1"]
 
 [node name="PlayerUnlockMarker" type="Node2D"]
 script = ExtResource("1")

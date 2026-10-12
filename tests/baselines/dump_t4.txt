@@ -112,10 +112,10 @@ CurrentZone/BackstepPawn/MotionRoot/SpriteRoot/HealthPips/Pip2 Sprite2D
 CurrentZone/BackstepPawn/MotionRoot/SpriteRoot/WeaponPivot Node2D
 CurrentZone/BackstepPawn/MotionRoot/SpriteRoot/WeaponPivot/WeaponSprite Sprite2D
 CurrentZone/BackstepPawn/TelegraphAura Sprite2D
-CurrentZone/Entry_From_B1 Marker2D script=res://scripts/world/zone_entry_marker.gd position=(496.00,84.00)
-CurrentZone/Entry_West Marker2D script=res://scripts/world/zone_entry_marker.gd position=(112.00,212.00)
-CurrentZone/Exit_To_B1 Marker2D script=res://scripts/world/zone_exit_marker.gd position=(528.00,84.00)
-CurrentZone/Exit_To_T3 Marker2D script=res://scripts/world/zone_exit_marker.gd position=(80.00,212.00)
+CurrentZone/Entry_From_B1 Marker2D script=res://authoring/markers/zone_entry_marker.gd position=(496.00,84.00)
+CurrentZone/Entry_West Marker2D script=res://authoring/markers/zone_entry_marker.gd position=(112.00,212.00)
+CurrentZone/Exit_To_B1 Marker2D script=res://authoring/markers/zone_exit_marker.gd position=(528.00,84.00)
+CurrentZone/Exit_To_T3 Marker2D script=res://authoring/markers/zone_exit_marker.gd position=(80.00,212.00)
 CurrentZone/PawnRecruit Node2D script=res://presentation/views/actor_view.gd position=(368.00,116.00) z_index=4
 CurrentZone/PawnRecruit/AnimationPlayer AnimationPlayer
 CurrentZone/PawnRecruit/AnimationTree AnimationTree
@@ -131,7 +131,7 @@ CurrentZone/PawnRecruit/MotionRoot/SpriteRoot/HealthPips/Pip2 Sprite2D
 CurrentZone/PawnRecruit/MotionRoot/SpriteRoot/WeaponPivot Node2D
 CurrentZone/PawnRecruit/MotionRoot/SpriteRoot/WeaponPivot/WeaponSprite Sprite2D
 CurrentZone/PawnRecruit/TelegraphAura Sprite2D
-CurrentZone/PencilSpearPickup Node2D script=res://scripts/world/pickup_spawn_point.gd position=(304.00,244.00)
+CurrentZone/PencilSpearPickup Node2D script=res://authoring/markers/pickup_spawn_point.gd position=(304.00,244.00)
 CurrentZone/RoomArt Node2D position=(0.00,0.00) z_index=-20
 CurrentZone/RoomArt/Frame Polygon2D position=(52.00,24.00)
 CurrentZone/RoomArt/GridLines Node2D script=res://scripts/world/grid_lines_overlay.gd position=(0.00,0.00)

@@ -2,7 +2,7 @@
 
 [ext_resource type="PackedScene" uid="uid://cxwxrf8td7kh1" path="res://objects/world/room_encounter.tscn" id="1"]
 [ext_resource type="Script" uid="uid://drrg761p361t0" path="res://scripts/world/grid_lines_overlay.gd" id="19"]
-[ext_resource type="PackedScene" uid="uid://bfu3s8us3gcqd" path="res://objects/markers/pickup_spawn_point.tscn" id="2"]
+[ext_resource type="PackedScene" uid="uid://bfu3s8us3gcqd" path="res://authoring/markers/pickup_spawn_point.tscn" id="2"]
 [ext_resource type="Resource" uid="uid://d0qxvb8xdjbov" path="res://resources/weapons/pencil_spear.tres" id="4"]
 [ext_resource type="Resource" uid="uid://po15384k0voh" path="res://resources/weapons/ruler_blade.tres" id="5"]
 [ext_resource type="Resource" uid="uid://corglo0dhnjbc" path="res://resources/enemies/pawn_armed.tres" id="7"]

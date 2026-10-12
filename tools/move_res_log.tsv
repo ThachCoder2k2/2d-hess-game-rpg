@@ -32,3 +32,14 @@ scripts/ecs/ecs_boot.gd	authoring/ecs_boot.gd
 scripts/ecs/ecs_actor_factory.gd	authoring/ecs_actor_factory.gd
 scripts/ecs/components	authoring/entity_components
 scripts/ecs/actor_view.gd	presentation/views/actor_view.gd
+scripts/world/grid_marker.gd	authoring/markers/grid_marker.gd
+scripts/world/blocker_marker.gd	authoring/markers/blocker_marker.gd
+scripts/world/gate_marker.gd	authoring/markers/gate_marker.gd
+scripts/world/pickup_spawn_point.gd	authoring/markers/pickup_spawn_point.gd
+scripts/world/player_unlock_marker.gd	authoring/markers/player_unlock_marker.gd
+scripts/world/zone_entry_marker.gd	authoring/markers/zone_entry_marker.gd
+scripts/world/zone_exit_marker.gd	authoring/markers/zone_exit_marker.gd
+objects/markers/blocker_marker.tscn	authoring/markers/blocker_marker.tscn
+objects/markers/gate_marker.tscn	authoring/markers/gate_marker.tscn
+objects/markers/pickup_spawn_point.tscn	authoring/markers/pickup_spawn_point.tscn
+objects/markers/player_unlock_marker.tscn	authoring/markers/player_unlock_marker.tscn

@@ -1,6 +1,6 @@
 [gd_scene load_steps=2 format=3 uid="uid://dvy0hol3co7kw"]
 
-[ext_resource type="Script" uid="uid://xecnhcj233a8" path="res://scripts/world/blocker_marker.gd" id="1"]
+[ext_resource type="Script" uid="uid://xecnhcj233a8" path="res://authoring/markers/blocker_marker.gd" id="1"]
 
 [node name="Blocker" type="Node2D"]
 z_index = -10
