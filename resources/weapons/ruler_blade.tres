@@ -1,6 +1,6 @@
 [gd_resource type="Resource" script_class="EnemyWeapon" format=3 uid="uid://po15384k0voh"]
 
-[ext_resource type="Script" uid="uid://s15i4wk2lxn4" path="res://scripts/combat/enemy_weapon.gd" id="1"]
+[ext_resource type="Script" uid="uid://s15i4wk2lxn4" path="res://schema/attacks/enemy_weapon.gd" id="1"]
 [ext_resource type="Texture2D" uid="uid://cwfqcxn8ifl0r" path="res://assets/sprites/generated/ruler_blade.png" id="2"]
 
 [resource]

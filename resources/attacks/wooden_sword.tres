@@ -1,6 +1,6 @@
 [gd_resource type="Resource" script_class="AttackProfile" format=3 uid="uid://byvw26cd7u12f"]
 
-[ext_resource type="Script" uid="uid://kp0wge5nj2h5" path="res://scripts/combat/attack_profile.gd" id="1"]
+[ext_resource type="Script" uid="uid://kp0wge5nj2h5" path="res://schema/attacks/attack_profile.gd" id="1"]
 [ext_resource type="Texture2D" uid="uid://6hr88wvg8w12" path="res://assets/sprites/generated/toy_sword.png" id="2"]
 
 [resource]

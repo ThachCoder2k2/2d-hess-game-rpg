@@ -14,3 +14,5 @@ scripts/data/world_graph.gd	schema/world/world_graph.gd
 scripts/data/rule_book.gd	schema/world/rule_book.gd
 scripts/data/rule_entry.gd	schema/world/rule_entry.gd
 scripts/data/difficulty_profile.gd	schema/feel/difficulty_profile.gd
+scripts/combat/attack_profile.gd	schema/attacks/attack_profile.gd
+scripts/combat/enemy_weapon.gd	schema/attacks/enemy_weapon.gd
