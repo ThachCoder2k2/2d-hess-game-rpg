@@ -62,6 +62,7 @@ func _init() -> void:
 	_check_pictures_fit_their_boxes()
 	_check_static_scenes_show_what_the_game_draws()
 	_check_pips_against_every_head()
+	_check_the_base_scene_agrees_with_the_view_knobs()
 	# The tree is not running while _init() is on the stack, and a sprite is only "visible in the
 	# tree" (and has a global transform) once it is: wait one frame before booting actors.
 	await wait_frames(1)
@@ -151,6 +152,23 @@ func _check_pips_against_every_head() -> void:
 		var expected_to_overlap := KINDS_WHOSE_PIPS_OVERLAP_THE_CROWN.has(row.piece_type)
 		_expect(overlaps == expected_to_overlap,
 			"a %s's head (box top %s px from the centre) %s the pip row (down to %s px)%s" % [row.piece_type, head_top, "reaches into" if overlaps else "stays below", band_bottom, "" if overlaps == expected_to_overlap else ": decide whether its pips go over its crown (KINDS_WHOSE_PIPS_OVERLAP_THE_CROWN) or the pip row moves"])
+
+
+## The base scene shows, in the editor, the arrow and the held weapon where ViewSyncSystem will put
+## them for a piece facing down; those places also have a home in ActorView's "In the cell" knobs.
+## Two homes for one number are held equal here, so editing one without the other turns this red
+## and names both.
+func _check_the_base_scene_agrees_with_the_view_knobs() -> void:
+	var view := (load(BASE_SCENE_PATH) as PackedScene).instantiate() as ActorView
+	var arrow := view.get_node("MotionRoot/SpriteRoot/FacingArrow") as Sprite2D
+	_expect(arrow.position == Vector2.DOWN * view.facing_mark_distance,
+		"the base scene's facing arrow stands where the game puts it for a piece facing down (scene %s, ActorView.facing_mark_distance %s)" % [arrow.position, view.facing_mark_distance])
+	var weapon := view.get_node("MotionRoot/SpriteRoot/WeaponPivot/WeaponSprite") as Sprite2D
+	_expect(weapon.scale == Vector2.ONE * view.weapon_held_scale,
+		"the base scene's weapon is drawn at the size the game draws an enemy's (scene %s, ActorView.weapon_held_scale %s)" % [weapon.scale, view.weapon_held_scale])
+	_expect(weapon.position == Vector2(0.0, -view.weapon_rest_length),
+		"the base scene's weapon is held at the distance the game holds it (scene %s, ActorView.weapon_rest_length %s)" % [weapon.position, view.weapon_rest_length])
+	view.free()
 
 
 # --------------------------------------------------------------------------- at rest

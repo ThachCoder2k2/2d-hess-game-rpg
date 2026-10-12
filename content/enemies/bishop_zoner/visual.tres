@@ -8,11 +8,6 @@ script = ExtResource("1")
 piece_type = &"bishop"
 body_texture = ExtResource("2")
 id = &"bishop"
-telegraph_color = Color(0.68, 0.42, 0.95, 1)
-impact_color = Color(0.78, 0.55, 1, 1)
-weapon_anchor = Vector2(5, -2)
-hurt_animation = &"hurt"
-defeat_animation = &"defeat"
 clip_speed_scales = Dictionary[StringName, float]({
 &"idle": 1.25,
 &"step": 0.9,
