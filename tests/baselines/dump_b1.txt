@@ -153,15 +153,15 @@ PawnHero/AnimationPlayer AnimationPlayer
 PawnHero/AnimationTree AnimationTree
 PawnHero/AudioPlayer AudioStreamPlayer
 PawnHero/Camera2D Camera2D script=res://scripts/world/camera_rig.gd
-PawnHero/CombatComponent Node script=res://scripts/ecs/components/combat_component.gd
-PawnHero/HealthComponent Node script=res://scripts/ecs/components/health_component.gd
-PawnHero/InputComponent Node script=res://scripts/ecs/components/input_component.gd
+PawnHero/CombatComponent Node script=res://authoring/entity_components/combat_component.gd
+PawnHero/HealthComponent Node script=res://authoring/entity_components/health_component.gd
+PawnHero/InputComponent Node script=res://authoring/entity_components/input_component.gd
 PawnHero/MotionRoot Node2D
 PawnHero/MotionRoot/SpriteRoot Node2D
 PawnHero/MotionRoot/SpriteRoot/BodySprite Sprite2D
 PawnHero/MotionRoot/SpriteRoot/WeaponPivot Node2D
 PawnHero/MotionRoot/SpriteRoot/WeaponPivot/WeaponSprite Sprite2D
-PawnHero/MovementComponent Node script=res://scripts/ecs/components/movement_component.gd
+PawnHero/MovementComponent Node script=res://authoring/entity_components/movement_component.gd
 
 [textures] 26
 CurrentZone/BlackPawnCaptain/MotionRoot/SpriteRoot/BodySprite -> res://assets/sprites/generated/black_pawn.png

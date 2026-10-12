@@ -30,3 +30,4 @@ scripts/ecs/systems/health_system.gd	ecs/systems/resolve/health_system.gd
 scripts/ecs/systems/view_sync_system.gd	ecs/systems/view/view_sync_system.gd
 scripts/ecs/ecs_boot.gd	authoring/ecs_boot.gd
 scripts/ecs/ecs_actor_factory.gd	authoring/ecs_actor_factory.gd
+scripts/ecs/components	authoring/entity_components

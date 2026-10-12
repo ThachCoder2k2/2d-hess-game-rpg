@@ -29,7 +29,7 @@ const LEGACY_LAYER_RULES: Array = [
 	["res://scripts/combat/", "schema"],
 	["res://scripts/ai/", "schema"],
 	["res://scripts/ecs/systems/", "ecs/systems"],
-	["res://scripts/ecs/components/", "authoring"],
+	["res://authoring/entity_components/", "authoring"],
 	["res://ecs/components/ecs_components.gd", "ecs/components"],
 	["res://ecs/core/ecs_world.gd", "ecs/core"],
 	["res://ecs/core/ecs_grid.gd", "ecs/core"],
