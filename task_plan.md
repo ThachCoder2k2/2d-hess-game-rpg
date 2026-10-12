@@ -306,7 +306,7 @@ Acceptance criteria:
 - Board floor art should use TileMapLayer and TileSet assets. Avoid adding one Polygon2D node per floor tile.
 - Keep reusable object `.tscn` templates under `objects/`; keep `scenes/` limited to playable/editor entry scenes, rooms, and UI.
 - Actor and pickup bodies should be real sprite/animation scene nodes. Do not reintroduce `_draw()` body rendering in `pawn_hero.gd`, `free_enemy.gd`, or `scripts/visuals/pickup_visual.gd`.
-- Chess-piece sprite art (owner-approved look, 2026-08) is generated, not hand-painted: `tools/generate_chess_sprites.gd` owns the shape tables and bakes `assets/sprites/generated/chess/`. Change a silhouette by editing a row radius and re-running; never repaint an exported PNG. Its `manifest.json` is the only source for frame size, `anchor_row` (the row that sits on the CELL CENTRE) and `block_size_in_world_pixels`.
+- Chess-piece sprite art (owner-approved look, 2026-08) is generated, not hand-painted: `tools/generate_chess_sprites.gd` owns the shape tables and bakes `assets/_generated/chess/`. Change a silhouette by editing a row radius and re-running; never repaint an exported PNG. Its `manifest.json` is the only source for frame size, `anchor_row` (the row that sits on the CELL CENTRE) and `block_size_in_world_pixels`.
 
 ## Errors Encountered
 

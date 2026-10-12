@@ -530,7 +530,7 @@ height map without art, is reported rather than half-applied, and a mismatched
 pair of sizes is reported rather than stretched.
 
 **Nothing in either script ever writes to `assets/art/pieces/`.** Templates go to
-`assets/art/piece_templates/` and are overwritten every run; your work goes in
+`assets/_generated/piece_templates/` and are overwritten every run; your work goes in
 the other folder and is never touched.
 
 ---
@@ -865,5 +865,5 @@ plumbing you can read the day you need to change it.
 | a colour | `_stamp` pass 1 | `#2e565c` |
 | still that colour | passes 2–5 | no weave, no grain, no shadow, interior so no bevel |
 | four pixels | `_to_world_pixels` | `(3760, 2896)` to `(3761, 2897)` |
-| a file | `_save` | `assets/sprites/generated/maps/demo_map.png` |
+| a file | `_save` | `assets/_generated/maps/demo_map.png` |
 | a fact you can check | `_write_manifest` | `demo_map.json`, region 206 |

@@ -8,8 +8,8 @@ extends UnboundTest
 ##
 ## "Tracked" comes from `git ls-files`, not from the disk: a sidecar that exists
 ## locally but was never committed is exactly the bug this guard catches.
-## Ignored generated art (assets/sprites/generated/{chess,tiles,maps,rooms}) is not
-## tracked at all, so it is not expected to carry tracked sidecars.
+## Ignored generated art (everything under assets/_generated/) is not tracked at
+## all, so it is not expected to carry tracked sidecars.
 ## Flip ENFORCING to true when the tree is clean (M1b).
 
 const ProjectFiles := preload("res://tests/architecture/project_files.gd")

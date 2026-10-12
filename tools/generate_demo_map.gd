@@ -41,7 +41,7 @@ extends SceneTree
 ##     HOME=/tmp/unbound-pawn-godot ../Godot.app/Contents/MacOS/Godot \
 ##         --headless --path . -s tools/generate_demo_map.gd
 
-const TILE_DIR := "res://assets/sprites/generated/tiles"
+const TILE_DIR := "res://assets/_generated/tiles"
 
 ## WHERE THE HAND-DRAWN ART GOES. Two folders, and the difference matters:
 ##   PIECE_ART_DIR       — yours. Drop "bed.png" and "bed_height.png" in here and
@@ -63,7 +63,7 @@ const PIECE_ART_DIR := "res://assets/art/pieces"
 ## now, so you can repaint the wallpaper or redraw the window and leave the rest
 ## of the floor exactly as it is.
 const ROOM_ART_NAME := "the_room"
-const PIECE_TEMPLATE_DIR := "res://assets/art/piece_templates"
+const PIECE_TEMPLATE_DIR := "res://assets/_generated/piece_templates"
 
 ## THE HEIGHT MAP'S KEY. One flat colour per height, painted at one pixel per
 ## block on the "<name>_height.png" beside your art. Anything left transparent is
@@ -78,7 +78,7 @@ const HEIGHT_IN_INCHES_BY_COLOUR := {
 	"ffb300": 30, "fb8c00": 36, "e65100": 42, "d84315": 48, "b71c1c": 54,
 	"6a1b9a": 60,
 }
-const OUTPUT_DIR := "res://assets/sprites/generated/maps"
+const OUTPUT_DIR := "res://assets/_generated/maps"
 const MAP_WIDTH_IN_CELLS := 128
 const MAP_HEIGHT_IN_CELLS := 96
 

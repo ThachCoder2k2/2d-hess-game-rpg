@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 # Make a fresh clone or a fresh git worktree test-ready in one command.
 #
-# Why this exists: generated art (assets/sprites/generated/{chess,tiles,maps,rooms})
-# is gitignored, so a new checkout has scenes that point at textures that are not
+# Why this exists: generated art (everything under assets/_generated/) is
+# gitignored, so a new checkout has scenes that point at textures that are not
 # there yet, and the global-class cache (.godot/) does not exist, so strict-typed
 # scripts do not parse. This script runs three steps:
 #   1. an editor import pass, to import the tracked audio and art and register

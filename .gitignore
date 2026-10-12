@@ -7,18 +7,16 @@ build/
 docs/vault/.obsidian/
 docs/archive/vault/.obsidian/
 
-# Generated art. Every file in these folders is rebuilt from scratch by a script
-# in tools/, so the repo carries the generator and not its output — otherwise one
-# tweaked constant churns hundreds of binary files in the diff.
-assets/sprites/generated/chess/
-assets/sprites/generated/tiles/
-assets/sprites/generated/maps/
-assets/sprites/generated/rooms/
-assets/art/piece_templates/
+# Generated art. Every file under assets/_generated/ (chess, tiles, maps, rooms,
+# piece_templates) is rebuilt from scratch by a script in tools/, so the repo
+# carries the generator and not its output — otherwise one tweaked constant churns
+# hundreds of binary files in the diff. Never hand-edit anything in there.
+assets/_generated/
 
 # NOT ignored, on purpose: the PNGs sitting directly in assets/sprites/generated/
 # (hero_pawn.png, toy_sword.png, black_pawn.png, ...). Despite the folder name no
-# script draws them, so they are source art and a fresh clone needs them.
+# script draws them, so they are source art and a fresh clone needs them. They move
+# to content/<kind>/<id>/body.png in a later M1b step; this note goes with them.
 
 # NOT ignored, on purpose: assets/art/pieces/. That is hand-drawn source art.
 # Nothing regenerates it and losing it loses the work.

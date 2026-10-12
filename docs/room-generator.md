@@ -183,7 +183,7 @@ this piece". The key is written out three ways next to the templates:
 
 `the_room` is drawable on the same terms, at the origin, covering the whole map.
 
-Templates are re-exported to `assets/art/piece_templates/` on **every run** and
+Templates are re-exported to `assets/_generated/piece_templates/` on **every run** and
 are identical to what the generator draws, so you paint over them rather than
 starting from nothing — and so you replace one piece at a time while everything
 else keeps building and the routes keep being checked.

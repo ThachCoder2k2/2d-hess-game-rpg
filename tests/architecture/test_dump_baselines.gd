@@ -12,8 +12,8 @@ extends UnboundTest
 ##   godot --headless --path . -s tools/dump_world.gd -- --write-baselines
 ## and reviewing the baseline diff in the same commit.
 ##
-## Needs the generated art (tools/bootstrap_worktree.sh): rooms name textures under
-## assets/sprites/generated/.
+## Needs the generated art (tools/bootstrap_worktree.sh): the T1 and T2 rooms name
+## their background textures under assets/_generated/rooms/.
 
 const WorldDumper := preload("res://tools/world_dumper.gd")
 

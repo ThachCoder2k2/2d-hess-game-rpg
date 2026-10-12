@@ -145,8 +145,8 @@ and in the new room add the entry it names and an exit back. (4) Open the game a
   (`rendering/textures/canvas_textures/default_texture_filter = 0`); the existing sprites import
   lossless with no mipmaps. Do not set linear filtering on a sprite.
 * **Folders by purpose.**
-  `assets/sprites/generated/chess/`, `tiles/`, `maps/` and `rooms/` are rebuilt by
-  `tools/generate_*.gd` and are gitignored (run `tools/bootstrap_worktree.sh` on a fresh checkout).
+  `assets/_generated/` (`chess/`, `tiles/`, `maps/`, `rooms/`, `piece_templates/`) is rebuilt by
+  `tools/generate_*.gd` and is gitignored (run `tools/bootstrap_worktree.sh` on a fresh checkout).
   PNGs directly in `assets/sprites/generated/` are hand-kept source art and are tracked.
   `assets/art/pieces/` is hand-drawn source art. `assets/concept-art/` is reference only, never
   production art. `assets/tiles/` holds the tile sheets, `assets/sfx/` and `assets/music/` the sounds.
@@ -161,5 +161,5 @@ and in the new room add the entry it names and an exit back. (4) Open the game a
 
 * `scripts/ecs/` and the systems: all decisions live there. Views and components hold no logic.
 * `.uid` and `.import` files, and `tile_map_data` lines, by hand.
-* Anything under `assets/sprites/generated/{chess,tiles,maps,rooms}`: regenerate it instead.
+* Anything under `assets/_generated/` (chess, tiles, maps, rooms, piece_templates): regenerate it instead.
 * Content values inside scripts: tuning lives in `.tres` files, and the Resource is the truth.

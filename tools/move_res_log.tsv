@@ -1,0 +1,7 @@
+# tools/move_res.py move log: <old res path><TAB><new res path>, oldest first.
+# Replay onto late files with: tools/move_res.py --rewrite-only FILE...
+assets/sprites/generated/rooms	assets/_generated/rooms
+assets/sprites/generated/maps	assets/_generated/maps
+assets/sprites/generated/tiles	assets/_generated/tiles
+assets/sprites/generated/chess	assets/_generated/chess
+assets/art/piece_templates	assets/_generated/piece_templates

@@ -26,6 +26,24 @@ tolerates), runs the four generators, imports again, and exits non-zero on any `
 Verified on a brand-new `git clone` of the branch: after the script, the whole suite and every new
 test pass and `git status` is clean.
 
+### Where generator output goes
+
+Everything a generator writes lives under `assets/_generated/` (gitignored, never hand-edited):
+`chess/`, `tiles/`, `maps/`, `rooms/` and `piece_templates/` (the paintable templates
+`generate_demo_map.gd` re-exports on every run). The output folder is one `const` at the top of
+each generator (`OUT_DIR`, `OUTPUT_DIR`, `TILE_DIR`, `PIECE_TEMPLATE_DIR`). Hand-drawn source art
+is never written by a tool: `assets/art/pieces/` and the 12 tracked PNGs directly in
+`assets/sprites/generated/` (which move to `content/<kind>/<id>/body.png` in a later M1b step).
+
+A tracked scene that names a generated PNG (today only the T1 and T2 room backgrounds) carries that
+PNG's uid. Godot 4.6.3 derives the uid of a freshly imported file from the project name and the
+file's path (measured: deleting `.godot/` and `assets/_generated/` and re-running
+`bootstrap_worktree.sh` twice gave the same two uids both times), so a fresh clone gets the uid the
+scene names. Moving or renaming generated output, or renaming the project, changes that uid: edit
+the scene line by hand to the new `uid=` from the PNG's `.import` file and confirm with
+`stamp_uids.gd --check`, which lists the mismatch as a `STALE` warning (the exit code does not
+change). Without the fix Godot falls back to the path and prints a warning.
+
 ## Every tool, one line each
 
 | Tool | What it does |
@@ -36,10 +54,10 @@ test pass and `git status` is clean.
 | `move_res.py` | `git mv` a file or folder with its `.uid`/`.import` sidecars and rewrite every `res://` string that pointed at it. `--dry-run`, `--rewrite-only`, `--rename-action`, `--import-pass`, `--self-test`. |
 | `dump_world.gd` | Boots a room headless, runs N manual ticks, prints the sorted node paths, texture paths and entity cells/components. `--room=t1`, `--write-baselines`, `--list`. |
 | `world_dumper.gd` | The dump logic, shared by `dump_world.gd` and `tests/architecture/test_dump_baselines.gd` (a helper, not a command; no `class_name`). |
-| `generate_chess_sprites.gd` | Bakes the chess-piece sprites (art language v13) to `assets/sprites/generated/chess/`. |
-| `generate_kingdom_tiles.gd` | Bakes the room materials as pixel tiles, a contact sheet and a manifest (same art language as the pieces). |
-| `generate_demo_map.gd` | Draws the pawn-scale bedroom demo world with the kingdom tiles into `assets/sprites/generated/maps/`. |
-| `generate_stage1_room_art.gd` | Paints the Stage-1 room backgrounds (T1, T2, ...) into `assets/sprites/generated/rooms/`. |
+| `generate_chess_sprites.gd` | Bakes the chess-piece sprites (art language v13) to `assets/_generated/chess/`. |
+| `generate_kingdom_tiles.gd` | Bakes the room materials as pixel tiles, a contact sheet and a manifest (same art language as the pieces) into `assets/_generated/tiles/`. |
+| `generate_demo_map.gd` | Draws the pawn-scale bedroom demo world with the kingdom tiles into `assets/_generated/maps/` and re-exports the paintable piece templates to `assets/_generated/piece_templates/`. |
+| `generate_stage1_room_art.gd` | Paints the Stage-1 room backgrounds (T1, T2, ...) into `assets/_generated/rooms/`. |
 | `generate_playground_tilemap.gd` | Builds the playground tile set and tilemap scene. Uses `ResourceSaver`: run `stamp_uids.gd` after it. |
 | `paint_kingdom_tilemap.gd` | Paints the first room's throne-room floor into `objects/world/kingdom_tilemap.tscn`. Uses `ResourceSaver`: run `stamp_uids.gd` after it. |
 | `paint_zone_tilemaps.gd` | Carves the 72x40 kingdom board into `objects/world/kingdom_world_tilemap.tscn`. Uses `ResourceSaver`: run `stamp_uids.gd` after it. |

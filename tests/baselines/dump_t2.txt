@@ -85,7 +85,7 @@ PawnHero/MotionRoot/SpriteRoot/WeaponPivot/WeaponSprite Sprite2D
 PawnHero/MovementComponent Node script=res://scripts/ecs/components/movement_component.gd
 
 [textures] 4
-CurrentZone/RoomArt/ProductionBackground -> res://assets/sprites/generated/rooms/t2_fallen_sword_tile_room.png
+CurrentZone/RoomArt/ProductionBackground -> res://assets/_generated/rooms/t2_fallen_sword_tile_room.png
 CurrentZone/RoomArt/TileMap#tile_set_source0 -> res://assets/tiles/kingdom_tiles.svg
 PawnHero/MotionRoot/SpriteRoot/BodySprite -> res://assets/sprites/generated/hero_pawn_unarmed.png
 PawnHero/MotionRoot/SpriteRoot/WeaponPivot/WeaponSprite -> res://assets/sprites/generated/toy_sword.png
