@@ -8,11 +8,11 @@ in "Authoring doctrine" below.
 ## Architecture
 
 - **Entity** = integer id. No behavior, no node.
-- **Component** = pure data (typed inner classes in `scripts/ecs/ecs_components.gd`).
+- **Component** = pure data (typed inner classes in `ecs/components/ecs_components.gd`).
   No methods beyond trivial constructors.
 - **System** = logic that queries entities by component set and mutates data.
   Ticked in fixed order by the world each frame.
-- **World** (`scripts/ecs/ecs_world.gd`, `EcsWorld extends Node`) = component
+- **World** (`ecs/core/ecs_world.gd`, `EcsWorld extends Node`) = component
   stores (`store_by_component: component name → {entity_id → data}`), entity
   lifecycle, system registry + tick loop, and an event queue
   (`pending_events: Array[Dictionary]`) for cross-system messages
@@ -81,7 +81,7 @@ resources become component templates.
 
 ## Rules for the conversion
 
-- Never half-flip: until phase D lands whole, `scenes/main.tscn` runs the node
+- Never half-flip: until phase D lands whole, the main scene (then `scenes/main.tscn`, now `shell/game_root.tscn`) runs the node
   game and all existing tests stay green.
 - Systems never call node APIs except ViewSyncSystem.
 - Components hold no logic; if a "component" grows a method with a decision in
