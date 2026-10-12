@@ -13,15 +13,19 @@ filling: taking the min and max filled column of a row spans straight across
 them, which is exactly what a solid silhouette wants.
 
 Run:
-    python3 tools/trace_knight_glyph.py
+    python3 tools/trace_knight_glyph.py              # 15 rows: the shipped knight
+    python3 tools/trace_knight_glyph.py --rows 21    # the same glyph on more rows (the old knight)
 
 Then paste the two printed arrays over KNIGHT_FRONT / KNIGHT_BACK in
 tools/generate_chess_sprites.gd and re-run that generator. Do not hand-edit a
-single row afterwards — retrace instead.
+single row afterwards — retrace instead. The row count is the one thing the owner's
+size table (content/feel/piece_sizes.tres) decides: the head plus its pedestal must fit
+the knight's box.
 
 Requires Pillow (`python3 -m pip install pillow`).
 """
 
+import argparse
 import math
 
 from PIL import Image, ImageDraw, ImageFont
@@ -32,8 +36,11 @@ FONT_PATH = "/System/Library/Fonts/Apple Symbols.ttf"
 GLYPH = "♞"
 RENDER_POINTS = 900
 
-# The head occupies this many rows of the sprite; the pedestal is lathed below it.
-TARGET_ROWS = 21
+# The head occupies this many rows of the sprite unless --rows says otherwise; the
+# pedestal is lathed below it. 15 is what the size table's knight box (20 x 24) allows and
+# what the arrays in the generator were traced at; the original tables used 21 (26 x 32,
+# as tall as the cell), and `--rows 21` still reproduces them.
+DEFAULT_TARGET_ROWS = 15
 
 # Shift right so the neck's base centres over the pedestal. Measured, not guessed:
 # offset 0 puts the muzzle tip hard against x=0, leaving the outline ring nowhere
@@ -63,13 +70,15 @@ def render_glyph_mask() -> tuple[list[list[bool]], int, int]:
     return grid, width, height
 
 
-def trace_spans(grid: list[list[bool]], width: int, height: int) -> tuple[list[int], list[int]]:
+def trace_spans(
+    grid: list[list[bool]], width: int, height: int, target_rows: int
+) -> tuple[list[int], list[int]]:
     """Reduce the full-resolution mask to one [leftmost, rightmost] pair per sprite row."""
-    scale = TARGET_ROWS / height
+    scale = target_rows / height
     front: list[int] = []
     back: list[int] = []
 
-    for row in range(TARGET_ROWS):
+    for row in range(target_rows):
         # The band of source rows that collapses into this one sprite row.
         top = int(row / scale)
         bottom = max(top + 1, int((row + 1) / scale))
@@ -101,11 +110,19 @@ def print_block_grid(front: list[int], back: list[int]) -> None:
 
 
 def main() -> None:
+    parser = argparse.ArgumentParser(description=__doc__.split("\n")[0])
+    parser.add_argument(
+        "--rows",
+        type=int,
+        default=DEFAULT_TARGET_ROWS,
+        help="how many sprite rows the head takes (default %(default)s)",
+    )
+    target_rows = parser.parse_args().rows
     grid, width, height = render_glyph_mask()
-    front, back = trace_spans(grid, width, height)
+    front, back = trace_spans(grid, width, height, target_rows)
 
     print(
-        f"glyph {width} x {height} px -> {TARGET_ROWS} rows, "
+        f"glyph {width} x {height} px -> {target_rows} rows, "
         f"{max(back) - min(front) + 1} blocks wide, x offset {X_OFFSET}"
     )
     print()

@@ -24,8 +24,6 @@ extends RefCounted
 ## Nodes under an ActorView print structure only: animations and ViewSyncSystem
 ## drive their transforms, which depend on frame timing.
 
-## The world graph that names every room (zone id -> scene). move_res.py rewrites this path.
-const WORLD_GRAPH_PATH := "res://content/world/world.tres"
 ## The player's puppet view, the same scene shell/game_root.tscn instances as PawnHero.
 const PLAYER_VIEW_SCENE_PATH := "res://presentation/views/actors/player.tscn"
 const BASELINE_DIRECTORY := "res://tests/baselines"
@@ -63,9 +61,9 @@ func baseline_path(room_id: String) -> String:
 func resolve_room(room_id: String) -> Dictionary:
 	if room_id.begins_with("res://"):
 		return {"zone_id": room_id.get_file().get_basename(), "scene_path": room_id}
-	var world_graph := load(WORLD_GRAPH_PATH) as WorldGraph
+	var world_graph := ContentDb.world()
 	if world_graph == null:
-		last_error = "cannot load the world graph at %s" % WORLD_GRAPH_PATH
+		last_error = "cannot load the world graph (%s)" % ContentDb.path_of(&"world", &"world")
 		return {}
 	var matching_zone_ids: Array[String] = []
 	for zone_id: StringName in world_graph.zone_scene_by_id:
@@ -86,7 +84,7 @@ func resolve_room(room_id: String) -> Dictionary:
 ## Every zone id in the world graph, sorted (for --list).
 func list_zone_ids() -> Array[String]:
 	var zone_ids: Array[String] = []
-	var world_graph := load(WORLD_GRAPH_PATH) as WorldGraph
+	var world_graph := ContentDb.world()
 	if world_graph != null:
 		for zone_id: StringName in world_graph.zone_scene_by_id:
 			zone_ids.append(String(zone_id))
@@ -164,6 +162,18 @@ func dump_room(tree: SceneTree, room_id: String, tick_count := DEFAULT_TICK_COUN
 	_dump_root.free()
 	_dump_root = null
 	return text
+
+
+## The "[entities at boot]" lines for a world that some other tool booted (tools/actor_dumper.gd
+## describes one actor at a time): every entity, every component, every script variable, printed
+## exactly as the room dumps print them. `dump_root` is the node that node paths are written
+## relative to, so a `view_ref` reads `node(Actor)` and not an engine path.
+func describe_world_entities(world: EcsWorld, dump_root: Node) -> PackedStringArray:
+	_dump_root = dump_root
+	var lines := PackedStringArray()
+	_append_entity_details(lines, world)
+	_dump_root = null
+	return lines
 
 
 ## The cell of the entry marker named "start", else the first marker, like game_root.gd._find_entry_cell.

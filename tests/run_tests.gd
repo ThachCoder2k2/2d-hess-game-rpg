@@ -91,14 +91,20 @@ func _init() -> void:
 	_expect(hero_view.get_node_or_null("AudioPlayer") is AudioStreamPlayer, "player view carries the clip-keyed audio player")
 	_expect(hero_view.definition == null, "player view has no enemy definition")
 	_expect(hero_view.get_node_or_null("Camera2D") is CameraRig, "player view carries the camera rig")
-	var hero_health_node := hero_view.get_node_or_null("HealthComponent") as HealthComponent
-	_expect(hero_health_node != null and hero_health_node.max_health == 3, "player view carries an editor-tunable HealthComponent node")
-	var hero_combat_node := hero_view.get_node_or_null("CombatComponent") as CombatComponent
-	_expect(hero_combat_node != null and hero_combat_node.wooden_sword != null \
-		and hero_combat_node.wooden_sword.resource_path.ends_with("wooden_sword.tres") \
-		and hero_combat_node.pencil_thrust != null, "CombatComponent node carries the attack loadout")
-	_expect(hero_view.get_node_or_null("MovementComponent") is MovementComponent \
-		and hero_view.get_node_or_null("InputComponent") is InputComponent, "player view carries movement and input component nodes")
+	# The hero's tuning is content/player/player.tres (a PlayerDefinition), not Inspector values on
+	# component nodes of the scene; EntityComponent nodes are optional per-instance overrides.
+	var hero_definition := hero_view.player_definition
+	_expect(hero_definition != null and hero_definition.resource_path == "res://content/player/player.tres" \
+		and hero_definition.max_courage >= 1 and hero_definition.invulnerability_duration > 0.0, "player view names content/player/player.tres, which carries the courage and invulnerability")
+	_expect(hero_definition != null and hero_definition.wooden_sword != null \
+		and hero_definition.wooden_sword.resource_path.ends_with("wooden_sword.tres") \
+		and hero_definition.pencil_thrust != null, "PlayerDefinition carries the attack loadout")
+	var hero_component_node_count := 0
+	for hero_child in hero_view.get_children():
+		if hero_child is EntityComponent:
+			hero_component_node_count += 1
+	_expect(hero_definition != null and hero_definition.step_duration > 0.0 and hero_definition.held_repeat_delay > 0.0 \
+		and hero_component_node_count == 0, "PlayerDefinition carries the step and hold timings, so the view carries no component nodes")
 	_expect(_actor_has_state_graph(hero_view), "player animation transitions live in an editor AnimationTree graph")
 	var view_source := FileAccess.get_file_as_string("res://presentation/views/actor_view.gd")
 	# A moved file reads as "", which would make the "does not contain" check pass for nothing.
@@ -109,7 +115,6 @@ func _init() -> void:
 		"res://presentation/views/actors/black_pawn.tscn": &"pawn_recruit",
 		"res://presentation/views/actors/knight_enemy.tscn": &"knight_tracker",
 		"res://presentation/views/actors/bishop_enemy.tscn": &"bishop_zoner",
-		"res://presentation/views/actors/enemy_base.tscn": &"pawn_recruit",
 	}
 	for scene_path: String in expected_definitions:
 		var enemy_view := _view(scene_path)

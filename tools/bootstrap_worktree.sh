@@ -6,12 +6,14 @@
 # generated art (everything under assets/_generated/) is gitignored, so it does not
 # exist either. No tracked scene names generated art any more (the room backgrounds
 # are tracked stand-ins in content/), but the generated pictures are what
-# tools/seed_placeholders.gd copies from for a new room. This script runs three steps:
+# tools/seed_placeholders.gd copies from for a new room. This script runs four steps:
 #   1. an editor import pass, to import the tracked audio and art and register
 #      every class_name (the SfxManager autoload loads imported .wav files, so the
 #      generators print resource errors if they run before this);
 #   2. the four generators in tools/;
-#   3. a second import pass, to import what the generators just wrote.
+#   3. a second import pass, to import what the generators just wrote;
+#   4. tools/render_actor_preview.gd, which draws every actor in its cell into
+#      assets/_generated/previews/pieces_in_cells.png for the owner to look at.
 #
 # Usage (from anywhere):
 #   tools/bootstrap_worktree.sh                  # bootstrap the project this script lives in
@@ -125,6 +127,17 @@ done
 
 # 3. import what the generators wrote (.import files for the new PNGs).
 run_import_pass import_after_generators || failed=1
+
+# 4. the owner's picture of every piece in its cell (needs the class registry the passes built).
+echo "bootstrap: running tools/render_actor_preview.gd"
+if ! "$godot_bin" --headless --path . -s "tools/render_actor_preview.gd" >"$HOME/render_actor_preview.log" 2>&1; then
+	echo "bootstrap: FAILED tools/render_actor_preview.gd (see $HOME/render_actor_preview.log)" >&2
+	tail -n 5 "$HOME/render_actor_preview.log" >&2
+	failed=1
+elif grep -q -E "SCRIPT ERROR|Parse Error" "$HOME/render_actor_preview.log"; then
+	echo "bootstrap: tools/render_actor_preview.gd printed script errors (see $HOME/render_actor_preview.log)" >&2
+	failed=1
+fi
 
 if [ "$failed" -eq 0 ]; then
 	echo "bootstrap: OK. Run the suite with: HOME=$HOME \"$godot_bin\" --headless --path . -s tests/run_tests.gd"

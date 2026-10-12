@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="EnemyWeapon" format=3 uid="uid://bv2siutgkpqeq"]
+
+[ext_resource type="Script" uid="uid://s15i4wk2lxn4" path="res://schema/attacks/enemy_weapon.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"toy_weapon"
+display_name = "Toy Weapon"
+shape = 0
+range_cells = 1
+damage = 1
+telegraph_time = 0.55
+recovery_time = 0.55
+color = Color(0.556863, 0.784314, 0.909804, 1)

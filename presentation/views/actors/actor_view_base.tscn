@@ -1,0 +1,555 @@
+[gd_scene format=3 uid="uid://dpqgd231wmnde"]
+
+[ext_resource type="Script" uid="uid://16la5b2fanxj" path="res://presentation/views/actor_view.gd" id="1"]
+[ext_resource type="Texture2D" uid="uid://h38rg0optq8b" path="res://content/player/body.png" id="2"]
+[ext_resource type="Texture2D" uid="uid://6hr88wvg8w12" path="res://content/skills/wooden_sword/icon.png" id="3"]
+[ext_resource type="Texture2D" uid="uid://bs64j61xywio8" path="res://assets/ui/actor_view/warning_aura.png" id="4"]
+[ext_resource type="Texture2D" uid="uid://cxpkyp4qmxeo5" path="res://assets/ui/actor_view/facing_arrow.png" id="5"]
+[ext_resource type="Texture2D" uid="uid://cwjf56oelxo4s" path="res://assets/ui/actor_view/health_pip_full.png" id="6"]
+[ext_resource type="Texture2D" uid="uid://co6ihhq0vjc6n" path="res://assets/ui/actor_view/health_pip_empty.png" id="7"]
+[ext_resource type="AudioStream" uid="uid://cnmrlnbvy2lik" path="res://assets/sfx/telegraph_warning.wav" id="8"]
+[ext_resource type="AudioStream" uid="uid://df37iqtb0lyvc" path="res://assets/sfx/hurt_thud.wav" id="9"]
+[ext_resource type="AudioStream" uid="uid://dpan0cjntr6dy" path="res://assets/sfx/defeat_crumple.wav" id="10"]
+[ext_resource type="AudioStream" uid="uid://b2panfygxfrkm" path="res://assets/sfx/sword_whoosh.wav" id="11"]
+[ext_resource type="AudioStream" uid="uid://cvipxkb1tdx5e" path="res://assets/sfx/wake_stir.wav" id="12"]
+[ext_resource type="Resource" uid="uid://c036lr1yfryoe" path="res://content/feel/piece_sizes.tres" id="13"]
+
+[sub_resource type="Animation" id="Animation_reset"]
+length = 0.001
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("MotionRoot/SpriteRoot:position")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 0,
+"values": [Vector2(0, 0)]
+}
+tracks/1/type = "value"
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/path = NodePath("MotionRoot/SpriteRoot:scale")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 0,
+"values": [Vector2(1, 1)]
+}
+tracks/2/type = "value"
+tracks/2/imported = false
+tracks/2/enabled = true
+tracks/2/path = NodePath("MotionRoot/SpriteRoot/WeaponPivot/WeaponSprite:rotation")
+tracks/2/interp = 1
+tracks/2/loop_wrap = true
+tracks/2/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 0,
+"values": [0.0]
+}
+tracks/3/type = "value"
+tracks/3/imported = false
+tracks/3/enabled = true
+tracks/3/path = NodePath("MotionRoot/SpriteRoot:rotation")
+tracks/3/interp = 1
+tracks/3/loop_wrap = true
+tracks/3/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 0,
+"values": [0.0]
+}
+
+[sub_resource type="Animation" id="Animation_idle"]
+resource_name = "idle"
+length = 0.9
+loop_mode = 1
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("MotionRoot/SpriteRoot:position")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 0.45, 0.9),
+"transitions": PackedFloat32Array(1, 1, 1),
+"update": 0,
+"values": [Vector2(0, 0), Vector2(0, -1.0), Vector2(0, 0)]
+}
+
+[sub_resource type="Animation" id="Animation_step"]
+resource_name = "step"
+length = 0.18
+loop_mode = 1
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("MotionRoot/SpriteRoot:position")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 0.09, 0.18),
+"transitions": PackedFloat32Array(1, 1, 1),
+"update": 0,
+"values": [Vector2(0, 0), Vector2(0, -2), Vector2(0, 0)]
+}
+tracks/1/type = "value"
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/path = NodePath("MotionRoot/SpriteRoot:scale")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/keys = {
+"times": PackedFloat32Array(0, 0.06, 0.18),
+"transitions": PackedFloat32Array(1, 1, 1),
+"update": 0,
+"values": [Vector2(1, 1), Vector2(1.06, 0.94), Vector2(1, 1)]
+}
+
+[sub_resource type="Animation" id="Animation_hurt"]
+resource_name = "hurt"
+length = 0.16
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("MotionRoot/SpriteRoot:scale")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 0.08, 0.16),
+"transitions": PackedFloat32Array(1, 1, 1),
+"update": 0,
+"values": [Vector2(1, 1), Vector2(1.12, 0.88), Vector2(1, 1)]
+}
+tracks/1/type = "value"
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/path = NodePath("MotionRoot/SpriteRoot:position")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/keys = {
+"times": PackedFloat32Array(0, 0.04, 0.1, 0.16),
+"transitions": PackedFloat32Array(1, 1, 1, 1),
+"update": 0,
+"values": [Vector2(0, 0), Vector2(2, 0), Vector2(-2, 0), Vector2(0, 0)]
+}
+tracks/2/type = "audio"
+tracks/2/imported = false
+tracks/2/enabled = true
+tracks/2/path = NodePath("AudioPlayer")
+tracks/2/interp = 1
+tracks/2/loop_wrap = true
+tracks/2/keys = {
+"clips": [{
+"end_offset": 0.0,
+"start_offset": 0.0,
+"stream": ExtResource("9")
+}],
+"times": PackedFloat32Array(0)
+}
+tracks/2/use_blend = true
+
+[sub_resource type="Animation" id="Animation_telegraph"]
+resource_name = "telegraph"
+length = 0.42
+loop_mode = 1
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("TelegraphAura:scale")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 0.21, 0.42),
+"transitions": PackedFloat32Array(1, 1, 1),
+"update": 0,
+"values": [Vector2(0.28, 0.28), Vector2(0.34, 0.34), Vector2(0.28, 0.28)]
+}
+tracks/1/type = "value"
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/path = NodePath("MotionRoot/SpriteRoot:scale")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/keys = {
+"times": PackedFloat32Array(0, 0.21, 0.42),
+"transitions": PackedFloat32Array(1, 1, 1),
+"update": 0,
+"values": [Vector2(1, 1), Vector2(1.12, 0.86), Vector2(1, 1)]
+}
+tracks/2/type = "audio"
+tracks/2/imported = false
+tracks/2/enabled = true
+tracks/2/path = NodePath("AudioPlayer")
+tracks/2/interp = 1
+tracks/2/loop_wrap = true
+tracks/2/keys = {
+"clips": [{
+"end_offset": 0.0,
+"start_offset": 0.0,
+"stream": ExtResource("8")
+}],
+"times": PackedFloat32Array(0)
+}
+tracks/2/use_blend = true
+
+[sub_resource type="Animation" id="Animation_attack"]
+resource_name = "attack"
+length = 0.18
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("MotionRoot/SpriteRoot/WeaponPivot/WeaponSprite:rotation")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 0.08, 0.18),
+"transitions": PackedFloat32Array(1, 1, 1),
+"update": 0,
+"values": [-0.45, 0.42, 0.0]
+}
+tracks/1/type = "value"
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/path = NodePath("MotionRoot/SpriteRoot:position")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/keys = {
+"times": PackedFloat32Array(0, 0.06, 0.18),
+"transitions": PackedFloat32Array(1, 1, 1),
+"update": 0,
+"values": [Vector2(0, 0), Vector2(0, -2), Vector2(0, 0)]
+}
+tracks/2/type = "audio"
+tracks/2/imported = false
+tracks/2/enabled = true
+tracks/2/path = NodePath("AudioPlayer")
+tracks/2/interp = 1
+tracks/2/loop_wrap = true
+tracks/2/keys = {
+"clips": [{
+"end_offset": 0.0,
+"start_offset": 0.0,
+"stream": ExtResource("11")
+}],
+"times": PackedFloat32Array(0)
+}
+tracks/2/use_blend = true
+
+[sub_resource type="Animation" id="Animation_defeat"]
+resource_name = "defeat"
+length = 0.3
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("MotionRoot/SpriteRoot:scale")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 0.18, 0.3),
+"transitions": PackedFloat32Array(1, 1, 1),
+"update": 0,
+"values": [Vector2(1, 1), Vector2(1.15, 0.15), Vector2(1.2, 0.08)]
+}
+tracks/1/type = "audio"
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/path = NodePath("AudioPlayer")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/keys = {
+"clips": [{
+"end_offset": 0.0,
+"start_offset": 0.0,
+"stream": ExtResource("10")
+}],
+"times": PackedFloat32Array(0)
+}
+tracks/1/use_blend = true
+
+[sub_resource type="Animation" id="Animation_wake"]
+resource_name = "wake"
+length = 1.25
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("MotionRoot/SpriteRoot:rotation")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 0.12, 0.22, 0.3, 0.42, 0.62, 0.8, 0.95, 1.1, 1.25),
+"transitions": PackedFloat32Array(1, 1, 1, 1, 1, 1, 1, 1, 1, 1),
+"update": 0,
+"values": [-1.5708, -1.5, -1.5708, -1.5708, -1.4, -0.62, 0.14, -0.06, 0.02, 0.0]
+}
+tracks/1/type = "value"
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/path = NodePath("MotionRoot/SpriteRoot:position")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/keys = {
+"times": PackedFloat32Array(0, 0.12, 0.22, 0.3, 0.42, 0.62, 0.8, 0.95, 1.1, 1.25),
+"transitions": PackedFloat32Array(1, 1, 1, 1, 1, 1, 1, 1, 1, 1),
+"update": 0,
+"values": [Vector2(-4, 6), Vector2(-3.99, 5.72), Vector2(-4, 6), Vector2(-4, 6), Vector2(-3.94, 3.82), Vector2(-2.32, -0.76), Vector2(0.56, -1.96), Vector2(-0.24, 0.51), Vector2(0.08, 0.1), Vector2(0, 0)]
+}
+tracks/2/type = "value"
+tracks/2/imported = false
+tracks/2/enabled = true
+tracks/2/path = NodePath("MotionRoot/SpriteRoot:scale")
+tracks/2/interp = 1
+tracks/2/loop_wrap = true
+tracks/2/keys = {
+"times": PackedFloat32Array(0, 0.42, 0.62, 0.8, 0.95, 1.25),
+"transitions": PackedFloat32Array(1, 1, 1, 1, 1, 1),
+"update": 0,
+"values": [Vector2(1, 1), Vector2(1, 1), Vector2(0.96, 1.05), Vector2(1.05, 0.95), Vector2(0.99, 1.02), Vector2(1, 1)]
+}
+tracks/3/type = "audio"
+tracks/3/imported = false
+tracks/3/enabled = true
+tracks/3/path = NodePath("AudioPlayer")
+tracks/3/interp = 1
+tracks/3/loop_wrap = true
+tracks/3/keys = {
+"clips": [{
+"end_offset": 0.0,
+"start_offset": 0.0,
+"stream": ExtResource("12")
+}],
+"times": PackedFloat32Array(0.3)
+}
+tracks/3/use_blend = true
+
+[sub_resource type="AnimationLibrary" id="AnimationLibrary_actor"]
+_data = {
+&"RESET": SubResource("Animation_reset"),
+&"attack": SubResource("Animation_attack"),
+&"defeat": SubResource("Animation_defeat"),
+&"hurt": SubResource("Animation_hurt"),
+&"idle": SubResource("Animation_idle"),
+&"step": SubResource("Animation_step"),
+&"telegraph": SubResource("Animation_telegraph"),
+&"wake": SubResource("Animation_wake")
+}
+
+[sub_resource type="AnimationNodeAnimation" id="Clip_idle"]
+animation = &"idle"
+
+[sub_resource type="AnimationNodeTimeScale" id="Tempo_idle"]
+
+[sub_resource type="AnimationNodeBlendTree" id="State_idle"]
+graph_offset = Vector2(-200, 100)
+nodes/Animation/node = SubResource("Clip_idle")
+nodes/Animation/position = Vector2(0, 100)
+nodes/TimeScale/node = SubResource("Tempo_idle")
+nodes/TimeScale/position = Vector2(200, 100)
+nodes/output/position = Vector2(400, 100)
+node_connections = [&"output", 0, &"TimeScale", &"TimeScale", 0, &"Animation"]
+
+[sub_resource type="AnimationNodeAnimation" id="Clip_step"]
+animation = &"step"
+
+[sub_resource type="AnimationNodeTimeScale" id="Tempo_step"]
+
+[sub_resource type="AnimationNodeBlendTree" id="State_step"]
+graph_offset = Vector2(-200, 100)
+nodes/Animation/node = SubResource("Clip_step")
+nodes/Animation/position = Vector2(0, 100)
+nodes/TimeScale/node = SubResource("Tempo_step")
+nodes/TimeScale/position = Vector2(200, 100)
+nodes/output/position = Vector2(400, 100)
+node_connections = [&"output", 0, &"TimeScale", &"TimeScale", 0, &"Animation"]
+
+[sub_resource type="AnimationNodeAnimation" id="Clip_hurt"]
+animation = &"hurt"
+
+[sub_resource type="AnimationNodeTimeScale" id="Tempo_hurt"]
+
+[sub_resource type="AnimationNodeBlendTree" id="State_hurt"]
+graph_offset = Vector2(-200, 100)
+nodes/Animation/node = SubResource("Clip_hurt")
+nodes/Animation/position = Vector2(0, 100)
+nodes/TimeScale/node = SubResource("Tempo_hurt")
+nodes/TimeScale/position = Vector2(200, 100)
+nodes/output/position = Vector2(400, 100)
+node_connections = [&"output", 0, &"TimeScale", &"TimeScale", 0, &"Animation"]
+
+[sub_resource type="AnimationNodeAnimation" id="Clip_telegraph"]
+animation = &"telegraph"
+
+[sub_resource type="AnimationNodeTimeScale" id="Tempo_telegraph"]
+
+[sub_resource type="AnimationNodeBlendTree" id="State_telegraph"]
+graph_offset = Vector2(-200, 100)
+nodes/Animation/node = SubResource("Clip_telegraph")
+nodes/Animation/position = Vector2(0, 100)
+nodes/TimeScale/node = SubResource("Tempo_telegraph")
+nodes/TimeScale/position = Vector2(200, 100)
+nodes/output/position = Vector2(400, 100)
+node_connections = [&"output", 0, &"TimeScale", &"TimeScale", 0, &"Animation"]
+
+[sub_resource type="AnimationNodeAnimation" id="Clip_attack"]
+animation = &"attack"
+
+[sub_resource type="AnimationNodeTimeScale" id="Tempo_attack"]
+
+[sub_resource type="AnimationNodeBlendTree" id="State_attack"]
+graph_offset = Vector2(-200, 100)
+nodes/Animation/node = SubResource("Clip_attack")
+nodes/Animation/position = Vector2(0, 100)
+nodes/TimeScale/node = SubResource("Tempo_attack")
+nodes/TimeScale/position = Vector2(200, 100)
+nodes/output/position = Vector2(400, 100)
+node_connections = [&"output", 0, &"TimeScale", &"TimeScale", 0, &"Animation"]
+
+[sub_resource type="AnimationNodeAnimation" id="Clip_defeat"]
+animation = &"defeat"
+
+[sub_resource type="AnimationNodeTimeScale" id="Tempo_defeat"]
+
+[sub_resource type="AnimationNodeBlendTree" id="State_defeat"]
+graph_offset = Vector2(-200, 100)
+nodes/Animation/node = SubResource("Clip_defeat")
+nodes/Animation/position = Vector2(0, 100)
+nodes/TimeScale/node = SubResource("Tempo_defeat")
+nodes/TimeScale/position = Vector2(200, 100)
+nodes/output/position = Vector2(400, 100)
+node_connections = [&"output", 0, &"TimeScale", &"TimeScale", 0, &"Animation"]
+
+[sub_resource type="AnimationNodeAnimation" id="Clip_wake"]
+animation = &"wake"
+
+[sub_resource type="AnimationNodeTimeScale" id="Tempo_wake"]
+
+[sub_resource type="AnimationNodeBlendTree" id="State_wake"]
+graph_offset = Vector2(-200, 100)
+nodes/Animation/node = SubResource("Clip_wake")
+nodes/Animation/position = Vector2(0, 100)
+nodes/TimeScale/node = SubResource("Tempo_wake")
+nodes/TimeScale/position = Vector2(200, 100)
+nodes/output/position = Vector2(400, 100)
+node_connections = [&"output", 0, &"TimeScale", &"TimeScale", 0, &"Animation"]
+
+[sub_resource type="AnimationNodeStateMachineTransition" id="T_start_asleep"]
+advance_mode = 2
+advance_condition = &"boots_asleep"
+
+[sub_resource type="AnimationNodeStateMachineTransition" id="T_start_awake"]
+advance_mode = 2
+advance_condition = &"boots_awake"
+
+[sub_resource type="AnimationNodeStateMachineTransition" id="T_to_step"]
+advance_mode = 2
+advance_condition = &"moving"
+
+[sub_resource type="AnimationNodeStateMachineTransition" id="T_to_idle"]
+advance_mode = 2
+advance_condition = &"not_moving"
+
+[sub_resource type="AnimationNodeStateMachineTransition" id="T_travel"]
+advance_mode = 1
+
+[sub_resource type="AnimationNodeStateMachineTransition" id="T_recover"]
+switch_mode = 2
+advance_mode = 2
+
+[sub_resource type="AnimationNodeStateMachineTransition" id="T_telegraph_out"]
+advance_mode = 2
+advance_condition = &"not_telegraphing"
+xfade_time = 0.06
+
+[sub_resource type="AnimationNodeStateMachine" id="StateMachine_actor"]
+states/attack/node = SubResource("State_attack")
+states/attack/position = Vector2(700, 380)
+states/defeat/node = SubResource("State_defeat")
+states/defeat/position = Vector2(850, 220)
+states/hurt/node = SubResource("State_hurt")
+states/hurt/position = Vector2(480, 100)
+states/idle/node = SubResource("State_idle")
+states/idle/position = Vector2(320, 220)
+states/step/node = SubResource("State_step")
+states/step/position = Vector2(540, 220)
+states/telegraph/node = SubResource("State_telegraph")
+states/telegraph/position = Vector2(320, 380)
+states/wake/node = SubResource("State_wake")
+states/wake/position = Vector2(120, 220)
+transitions = ["Start", "wake", SubResource("T_start_asleep"), "Start", "idle", SubResource("T_start_awake"), "wake", "idle", SubResource("T_recover"), "wake", "step", SubResource("T_to_step"), "wake", "hurt", SubResource("T_travel"), "wake", "attack", SubResource("T_travel"), "wake", "defeat", SubResource("T_travel"), "idle", "step", SubResource("T_to_step"), "step", "idle", SubResource("T_to_idle"), "idle", "hurt", SubResource("T_travel"), "step", "hurt", SubResource("T_travel"), "telegraph", "hurt", SubResource("T_travel"), "attack", "hurt", SubResource("T_travel"), "hurt", "idle", SubResource("T_recover"), "idle", "telegraph", SubResource("T_travel"), "step", "telegraph", SubResource("T_travel"), "telegraph", "idle", SubResource("T_telegraph_out"), "idle", "attack", SubResource("T_travel"), "step", "attack", SubResource("T_travel"), "attack", "idle", SubResource("T_recover"), "idle", "defeat", SubResource("T_travel"), "step", "defeat", SubResource("T_travel"), "hurt", "defeat", SubResource("T_travel"), "telegraph", "defeat", SubResource("T_travel"), "attack", "defeat", SubResource("T_travel")]
+
+[node name="ActorView" type="Node2D"]
+z_index = 2
+script = ExtResource("1")
+piece_sizes = ExtResource("13")
+default_weapon_texture = ExtResource("3")
+pip_full_texture = ExtResource("6")
+pip_empty_texture = ExtResource("7")
+
+[node name="TelegraphAura" type="Sprite2D" parent="."]
+visible = false
+z_index = -1
+scale = Vector2(0.28, 0.28)
+texture = ExtResource("4")
+
+[node name="MotionRoot" type="Node2D" parent="."]
+
+[node name="SpriteRoot" type="Node2D" parent="MotionRoot"]
+
+[node name="BodySprite" type="Sprite2D" parent="MotionRoot/SpriteRoot"]
+position = Vector2(-16, -16)
+texture = ExtResource("2")
+centered = false
+
+[node name="FacingArrow" type="Sprite2D" parent="MotionRoot/SpriteRoot"]
+position = Vector2(0, 10)
+scale = Vector2(0.3, 0.3)
+texture = ExtResource("5")
+
+[node name="WeaponPivot" type="Node2D" parent="MotionRoot/SpriteRoot"]
+visible = false
+
+[node name="WeaponSprite" type="Sprite2D" parent="MotionRoot/SpriteRoot/WeaponPivot"]
+position = Vector2(0, -3)
+scale = Vector2(0.16, 0.16)
+texture = ExtResource("3")
+
+[node name="HealthPips" type="Node2D" parent="MotionRoot/SpriteRoot"]
+visible = false
+position = Vector2(0, -12)
+
+[node name="Pip0" type="Sprite2D" parent="MotionRoot/SpriteRoot/HealthPips"]
+position = Vector2(-5, 0)
+scale = Vector2(0.5, 0.5)
+texture = ExtResource("6")
+
+[node name="Pip1" type="Sprite2D" parent="MotionRoot/SpriteRoot/HealthPips"]
+scale = Vector2(0.5, 0.5)
+texture = ExtResource("6")
+
+[node name="Pip2" type="Sprite2D" parent="MotionRoot/SpriteRoot/HealthPips"]
+position = Vector2(5, 0)
+scale = Vector2(0.5, 0.5)
+texture = ExtResource("6")
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="."]
+libraries = {
+&"": SubResource("AnimationLibrary_actor")
+}
+
+[node name="AnimationTree" type="AnimationTree" parent="."]
+tree_root = SubResource("StateMachine_actor")
+anim_player = NodePath("../AnimationPlayer")
+active = true
+parameters/conditions/boots_asleep = false
+parameters/conditions/boots_awake = true
+parameters/conditions/moving = false
+parameters/conditions/not_moving = false
+parameters/conditions/not_telegraphing = false
+
+[node name="AudioPlayer" type="AudioStreamPlayer" parent="."]
+bus = &"SFX"

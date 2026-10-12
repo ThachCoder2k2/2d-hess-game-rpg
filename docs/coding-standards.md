@@ -146,6 +146,20 @@ These are the rules `CLAUDE.md` makes binding, with the reasoning.
 - An actor view is `Sprite2D`s under `MotionRoot/SpriteRoot`, a sibling `AnimationPlayer`
   (clips) and an `AnimationTree` (state graph). Keyframe `SpriteRoot`, never `MotionRoot`.
   Never `_draw()` an actor or pickup body; board overlays may use `_draw()`.
+- **There is one actor view**, `presentation/views/actors/actor_view_base.tscn`; the clips and the graph
+  exist once, in it. Never copy it. A new enemy needs no scene (instance the base, set `definition`); a
+  thin inherited scene (`<id>_enemy.tscn`) only sets exports, stays under 40 lines and owns no clip, graph or
+  other sub-resource (`test_one_actor_view`). What differs between pieces is data in `VisualDefinition`:
+  the body picture, `piece_type`, `anchor_offset` and `clip_speed_scales` (a per-clip tempo; the base's
+  `TimeScale` nodes apply it, because `AnimationPlayer.speed_scale` does nothing under an `AnimationTree`).
+- **A piece is smaller than its cell** (owner, 2026-10-12). The size of each kind is data
+  (`content/feel/piece_sizes.tres`, `PieceSizeTable`: a body box, a base line, a footprint), never a number in a
+  scene or a script. Place a body only through `PieceSizeTable.body_top_left()` (`ViewSyncSystem` does); never hand-set
+  `BodySprite.position`. Everything an actor draws (body, pips, arrow, weapon, aura) stays within 14 px of the cell
+  centre, with 2 px to every edge. A clip may hop or shake a piece by at most the 2 px margin, and a clip that rotates
+  `SpriteRoot` must turn about the body's middle, not the cell's centre. A new actor, clip or offset is checked by
+  `tests/architecture/test_pieces_inside_cell.gd` and drawn by `tools/render_actor_preview.gd`; if either goes red,
+  change the art or the offset, not the margin.
 - The cell-to-cell slide is procedural (`MovementSystem` progress, `ViewSyncSystem`
   position). Never keyframe it, because it is the gameplay timing of the dodge window.
 
@@ -162,6 +176,22 @@ These are the rules `CLAUDE.md` makes binding, with the reasoning.
   copy (a picked-up `EnemyWeapon`).
 - Enemy locomotion is data: `MovementConfig.allowed_directions` lists the offsets of one
   move. Never encode a piece's movement in a system.
+- **Look content up by id, through `ContentDb`** (`shell/content/`, a static class): the id is the
+  folder name under `content/<kind>/` and is spelled in one place. Code outside the shell does not
+  load `content/` by path; a scene names what it needs by uid. Adding a kind is one line in
+  `ContentDb._ensure_kinds()`, a `validate()` on its schema class, and a minimum count in
+  `tests/content/test_validate_all.gd`. A reference between entries goes by id, and
+  `ContentDb.validate_cross_refs()` fails on one that points at nothing.
+- The hero's numbers are `content/player/player.tres` (`PlayerDefinition`), baked by `EcsBoot` like an
+  enemy's definition; an `EntityComponent` node on the instance beats it field by field. Do not put a
+  tuning value on the player scene.
+- **Every definition class answers `validate()`** with readable sentences (empty when healthy), and
+  `ContentDb.validate()` fails a kind whose class has none. A new enemy, room or skill is a folder with
+  its role file: nothing registers it, `ContentDb` finds it by name and `test_validate_all` checks it.
+- A text copy of a `.tres` or `.tscn` also copies its header `uid`; remove it from the copy, leave a reference to
+  a file you just made path-only, then run import, `tools/stamp_uids.gd`, import, and `-- --check` (the steps and
+  what each prevents are in `.claude/commands/new-enemy.md`). Duplicating in the editor's FileSystem dock does the
+  uid part itself.
 
 ## Folder placement
 
@@ -303,8 +333,6 @@ Deliberately not used (do not add them without a real need and the owner's say):
 ## What the plan adds next
 
 `docs/game-base-plan.md` §13.3 lists conventions that M1b did not need and later milestones add:
-a `validate()` on every schema class run by a test over every file `ContentDb` finds, ids derived
-from folder names by `ContentDb` (M2), systems grouped by phase with the order kept as data in
-`ecs/schedule/` (M3a), the file-naming suffixes `*_effect.gd`, `*_handler.gd`, `*_bridge.gd` as
+systems grouped by phase with the order kept as data in `ecs/schedule/` (M3a), the file-naming suffixes `*_effect.gd`, `*_handler.gd`, `*_bridge.gd` as
 those kinds appear, and `.po` text keys instead of literal strings. Those are targets, not rules
 yet; the rules above are the ones the code and the guards already hold.

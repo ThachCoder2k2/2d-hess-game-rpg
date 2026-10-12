@@ -1,13 +1,16 @@
 # Architecture
 
 The Unbound Pawn — a 2D top-down grid-combat RPG in Godot 4.6.3. This document
-describes the code **as it is built today** (checked against the tree on 2026-10-12, at
-the end of milestone M1b, the folder migration). The simulation is a full ECS; the
+describes the code **as it is built today** (checked against the tree on 2026-10-13, at
+the end of milestone M2, the content registry and the actor collapse). The simulation is a full ECS; the
 node-composition architecture that older docs described (`GridWorld`, `FreeEnemy`,
 `PawnHero`, `EnemyActor`, `EncounterDirector`, per-actor component nodes) was deleted in
 the ECS conversion (`docs/ecs-conversion-plan.md`, owner decision 2026-07-19). The folders
 were rearranged in M1b to the tree of `docs/game-base-plan.md` section 13; the move is
-recorded file by file in `docs/migration-notes.md` and `tools/move_res_log.tsv`.
+recorded file by file in `docs/migration-notes.md` and `tools/move_res_log.tsv`. M2 then added the
+content registry (`ContentDb`), the hero as data (`PlayerDefinition`), the one actor view and the table
+that keeps every piece smaller than its cell; the section "The content registry, the hero and the actor
+view" below is where they fit together.
 
 Pair this file with `docs/coding-standards.md` (conventions), `AGENTS.md` (workflow),
 `CLAUDE.md` (binding rules), `docs/OWNER_GUIDE.md` (how the owner changes things) and
@@ -60,7 +63,8 @@ content/                 THE OWNER'S FOLDER: data, art, audio, words. Zero .gd f
                          backstep_pawn, charging_pawn, black_pawn_captain, knight_tracker, bishop_zoner)
   enemies/_shared/       sub-resources several pawns share: movement/ attacks/ decisions/ visuals/
   pickups/<id>/          the floor weapons (EnemyWeapon .tres) and their pictures
-  player/                body.png, icon.png (the player's .tres kit is still on the scene until M2)
+  player/                player.tres (PlayerDefinition), visual.tres (its VisualDefinition), body.png, icon.png
+  feel/                  piece_sizes.tres: how big each kind of piece is drawn inside its cell
   rooms/<id>/            room.tscn (a RoomEncounter) and, for T1 and T2, background.png
   rules/<id>/page.tres   Book of House Rules pages; rule_book.tres lists them
   skills/<id>/           the Wooden Sword and Pencil Thrust AttackProfile .tres and the sword icon
@@ -68,10 +72,10 @@ content/                 THE OWNER'S FOLDER: data, art, audio, words. Zero .gd f
   world/world.tres       WorldGraph: zone id -> room scene
 
 schema/                  THE SHAPE OF CONTENT: one Resource class per file
-  entity/                EnemyDefinition, VisualDefinition, MovementConfig, DecisionConfig, EnemyIntent
+  entity/                EnemyDefinition, PlayerDefinition, VisualDefinition, MovementConfig, DecisionConfig, EnemyIntent
   attacks/               AttackPattern, AttackProfile, EnemyWeapon
   world/                 WorldGraph, RoomObjective, RuleBook, RuleEntry
-  feel/                  DifficultyProfile
+  feel/                  DifficultyProfile, PieceSizeTable, PieceSize
 
 ecs/                     THE SIMULATION: rules only; no art, prose or tuning numbers
   core/                  EcsWorld, EcsGrid, EcsSystem
@@ -87,7 +91,9 @@ authoring/               THINGS YOU DRAG INTO A SCENE: Inspector data + apply();
   room_encounter.gd/.tscn  the room scene root
 
 presentation/            HOW THE WORLD IS SHOWN: reads events, never decides
-  views/                 actor_view.gd, weapon_pickup + pickup_visual, and actors/ (five actor scenes)
+  views/                 actor_view.gd, weapon_pickup + pickup_visual, and actors/: actor_view_base.tscn
+                         (the one actor view) and the thin scenes that inherit it (player, black_pawn,
+                         knight_enemy, bishop_enemy)
   ui/hud/  ui/codex/     GameHud scene, the Book of House Rules screen
   board/                 PrototypeBoard (telegraphs, F3 debug) and GridLinesOverlay
   camera/                CameraRig
@@ -95,6 +101,7 @@ presentation/            HOW THE WORLD IS SHOWN: reads events, never decides
 
 shell/                   THE GAME AROUND THE GAME
   game_root.gd/.tscn     the one game scene and its bridge (605 lines; split in M3b)
+  content/               ContentDb (the content registry, a static class) and ContentKind
   save/world_state.gd    WorldState autoload: zone, entry, taken pickups, opened gates, read pages
 
 assets/                  shared raw art and audio not owned by one content item
@@ -109,10 +116,9 @@ docs/                    this file, coding-standards.md, OWNER_GUIDE.md, plans, 
 ```
 
 Not built yet (the plan's later milestones): `ecs/events/`, `ecs/schedule/`, `schema/skills`,
-`schema/progression`, `schema/story`, `schema/audio`, `shell/content/` (`ContentDb`),
-`shell/title|pause|settings|credits`, `presentation/story|vfx|bridges`, `content/story|audio|feel|ui|bosses|props|progression`,
-`authoring/markers/` beyond today's, and the single `actor_view_base.tscn` (M2) that will replace the five
-copies in `presentation/views/actors/`.
+`schema/progression`, `schema/story`, `schema/audio`,
+`shell/title|pause|settings|credits`, `presentation/story|vfx|bridges`, `content/story|audio|ui|bosses|props|progression` and the rest of `content/feel`,
+`authoring/markers/` beyond today's.
 
 ### Which layer may name which
 
@@ -220,17 +226,20 @@ dictionaries are all documented in the file:
 
 | Piece | File | What it does |
 |---|---|---|
-| `ActorView` | `presentation/views/actor_view.gd` | the puppet and spawn marker. `definition: EnemyDefinition` (null on the player) plus appearance exports (tints, weapon anchor, pip textures). No logic. |
-| `EntityComponent` nodes | `authoring/entity_components/` | Inspector-draggable children of an `ActorView`; `EcsBoot` calls `apply(world, entity_id)` at spawn. Six exist: `CombatComponent`, `HealthComponent`, `InputComponent`, `MovementComponent` (the player's kit; `HealthComponent` and `MovementComponent` also work as per-instance overrides) and `AIComponent`/`WeaponComponent` (per-instance enemy overrides). A node on an instance beats the definition. Zero logic. |
-| `EcsBoot` | `authoring/ecs_boot.gd` | static `boot(...)`: sizes the grid from `RoomEncounter.board_size`, bakes solid tiles, `ZoneExitMarker`, `PlayerUnlockMarker` and `GateMarker`; spawns the player, then every `ActorView` child of the room that has a `definition`, then pickups. Returns the cast dictionary (`player`, `enemies`, `view_by_entity`, `piece_name_by_entity`, pickup maps). |
-| `EcsActorFactory` | `authoring/ecs_actor_factory.gd` | `spawn_player`, `spawn_enemy`, `spawn_pickup`: assemble an entity's components from the `.tres` data and apply the difficulty multipliers. |
+| `ActorView` | `presentation/views/actor_view.gd` | the puppet and spawn marker. Spawn data: `definition: EnemyDefinition` (null on the player) or `player_definition: PlayerDefinition` (null on an enemy, `content/player/player.tres`); plus appearance exports (tints, facing mark, the `PieceSizeTable`), the in-cell knobs (`facing_mark_distance`, `weapon_anchor`, `weapon_rest_length`, `weapon_held_scale`) and the pictures (default weapon, pips). No logic. |
+| Actor scenes | `presentation/views/actors/` | **One actor view**: `actor_view_base.tscn` holds the nodes, every clip and the one animation graph; `player.tscn`, `black_pawn.tscn`, `knight_enemy.tscn` and `bishop_enemy.tscn` inherit it and say only what is theirs (13 to 20 lines each; `test_one_actor_view` holds that). A new enemy needs no scene: instance the base and set `definition`. |
+| `PieceSizeTable` | `schema/feel/piece_size_table.gd` (+ `piece_size.gd`), `content/feel/piece_sizes.tres` | the owner's rule that a piece is smaller than its cell, as data: per kind a body box, a base line (px below the cell centre) and a footprint in cells; `validate()` holds the margin and the chess heights; `body_top_left()` is the one placement formula. |
+| `EntityComponent` nodes | `authoring/entity_components/` | Inspector-draggable children of an `ActorView`; `EcsBoot` calls `apply(world, entity_id)` at spawn. Six exist: `CombatComponent`, `HealthComponent`, `InputComponent`, `MovementComponent` (overrides of the player's `PlayerDefinition`; the player scene carries none, so `content/player/player.tres` is the only source) and `AIComponent`/`WeaponComponent` (per-instance enemy overrides). A node on an instance beats the definition, field by field. Zero logic. |
+| `EcsBoot` | `authoring/ecs_boot.gd` | static `boot(...)`: sizes the grid from `RoomEncounter.board_size`, bakes solid tiles, `ZoneExitMarker`, `PlayerUnlockMarker` and `GateMarker`; spawns the player from the view's `PlayerDefinition` (class defaults when it names none) and applies its `EntityComponent` nodes, then every `ActorView` child of the room that has a `definition`, then pickups. Returns the cast dictionary (`player`, `enemies`, `view_by_entity`, `piece_name_by_entity`, pickup maps). |
+| `EcsActorFactory` | `authoring/ecs_actor_factory.gd` | `spawn_player` (bare hero, kept), `spawn_player_from_definition` (what `EcsBoot` calls), `spawn_enemy`, `spawn_pickup`: assemble an entity's components from the `.tres` data and apply the difficulty multipliers. |
+| `ContentDb` | `shell/content/content_db.gd` (+ `content_kind.gd`) | the content registry, a static class (no autoload, so it works inside a suite's `_init()`). Ids are folder names under `content/<kind>/`, listed lazily once per kind. `ids(kind)`, `fetch(kind, id)`, `all(kind)`, `player()`, `world()`, `piece_sizes()`, `validate()`, `validate_cross_refs()`. Ten kinds registered (one line each in `_ensure_kinds()`). Only the shell may name it; tests and tools call the two validators, nothing calls them at game start. |
 | `RoomEncounter` | `authoring/room_encounter.gd` | a room scene root: `board_size`, `zone_id`, prose, and a `RoomObjective`. It carries data only. |
 | Markers | `authoring/markers/` | `GridMarker` base (drag to snap, writes `grid_cell`). `ZoneEntryMarker`/`ZoneExitMarker` (doors), `GateMarker`, `PlayerUnlockMarker`, `PickupSpawnPoint`. `BlockerMarker` is a legacy marker `EcsBoot` no longer bakes; walls are painted tiles. |
 | Walls | `RoomArt/TileMap` | any tile whose custom data `solid = true` becomes a blocked cell. Paint = collision. |
 
 Enemies are real scene children: instance an actor scene from `presentation/views/actors/`
-(`black_pawn.tscn`, `knight_enemy.tscn`, `bishop_enemy.tscn`) in a room, park it on a cell,
-and override `definition` to vary it. What the editor shows is what spawns.
+(`black_pawn.tscn`, `knight_enemy.tscn`, `bishop_enemy.tscn`, or `actor_view_base.tscn` itself) in a
+room, park it on a cell, and override `definition` to vary it. What the editor shows is what spawns.
 
 ## The data model
 
@@ -239,8 +248,10 @@ and override `definition` to vary it. What the editor shows is what spawns.
 `DifficultyProfile` and an optional default `EnemyWeapon`. The pieces several pawns share are
 in `content/enemies/_shared/{movement,attacks,decisions,visuals}/`; an enemy's own are beside
 its `enemy.tres`, named for the `EnemyDefinition` export they fill (`movement.tres`,
-`decision.tres`, `unarmed_attack.tres`, `visual.tres`). The player's kit uses `AttackProfile`
-`.tres` files (`content/skills/wooden_sword/`, `content/skills/pencil_thrust/`).
+`decision.tres`, `unarmed_attack.tres`, `visual.tres`). The player has one `PlayerDefinition`
+(`content/player/player.tres`: Courage, invulnerability, step time, hold-repeat delay, skill cooldown,
+whether the sword starts unlocked, and the two `AttackProfile` `.tres` files
+`content/skills/wooden_sword/` and `content/skills/pencil_thrust/`).
 `RuleBook`/`RuleEntry` (the Book of House Rules, `content/rules/`), `RoomObjective` and
 `WorldGraph` (`content/world/world.tres`: zone id -> room scene) are the other schemas. Shared
 Resources are treated as immutable at runtime; instances `duplicate(true)` before mutating (a
@@ -254,6 +265,79 @@ diagonals (`content/enemies/bishop_zoner/movement.tres`), the Knight the eight L
 (`content/enemies/knight_tracker/movement.tres`), landing on a free cell. The June "all
 enemies move cardinally" note in `findings.md` is superseded (`docs/game-base-plan.md` D-08).
 Equipping a weapon replaces the piece's chess-shaped *attack*, not its movement.
+
+## The content registry, the hero and the actor view
+
+What M2 added, in the order a piece travels from a folder to the board.
+
+**`ContentDb`** (`shell/content/content_db.gd`, `content_kind.gd`) is the only code that loads `content/` by id. A
+static class, not an autoload, because no autoload exists while a suite's `_init()` runs
+(`test_content_db_in_init` asserts it works there). An id is a folder name (or a file name), listed once per kind on
+the first ask; a name starting with `_` (`_shared`) or `.` is not an id. Ten kinds are registered, one line each in
+`ContentDb._ensure_kinds()`:
+
+| Kind | Folder under `content/` | The id is | Main file | Class |
+|---|---|---|---|---|
+| `player` | `player/` | the kind itself | `player.tres` | `PlayerDefinition` |
+| `world` | `world/` | the kind itself | `world.tres` | `WorldGraph` |
+| `piece_sizes` | `feel/` | the kind itself | `piece_sizes.tres` | `PieceSizeTable` |
+| `enemies` | `enemies/` | the folder name | `<id>/enemy.tres` | `EnemyDefinition` |
+| `rooms` | `rooms/` | the folder name | `<id>/room.tscn` | `PackedScene` |
+| `rules` | `rules/` | the folder name | `<id>/page.tres` | `RuleEntry` |
+| `skills` | `skills/` | the folder name | `<id>/<id>.tres` | `AttackProfile` |
+| `pickups` | `pickups/` | the folder name | `<id>/<id>.tres` | `EnemyWeapon` |
+| `difficulty` | `difficulty/` | the file name | `<id>.tres` | `DifficultyProfile` |
+| `tilesets` | `tilesets/` | the folder name | `<id>/tileset.tres` | `TileSet` |
+
+`ids(kind)`, `has_id`, `path_of`, `fetch(kind, id)` (null when unknown, never an error), `all(kind)`, and the
+shortcuts `player()`, `world()` and `piece_sizes()`. Everything comes from `ResourceLoader`'s shared cache, so
+`duplicate()` before changing a resource. Two validators return readable sentences and are empty when all is well;
+tests and tools call them and nothing calls them at game start. `validate()` checks each entry: the main file exists,
+loads and is the right class, the class's own `validate()` is empty, the folder is lowercase snake_case, an `id`
+property equals the folder and no two entries claim one id, and every property a `.tres` assigns a resource to holds one (Godot leaves a property empty, with no message, when the named resource is of another class). `validate_cross_refs()` checks the references between
+entries: a Book page's `piece_id` is an enemy, an enemy's difficulty, default weapon and weapon preferences are
+registered, the player's two attacks are skills, **every actor's `piece_type` is a row of the size table and its body
+picture fits that row (a tight picture inside the box, or the 32 x 32 canvas of the art spec with its drawn pixels inside the box)**, the world graph and the room folders agree, every door leads to a zone and an
+entry marker that exist, every room's `zone_id` equals its folder and every enemy parked in a room is a registered
+enemy. `tests/content/test_validate_all.gd` runs both over the real tree; `test_content_db_detects_problems` runs them
+over a deliberately broken tree under `user://` and requires each defect to be named. A new kind is one
+`_add_kind` line, a `validate()` on its class and a minimum count in `test_validate_all`.
+
+**`PlayerDefinition`** (`schema/entity/player_definition.gd`, `content/player/player.tres`) is the hero as data:
+`max_courage`, `invulnerability_duration`, `step_duration`, `held_repeat_delay`, `skill_cooldown_duration`,
+`starts_with_sword`, the two `AttackProfile` files (`wooden_sword`, `pencil_thrust`), `piece_name`, and its
+`VisualDefinition` (`content/player/visual.tres`: piece type `pawn`, `body.png`, clip speeds). `ActorView.player_definition`
+names it; `EcsBoot` calls `EcsActorFactory.spawn_player_from_definition` to bake it into the player entity, exactly as an
+`EnemyDefinition` is baked into an enemy. `player.tscn` carries no tuning number and no `EntityComponent` node. A node
+of that kind on a room's instance of the player still wins over the file, field by field, so one room can override a value
+without touching the shared file. A class default equals the pre-M2 hero, so a view with no definition plays as before;
+`test_player_definition` proves each field reaches the entity.
+
+**The actor view.** There is one: `presentation/views/actors/actor_view_base.tscn`. Its nodes are
+`ActorView` (the script, the spawn data) with `TelegraphAura`, `MotionRoot/SpriteRoot` (`BodySprite`, `FacingArrow`,
+`WeaponPivot/WeaponSprite`, `HealthPips/Pip0..2`), `AnimationPlayer` (the clips), `AnimationTree` (the graph) and
+`AudioPlayer`. The four scenes beside it inherit it and set only what is theirs. A piece's look is data read by
+`ViewSyncSystem`, the only writer:
+
+| What | Comes from | Written to |
+|---|---|---|
+| the body picture and where it stands | `VisualDefinition.body_texture`, `piece_type`, `anchor_offset` and the size table's `PieceSizeTable.body_top_left()` | `BodySprite.texture` and `.position`, at scale 1 |
+| how fast each clip plays | `VisualDefinition.clip_speed_scales` (clip name to a multiple, default 1.0) | the `TimeScale` node of each graph state, parameter `parameters/<state>/TimeScale/scale` |
+| the telegraph tint | `ActorView.telegraph_modulate` (a thin scene may set its own; `VisualDefinition` has no tint field: a field is added when a system reads it) | the aura |
+| the facing arrow, the held weapon's size and place, the pips | `ActorView.facing_mark_distance` (10 px out on the facing side), `weapon_held_scale` (0.16), `weapon_anchor`, `weapon_rest_length`; pips are placed by the base scene along the top margin line (a queen and a king stand up into that row, so theirs are drawn over the crown; the in-cell test names those two kinds) | the arrow, the weapon, the pips |
+
+**The size table and who reads it.** `content/feel/piece_sizes.tres` (`PieceSizeTable`, one `PieceSize` row per kind: `body_box`,
+`base_offset_y`, `footprint_cells`) is the owner's rule that a piece is smaller than its cell, written as data
+(`docs/owner-decisions.md`, 2026-10-12). `PieceSizeTable.validate()` holds the 2 px margin and the chess height order.
+Six readers keep to it: `ViewSyncSystem` (places the body, and limits a hit's drawn shove to the margin), `ContentDb.validate_cross_refs()` (a picture
+that does not fit its row, by `PieceSizeTable.picture_problems()`, is a problem), `tools/generate_chess_sprites.gd` (refuses to draw a piece that does not fit), `test_piece_size_table`
+(the table's own rules), `tests/architecture/test_pieces_inside_cell.gd` (boots the hero, the three thin scenes and every
+enemy of `content/enemies/`, and every actor a room scene places as the room places it, through the real `EcsBoot` and `ViewSyncSystem`, in every facing, armed, telegraphing, shoved by a hit and at
+about 600 clip poses, and measures the opaque pixels each actor draws against its cell, in the cell's own frame so a scale shows: 2 px from every edge) and
+`tools/render_actor_preview.gd` (draws the hero, a black pawn, the knight and the bishop, and every actor the rooms place, in their cells at 4x with a gutter into
+`assets/_generated/previews/pieces_in_cells.png` and `pieces_placed_in_rooms.png`, composed on the CPU with `Image`, no renderer needed; pixels in the margin band are magenta and counted). A new
+kind of piece is a row; a boss is a row with a bigger footprint. `tools/actor_stage.gd` and `tools/actor_cell_probe.gd`
+are the shared helpers of the last two.
 
 ## The event contract
 
@@ -300,8 +384,21 @@ Presentation consumes `drain_events()` and never decides gameplay.
 - Actor scenes (`presentation/views/actors/`) — `Sprite2D`s under `MotionRoot/SpriteRoot`, a
   sibling `AnimationPlayer` for clips, and an `AnimationTree` state graph (states, transitions,
   crossfades are editor-owned; `ViewSyncSystem` publishes conditions and calls `travel()` on
-  event edges). The cell-to-cell slide is procedural (`MovementSystem` progress ->
-  `ViewSyncSystem` position) so the dodge window is gameplay timing, never keyframed.
+  event edges). They exist once, in `actor_view_base.tscn`: the union of the hero's and the
+  enemies' clips and graph. Two `Start` edges wait for scene-set conditions, so the base boots
+  awake and the hero's scene boots asleep into `wake`. Every graph state plays its clip through a
+  `TimeScale` node, so `VisualDefinition.clip_speed_scales` is data. The cell-to-cell slide is
+  procedural (`MovementSystem` progress -> `ViewSyncSystem` position) so the dodge window is
+  gameplay timing, never keyframed.
+- **A piece is smaller than its cell** (owner, 2026-10-12). `ViewSyncSystem` writes the body
+  picture (`VisualDefinition.body_texture`, scale 1) so its base is on the kind's base line (a tight
+  picture's bottom edge; the 32 x 32 canvas of the art spec lands exactly on the cell)
+  (`PieceSizeTable.body_top_left`), puts the facing arrow on the facing side of the cell, scales the
+  held weapon to `weapon_held_scale`, and leaves the aura's size to the telegraph clip. The base
+  scene places the pips along the top edge and sizes the aura so that everything an actor draws is
+  within 14 px of the cell centre. Clips cap their hops and shakes at the 2 px margin. Row-based
+  depth (z by row) is kept; nothing needs it any more. Measured by `test_pieces_inside_cell`,
+  drawn for the owner by `tools/render_actor_preview.gd`.
 
 ## Persistence
 
@@ -325,8 +422,6 @@ ad-hoc edits:
 - `ViewSyncSystem` blinks the invulnerability tint from the wall clock.
 - `game_root.gd` (605 lines) still holds travel, death, persistence and HUD wiring together
   (the split is M3b).
-- The five actor scenes in `presentation/views/actors/` are still five 353-line copies (M2
-  collapses them into one base scene plus thin inherited ones).
 - The 72x40 kingdom (`tests/fixtures/the_kingdom.tscn`) is still a zone in the shipped world
   graph (`content/world/world.tres`, the one documented exception in
   `test_content_references.gd`, so the H1 exit keeps resolving until M5), and `first_encounter`
@@ -377,10 +472,10 @@ HOME=/tmp/unbound-pawn-godot ../Godot.app/Contents/MacOS/Godot --headless --path
 
 ## What is built and what is next
 
-The tree above is the part of `docs/game-base-plan.md` §13 that M1b built: the folders, the
-moves, the guards that keep code and content where they belong, and the placeholder tools.
-The ECS contract is kept as it was. Still to come, in plan order: `ContentDb` and the actor
-collapse (M2), the runtime seams — commands, the input snapshot, the `HudSnapshot`, the
+The tree above is the part of `docs/game-base-plan.md` §13 that M1b and M2 built: the folders, the
+moves, the guards that keep code and content where they belong, the placeholder tools, and, from M2, the content
+registry, the hero as data, the one actor view and the in-cell size table (the section above). The ECS contract is
+kept as it was. Still to come, in plan order: the runtime seams — commands, the input snapshot, the `HudSnapshot`, the
 schedule files, `events.gd` (M3a) — the split of `game_root.gd` and the save service (M3b),
 then the shell, input, text, story, skills, bosses and the other five districts. The
 owner-facing "how do I change X" table, with real paths for what exists today, is

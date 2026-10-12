@@ -164,7 +164,7 @@ The 12 tracked sprites of `assets/sprites/generated/`:
 | Tile kits | `content/tilesets/<district>/tileset.tres`, `assets/tiles/<district>/atlas.png` | `kingdom` (every Stage 1 room) and `playground` (the owner's first tile set, unused) as district folders; atlases keep their `.svg` and are named `atlas.svg`; the painted floor scene is `tilemap.tscn` beside the tile set | the kit keeps the name the code and generators use; `chess_rug` would be one `move_res.py` call when the art arrives. The owner's single-tile PNG direction fits: a tool assembles the atlas from `assets/tiles/<district>/<tile>.png` later and nothing here blocks it |
 | `kingdom` zone in the graph | `the_kingdom.tscn` is a fixture, "excluded from `ContentDb`" | `content/world/world.tres` still lists the `kingdom` zone, now naming `tests/fixtures/the_kingdom.tscn`, so the H1 exit (`target_zone = kingdom`) and the bridge tests still work | the plan drops it from the graph when M5 ports the world-graph assertions; `test_content_references` lists the one reference as a documented exception |
 | Fixture layout | `tests/fixtures/the_kingdom.tscn` flat | the scene is flat and its parts are in a folder of the same name (`tests/fixtures/the_kingdom/`) | one convention for both fixtures |
-| Actor scenes | `presentation/views/` now, collapse in M2 | `presentation/views/actors/` | the interim subfolder keeps five 353-line copies apart from the real views, and M2 deletes one folder |
+| Actor scenes | `presentation/views/` now, collapse in M2 | `presentation/views/actors/` | M2 step 2 collapsed the five 353-line copies into `actor_view_base.tscn` plus four thin scenes (and deleted the duplicate `enemy_base.tscn`); the interim subfolder name stays, and M2 deletes one folder |
 | `assets/art/pieces/` | "its planned home outside any ignored folder" (the plan names none) | `assets/map_pieces/` | tracked, flat, one file per thing, away from `assets/_generated/` (gitignored) and `assets/_source/` (`.gdignore`). The owner can overrule with one move |
 | `rule_book.tres` | not named | `content/rules/rule_book.tres`, a file beside the id folders | folder names are ids; a file is not one, so a registry that lists folders skips it |
 
@@ -254,3 +254,23 @@ The five dependency edges and six room references listed under step 3 stay repor
 `content/audio/` and `sound_bank.tres` (the registry is still Inspector exports on `sfx_manager.tscn`), `ContentDb` and the
 actor collapse (M2), `/new-skill` (M7a), `/new-room` and `/new-beat` (M14), the tile and animation-frame assembly tools, and
 prose paths in `docs/design/*` and the production checklists (planning documents).
+
+## M2 (2026-10-13): what the registry and the actor collapse changed
+
+No file was moved by M2 (`tools/move_res_log.tsv` has no M2 line, `git diff -M` finds no rename): M2 added files,
+edited files and deleted one (`presentation/views/actors/enemy_base.tscn`, which was `black_pawn.tscn` byte for byte under
+another node name; its six test labels continue as black_pawn's through `tests/label_renames.txt`). It closes the items the
+M1b notes left for M2.
+
+| M1b left this undone | M2 did |
+|---|---|
+| `ContentDb` | `shell/content/content_db.gd` and `content_kind.gd`, ten kinds; the registry method is `fetch`, because a static `get` would override `Object.get` |
+| the four 353-line actor scenes | `presentation/views/actors/actor_view_base.tscn` plus `player`, `black_pawn`, `knight_enemy`, `bishop_enemy` as thin inherited scenes. They stay in `actors/` beside the base (the plan's `content/enemies/<id>/actor.tscn` is not needed: an enemy is a definition on the base) |
+| the pawn's numbers on `player.tscn` | `content/player/player.tres` (`PlayerDefinition`) and `content/player/visual.tres` |
+| `content/feel/` | exists, with `piece_sizes.tres` (the owner's rule that a piece is smaller than its cell, 2026-10-12) |
+| `/new-enemy` for the new layout | rewritten in step 2 from the code, then walked once for real in step 3 on a scratch clone |
+| the bishop borrowed the knight's picture | `content/enemies/bishop_zoner/body.png`; `content/_placeholders.json` has 26 entries |
+
+Still not built, unchanged by M2: `content/_index.json` (the exported-build fallback), `content/audio/`, `ecs/schedule/`,
+`ecs/events/`, and `dev_sandbox` (M6). The five dependency edges and six room references of step 3 are still the owner's to
+decide.

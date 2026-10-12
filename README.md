@@ -31,6 +31,10 @@ The first playable foundation includes:
 - Draggable room authoring markers for hero start, blockers, enemy spawns, and pickups.
 - Real PNG sprite placeholders and AnimationPlayer clips for the hero, Pawns, Knight, pickups, and toy weapons.
 - Headless grid-logic tests.
+- Every chess piece is drawn inside its 32 x 32 cell with a margin, never cell-sized or taller (the
+  owner's rule of 2026-10-12): the sizes are `content/feel/piece_sizes.tres`, one actor view
+  (`presentation/views/actors/actor_view_base.tscn`) serves the pawn, the black pawns, the knight and the
+  bishop, and `assets/_generated/previews/pieces_in_cells.png` shows every piece in its cell.
 
 ## First run after a fresh clone
 
@@ -41,8 +45,9 @@ command first:
 tools/bootstrap_worktree.sh
 ```
 
-It runs an import pass, the four generators, and a second import pass, and exits 0 only when every
-step came out clean (about 50 s). Set `GODOT_BIN` and `BOOTSTRAP_HOME` to override the Godot
+It runs an import pass, the four generators, a second import pass and the actor preview picture
+(`assets/_generated/previews/pieces_in_cells.png`), and exits 0 only when every step came out clean
+(about 50 s). Set `GODOT_BIN` and `BOOTSTRAP_HOME` to override the Godot
 binary and the private `HOME`. `tools/README.md` describes it and the other build tools.
 
 The generators (`tools/generate_chess_sprites.gd`, `generate_kingdom_tiles.gd`, `generate_demo_map.gd`,
@@ -120,8 +125,10 @@ may name which). The top-level folders are layers:
 - `content/`: **the owner's folder**, data, art, audio and words, with no `.gd` files. `enemies/<id>/`
   (`enemy.tres`, `body.png`, the enemy's own pieces; `_shared/` for the pieces several enemies use),
   `rooms/<id>/room.tscn`, `rules/<id>/page.tres` (the Book of House Rules), `skills/<id>/` (the
-  Wooden Sword and Pencil Thrust), `pickups/<id>/`, `player/`, `difficulty/`, `world/world.tres` (the
-  world graph), `tilesets/<kit>/`, and `_placeholders.json` (which art and audio are still stand-ins).
+  Wooden Sword and Pencil Thrust), `pickups/<id>/`, `player/` (`player.tres`: the pawn's numbers),
+  `feel/piece_sizes.tres` (how big each kind of piece is inside its cell), `difficulty/`,
+  `world/world.tres` (the world graph), `tilesets/<kit>/`, and `_placeholders.json` (which art and audio
+  are still stand-ins).
 - `schema/`: the Resource classes that give content its shape (`EnemyDefinition`, `MovementConfig`,
   `AttackPattern`, `EnemyWeapon`, `WorldGraph`, ...).
 - `ecs/`: the simulation: `core/` (`EcsWorld`, `EcsGrid`), `components/` (`ecs_components.gd`),
@@ -131,7 +138,7 @@ may name which). The top-level folders are layers:
 - `presentation/`: how the world is shown: `views/` (`ActorView`, pickups, the actor scenes), `ui/` (HUD,
   the Book), `board/`, `camera/`, `audio/`.
 - `shell/`: the game around the game: `game_root.tscn/.gd` (the one game scene and the bridge from the
-  ECS to presentation) and `save/world_state.gd`.
+  ECS to presentation), `content/` (`ContentDb`, the content registry) and `save/world_state.gd`.
 - `assets/`: shared raw art and audio (tile atlases, interface pictures, sound effects, music, the
   hand-drawn bedroom pieces). `tools/`: generators, the test runner and the migration scripts (never
   shipped). `tests/`: headless tests, fixtures and baselines.
@@ -139,8 +146,9 @@ may name which). The top-level folders are layers:
   status (`where-we-are.md`), design specs, and `archive/` for superseded documents.
 
 The folders reached this shape in milestone M1b (`docs/migration-notes.md` records where every file
-went). The plan's tree has more folders than exist yet (`ecs/events/`, `ecs/schedule/`,
-`shell/content/`, `content/story|audio|feel|...`); they appear with the milestones that need them.
+went); M2 added `shell/content/` (`ContentDb`, the content registry) and `content/feel/`. The plan's tree has
+more folders than exist yet (`ecs/events/`, `ecs/schedule/`, `content/story|audio|ui|...`); they appear
+with the milestones that need them.
 
 ## License
 

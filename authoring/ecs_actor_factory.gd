@@ -28,6 +28,23 @@ static func spawn_player(world: EcsWorld, cell: Vector2i, wooden_sword: AttackPr
 	return entity_id
 
 
+## Spawns the hero from its PlayerDefinition (content/player/player.tres): the entity
+## spawn_player builds, with every value the definition owns written into its
+## components. EcsBoot calls this, then lets EntityComponent nodes on the view override.
+static func spawn_player_from_definition(world: EcsWorld, definition: PlayerDefinition, cell: Vector2i) -> int:
+	var entity_id := spawn_player(world, cell, definition.wooden_sword, definition.pencil_thrust, definition.max_courage)
+	var health: EcsComponents.Health = world.get_component(entity_id, EcsComponents.HEALTH)
+	health.invulnerability_duration = definition.invulnerability_duration
+	var move: EcsComponents.MoveState = world.get_component(entity_id, EcsComponents.MOVE_STATE)
+	move.duration = definition.step_duration
+	var input_state: EcsComponents.PlayerInput = world.get_component(entity_id, EcsComponents.PLAYER_INPUT)
+	input_state.held_repeat_delay = definition.held_repeat_delay
+	var combat: EcsComponents.PlayerCombat = world.get_component(entity_id, EcsComponents.PLAYER_COMBAT)
+	combat.sword_unlocked = definition.starts_with_sword
+	combat.skill_cooldown_duration = definition.skill_cooldown_duration
+	return entity_id
+
+
 static func spawn_enemy(world: EcsWorld, definition: EnemyDefinition, cell: Vector2i) -> int:
 	var entity_id := world.create_entity()
 	var grid_pos: EcsComponents.GridPos = world.add_component(entity_id, EcsComponents.GRID_POS, EcsComponents.GridPos.new())

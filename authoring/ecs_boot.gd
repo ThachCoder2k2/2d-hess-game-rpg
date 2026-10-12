@@ -33,14 +33,18 @@ static func boot(world: EcsWorld, player_view: ActorView, room_root: Node, fallb
 		var player_cell := world.grid.world_to_cell(player_view.position)
 		if not world.grid.is_inside(player_cell):
 			player_cell = fallback_player_cell
-		# The kit (attack profiles, health, timings) comes from the view's
-		# component nodes, baked below.
-		var player_id := EcsActorFactory.spawn_player(world, player_cell, null, null)
+		# The kit (courage, timings, attack profiles) comes from the view's PlayerDefinition
+		# (content/player/player.tres); a view that names none plays on the definition's
+		# defaults. EntityComponent nodes on the view are applied after it and win.
+		var player_definition := player_view.player_definition
+		if player_definition == null:
+			player_definition = PlayerDefinition.new()
+		var player_id := EcsActorFactory.spawn_player_from_definition(world, player_definition, player_cell)
 		_bind_view(world, player_id, player_view)
 		_apply_component_nodes(world, player_id, player_view)
 		cast["player"] = player_id
 		cast["view_by_entity"][player_id] = player_view
-		cast["piece_name_by_entity"][player_id] = "Pawn Hero"
+		cast["piece_name_by_entity"][player_id] = player_definition.piece_name
 
 	if room_root != null:
 		for child in room_root.get_children():

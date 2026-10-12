@@ -11,6 +11,8 @@ extends UnboundTest
 ##     overwriting a file does NOT: a changed hash is "replaced", never a failure);
 ##  3. overwriting a listed file clears its flag by itself, and deleting it shows as missing
 ##     (checked on a probe file under user://, never on the working tree);
+##  3b. the seed tool may replace an earlier stand-in with a better one, but never the owner's art:
+##     PlaceholderManifest.seed_decision is checked for every case (also on a probe under user://);
 ##  4. every row of tools/seed_placeholders.gd is recorded, so a new stand-in cannot be added
 ##     to the seed lists and forgotten in the manifest;
 ##  5. tools/list_placeholders.gd runs and prints the TODO;
@@ -46,6 +48,7 @@ func _init() -> void:
 
 	_check_listed_files_exist(entries)
 	_check_overwriting_clears_the_flag()
+	_check_seed_decisions()
 	_check_seed_rows_are_recorded(entries)
 	_check_list_tool_prints_the_todo(paths, entries)
 	_check_no_scene_names_generated_art()
@@ -108,6 +111,39 @@ func _check_overwriting_clears_the_flag() -> void:
 	var no_origin_entry := res_path_entry.duplicate()
 	no_origin_entry.erase("origin")
 	_expect(not PlaceholderManifest.entry_problem(no_origin_entry).is_empty(), "an entry with a missing field is rejected")
+
+
+## What tools/seed_placeholders.gd may do to a file, case by case. The cases that matter most are
+## the two "nothing": a file the owner replaced, and a file the row already seeded.
+func _check_seed_decisions() -> void:
+	var plain_row := {"source": "res://assets/_generated/chess/pawn_idle.png", "target": PROBE_PATH, "kind": "body", "id": "probe"}
+	var superseding_row := plain_row.duplicate()
+	superseding_row["supersedes_stand_in"] = true
+	_write_probe(PackedByteArray([1, 2, 3]))
+	var earlier_stand_in := {
+		"path": PROBE_PATH, "kind": "body", "id": "probe",
+		"sha256": FileAccess.get_sha256(PROBE_PATH), "origin": "tracked sprite adopted at M1b",
+	}
+	_expect(PlaceholderManifest.seed_decision(plain_row, false, {}) == PlaceholderManifest.SEED_COPY, "seeding: a missing file is copied")
+	_expect(PlaceholderManifest.seed_decision(plain_row, true, {}) == PlaceholderManifest.SEED_OWNERS_FILE, "seeding: a file the manifest does not list is the owner's and is left alone")
+	_expect(PlaceholderManifest.seed_decision(superseding_row, true, {}) == PlaceholderManifest.SEED_OWNERS_FILE, "seeding: even a superseding row leaves an unlisted file alone")
+	_expect(PlaceholderManifest.seed_decision(plain_row, true, earlier_stand_in) == PlaceholderManifest.SEED_NOTHING, "seeding: a row that does not say it supersedes never overwrites a listed file")
+	_expect(PlaceholderManifest.seed_decision(superseding_row, true, earlier_stand_in) == PlaceholderManifest.SEED_REPLACE_STAND_IN, "seeding: a superseding row replaces a listed stand-in that is still unchanged")
+	var already_seeded := earlier_stand_in.duplicate()
+	already_seeded["origin"] = PlaceholderManifest.seed_origin(superseding_row)
+	_expect(PlaceholderManifest.seed_decision(superseding_row, true, already_seeded) == PlaceholderManifest.SEED_NOTHING, "seeding: a stand-in this row already seeded is not replaced again")
+	var revised_row := superseding_row.duplicate()
+	revised_row["revision"] = "on the 32 x 32 cell canvas"
+	_expect(PlaceholderManifest.seed_origin(revised_row) != PlaceholderManifest.seed_origin(superseding_row), "seeding: a revision changes the recorded origin")
+	_expect(PlaceholderManifest.seed_decision(revised_row, true, already_seeded) == PlaceholderManifest.SEED_REPLACE_STAND_IN, "seeding: a stand-in the row seeded before its revision is replaced by the revised drawing")
+	var revised_seeded := earlier_stand_in.duplicate()
+	revised_seeded["origin"] = PlaceholderManifest.seed_origin(revised_row)
+	_expect(PlaceholderManifest.seed_decision(revised_row, true, revised_seeded) == PlaceholderManifest.SEED_NOTHING, "seeding: ...and not replaced again once the revised drawing is in")
+	_write_probe(PackedByteArray([7, 7, 7, 7]))
+	_expect(PlaceholderManifest.seed_decision(revised_row, true, earlier_stand_in) == PlaceholderManifest.SEED_NOTHING, "seeding: a revised row never replaces a file the owner overwrote")
+	_expect(PlaceholderManifest.status_of(earlier_stand_in) == PlaceholderManifest.STATUS_REPLACED, "seeding: the probe now differs from its recorded hash, as if the owner overwrote it")
+	_expect(PlaceholderManifest.seed_decision(superseding_row, true, earlier_stand_in) == PlaceholderManifest.SEED_NOTHING, "seeding: a file the owner overwrote is never replaced, even by a superseding row")
+	DirAccess.remove_absolute(ProjectSettings.globalize_path(PROBE_PATH))
 
 
 func _check_seed_rows_are_recorded(entries: Array[Dictionary]) -> void:

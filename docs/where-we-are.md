@@ -14,6 +14,13 @@ Trang này trả lời hai câu: **làm việc theo quy trình nào**, và **m�
 > (`content/`, `schema/`, `ecs/`, `authoring/`, `presentation/`, `shell/`) nằm trong
 > `docs/ARCHITECTURE.md`; cảnh chính nay là `shell/game_root.tscn` (trước đây `main.tscn`); bảng cũ → mới
 > nằm trong `docs/migration-notes.md`. Tiến độ xây bản base: `docs/game-base-plan.md` và `task_plan.md`.
+>
+> **Ghi chú cuối M2 (2026-10-13):** M2 cũng không đổi luật chơi. Đổi ở phần hiển thị và dữ liệu: **quân cờ giờ nhỏ
+> hơn ô** theo quyết định của bạn ngày 2026-10-12 (bảng kích thước `content/feel/piece_sizes.tres`; thay phase 66, quân
+> cao 1,5 ô), chỉ còn **một** cảnh actor (`presentation/views/actors/actor_view_base.tscn`) thay cho bốn bản chép,
+> con số của con tốt nằm ở `content/player/player.tres`, và có sổ đăng ký nội dung `ContentDb`. Xem kết quả:
+> `assets/_generated/previews/pieces_in_cells.png`; cách đọc nó và cách đổi cỡ: `docs/OWNER_GUIDE.md` mục 6. Số bộ test
+> bây giờ là 35 (không còn "7 bộ" như bên dưới).
 
 ---
 

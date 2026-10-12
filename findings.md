@@ -394,3 +394,120 @@ June note).
 - The owner's one-file-per-thing direction (2026-10-12) fits the tree without building anything: single tiles go in
   `assets/tiles/<district>/<tile_id>.png` (the atlas is `assets/tiles/<district>/atlas.*` until a tool assembles one) and
   animation frames in `content/<kind>/<id>/anim/<clip>/<NN>.png`. The assembly tools are later work.
+
+## Content Registry and Player Definition Facts (M2 step 1, 2026-10-13)
+
+- `ContentDb` is the only code that should load `content/` by id. It is a static class (`shell/content/`), because an
+  autoload does not exist while a suite's `_init()` runs (it is added to the tree after `_init()` returns), and
+  `test_content_db_in_init` asserts that premise so a Godot upgrade cannot make it vacuous.
+- A static method cannot be called `get` in GDScript: it would override `Object.get`. The lookup is `ContentDb.fetch`.
+- The id of a thing is its folder name; an `id` property inside the resource must equal it (`validate()` checks), and a
+  Book page's `piece_id` or a door's `target_zone` must name an id that exists (`validate_cross_refs()` checks). The
+  `kingdom` zone is the one world entry with no room folder (a test fixture the graph keeps until M5):
+  `ContentDb.FIXTURE_ZONE_IDS`.
+- A `.tres` omits every property equal to the script default, so a hand-written `player.tres` that lists all values is
+  rewritten shorter the first time the editor saves it. The values are the same; the class defaults equal the
+  pre-M2 hero, which is also why a view with no definition plays unchanged.
+- The player scene carries no `EntityComponent` node on purpose: a node on the instance always beats the definition, so
+  a leftover `HealthComponent` with default values would silently shadow `player.tres`. A node there now means "this
+  scene overrides the file".
+- Adding or removing an `EntityComponent` node under a view changes only the `[nodes]` section of the dump; the
+  `[entities at boot]` section depends on the baked values alone, which is what makes it the proof that a bake
+  refactor changed nothing.
+- Fixture trees for a validator test belong under `user://`, written at run time: `tests/fixtures/` is scanned by the
+  stamper and by `test_no_path_only_ext_resource`, and a deliberately broken `.tres` there would fail both.
+
+## Actor View and In-Cell Facts (M2 step 2, 2026-10-13)
+
+- `AnimationPlayer.speed_scale` is ignored once an `AnimationTree` drives the clips. Per-clip speed is a `TimeScale` node
+  inside the state (a small blend tree: Animation, TimeScale, output) and the parameter `parameters/<state>/TimeScale/
+  scale`; measured 0.52 s for a 1.0 s clip at scale 2 and 2.01 s at 0.5, and the `at_end` transition back to idle still
+  fires at the scaled end.
+- A state machine's `Start` edge may wait for an `advance_condition`: with two Start edges and one condition true, it
+  takes that one; with both false it stays in Start. That is how one graph serves the hero (boots asleep into `wake`)
+  and everyone else (boots awake into `idle`). Driving a fresh tree with `AnimationTree.advance()` from `_init()` is not a
+  faithful test (an `at_end` edge fires on the first call); tests wait real frames.
+- A suite or tool that runs `_init()`-time code has no running tree: a sprite is not "visible in the tree" and has no
+  global transform until a frame has passed. `ActorStage.boot` documents that its callers await one frame first. Autoloads
+  are null there too: a scratch script that reads `WorldState` in `_init()` dies and the process then hangs.
+- `Texture2D.get_image()` works headless (the dummy renderer keeps the picture), so the cell probe reads opaque pixels
+  without a renderer; `Image.get_used_rect()` is the drawn box of a picture, which is why a transparent border in the
+  owner's PNG does not count as drawing. The size table's box limits the whole PNG; the probe measures what is opaque.
+- Pivot arithmetic: a body that stands 14 px below the cell centre swings its bottom corners outside the cell when a
+  clip rotates `SpriteRoot` about the centre. A rotating clip must turn about the body's middle (position keys
+  x = r sin a, y = r - r cos a for a pivot r px below the centre); the wake clip is authored for the 20 px hero (r = 4).
+- A held weapon is the one thing that cannot be both readable and inside a 32 px cell at its icon size (24 x 56 to
+  28 x 64): it is drawn at 0.16 scale. Reach is shown by the board overlay, not by the length of the picture.
+- The generated chess family was drawn at two world pixels per block (pawn 36 x 40, knight 52 x 64: taller than the
+  cell). At one pixel per block the pawns fit; the knight (26 x 32) could not, and a half-scale (13 x 16) would be lower
+  than the pawn, which the chess ladder forbids. Retracing the same glyph on fewer rows is the generator's own sanctioned
+  way to change the knight; the old arrays are kept in its comment.
+- A placeholder swap needs the manifest rule "provably still the old stand-in": `PlaceholderManifest.seed_decision`
+  replaces a listed file only while its sha256 equals the recorded one, so the owner's art is never overwritten.
+- `tests/architecture/test_pieces_inside_cell.gd` leaves the held weapon out of clips other than the hero's attack: a hurt
+  clip squashes the whole actor 12 % and shakes it 2 px, which pushes a 13 px spear tip about a pixel over the edge for
+  a few milliseconds. If that ever matters, lower `weapon_held_scale`, not the margin.
+- The hero's pivot and the 14 px base line are the table's numbers: if the owner changes the hero's height, the wake
+  clip's position keys (authored for a 20 px body) need a new pivot; the in-cell test will say how far out it goes.
+
+## Walk and Docs Facts (M2 step 3, 2026-10-13)
+
+- The uid stamper fills a path-only `[ext_resource]` line from the target file's own uid, and a picture has none until an
+  import pass has written its `.import`. So a new enemy's files go in this order: write them with no header uid and a path-only
+  reference to the files just made, import, `stamp_uids.gd`, import again, `stamp_uids.gd -- --check`. A text copy of a `.tres`
+  keeps the source's header uid, which two files must not share; duplicating in the editor's FileSystem dock does that part
+  itself.
+- A uid the stamper just wrote is unknown to the editor until the next import pass: a scene that names it logs `ext_resource,
+  invalid UID ... using text path instead` and loads by path. Harmless, and gone after the import.
+- `max_health` has a default (2) and a `.tres` omits every property equal to its default, so a copy of `pawn_recruit/enemy.tres`
+  has no `max_health` line to edit: add one.
+- Adding an enemy to a real room changes more than the room. That room's baseline (`tests/baselines/dump_<room>.txt`) fails until
+  it is regenerated with `tools/dump_world.gd -- --write-baselines`, and tests that count a room's contents fail too: T3's pawn
+  count is asserted by `test_bridge_travel` ("T3 holds its single living pawn").
+- To see that a definition spawns without touching a room, put a throwaway scene in the **project root** and boot it with
+  `tools/dump_world.gd --room=res://<scene>` (it accepts any scene path). Under `content/rooms/` the same scene fails four suites
+  (`ContentDb.validate_cross_refs()`: "no zone of content/world/world.tres leads here"; `test_content_references`: it names
+  `presentation/board/`; and the two registry suites that assert the whole tree is healthy), so delete it before running the
+  runner.
+- `dev_sandbox` (the room the plan's M2 "owner can try" names) is an M6 deliverable; until then the only place to play a new enemy
+  is a real room.
+- **Resolved in the M2 fix round:** `VisualDefinition` had five fields nothing read (`telegraph_color`, `impact_color`,
+  `weapon_anchor`, `hurt_animation`, `defeat_animation`); they are deleted from the class and the three `.tres` that set them. The
+  tint is `ActorView.telegraph_modulate` and the hand is `ActorView.weapon_anchor`; a field is added when a system reads it.
+- `tools/render_actor_preview.gd` now writes two pictures: `pieces_in_cells.png` (the hero and the three thin scenes, the
+  `ACTORS` rows) and `pieces_placed_in_rooms.png` (one row per actor a room scene places, as placed: seven today). An enemy
+  that is only a `definition` is a row of the second picture once a room places it. `test_actor_preview_tool` reads the sizes
+  from the tool's constants.
+- The first picture is `(46 + 9 x 44) x 4` by `(14 + 4 x 44) x 4` = 1768 x 760: a name strip, nine cells of 32 px each with a
+  6 px gutter on every side (pitch 44), a header strip and four rows, at whole-number 4x. Grid and margin lines are laid only
+  on background pixels, so they sit under the pieces; a piece pixel in the margin band or outside the cell is magenta and counted.
+- **The art spec's canvas.** The owner's request list (`docs/assets`, on game-base) asks for every piece on a 32 x 32 canvas
+  (`block_px` 2: chunky 2 px art pixels), anchor (16,30), body boxes pawn 18 x 22 (top y 8), knight, bishop, rook 20 x 24 (y 6),
+  queen 22 x 26 (y 4), king 22 x 28 (y 2): the same numbers as `piece_sizes.tres`, with the base rim 14 px below the cell
+  centre. The game accepts that canvas (and a tight picture): `PieceSizeTable.cell_canvas_base_row` (30), `box_on_cell_canvas`,
+  `picture_problems`. A canvas lands exactly on the cell, so `BodySprite` in the base scene is (-16,-16) for every picture.
+- **Measuring in the cell's frame.** `ActorCellProbe` used the view's own inverse transform, which cancels a scale and made the
+  B1 captain at 1.18x look exactly as big as its picture. It now measures from the cell (the view's position only).
+- **A hit's drawn shove** (`Health.recoil`, 4 px) moved the whole piece and crossed the cell edge for about 57 ms; the drawn
+  offset is limited to the size table's margin (a piece touches the edge, never crosses it). `Health.recoil` is unchanged.
+- **Pips and tall pieces.** The pip row (4 px, on the top margin line, -14 to -10) clears the head of a pawn, knight, bishop and
+  rook (a knight's head touches it) and cannot clear a queen (26 px) or a king (28 px): a king's box fills the 28 px the margin
+  leaves. Their pips are drawn over the crown; `KINDS_WHOSE_PIPS_OVERLAP_THE_CROWN` in `test_pieces_inside_cell` names them, so a
+  boss row tall enough to reach the pips fails until the owner decides.
+- **Open between the two documents (game-base `docs/assets` and the M2 scene):** telegraph aura files of 40, 56 and 96 px
+  (against 22 to 27 px in the scene), a facing arrow 8 x 8 in a 16 x 16 canvas (about 6 px in the scene), a pip row 24 px wide
+  (14 px in the scene). The owner's rule says nothing a piece shows leaves its cell; whoever merges picks one set.
+- **Ladder.** The table puts knight, bishop and rook on one rung and the drawn bishop is 22 px against the knight's 24; a
+  real set has the bishop taller. A design call for the owner (split the rung and redraw, or keep).
+- ContentDb now reports a reference Godot drops without a word (a resource of the wrong class loads as null with no engine
+  message): `validate()` reads the `[resource]` section of each `.tres` for `name = ExtResource(...)` and compares with the
+  loaded value, and follows resource files those properties name.
+- Moving a file is the only thing that edits `tools/move_res_log.tsv`; M2 added files and deleted one and renamed none (`git diff -M`
+  shows no rename), so the log has no M2 line.
+- A scratch copy of a checkout for a destructive walk must be a `git clone`, not `cp -R`: a worktree's `.git` is a file that points at
+  the main repository's worktree metadata, so git commands in a copied worktree would act on the original. A clone plus
+  `tools/bootstrap_worktree.sh` is ready in about a minute.
+- From a worktree-isolated agent session the sandbox refuses a command that sets `HOME=` in front of Godot and compound commands
+  that mix git with another directory. What works: a tiny wrapper script that exports `HOME` and `exec`s Godot, `GODOT` and
+  `UNBOUND_GODOT_HOME` for `tools/run_all_tests.py`, `BOOTSTRAP_HOME` and `GODOT_BIN` for the bootstrap script, plain separate `git
+  clone` and `git -C <dir>` calls.

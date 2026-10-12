@@ -37,3 +37,19 @@ static func pencil_spear() -> EnemyWeapon:
 
 static func ruler_blade() -> EnemyWeapon:
 	return (load("res://content/pickups/ruler_blade/ruler_blade.tres") as EnemyWeapon).duplicate(true)
+
+
+## Problems that would make this weapon unusable, as readable sentences (empty = fine).
+func validate() -> PackedStringArray:
+	var warnings := PackedStringArray()
+	if id.is_empty():
+		warnings.append("Weapon requires an id.")
+	if range_cells < 1:
+		warnings.append("Weapon '%s' needs a range of at least 1 cell." % id)
+	if damage < 1:
+		warnings.append("Weapon '%s' needs damage of at least 1." % id)
+	if telegraph_time <= 0.0:
+		warnings.append("Weapon '%s' needs a telegraph_time above 0." % id)
+	if recovery_time <= 0.0:
+		warnings.append("Weapon '%s' needs a recovery_time above 0." % id)
+	return warnings

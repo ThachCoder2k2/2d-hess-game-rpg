@@ -54,7 +54,6 @@ weapon = ExtResource("11_ruler")
 
 [node name="BlackPawnCaptain" parent="." instance=ExtResource("6_pawn")]
 position = Vector2(400, 148)
-scale = Vector2(1.18, 1.18)
 definition = ExtResource("7_captain")
 
 [node name="CaptainGuardA" parent="." instance=ExtResource("6_pawn")]

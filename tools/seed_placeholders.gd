@@ -8,7 +8,10 @@ extends SceneTree
 ## stand-ins. This tool does both:
 ##
 ##   1. GENERATED_SEEDS: a picture a generator painted into assets/_generated/ is COPIED into
-##      content/ only when the target file is absent. It never overwrites a file.
+##      content/ only when the target file is absent. It never overwrites the owner's file. A row
+##      marked `supersedes_stand_in` may also replace an EARLIER stand-in, and only while that file
+##      still equals the hash recorded for it (so it is provably not the owner's art); the new
+##      stand-in is recorded in its place. PlaceholderManifest.seed_decision holds the rule.
 ##   2. ADOPTED_PLACEHOLDERS: art and audio that were already tracked when M1b ran, but that the
 ##      owner did not make, are recorded where they stand.
 ##   3. For every file in either list it records the sha256 in content/_placeholders.json.
@@ -43,15 +46,52 @@ const GENERATED_SEEDS: Array[Dictionary] = [
 		"kind": "background",
 		"id": "t2_fallen_sword_tile",
 	},
+	# The bodies: the owner-approved generated chess family, drawn to the size table
+	# (content/feel/piece_sizes.tres) by tools/generate_chess_sprites.gd. The first three replace
+	# the M1b stand-ins (sprites from before the owner decided a piece is smaller than its cell,
+	# 64 to 96 px pictures drawn at a scale in the scene); the bishop had none of its own and
+	# borrowed the knight's. The white pawn is the hero, the black pawn is the whole pawn family.
+	# `revision` marks the second drawing of the same four files: the generator now writes them on
+	# the owner's art-spec canvas (32 x 32, base rim on row 30), so a stand-in that is still the
+	# first drawing is replaced once.
+	{
+		"source": "res://assets/_generated/chess/pawn_idle.png",
+		"revision": "on the 32 x 32 cell canvas",
+		"target": "res://content/player/body.png",
+		"kind": "body",
+		"id": "player",
+		"supersedes_stand_in": true,
+	},
+	{
+		"source": "res://assets/_generated/chess/black_pawn_idle.png",
+		"revision": "on the 32 x 32 cell canvas",
+		"target": "res://content/enemies/pawn_recruit/body.png",
+		"kind": "body",
+		"id": "pawn_recruit",
+		"supersedes_stand_in": true,
+	},
+	{
+		"source": "res://assets/_generated/chess/knight_idle.png",
+		"revision": "on the 32 x 32 cell canvas",
+		"target": "res://content/enemies/knight_tracker/body.png",
+		"kind": "body",
+		"id": "knight_tracker",
+		"supersedes_stand_in": true,
+	},
+	{
+		"source": "res://assets/_generated/chess/bishop_idle.png",
+		"revision": "on the 32 x 32 cell canvas",
+		"target": "res://content/enemies/bishop_zoner/body.png",
+		"kind": "body",
+		"id": "bishop_zoner",
+		"supersedes_stand_in": true,
+	},
 ]
 
 ## Files that already stand in the tree as placeholders and are recorded exactly where they are.
 ## Left out on purpose: assets/map_pieces/ (the owner drew those) and assets/tiles/playground/
 ## (the owner's first tile kit); both are the owner's art, not stand-ins.
 const ADOPTED_PLACEHOLDERS: Array[Dictionary] = [
-	{"path": "res://content/player/body.png", "kind": "body", "id": "player", "origin": "tracked sprite adopted at M1b (was hero_pawn_unarmed.png); provenance in THIRD_PARTY_NOTICES.md"},
-	{"path": "res://content/enemies/pawn_recruit/body.png", "kind": "body", "id": "pawn_recruit", "origin": "tracked sprite adopted at M1b (was black_pawn.png); provenance in THIRD_PARTY_NOTICES.md"},
-	{"path": "res://content/enemies/knight_tracker/body.png", "kind": "body", "id": "knight_tracker", "origin": "tracked sprite adopted at M1b (was black_knight.png); traced from a font glyph, see THIRD_PARTY_NOTICES.md"},
 	{"path": "res://content/player/icon.png", "kind": "icon", "id": "player", "origin": "tracked sprite adopted at M1b (was hero_pawn.png); also the project icon"},
 	{"path": "res://content/skills/wooden_sword/icon.png", "kind": "icon", "id": "wooden_sword", "origin": "tracked sprite adopted at M1b (was toy_sword.png)"},
 	{"path": "res://content/pickups/pencil_spear/icon.png", "kind": "icon", "id": "pencil_spear", "origin": "tracked sprite adopted at M1b (was pencil_spear.png)"},
@@ -97,22 +137,30 @@ func _init() -> void:
 	for seed_row in GENERATED_SEEDS:
 		var source_path := String(seed_row["source"])
 		var target_path := String(seed_row["target"])
-		if FileAccess.file_exists(target_path):
-			if not recorded_paths.has(target_path):
-				print("SEED PLACEHOLDERS: %s exists but is not recorded; treated as the owner's file, not a placeholder" % target_path.trim_prefix("res://"))
+		var recorded_entry := _entry_for_path(entries, target_path)
+		var decision := PlaceholderManifest.seed_decision(seed_row, FileAccess.file_exists(target_path), recorded_entry)
+		if decision == PlaceholderManifest.SEED_OWNERS_FILE:
+			print("SEED PLACEHOLDERS: %s exists but is not recorded; treated as the owner's file, not a placeholder" % target_path.trim_prefix("res://"))
+			continue
+		if decision == PlaceholderManifest.SEED_NOTHING:
 			continue
 		if not FileAccess.file_exists(source_path):
 			printerr("SEED PLACEHOLDERS: %s is missing; run tools/bootstrap_worktree.sh first" % source_path)
 			failed = true
 			continue
-		work_lines.append("copy %s -> %s" % [source_path.trim_prefix("res://"), target_path.trim_prefix("res://")])
+		var replacing := decision == PlaceholderManifest.SEED_REPLACE_STAND_IN
+		work_lines.append("%s %s -> %s" % ["replace the stand-in with" if replacing else "copy", source_path.trim_prefix("res://"), target_path.trim_prefix("res://")])
 		if check_only:
 			continue
-		if not _copy_file(source_path, target_path):
+		if not _copy_file(source_path, target_path, replacing):
 			printerr("SEED PLACEHOLDERS: could not copy %s to %s" % [source_path, target_path])
 			failed = true
 			continue
-		entries.append(_new_entry(target_path, String(seed_row["kind"]), String(seed_row["id"]), "copied from %s by tools/seed_placeholders.gd" % source_path.trim_prefix("res://")))
+		if replacing:
+			recorded_entry["sha256"] = FileAccess.get_sha256(target_path)
+			recorded_entry["origin"] = PlaceholderManifest.seed_origin(seed_row)
+		else:
+			entries.append(_new_entry(target_path, String(seed_row["kind"]), String(seed_row["id"]), PlaceholderManifest.seed_origin(seed_row)))
 		recorded_paths[target_path] = true
 
 	for adopted_row in ADOPTED_PLACEHOLDERS:
@@ -155,9 +203,19 @@ func _new_entry(path: String, kind: String, id: String, origin: String) -> Dicti
 	return {"path": path, "kind": kind, "id": id, "sha256": FileAccess.get_sha256(path), "origin": origin}
 
 
-## Copies source over to target (creating the folder), never over an existing file.
-func _copy_file(source_path: String, target_path: String) -> bool:
-	if FileAccess.file_exists(target_path):
+## The manifest entry for a file, or an empty dictionary when the manifest does not list it. The
+## dictionary is the entry itself, so changing it changes what is written back.
+func _entry_for_path(entries: Array[Dictionary], path: String) -> Dictionary:
+	for entry in entries:
+		if entry["path"] == path:
+			return entry
+	return {}
+
+
+## Copies source over to target (creating the folder). Over an existing file only when the caller
+## has decided it is a stand-in being superseded (PlaceholderManifest.seed_decision).
+func _copy_file(source_path: String, target_path: String, overwrite_stand_in := false) -> bool:
+	if FileAccess.file_exists(target_path) and not overwrite_stand_in:
 		return false
 	var target_directory := ProjectSettings.globalize_path(target_path.get_base_dir())
 	if DirAccess.make_dir_recursive_absolute(target_directory) != OK:

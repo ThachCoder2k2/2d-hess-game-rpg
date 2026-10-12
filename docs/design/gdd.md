@@ -466,10 +466,8 @@ The war feels serious to the pieces, but the game avoids gore and nihilism. Play
 
 - Base resolution: 640x360.
 - World tile: 32x32 pixels.
-- Standard chess piece footprint: one tile, with artwork allowed to rise above it.
-- Pawn sprite canvas: approximately 32x40 pixels.
-- Common enemies: 32x40 to 48x48 pixels.
-- Bosses: 64x64 to 96x96 pixels.
+- Standard chess piece footprint: one tile, with the artwork inside it. *(Superseded 2026-10-12: the owner decided a piece is smaller than its cell, never taller, so the four lines about canvas sizes that used to follow this one are replaced by `content/feel/piece_sizes.tres`: pawn 18x22, knight, bishop and rook 20x24, queen 22x26, king 22x28 px; `docs/owner-decisions.md`, `docs/OWNER_GUIDE.md` section 6.)*
+- ~~Pawn sprite canvas: approximately 32x40 pixels.~~ ~~Common enemies: 32x40 to 48x48 pixels.~~ ~~Bosses: 64x64 to 96x96 pixels.~~ Superseded: a boss is a row of the size table with a bigger footprint.
 - Nearest-neighbor filtering and integer viewport scaling.
 - Four directional idle and movement sets for the hero.
 - Sword attacks use four directional animations and one-cell hit effects.

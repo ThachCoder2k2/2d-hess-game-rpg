@@ -29,10 +29,14 @@ session. Read `AGENTS.md` for the full workflow, and `docs/ARCHITECTURE.md` +
 	`authoring/entity_components/` (Inspector data + one `apply()`; `EcsBoot` bakes
 	it at spawn; a node on an instance beats the definition; zero logic). Runtime
 	data classes live in `ecs/components/`.
-  - Animation transitions → the actor scene's `AnimationTree` graph (states,
+  - Animation transitions → the `AnimationTree` graph of `presentation/views/actors/
+	actor_view_base.tscn`, the ONE actor view (the clips and the graph exist once there; the thin
+	scenes that inherit it, player / black_pawn / knight_enemy / bishop_enemy, carry none, and a
+	new enemy needs no scene: instance the base and set `definition`). States, transitions,
 	xfades, at_end recovery are editor-owned; `ViewSyncSystem` only publishes
-	conditions and fires `travel()` on event edges). Clips stay on the
-	sibling `AnimationPlayer`; keyframe `SpriteRoot`, never `MotionRoot`.
+	conditions and fires `travel()` on event edges. Clips stay on the
+	sibling `AnimationPlayer`; keyframe `SpriteRoot`, never `MotionRoot`. How fast a piece plays
+	a clip is data (`VisualDefinition.clip_speed_scales`), not a copy of the clip.
   - The cell-to-cell slide is procedural (MovementSystem/ViewSync) — gameplay
 	timing for the reserve→commit dodge window; never keyframe it.
   - Presentation consumes `drain_events()` and the read-only `HudSnapshot`. It
@@ -49,6 +53,20 @@ session. Read `AGENTS.md` for the full workflow, and `docs/ARCHITECTURE.md` +
 	drained events. Systems never play audio. The registry will be keyed from
 	`content/audio/sound_bank.tres` (not built yet; today the keys are
 	Inspector exports on `presentation/audio/sfx_manager.tscn`). Recipe: `/new-sound`.
+- **Content is looked up by id.** `ContentDb` (`shell/content/`, a static class, no autoload) lists
+  `content/<kind>/` folders; the folder name is the id. Do not load `content/` by path from `ecs/`,
+  `authoring/` or `presentation/`: a scene names a resource by uid, the shell asks `ContentDb`. A new
+  kind is one line in `ContentDb._ensure_kinds()`, a `validate()` on its class and a minimum in
+  `tests/content/test_validate_all.gd`. The hero's tuning is `content/player/player.tres`.
+- **A piece is smaller than its cell** (owner, 2026-10-12). Never exactly cell-sized, never
+  taller than the cell, heights as in a real chess set (pawn lowest, king tallest). The numbers are
+  data: `content/feel/piece_sizes.tres` (a box and a base line per kind of piece, 2 px margin to
+  every cell edge, validated by `PieceSizeTable.validate()`). A `VisualDefinition` names its
+  `piece_type` and `body_texture`; `ViewSyncSystem` stands the picture on the base line, so a body
+  picture is drawn at scale 1 and is never scaled or offset in a scene. Everything an actor shows
+  (pips, facing arrow, held weapon, telegraph aura, every clip's hop and shake) stays inside the
+  cell: `tests/architecture/test_pieces_inside_cell.gd` measures it, and
+  `tools/render_actor_preview.gd` draws it for the owner.
 - **Research before building any new mechanic.** Mandatory order:
   1. Search Godot's built-in nodes/engine features for the capability
 	 (Timer, Tween, AnimationPlayer, Area2D signals, TileMapLayer, AStarGrid2D,

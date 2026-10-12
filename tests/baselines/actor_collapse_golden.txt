@@ -1,0 +1,365 @@
+# actor_collapse_golden v1: how every actor scene looked BEFORE M2 collapsed them into presentation/views/actors/actor_view_base.tscn.
+# Captured from base/m2-1 (01f2283) by tools/dump_actor_golden.gd. The oracle of tests/architecture/test_actor_collapse_golden.gd; see tools/actor_dumper.gd for the line formats.
+# Never re-record it from the collapsed scenes: --write refuses an existing file unless --force is given.
+
+[rooms]
+room t1 head_sha256=f28b43bdfbe9216b57521d0c2a8ecca3c66168dfe0c7cb1e1cd89bc173c30266 lines=47
+room t2 head_sha256=819203aba86765147bbcdbe3290b107e0399a2af7710cb79bf71612e12d9dcab lines=49
+room t3 head_sha256=7f255bf9b225d5f626cad4823b29bfaac29e7d51916b613dd3965db94dd3f5dc lines=58
+room t4 head_sha256=bc6cc23459f92e6c18a95791931561dc68375478e6538e3246a87d3c698a69a2 lines=82
+room b1 head_sha256=68cb98f7e2a0cdc7bdb182f3e3691bcfe95b196daff3d30da702543defd2e343 lines=83
+room h1 head_sha256=8025bafcd530bd506740e34f94844d65d0226eb77f2136fa4fdf5ca432e25a76 lines=48
+
+[actor player] scene=res://presentation/views/actors/player.tscn role=player
+node . Node2D script=res://presentation/views/actor_view.gd scale=(1.0000,1.0000) z=3
+node MotionRoot Node2D position=(0.0000,0.0000) scale=(1.0000,1.0000) z=0
+node MotionRoot/SpriteRoot Node2D position=(0.0000,0.0000) scale=(1.0000,1.0000) z=0
+node MotionRoot/SpriteRoot/BodySprite Sprite2D position=(0.0000,-8.0000) scale=(0.5000,0.5000) z=0 texture=res://content/player/body.png centered=true
+node MotionRoot/SpriteRoot/WeaponPivot Node2D visible=false position=(0.0000,0.0000) scale=(1.0000,1.0000) z=0
+node MotionRoot/SpriteRoot/WeaponPivot/WeaponSprite Sprite2D position=(0.0000,-18.0000) scale=(0.4600,0.4600) z=0 texture=res://content/skills/wooden_sword/icon.png centered=true
+node AnimationPlayer AnimationPlayer
+node Camera2D Camera2D script=res://presentation/camera/camera_rig.gd position=(0.0000,0.0000) scale=(1.0000,1.0000) z=0
+node AnimationTree AnimationTree active=true anim_player=../AnimationPlayer
+node AudioPlayer AudioStreamPlayer bus=SFX
+view default_weapon_texture=res://content/skills/wooden_sword/icon.png
+view definition=null
+view hurt_modulate=#ff8170ff
+view pip_empty_texture=null
+view pip_full_texture=null
+view player_definition=res://content/player/player.tres
+view show_facing_mark=true
+view show_health=true
+view telegraph_modulate=#d14a52ff
+view weapon_anchor=(4.0000,-14.0000)
+view weapon_rest_length=18.0000
+clip RESET
+clip attack
+clip defeat
+clip hurt
+clip idle
+clip step
+clip wake
+tree_condition moving=false
+tree_condition not_moving=false
+state End clip=?
+state Start clip=?
+state attack clip=attack
+state defeat clip=defeat
+state hurt clip=hurt
+state idle clip=idle
+state step clip=step
+state wake clip=wake
+transition Start -> wake switch=0 advance=2 condition= xfade=0.0000
+transition attack -> defeat switch=0 advance=1 condition= xfade=0.0000
+transition attack -> hurt switch=0 advance=1 condition= xfade=0.0000
+transition attack -> idle switch=2 advance=2 condition= xfade=0.0000
+transition hurt -> defeat switch=0 advance=1 condition= xfade=0.0000
+transition hurt -> idle switch=2 advance=2 condition= xfade=0.0000
+transition idle -> attack switch=0 advance=1 condition= xfade=0.0000
+transition idle -> defeat switch=0 advance=1 condition= xfade=0.0000
+transition idle -> hurt switch=0 advance=1 condition= xfade=0.0000
+transition idle -> step switch=0 advance=2 condition=moving xfade=0.0000
+transition step -> attack switch=0 advance=1 condition= xfade=0.0000
+transition step -> defeat switch=0 advance=1 condition= xfade=0.0000
+transition step -> hurt switch=0 advance=1 condition= xfade=0.0000
+transition step -> idle switch=0 advance=2 condition=not_moving xfade=0.0000
+transition wake -> attack switch=0 advance=1 condition= xfade=0.0000
+transition wake -> defeat switch=0 advance=1 condition= xfade=0.0000
+transition wake -> hurt switch=0 advance=1 condition= xfade=0.0000
+transition wake -> idle switch=2 advance=2 condition= xfade=0.0000
+transition wake -> step switch=0 advance=2 condition=moving xfade=0.0000
+entity 1 player cell=(1,5)
+  player_combat: active_attack=null attack_on_cooldown=false attack_visual_time=0.0000 impact_left=0.0000 pencil_thrust=AttackProfile@res://content/skills/pencil_thrust/pencil_thrust.tres pending_cells=[] recovery_left=0.0000 skill_cooldown_duration=1.2500 skill_cooldown_left=0.0000 sword_unlocked=true wooden_sword=AttackProfile@res://content/skills/wooden_sword/wooden_sword.tres
+  view_ref: node=node(Actor) was_attacking=false was_dead=false was_hurt=false was_telegraphing=false
+  player_input: buffered_direction=(0, 0) held_repeat_delay=0.2200 hold_time=0.0000 last_held_direction=(0, 0)
+  player_tag: control_enabled=true
+  move_state: duration=0.1800 from_cell=(0, 0) moving=false progress=0.0000 to_cell=(0, 0)
+  move_intent: direction=(0, 0)
+  attack_intent: kind=&"none"
+  health: current=3 flash_left=0.0000 hurt_visual_time=0.0000 invulnerability_duration=0.7000 invulnerable_left=0.0000 max_value=3 recoil=(0.0000, 0.0000)
+  facing: direction=(0, 1)
+  grid_pos: cell=(1, 5)
+
+[actor black_pawn] scene=res://presentation/views/actors/black_pawn.tscn role=enemy
+node . Node2D script=res://presentation/views/actor_view.gd scale=(1.0000,1.0000) z=2
+node TelegraphAura Sprite2D visible=false position=(0.0000,0.0000) scale=(0.6800,0.6800) z=-1 texture=res://assets/ui/actor_view/warning_aura.png centered=true
+node MotionRoot Node2D position=(0.0000,0.0000) scale=(1.0000,1.0000) z=0
+node MotionRoot/SpriteRoot Node2D position=(0.0000,0.0000) scale=(1.0000,1.0000) z=0
+node MotionRoot/SpriteRoot/BodySprite Sprite2D position=(0.0000,-8.0000) scale=(0.6000,0.6000) z=0 texture=res://content/enemies/pawn_recruit/body.png centered=true
+node MotionRoot/SpriteRoot/FacingArrow Sprite2D position=(0.0000,-34.0000) scale=(0.4000,0.4000) z=0 texture=res://assets/ui/actor_view/facing_arrow.png centered=true
+node MotionRoot/SpriteRoot/WeaponPivot Node2D visible=false position=(0.0000,0.0000) scale=(1.0000,1.0000) z=0
+node MotionRoot/SpriteRoot/WeaponPivot/WeaponSprite Sprite2D position=(0.0000,-18.0000) scale=(0.4600,0.4600) z=0 texture=res://content/skills/wooden_sword/icon.png centered=true
+node MotionRoot/SpriteRoot/HealthPips Node2D visible=false position=(-8.0000,-40.0000) scale=(1.0000,1.0000) z=0
+node MotionRoot/SpriteRoot/HealthPips/Pip0 Sprite2D position=(0.0000,0.0000) scale=(1.0000,1.0000) z=0 texture=res://assets/ui/actor_view/health_pip_full.png centered=true
+node MotionRoot/SpriteRoot/HealthPips/Pip1 Sprite2D position=(8.0000,0.0000) scale=(1.0000,1.0000) z=0 texture=res://assets/ui/actor_view/health_pip_full.png centered=true
+node MotionRoot/SpriteRoot/HealthPips/Pip2 Sprite2D position=(16.0000,0.0000) scale=(1.0000,1.0000) z=0 texture=res://assets/ui/actor_view/health_pip_full.png centered=true
+node AnimationPlayer AnimationPlayer
+node AnimationTree AnimationTree active=true anim_player=../AnimationPlayer
+node AudioPlayer AudioStreamPlayer bus=SFX
+view default_weapon_texture=res://content/skills/wooden_sword/icon.png
+view definition=res://content/enemies/pawn_recruit/enemy.tres
+view hurt_modulate=#ff8170ff
+view pip_empty_texture=res://assets/ui/actor_view/health_pip_empty.png
+view pip_full_texture=res://assets/ui/actor_view/health_pip_full.png
+view player_definition=null
+view show_facing_mark=true
+view show_health=true
+view telegraph_modulate=#d94f59ff
+view weapon_anchor=(5.0000,-14.0000)
+view weapon_rest_length=18.0000
+clip RESET
+clip attack
+clip defeat
+clip hurt
+clip idle
+clip step
+clip telegraph
+tree_condition moving=false
+tree_condition not_moving=false
+tree_condition not_telegraphing=false
+state End clip=?
+state Start clip=?
+state attack clip=attack
+state defeat clip=defeat
+state hurt clip=hurt
+state idle clip=idle
+state step clip=step
+state telegraph clip=telegraph
+transition Start -> idle switch=0 advance=2 condition= xfade=0.0000
+transition attack -> idle switch=2 advance=2 condition= xfade=0.0000
+transition hurt -> defeat switch=0 advance=1 condition= xfade=0.0000
+transition hurt -> idle switch=2 advance=2 condition= xfade=0.0000
+transition idle -> attack switch=0 advance=1 condition= xfade=0.0000
+transition idle -> defeat switch=0 advance=1 condition= xfade=0.0000
+transition idle -> hurt switch=0 advance=1 condition= xfade=0.0000
+transition idle -> step switch=0 advance=2 condition=moving xfade=0.0000
+transition idle -> telegraph switch=0 advance=1 condition= xfade=0.0000
+transition step -> defeat switch=0 advance=1 condition= xfade=0.0000
+transition step -> hurt switch=0 advance=1 condition= xfade=0.0000
+transition step -> idle switch=0 advance=2 condition=not_moving xfade=0.0000
+transition step -> telegraph switch=0 advance=1 condition= xfade=0.0000
+transition telegraph -> defeat switch=0 advance=1 condition= xfade=0.0000
+transition telegraph -> hurt switch=0 advance=1 condition= xfade=0.0000
+transition telegraph -> idle switch=0 advance=2 condition=not_telegraphing xfade=0.0600
+entity 1 enemy:Pawn cell=(1,5)
+  weapon_slot: weapon=null
+  enemy_ai: action_memory=[] allowed_directions=[(0, -1), (0, 1), (-1, 0), (1, 0)] attack_pattern=AttackPattern@res://content/enemies/_shared/attacks/pawn_diagonal.tres committed_goal=(-999, -999) committed_goal_kind=&"none" committed_target_snapshot=(-999, -999) decision_profile=DecisionConfig@res://content/enemies/_shared/decisions/pawn_skirmisher.tres definition=EnemyDefinition@res://content/enemies/pawn_recruit/enemy.tres goal_commitment_decisions=2 goal_decisions_left=0 last_move_direction=(0, 0) locked_attack_cells=[] move_recovery_time=0.1800 observe_delay=0.4200 path_memory_size=6 recent_cells=[] state=0 state_time_left=0.4200 telegraph_duration=0.0000 unarmed_recovery_time=0.4800 unarmed_telegraph_time=0.5800
+  view_ref: node=node(CurrentZone/Actor) was_attacking=false was_dead=false was_hurt=false was_telegraphing=false
+  move_state: duration=0.1800 from_cell=(0, 0) moving=false progress=0.0000 to_cell=(0, 0)
+  move_intent: direction=(0, 0)
+  health: current=2 flash_left=0.0000 hurt_visual_time=0.0000 invulnerability_duration=0.7000 invulnerable_left=0.0000 max_value=2 recoil=(0.0000, 0.0000)
+  facing: direction=(0, 1)
+  grid_pos: cell=(1, 5)
+
+[actor knight_enemy] scene=res://presentation/views/actors/knight_enemy.tscn role=enemy
+node . Node2D script=res://presentation/views/actor_view.gd scale=(1.0000,1.0000) z=2
+node TelegraphAura Sprite2D visible=false position=(0.0000,0.0000) scale=(0.7500,0.7500) z=-1 texture=res://assets/ui/actor_view/warning_aura.png centered=true
+node MotionRoot Node2D position=(0.0000,0.0000) scale=(1.0000,1.0000) z=0
+node MotionRoot/SpriteRoot Node2D position=(0.0000,0.0000) scale=(1.0000,1.0000) z=0
+node MotionRoot/SpriteRoot/BodySprite Sprite2D position=(0.0000,-8.0000) scale=(0.5000,0.5000) z=0 texture=res://content/enemies/knight_tracker/body.png centered=true
+node MotionRoot/SpriteRoot/FacingArrow Sprite2D visible=false position=(0.0000,-34.0000) scale=(0.4200,0.4200) z=0 texture=res://assets/ui/actor_view/facing_arrow.png centered=true
+node MotionRoot/SpriteRoot/WeaponPivot Node2D visible=false position=(0.0000,0.0000) scale=(1.0000,1.0000) z=0
+node MotionRoot/SpriteRoot/WeaponPivot/WeaponSprite Sprite2D position=(0.0000,-18.0000) scale=(0.4600,0.4600) z=0 texture=res://content/skills/wooden_sword/icon.png centered=true
+node MotionRoot/SpriteRoot/HealthPips Node2D visible=false position=(-8.0000,-40.0000) scale=(1.0000,1.0000) z=0
+node MotionRoot/SpriteRoot/HealthPips/Pip0 Sprite2D position=(0.0000,0.0000) scale=(1.0000,1.0000) z=0 texture=res://assets/ui/actor_view/health_pip_full.png centered=true
+node MotionRoot/SpriteRoot/HealthPips/Pip1 Sprite2D position=(8.0000,0.0000) scale=(1.0000,1.0000) z=0 texture=res://assets/ui/actor_view/health_pip_full.png centered=true
+node MotionRoot/SpriteRoot/HealthPips/Pip2 Sprite2D position=(16.0000,0.0000) scale=(1.0000,1.0000) z=0 texture=res://assets/ui/actor_view/health_pip_full.png centered=true
+node AnimationPlayer AnimationPlayer
+node AnimationTree AnimationTree active=true anim_player=../AnimationPlayer
+node AudioPlayer AudioStreamPlayer bus=SFX
+view default_weapon_texture=res://content/skills/wooden_sword/icon.png
+view definition=res://content/enemies/knight_tracker/enemy.tres
+view hurt_modulate=#ff8170ff
+view pip_empty_texture=res://assets/ui/actor_view/health_pip_empty.png
+view pip_full_texture=res://assets/ui/actor_view/health_pip_full.png
+view player_definition=null
+view show_facing_mark=false
+view show_health=true
+view telegraph_modulate=#db5763ff
+view weapon_anchor=(5.0000,-14.0000)
+view weapon_rest_length=18.0000
+clip RESET
+clip attack
+clip defeat
+clip hurt
+clip idle
+clip step
+clip telegraph
+tree_condition moving=false
+tree_condition not_moving=false
+tree_condition not_telegraphing=false
+state End clip=?
+state Start clip=?
+state attack clip=attack
+state defeat clip=defeat
+state hurt clip=hurt
+state idle clip=idle
+state step clip=step
+state telegraph clip=telegraph
+transition Start -> idle switch=0 advance=2 condition= xfade=0.0000
+transition attack -> idle switch=2 advance=2 condition= xfade=0.0000
+transition hurt -> defeat switch=0 advance=1 condition= xfade=0.0000
+transition hurt -> idle switch=2 advance=2 condition= xfade=0.0000
+transition idle -> attack switch=0 advance=1 condition= xfade=0.0000
+transition idle -> defeat switch=0 advance=1 condition= xfade=0.0000
+transition idle -> hurt switch=0 advance=1 condition= xfade=0.0000
+transition idle -> step switch=0 advance=2 condition=moving xfade=0.0000
+transition idle -> telegraph switch=0 advance=1 condition= xfade=0.0000
+transition step -> defeat switch=0 advance=1 condition= xfade=0.0000
+transition step -> hurt switch=0 advance=1 condition= xfade=0.0000
+transition step -> idle switch=0 advance=2 condition=not_moving xfade=0.0000
+transition step -> telegraph switch=0 advance=1 condition= xfade=0.0000
+transition telegraph -> defeat switch=0 advance=1 condition= xfade=0.0000
+transition telegraph -> hurt switch=0 advance=1 condition= xfade=0.0000
+transition telegraph -> idle switch=0 advance=2 condition=not_telegraphing xfade=0.0600
+entity 1 enemy:Knight cell=(1,5)
+  weapon_slot: weapon=null
+  enemy_ai: action_memory=[] allowed_directions=[(-2, -1), (-2, 1), (2, -1), (2, 1), (-1, -2), (-1, 2), (1, -2), (1, 2)] attack_pattern=AttackPattern@res://content/enemies/knight_tracker/unarmed_attack.tres committed_goal=(-999, -999) committed_goal_kind=&"none" committed_target_snapshot=(-999, -999) decision_profile=DecisionConfig@res://content/enemies/knight_tracker/decision.tres definition=EnemyDefinition@res://content/enemies/knight_tracker/enemy.tres goal_commitment_decisions=2 goal_decisions_left=0 last_move_direction=(0, 0) locked_attack_cells=[] move_recovery_time=0.1800 observe_delay=0.4200 path_memory_size=6 recent_cells=[] state=0 state_time_left=0.4200 telegraph_duration=0.0000 unarmed_recovery_time=0.4800 unarmed_telegraph_time=0.5800
+  view_ref: node=node(CurrentZone/Actor) was_attacking=false was_dead=false was_hurt=false was_telegraphing=false
+  move_state: duration=0.1800 from_cell=(0, 0) moving=false progress=0.0000 to_cell=(0, 0)
+  move_intent: direction=(0, 0)
+  health: current=2 flash_left=0.0000 hurt_visual_time=0.0000 invulnerability_duration=0.7000 invulnerable_left=0.0000 max_value=2 recoil=(0.0000, 0.0000)
+  facing: direction=(0, 1)
+  grid_pos: cell=(1, 5)
+
+[actor bishop_enemy] scene=res://presentation/views/actors/bishop_enemy.tscn role=enemy
+node . Node2D script=res://presentation/views/actor_view.gd scale=(1.0000,1.0000) z=2
+node TelegraphAura Sprite2D visible=false position=(0.0000,0.0000) scale=(0.7500,0.7500) z=-1 texture=res://assets/ui/actor_view/warning_aura.png centered=true
+node MotionRoot Node2D position=(0.0000,0.0000) scale=(1.0000,1.0000) z=0
+node MotionRoot/SpriteRoot Node2D position=(0.0000,0.0000) scale=(1.0000,1.0000) z=0
+node MotionRoot/SpriteRoot/BodySprite Sprite2D position=(0.0000,-8.0000) scale=(0.5000,0.5000) z=0 texture=res://content/enemies/knight_tracker/body.png centered=true
+node MotionRoot/SpriteRoot/FacingArrow Sprite2D visible=false position=(0.0000,-34.0000) scale=(0.4200,0.4200) z=0 texture=res://assets/ui/actor_view/facing_arrow.png centered=true
+node MotionRoot/SpriteRoot/WeaponPivot Node2D visible=false position=(0.0000,0.0000) scale=(1.0000,1.0000) z=0
+node MotionRoot/SpriteRoot/WeaponPivot/WeaponSprite Sprite2D position=(0.0000,-18.0000) scale=(0.4600,0.4600) z=0 texture=res://content/skills/wooden_sword/icon.png centered=true
+node MotionRoot/SpriteRoot/HealthPips Node2D visible=false position=(-8.0000,-40.0000) scale=(1.0000,1.0000) z=0
+node MotionRoot/SpriteRoot/HealthPips/Pip0 Sprite2D position=(0.0000,0.0000) scale=(1.0000,1.0000) z=0 texture=res://assets/ui/actor_view/health_pip_full.png centered=true
+node MotionRoot/SpriteRoot/HealthPips/Pip1 Sprite2D position=(8.0000,0.0000) scale=(1.0000,1.0000) z=0 texture=res://assets/ui/actor_view/health_pip_full.png centered=true
+node MotionRoot/SpriteRoot/HealthPips/Pip2 Sprite2D position=(16.0000,0.0000) scale=(1.0000,1.0000) z=0 texture=res://assets/ui/actor_view/health_pip_full.png centered=true
+node AnimationPlayer AnimationPlayer
+node AnimationTree AnimationTree active=true anim_player=../AnimationPlayer
+node AudioPlayer AudioStreamPlayer bus=SFX
+view default_weapon_texture=res://content/skills/wooden_sword/icon.png
+view definition=res://content/enemies/bishop_zoner/enemy.tres
+view hurt_modulate=#ff8170ff
+view pip_empty_texture=res://assets/ui/actor_view/health_pip_empty.png
+view pip_full_texture=res://assets/ui/actor_view/health_pip_full.png
+view player_definition=null
+view show_facing_mark=false
+view show_health=true
+view telegraph_modulate=#db5763ff
+view weapon_anchor=(5.0000,-14.0000)
+view weapon_rest_length=18.0000
+clip RESET
+clip attack
+clip defeat
+clip hurt
+clip idle
+clip step
+clip telegraph
+tree_condition moving=false
+tree_condition not_moving=false
+tree_condition not_telegraphing=false
+state End clip=?
+state Start clip=?
+state attack clip=attack
+state defeat clip=defeat
+state hurt clip=hurt
+state idle clip=idle
+state step clip=step
+state telegraph clip=telegraph
+transition Start -> idle switch=0 advance=2 condition= xfade=0.0000
+transition attack -> idle switch=2 advance=2 condition= xfade=0.0000
+transition hurt -> defeat switch=0 advance=1 condition= xfade=0.0000
+transition hurt -> idle switch=2 advance=2 condition= xfade=0.0000
+transition idle -> attack switch=0 advance=1 condition= xfade=0.0000
+transition idle -> defeat switch=0 advance=1 condition= xfade=0.0000
+transition idle -> hurt switch=0 advance=1 condition= xfade=0.0000
+transition idle -> step switch=0 advance=2 condition=moving xfade=0.0000
+transition idle -> telegraph switch=0 advance=1 condition= xfade=0.0000
+transition step -> defeat switch=0 advance=1 condition= xfade=0.0000
+transition step -> hurt switch=0 advance=1 condition= xfade=0.0000
+transition step -> idle switch=0 advance=2 condition=not_moving xfade=0.0000
+transition step -> telegraph switch=0 advance=1 condition= xfade=0.0000
+transition telegraph -> defeat switch=0 advance=1 condition= xfade=0.0000
+transition telegraph -> hurt switch=0 advance=1 condition= xfade=0.0000
+transition telegraph -> idle switch=0 advance=2 condition=not_telegraphing xfade=0.0600
+entity 1 enemy:Bishop cell=(1,5)
+  weapon_slot: weapon=null
+  enemy_ai: action_memory=[] allowed_directions=[(1, 1), (1, -1), (-1, 1), (-1, -1)] attack_pattern=AttackPattern@res://content/enemies/bishop_zoner/unarmed_attack.tres committed_goal=(-999, -999) committed_goal_kind=&"none" committed_target_snapshot=(-999, -999) decision_profile=DecisionConfig@res://content/enemies/bishop_zoner/decision.tres definition=EnemyDefinition@res://content/enemies/bishop_zoner/enemy.tres goal_commitment_decisions=2 goal_decisions_left=0 last_move_direction=(0, 0) locked_attack_cells=[] move_recovery_time=0.2000 observe_delay=0.5000 path_memory_size=6 recent_cells=[] state=0 state_time_left=0.5000 telegraph_duration=0.0000 unarmed_recovery_time=0.5000 unarmed_telegraph_time=0.6200
+  view_ref: node=node(CurrentZone/Actor) was_attacking=false was_dead=false was_hurt=false was_telegraphing=false
+  move_state: duration=0.2000 from_cell=(0, 0) moving=false progress=0.0000 to_cell=(0, 0)
+  move_intent: direction=(0, 0)
+  health: current=2 flash_left=0.0000 hurt_visual_time=0.0000 invulnerability_duration=0.7000 invulnerable_left=0.0000 max_value=2 recoil=(0.0000, 0.0000)
+  facing: direction=(0, 1)
+  grid_pos: cell=(1, 5)
+
+[actor enemy_base] scene=res://presentation/views/actors/enemy_base.tscn role=enemy
+node . Node2D script=res://presentation/views/actor_view.gd scale=(1.0000,1.0000) z=2
+node TelegraphAura Sprite2D visible=false position=(0.0000,0.0000) scale=(0.6800,0.6800) z=-1 texture=res://assets/ui/actor_view/warning_aura.png centered=true
+node MotionRoot Node2D position=(0.0000,0.0000) scale=(1.0000,1.0000) z=0
+node MotionRoot/SpriteRoot Node2D position=(0.0000,0.0000) scale=(1.0000,1.0000) z=0
+node MotionRoot/SpriteRoot/BodySprite Sprite2D position=(0.0000,-8.0000) scale=(0.6000,0.6000) z=0 texture=res://content/enemies/pawn_recruit/body.png centered=true
+node MotionRoot/SpriteRoot/FacingArrow Sprite2D position=(0.0000,-34.0000) scale=(0.4000,0.4000) z=0 texture=res://assets/ui/actor_view/facing_arrow.png centered=true
+node MotionRoot/SpriteRoot/WeaponPivot Node2D visible=false position=(0.0000,0.0000) scale=(1.0000,1.0000) z=0
+node MotionRoot/SpriteRoot/WeaponPivot/WeaponSprite Sprite2D position=(0.0000,-18.0000) scale=(0.4600,0.4600) z=0 texture=res://content/skills/wooden_sword/icon.png centered=true
+node MotionRoot/SpriteRoot/HealthPips Node2D visible=false position=(-8.0000,-40.0000) scale=(1.0000,1.0000) z=0
+node MotionRoot/SpriteRoot/HealthPips/Pip0 Sprite2D position=(0.0000,0.0000) scale=(1.0000,1.0000) z=0 texture=res://assets/ui/actor_view/health_pip_full.png centered=true
+node MotionRoot/SpriteRoot/HealthPips/Pip1 Sprite2D position=(8.0000,0.0000) scale=(1.0000,1.0000) z=0 texture=res://assets/ui/actor_view/health_pip_full.png centered=true
+node MotionRoot/SpriteRoot/HealthPips/Pip2 Sprite2D position=(16.0000,0.0000) scale=(1.0000,1.0000) z=0 texture=res://assets/ui/actor_view/health_pip_full.png centered=true
+node AnimationPlayer AnimationPlayer
+node AnimationTree AnimationTree active=true anim_player=../AnimationPlayer
+node AudioPlayer AudioStreamPlayer bus=SFX
+view default_weapon_texture=res://content/skills/wooden_sword/icon.png
+view definition=res://content/enemies/pawn_recruit/enemy.tres
+view hurt_modulate=#ff8170ff
+view pip_empty_texture=res://assets/ui/actor_view/health_pip_empty.png
+view pip_full_texture=res://assets/ui/actor_view/health_pip_full.png
+view player_definition=null
+view show_facing_mark=true
+view show_health=true
+view telegraph_modulate=#d94f59ff
+view weapon_anchor=(5.0000,-14.0000)
+view weapon_rest_length=18.0000
+clip RESET
+clip attack
+clip defeat
+clip hurt
+clip idle
+clip step
+clip telegraph
+tree_condition moving=false
+tree_condition not_moving=false
+tree_condition not_telegraphing=false
+state End clip=?
+state Start clip=?
+state attack clip=attack
+state defeat clip=defeat
+state hurt clip=hurt
+state idle clip=idle
+state step clip=step
+state telegraph clip=telegraph
+transition Start -> idle switch=0 advance=2 condition= xfade=0.0000
+transition attack -> idle switch=2 advance=2 condition= xfade=0.0000
+transition hurt -> defeat switch=0 advance=1 condition= xfade=0.0000
+transition hurt -> idle switch=2 advance=2 condition= xfade=0.0000
+transition idle -> attack switch=0 advance=1 condition= xfade=0.0000
+transition idle -> defeat switch=0 advance=1 condition= xfade=0.0000
+transition idle -> hurt switch=0 advance=1 condition= xfade=0.0000
+transition idle -> step switch=0 advance=2 condition=moving xfade=0.0000
+transition idle -> telegraph switch=0 advance=1 condition= xfade=0.0000
+transition step -> defeat switch=0 advance=1 condition= xfade=0.0000
+transition step -> hurt switch=0 advance=1 condition= xfade=0.0000
+transition step -> idle switch=0 advance=2 condition=not_moving xfade=0.0000
+transition step -> telegraph switch=0 advance=1 condition= xfade=0.0000
+transition telegraph -> defeat switch=0 advance=1 condition= xfade=0.0000
+transition telegraph -> hurt switch=0 advance=1 condition= xfade=0.0000
+transition telegraph -> idle switch=0 advance=2 condition=not_telegraphing xfade=0.0600
+entity 1 enemy:Pawn cell=(1,5)
+  weapon_slot: weapon=null
+  enemy_ai: action_memory=[] allowed_directions=[(0, -1), (0, 1), (-1, 0), (1, 0)] attack_pattern=AttackPattern@res://content/enemies/_shared/attacks/pawn_diagonal.tres committed_goal=(-999, -999) committed_goal_kind=&"none" committed_target_snapshot=(-999, -999) decision_profile=DecisionConfig@res://content/enemies/_shared/decisions/pawn_skirmisher.tres definition=EnemyDefinition@res://content/enemies/pawn_recruit/enemy.tres goal_commitment_decisions=2 goal_decisions_left=0 last_move_direction=(0, 0) locked_attack_cells=[] move_recovery_time=0.1800 observe_delay=0.4200 path_memory_size=6 recent_cells=[] state=0 state_time_left=0.4200 telegraph_duration=0.0000 unarmed_recovery_time=0.4800 unarmed_telegraph_time=0.5800
+  view_ref: node=node(CurrentZone/Actor) was_attacking=false was_dead=false was_hurt=false was_telegraphing=false
+  move_state: duration=0.1800 from_cell=(0, 0) moving=false progress=0.0000 to_cell=(0, 0)
+  move_intent: direction=(0, 0)
+  health: current=2 flash_left=0.0000 hurt_visual_time=0.0000 invulnerability_duration=0.7000 invulnerable_left=0.0000 max_value=2 recoil=(0.0000, 0.0000)
+  facing: direction=(0, 1)
+  grid_pos: cell=(1, 5)

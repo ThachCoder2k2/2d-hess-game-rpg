@@ -73,6 +73,13 @@ Pure white and pure black are reserved for brief impact frames and maximum contr
 
 ## 6. Sprite Scale
 
+> **Superseded for chess pieces, 2026-10-12.** The owner decided that a piece is smaller than its cell:
+> never cell-sized, never taller, with a margin, heights as in a real chess set (`docs/owner-decisions.md`).
+> The sizes in the table below, and the line after it that lets sprites extend beyond their cell, no longer
+> apply to pieces. The sizes now are `content/feel/piece_sizes.tres` (pawn 18x22, knight, bishop and rook 20x24,
+> queen 22x26, king 22x28 px, base line 14 px below the cell centre); `docs/OWNER_GUIDE.md` section 6 explains
+> them. The child hand, the sword effect and the block intervention below are not chess pieces and are unchanged.
+
 | Asset | Canvas target |
 |---|---:|
 | Pawn hero | 32x40 |

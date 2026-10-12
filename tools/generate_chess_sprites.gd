@@ -16,15 +16,33 @@ extends SceneTree
 ##   - The outline is a one-block near-black ring dilated OUTSIDE the body, so
 ##     adding it does not shrink the silhouette. That costs one block of
 ##     padding on every side, which is why an exported frame is width + 2.
-##   - The foot of a piece sits on the CELL CENTRE, not on the cell's bottom
-##     edge. `anchor_row` in the manifest is the row (counted from the top of
-##     the frame) that must land on the centre of the grid cell.
+##   - A piece is smaller than its cell (the owner's decision of 2026-10-12).
+##     One block is ONE world pixel, so a frame is drawn at scale 1, centred on
+##     the cell's centre line, with its BOTTOM EDGE `base_offset_y` pixels below
+##     the cell's centre (content/feel/piece_sizes.tres, the PieceSizeTable). The
+##     same table gives every kind its largest box; the generator reads it and
+##     refuses to write a piece that does not fit.
+##   - A piece of a kind that has a row is WRITTEN on the cell-sized canvas of the
+##     owner's art spec (32 x 32, base rim on row 30): the files the owner will
+##     draw have that shape, so the stand-ins have it too. The pixels are the same;
+##     they only gain a transparent border and show in the same screen pixels.
 ##
 ## Run:
 ##   HOME=/tmp/unbound-pawn-godot ../Godot.app/Contents/MacOS/Godot \
 ##     --headless --path . -s tools/generate_chess_sprites.gd
 
 const OUT_DIR := "res://assets/_generated/chess"
+
+## The kind of piece (a row of content/feel/piece_sizes.tres) each generated piece is drawn for.
+## A piece with no entry has no row yet and is not checked: the promoted pawn is the mini-boss, and
+## bosses get their own rows when the first one is built.
+const PIECE_TYPE_BY_PIECE := {
+	"pawn": "pawn",
+	"black_pawn": "pawn",
+	"double_step": "pawn",
+	"knight": "knight",
+	"bishop": "bishop",
+}
 
 ## Every palette is exactly four entries: [outline, dark, mid, light].
 ## Index 0 is a real drawn colour (the ring), not a shading stop.
@@ -62,14 +80,25 @@ const EYE_MASKS := {
 ## THESE NUMBERS ARE TRACED, NOT DESIGNED. Every hand-authored revision of this
 ## silhouette read wrong. What follows is the outline of the actual chess knight
 ## glyph U+265E (BLACK CHESS KNIGHT) as cut by Apple Symbols: rendered at 900pt,
-## cropped to its bounding box, scaled uniformly to 21 rows, reduced to one
+## cropped to its bounding box, scaled uniformly to 15 rows, reduced to one
 ## [leftmost, rightmost] filled pair per row, then shifted one block right so the
 ## neck centres over the pedestal. The ear, the brow, the eye socket, the muzzle
 ## taper and the throat cut are the typeface's proportions, not mine.
 ## Do not "improve" a single row by hand. To change the shape, retrace the glyph
-## with `tools/trace_knight_glyph.py` and paste both arrays wholesale.
-const KNIGHT_FRONT := [5, 5, 5, 5, 4, 4, 3, 3, 2, 1, 1, 1, 1, 1, 1, 2, 6, 6, 6, 6, 6]
-const KNIGHT_BACK := [10, 10, 11, 13, 14, 15, 16, 16, 17, 17, 18, 18, 18, 18, 19, 19, 19, 19, 19, 19, 19]
+## with `tools/trace_knight_glyph.py --rows 15` and paste both arrays wholesale.
+##
+## Why 15 rows and not the 21 the owner approved: at one pixel per block the 21-row
+## knight is 26 x 32, as tall as the cell, and the owner decided a piece is smaller
+## than its cell. The size table gives the knight 20 x 24, and no whole-number
+## scaling gets 26 x 32 into that, so the SAME glyph was traced again on fewer rows
+## (`--rows 15`, the tool the paragraph above names). The approved 21-row arrays,
+## kept here so the old knight can be rebuilt by pasting them back:
+##   KNIGHT_FRONT := [5, 5, 5, 5, 4, 4, 3, 3, 2, 1, 1, 1, 1, 1, 1, 2, 6, 6, 6, 6, 6]
+##   KNIGHT_BACK := [10, 10, 11, 13, 14, 15, 16, 16, 17, 17, 18, 18, 18, 18, 19, 19, 19, 19, 19, 19, 19]
+## (and the pedestal rows of the approved knight: 7.0, 6.4 SB, 6.0, 6.4, 7.0, 7.8, 8.8 SB, 9.6, 9.0
+## on a body 24 wide.)
+const KNIGHT_FRONT := [4, 4, 3, 3, 2, 2, 1, 1, 1, 1, 1, 3, 4, 4, 4]
+const KNIGHT_BACK := [7, 8, 10, 11, 11, 12, 13, 13, 13, 13, 13, 14, 14, 14, 13]
 
 ## The promoted pawn's crown is a cross — also hand-authored spans.
 const CROSS_SPANS := [[7, 8], [7, 8], [5, 10], [7, 8], [7, 8]]
@@ -86,32 +115,69 @@ func _init() -> void:
 		quit(1)
 		return
 
+	var size_table := ContentDb.piece_sizes()
+	if size_table == null:
+		printerr("GENERATE CHESS SPRITES: content/feel/piece_sizes.tres does not load; run the editor import pass first")
+		quit(1)
+		return
+
 	var manifest := {}
+	var pieces_that_do_not_fit := PackedStringArray()
 	for piece_id: String in _pieces:
 		var frames: Array[Image] = []
 		for state: String in STATE_ORDER:
-			var frame := _raster(piece_id, state)
-			frames.append(frame)
-			_save(frame, "%s/%s_%s.png" % [OUT_DIR, piece_id, state])
-		_save(_strip(frames), "%s/%s_states.png" % [OUT_DIR, piece_id])
+			frames.append(_raster(piece_id, state))
 
 		var frame_width := frames[0].get_width()
 		var frame_height := frames[0].get_height()
-		manifest[piece_id] = {
+		var entry := {
 			"frame_width": frame_width,
 			"frame_height": frame_height,
-			# Row (from the frame's top) that must sit on the grid cell's centre.
-			"anchor_row": frame_height - 3,
 			"states": STATE_ORDER,
 			"sheet": "%s_states.png" % piece_id,
 		}
-		print("  %-12s %2d x %-2d   anchor row %d" % [
-			piece_id, frame_width, frame_height, frame_height - 3,
-		])
+		var box_note := "no size row yet"
+		var on_cell_canvas := false
+		if PIECE_TYPE_BY_PIECE.has(piece_id):
+			var piece_type := StringName(PIECE_TYPE_BY_PIECE[piece_id])
+			var row := size_table.row_for(piece_type)
+			if row == null:
+				pieces_that_do_not_fit.append("%s: the size table has no row for '%s'" % [piece_id, piece_type])
+			else:
+				entry["piece_type"] = String(piece_type)
+				entry["box_width"] = row.body_box.x
+				entry["box_height"] = row.body_box.y
+				var fits := frame_width <= row.body_box.x and frame_height <= row.body_box.y
+				box_note = "box %d x %d %s" % [row.body_box.x, row.body_box.y, "ok" if fits else "TOO BIG"]
+				if not fits:
+					pieces_that_do_not_fit.append("%s is %d x %d but a %s may be at most %d x %d" % [piece_id, frame_width, frame_height, piece_type, row.body_box.x, row.body_box.y])
+				else:
+					# The owner's art spec (docs/assets) draws every piece on the cell-sized canvas, so the
+					# stand-ins do too: the same pixels, on the same screen pixels as a tight picture would
+					# be, but the file is the shape the owner's own files will be.
+					on_cell_canvas = true
+					for index in frames.size():
+						frames[index] = _on_cell_canvas(frames[index], size_table)
+					entry["canvas_width"] = size_table.cell_size
+					entry["canvas_height"] = size_table.cell_size
+					entry["canvas_base_row"] = size_table.cell_canvas_base_row
+		manifest[piece_id] = entry
+		for index in frames.size():
+			_save(frames[index], "%s/%s_%s.png" % [OUT_DIR, piece_id, STATE_ORDER[index]])
+		_save(_strip(frames), "%s/%s_states.png" % [OUT_DIR, piece_id])
+		print("  %-12s %2d x %-2d   %s%s" % [piece_id, frame_width, frame_height, box_note, ", on the %d x %d cell canvas" % [size_table.cell_size, size_table.cell_size] if on_cell_canvas else ""])
 
-	# One block of art is two world pixels, so a sprite drawn at scale 2 lines
-	# up with the 32px grid. Recorded here so no scene has to rediscover it.
-	manifest["block_size_in_world_pixels"] = 2
+	if not pieces_that_do_not_fit.is_empty():
+		for line in pieces_that_do_not_fit:
+			printerr("GENERATE CHESS SPRITES: %s" % line)
+		printerr("GENERATE CHESS SPRITES: a piece is smaller than its cell; fix the shape or the table (content/feel/piece_sizes.tres), not the check")
+		quit(1)
+		return
+
+	# One block of art is ONE world pixel since the owner decided a piece is smaller than its
+	# cell: a frame is placed at scale 1, its bottom edge on the piece's base line. Recorded so
+	# no scene has to rediscover it.
+	manifest["block_size_in_world_pixels"] = 1
 
 	var manifest_path := "%s/manifest.json" % OUT_DIR
 	var file := FileAccess.open(manifest_path, FileAccess.WRITE)
@@ -138,13 +204,40 @@ func _build_pieces() -> void:
 	# The pawn's profile, top to bottom: round head, pinched neck, steel collar,
 	# a body that swells, then a stepped slab base. The neck pinch is what keeps
 	# it from reading as a baby — the head must never be the widest part.
+	var pawn_rows := [
+		_lathe(2.6), _lathe(3.4), _lathe(3.8), _lathe(3.8), _lathe(3.4), _lathe(2.6),
+		_lathe(1.8), _lathe(1.6), _lathe(1.6),
+		_lathe(3.4, "ST"), _lathe(3.8, "ST"),
+		_lathe(2.2), _lathe(2.6), _lathe(3.0), _lathe(3.6),
+		_lathe(4.8), _lathe(5.6), _lathe(6.0),
+	]
 	_pieces["pawn"] = {
 		"width": 16,
 		"palette": "IV",
 		"eye_row": 2,
+		"rows": pawn_rows,
+	}
+
+	# The same pawn in the black pieces' obsidian: the enemy the hero's white pawn meets. Same
+	# rows, same steel collar, only the palette differs, so it is the approved silhouette.
+	_pieces["black_pawn"] = {
+		"width": 16,
+		"palette": "BK",
+		"eye_row": 2,
+		"rows": pawn_rows,
+	}
+
+	# The bishop: a finial, an ovoid mitre, a steel collar, a stem and the pawn's base, all turned
+	# on the lathe like the pawn so it stands in the same family. Black, like the knight.
+	# Placeholder shape for the owner to redraw or approve; the eyes sit on the widest mitre rows.
+	_pieces["bishop"] = {
+		"width": 16,
+		"palette": "BK",
+		"eye_row": 5,
 		"rows": [
-			_lathe(2.6), _lathe(3.4), _lathe(3.8), _lathe(3.8), _lathe(3.4), _lathe(2.6),
-			_lathe(1.8), _lathe(1.6), _lathe(1.6),
+			_lathe(1.2), _lathe(1.8), _lathe(1.2),
+			_lathe(2.4), _lathe(3.2), _lathe(3.8), _lathe(3.8), _lathe(3.8), _lathe(3.4), _lathe(2.8),
+			_lathe(2.0),
 			_lathe(3.4, "ST"), _lathe(3.8, "ST"),
 			_lathe(2.2), _lathe(2.6), _lathe(3.0), _lathe(3.6),
 			_lathe(4.8), _lathe(5.6), _lathe(6.0),
@@ -196,23 +289,24 @@ func _build_pieces() -> void:
 	for row in KNIGHT_FRONT.size():
 		knight_head.append([KNIGHT_FRONT[row], KNIGHT_BACK[row]])
 	_pieces["knight"] = {
-		# 24, not 22: the traced neck is 14 blocks across and sits in x 6..19, so
-		# the pedestal has to be wide enough to carry it. centre = 12.
-		"width": 24,
+		# 18: the traced neck is 11 blocks across and sits in x 4..14, so the pedestal has
+		# to be wide enough to carry it. centre = 9. (24 for the 21-row knight.)
+		"width": 18,
 		"palette": "BK",
 		"head": knight_head,
 		# One eye, not a mirrored pair — the knight is seen in profile. All three
-		# facial marks sit in the glyph's own hollows: the eye socket at rows 4-6,
-		# the nostril in the muzzle tip, the mouth in the gap at row 13.
-		"eye_at": Vector2i(5, 4),
-		"nostril": Vector2i(2, 12),
-		"mouth_row": 13,
-		"mouth_span": Vector2i(6, 8),
+		# facial marks sit in the glyph's own hollows: the eye socket at rows 3-5, the
+		# nostril in the muzzle tip, the mouth along the underside of the muzzle. (The marks
+		# are placed by hand on the traced rows, scaled from the 21-row knight's.)
+		"eye_at": Vector2i(4, 3),
+		"nostril": Vector2i(1, 8),
+		"mouth_row": 10,
+		"mouth_span": Vector2i(3, 5),
 		# The pedestal: it starts as wide as the neck it carries, pinches once
-		# under a steel ring, then flares out to the widest block of any piece.
+		# under a steel ring, then flares out to the widest block of the piece.
 		"rows": [
-			_lathe(7.0), _lathe(6.4, "SB"), _lathe(6.0), _lathe(6.4),
-			_lathe(7.0), _lathe(7.8), _lathe(8.8, "SB"), _lathe(9.6), _lathe(9.0),
+			_lathe(6.0), _lathe(5.0, "SB"), _lathe(4.8), _lathe(5.2),
+			_lathe(6.0), _lathe(7.0, "SB"), _lathe(7.6),
 		],
 	}
 
@@ -389,6 +483,17 @@ func _dilate_outline(image: Image, occupied: Array[Array], colour: Color) -> voi
 					break
 			if touches_body:
 				image.set_pixel(x, y, colour)
+
+
+## A tight frame placed on the art spec's cell-sized canvas (docs/assets): centred on the cell's
+## centre line the way a tight picture is (PieceSizeTable.body_top_left), its bottom edge on the
+## canvas's base row. Nothing is resampled; the frame is only given the transparent border.
+func _on_cell_canvas(frame: Image, size_table: PieceSizeTable) -> Image:
+	var canvas := Image.create_empty(size_table.cell_size, size_table.cell_size, false, Image.FORMAT_RGBA8)
+	canvas.fill(Color(0, 0, 0, 0))
+	var top_left := Vector2i(floori(size_table.cell_size / 2.0) - floori(frame.get_width() / 2.0), size_table.cell_canvas_base_row - frame.get_height())
+	canvas.blit_rect(frame, Rect2i(Vector2i.ZERO, frame.get_size()), top_left)
+	return canvas
 
 
 ## The six states laid out left to right in STATE_ORDER, one frame per cell.
