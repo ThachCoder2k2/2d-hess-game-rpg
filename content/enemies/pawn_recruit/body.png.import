@@ -10,7 +10,7 @@ metadata={
 
 [deps]
 
-source_file="res://assets/sprites/generated/black_pawn.png"
+source_file="res://content/enemies/pawn_recruit/body.png"
 dest_files=["res://.godot/imported/black_pawn.png-86ea7c8e8efeb4858e8ac8d59215ee98.ctex"]
 
 [params]

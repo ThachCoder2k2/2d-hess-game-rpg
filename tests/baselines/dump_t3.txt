@@ -102,7 +102,7 @@ PawnHero/MotionRoot/SpriteRoot/WeaponPivot/WeaponSprite Sprite2D
 PawnHero/MovementComponent Node script=res://authoring/entity_components/movement_component.gd
 
 [textures] 10
-CurrentZone/PawnRecruit/MotionRoot/SpriteRoot/BodySprite -> res://assets/sprites/generated/black_pawn.png
+CurrentZone/PawnRecruit/MotionRoot/SpriteRoot/BodySprite -> res://content/enemies/pawn_recruit/body.png
 CurrentZone/PawnRecruit/MotionRoot/SpriteRoot/FacingArrow -> res://assets/sprites/generated/facing_arrow.png
 CurrentZone/PawnRecruit/MotionRoot/SpriteRoot/HealthPips/Pip0 -> res://assets/sprites/generated/health_pip_full.png
 CurrentZone/PawnRecruit/MotionRoot/SpriteRoot/HealthPips/Pip1 -> res://assets/sprites/generated/health_pip_full.png
