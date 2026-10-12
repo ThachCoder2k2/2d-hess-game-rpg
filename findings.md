@@ -315,3 +315,26 @@ June note).
   a warning (`ext_resource, invalid UID ... using text path instead`), never an error.
 - Cosmetic, not fixed: the bootstrap warm-up import pass prints that same warning for the two room PNGs on a
   fresh clone, because the art does not exist yet; the pass after the generators is clean.
+
+## Code Layout Facts (M1b step 2, 2026-10-12)
+
+- The code lives in `schema/`, `ecs/`, `authoring/`, `presentation/`, `shell/` (plan 13.2); `scripts/` does not
+  exist. A script's layer is its top folder, and `test_dependency_edges.gd` fails on a `.gd` outside them.
+  `docs/migration-notes.md` has the old-to-new table and every place the plan's table needed a judgement call;
+  `tools/move_res_log.tsv` is the exact move list.
+- `EnemyIntent` (a `RefCounted`) is in `schema/entity/` on purpose: the system builds it, the board draws it and
+  the bridge forwards it in an event, so `schema` is the only layer all three may name. Putting it in
+  `ecs/systems/decide/` added a new presentation to ecs/systems edge to the dependency report.
+- Phase folders (`ecs/systems/<phase>/`) exist, but the tick order is still the list in `game_root.gd` and
+  `tools/world_dumper.gd`; `ecs/schedule/`, the `PHASE` const and `ecs/events/` are M3a. `main.tscn` is now
+  `shell/game_root.tscn` (root node still named `Main`) and `project.godot` starts it directly; `app_root` is
+  M3b/M4. `WorldState` is `shell/save/world_state.gd` until M3b rewrites it as `SaveService`.
+- `move_res.py` moves a folder or a file, not a regrouping: when one old folder fans out to several new ones
+  (`scripts/data` to `schema/{entity,world,feel}`, `scripts/ecs/systems` to six phases) call it once per file in
+  the same commit. It does not touch prose paths (docs, comments); grep for the old names afterwards.
+- After a commit that changes an AUTOLOAD path, the first editor import pass on an old checkout prints
+  `Failed to create an autoload` for the old path (stale editor state under `.godot/`) and the strict runner
+  goes red on that pass; run the import pass once more and it is clean. Moving the main scene or any other file
+  does not do this, and a fresh clone never does.
+- Scans that must see every scene or script wherever it lives use `TestPaths.project_directory()` with the
+  recursive listing, not `scenes/` or `objects/` (the audio-bus test used to, and would have gone blind).

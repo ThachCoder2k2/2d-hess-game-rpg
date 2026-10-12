@@ -891,3 +891,34 @@ gameplay change, no scene structure change, no code or content folder moved yet.
   green with a clean `git status` and the room-PNG uids matching the scenes.
 - **Not done here (later steps):** code and content folder moves, tracked-sprite move, `project.godot` paths,
   `CLAUDE.md` amendments, `test_sidecars_tracked` ENFORCING (it still reports), `task_plan.md` M1b row.
+
+## M1b step 2 - the code moves - 2026-10-12
+
+Second of four M1b steps, branch `base/m1b-2` from `base/m1b-1`. No gameplay change, no script body edited, no
+`class_name` renamed, no scene changed except the `path=` text of `ext_resource` lines.
+
+- **What moved.** All 51 scripts outside `tests/` and `tools/` left `scripts/` (which is gone) for the plan's
+  code tree, plus the scenes that belong to them: `schema/{entity,attacks,world,feel}/`, `ecs/core/`,
+  `ecs/components/ecs_components.gd`, `ecs/systems/{input,decide,move,act,resolve,view}/`, `authoring/` (the
+  baker, `authoring/entity_components/`, `authoring/markers/`, `room_encounter`), `presentation/{views,ui/hud,
+  ui/codex,audio,camera,board}/` and `shell/{game_root.gd/.tscn, save/world_state.gd}`. `project.godot`
+  (`run/main_scene`, the `SfxManager` and `WorldState` autoloads) followed. Every move went through
+  `tools/move_res.py`; the old-to-new table and the eleven judgement calls are in `docs/migration-notes.md`.
+- **One commit per folder or coherent group** (19 move commits, leaf-first in the order of plan 13.6), the strict
+  runner after each. The dump baselines changed in 85 lines in total and every change is only the `script=res://`
+  path a moved script prints (proved line by line against the step-1 baselines).
+- **EnemyIntent moved twice.** First put in `ecs/systems/decide/` (it is a `RefCounted`, not a Resource), then back
+  to `schema/entity/` as the plan says: the dependency report showed the first placement adds a presentation to
+  ecs/systems edge, because the board's F3 overlay and `game_root.gd` also name it. The report on the final tree
+  equals the one printed on the step-1 tree (5 NOT ALLOWED edges, 1 documented exception).
+- **Guards.** `test_dependency_edges.gd` dropped its `LEGACY_LAYER_RULES` table (a layer is the top folder) and now
+  fails on a script outside the layer folders. `test_audio_buses.gd` scans every scene in the project instead of
+  `scenes/` and `objects/` (they are being emptied), through the new `TestPaths.project_directory()`.
+- **Verification.** `python3 tools/run_all_tests.py --strict` green after every commit (21 suites, 235 of 235
+  baseline labels, 0 warnings, none renamed); both `--self-test` runs 0 failures; `stamp_uids.gd --check` CLEAN;
+  `git diff --check` clean; a fresh `git clone` of the branch plus `tools/bootstrap_worktree.sh` came out green
+  with a clean `git status`.
+- **Not done here (later steps):** content and fixtures (`objects/actors`, tilemaps, `scenes/rooms`,
+  `scenes/zones`, `resources/*`, the 12 tracked sprites), `CLAUDE.md` amendments and the prose docs (they still
+  describe the old layout), `test_sidecars_tracked` ENFORCING (clean today: 96 `.gd`, 0 missing sidecars),
+  `task_plan.md` M1b row.
