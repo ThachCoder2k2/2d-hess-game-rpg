@@ -62,3 +62,4 @@ scripts/world/grid_lines_overlay.gd	presentation/board/grid_lines_overlay.gd
 scripts/world/world_state.gd	shell/save/world_state.gd
 scripts/main.gd	shell/game_root.gd
 scenes/main.tscn	shell/game_root.tscn
+ecs/systems/decide/enemy_intent.gd	schema/entity/enemy_intent.gd
