@@ -94,6 +94,46 @@ static func entry_problem(entry: Dictionary) -> String:
 	return ""
 
 
+## What tools/seed_placeholders.gd does about one GENERATED_SEEDS row (keys source, target, kind, id and
+## optionally supersedes_stand_in). Kept here, as plain data in and a word out, so the rules that
+## decide whether the tool may overwrite a file are tested (tests/content/test_placeholders_manifest.gd)
+## and not only believed.
+const SEED_COPY := "copy"
+const SEED_REPLACE_STAND_IN := "replace_stand_in"
+const SEED_NOTHING := "nothing"
+## The target exists and the manifest does not list it: it is the owner's file, never touched.
+const SEED_OWNERS_FILE := "owners_file"
+
+
+## The origin text a seeded file is recorded with. Also how the tool recognises a row it already ran.
+static func seed_origin(seed_row: Dictionary) -> String:
+	return "copied from %s by tools/seed_placeholders.gd" % String(seed_row["source"]).trim_prefix("res://")
+
+
+## The decision, from the row, whether the target file exists and the manifest entry for it (empty
+## when it has none):
+##   no file                              -> copy
+##   a file the manifest does not list    -> the owner's, leave it
+##   a listed file, the row does not say it supersedes a stand-in -> nothing
+##   a listed file whose sha256 differs from the recorded one     -> the owner replaced it, nothing
+##   a listed file this very row already seeded                   -> nothing
+##   a listed file still unchanged since an EARLIER stand-in was seeded, and the row says
+##   `supersedes_stand_in`                -> replace it with the new stand-in and re-record it
+## A stand-in can therefore be swapped for a better stand-in, and the owner's art can never be.
+static func seed_decision(seed_row: Dictionary, target_exists: bool, recorded_entry: Dictionary) -> String:
+	if not target_exists:
+		return SEED_COPY
+	if recorded_entry.is_empty():
+		return SEED_OWNERS_FILE
+	if not bool(seed_row.get("supersedes_stand_in", false)):
+		return SEED_NOTHING
+	if status_of(recorded_entry) != STATUS_PLACEHOLDER:
+		return SEED_NOTHING
+	if String(recorded_entry["origin"]) == seed_origin(seed_row):
+		return SEED_NOTHING
+	return SEED_REPLACE_STAND_IN
+
+
 ## STATUS_PLACEHOLDER while the file's sha256 equals the recorded one, STATUS_REPLACED once
 ## it differs (the owner overwrote it), STATUS_MISSING when the file is gone.
 static func status_of(entry: Dictionary) -> String:

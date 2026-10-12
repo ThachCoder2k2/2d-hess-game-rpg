@@ -56,7 +56,7 @@ No tracked scene names a generated PNG (`tests/content/test_placeholders_manifes
 | `seed_placeholders.gd` | Copies a generator's stand-in picture into `content/` only when the target is absent, and records the sha256 of every placeholder in `content/_placeholders.json`. `-- --check` changes nothing and exits 1 if there is work to do. Never re-records a file already listed. |
 | `list_placeholders.gd` | Prints the owner's art and audio TODO by kind: every listed file whose sha256 still equals the recorded one. Overwriting a file clears its flag by itself. Exit 1 if a listed file is gone. |
 | `placeholder_manifest.gd` | The manifest logic shared by the two tools above and `tests/content/test_placeholders_manifest.gd` (a helper, not a command; no `class_name`). |
-| `generate_chess_sprites.gd` | Bakes the chess-piece sprites (art language v13) to `assets/_generated/chess/`. |
+| `generate_chess_sprites.gd` | Bakes the chess-piece sprites (art language v13) to `assets/_generated/chess/`: the white pawn (the hero), the black pawn, the bishop, the knight, and the double-step and promoted pawns, six states each. One block is one world pixel, and it reads the size table (`content/feel/piece_sizes.tres`) and refuses to write a piece that does not fit its box. |
 | `generate_kingdom_tiles.gd` | Bakes the room materials as pixel tiles, a contact sheet and a manifest (same art language as the pieces) into `assets/_generated/tiles/`. |
 | `generate_demo_map.gd` | Draws the pawn-scale bedroom demo world with the kingdom tiles into `assets/_generated/maps/` and re-exports the paintable piece templates to `assets/_generated/piece_templates/`. |
 | `generate_stage1_room_art.gd` | Paints the Stage-1 room backgrounds (T1, T2, ...) into `assets/_generated/rooms/`. |
@@ -66,7 +66,7 @@ No tracked scene names a generated PNG (`tests/content/test_placeholders_manifes
 | `render_kingdom_map.gd` | Renders the whole kingdom to one image for review; needs a real renderer (no `--headless`) and `--write-movie`. |
 | `generate_sfx.py` | Generates the placeholder SFX as mono WAV files into `assets/sfx/`. |
 | `generate_music.py` | Generates the placeholder A-minor march loop into `assets/music/`. |
-| `trace_knight_glyph.py` | Traces the knight glyph into the span tables `generate_chess_sprites.gd` uses (needs a font with U+265E). |
+| `trace_knight_glyph.py` | Traces the knight glyph into the span tables `generate_chess_sprites.gd` uses (needs a font with U+265E and Pillow); `--rows N` sets how many sprite rows the head takes (the shipped knight is traced at 15). |
 
 Never use the editor UID tool, the `update_project_uids` MCP tool, or a `ResourceLoader.load` plus
 `ResourceSaver.save` loop to "fix" uids: on this project it added 0 uids, turned 38 more

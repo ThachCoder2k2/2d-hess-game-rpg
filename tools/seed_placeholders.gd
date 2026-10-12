@@ -8,7 +8,10 @@ extends SceneTree
 ## stand-ins. This tool does both:
 ##
 ##   1. GENERATED_SEEDS: a picture a generator painted into assets/_generated/ is COPIED into
-##      content/ only when the target file is absent. It never overwrites a file.
+##      content/ only when the target file is absent. It never overwrites the owner's file. A row
+##      marked `supersedes_stand_in` may also replace an EARLIER stand-in, and only while that file
+##      still equals the hash recorded for it (so it is provably not the owner's art); the new
+##      stand-in is recorded in its place. PlaceholderManifest.seed_decision holds the rule.
 ##   2. ADOPTED_PLACEHOLDERS: art and audio that were already tracked when M1b ran, but that the
 ##      owner did not make, are recorded where they stand.
 ##   3. For every file in either list it records the sha256 in content/_placeholders.json.
@@ -97,22 +100,30 @@ func _init() -> void:
 	for seed_row in GENERATED_SEEDS:
 		var source_path := String(seed_row["source"])
 		var target_path := String(seed_row["target"])
-		if FileAccess.file_exists(target_path):
-			if not recorded_paths.has(target_path):
-				print("SEED PLACEHOLDERS: %s exists but is not recorded; treated as the owner's file, not a placeholder" % target_path.trim_prefix("res://"))
+		var recorded_entry := _entry_for_path(entries, target_path)
+		var decision := PlaceholderManifest.seed_decision(seed_row, FileAccess.file_exists(target_path), recorded_entry)
+		if decision == PlaceholderManifest.SEED_OWNERS_FILE:
+			print("SEED PLACEHOLDERS: %s exists but is not recorded; treated as the owner's file, not a placeholder" % target_path.trim_prefix("res://"))
+			continue
+		if decision == PlaceholderManifest.SEED_NOTHING:
 			continue
 		if not FileAccess.file_exists(source_path):
 			printerr("SEED PLACEHOLDERS: %s is missing; run tools/bootstrap_worktree.sh first" % source_path)
 			failed = true
 			continue
-		work_lines.append("copy %s -> %s" % [source_path.trim_prefix("res://"), target_path.trim_prefix("res://")])
+		var replacing := decision == PlaceholderManifest.SEED_REPLACE_STAND_IN
+		work_lines.append("%s %s -> %s" % ["replace the stand-in with" if replacing else "copy", source_path.trim_prefix("res://"), target_path.trim_prefix("res://")])
 		if check_only:
 			continue
-		if not _copy_file(source_path, target_path):
+		if not _copy_file(source_path, target_path, replacing):
 			printerr("SEED PLACEHOLDERS: could not copy %s to %s" % [source_path, target_path])
 			failed = true
 			continue
-		entries.append(_new_entry(target_path, String(seed_row["kind"]), String(seed_row["id"]), "copied from %s by tools/seed_placeholders.gd" % source_path.trim_prefix("res://")))
+		if replacing:
+			recorded_entry["sha256"] = FileAccess.get_sha256(target_path)
+			recorded_entry["origin"] = PlaceholderManifest.seed_origin(seed_row)
+		else:
+			entries.append(_new_entry(target_path, String(seed_row["kind"]), String(seed_row["id"]), PlaceholderManifest.seed_origin(seed_row)))
 		recorded_paths[target_path] = true
 
 	for adopted_row in ADOPTED_PLACEHOLDERS:
@@ -155,9 +166,19 @@ func _new_entry(path: String, kind: String, id: String, origin: String) -> Dicti
 	return {"path": path, "kind": kind, "id": id, "sha256": FileAccess.get_sha256(path), "origin": origin}
 
 
-## Copies source over to target (creating the folder), never over an existing file.
-func _copy_file(source_path: String, target_path: String) -> bool:
-	if FileAccess.file_exists(target_path):
+## The manifest entry for a file, or an empty dictionary when the manifest does not list it. The
+## dictionary is the entry itself, so changing it changes what is written back.
+func _entry_for_path(entries: Array[Dictionary], path: String) -> Dictionary:
+	for entry in entries:
+		if entry["path"] == path:
+			return entry
+	return {}
+
+
+## Copies source over to target (creating the folder). Over an existing file only when the caller
+## has decided it is a stand-in being superseded (PlaceholderManifest.seed_decision).
+func _copy_file(source_path: String, target_path: String, overwrite_stand_in := false) -> bool:
+	if FileAccess.file_exists(target_path) and not overwrite_stand_in:
 		return false
 	var target_directory := ProjectSettings.globalize_path(target_path.get_base_dir())
 	if DirAccess.make_dir_recursive_absolute(target_directory) != OK:
