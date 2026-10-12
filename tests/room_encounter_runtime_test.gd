@@ -28,7 +28,7 @@ func _init() -> void:
 
 	var room := (load("res://scenes/rooms/first_encounter.tscn") as PackedScene).instantiate()
 	root.add_child(room)
-	var player_view := (load("res://objects/actors/player.tscn") as PackedScene).instantiate() as ActorView
+	var player_view := (load("res://presentation/views/actors/player.tscn") as PackedScene).instantiate() as ActorView
 	player_view.position = Vector2(110, 229)
 	root.add_child(player_view)
 

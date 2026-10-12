@@ -25,7 +25,7 @@ func _boot_kingdom(player_cell: Vector2i, opened_gates: Array = [], with_ai := f
 	if with_ai:
 		world.add_system(EnemyAISystem.new())
 	world.add_system(MovementSystem.new())
-	var player_view := (load("res://objects/actors/player.tscn") as PackedScene).instantiate() as ActorView
+	var player_view := (load("res://presentation/views/actors/player.tscn") as PackedScene).instantiate() as ActorView
 	root.add_child(player_view)
 	player_view.position = world.grid.cell_to_world(player_cell)
 	var cast := EcsBoot.boot(world, player_view, zone, player_cell, [], opened_gates)

@@ -49,7 +49,7 @@ Steps:
    with gameplay in it and never `_draw()` the body.
 
 4. Add tests to `tests/run_tests.gd` (copy the Bishop block):
-   - add `"res://objects/actors/<name>_enemy.tscn": &"<id>"` to `expected_definitions` (it
+   - add `"res://presentation/views/actors/<name>_enemy.tscn": &"<id>"` to `expected_definitions` (it
      then asserts the view has a definition, validates, owns sprites, telegraph and defeat
      clips, an audio player and a state graph);
    - add a data block asserting the movement offsets, the attack cells for a known origin

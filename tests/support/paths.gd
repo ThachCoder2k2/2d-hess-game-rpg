@@ -94,7 +94,7 @@ func room_scene(room_id: StringName) -> String:
 ## `actor_id` is the actor scene's file name without extension, for example
 ## `player`, `black_pawn` or `knight_enemy`.
 func actor_scene(actor_id: StringName) -> String:
-	return _existing_resource("res://objects/actors/%s.tscn" % actor_id)
+	return _existing_resource("res://presentation/views/actors/%s.tscn" % actor_id)
 
 
 ## The SfxManager autoload's scene (its player pool is built in code).
@@ -117,7 +117,7 @@ func project_directory() -> String:
 
 ## The actor scenes: player, pawns, knight, bishop, and so on.
 func actors_directory() -> String:
-	return _existing_directory("res://objects/actors")
+	return _existing_directory("res://presentation/views/actors")
 
 
 func enemy_definitions_directory() -> String:

@@ -82,7 +82,7 @@ func _init() -> void:
 	_expect(grid.world_to_cell(Vector2(110, 229)) == Vector2i(1, 6), "world positions floor to their containing cell")
 
 	# --- The player scene is a pure view + spawn data ---
-	var hero_view := _view("res://objects/actors/player.tscn")
+	var hero_view := _view("res://presentation/views/actors/player.tscn")
 	_expect(hero_view != null, "player scene root is an ActorView (no gameplay script)")
 	_expect(_actor_is_sprite_animated(hero_view), "player view owns its sprites and AnimationPlayer")
 	_expect(_actor_has_clip(hero_view, &"step") and _actor_has_clip(hero_view, &"attack"), "player view owns step/attack clips")
@@ -106,10 +106,10 @@ func _init() -> void:
 
 	# --- Enemy scenes are views + definitions ---
 	var expected_definitions := {
-		"res://objects/actors/black_pawn.tscn": &"pawn_recruit",
-		"res://objects/actors/knight_enemy.tscn": &"knight_tracker",
-		"res://objects/actors/bishop_enemy.tscn": &"bishop_zoner",
-		"res://objects/actors/enemy_base.tscn": &"pawn_recruit",
+		"res://presentation/views/actors/black_pawn.tscn": &"pawn_recruit",
+		"res://presentation/views/actors/knight_enemy.tscn": &"knight_tracker",
+		"res://presentation/views/actors/bishop_enemy.tscn": &"bishop_zoner",
+		"res://presentation/views/actors/enemy_base.tscn": &"pawn_recruit",
 	}
 	for scene_path: String in expected_definitions:
 		var enemy_view := _view(scene_path)

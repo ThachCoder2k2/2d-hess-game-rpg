@@ -27,7 +27,7 @@ extends RefCounted
 ## The world graph that names every room (zone id -> scene). move_res.py rewrites this path.
 const WORLD_GRAPH_PATH := "res://resources/world/world_graph.tres"
 ## The player's puppet view, the same scene shell/game_root.tscn instances as PawnHero.
-const PLAYER_VIEW_SCENE_PATH := "res://objects/actors/player.tscn"
+const PLAYER_VIEW_SCENE_PATH := "res://presentation/views/actors/player.tscn"
 const BASELINE_DIRECTORY := "res://tests/baselines"
 ## Short room codes with a recorded baseline: the six Stage-1 rooms (docs/game-base-plan.md 15 M1a item 6).
 const BASELINE_ROOM_IDS: Array[String] = ["t1", "t2", "t3", "t4", "b1", "h1"]
