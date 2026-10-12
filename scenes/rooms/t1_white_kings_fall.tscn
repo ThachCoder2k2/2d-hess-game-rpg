@@ -1,6 +1,6 @@
 [gd_scene load_steps=6 format=3 uid="uid://clh36vjegdepp"]
 
-[ext_resource type="PackedScene" uid="uid://cxwxrf8td7kh1" path="res://objects/world/room_encounter.tscn" id="1_room"]
+[ext_resource type="PackedScene" uid="uid://cxwxrf8td7kh1" path="res://authoring/room_encounter.tscn" id="1_room"]
 [ext_resource type="PackedScene" uid="uid://bps3hxs0hyrgq" path="res://objects/world/kingdom_tilemap.tscn" id="2_tilemap"]
 [ext_resource type="Script" uid="uid://drrg761p361t0" path="res://scripts/world/grid_lines_overlay.gd" id="3_grid"]
 [ext_resource type="Script" uid="uid://ctn0g5fqvworr" path="res://authoring/markers/zone_entry_marker.gd" id="4_entry"]

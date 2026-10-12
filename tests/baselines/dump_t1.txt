@@ -46,7 +46,7 @@ entity 1 player cell=(2,5) facing=(0,1) moving=false health=3/3
 events drained: 0
 
 [nodes] 35
-CurrentZone Node2D script=res://scripts/world/room_encounter.gd position=(0.00,0.00)
+CurrentZone Node2D script=res://authoring/room_encounter.gd position=(0.00,0.00)
 CurrentZone/Entry_From_T2 Marker2D script=res://authoring/markers/zone_entry_marker.gd position=(496.00,84.00)
 CurrentZone/Entry_Start Marker2D script=res://authoring/markers/zone_entry_marker.gd position=(144.00,212.00)
 CurrentZone/Exit_To_T2 Marker2D script=res://authoring/markers/zone_exit_marker.gd position=(528.00,84.00)

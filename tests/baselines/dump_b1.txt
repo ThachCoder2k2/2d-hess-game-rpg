@@ -82,7 +82,7 @@ entity 5 pickup:Ruler Blade cell=(8,6)
 events drained: 3
 
 [nodes] 80
-CurrentZone Node2D script=res://scripts/world/room_encounter.gd position=(0.00,0.00)
+CurrentZone Node2D script=res://authoring/room_encounter.gd position=(0.00,0.00)
 CurrentZone/BlackPawnCaptain Node2D script=res://presentation/views/actor_view.gd position=(400.00,148.00) scale=(1.18,1.18) z_index=5
 CurrentZone/BlackPawnCaptain/AnimationPlayer AnimationPlayer
 CurrentZone/BlackPawnCaptain/AnimationTree AnimationTree

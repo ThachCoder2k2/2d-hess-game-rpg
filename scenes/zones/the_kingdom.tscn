@@ -1,6 +1,6 @@
 [gd_scene load_steps=13 format=3 uid="uid://dcky3f3xqn4eo"]
 
-[ext_resource type="PackedScene" uid="uid://cxwxrf8td7kh1" path="res://objects/world/room_encounter.tscn" id="1"]
+[ext_resource type="PackedScene" uid="uid://cxwxrf8td7kh1" path="res://authoring/room_encounter.tscn" id="1"]
 [ext_resource type="PackedScene" uid="uid://25b4e20s5dsk" path="res://objects/world/kingdom_world_tilemap.tscn" id="2"]
 [ext_resource type="PackedScene" uid="uid://dy23jflk5mhj" path="res://objects/actors/black_pawn.tscn" id="3"]
 [ext_resource type="Script" uid="uid://ctn0g5fqvworr" path="res://authoring/markers/zone_entry_marker.gd" id="4"]

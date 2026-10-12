@@ -43,3 +43,5 @@ objects/markers/blocker_marker.tscn	authoring/markers/blocker_marker.tscn
 objects/markers/gate_marker.tscn	authoring/markers/gate_marker.tscn
 objects/markers/pickup_spawn_point.tscn	authoring/markers/pickup_spawn_point.tscn
 objects/markers/player_unlock_marker.tscn	authoring/markers/player_unlock_marker.tscn
+scripts/world/room_encounter.gd	authoring/room_encounter.gd
+objects/world/room_encounter.tscn	authoring/room_encounter.tscn

@@ -81,7 +81,7 @@ entity 4 enemy:Backstep Pawn cell=(7,6) facing=(0,-1) moving=false health=2/2 ai
 events drained: 5
 
 [nodes] 80
-CurrentZone Node2D script=res://scripts/world/room_encounter.gd position=(0.00,0.00)
+CurrentZone Node2D script=res://authoring/room_encounter.gd position=(0.00,0.00)
 CurrentZone/ArmedPawn Node2D script=res://presentation/views/actor_view.gd position=(464.00,180.00) z_index=6
 CurrentZone/ArmedPawn/AnimationPlayer AnimationPlayer
 CurrentZone/ArmedPawn/AnimationTree AnimationTree
