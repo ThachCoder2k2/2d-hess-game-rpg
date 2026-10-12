@@ -44,8 +44,23 @@
 
 ## Enemy Freedom Revision
 
-- All common enemies move freely in four cardinal directions.
-- Chess identity moves from locomotion into the unarmed attack pattern.
+Amended 2026-10-12: the locomotion rule below was **superseded**; the attack and weapon
+rules still hold. Source of truth: `docs/game-base-plan.md` D-08 (the files win over the
+June note).
+
+- June 2026 revision, now superseded for locomotion: "All common enemies move freely in
+  four cardinal directions. Chess identity moves from locomotion into the unarmed attack
+  pattern."
+- As built (checked against the files 2026-10-12): every piece moves by its **own chess
+  law**, one move per `step_duration`, and the move set is data. `MovementConfig.
+  allowed_directions` lists the offsets of one move: the Pawn family the four cardinal
+  cells (the script default; `pawn_charging.tres` uses two-cell cardinal offsets), the
+  Bishop one diagonal cell (`resources/movement/bishop_diagonal.tres`), the Knight the
+  eight L offsets, landing on a free cell (`resources/movement/knight_standard.tres`).
+  Rook, Queen and King movement files arrive with their milestones.
+- Still an open owner question (`docs/where-we-are.md` decision 7, plan O-8): chess-law
+  moves or one cardinal step for all. The default taken is chess-law, and flipping it is
+  an edit to the `movement` `.tres` files only.
 - An equipped weapon replaces the chess-shaped attack until dropped or changed.
 - Encounters support both pre-armed enemies and weapons collected during combat.
 - The first mixed encounter includes free-moving Pawns and a Knight.
