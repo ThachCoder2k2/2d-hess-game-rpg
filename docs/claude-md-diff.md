@@ -1,11 +1,35 @@
 # Đề xuất sửa CLAUDE.md cho cổng OG0 (CLAUDE.md amendment proposal for gate OG0)
 
-> **Trạng thái (Status): ĐỀ XUẤT, CHƯA ÁP DỤNG (PROPOSAL, NOT APPLIED).** `CLAUDE.md` **chưa bị sửa**.
-> Cho tới khi bạn duyệt, `CLAUDE.md` thắng mọi tài liệu khác (`docs/game-base-plan.md`, thứ tự quyền
-> ưu tiên, mục 2). Các dòng dưới đây chỉ được áp dụng sau cổng **OG0**, trước khi M1b di chuyển thư mục.
+> **Trạng thái (Status): ĐÃ ÁP DỤNG (APPLIED) — M1b bước 4, 2026-10-12.** Bạn đã duyệt ở cổng **OG0**
+> ("Đồng ý", ghi nguyên văn trong `progress.md`, mục "Owner directions and gate OG0"): chuyển toàn bộ code và
+> thư mục sang cây ECS và sửa "Folder ownership" của `CLAUDE.md` cho khớp. Khi M1b đã tạo các đường dẫn mới,
+> A-1 đến A-9 được áp dụng vào `CLAUDE.md`. Tài liệu này giữ lại phần "Cũ / Mới" như một bản ghi.
 >
-> *EN: `CLAUDE.md` is not edited. These are the exact old and new lines from `docs/game-base-plan.md`
-> §2.4 (A-1 to A-9). Until you approve them at gate OG0, the current `CLAUDE.md` wins.*
+> *EN: **APPLIED in M1b step 4, 2026-10-12.** The owner approved at gate OG0 ("Đồng ý", recorded verbatim in
+> `progress.md`, section "Owner directions and gate OG0"): move all code and folders to the ECS tree and amend
+> `CLAUDE.md` "Folder ownership" to match. Once M1b had created the new paths, A-1 to A-9 were applied to
+> `CLAUDE.md`. This file keeps the Old / New text below as a record.*
+>
+> **Điều chỉnh khi áp dụng (How the text differs from the proposal, English is canonical):**
+> - A-1 is the proposed sentence plus two short additions: a folder name inside `content/` is the id (a leading
+>   underscore is not an id), and the layer table lives in `docs/ARCHITECTURE.md`, enforced by
+>   `tests/architecture/test_dependency_edges.gd`.
+> - A-2, A-5 and A-9 keep the proposed text but say which part does not exist yet, so an agent does not hunt
+>   for it: `HudSnapshot` and `world.commands` (M3a), `ecs/schedule/<phase>.gd` and `test_schedule_complete`
+>   (M3a; until then the tick order is the list in `shell/game_root.gd`, mirrored in `tools/world_dumper.gd`),
+>   `content/audio/sound_bank.tres` (not built yet).
+> - A-6 is the runner, the import pass, the stamper check and `git diff --check`; `/verify` adds the two
+>   `--self-test`s. The command lines were fixed once M1a had landed the tools.
+> - A-7 adds four bullets: stamp before moving, move only with `tools/move_res.py`, commit the sidecars, never
+>   let a headless `ResourceSaver` resave a scene (use `tools/save_keeping_uids.gd`); plus one on
+>   `assets/_generated/` and the placeholder tools.
+> - A-8: `/verify` and `/new-enemy` are rewritten for the new tree and `/new-sound` is listed. `/new-skill`,
+>   `/new-room` and `/new-beat` are named as "still to come" with their milestones (M7a, M14, M14) because
+>   the content kinds they scaffold do not exist yet.
+> - Two paths in untouched rules had to follow the move: `scripts/ecs/` in the first rule is `ecs/`, and "the
+>   main.gd bridge" in the sound rule is "the `shell/game_root.gd` bridge".
+> - Not changed (the optional note at the end of this file): "Read first, every session" still does not list
+>   `docs/where-we-are.md` or `docs/game-base-plan.md`.
 
 Ngôn ngữ: tiếng Việt trước, tiếng Anh sau; thuật ngữ và đường dẫn giữ nguyên. **Bản tiếng Anh là bản
 chuẩn.** Phần tiếng Việt do agent viết, bạn cứ sửa nếu thấy chưa đúng.
@@ -30,8 +54,8 @@ D-35). Revert path: the `pre-restructure` tag, or reverting the per-folder commi
 duplicate a value"; "self-documenting names"; "no `_draw()` for actors"; "research before building";
 "one logical change per commit".
 
-Phần "Cũ (Old)" dưới đây là trích **nguyên văn** từ `CLAUDE.md` hiện tại (kèm số dòng). Phần "Mới (New)"
-là nguyên văn từ plan §2.4.
+Phần "Cũ (Old)" dưới đây là trích **nguyên văn** từ `CLAUDE.md` trước khi sửa (kèm số dòng của bản đó). Phần
+"Mới (New)" là nguyên văn từ plan §2.4.
 
 ---
 
