@@ -18,7 +18,7 @@ The first playable foundation includes:
 - One-cell Wooden Sword attacks.
 - Two-cell Pencil Thrust skill on `Q`.
 - Black Pawn AI with diagonal attack telegraphs.
-- Enemies move by their own chess law, as data (`MovementConfig.allowed_directions`): Pawn one cardinal cell, Bishop one diagonal cell, Knight an L-step.
+- Enemies move by their own chess law, as data (`MovementConfig.allowed_directions`): Pawn cardinal, Bishop diagonal, Knight L-step.
 - Knight enemy with L-shaped unarmed attacks.
 - Enemy weapon pickups and pre-armed variants.
 - Pencil Spear and Ruler Blade replacement attack patterns.

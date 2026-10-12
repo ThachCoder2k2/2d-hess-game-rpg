@@ -179,7 +179,7 @@ the other schemas. Shared Resources are treated as immutable at runtime; instanc
 
 **Enemy locomotion is the piece's own chess law**, and it is data: `MovementConfig.
 allowed_directions` is a list of offsets, one move per step. Pawns use the four cardinal
-offsets, the Bishop the four diagonals (`resources/movement/bishop_diagonal.tres`), the
+offsets (the Charging Pawn two-cell cardinal offsets), the Bishop the four diagonals (`resources/movement/bishop_diagonal.tres`), the
 Knight the eight L offsets (`knight_standard.tres`), landing on a free cell. The June
 "all enemies move cardinally" note in `findings.md` is superseded
 (`docs/game-base-plan.md` D-08). Equipping a weapon replaces the piece's chess-shaped
