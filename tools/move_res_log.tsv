@@ -90,3 +90,4 @@ resources/enemies/knight_tracker.tres	content/enemies/knight_tracker/enemy.tres
 resources/enemies/pawn_armed.tres	content/enemies/pawn_armed/enemy.tres
 resources/enemies/pawn_recruit.tres	content/enemies/pawn_recruit/enemy.tres
 assets/sprites/generated/black_pawn.png	content/enemies/pawn_recruit/body.png
+resources/movement/pawn_charging.tres	content/enemies/charging_pawn/movement.tres
