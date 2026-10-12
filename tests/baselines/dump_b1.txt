@@ -32,7 +32,7 @@ XP.....#e...e..#
 
 [entities at boot]
 entity 1 player cell=(1,5)
-  player_combat: active_attack=null attack_on_cooldown=false attack_visual_time=0.0000 impact_left=0.0000 pencil_thrust=AttackProfile@res://resources/attacks/pencil_thrust.tres pending_cells=[] recovery_left=0.0000 skill_cooldown_duration=1.2500 skill_cooldown_left=0.0000 sword_unlocked=true wooden_sword=AttackProfile@res://resources/attacks/wooden_sword.tres
+  player_combat: active_attack=null attack_on_cooldown=false attack_visual_time=0.0000 impact_left=0.0000 pencil_thrust=AttackProfile@res://content/skills/pencil_thrust/pencil_thrust.tres pending_cells=[] recovery_left=0.0000 skill_cooldown_duration=1.2500 skill_cooldown_left=0.0000 sword_unlocked=true wooden_sword=AttackProfile@res://content/skills/wooden_sword/wooden_sword.tres
   view_ref: node=node(PawnHero) was_attacking=false was_dead=false was_hurt=false was_telegraphing=false
   player_input: buffered_direction=(0, 0) held_repeat_delay=0.2200 hold_time=0.0000 last_held_direction=(0, 0)
   player_tag: control_enabled=true
@@ -176,7 +176,7 @@ CurrentZone/CaptainGuardA/MotionRoot/SpriteRoot/FacingArrow -> res://assets/spri
 CurrentZone/CaptainGuardA/MotionRoot/SpriteRoot/HealthPips/Pip0 -> res://assets/sprites/generated/health_pip_full.png
 CurrentZone/CaptainGuardA/MotionRoot/SpriteRoot/HealthPips/Pip1 -> res://assets/sprites/generated/health_pip_full.png
 CurrentZone/CaptainGuardA/MotionRoot/SpriteRoot/HealthPips/Pip2 -> res://assets/sprites/generated/health_pip_empty.png
-CurrentZone/CaptainGuardA/MotionRoot/SpriteRoot/WeaponPivot/WeaponSprite -> res://assets/sprites/generated/toy_sword.png
+CurrentZone/CaptainGuardA/MotionRoot/SpriteRoot/WeaponPivot/WeaponSprite -> res://content/skills/wooden_sword/icon.png
 CurrentZone/CaptainGuardA/TelegraphAura -> res://assets/sprites/generated/warning_aura.png
 CurrentZone/CaptainGuardB/MotionRoot/SpriteRoot/BodySprite -> res://assets/sprites/generated/black_pawn.png
 CurrentZone/CaptainGuardB/MotionRoot/SpriteRoot/FacingArrow -> res://assets/sprites/generated/facing_arrow.png
@@ -189,4 +189,4 @@ CurrentZone/RoomArt/TileMap#tile_set_source0 -> res://assets/tiles/kingdom_tiles
 CurrentZone/WeaponPickup/Visual/GlowSprite -> res://assets/sprites/generated/warning_aura.png
 CurrentZone/WeaponPickup/Visual/MotionRoot/SpriteRoot/PickupSprite -> res://assets/sprites/generated/toy_weapon_pickup.png
 PawnHero/MotionRoot/SpriteRoot/BodySprite -> res://assets/sprites/generated/hero_pawn_unarmed.png
-PawnHero/MotionRoot/SpriteRoot/WeaponPivot/WeaponSprite -> res://assets/sprites/generated/toy_sword.png
+PawnHero/MotionRoot/SpriteRoot/WeaponPivot/WeaponSprite -> res://content/skills/wooden_sword/icon.png

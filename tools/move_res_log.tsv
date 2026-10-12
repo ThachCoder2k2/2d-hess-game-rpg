@@ -70,3 +70,6 @@ resources/rules/charging_pawn.tres	content/rules/charging_pawn/page.tres
 resources/rules/first_law.tres	content/rules/first_law/page.tres
 resources/rules/knight_errant.tres	content/rules/knight_errant/page.tres
 resources/rules/rule_book.tres	content/rules/rule_book.tres
+resources/attacks/wooden_sword.tres	content/skills/wooden_sword/wooden_sword.tres
+assets/sprites/generated/toy_sword.png	content/skills/wooden_sword/icon.png
+resources/attacks/pencil_thrust.tres	content/skills/pencil_thrust/pencil_thrust.tres

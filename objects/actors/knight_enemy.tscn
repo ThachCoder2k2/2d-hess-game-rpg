@@ -3,7 +3,7 @@
 [ext_resource type="Script" uid="uid://16la5b2fanxj" path="res://presentation/views/actor_view.gd" id="1"]
 [ext_resource type="Resource" uid="uid://dnn7ikejfxp11" path="res://resources/enemies/knight_tracker.tres" id="2"]
 [ext_resource type="Texture2D" uid="uid://doa640710y5up" path="res://assets/sprites/generated/black_knight.png" id="3"]
-[ext_resource type="Texture2D" uid="uid://6hr88wvg8w12" path="res://assets/sprites/generated/toy_sword.png" id="4"]
+[ext_resource type="Texture2D" uid="uid://6hr88wvg8w12" path="res://content/skills/wooden_sword/icon.png" id="4"]
 [ext_resource type="Texture2D" uid="uid://bs64j61xywio8" path="res://assets/sprites/generated/warning_aura.png" id="5"]
 [ext_resource type="Texture2D" uid="uid://cxpkyp4qmxeo5" path="res://assets/sprites/generated/facing_arrow.png" id="6"]
 [ext_resource type="Texture2D" uid="uid://cwjf56oelxo4s" path="res://assets/sprites/generated/health_pip_full.png" id="7"]

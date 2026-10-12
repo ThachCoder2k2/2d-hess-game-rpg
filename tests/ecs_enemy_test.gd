@@ -32,8 +32,8 @@ func _init() -> void:
 	world.add_system(HealthSystem.new())
 
 	var definition := load("res://resources/enemies/pawn_recruit.tres") as EnemyDefinition
-	var sword := load("res://resources/attacks/wooden_sword.tres") as AttackProfile
-	var thrust := load("res://resources/attacks/pencil_thrust.tres") as AttackProfile
+	var sword := load("res://content/skills/wooden_sword/wooden_sword.tres") as AttackProfile
+	var thrust := load("res://content/skills/pencil_thrust/pencil_thrust.tres") as AttackProfile
 
 	var hero := EcsActorFactory.spawn_player(world, Vector2i(2, 3), sword, thrust)
 	# Distance 7 = exactly the default aggro radius; the leash (zone_travel

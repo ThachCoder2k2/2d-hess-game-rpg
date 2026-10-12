@@ -30,8 +30,8 @@ func _init() -> void:
 	world.add_system(CombatSystem.new())
 	world.add_system(HealthSystem.new())
 
-	var sword := load("res://resources/attacks/wooden_sword.tres") as AttackProfile
-	var thrust := load("res://resources/attacks/pencil_thrust.tres") as AttackProfile
+	var sword := load("res://content/skills/wooden_sword/wooden_sword.tres") as AttackProfile
+	var thrust := load("res://content/skills/pencil_thrust/pencil_thrust.tres") as AttackProfile
 
 	var hero := world.create_entity()
 	var hero_pos: EcsComponents.GridPos = world.add_component(hero, EcsComponents.GRID_POS, EcsComponents.GridPos.new())
