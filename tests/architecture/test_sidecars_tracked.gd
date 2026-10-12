@@ -1,6 +1,6 @@
 extends UnboundTest
 
-## Architecture guard (REPORT-ONLY in M1a): every tracked .gd must have a tracked
+## Architecture guard (ENFORCING since M1b step 3): every tracked .gd must have a tracked
 ## .gd.uid, and every tracked imported asset (png, wav, svg, ...) must have a
 ## tracked .import (docs/game-base-plan.md 13.3 "Sidecars"). A missing sidecar means
 ## a fresh clone invents a new uid for the file, and every scene that references the
@@ -10,11 +10,13 @@ extends UnboundTest
 ## locally but was never committed is exactly the bug this guard catches.
 ## Ignored generated art (everything under assets/_generated/) is not tracked at
 ## all, so it is not expected to carry tracked sidecars.
-## Flip ENFORCING to true when the tree is clean (M1b).
+## Run the import pass (godot --headless --editor --quit) before committing a new script or
+## image, and stage the sidecars it writes.
 
 const ProjectFiles := preload("res://tests/architecture/project_files.gd")
 
-const ENFORCING := false
+## false = print REPORT lines and pass. true = fail on a missing sidecar.
+const ENFORCING := true
 ## Extensions Godot imports and therefore writes "<file>.<ext>.import" for.
 const IMPORTED_EXTENSIONS: Array[String] = ["png", "jpg", "jpeg", "webp", "svg", "wav", "ogg", "mp3", "ttf", "otf"]
 ## A repository with fewer tracked files than this is not the project (the git call is broken).
