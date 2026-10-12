@@ -76,8 +76,9 @@ Steps:
      picture is larger than the box.
 
    **The uid dance (do it in this order, once, after the files exist).** A text copy of a `.tres` also
-   copies its header `uid="..."`, and two files must not share one: delete the ` uid="..."` part of the
-   copy's first line, and in a reference to a file you just made (`visual.tres`, `body.png`) leave the
+   copies its header `uid="..."`, and two files must not share one (duplicating a file in the editor's
+   FileSystem dock gives the copy a fresh uid for you; a text copy does not): delete the ` uid="..."` part of
+   the copy's first line, and in a reference to a file you just made (`visual.tres`, `body.png`) leave the
    `[ext_resource ...]` line **path-only** (no `uid=`). Then:
 
    ```bash
