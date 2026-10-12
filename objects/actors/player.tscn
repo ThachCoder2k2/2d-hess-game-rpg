@@ -1,6 +1,6 @@
 [gd_scene format=3 uid="uid://ccqe76typpaaq"]
 
-[ext_resource type="Script" uid="uid://16la5b2fanxj" path="res://scripts/ecs/actor_view.gd" id="1"]
+[ext_resource type="Script" uid="uid://16la5b2fanxj" path="res://presentation/views/actor_view.gd" id="1"]
 [ext_resource type="Resource" uid="uid://byvw26cd7u12f" path="res://resources/attacks/wooden_sword.tres" id="2"]
 [ext_resource type="Resource" uid="uid://bog2k4gpe6yi4" path="res://resources/attacks/pencil_thrust.tres" id="3"]
 [ext_resource type="Script" uid="uid://d22stukg2rlbf" path="res://scripts/world/camera_rig.gd" id="5"]

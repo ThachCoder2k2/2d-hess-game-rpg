@@ -62,7 +62,7 @@ CurrentZone/Entry_From_T4 Marker2D script=res://scripts/world/zone_entry_marker.
 CurrentZone/Entry_West Marker2D script=res://scripts/world/zone_entry_marker.gd position=(112.00,212.00)
 CurrentZone/Exit_To_T2 Marker2D script=res://scripts/world/zone_exit_marker.gd position=(80.00,212.00)
 CurrentZone/Exit_To_T4 Marker2D script=res://scripts/world/zone_exit_marker.gd position=(528.00,84.00)
-CurrentZone/PawnRecruit Node2D script=res://scripts/ecs/actor_view.gd position=(400.00,148.00) z_index=5
+CurrentZone/PawnRecruit Node2D script=res://presentation/views/actor_view.gd position=(400.00,148.00) z_index=5
 CurrentZone/PawnRecruit/AnimationPlayer AnimationPlayer
 CurrentZone/PawnRecruit/AnimationTree AnimationTree
 CurrentZone/PawnRecruit/AudioPlayer AudioStreamPlayer
@@ -86,7 +86,7 @@ CurrentZone/RoomArt/SetDressing/WarningScratchA Line2D position=(0.00,0.00)
 CurrentZone/RoomArt/SetDressing/WarningScratchB Line2D position=(0.00,0.00)
 CurrentZone/RoomArt/SetDressing/WhiteShieldScrap Polygon2D position=(222.00,116.00)
 CurrentZone/RoomArt/TileMap TileMapLayer position=(64.00,36.00) used_cells=144 tile_set=res://resources/tiles/kingdom_tileset.tres
-PawnHero Node2D script=res://scripts/ecs/actor_view.gd position=(112.00,212.00) z_index=7
+PawnHero Node2D script=res://presentation/views/actor_view.gd position=(112.00,212.00) z_index=7
 PawnHero/AnimationPlayer AnimationPlayer
 PawnHero/AnimationTree AnimationTree
 PawnHero/AudioPlayer AudioStreamPlayer

@@ -100,7 +100,7 @@ func _init() -> void:
 	_expect(hero_view.get_node_or_null("MovementComponent") is MovementComponent \
 		and hero_view.get_node_or_null("InputComponent") is InputComponent, "player view carries movement and input component nodes")
 	_expect(_actor_has_state_graph(hero_view), "player animation transitions live in an editor AnimationTree graph")
-	var view_source := FileAccess.get_file_as_string("res://scripts/ecs/actor_view.gd")
+	var view_source := FileAccess.get_file_as_string("res://presentation/views/actor_view.gd")
 	# A moved file reads as "", which would make the "does not contain" check pass for nothing.
 	_expect(not view_source.is_empty() and not view_source.contains("func _draw") and not view_source.contains("func _process"), "actor views hold no logic at all")
 

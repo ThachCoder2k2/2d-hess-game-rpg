@@ -82,7 +82,7 @@ events drained: 5
 
 [nodes] 80
 CurrentZone Node2D script=res://scripts/world/room_encounter.gd position=(0.00,0.00)
-CurrentZone/ArmedPawn Node2D script=res://scripts/ecs/actor_view.gd position=(464.00,180.00) z_index=6
+CurrentZone/ArmedPawn Node2D script=res://presentation/views/actor_view.gd position=(464.00,180.00) z_index=6
 CurrentZone/ArmedPawn/AnimationPlayer AnimationPlayer
 CurrentZone/ArmedPawn/AnimationTree AnimationTree
 CurrentZone/ArmedPawn/AudioPlayer AudioStreamPlayer
@@ -97,7 +97,7 @@ CurrentZone/ArmedPawn/MotionRoot/SpriteRoot/HealthPips/Pip2 Sprite2D
 CurrentZone/ArmedPawn/MotionRoot/SpriteRoot/WeaponPivot Node2D
 CurrentZone/ArmedPawn/MotionRoot/SpriteRoot/WeaponPivot/WeaponSprite Sprite2D
 CurrentZone/ArmedPawn/TelegraphAura Sprite2D
-CurrentZone/BackstepPawn Node2D script=res://scripts/ecs/actor_view.gd position=(304.00,244.00) z_index=8
+CurrentZone/BackstepPawn Node2D script=res://presentation/views/actor_view.gd position=(304.00,244.00) z_index=8
 CurrentZone/BackstepPawn/AnimationPlayer AnimationPlayer
 CurrentZone/BackstepPawn/AnimationTree AnimationTree
 CurrentZone/BackstepPawn/AudioPlayer AudioStreamPlayer
@@ -116,7 +116,7 @@ CurrentZone/Entry_From_B1 Marker2D script=res://scripts/world/zone_entry_marker.
 CurrentZone/Entry_West Marker2D script=res://scripts/world/zone_entry_marker.gd position=(112.00,212.00)
 CurrentZone/Exit_To_B1 Marker2D script=res://scripts/world/zone_exit_marker.gd position=(528.00,84.00)
 CurrentZone/Exit_To_T3 Marker2D script=res://scripts/world/zone_exit_marker.gd position=(80.00,212.00)
-CurrentZone/PawnRecruit Node2D script=res://scripts/ecs/actor_view.gd position=(368.00,116.00) z_index=4
+CurrentZone/PawnRecruit Node2D script=res://presentation/views/actor_view.gd position=(368.00,116.00) z_index=4
 CurrentZone/PawnRecruit/AnimationPlayer AnimationPlayer
 CurrentZone/PawnRecruit/AnimationTree AnimationTree
 CurrentZone/PawnRecruit/AudioPlayer AudioStreamPlayer
@@ -147,7 +147,7 @@ CurrentZone/WeaponPickup/Visual/GlowSprite Sprite2D position=(0.00,0.00) scale=(
 CurrentZone/WeaponPickup/Visual/MotionRoot Node2D position=(0.00,0.00)
 CurrentZone/WeaponPickup/Visual/MotionRoot/SpriteRoot Node2D position=(0.00,0.00)
 CurrentZone/WeaponPickup/Visual/MotionRoot/SpriteRoot/PickupSprite Sprite2D position=(0.00,0.00) scale=(0.42,0.42)
-PawnHero Node2D script=res://scripts/ecs/actor_view.gd position=(112.00,212.00) z_index=7
+PawnHero Node2D script=res://presentation/views/actor_view.gd position=(112.00,212.00) z_index=7
 PawnHero/AnimationPlayer AnimationPlayer
 PawnHero/AnimationTree AnimationTree
 PawnHero/AudioPlayer AudioStreamPlayer

@@ -69,7 +69,7 @@ CurrentZone/RoomArt/SetDressing/RetreatTrailA Line2D position=(0.00,0.00)
 CurrentZone/RoomArt/SetDressing/RetreatTrailB Line2D position=(0.00,0.00)
 CurrentZone/RoomArt/SetDressing/SwordGlow Polygon2D position=(304.00,180.00)
 CurrentZone/RoomArt/TileMap TileMapLayer visible=false position=(64.00,36.00) used_cells=144 tile_set=res://resources/tiles/kingdom_tileset.tres
-PawnHero Node2D script=res://scripts/ecs/actor_view.gd position=(112.00,212.00) z_index=7
+PawnHero Node2D script=res://presentation/views/actor_view.gd position=(112.00,212.00) z_index=7
 PawnHero/AnimationPlayer AnimationPlayer
 PawnHero/AnimationTree AnimationTree
 PawnHero/AudioPlayer AudioStreamPlayer

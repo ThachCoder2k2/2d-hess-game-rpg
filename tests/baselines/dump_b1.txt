@@ -83,7 +83,7 @@ events drained: 3
 
 [nodes] 80
 CurrentZone Node2D script=res://scripts/world/room_encounter.gd position=(0.00,0.00)
-CurrentZone/BlackPawnCaptain Node2D script=res://scripts/ecs/actor_view.gd position=(400.00,148.00) scale=(1.18,1.18) z_index=5
+CurrentZone/BlackPawnCaptain Node2D script=res://presentation/views/actor_view.gd position=(400.00,148.00) scale=(1.18,1.18) z_index=5
 CurrentZone/BlackPawnCaptain/AnimationPlayer AnimationPlayer
 CurrentZone/BlackPawnCaptain/AnimationTree AnimationTree
 CurrentZone/BlackPawnCaptain/AudioPlayer AudioStreamPlayer
@@ -98,7 +98,7 @@ CurrentZone/BlackPawnCaptain/MotionRoot/SpriteRoot/HealthPips/Pip2 Sprite2D
 CurrentZone/BlackPawnCaptain/MotionRoot/SpriteRoot/WeaponPivot Node2D
 CurrentZone/BlackPawnCaptain/MotionRoot/SpriteRoot/WeaponPivot/WeaponSprite Sprite2D
 CurrentZone/BlackPawnCaptain/TelegraphAura Sprite2D
-CurrentZone/CaptainGuardA Node2D script=res://scripts/ecs/actor_view.gd position=(336.00,244.00) z_index=8
+CurrentZone/CaptainGuardA Node2D script=res://presentation/views/actor_view.gd position=(336.00,244.00) z_index=8
 CurrentZone/CaptainGuardA/AnimationPlayer AnimationPlayer
 CurrentZone/CaptainGuardA/AnimationTree AnimationTree
 CurrentZone/CaptainGuardA/AudioPlayer AudioStreamPlayer
@@ -113,7 +113,7 @@ CurrentZone/CaptainGuardA/MotionRoot/SpriteRoot/HealthPips/Pip2 Sprite2D
 CurrentZone/CaptainGuardA/MotionRoot/SpriteRoot/WeaponPivot Node2D
 CurrentZone/CaptainGuardA/MotionRoot/SpriteRoot/WeaponPivot/WeaponSprite Sprite2D
 CurrentZone/CaptainGuardA/TelegraphAura Sprite2D
-CurrentZone/CaptainGuardB Node2D script=res://scripts/ecs/actor_view.gd position=(464.00,212.00) z_index=7
+CurrentZone/CaptainGuardB Node2D script=res://presentation/views/actor_view.gd position=(464.00,212.00) z_index=7
 CurrentZone/CaptainGuardB/AnimationPlayer AnimationPlayer
 CurrentZone/CaptainGuardB/AnimationTree AnimationTree
 CurrentZone/CaptainGuardB/AudioPlayer AudioStreamPlayer
@@ -148,7 +148,7 @@ CurrentZone/WeaponPickup/Visual/GlowSprite Sprite2D position=(0.00,0.00) scale=(
 CurrentZone/WeaponPickup/Visual/MotionRoot Node2D position=(0.00,0.00)
 CurrentZone/WeaponPickup/Visual/MotionRoot/SpriteRoot Node2D position=(0.00,0.00)
 CurrentZone/WeaponPickup/Visual/MotionRoot/SpriteRoot/PickupSprite Sprite2D position=(0.00,0.00) scale=(0.42,0.42)
-PawnHero Node2D script=res://scripts/ecs/actor_view.gd position=(112.00,212.00) z_index=7
+PawnHero Node2D script=res://presentation/views/actor_view.gd position=(112.00,212.00) z_index=7
 PawnHero/AnimationPlayer AnimationPlayer
 PawnHero/AnimationTree AnimationTree
 PawnHero/AudioPlayer AudioStreamPlayer

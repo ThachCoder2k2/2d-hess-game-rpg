@@ -1,6 +1,6 @@
 [gd_scene load_steps=33 format=3 uid="uid://dg1d0ijcmumbp"]
 
-[ext_resource type="Script" uid="uid://16la5b2fanxj" path="res://scripts/ecs/actor_view.gd" id="1"]
+[ext_resource type="Script" uid="uid://16la5b2fanxj" path="res://presentation/views/actor_view.gd" id="1"]
 [ext_resource type="Resource" uid="uid://dnn7ikejfxp11" path="res://resources/enemies/knight_tracker.tres" id="2"]
 [ext_resource type="Texture2D" uid="uid://doa640710y5up" path="res://assets/sprites/generated/black_knight.png" id="3"]
 [ext_resource type="Texture2D" uid="uid://6hr88wvg8w12" path="res://assets/sprites/generated/toy_sword.png" id="4"]

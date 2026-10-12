@@ -36,7 +36,7 @@ const LEGACY_LAYER_RULES: Array = [
 	["res://ecs/core/ecs_system.gd", "ecs/core"],
 	["res://authoring/ecs_boot.gd", "authoring"],
 	["res://authoring/ecs_actor_factory.gd", "authoring"],
-	["res://scripts/ecs/actor_view.gd", "presentation"],
+	["res://presentation/views/actor_view.gd", "presentation"],
 	["res://scripts/ui/", "presentation"],
 	["res://scripts/visuals/", "presentation"],
 	["res://scripts/audio/", "presentation"],

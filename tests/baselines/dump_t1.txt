@@ -67,7 +67,7 @@ CurrentZone/RoomArt/SetDressing/FallenWhiteKingShadow Polygon2D position=(300.00
 CurrentZone/RoomArt/SetDressing/PaperScrapLeft Polygon2D position=(78.00,266.00)
 CurrentZone/RoomArt/SetDressing/RugDamageNearKing Line2D position=(0.00,0.00)
 CurrentZone/RoomArt/TileMap TileMapLayer visible=false position=(64.00,36.00) used_cells=144 tile_set=res://resources/tiles/kingdom_tileset.tres
-PawnHero Node2D script=res://scripts/ecs/actor_view.gd position=(144.00,212.00) z_index=7
+PawnHero Node2D script=res://presentation/views/actor_view.gd position=(144.00,212.00) z_index=7
 PawnHero/AnimationPlayer AnimationPlayer
 PawnHero/AnimationTree AnimationTree
 PawnHero/AudioPlayer AudioStreamPlayer

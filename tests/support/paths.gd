@@ -72,7 +72,7 @@ func world_state_script() -> String:
 
 
 func actor_view_script() -> String:
-	return _existing_file("res://scripts/ecs/actor_view.gd")
+	return _existing_file("res://presentation/views/actor_view.gd")
 
 
 # --- Scenes ---

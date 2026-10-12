@@ -1,6 +1,6 @@
 [gd_scene load_steps=33 format=3 uid="uid://cg1s5bt12rcyq"]
 
-[ext_resource type="Script" uid="uid://16la5b2fanxj" path="res://scripts/ecs/actor_view.gd" id="1"]
+[ext_resource type="Script" uid="uid://16la5b2fanxj" path="res://presentation/views/actor_view.gd" id="1"]
 [ext_resource type="Resource" uid="uid://dufopkr811e7m" path="res://resources/enemies/bishop_zoner.tres" id="2"]
 [ext_resource type="Texture2D" uid="uid://doa640710y5up" path="res://assets/sprites/generated/black_knight.png" id="3"]
 [ext_resource type="Texture2D" uid="uid://6hr88wvg8w12" path="res://assets/sprites/generated/toy_sword.png" id="4"]
