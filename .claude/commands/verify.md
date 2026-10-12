@@ -2,7 +2,7 @@
 description: Run the full Godot verification (the tools' self-tests, the strict test runner with its import pass, and the diff check)
 ---
 
-Verify the project is green. Run from the project root. `/verify` is exactly three
+Verify the project is green. Run from the project root. `/verify` is exactly four
 steps; do not re-implement their steps by hand.
 
 1. The tools' own self-tests (seconds, no Godot needed). They prove the gate itself
@@ -32,18 +32,25 @@ steps; do not re-implement their steps by hand.
    - `--strict` also fails on soft warnings (`WARN:` lines, engine `ERROR` lines in
      a suite, stale renames).
 
-   Expect the last lines to be `0 failed` and `GREEN`.
+   Expect the last lines to be `0 failed` and `GREEN`. The suites include the architecture
+   guards of `tests/architecture/` (the layer rule, `content/` holds no `.gd`, sidecars, no old
+   paths, zero path-only `ext_resource` lines) and the deterministic room dumps, so a moved
+   or edited file that breaks the layout fails here by name.
 
    Environment: `GODOT` is the Godot binary (default `../Godot.app/Contents/MacOS/Godot`
    next to the repository, also found from a git worktree). `UNBOUND_GODOT_HOME` is
    the isolated `HOME` for Godot (default `/tmp/unbound-pawn-godot`); parallel lanes
-   should each set their own. A fresh clone or worktree needs its generated art first
-   (`tools/bootstrap_worktree.sh`, or the `tools/generate_*.gd` scripts).
+   should each set their own. A fresh clone or worktree runs `tools/bootstrap_worktree.sh`
+   first (it builds the class registry and the generated art, then imports).
 
 3. Whitespace: `git diff --check`.
 
+4. UIDs: `"$GODOT" --headless --path . -s tools/stamp_uids.gd -- --check` must print
+   `STAMP UIDS: CLEAN` (no path-only reference, no stale uid). If it does not, run the stamper
+   without `--check` and commit the result alone.
+
 Report a concise pass/fail table: the two self-tests, the import pass, each suite (with its PASS and WARN
-counts), the baseline-label line, and the diff check. A failing suite prints the
+counts), the baseline-label line, the diff check and the uid check. A failing suite prints the
 exact `FAIL:` or `SCRIPT ERROR` line; quote it. For a quick loop while iterating,
 `python3 tools/run_all_tests.py --only <part of a suite path> --skip-import` runs
 a subset, but only the full strict run counts as verified.

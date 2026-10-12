@@ -150,11 +150,11 @@ M1a shipped the tool; M1b step 1 ran it over the real tree (the numbers above, e
 ## move_res.py
 
 ```bash
-tools/move_res.py --dry-run resources/difficulty content/difficulty   # print every change, touch nothing
-tools/move_res.py resources/difficulty content/difficulty             # git mv + rewrite + log
+tools/move_res.py --dry-run content/enemies/old_id content/enemies/new_id   # print every change, touch nothing
+tools/move_res.py content/enemies/old_id content/enemies/new_id             # git mv + rewrite + log
 tools/move_res.py --import-pass SRC DST                               # then run the import pass (GODOT_BIN)
 tools/move_res.py --rewrite-only SRC DST                              # the move was already done by hand
-tools/move_res.py --rewrite-only scenes/owner_edit.tscn               # replay the whole move log onto a late file
+tools/move_res.py --rewrite-only path/to/owner_edit.tscn              # replay the whole move log onto a late file
 tools/move_res.py --rename-action skill_1 skill_slot_1                # InputMap action rename
 tools/move_res.py --self-test                                         # 27 checks in a throwaway git repo
 ```
@@ -162,6 +162,9 @@ tools/move_res.py --self-test                                         # 27 check
 * Rewrites `res://` strings in `*.gd *.tscn *.tres *.cfg *.md project.godot`, and also `*.import`
   (`source_file=`), `*.gdshader`, `*.json`, `*.sh`, `*.yml` and `tests/baselines/*.txt` (the dump
   baselines name texture and script paths, so they follow a move). `uid://` is never touched.
+  A move that renames the folder an id lives in (`content/enemies/<id>/`) also changes what a test
+  that builds a path from the id sees: grep for format strings (`"%s"` paths) afterwards, because only
+  whole `res://` paths are rewritten.
 * Matches whole path segments: moving `res://old/folder` leaves `res://old/folder_old/`
   and `res://old/folder.tres` alone. CRLF files keep their line endings.
 * Not rewritten on purpose: `docs/archive/`, `.godot/`, `.git/`, `addons/`, nested `.claude/worktrees/`,
@@ -172,7 +175,10 @@ tools/move_res.py --self-test                                         # 27 check
 * Refuses an existing destination, a missing source, a sidecar on its own, `.git`/`.godot`/`addons`,
   and moving a folder into itself.
 
-Proven on a scratch copy (a separate throwaway git repo, never the worktree), stamped tree:
+M1b's real moves (130 lines, oldest first) are in `tools/move_res_log.tsv`, and
+`docs/migration-notes.md` explains them. The paths in the next table are the pre-migration ones: it
+records the proof made at M1a on a scratch copy (a separate throwaway git repo, never the worktree),
+stamped tree:
 
 | Step | Result |
 |---|---|

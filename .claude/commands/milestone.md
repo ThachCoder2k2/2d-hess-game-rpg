@@ -24,16 +24,20 @@ are the owner's.
    Godot's built-in nodes/features for the capability; then a proven addon (ask the human
    before adding a dependency); custom script only if neither fits — say why in the
    commit. Prefer new/edited `.tscn` + `.tres` over new script. Place new work by the ECS
-   map in `CLAUDE.md`: new state is a pure-data component in `scripts/ecs/ecs_components.gd`;
-   a new decision is a system in `scripts/ecs/systems/` (only `ViewSyncSystem` touches nodes);
-   an editor-draggable component extends `EntityComponent`; presentation consumes
-   `drain_events()` only. Never hardcode content, never duplicate a `.tres` value in code,
-   never `_draw()` an actor/pickup body. Do not move or rename files by hand.
+   map in `CLAUDE.md`: new state is a pure-data component in its own file under `ecs/components/`
+   (`ecs_components.gd` is frozen); a new decision is a system in `ecs/systems/<phase>/` (only
+   `ViewSyncSystem` touches nodes); an editor-draggable component extends `EntityComponent` in
+   `authoring/entity_components/`; presentation consumes `drain_events()` (and the `HudSnapshot`
+   once it exists). Content goes in `content/` (zero `.gd`). Never hardcode content, never
+   duplicate a `.tres` value in code, never `_draw()` an actor/pickup body. Do not move or rename
+   files by hand: only `tools/move_res.py` does (one folder per commit, `stamp_uids.gd --check`
+   CLEAN, the dump baselines unchanged except for path strings).
 
 4. **Add or update tests** for behavior and scene ownership (assertion messages read as
    a spec). Simulation tests drive `EcsWorld.tick(delta)` by hand.
 
-5. **Verify** with `/verify` (tests + import + `git diff --check`). Fix until green.
+5. **Verify** with `/verify` (self-tests, strict runner, `git diff --check`, uid check). Fix until
+   green.
    If visuals changed, capture a frame with `--write-movie` and inspect it.
 
 6. **Update planning docs:** `progress.md` (what + why + verification + commit hash),
