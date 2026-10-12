@@ -5,7 +5,7 @@
 [ext_resource type="Resource" uid="uid://bym46kf4lsn6w" path="res://resources/decisions/bishop_sniper.tres" id="3"]
 [ext_resource type="Resource" uid="uid://d3uumcyp51arn" path="res://resources/attacks/bishop_diagonal.tres" id="4"]
 [ext_resource type="Resource" uid="uid://d2ob0tl030xqm" path="res://resources/visuals/bishop_compatibility.tres" id="5"]
-[ext_resource type="Resource" uid="uid://cq15s5oalg3r5" path="res://resources/difficulty/standard.tres" id="6"]
+[ext_resource type="Resource" uid="uid://cq15s5oalg3r5" path="res://content/difficulty/standard.tres" id="6"]
 
 [resource]
 script = ExtResource("1")

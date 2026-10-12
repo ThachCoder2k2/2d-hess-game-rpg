@@ -5,7 +5,7 @@
 [ext_resource type="Resource" uid="uid://bw8d037o5k3m6" path="res://resources/decisions/knight_flanker.tres" id="3"]
 [ext_resource type="Resource" uid="uid://bh0jw0k6pi6ii" path="res://resources/attacks/knight_leap.tres" id="4"]
 [ext_resource type="Resource" uid="uid://co4ghkjp42f0w" path="res://resources/visuals/knight_compatibility.tres" id="5"]
-[ext_resource type="Resource" uid="uid://cq15s5oalg3r5" path="res://resources/difficulty/standard.tres" id="6"]
+[ext_resource type="Resource" uid="uid://cq15s5oalg3r5" path="res://content/difficulty/standard.tres" id="6"]
 
 [resource]
 script = ExtResource("1")

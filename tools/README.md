@@ -137,8 +137,8 @@ tools/move_res.py --self-test                                         # 27 check
 * Rewrites `res://` strings in `*.gd *.tscn *.tres *.cfg *.md project.godot`, and also `*.import`
   (`source_file=`), `*.gdshader`, `*.json`, `*.sh`, `*.yml` and `tests/baselines/*.txt` (the dump
   baselines name texture and script paths, so they follow a move). `uid://` is never touched.
-* Matches whole path segments: moving `res://resources/difficulty` leaves `res://resources/difficulty_old/`
-  and `res://resources/difficulty.tres` alone. CRLF files keep their line endings.
+* Matches whole path segments: moving `res://old/folder` leaves `res://old/folder_old/`
+  and `res://old/folder.tres` alone. CRLF files keep their line endings.
 * Not rewritten on purpose: `docs/archive/`, `.godot/`, `.git/`, `addons/`, nested `.claude/worktrees/`,
   `move_res.py` itself and its log. Prose that names paths without `res://` is not touched.
 * Each real move appends `old<TAB>new` to `tools/move_res_log.tsv` (created on first use; commit it with
