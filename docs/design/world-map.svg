@@ -1,0 +1,218 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1000" viewBox="0 0 1600 1000">
+  <defs>
+    <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+      <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#2a2430" stroke-width="1"/>
+    </pattern>
+    <filter id="softShadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="8" stdDeviation="8" flood-color="#000000" flood-opacity="0.45"/>
+    </filter>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#130f18"/>
+      <stop offset="0.52" stop-color="#1b141f"/>
+      <stop offset="1" stop-color="#0c0b10"/>
+    </linearGradient>
+    <style>
+      .title { font-family: "Avenir Next", "Inter", Arial, sans-serif; font-size: 42px; font-weight: 800; fill: #f4dfbf; letter-spacing: 2px; }
+      .subtitle { font-family: "Avenir Next", "Inter", Arial, sans-serif; font-size: 19px; font-weight: 600; fill: #a9957c; }
+      .zone { font-family: "Avenir Next", "Inter", Arial, sans-serif; font-size: 18px; font-weight: 800; fill: #efe0c7; letter-spacing: 1px; }
+      .small { font-family: "Avenir Next", "Inter", Arial, sans-serif; font-size: 14px; font-weight: 600; fill: #d7c3a2; }
+      .tiny { font-family: "Avenir Next", "Inter", Arial, sans-serif; font-size: 12px; font-weight: 700; fill: #f8edda; }
+      .room-title { font-family: "Avenir Next", "Inter", Arial, sans-serif; font-size: 16px; font-weight: 800; fill: #fff2d5; }
+      .room-sub { font-family: "Avenir Next", "Inter", Arial, sans-serif; font-size: 12px; font-weight: 700; fill: #37291e; }
+      .path { fill: none; stroke: #a78a5e; stroke-width: 12; stroke-linecap: round; stroke-linejoin: round; opacity: 0.92; }
+      .path2 { fill: none; stroke: #2d2028; stroke-width: 22; stroke-linecap: round; stroke-linejoin: round; opacity: 1; }
+      .lock { fill: #f1c15f; stroke: #2e2317; stroke-width: 4; }
+      .note { font-family: "Avenir Next", "Inter", Arial, sans-serif; font-size: 13px; font-weight: 700; fill: #f2d7a4; }
+    </style>
+  </defs>
+
+  <rect width="1600" height="1000" fill="url(#bg)"/>
+  <rect width="1600" height="1000" fill="url(#grid)" opacity="0.55"/>
+
+  <text x="80" y="80" class="title">THE UNBOUND PAWN - WORLD MAP</text>
+  <text x="83" y="113" class="subtitle">Connected room blueprint for the 2-hour playground kingdom adventure</text>
+
+  <g opacity="0.2">
+    <rect x="1020" y="96" width="420" height="150" rx="8" fill="#51411f"/>
+    <text x="1040" y="132" class="zone">THE CHILD'S DESK</text>
+    <text x="1040" y="160" class="small">The fourth wall lives here: crayons, paper gates,</text>
+    <text x="1040" y="184" class="small">moved toy blocks, erased rules, drawn bridges.</text>
+  </g>
+
+  <g id="paths">
+    <path class="path2" d="M225,690 L385,690 L545,690 L705,690 L865,690 L1025,690 L1185,690 L1345,690"/>
+    <path class="path" d="M225,690 L385,690 L545,690 L705,690 L865,690 L1025,690 L1185,690 L1345,690"/>
+    <path class="path2" d="M545,690 L545,830"/>
+    <path class="path" d="M545,690 L545,830"/>
+    <path class="path2" d="M705,690 L705,520 L865,520 L1025,520 L1185,520"/>
+    <path class="path" d="M705,690 L705,520 L865,520 L1025,520 L1185,520"/>
+    <path class="path2" d="M705,690 L705,850 L865,850 L1025,850"/>
+    <path class="path" d="M705,690 L705,850 L865,850 L1025,850"/>
+    <path class="path2" d="M705,520 L705,350 L865,350 L1025,350 L1185,350"/>
+    <path class="path" d="M705,520 L705,350 L865,350 L1025,350 L1185,350"/>
+    <path class="path2" d="M1025,520 L1025,350"/>
+    <path class="path" d="M1025,520 L1025,350"/>
+  </g>
+
+  <g id="zone-labels">
+    <text x="155" y="610" class="zone">FALLEN BOARD FIELD</text>
+    <text x="635" y="615" class="zone">BROKEN PLAZA HUB</text>
+    <text x="760" y="447" class="zone">TOYBOX CAVALRY YARD</text>
+    <text x="760" y="280" class="zone">BOOK FORT CHAPEL</text>
+    <text x="760" y="775" class="zone">BLOCK TOWER RAMPARTS</text>
+    <text x="1085" y="447" class="zone">DOLLHOUSE COURT</text>
+    <text x="1210" y="615" class="zone">BLACK CASTLE</text>
+  </g>
+
+  <g id="rooms" filter="url(#softShadow)">
+    <g transform="translate(165 640)">
+      <rect width="120" height="100" rx="8" fill="#5f6f8f" stroke="#e7d5b5" stroke-width="4"/>
+      <text x="18" y="38" class="room-title">T1</text>
+      <text x="18" y="61" class="room-sub">KING'S FALL</text>
+    </g>
+    <g transform="translate(325 640)">
+      <rect width="120" height="100" rx="8" fill="#768550" stroke="#e7d5b5" stroke-width="4"/>
+      <text x="18" y="38" class="room-title">T2</text>
+      <text x="18" y="61" class="room-sub">SWORD TILE</text>
+    </g>
+    <g transform="translate(485 640)">
+      <rect width="120" height="100" rx="8" fill="#965744" stroke="#e7d5b5" stroke-width="4"/>
+      <text x="18" y="38" class="room-title">T3</text>
+      <text x="18" y="61" class="room-sub">PAWN AMBUSH</text>
+    </g>
+    <g transform="translate(645 640)">
+      <rect width="120" height="100" rx="8" fill="#47635f" stroke="#f2d77e" stroke-width="5"/>
+      <text x="18" y="38" class="room-title">H1</text>
+      <text x="18" y="61" class="room-sub">BROKEN PLAZA</text>
+    </g>
+    <g transform="translate(485 780)">
+      <rect width="120" height="100" rx="8" fill="#80613a" stroke="#e7d5b5" stroke-width="4"/>
+      <text x="18" y="38" class="room-title">O1</text>
+      <text x="18" y="61" class="room-sub">CRAYON CACHE</text>
+    </g>
+
+    <g transform="translate(645 470)">
+      <rect width="120" height="100" rx="8" fill="#47635f" stroke="#f2d77e" stroke-width="5"/>
+      <text x="18" y="38" class="room-title">H2</text>
+      <text x="18" y="61" class="room-sub">DRAWING TABLE</text>
+    </g>
+    <g transform="translate(805 470)">
+      <rect width="120" height="100" rx="8" fill="#485a86" stroke="#e7d5b5" stroke-width="4"/>
+      <text x="18" y="38" class="room-title">K1</text>
+      <text x="18" y="61" class="room-sub">TOYBOX GATE</text>
+    </g>
+    <g transform="translate(965 470)">
+      <rect width="120" height="100" rx="8" fill="#485a86" stroke="#e7d5b5" stroke-width="4"/>
+      <text x="18" y="38" class="room-title">K2</text>
+      <text x="18" y="61" class="room-sub">L-JUMP LANES</text>
+    </g>
+    <g transform="translate(1125 470)">
+      <rect width="120" height="100" rx="8" fill="#6f4f86" stroke="#ffca68" stroke-width="5"/>
+      <text x="18" y="38" class="room-title">KB</text>
+      <text x="18" y="61" class="room-sub">KNIGHT BOSS</text>
+    </g>
+
+    <g transform="translate(645 300)">
+      <rect width="120" height="100" rx="8" fill="#575a7c" stroke="#e7d5b5" stroke-width="4"/>
+      <text x="18" y="38" class="room-title">B1</text>
+      <text x="18" y="61" class="room-sub">BOOK SPINES</text>
+    </g>
+    <g transform="translate(805 300)">
+      <rect width="120" height="100" rx="8" fill="#575a7c" stroke="#e7d5b5" stroke-width="4"/>
+      <text x="18" y="38" class="room-title">B2</text>
+      <text x="18" y="61" class="room-sub">DIAGONAL HALL</text>
+    </g>
+    <g transform="translate(965 300)">
+      <rect width="120" height="100" rx="8" fill="#575a7c" stroke="#e7d5b5" stroke-width="4"/>
+      <text x="18" y="38" class="room-title">B3</text>
+      <text x="18" y="61" class="room-sub">PAPER LOCK</text>
+    </g>
+    <g transform="translate(1125 300)">
+      <rect width="120" height="100" rx="8" fill="#7e516c" stroke="#ffca68" stroke-width="5"/>
+      <text x="18" y="38" class="room-title">BB</text>
+      <text x="18" y="61" class="room-sub">BISHOP BOSS</text>
+    </g>
+
+    <g transform="translate(645 800)">
+      <rect width="120" height="100" rx="8" fill="#7d6344" stroke="#e7d5b5" stroke-width="4"/>
+      <text x="18" y="38" class="room-title">R1</text>
+      <text x="18" y="61" class="room-sub">BLOCK YARD</text>
+    </g>
+    <g transform="translate(805 800)">
+      <rect width="120" height="100" rx="8" fill="#7d6344" stroke="#e7d5b5" stroke-width="4"/>
+      <text x="18" y="38" class="room-title">R2</text>
+      <text x="18" y="61" class="room-sub">RULER BRIDGE</text>
+    </g>
+    <g transform="translate(965 800)">
+      <rect width="120" height="100" rx="8" fill="#765048" stroke="#ffca68" stroke-width="5"/>
+      <text x="18" y="38" class="room-title">RB</text>
+      <text x="18" y="61" class="room-sub">ROOK BOSS</text>
+    </g>
+
+    <g transform="translate(1125 640)">
+      <rect width="120" height="100" rx="8" fill="#8c4d6b" stroke="#e7d5b5" stroke-width="4"/>
+      <text x="18" y="38" class="room-title">Q1</text>
+      <text x="18" y="61" class="room-sub">DOLLHOUSE</text>
+    </g>
+    <g transform="translate(1285 640)">
+      <rect width="120" height="100" rx="8" fill="#8c4d6b" stroke="#e7d5b5" stroke-width="4"/>
+      <text x="18" y="38" class="room-title">Q2</text>
+      <text x="18" y="61" class="room-sub">MIXED COURT</text>
+    </g>
+    <g transform="translate(1285 470)">
+      <rect width="120" height="100" rx="8" fill="#904f7c" stroke="#ffca68" stroke-width="5"/>
+      <text x="18" y="38" class="room-title">QB</text>
+      <text x="18" y="61" class="room-sub">QUEEN BOSS</text>
+    </g>
+    <g transform="translate(1285 300)">
+      <rect width="120" height="100" rx="8" fill="#3c3139" stroke="#d6b066" stroke-width="5"/>
+      <text x="18" y="38" class="room-title">F1</text>
+      <text x="18" y="61" class="room-sub">CASTLE GATE</text>
+    </g>
+    <g transform="translate(1285 160)">
+      <rect width="120" height="100" rx="8" fill="#3c3139" stroke="#d6b066" stroke-width="5"/>
+      <text x="18" y="38" class="room-title">F2</text>
+      <text x="18" y="61" class="room-sub">LAST BOARD</text>
+    </g>
+    <g transform="translate(1430 160)">
+      <rect width="120" height="100" rx="8" fill="#1f1b1f" stroke="#ff645f" stroke-width="6"/>
+      <text x="18" y="38" class="room-title">FB</text>
+      <text x="18" y="61" class="room-sub">BLACK KING</text>
+    </g>
+  </g>
+
+  <g id="extra-connections">
+    <path class="path2" d="M1185,690 L1185,520 L1345,520 L1345,350 L1345,210 L1490,210"/>
+    <path class="path" d="M1185,690 L1185,520 L1345,520 L1345,350 L1345,210 L1490,210"/>
+  </g>
+
+  <g id="locks-and-rewards">
+    <circle cx="705" cy="610" r="18" class="lock"/>
+    <text x="697" y="615" class="tiny">1</text>
+    <text x="731" y="616" class="note">Sword opens the hub</text>
+    <circle cx="1030" cy="610" r="18" class="lock"/>
+    <text x="1022" y="615" class="tiny">2</text>
+    <text x="1055" y="616" class="note">Knight + Bishop keys open Queen route</text>
+    <circle cx="1248" cy="588" r="18" class="lock"/>
+    <text x="1240" y="593" class="tiny">3</text>
+    <text x="1274" y="594" class="note">Queen unlocks Black Castle</text>
+  </g>
+
+  <g id="legend">
+    <rect x="80" y="160" width="410" height="160" rx="10" fill="#211923" stroke="#5f5040" stroke-width="2"/>
+    <text x="105" y="195" class="zone">LEGEND</text>
+    <rect x="105" y="220" width="28" height="20" rx="4" fill="#47635f" stroke="#f2d77e" stroke-width="3"/>
+    <text x="150" y="236" class="small">Hub / story room</text>
+    <rect x="105" y="252" width="28" height="20" rx="4" fill="#965744" stroke="#e7d5b5" stroke-width="3"/>
+    <text x="150" y="268" class="small">Combat room</text>
+    <rect x="105" y="284" width="28" height="20" rx="4" fill="#904f7c" stroke="#ffca68" stroke-width="3"/>
+    <text x="150" y="300" class="small">Boss / major test</text>
+    <text x="300" y="236" class="small">Gold circles = locks</text>
+    <text x="300" y="268" class="small">Thick paths = exits</text>
+    <text x="300" y="300" class="small">Rooms become .tscn scenes</text>
+  </g>
+
+  <g id="footer">
+    <text x="80" y="955" class="subtitle">Build order: T1 -> T2 -> T3 -> H1, then one district at a time. Every box is an editable Godot room scene.</text>
+  </g>
+</svg>

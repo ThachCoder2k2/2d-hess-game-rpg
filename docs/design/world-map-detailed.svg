@@ -1,0 +1,370 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="2200" height="1500" viewBox="0 0 2200 1500">
+  <defs>
+    <pattern id="bggrid" width="40" height="40" patternUnits="userSpaceOnUse">
+      <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#29212c" stroke-width="1"/>
+    </pattern>
+    <pattern id="tilegrid" width="20" height="20" patternUnits="userSpaceOnUse">
+      <path d="M 20 0 L 0 0 0 20" fill="none" stroke="#43364b" stroke-width="1"/>
+    </pattern>
+    <filter id="shadow" x="-15%" y="-15%" width="130%" height="130%">
+      <feDropShadow dx="0" dy="8" stdDeviation="8" flood-color="#000" flood-opacity="0.45"/>
+    </filter>
+    <style>
+      .title { font-family: "Avenir Next", Inter, Arial, sans-serif; font-size: 46px; font-weight: 900; fill: #f8e5c1; letter-spacing: 2px; }
+      .sub { font-family: "Avenir Next", Inter, Arial, sans-serif; font-size: 20px; font-weight: 650; fill: #bda886; }
+      .zone { font-family: "Avenir Next", Inter, Arial, sans-serif; font-size: 18px; font-weight: 900; fill: #f3dfba; letter-spacing: 1px; }
+      .label { font-family: "Avenir Next", Inter, Arial, sans-serif; font-size: 13px; font-weight: 800; fill: #fff2d6; }
+      .small { font-family: "Avenir Next", Inter, Arial, sans-serif; font-size: 11px; font-weight: 800; fill: #261c1b; }
+      .note { font-family: "Avenir Next", Inter, Arial, sans-serif; font-size: 12px; font-weight: 700; fill: #d5be96; }
+      .path-dark { fill: none; stroke: #2a2028; stroke-width: 20; stroke-linecap: round; stroke-linejoin: round; }
+      .path { fill: none; stroke: #ba965b; stroke-width: 8; stroke-linecap: round; stroke-linejoin: round; }
+      .room { fill: #211923; stroke: #756147; stroke-width: 3; rx: 10; }
+      .floor { fill: #342536; stroke: #caae75; stroke-width: 2; }
+      .wall { fill: #8b785d; stroke: #2a2028; stroke-width: 1; }
+      .cover { fill: #6e5436; stroke: #2a2028; stroke-width: 1; }
+      .hazard { fill: #914f4a; stroke: #2a2028; stroke-width: 1; }
+      .exit { fill: #f2cf70; stroke: #2a2028; stroke-width: 2; }
+      .spawn { fill: #8ecae6; stroke: #2a2028; stroke-width: 2; }
+      .enemy { fill: #f08b61; stroke: #2a2028; stroke-width: 2; }
+      .boss { fill: #c85d79; stroke: #2a2028; stroke-width: 2; }
+      .reward { fill: #f7d46a; stroke: #2a2028; stroke-width: 2; }
+      .kid { fill: #a2d36f; stroke: #2a2028; stroke-width: 2; }
+    </style>
+  </defs>
+
+  <rect width="2200" height="1500" fill="#120f17"/>
+  <rect width="2200" height="1500" fill="url(#bggrid)" opacity="0.55"/>
+
+  <text x="80" y="78" class="title">THE UNBOUND PAWN - DETAILED ROOM MAP</text>
+  <text x="84" y="112" class="sub">Every box is a future editable Godot room scene: TileMap, exits, enemies, objects, reward, and lesson.</text>
+
+  <g id="legend">
+    <rect x="1580" y="52" width="500" height="150" rx="10" fill="#211923" stroke="#756147" stroke-width="2"/>
+    <text x="1608" y="86" class="zone">LEGEND</text>
+    <circle cx="1620" cy="116" r="10" class="spawn"/><text x="1640" y="120" class="note">Player start</text>
+    <circle cx="1775" cy="116" r="10" class="enemy"/><text x="1795" y="120" class="note">Enemy spawn</text>
+    <circle cx="1945" cy="116" r="10" class="boss"/><text x="1965" y="120" class="note">Boss</text>
+    <rect x="1610" y="143" width="20" height="16" class="cover"/><text x="1640" y="156" class="note">Cover / toy block</text>
+    <rect x="1770" y="143" width="20" height="16" class="hazard"/><text x="1800" y="156" class="note">Danger tile</text>
+    <rect x="1940" y="143" width="20" height="16" class="exit"/><text x="1970" y="156" class="note">Exit / door</text>
+    <circle cx="1620" cy="178" r="10" class="kid"/><text x="1640" y="182" class="note">Child fourth-wall action</text>
+    <circle cx="1860" cy="178" r="10" class="reward"/><text x="1880" y="182" class="note">Reward / unlock</text>
+  </g>
+
+  <g id="paths">
+    <path class="path-dark" d="M205,455 H435 H665 H895 V650 H1125 H1355 H1585"/>
+    <path class="path" d="M205,455 H435 H665 H895 V650 H1125 H1355 H1585"/>
+    <path class="path-dark" d="M895,650 V875 H1125 H1355"/>
+    <path class="path" d="M895,650 V875 H1125 H1355"/>
+    <path class="path-dark" d="M895,650 V425 H1125 H1355"/>
+    <path class="path" d="M895,650 V425 H1125 H1355"/>
+    <path class="path-dark" d="M895,425 V230 H1125 H1355 H1585"/>
+    <path class="path" d="M895,425 V230 H1125 H1355 H1585"/>
+    <path class="path-dark" d="M1585,425 V650 H1815 V425 V230 H2045"/>
+    <path class="path" d="M1585,425 V650 H1815 V425 V230 H2045"/>
+  </g>
+
+  <g id="section-labels">
+    <text x="92" y="315" class="zone">ACT 1: FALLEN BOARD FIELD</text>
+    <text x="785" y="335" class="zone">HUB</text>
+    <text x="1015" y="335" class="zone">KNIGHT DISTRICT</text>
+    <text x="1015" y="140" class="zone">BISHOP DISTRICT</text>
+    <text x="1015" y="790" class="zone">ROOK DISTRICT</text>
+    <text x="1495" y="335" class="zone">QUEEN DISTRICT</text>
+    <text x="1760" y="140" class="zone">BLACK CASTLE</text>
+  </g>
+
+  <!-- Room drawing convention: outer scene card, 8x5 board at 20px cells. -->
+  <g id="rooms" filter="url(#shadow)">
+    <!-- T1 -->
+    <g transform="translate(85 355)">
+      <rect width="240" height="170" class="room"/>
+      <text x="16" y="25" class="label">T1 WHITE KING'S FALL</text>
+      <rect x="40" y="45" width="160" height="100" class="floor" fill="url(#tilegrid)"/>
+      <rect x="40" y="45" width="160" height="20" class="wall"/>
+      <circle cx="70" cy="125" r="9" class="spawn"/>
+      <circle cx="150" cy="75" r="9" class="boss"/>
+      <rect x="190" y="85" width="18" height="20" class="exit"/>
+      <text x="16" y="160" class="note">Story: white army collapses, pawn wakes.</text>
+    </g>
+
+    <!-- T2 -->
+    <g transform="translate(315 355)">
+      <rect width="240" height="170" class="room"/>
+      <text x="16" y="25" class="label">T2 FALLEN SWORD TILE</text>
+      <rect x="40" y="45" width="160" height="100" class="floor" fill="url(#tilegrid)"/>
+      <rect x="72" y="84" width="34" height="16" class="cover"/>
+      <rect x="132" y="84" width="22" height="22" class="reward"/>
+      <circle cx="70" cy="125" r="9" class="spawn"/>
+      <rect x="32" y="85" width="18" height="20" class="exit"/>
+      <rect x="190" y="85" width="18" height="20" class="exit"/>
+      <text x="16" y="160" class="note">Reward: sword. Lesson: face then strike.</text>
+    </g>
+
+    <!-- T3 -->
+    <g transform="translate(545 355)">
+      <rect width="240" height="170" class="room"/>
+      <text x="16" y="25" class="label">T3 PAWN AMBUSH</text>
+      <rect x="40" y="45" width="160" height="100" class="floor" fill="url(#tilegrid)"/>
+      <circle cx="70" cy="125" r="9" class="spawn"/>
+      <circle cx="130" cy="85" r="9" class="enemy"/>
+      <circle cx="170" cy="85" r="9" class="enemy"/>
+      <rect x="92" y="105" width="24" height="20" class="cover"/>
+      <rect x="32" y="85" width="18" height="20" class="exit"/>
+      <rect x="190" y="85" width="18" height="20" class="exit"/>
+      <text x="16" y="160" class="note">First combat: enemies obey pawn rules.</text>
+    </g>
+
+    <!-- H1 -->
+    <g transform="translate(775 570)">
+      <rect width="240" height="170" class="room"/>
+      <text x="16" y="25" class="label">H1 BROKEN PLAZA HUB</text>
+      <rect x="40" y="45" width="160" height="100" class="floor" fill="url(#tilegrid)"/>
+      <rect x="86" y="72" width="70" height="45" class="cover"/>
+      <circle cx="70" cy="125" r="9" class="spawn"/>
+      <circle cx="120" cy="70" r="9" class="kid"/>
+      <rect x="32" y="85" width="18" height="20" class="exit"/>
+      <rect x="110" y="37" width="20" height="18" class="exit"/>
+      <rect x="190" y="85" width="18" height="20" class="exit"/>
+      <rect x="110" y="135" width="20" height="18" class="exit"/>
+      <text x="16" y="160" class="note">Hub: all districts branch from here.</text>
+    </g>
+
+    <!-- K1 -->
+    <g transform="translate(1005 570)">
+      <rect width="240" height="170" class="room"/>
+      <text x="16" y="25" class="label">K1 TOYBOX GATE</text>
+      <rect x="40" y="45" width="160" height="100" class="floor" fill="url(#tilegrid)"/>
+      <rect x="82" y="65" width="20" height="58" class="cover"/>
+      <rect x="142" y="65" width="20" height="58" class="cover"/>
+      <circle cx="68" cy="125" r="9" class="spawn"/>
+      <circle cx="150" cy="75" r="9" class="enemy"/>
+      <circle cx="170" cy="115" r="9" class="enemy"/>
+      <rect x="32" y="85" width="18" height="20" class="exit"/>
+      <rect x="190" y="85" width="18" height="20" class="exit"/>
+      <text x="16" y="160" class="note">Teaches: knight windup and L pressure.</text>
+    </g>
+
+    <!-- K2 -->
+    <g transform="translate(1235 570)">
+      <rect width="240" height="170" class="room"/>
+      <text x="16" y="25" class="label">K2 L-JUMP LANES</text>
+      <rect x="40" y="45" width="160" height="100" class="floor" fill="url(#tilegrid)"/>
+      <rect x="80" y="45" width="20" height="40" class="hazard"/>
+      <rect x="140" y="105" width="20" height="40" class="hazard"/>
+      <circle cx="70" cy="125" r="9" class="spawn"/>
+      <circle cx="120" cy="80" r="9" class="enemy"/>
+      <circle cx="170" cy="110" r="9" class="enemy"/>
+      <rect x="32" y="85" width="18" height="20" class="exit"/>
+      <rect x="190" y="85" width="18" height="20" class="exit"/>
+      <text x="16" y="160" class="note">Fast room: react to marked landing tiles.</text>
+    </g>
+
+    <!-- KB -->
+    <g transform="translate(1465 570)">
+      <rect width="240" height="170" class="room"/>
+      <text x="16" y="25" class="label">KB KNIGHT CAPTAIN</text>
+      <rect x="40" y="45" width="160" height="100" class="floor" fill="url(#tilegrid)"/>
+      <circle cx="70" cy="125" r="9" class="spawn"/>
+      <circle cx="132" cy="92" r="14" class="boss"/>
+      <circle cx="90" cy="72" r="7" class="enemy"/>
+      <circle cx="172" cy="116" r="7" class="enemy"/>
+      <rect x="190" y="85" width="18" height="20" class="exit"/>
+      <circle cx="118" cy="132" r="9" class="reward"/>
+      <text x="16" y="160" class="note">Reward: dodge / rule-break step.</text>
+    </g>
+
+    <!-- B1 -->
+    <g transform="translate(775 160)">
+      <rect width="240" height="170" class="room"/>
+      <text x="16" y="25" class="label">B1 BOOK SPINES</text>
+      <rect x="40" y="45" width="160" height="100" class="floor" fill="url(#tilegrid)"/>
+      <rect x="60" y="65" width="30" height="60" class="cover"/>
+      <rect x="150" y="65" width="30" height="60" class="cover"/>
+      <circle cx="70" cy="125" r="9" class="spawn"/>
+      <circle cx="145" cy="80" r="9" class="enemy"/>
+      <rect x="110" y="135" width="20" height="18" class="exit"/>
+      <rect x="190" y="85" width="18" height="20" class="exit"/>
+      <text x="16" y="160" class="note">Teaches: diagonal attack previews.</text>
+    </g>
+
+    <!-- B2 -->
+    <g transform="translate(1005 160)">
+      <rect width="240" height="170" class="room"/>
+      <text x="16" y="25" class="label">B2 DIAGONAL HALL</text>
+      <rect x="40" y="45" width="160" height="100" class="floor" fill="url(#tilegrid)"/>
+      <rect x="60" y="45" width="20" height="20" class="hazard"/>
+      <rect x="80" y="65" width="20" height="20" class="hazard"/>
+      <rect x="100" y="85" width="20" height="20" class="hazard"/>
+      <rect x="120" y="105" width="20" height="20" class="hazard"/>
+      <circle cx="70" cy="125" r="9" class="spawn"/>
+      <circle cx="160" cy="78" r="9" class="enemy"/>
+      <rect x="32" y="85" width="18" height="20" class="exit"/>
+      <rect x="190" y="85" width="18" height="20" class="exit"/>
+      <text x="16" y="160" class="note">Player learns to cross diagonals safely.</text>
+    </g>
+
+    <!-- B3 -->
+    <g transform="translate(1235 160)">
+      <rect width="240" height="170" class="room"/>
+      <text x="16" y="25" class="label">B3 PAPER LOCK</text>
+      <rect x="40" y="45" width="160" height="100" class="floor" fill="url(#tilegrid)"/>
+      <circle cx="70" cy="125" r="9" class="spawn"/>
+      <circle cx="125" cy="70" r="9" class="kid"/>
+      <circle cx="155" cy="104" r="9" class="enemy"/>
+      <circle cx="108" cy="126" r="9" class="reward"/>
+      <rect x="32" y="85" width="18" height="20" class="exit"/>
+      <rect x="190" y="85" width="18" height="20" class="exit"/>
+      <text x="16" y="160" class="note">Child draws first shortcut line.</text>
+    </g>
+
+    <!-- BB -->
+    <g transform="translate(1465 160)">
+      <rect width="240" height="170" class="room"/>
+      <text x="16" y="25" class="label">BB BISHOP ORACLE</text>
+      <rect x="40" y="45" width="160" height="100" class="floor" fill="url(#tilegrid)"/>
+      <circle cx="70" cy="125" r="9" class="spawn"/>
+      <circle cx="132" cy="92" r="14" class="boss"/>
+      <rect x="80" y="65" width="20" height="20" class="hazard"/>
+      <rect x="120" y="105" width="20" height="20" class="hazard"/>
+      <rect x="160" y="65" width="20" height="20" class="hazard"/>
+      <rect x="190" y="85" width="18" height="20" class="exit"/>
+      <text x="16" y="160" class="note">Boss: diagonal waves plus safe gaps.</text>
+    </g>
+
+    <!-- R1 -->
+    <g transform="translate(775 795)">
+      <rect width="240" height="170" class="room"/>
+      <text x="16" y="25" class="label">R1 BLOCK YARD</text>
+      <rect x="40" y="45" width="160" height="100" class="floor" fill="url(#tilegrid)"/>
+      <circle cx="70" cy="70" r="9" class="spawn"/>
+      <rect x="80" y="85" width="84" height="20" class="cover"/>
+      <circle cx="150" cy="125" r="9" class="enemy"/>
+      <rect x="110" y="37" width="20" height="18" class="exit"/>
+      <rect x="190" y="85" width="18" height="20" class="exit"/>
+      <text x="16" y="160" class="note">Teaches: hide from rook line attacks.</text>
+    </g>
+
+    <!-- R2 -->
+    <g transform="translate(1005 795)">
+      <rect width="240" height="170" class="room"/>
+      <text x="16" y="25" class="label">R2 RULER BRIDGE</text>
+      <rect x="40" y="45" width="160" height="100" class="floor" fill="url(#tilegrid)"/>
+      <rect x="78" y="45" width="20" height="100" class="hazard"/>
+      <rect x="138" y="45" width="20" height="100" class="hazard"/>
+      <circle cx="70" cy="125" r="9" class="spawn"/>
+      <circle cx="170" cy="70" r="9" class="enemy"/>
+      <circle cx="118" cy="92" r="9" class="reward"/>
+      <rect x="32" y="85" width="18" height="20" class="exit"/>
+      <rect x="190" y="85" width="18" height="20" class="exit"/>
+      <text x="16" y="160" class="note">Reward: eraser guard / parry idea.</text>
+    </g>
+
+    <!-- RB -->
+    <g transform="translate(1235 795)">
+      <rect width="240" height="170" class="room"/>
+      <text x="16" y="25" class="label">RB ROOK WARDEN</text>
+      <rect x="40" y="45" width="160" height="100" class="floor" fill="url(#tilegrid)"/>
+      <circle cx="70" cy="125" r="9" class="spawn"/>
+      <circle cx="132" cy="92" r="14" class="boss"/>
+      <rect x="60" y="70" width="28" height="18" class="cover"/>
+      <rect x="155" y="112" width="28" height="18" class="cover"/>
+      <rect x="190" y="85" width="18" height="20" class="exit"/>
+      <text x="16" y="160" class="note">Boss: straight charges, cover breaks.</text>
+    </g>
+
+    <!-- Q1 -->
+    <g transform="translate(1465 355)">
+      <rect width="240" height="170" class="room"/>
+      <text x="16" y="25" class="label">Q1 DOLLHOUSE COURT</text>
+      <rect x="40" y="45" width="160" height="100" class="floor" fill="url(#tilegrid)"/>
+      <circle cx="70" cy="125" r="9" class="spawn"/>
+      <circle cx="140" cy="75" r="9" class="enemy"/>
+      <circle cx="170" cy="115" r="9" class="enemy"/>
+      <rect x="95" y="85" width="28" height="24" class="cover"/>
+      <rect x="32" y="85" width="18" height="20" class="exit"/>
+      <rect x="190" y="85" width="18" height="20" class="exit"/>
+      <text x="16" y="160" class="note">Mixed enemies: pawn + bishop + weapon.</text>
+    </g>
+
+    <!-- Q2 -->
+    <g transform="translate(1695 570)">
+      <rect width="240" height="170" class="room"/>
+      <text x="16" y="25" class="label">Q2 MIXED COURT</text>
+      <rect x="40" y="45" width="160" height="100" class="floor" fill="url(#tilegrid)"/>
+      <circle cx="70" cy="125" r="9" class="spawn"/>
+      <circle cx="110" cy="75" r="9" class="enemy"/>
+      <circle cx="160" cy="75" r="9" class="enemy"/>
+      <circle cx="145" cy="125" r="9" class="enemy"/>
+      <rect x="32" y="85" width="18" height="20" class="exit"/>
+      <rect x="110" y="37" width="20" height="18" class="exit"/>
+      <text x="16" y="160" class="note">Final normal room before Queen.</text>
+    </g>
+
+    <!-- QB -->
+    <g transform="translate(1695 355)">
+      <rect width="240" height="170" class="room"/>
+      <text x="16" y="25" class="label">QB QUEEN OF TRICKS</text>
+      <rect x="40" y="45" width="160" height="100" class="floor" fill="url(#tilegrid)"/>
+      <circle cx="70" cy="125" r="9" class="spawn"/>
+      <circle cx="132" cy="92" r="15" class="boss"/>
+      <rect x="60" y="65" width="20" height="20" class="hazard"/>
+      <rect x="160" y="65" width="20" height="20" class="hazard"/>
+      <rect x="100" y="125" width="40" height="12" class="cover"/>
+      <rect x="110" y="37" width="20" height="18" class="exit"/>
+      <text x="16" y="160" class="note">Reward: child opens Black Castle.</text>
+    </g>
+
+    <!-- F1 -->
+    <g transform="translate(1695 160)">
+      <rect width="240" height="170" class="room"/>
+      <text x="16" y="25" class="label">F1 BLACK CASTLE GATE</text>
+      <rect x="40" y="45" width="160" height="100" class="floor" fill="url(#tilegrid)"/>
+      <circle cx="70" cy="125" r="9" class="spawn"/>
+      <circle cx="112" cy="84" r="9" class="enemy"/>
+      <circle cx="150" cy="84" r="9" class="enemy"/>
+      <circle cx="132" cy="122" r="9" class="kid"/>
+      <rect x="110" y="135" width="20" height="18" class="exit"/>
+      <rect x="190" y="85" width="18" height="20" class="exit"/>
+      <text x="16" y="160" class="note">Child moves a toy wall out of the way.</text>
+    </g>
+
+    <!-- F2 -->
+    <g transform="translate(1935 160)">
+      <rect width="240" height="170" class="room"/>
+      <text x="16" y="25" class="label">F2 LAST BOARD</text>
+      <rect x="40" y="45" width="160" height="100" class="floor" fill="url(#tilegrid)"/>
+      <circle cx="70" cy="125" r="9" class="spawn"/>
+      <circle cx="110" cy="74" r="9" class="enemy"/>
+      <circle cx="155" cy="74" r="9" class="enemy"/>
+      <circle cx="135" cy="118" r="9" class="enemy"/>
+      <rect x="32" y="85" width="18" height="20" class="exit"/>
+      <rect x="190" y="85" width="18" height="20" class="exit"/>
+      <text x="16" y="160" class="note">Gauntlet: all rules at once.</text>
+    </g>
+
+    <!-- FB -->
+    <g transform="translate(1935 355)">
+      <rect width="240" height="170" class="room"/>
+      <text x="16" y="25" class="label">FB BLACK KING</text>
+      <rect x="40" y="45" width="160" height="100" class="floor" fill="url(#tilegrid)"/>
+      <circle cx="70" cy="125" r="9" class="spawn"/>
+      <circle cx="132" cy="92" r="16" class="boss"/>
+      <circle cx="86" cy="70" r="8" class="kid"/>
+      <circle cx="178" cy="118" r="8" class="kid"/>
+      <rect x="75" y="105" width="20" height="20" class="hazard"/>
+      <rect x="165" y="65" width="20" height="20" class="hazard"/>
+      <text x="16" y="160" class="note">Final: pawn and player break checkmate.</text>
+    </g>
+  </g>
+
+  <g id="bottom-notes">
+    <rect x="80" y="1115" width="2040" height="290" rx="12" fill="#211923" stroke="#756147" stroke-width="2"/>
+    <text x="110" y="1155" class="zone">BUILDING NOTES FOR GODOT</text>
+    <text x="110" y="1190" class="sub">1. Each card becomes one room scene under scenes/rooms/. Keep the TileMap, exits, props, enemies, and pickups visible in the editor.</text>
+    <text x="110" y="1230" class="sub">2. Start with T1, T2, T3, and H1. That gives the game a playable opening before we build the boss districts.</text>
+    <text x="110" y="1270" class="sub">3. Do not build all bosses first. Build one full district loop: hub -> normal room -> pressure room -> boss -> reward -> hub shortcut.</text>
+    <text x="110" y="1310" class="sub">4. Use the same 8x5 planning board in this image as a rough gameplay shape, then scale it up in Godot to the real TileMap size.</text>
+    <text x="110" y="1350" class="sub">5. The detailed tile art can change later. The important thing now is room purpose, exits, cover, enemy placement, and player learning.</text>
+  </g>
+</svg>
