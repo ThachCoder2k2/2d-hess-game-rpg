@@ -62,6 +62,15 @@ const COMPONENT_DUMP_ORDER: Array[StringName] = [
 const MAX_VALUE_DEPTH := 3
 const MAX_COLLECTION_ITEMS := 24
 const MAX_BOARD_WIDTH := 96
+## cell kind -> the character the [board] map draws for a cell of that kind (CellKinds ids).
+const BOARD_SYMBOL_BY_KIND: Dictionary = {
+	&"floor": ".",
+	&"wall": "#",
+	&"gap": "~",
+	&"leapable_block": "b",
+	&"chalk": "c",
+	&"corruption": "x",
+}
 
 ## Why the last call returned "" (unknown room, missing scene...). Empty after a success.
 var last_error := ""
@@ -221,6 +230,9 @@ func _append_grid_section(lines: PackedStringArray, world: EcsWorld) -> void:
 	for cell in blocked_cells:
 		blocked_cell_texts.append(_format_cell(cell))
 	lines.append("  " + " ".join(blocked_cell_texts))
+	var kinds_beyond_walls := _kinds_beyond_walls(grid)
+	if not kinds_beyond_walls.is_empty():
+		lines.append("cell_kinds: " + _format_cell_kind_counts(grid))
 	lines.append("exits: %d" % grid.exit_by_cell.size())
 	for cell in _sorted_cells(grid.exit_by_cell.keys()):
 		lines.append("  %s %s" % [_format_cell(cell), _format_value(grid.exit_by_cell[cell], 1)])
@@ -235,10 +247,36 @@ func _append_grid_section(lines: PackedStringArray, world: EcsWorld) -> void:
 		lines.append("  %s entity=%d" % [_format_cell(cell), int(grid.item_by_cell[cell])])
 
 
-## An ASCII map of the booted board. P player, e enemy, i item, X exit, G gate, U unlock, # wall, . floor.
+## The cell kinds the grid holds besides plain floor and plain walls, in CellKinds order. Empty on every board
+## that exists today: a wall is the blocked_cells line above and floor is the rest, so the dump prints
+## nothing more until a room has a gap, a leapable block, chalk or corruption (docs/game-base-plan.md 5.11).
+func _kinds_beyond_walls(grid: EcsGrid) -> Array[StringName]:
+	var kinds: Array[StringName] = []
+	for kind: StringName in CellKinds.RULES_BY_KIND:
+		if kind != CellKinds.FLOOR and kind != CellKinds.WALL and grid.cell_kind_by_cell.values().has(kind):
+			kinds.append(kind)
+	return kinds
+
+
+## How many cells of each kind that is not plain floor the grid holds, in CellKinds order ("wall=50 gap=2").
+func _format_cell_kind_counts(grid: EcsGrid) -> String:
+	var texts := PackedStringArray()
+	for kind: StringName in CellKinds.RULES_BY_KIND:
+		var count := grid.cell_kind_by_cell.values().count(kind)
+		if kind != CellKinds.FLOOR and count > 0:
+			texts.append("%s=%d" % [kind, count])
+	return " ".join(texts)
+
+
+## An ASCII map of the booted board. P player, e enemy, i item, X exit, G gate, U unlock, # wall, . floor, and,
+## when the board has them, ~ gap, b leapable block, c chalk, x corruption (named in the legend only when
+## the board holds one, so a board of walls and floor reads as it always did).
 func _append_board_section(lines: PackedStringArray, world: EcsWorld) -> void:
 	var grid := world.grid
-	lines.append("[board] P player, e enemy, i item, X exit, G gate, U unlock, # wall, . floor")
+	var legend := "[board] P player, e enemy, i item, X exit, G gate, U unlock, # wall, . floor"
+	for kind in _kinds_beyond_walls(grid):
+		legend += ", %s %s" % [BOARD_SYMBOL_BY_KIND[kind], String(kind).replace("_", " ")]
+	lines.append(legend)
 	if grid.bounds.size.x > MAX_BOARD_WIDTH:
 		lines.append("(board wider than %d cells, map omitted)" % MAX_BOARD_WIDTH)
 		return
@@ -247,9 +285,7 @@ func _append_board_section(lines: PackedStringArray, world: EcsWorld) -> void:
 		for column in range(grid.bounds.position.x, grid.bounds.end.x):
 			var cell := Vector2i(column, row)
 			var occupant := grid.entity_at(cell)
-			var symbol := "."
-			if grid.blocked_cells.has(cell):
-				symbol = "#"
+			var symbol: String = BOARD_SYMBOL_BY_KIND.get(grid.kind_at(cell), "?")
 			if grid.gate_by_cell.has(cell):
 				symbol = "G"
 			if grid.exit_by_cell.has(cell):

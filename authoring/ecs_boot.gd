@@ -3,7 +3,8 @@ extends RefCounted
 
 ## Turns editor-authored scenes into a running ECS world: parked ActorViews
 ## become entities (position -> cell, exports -> component values), painted
-## solid tiles become blocks, pickup markers become item entities + views.
+## solid tiles become blocks (a tile's `kind` gives its cell a gap, a leapable block, chalk or corruption
+## instead), pickup markers become item entities + views.
 ## WYSIWYG authoring survives the conversion — the scene is spawn data.
 
 
@@ -30,7 +31,7 @@ static func boot(world: EcsWorld, options: EcsBootOptions) -> Dictionary:
 	}
 	if room_root != null:
 		shape_grid(world, room_root, options.view_size)
-		apply_solid_tiles(world, room_root)
+		apply_tile_kinds(world, room_root)
 		_bake_zone_exits(world, room_root)
 		_bake_player_unlocks(world, room_root)
 		_bake_gates(world, room_root, opened_gate_ids)
@@ -140,16 +141,22 @@ static func _bake_player_unlocks(world: EcsWorld, room_root: Node) -> void:
 		}
 
 
-## Paint-once walls, ported from the node-era RoomEncounter: every TileMap cell
-## whose tile carries solid=true custom data blocks movement and pathing.
-static func apply_solid_tiles(world: EcsWorld, room_root: Node) -> void:
+## Paint-once terrain, grown from the node-era paint-once walls: every TileMap cell whose tile is not plain
+## floor gives its grid cell that kind (docs/game-base-plan.md 5.11). What a tile says is
+## CellKinds.kind_of_tile(): its `kind` custom data when filled in with a known kind, else a wall when
+## `solid` is true. A wall blocks movement and pathing exactly as a solid tile always did; a gap, a leapable
+## block, chalk or corruption is stored the same way and is read by the services that ask for kinds.
+static func apply_tile_kinds(world: EcsWorld, room_root: Node) -> void:
 	var tilemap := room_root.get_node_or_null("RoomArt/TileMap") as TileMapLayer
-	if tilemap == null:
+	if tilemap == null or tilemap.tile_set == null:
 		return
 	for cell in tilemap.get_used_cells():
 		var tile_data := tilemap.get_cell_tile_data(cell)
-		if tile_data != null and bool(tile_data.get_custom_data("solid")):
-			world.grid.add_block(cell)
+		if tile_data == null:
+			continue
+		var kind := CellKinds.kind_of_tile(tilemap.tile_set, tile_data)
+		if kind != CellKinds.FLOOR:
+			world.grid.set_cell_kind(cell, kind)
 
 
 static func _spawn_pickups(world: EcsWorld, room_root: Node, cast: Dictionary, skipped_pickup_names: Array = []) -> void:

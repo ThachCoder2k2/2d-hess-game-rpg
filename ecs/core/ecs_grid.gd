@@ -5,20 +5,53 @@ extends RefCounted
 ## reserve -> commit movement protocol, ported 1:1 from GridWorld
 ## (scripts/core/grid_world.gd) with int entity ids instead of Node refs.
 ## The flip phase (plan D) decides which of the two survives.
+##
+## Since M3a (docs/game-base-plan.md 5.11) it also knows what each cell is made of (cell_kind_by_cell,
+## the vocabulary in CellKinds), counts the changes of that layout (layout_version) so the pathfinder is
+## built once per layout and not once per question, and offers the two services the attack and skill
+## frameworks stand on: a leap that frees its origin at takeoff and reserves its landing cell
+## (begin_leap), and a ray that stops at blockers (ray_cells).
 
 ## Where a board's top-left corner sits when the board does not fit the view on that axis (a scrolling
 ## world has nothing to centre), and where every board sat before M3a: the margin that centres the
 ## default 16x9 board in the 640x360 view. A room that fits the view gets centred_origin() instead.
 const FALLBACK_ORIGIN := Vector2(64, 36)
 
+## The answer of "which cell?" when there is none: no reservation, no landing. Far outside any board.
+const NO_CELL := Vector2i(-999, -999)
+
 var cell_size := 32
 ## World position of the top-left corner of cell (0, 0). Each room sets its own (EcsBoot.shape_grid):
 ## the board centred in the view, so a 16x9 room starts at (64, 36) and an 18x9 arena at (32, 36).
 var grid_origin := FALLBACK_ORIGIN
-var bounds := Rect2i(0, 0, 16, 9)
+## The cells of the board. Changing it changes the layout (layout_version moves), because the cached
+## pathfinder covers exactly this rectangle.
+var bounds := Rect2i(0, 0, 16, 9):
+	set(new_bounds):
+		if new_bounds != bounds:
+			bounds = new_bounds
+			_layout_version += 1
 
-## cell -> true. Walls: cells nothing may enter.
+## How many times the layout has changed: a cell's kind (set_cell_kind, add_block, open_gate) or the
+## bounds. Anything that caches a fact about the terrain (the pathfinder here, a drawing of the cell
+## kinds later) keeps the version it was built for and rebuilds when this one has moved. Starts at 0 and
+## only grows; a change that leaves a cell as it was does not count.
+var layout_version: int:
+	get:
+		return _layout_version
+
+## cell -> kind (StringName, see CellKinds) for every cell that is NOT plain floor. A cell the grid does
+## not list is floor. Written only by set_cell_kind(), which keeps blocked_cells and layout_version in
+## step; the TileSets' `kind` layer is where the kinds are authored (EcsBoot.apply_tile_kinds).
+var cell_kind_by_cell: Dictionary = {}
+## cell -> true. Every cell whose kind cannot be walked on (CellKinds.is_walkable): walls, gaps, blocks.
+## Derived from cell_kind_by_cell and kept by set_cell_kind(); read it, never write it.
 var blocked_cells: Dictionary = {}
+## cell -> {"effect": StringName, "kind_before": StringName, "time_left": float}. The temporary changes
+## of a cell's kind that are in progress (chalk over a gap, a corrupted tile): the store of the
+## CellEffectSystem (M10, stage 4 of the schedule), which ticks `time_left` down and gives the cell back
+## its `kind_before` through set_cell_kind(). Empty until the first cell effect exists.
+var cell_effect_by_cell: Dictionary = {}
 ## cell -> entity id. Who stands on each cell right now.
 var entity_by_cell: Dictionary = {}
 ## entity id -> cell. Reverse of entity_by_cell, both directions O(1).
@@ -39,6 +72,9 @@ var player_unlock_by_cell: Dictionary = {}
 ## direction onto the cell opens the gate permanently.
 var gate_by_cell: Dictionary = {}
 
+## What layout_version reads. Moved only by this class, when the terrain changes.
+var _layout_version := 0
+
 
 ## The grid origin that centres a board of `board_cells` cells in a view of `view_size` pixels, in whole
 ## pixels (docs/game-base-plan.md D-02, D-30: static framing with a per-room centred origin). On an axis
@@ -58,7 +94,7 @@ static func centred_origin(board_cells: Vector2i, board_cell_size: int, view_siz
 ## caller's job (MovementSystem emits, the bridge writes WorldState).
 func open_gate(cell: Vector2i) -> void:
 	gate_by_cell.erase(cell)
-	blocked_cells.erase(cell)
+	set_cell_kind(cell, CellKinds.FLOOR)
 
 
 func cell_to_world(cell: Vector2i) -> Vector2:
@@ -77,11 +113,58 @@ func is_walkable(cell: Vector2i) -> bool:
 	return is_inside(cell) and not blocked_cells.has(cell)
 
 
+## Makes the cell a wall. False when it is off the board or a piece stands on it or is about to.
 func add_block(cell: Vector2i) -> bool:
-	if not is_inside(cell) or entity_by_cell.has(cell) or move_reservations.has(cell):
+	return set_cell_kind(cell, CellKinds.WALL)
+
+
+## What the cell is made of (a CellKinds id); floor for a cell the grid lists nothing about, and for a
+## cell off the board (there is nothing there: ask is_inside first).
+func kind_at(cell: Vector2i) -> StringName:
+	return cell_kind_by_cell.get(cell, CellKinds.FLOOR)
+
+
+## Gives the cell a kind, and keeps everything derived from it in step: cell_kind_by_cell (floor is
+## stored as the absence of an entry), blocked_cells, and layout_version (moved only when the kind really
+## changed). The only way the terrain changes. Returns false and changes nothing when the cell is off the
+## board, the kind does not exist, or the new kind cannot be walked on while a piece stands on the cell
+## or has reserved it (a wall never grows under a piece; the caller waits and asks again). Returns true,
+## changing nothing, when the cell already is that kind.
+func set_cell_kind(cell: Vector2i, kind: StringName) -> bool:
+	if not is_inside(cell) or not CellKinds.is_known(kind):
 		return false
-	blocked_cells[cell] = true
+	if kind_at(cell) == kind:
+		return true
+	var walkable := CellKinds.is_walkable(kind)
+	if not walkable and (entity_by_cell.has(cell) or move_reservations.has(cell)):
+		return false
+	if kind == CellKinds.FLOOR:
+		cell_kind_by_cell.erase(cell)
+	else:
+		cell_kind_by_cell[cell] = kind
+	if walkable:
+		blocked_cells.erase(cell)
+	else:
+		blocked_cells[cell] = true
+	_layout_version += 1
 	return true
+
+
+## Every cell of this kind, row by row and left to right. Floor is every cell the grid lists nothing for,
+## so it is answered by walking the board.
+func cells_of_kind(kind: StringName) -> Array[Vector2i]:
+	var cells: Array[Vector2i] = []
+	if kind == CellKinds.FLOOR:
+		for y in range(bounds.position.y, bounds.end.y):
+			for x in range(bounds.position.x, bounds.end.x):
+				if not cell_kind_by_cell.has(Vector2i(x, y)):
+					cells.append(Vector2i(x, y))
+		return cells
+	for cell: Vector2i in cell_kind_by_cell:
+		if cell_kind_by_cell[cell] == kind:
+			cells.append(cell)
+	cells.sort_custom(func(a: Vector2i, b: Vector2i) -> bool: return a.y < b.y or (a.y == b.y and a.x < b.x))
+	return cells
 
 
 func register_entity(entity_id: int, cell: Vector2i) -> bool:

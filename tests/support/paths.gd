@@ -91,6 +91,12 @@ func kingdom_scene() -> String:
 	return _existing_resource("res://tests/fixtures/the_kingdom.tscn")
 
 
+## The kingdom fixture's TileSet: a test fixture like the scene above, with the same custom-data layers
+## (`solid`, `kind`) as the game's own kingdom TileSet in content/tilesets/kingdom/.
+func kingdom_fixture_tileset() -> String:
+	return _existing_resource("res://tests/fixtures/the_kingdom/tileset.tres")
+
+
 ## The first-encounter demo room: a test fixture, not game content (plan D-02).
 func first_encounter_scene() -> String:
 	return _existing_resource("res://tests/fixtures/first_encounter.tscn")
