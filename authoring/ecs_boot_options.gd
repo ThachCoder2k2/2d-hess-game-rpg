@@ -31,6 +31,16 @@ var skipped_pickup_names: Array = []
 ## Gate ids the save already recorded as opened: they boot as floor.
 var opened_gate_ids: Array = []
 
+## What the pawn carries into this room (PlayerSnapshot, docs/game-base-plan.md 14.2): the shell
+## captures it from the old world at the room exit and passes it here. boot() applies it to the hero
+## right after the hero is built, so the carried courage, the sword and the flags win over the
+## definition and over any EntityComponent node. Null boots the hero as the definition says.
+var player_snapshot: PlayerSnapshot = null
+
+## True to also put the hero's carried facing back (a checkpoint or a save resume). A room change leaves
+## it false: the entry marker sets the facing of the new room.
+var restore_player_facing := false
+
 
 ## The common case: a hero and a room (either may be null).
 static func for_scene(hero_view: Node2D, room: Node) -> EcsBootOptions:

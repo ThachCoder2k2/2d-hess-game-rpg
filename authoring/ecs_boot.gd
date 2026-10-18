@@ -48,6 +48,8 @@ static func boot(world: EcsWorld, options: EcsBootOptions) -> Dictionary:
 		var player_id := EcsActorFactory.spawn_player_from_definition(world, player_definition, player_cell)
 		_bind_view(world, player_id, player_view)
 		_apply_component_nodes(world, player_id, player_view)
+		if options.player_snapshot != null:
+			options.player_snapshot.apply_to(world, player_id, options.restore_player_facing)
 		cast["player"] = player_id
 		cast["view_by_entity"][player_id] = player_view
 		cast["piece_name_by_entity"][player_id] = player_definition.piece_name

@@ -70,7 +70,7 @@ layer may name which (`tests/architecture/test_dependency_edges.gd` enforces it)
 - `schema/` — Resource classes (`EnemyDefinition`, `MovementConfig`, `AttackPattern`, ...), one
   class per file, no behaviour beyond `validate()`-style checks.
 - `ecs/` — the simulation: `core/` (`EcsWorld`, `EcsGrid`, `EcsSystem`, `WorldFlags`,
-  `InputSnapshot`, `HudSnapshot`), `components/` (`ecs_components.gd`, frozen; every new component
+  `InputSnapshot`, `HudSnapshot`, `PlayerSnapshot`), `components/` (`ecs_components.gd`, frozen; every new component
   its own file, such as `tuning.gd`), `systems/<folder>/`, `events/` (`events.gd` declares every
   event, `commands.gd` every request presentation may push) and `schedule/` (one file per stage of
   the tick plus `schedule.gd`: the order the systems run in is data there and nowhere else). No art,

@@ -85,7 +85,7 @@ schema/                  THE SHAPE OF CONTENT: one Resource class per file
   feel/                  DifficultyProfile, PieceSizeTable, PieceSize
 
 ecs/                     THE SIMULATION: rules only; no art, prose or tuning numbers
-  core/                  EcsWorld, EcsGrid, EcsSystem, WorldFlags, InputSnapshot, HudSnapshot
+  core/                  EcsWorld, EcsGrid, EcsSystem, WorldFlags, InputSnapshot, HudSnapshot, PlayerSnapshot
   components/            ecs_components.gd (frozen); tuning.gd (Tuning), and every new component in its own file
   systems/<folder>/      command/CommandSystem  input/PlayerInputSystem  decide/EnemyAISystem
                          move/MovementSystem  act/CombatSystem  resolve/HealthSystem  view/ViewSyncSystem
@@ -248,6 +248,20 @@ behaviour and never a field to the hot file. Each is documented where it is decl
 `flags` is a fresh object for every world, and the shell rebuilds the world for every room, so what must
 outlive a room (flags, the player's carry) is carried by the shell and the save in M3b.
 
+### What the pawn carries (`PlayerSnapshot`)
+
+`ecs/core/player_snapshot.gd` is the carry contract of plan 14.2, defined once: courage (current and max), Believe,
+unlocked skill ids and applied upgrades, equipped pages and Margin, the direction lock, the facing and the
+run's flags (`WorldFlags`). It has a dictionary form that survives JSON (`to_dictionary()`, `from_dictionary()`,
+which tolerates a damaged or older save and refuses a newer one), `capture(world, hero)` for the old world
+at the exit, and `apply_to(world, hero)` for the new one. The per-room rows of the plan's table (cooldowns,
+status, the cast, the attack lock and token, telegraphs, hit progress, the floor weapon, cell effects) are
+deliberately not fields, so they reset with the world. The facing is captured but only restored when
+asked (`restore_player_facing`): a room change leaves it to the entry marker. Believe, skills, pages, Margin
+and the lock have fields but no component yet; the milestone that adds one adds a line to `capture()` and
+`apply_to()`. `EcsBootOptions.player_snapshot` makes `EcsBoot.boot()` apply it right after the hero is
+built. Nothing in the shell passes one yet: M3b's zone swap does. `test_player_snapshot_roundtrip` holds it.
+
 ## The grid (`EcsGrid`)
 
 `EcsWorld.grid` is the spatial service, defaults `cell_size = 32`, `grid_origin = (64, 36)`,
@@ -271,7 +285,7 @@ dictionaries are all documented in the file:
 | Actor scenes | `presentation/views/actors/` | **One actor view**: `actor_view_base.tscn` holds the nodes, every clip and the one animation graph; `player.tscn`, `black_pawn.tscn`, `knight_enemy.tscn` and `bishop_enemy.tscn` inherit it and say only what is theirs (13 to 20 lines each; `test_one_actor_view` holds that). A new enemy needs no scene: instance the base and set `definition`. |
 | `PieceSizeTable` | `schema/feel/piece_size_table.gd` (+ `piece_size.gd`), `content/feel/piece_sizes.tres` | the owner's rule that a piece is smaller than its cell, as data: per kind a body box, a base line (px below the cell centre) and a footprint in cells; `validate()` holds the margin and the chess heights; `body_top_left()` is the one placement formula. |
 | `EntityComponent` nodes | `authoring/entity_components/` | Inspector-draggable children of an `ActorView`; `EcsBoot` calls `apply(world, entity_id)` at spawn. Six exist: `CombatComponent`, `HealthComponent`, `InputComponent`, `MovementComponent` (overrides of the player's `PlayerDefinition`; the player scene carries none, so `content/player/player.tres` is the only source) and `AIComponent`/`WeaponComponent` (per-instance enemy overrides). A node on an instance beats the definition, field by field. Zero logic. |
-| `EcsBoot` | `authoring/ecs_boot.gd` | static `boot(world, options)`, where `options` is an `EcsBootOptions` (`authoring/ecs_boot_options.gd`: `player_view`, `room_root`, `fallback_player_cell`, `skipped_pickup_names`, `opened_gate_ids`; a new need is a new field, never a new argument; `EcsBootOptions.for_scene(hero, room)` is the common case): sizes the grid from `RoomEncounter.board_size`, bakes solid tiles, `ZoneExitMarker`, `PlayerUnlockMarker` and `GateMarker`; spawns the player from the view's `PlayerDefinition` (class defaults when it names none) and applies its `EntityComponent` nodes, then every `ActorView` child of the room that has a `definition`, then pickups. Returns the cast dictionary (`player`, `enemies`, `view_by_entity`, `piece_name_by_entity`, pickup maps). |
+| `EcsBoot` | `authoring/ecs_boot.gd` | static `boot(world, options)`, where `options` is an `EcsBootOptions` (`authoring/ecs_boot_options.gd`: `player_view`, `room_root`, `fallback_player_cell`, `skipped_pickup_names`, `opened_gate_ids`, `player_snapshot`, `restore_player_facing`; a new need is a new field, never a new argument; `EcsBootOptions.for_scene(hero, room)` is the common case): sizes the grid from `RoomEncounter.board_size`, bakes solid tiles, `ZoneExitMarker`, `PlayerUnlockMarker` and `GateMarker`; spawns the player from the view's `PlayerDefinition` (class defaults when it names none) and applies its `EntityComponent` nodes, then every `ActorView` child of the room that has a `definition`, then pickups. Returns the cast dictionary (`player`, `enemies`, `view_by_entity`, `piece_name_by_entity`, pickup maps). |
 | `EcsActorFactory` | `authoring/ecs_actor_factory.gd` | `spawn_player` (bare hero, kept), `spawn_player_from_definition` (what `EcsBoot` calls), `spawn_enemy`, `spawn_pickup`: assemble an entity's components from the `.tres` data and apply the difficulty multipliers. |
 | `ContentDb` | `shell/content/content_db.gd` (+ `content_kind.gd`) | the content registry, a static class (no autoload, so it works inside a suite's `_init()`). Ids are folder names under `content/<kind>/`, listed lazily once per kind. `ids(kind)`, `fetch(kind, id)`, `all(kind)`, `player()`, `world()`, `piece_sizes()`, `validate()`, `validate_cross_refs()`. Ten kinds registered (one line each in `_ensure_kinds()`). Only the shell may name it; tests and tools call the two validators, nothing calls them at game start. |
 | `RoomEncounter` | `authoring/room_encounter.gd` | a room scene root: `board_size`, `zone_id`, prose, and a `RoomObjective`. It carries data only. |
