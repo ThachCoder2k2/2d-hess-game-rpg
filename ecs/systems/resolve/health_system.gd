@@ -5,6 +5,7 @@ extends EcsSystem
 ## direction, tags) and then world.heal_events (built by Events.emit_heal: target, source, amount)
 ## to Health components, passes the source and tags on in the `damaged` and `defeated` events,
 ## says `healed` for a heal that restored something, and decays hit-feedback timers.
+## An airborne entity (EcsGrid.is_airborne, in the middle of a leap) takes no damage: untargetable in flight.
 ## Rules ported from the node era: invulnerability window on hit for player-tagged entities only;
 ## defeat disables player control but leaves the entity, while non-players leave the grid
 ## (despawn handled by the view bridge on the defeated event).
@@ -58,6 +59,10 @@ func _apply_heal(target_id: int, amount: int, source: int) -> void:
 func _apply_damage(target_id: int, amount: int, direction: Vector2i, source: int, tags: Array[StringName]) -> void:
 	var health: EcsComponents.Health = world.get_component(target_id, EcsComponents.HEALTH)
 	if health == null or health.current <= 0 or health.invulnerable_left > 0.0:
+		return
+	# A piece in the air (EcsGrid.begin_leap) is out of reach: the blow finds nobody, as it finds nobody on
+	# the cells the leaper left and has not reached.
+	if world.grid.is_airborne(target_id):
 		return
 	health.current = maxi(0, health.current - amount)
 	health.flash_left = 0.12

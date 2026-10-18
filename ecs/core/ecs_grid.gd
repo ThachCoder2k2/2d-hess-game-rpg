@@ -61,6 +61,10 @@ var cell_by_entity: Dictionary = {}
 ## (finish_move). While sliding, origin stays occupied and destination stays
 ## reserved — nobody can race into either.
 var move_reservations: Dictionary = {}
+## entity id -> {"from": Vector2i, "to": Vector2i}. Every entity that is in the air (begin_leap ...
+## finish_leap): where it took off and the landing cell it has reserved. An airborne entity stands on NO
+## cell (it is in neither entity_by_cell nor cell_by_entity) and holds one reservation, its landing cell.
+var leap_by_entity: Dictionary = {}
 ## cell -> {"zone": StringName, "entry": StringName}. Door cells baked from
 ## ZoneExitMarkers; the player landing here triggers a zone travel.
 var exit_by_cell: Dictionary = {}
@@ -175,12 +179,16 @@ func register_entity(entity_id: int, cell: Vector2i) -> bool:
 	return true
 
 
+## Takes the entity off the board: its cell, its reservation and, if it is in the air, its leap (a piece
+## that falls mid-leap frees its landing cell and leaves nothing behind).
 func unregister_entity(entity_id: int) -> void:
-	if not cell_by_entity.has(entity_id):
+	if not cell_by_entity.has(entity_id) and not leap_by_entity.has(entity_id):
 		return
-	var cell: Vector2i = cell_by_entity[entity_id]
-	entity_by_cell.erase(cell)
-	cell_by_entity.erase(entity_id)
+	if cell_by_entity.has(entity_id):
+		var cell: Vector2i = cell_by_entity[entity_id]
+		entity_by_cell.erase(cell)
+		cell_by_entity.erase(entity_id)
+	leap_by_entity.erase(entity_id)
 	for reserved_cell in move_reservations.keys():
 		if move_reservations[reserved_cell] == entity_id:
 			move_reservations.erase(reserved_cell)
@@ -217,11 +225,95 @@ func finish_move(entity_id: int, destination: Vector2i) -> void:
 	cell_by_entity[entity_id] = destination
 
 
+## The cell this entity has reserved (a step's destination or a leap's landing cell), or NO_CELL.
 func get_reserved_cell(entity_id: int) -> Vector2i:
 	for reserved_cell in move_reservations:
 		if move_reservations[reserved_cell] == entity_id:
 			return reserved_cell
-	return Vector2i(-999, -999)
+	return NO_CELL
+
+
+# --------------------------------------------------------------------------- leaps (docs/game-base-plan.md 5.11)
+## Whether `entity_id` may take off from `from` for `to`: it stands on `from`, is not mid-step or already in
+## the air, and `to` is another cell of the board that can be walked on and that nobody holds or has reserved.
+## It does not look at what lies between the two cells: that is the skill's rule (can_leap_over asks it).
+func can_begin_leap(entity_id: int, from: Vector2i, to: Vector2i) -> bool:
+	if from == to or leap_by_entity.has(entity_id):
+		return false
+	if not cell_by_entity.has(entity_id) or cell_by_entity[entity_id] != from or get_reserved_cell(entity_id) != NO_CELL:
+		return false
+	return is_walkable(to) and not entity_by_cell.has(to) and not move_reservations.has(to)
+
+
+## Takeoff. Unlike a step, which holds its origin until it lands, a leap lets go of the origin at once (a
+## piece may enter it while the leaper is in the air) and reserves the landing cell (nobody may enter or
+## reserve it before the leaper lands). While it is in the air the entity stands on no cell, so nothing
+## aimed at a cell can hit it: that is what "untargetable in flight" means to the grid, and HealthSystem
+## ignores damage to an airborne entity for the same reason. False and nothing changed when
+## can_begin_leap says no.
+func begin_leap(entity_id: int, from: Vector2i, to: Vector2i) -> bool:
+	if not can_begin_leap(entity_id, from, to):
+		return false
+	entity_by_cell.erase(from)
+	cell_by_entity.erase(entity_id)
+	move_reservations[to] = entity_id
+	leap_by_entity[entity_id] = {"from": from, "to": to}
+	return true
+
+
+## Touchdown: the entity stands on the cell it reserved. False when it was not in the air.
+func finish_leap(entity_id: int) -> bool:
+	if not leap_by_entity.has(entity_id):
+		return false
+	var landing_cell: Vector2i = leap_by_entity[entity_id]["to"]
+	move_reservations.erase(landing_cell)
+	entity_by_cell[landing_cell] = entity_id
+	cell_by_entity[entity_id] = landing_cell
+	leap_by_entity.erase(entity_id)
+	return true
+
+
+func is_airborne(entity_id: int) -> bool:
+	return leap_by_entity.has(entity_id)
+
+
+## The cell an airborne entity will land on, or NO_CELL when it is not in the air.
+func leap_landing_cell(entity_id: int) -> Vector2i:
+	if not leap_by_entity.has(entity_id):
+		return NO_CELL
+	return leap_by_entity[entity_id]["to"]
+
+
+## Whether a leap may pass over this cell on its way to its landing cell: a cell of the board whose kind
+## allows it (CellKinds: floor, gap, leapable block, chalk and corruption yes, a wall and a closed gate no)
+## that is not a door. Pieces never matter: a leap passes over them.
+func can_leap_over(cell: Vector2i) -> bool:
+	return is_inside(cell) and CellKinds.is_leapable(kind_at(cell)) and not exit_by_cell.has(cell)
+
+
+# --------------------------------------------------------------------------- rays (docs/game-base-plan.md 5.11)
+## The cells a ray covers, nearest first: it starts on the cell next to `origin` in `direction` (the cardinal
+## directions and the diagonals, any non-zero step) and goes on for at most `max_cells` cells, ending BEFORE
+## the first cell that is off the board or whose kind is in `stop_kinds` (the kinds that stop a ray,
+## CellKinds.default_ray_stop_kinds() unless the caller names its own: walls and blocks, never gaps). The
+## origin is not in the list. Rook charges, Bishop lanes and Queen lines are made of this.
+##
+## Pieces are not terrain: the ray does not stop at a piece, and every cell of the list may hold one
+## (entity_at). With `stop_before_occupied` the ray also ends before the first cell a piece stands on or has
+## reserved, for a charge that cannot run through anyone.
+func ray_cells(origin: Vector2i, direction: Vector2i, max_cells: int, stop_kinds: Array[StringName] = CellKinds.default_ray_stop_kinds(), stop_before_occupied := false) -> Array[Vector2i]:
+	var cells: Array[Vector2i] = []
+	if direction == Vector2i.ZERO:
+		return cells
+	var cell := origin
+	for _step in range(max_cells):
+		cell += direction
+		if not is_inside(cell) or kind_at(cell) in stop_kinds:
+			break
+		if stop_before_occupied and (entity_by_cell.has(cell) or move_reservations.has(cell)):
+			break
+		cells.append(cell)
+	return cells
 
 
 ## cell -> pickup entity id. Weapons lying on the floor, one per cell.
