@@ -61,7 +61,9 @@ func _run() -> void:
 	_expect(String(hud.objective_label.text).begins_with("The king has fallen"), "HUD shows the T1 start message")
 
 	var board := main.get("board") as PrototypeBoard
-	_expect(board != null and board.grid_world == ecs.grid and board.ecs == ecs, "board overlay reads the ECS world")
+	# Was `board.ecs == ecs`: the overlay no longer holds the world, it draws from the world's HudSnapshot
+	# (docs/game-base-plan.md 13.1: presentation never touches ecs/components).
+	_expect(board != null and board.grid_world == ecs.grid and board.hud_snapshot == ecs.hud_snapshot, "board overlay draws from the ECS grid and the world's hud snapshot")
 
 	var camera := main.get("camera_rig") as CameraRig
 	_expect(camera != null and camera.grid_world == ecs.grid, "camera rig clamps to the ECS board")

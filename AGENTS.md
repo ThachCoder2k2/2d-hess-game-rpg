@@ -476,6 +476,6 @@ registry and the generated art; see `tools/README.md`).
 
 Follow `docs/where-we-are.md` section 5 for the order of work and `docs/game-base-plan.md`
 section 15 for the milestone you are on. M1a, M1b and M2 are done; the next milestone is M3a (the
-runtime seams). Five dependency edges and six room references are still
+runtime seams). Three dependency edges and six room references are still
 undecided (listed in `tests/architecture/test_dependency_edges.gd` and `test_content_references.gd`);
 the owner decides them before `tests/architecture/allowed_edges.txt` is frozen.

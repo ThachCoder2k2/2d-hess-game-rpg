@@ -46,10 +46,10 @@ session. Read `AGENTS.md` for the full workflow, and `docs/ARCHITECTURE.md` +
 	writes the simulation only by pushing typed requests on `world.commands`
 	(`world.push_command(Commands.set_flag(...))`, declared in `ecs/events/commands.gd`;
 	`CommandSystem` applies them at the head of the next tick), never by setting
-	components. (`world.commands` exists since M3a; the `HudSnapshot` arrives later in
-	M3a, and until then presentation reads `drain_events()` only, and the one known
-	reader of components is listed as undecided in
-	`tests/architecture/test_dependency_edges.gd`.)
+	components. (`world.commands` and the `HudSnapshot`, filled each tick by
+	`HudSnapshotSystem`, exist since M3a; no script under `presentation/` names
+	`EcsComponents` or `EcsWorld`, and `tests/architecture/test_dependency_edges.gd`
+	fails if one does.)
   - Sound (three layers, one owner each): motion sounds → audio tracks inside
 	the actor's clips (keying its `AudioPlayer`, bus `SFX`); mixing →
 	`default_bus_layout.tres` (Master ← SFX/Music/UI); event sounds with no

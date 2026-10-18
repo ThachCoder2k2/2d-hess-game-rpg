@@ -19,6 +19,7 @@ func _init() -> void:
 	_check_the_token_owner()
 	_check_it_is_rebuilt_in_place_counted_and_not_while_frozen()
 	_check_it_only_reads()
+	_check_presentation_names_no_component()
 	finish()
 
 

@@ -146,11 +146,14 @@ reference). Starting-point table from `docs/game-base-plan.md` 13.1:
 | `presentation` | `ecs/events`, `schema`, `HudSnapshot`. Never `ecs/components` |
 | `shell` | everything |
 
-Five edges and six room references are not decided by the owner yet and are printed on
+Three edges and six room references are not decided by the owner yet and are printed on
 every run (report-only, an entry nothing uses fails the suite): `EcsBoot` and `EntityComponent`
-name `ActorView`; `PickupSpawnPoint` names `WeaponPickup`; `PrototypeBoard` reads `EcsComponents`
-and `EcsWorld`; the six Stage 1 rooms carry a `GridLinesOverlay` from `presentation/board/`. The
-allowed-edge table is not frozen until the owner decides them (`docs/migration-notes.md`).
+name `ActorView`; `PickupSpawnPoint` names `WeaponPickup`; the six Stage 1 rooms carry a
+`GridLinesOverlay` from `presentation/board/`. The allowed-edge table is not frozen until the owner
+decides them (`docs/migration-notes.md`). A fourth, `PrototypeBoard` reading `EcsComponents` and
+`EcsWorld`, was settled by M3a step 2 rather than decided: the overlay draws from the `HudSnapshot`,
+the one `ecs/core` class the presentation row of the table names (`CLASS_ALLOWANCES` in the edge test),
+and the edges are gone.
 
 ## Runtime flow
 
@@ -237,7 +240,7 @@ behaviour and never a field to the hot file. Each is documented where it is decl
 | `flags` | `WorldFlags`: switches (bool) and counters (int) the story and progression ask about; `to_dictionary()` for the save | the `set_flag` command, or a system that owns a counter |
 | `tuning` | `Tuning`: `telegraph_time_scale`, `enemy_pace_scale`, `input_buffer_window`, `extra_courage`; neutral by default, nothing reads them yet | the `tuning_set` command |
 | `input_snapshot` | `InputSnapshot`: per action pressed, just pressed, just released, held time, press timestamp (`InputPoller` in the shell fills it once per frame; `PlayerInputSystem` reads only it) | the shell |
-| `hud_snapshot` | `HudSnapshot`: a revision counter for now; the HUD's read-only picture arrives with `HudSnapshotSystem` | `HudSnapshotSystem` (later step) |
+| `hud_snapshot` | `HudSnapshot`: the hero's courage, cell, facing, sword and skill cooldown, the attack token owner, and one `EnemyBrief` per enemy (cell, committed goal, telegraph progress); rebuilt in place at the end of every tick, plus a revision counter | `HudSnapshotSystem` (the shell also calls its `build()` once after booting a room) |
 | `commands`, `command_handler_by_type` | the requests from presentation, and the Callable that applies each type | `push_command()`; `register_command_handler()` |
 | `view_commands` | cosmetic instructions for the views (`Commands.play_state`) | `push_view_command()`; consumed by `ViewSyncSystem` |
 | `heal_events` | heal requests `{target, source, amount}` | `Events.emit_heal()`; consumed by `HealthSystem` |
@@ -432,7 +435,8 @@ Presentation consumes `drain_events()` and never decides gameplay.
 - `shell/game_root.gd` — the bridge and zone-travel host (see Runtime flow). It owns fades,
   the Book toggle, the F3 debug view, F11 fullscreen and scene reload.
 - `PrototypeBoard` (`presentation/board/`) — the combat overlay: telegraph cells, hit flashes,
-  F3 debug paths. The one place `_draw()` is allowed for gameplay overlays.
+  F3 debug paths. The one place `_draw()` is allowed for gameplay overlays. It reads the board
+  geometry from the grid (duck-typed) and everything else from `world.hud_snapshot`.
 - `GameHud` (`presentation/ui/hud/`, a `CanvasLayer`) — courage, skill cooldown, enemy count,
   status, damage flash, result panel. It owns all its own formatting.
 - `CameraRig` (`presentation/camera/`) — a `Camera2D` that is a child of the player view (so it
@@ -473,11 +477,13 @@ zone travel but is never saved. The bridge writes it from events and feeds it ba
 These exist today and are scheduled to be fixed by `docs/game-base-plan.md` §14, not by
 ad-hoc edits:
 
-- The bridge and `PrototypeBoard` read components directly (`ecs.get_component(...)`), and
-  `game_root.gd` writes a few (`PlayerTag.control_enabled`, `PlayerCombat.sword_unlocked`, the
-  health carry, removing `VIEW_REF`). The channel that replaces the writes (`world.commands`) exists since
-  M3a step 1 but nothing pushes on it yet, and the read-only `HudSnapshot` that replaces the reads is
-  still empty: both are moved over in the later steps of M3a and in M3b.
+- Nothing in `presentation/` reads a component any more (the HUD bridge and the board read
+  `world.hud_snapshot`), but `game_root.gd` still WRITES a few: `PlayerTag.control_enabled`,
+  `PlayerCombat.sword_unlocked`, the health carry and removing `VIEW_REF`. The channel that replaces the
+  writes (`world.commands`) exists since M3a step 1 but nothing pushes on it yet; M3b moves the
+  writes over (the carry through the `PlayerSnapshot`). The skill slot is redrawn on `skill_cooldown`
+  events, as it always was, so after the sword is found it says "find sword" until the first
+  skill is used; the M4 widgets draw the snapshot every frame and end that.
 - Three shell keys (`F3`, `F11`, `B`) are raw keys, not `InputMap` actions. `InputPoller` publishes them in
   the snapshot as `debug_view_toggle`, `fullscreen_toggle` and `rule_book_toggle` so nobody else calls
   `Input`; M4 adds the actions under the same names and deletes the table (`R` is already the

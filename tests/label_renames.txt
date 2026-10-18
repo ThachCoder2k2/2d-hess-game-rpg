@@ -41,3 +41,9 @@ enemy_base.tscn owns sprites + telegraph clip -> black_pawn.tscn owns sprites + 
 # against the system files. Nothing is asserted less: the old check could pass with a wrong system in
 # the right count, the new one cannot.
 main boots the world with all six systems -> main boots the world with every system the schedule lists, in order
+
+# M3a step 2: the board overlay used to hold the EcsWorld and read the telegraph progress and the F3
+# intent paths out of EnemyAI components; presentation may not touch ecs/components (docs/game-base-plan.md
+# 13.1), so it now holds the world's HudSnapshot, which HudSnapshotSystem fills. The same wiring is
+# asserted: the overlay is bound to the booted world's grid and to the world's one source of facts.
+board overlay reads the ECS world -> board overlay draws from the ECS grid and the world's hud snapshot

@@ -2,9 +2,11 @@ class_name PrototypeBoard
 extends Node2D
 
 ## Runtime combat overlay only: telegraph danger cells, hit flashes, and the F3
-## debug view. Reads the EcsGrid (board geometry/occupancy) and the EcsWorld
-## (telegraph progress, intent paths); telegraphs and intents are keyed by
-## entity id. This node draws nothing in the editor.
+## debug view. Reads the board geometry and occupancy from the grid (duck-typed, so this script
+## names no ecs class) and every other fact about the simulation (telegraph progress, where each
+## enemy stands and what it is heading for) from the HudSnapshot; telegraphs and intents are keyed
+## by entity id. It never touches a component: presentation reads events and the snapshot
+## (docs/game-base-plan.md 13.1). This node draws nothing in the editor.
 
 @export_group("Impact Theme")
 @export var player_miss_color := Color("#d84a3a")
@@ -31,9 +33,10 @@ extends Node2D
 
 ## The board geometry/occupancy service (EcsGrid).
 var grid_world
-## The running world, for telegraph progress + intent path lookups. Optional —
-## without it telegraphs draw at zero progress and intent paths are skipped.
-var ecs: EcsWorld
+## The read-only picture of the simulation (EcsWorld.hud_snapshot), for telegraph progress and
+## the F3 intent paths. Optional: without it telegraphs draw at zero progress and intent paths
+## are skipped.
+var hud_snapshot: HudSnapshot
 ## entity id -> locked cells while that entity telegraphs.
 var telegraphs: Dictionary = {}
 var impact_cells: Array[Vector2i] = []
@@ -45,9 +48,9 @@ var enemy_intents: Dictionary = {}
 var effect_time := 0.0
 
 
-func setup(world, ecs_world: EcsWorld = null) -> void:
+func setup(world, snapshot: HudSnapshot = null) -> void:
 	grid_world = world
-	ecs = ecs_world
+	hud_snapshot = snapshot
 	queue_redraw()
 
 
@@ -101,13 +104,12 @@ func _process(delta: float) -> void:
 		queue_redraw()
 
 
+## How far through its telegraph the enemy is, 0.0 to 1.0 (0.0 for an enemy the snapshot does not brief).
 func _telegraph_progress(source_entity: int) -> float:
-	if ecs == null:
+	if hud_snapshot == null:
 		return 0.0
-	var ai: EcsComponents.EnemyAI = ecs.get_component(source_entity, EcsComponents.ENEMY_AI)
-	if ai == null or ai.state != EcsComponents.EnemyAI.STATE_TELEGRAPH:
-		return 0.0
-	return clampf(1.0 - ai.state_time_left / maxf(ai.telegraph_duration, 0.001), 0.0, 1.0)
+	var brief: HudSnapshot.EnemyBrief = hud_snapshot.enemy_brief_by_entity.get(source_entity)
+	return brief.telegraph_progress if brief != null else 0.0
 
 
 func _draw() -> void:
@@ -162,14 +164,15 @@ func _draw_debug_layer(origin: Vector2, size: int) -> void:
 	for cell in grid_world.get_item_cells():
 		_draw_debug_cell(cell, Color(debug_item_color, 0.95), 2.0)
 
-	if ecs == null:
+	if hud_snapshot == null:
 		return
 	var stale: Array = []
 	for source_entity in enemy_intents.keys():
-		if not ecs.has_component(source_entity, EcsComponents.ENEMY_AI):
+		var brief: HudSnapshot.EnemyBrief = hud_snapshot.enemy_brief_by_entity.get(source_entity)
+		if brief == null:
 			stale.append(source_entity)
 			continue
-		_draw_intent_path(source_entity, enemy_intents[source_entity])
+		_draw_intent_path(brief, enemy_intents[source_entity], source_entity)
 	for source_entity in stale:
 		enemy_intents.erase(source_entity)
 
@@ -184,16 +187,12 @@ func _draw_debug_cell(cell: Vector2i, color: Color, width: float) -> void:
 	draw_rect(rect, color, false, width)
 
 
-func _draw_intent_path(source_entity: int, intent: EnemyIntent) -> void:
-	var grid_pos: EcsComponents.GridPos = ecs.get_component(source_entity, EcsComponents.GRID_POS)
-	var ai: EcsComponents.EnemyAI = ecs.get_component(source_entity, EcsComponents.ENEMY_AI)
-	if grid_pos == null or ai == null:
-		return
-	var current_cell := grid_pos.cell
+func _draw_intent_path(brief: HudSnapshot.EnemyBrief, intent: EnemyIntent, source_entity: int) -> void:
+	var current_cell := brief.cell
 	var start: Vector2 = grid_world.cell_to_world(current_cell)
 	var color := _intent_color(intent.type)
 	if intent.type == EnemyIntent.Type.MOVE:
-		var goal: Vector2i = ai.committed_goal if grid_world.is_inside(ai.committed_goal) else intent.destination
+		var goal: Vector2i = brief.committed_goal if grid_world.is_inside(brief.committed_goal) else intent.destination
 		var route: Array[Vector2i] = grid_world.get_grid_path(source_entity, current_cell, goal)
 		var segment_start := start
 		if route.size() <= 1:

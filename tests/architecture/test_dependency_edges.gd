@@ -13,6 +13,11 @@ extends UnboundTest
 ## edge is deleted from its list instead of rotting there. A NEW unallowed edge is not
 ## in either list and fails. No agent adds an entry ad hoc (13.1).
 ##
+## One more thing 13.1 names itself: CLASS_ALLOWANCES. The presentation row of the table reads
+## "ecs/events, schema, HudSnapshot": presentation may name that one ecs/core class (the read-only
+## picture of the simulation) and no other. Those edges are allowed, not exceptions, and the list
+## is exact too (an allowance nothing uses fails the suite).
+##
 ## An edge is "file A names class B": A's code (comments and string literals removed)
 ## contains the identifier of a class_name or autoload defined in file B, or
 ## preload()/load()s B's .gd by path. A file's layer is its top folder: schema/,
@@ -45,6 +50,10 @@ const ALLOWED_TARGET_LAYERS := {
 	"authoring": ["ecs/core", "ecs/components", "schema"],
 	"presentation": ["ecs/events", "schema"],
 }
+## source layer -> classes outside its layers that 13.1 lets it name anyway.
+const CLASS_ALLOWANCES := {
+	"presentation": ["HudSnapshot"],
+}
 ## Edges 13.1 documents as exceptions: "<source file basename> -> <target class>".
 const DOCUMENTED_EXCEPTIONS: Array[String] = ["view_sync_system.gd -> ActorView"]
 ## Edges the table does not allow and nobody has decided: "<source file basename> -> <target class>".
@@ -59,11 +68,8 @@ const UNDECIDED_EDGES: Array[String] = [
 	# The pickup spawn marker instantiates the WeaponPickup view. Open: allow authoring ->
 	# presentation/views, or let the marker name a PackedScene export instead of the class.
 	"pickup_spawn_point.gd -> WeaponPickup",
-	# The board overlay reads the EcsWorld for telegraph progress and each enemy's EnemyAI
-	# component for the F3 intent paths. 13.1 says presentation never touches ecs/components.
-	# Open: feed the overlay from the HudSnapshot and events (M3a/M3b) or allow this one reader.
-	"prototype_board.gd -> EcsComponents",
-	"prototype_board.gd -> EcsWorld",
+	# (The board overlay's two edges, to EcsComponents and EcsWorld, were decided by M3a step 2: it now
+	# draws from the HudSnapshot, which 13.1 lets presentation name, and the edges are gone.)
 ]
 const SHELL_LAYER := "shell"
 
@@ -76,6 +82,10 @@ var documented_exception_lines: Array[String] = []
 var undecided_edge_lines: Array[String] = []
 ## "<file> -> <Class>" keys of the documented exceptions and undecided edges that an edge used.
 var used_exception_keys: Dictionary = {}
+## "<layer> -> <class>" keys of the class allowances that an edge used.
+var used_class_allowance_keys: Dictionary = {}
+## "from layer -> to layer" keys of the layer pairs that have at least one edge allowed by a class allowance.
+var layer_pairs_with_class_allowance: Dictionary = {}
 
 var class_name_regex := RegEx.new()
 var identifier_regex := RegEx.new()
@@ -137,6 +147,12 @@ func _init() -> void:
 			if not used_exception_keys.has(listed_key):
 				stale_entries.append(listed_key)
 		_expect(stale_entries.is_empty(), "every documented exception and undecided edge is still used by a real edge (stale, delete the line: %s)" % "; ".join(stale_entries))
+		var stale_allowances: Array[String] = []
+		for allowed_layer: String in CLASS_ALLOWANCES:
+			for allowed_class: String in CLASS_ALLOWANCES[allowed_layer]:
+				if not used_class_allowance_keys.has("%s -> %s" % [allowed_layer, allowed_class]):
+					stale_allowances.append("%s -> %s" % [allowed_layer, allowed_class])
+		_expect(stale_allowances.is_empty(), "every class 13.1 lets a layer name is named by that layer (stale, delete the line: %s)" % "; ".join(stale_allowances))
 	finish()
 
 
@@ -201,7 +217,10 @@ func _collect_edges(script_path: String, code: String, load_paths: Array) -> voi
 		if not edge_lines_by_layer_pair.has(pair_key):
 			edge_lines_by_layer_pair[pair_key] = []
 		edge_lines_by_layer_pair[pair_key].append(edge_line)
-		if not _is_allowed(own_layer, target_layer):
+		if _is_allowed_class(own_layer, symbol):
+			used_class_allowance_keys["%s -> %s" % [own_layer, symbol]] = true
+			layer_pairs_with_class_allowance[pair_key] = true
+		elif not _is_allowed(own_layer, target_layer):
 			var exception_key := "%s -> %s" % [script_path.get_file(), symbol]
 			if exception_key in DOCUMENTED_EXCEPTIONS:
 				used_exception_keys[exception_key] = true
@@ -211,6 +230,18 @@ func _collect_edges(script_path: String, code: String, load_paths: Array) -> voi
 				undecided_edge_lines.append("%s  %s  [undecided, report-only]" % [pair_key, edge_line])
 			else:
 				violation_lines.append("%s  %s" % [pair_key, edge_line])
+
+
+## True when 13.1 lets `from_layer` name this class although the class lives in a layer it may not use.
+func _is_allowed_class(from_layer: String, symbol: String) -> bool:
+	return symbol in CLASS_ALLOWANCES.get(from_layer, [])
+
+
+func _pair_has_violation(layer_pair: String) -> bool:
+	for violation_line in violation_lines:
+		if violation_line.begins_with(layer_pair + "  "):
+			return true
+	return false
 
 
 func _is_allowed(from_layer: String, to_layer: String) -> bool:
@@ -230,7 +261,11 @@ func _print_report(source_file_count: int, unmapped_files: Array[String]) -> voi
 		var edge_lines: Array = edge_lines_by_layer_pair[layer_pair]
 		var from_layer := layer_pair.get_slice(" -> ", 0)
 		var to_layer := layer_pair.get_slice(" -> ", 1)
-		print("REPORT   %-34s %3d edge(s)  %s" % [layer_pair, edge_lines.size(), "allowed by 13.1" if _is_allowed(from_layer, to_layer) else "NOT ALLOWED by 13.1 (see below)"])
+		var verdict := "allowed by 13.1"
+		if not _is_allowed(from_layer, to_layer):
+			var only_named_classes := layer_pairs_with_class_allowance.has(layer_pair) and not _pair_has_violation(layer_pair)
+			verdict = "allowed by 13.1 for the classes it names" if only_named_classes else "NOT ALLOWED by 13.1 (see below)"
+		print("REPORT   %-34s %3d edge(s)  %s" % [layer_pair, edge_lines.size(), verdict])
 	print("REPORT edges the 13.1 starting-point table does NOT allow: %d (+%d documented exception(s), +%d undecided report-only)" % [violation_lines.size(), documented_exception_lines.size(), undecided_edge_lines.size()])
 	violation_lines.sort()
 	for violation_line in violation_lines:
