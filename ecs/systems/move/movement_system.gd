@@ -20,7 +20,7 @@ func tick(delta: float) -> void:
 				world.grid.finish_move(entity_id, move.to_cell)
 				grid_pos.cell = move.to_cell
 				move.moving = false
-				world.emit_event({"type": &"step_finished", "entity": entity_id, "cell": move.to_cell})
+				world.emit_event({"type": Events.STEP_FINISHED, "entity": entity_id, "cell": move.to_cell})
 				_check_player_unlock(entity_id, move.to_cell)
 				_check_zone_exit(entity_id, move.to_cell)
 			continue
@@ -42,9 +42,9 @@ func tick(delta: float) -> void:
 			move.to_cell = destination
 			move.progress = 0.0
 			move.moving = true
-			world.emit_event({"type": &"step_started", "entity": entity_id, "cell": destination})
+			world.emit_event({"type": Events.STEP_STARTED, "entity": entity_id, "cell": destination})
 		else:
-			world.emit_event({"type": &"step_blocked", "entity": entity_id, "direction": direction})
+			world.emit_event({"type": Events.STEP_BLOCKED, "entity": entity_id, "direction": direction})
 
 
 ## One-way shortcut gates: a player pushing INTO the gate cell while moving
@@ -59,7 +59,7 @@ func _try_open_gate(entity_id: int, destination: Vector2i, direction: Vector2i) 
 		return
 	world.grid.open_gate(destination)
 	world.emit_event({
-		"type": &"gate_opened",
+		"type": Events.GATE_OPENED,
 		"entity": entity_id,
 		"gate": gate.get("id", &""),
 		"cell": destination,
@@ -76,7 +76,7 @@ func _check_zone_exit(entity_id: int, cell: Vector2i) -> void:
 		return
 	if bool(exit.get("requires_room_clear", false)) and not _room_is_clear():
 		world.emit_event({
-			"type": &"zone_exit_locked",
+			"type": Events.ZONE_EXIT_LOCKED,
 			"entity": entity_id,
 			"zone": exit.get("zone", &""),
 			"entry": exit.get("entry", &"start"),
@@ -84,7 +84,7 @@ func _check_zone_exit(entity_id: int, cell: Vector2i) -> void:
 		})
 		return
 	world.emit_event({
-		"type": &"zone_exit",
+		"type": Events.ZONE_EXIT,
 		"entity": entity_id,
 		"zone": exit.get("zone", &""),
 		"entry": exit.get("entry", &"start"),
@@ -98,7 +98,7 @@ func _check_player_unlock(entity_id: int, cell: Vector2i) -> void:
 	if unlock.is_empty():
 		return
 	world.emit_event({
-		"type": &"player_unlock",
+		"type": Events.PLAYER_UNLOCK,
 		"entity": entity_id,
 		"id": unlock.get("id", &""),
 		"message": unlock.get("message", ""),

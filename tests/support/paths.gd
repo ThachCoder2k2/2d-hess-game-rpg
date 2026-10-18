@@ -138,6 +138,21 @@ func actors_directory() -> String:
 	return _existing_directory("res://presentation/views/actors")
 
 
+## The folders whose code may emit events or queue damage: the simulation, the baker, the views and the shell.
+func event_producer_directories() -> Array[String]:
+	return [
+		_existing_directory("res://ecs"),
+		_existing_directory("res://authoring"),
+		_existing_directory("res://presentation"),
+		_existing_directory("res://shell"),
+	]
+
+
+## The one file that declares every event (and builds the damage and heal requests).
+func events_script() -> String:
+	return _existing_file("res://ecs/events/events.gd")
+
+
 ## The system scripts of the simulation, one sub-folder per area (input, decide, move, ...).
 func ecs_systems_directory() -> String:
 	return _existing_directory("res://ecs/systems")

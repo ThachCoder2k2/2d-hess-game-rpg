@@ -82,7 +82,10 @@ func add_system(system: EcsSystem) -> void:
 	systems.append(system)
 
 
+## Queues an event for presentation. In debug builds the event must match its declaration in
+## ecs/events/events.gd (declared, status EMITTED, exactly the documented keys).
 func emit_event(event: Dictionary) -> void:
+	assert(Events.problem_with(event).is_empty(), Events.problem_with(event))
 	pending_events.append(event)
 
 

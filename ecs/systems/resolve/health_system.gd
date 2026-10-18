@@ -33,7 +33,7 @@ func _apply_damage(target_id: int, amount: int, direction := Vector2i.ZERO) -> v
 	health.flash_left = 0.12
 	health.hurt_visual_time = 0.18
 	health.recoil = Vector2(direction) * 4.0
-	world.emit_event({"type": &"damaged", "entity": target_id, "amount": amount, "remaining": health.current})
+	world.emit_event({"type": Events.DAMAGED, "entity": target_id, "amount": amount, "remaining": health.current})
 	var tag: EcsComponents.PlayerTag = world.get_component(target_id, EcsComponents.PLAYER_TAG)
 	if health.current <= 0:
 		if tag != null:
@@ -45,6 +45,6 @@ func _apply_damage(target_id: int, amount: int, direction := Vector2i.ZERO) -> v
 				ai.state = EcsComponents.EnemyAI.STATE_DEFEATED
 			if world.attack_token_owner == target_id:
 				world.attack_token_owner = 0
-		world.emit_event({"type": &"defeated", "entity": target_id})
+		world.emit_event({"type": Events.DEFEATED, "entity": target_id})
 	elif tag != null:
 		health.invulnerable_left = health.invulnerability_duration

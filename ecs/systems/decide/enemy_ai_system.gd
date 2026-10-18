@@ -78,7 +78,7 @@ func _choose_action(entity_id: int, ai: EcsComponents.EnemyAI, hero_id: int) -> 
 	for candidate in intents:
 		if candidate.score > best.score:
 			best = candidate
-	world.emit_event({"type": &"intent_changed", "entity": entity_id, "intent": best})
+	world.emit_event({"type": Events.INTENT_CHANGED, "entity": entity_id, "intent": best})
 	_execute_intent(entity_id, ai, best)
 
 
@@ -237,7 +237,7 @@ func _execute_intent(entity_id: int, ai: EcsComponents.EnemyAI, intent: EnemyInt
 			ai.state = EcsComponents.EnemyAI.STATE_TELEGRAPH
 			ai.telegraph_duration = _telegraph_time(entity_id, ai)
 			ai.state_time_left = ai.telegraph_duration
-			world.emit_event({"type": &"telegraph_started", "entity": entity_id, "cells": ai.locked_attack_cells})
+			world.emit_event({"type": Events.TELEGRAPH_STARTED, "entity": entity_id, "cells": ai.locked_attack_cells})
 		EnemyIntent.Type.MOVE:
 			ai.last_move_direction = intent.direction
 			var move_intent: EcsComponents.MoveIntent = world.get_component(entity_id, EcsComponents.MOVE_INTENT)
@@ -265,7 +265,7 @@ func _execute_intent(entity_id: int, ai: EcsComponents.EnemyAI, intent: EnemyInt
 
 
 func _resolve_attack(entity_id: int, ai: EcsComponents.EnemyAI, hero_id: int) -> void:
-	world.emit_event({"type": &"telegraph_finished", "entity": entity_id})
+	world.emit_event({"type": Events.TELEGRAPH_FINISHED, "entity": entity_id})
 	var facing: EcsComponents.Facing = world.get_component(entity_id, EcsComponents.FACING)
 	var hero_pos: EcsComponents.GridPos = world.get_component(hero_id, EcsComponents.GRID_POS)
 	# Damage checks the hero's CURRENT cell against the locked cells — stepping
@@ -276,7 +276,7 @@ func _resolve_attack(entity_id: int, ai: EcsComponents.EnemyAI, hero_id: int) ->
 			"amount": _attack_damage(entity_id, ai),
 			"direction": facing.direction,
 		})
-	world.emit_event({"type": &"attack_resolved", "entity": entity_id, "cells": ai.locked_attack_cells.duplicate()})
+	world.emit_event({"type": Events.ATTACK_RESOLVED, "entity": entity_id, "cells": ai.locked_attack_cells.duplicate()})
 	ai.locked_attack_cells = []
 	if world.attack_token_owner == entity_id:
 		world.attack_token_owner = 0
@@ -296,8 +296,8 @@ func _collect_local_item(entity_id: int) -> void:
 	slot.weapon = pickup.weapon
 	world.grid.take_item(grid_pos.cell)
 	world.destroy_entity(item_id)
-	world.emit_event({"type": &"pickup_taken", "item": item_id, "cell": grid_pos.cell})
-	world.emit_event({"type": &"weapon_changed", "entity": entity_id, "weapon": slot.weapon})
+	world.emit_event({"type": Events.PICKUP_TAKEN, "item": item_id, "cell": grid_pos.cell})
+	world.emit_event({"type": Events.WEAPON_CHANGED, "entity": entity_id, "weapon": slot.weapon})
 
 
 func _weapon(entity_id: int) -> EnemyWeapon:
