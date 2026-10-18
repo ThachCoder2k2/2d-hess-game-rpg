@@ -33,6 +33,19 @@ func set_state(action: StringName, state: ActionState) -> void:
 	state_by_action[action] = state
 
 
+## Sets one action's whole state in one call and returns it. This is how a test (or a tool) injects
+## a press: `snapshot.set_action(&"move_left", true, true)` is a fresh tap of the left key.
+func set_action(action: StringName, pressed: bool, just_pressed := false, just_released := false, held_time := 0.0, timestamp_msec := -1) -> ActionState:
+	var state := ActionState.new()
+	state.pressed = pressed
+	state.just_pressed = just_pressed
+	state.just_released = just_released
+	state.held_time = held_time
+	state.timestamp_msec = timestamp_msec
+	state_by_action[action] = state
+	return state
+
+
 ## The action's state; a fresh released state for an action nobody set.
 func state_of(action: StringName) -> ActionState:
 	var state: ActionState = state_by_action.get(action)

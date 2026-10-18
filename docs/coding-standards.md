@@ -123,8 +123,10 @@ These are the rules `CLAUDE.md` makes binding, with the reasoning.
   (the command and view systems). A new system answers no unless it keeps the frozen world alive.
 - Only `ViewSyncSystem` may touch nodes. If a system seems to need a node, it needs an event
   or a component field that `ViewSyncSystem` (or the bridge) turns into the node change.
-- Do not use the `Input` singleton in a new system. `PlayerInputSystem` is the one existing
-  exception and is slated to move behind an input snapshot (`world.input_snapshot`).
+- Never use the `Input` singleton. `shell/input/input_poller.gd` is the only file that calls it
+  (`tests/architecture/test_input_only_in_poller.gd` fails on any other); it copies the controls into
+  `world.input_snapshot` once per frame, and a system reads that. To test a rule that depends on
+  the controls, inject an `InputSnapshot` (`set_action`) and tick: see `tests/ecs/test_input_snapshot.gd`.
 - Give a system a `##` header saying what it reads, what it writes and what it emits.
 - Port-then-refactor: when moving logic into a system, port the math verbatim first and
   clean up after behavior parity is proven by the tests.

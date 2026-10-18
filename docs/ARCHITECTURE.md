@@ -112,6 +112,7 @@ presentation/            HOW THE WORLD IS SHOWN: reads events, never decides
 shell/                   THE GAME AROUND THE GAME
   game_root.gd/.tscn     the one game scene and its bridge (605 lines; split in M3b)
   content/               ContentDb (the content registry, a static class) and ContentKind
+  input/input_poller.gd  InputPoller: the one reader of the Input singleton; fills world.input_snapshot once per frame
   save/world_state.gd    WorldState autoload: zone, entry, taken pickups, opened gates, read pages
 
 assets/                  shared raw art and audio not owned by one content item
@@ -185,7 +186,7 @@ exactly once.
 | # | System (stage, folder) | Reads | Writes / emits |
 |---|---|---|---|
 | 1 | `CommandSystem` (`command`, `command/`) | `world.commands`, `world.command_handler_by_type` | `world.frozen`, `world.flags`, `world.tuning`; whatever a registered handler changes; emits `flag_set`, `command_rejected`. Runs while the world is frozen |
-| 2 | `PlayerInputSystem` (`input`, `input/`) | the `Input` singleton, `PLAYER_TAG`, `PLAYER_INPUT`, `MOVE_STATE` | `MOVE_INTENT` (buffered and held-key steps), `FACING` (turn in place), `ATTACK_INTENT` |
+| 2 | `PlayerInputSystem` (`input`, `input/`) | `world.input_snapshot` (never the `Input` singleton), `PLAYER_TAG`, `PLAYER_INPUT`, `MOVE_STATE` | `MOVE_INTENT` (buffered and held-key steps), `FACING` (turn in place), `ATTACK_INTENT` |
 | 3 | `EnemyAISystem` (`decide`, `decide/`) | `ENEMY_AI`, `GRID_POS`, `FACING`, `MOVE_STATE`, the grid, the hero | `MOVE_INTENT`, `FACING`, `ENEMY_AI` state, `WEAPON_SLOT` (pickup), `damage_events`; owns the attack token; emits `intent_changed`, `telegraph_started/finished`, `attack_resolved`, `pickup_taken`, `weapon_changed` |
 | 4 | `MovementSystem` (`move`, `move/`) | `MOVE_INTENT`, `MOVE_STATE`, `GRID_POS` | reserve -> commit through the grid; `GRID_POS`, `MOVE_STATE`; emits `step_started/finished/blocked`, `gate_opened`, `zone_exit`, `zone_exit_locked`, `player_unlock` |
 | 5 | `CombatSystem` (`act`, `act/`) | `ATTACK_INTENT`, `PLAYER_COMBAT`, `GRID_POS`, `FACING` | attack lifecycle as timers; `damage_events`; emits `attack_started`, `attack_landed`, `attack_locked`, `skill_cooldown` |
@@ -235,7 +236,7 @@ behaviour and never a field to the hot file. Each is documented where it is decl
 | `frozen` | the simulation is held still (cutscene, pause) | the `freeze_requested` / `unfreeze_requested` commands |
 | `flags` | `WorldFlags`: switches (bool) and counters (int) the story and progression ask about; `to_dictionary()` for the save | the `set_flag` command, or a system that owns a counter |
 | `tuning` | `Tuning`: `telegraph_time_scale`, `enemy_pace_scale`, `input_buffer_window`, `extra_courage`; neutral by default, nothing reads them yet | the `tuning_set` command |
-| `input_snapshot` | `InputSnapshot`: per action pressed, just pressed, just released, held time, press timestamp (the shell fills it; `PlayerInputSystem` still reads the `Input` singleton until a later step of M3a) | the shell |
+| `input_snapshot` | `InputSnapshot`: per action pressed, just pressed, just released, held time, press timestamp (`InputPoller` in the shell fills it once per frame; `PlayerInputSystem` reads only it) | the shell |
 | `hud_snapshot` | `HudSnapshot`: a revision counter for now; the HUD's read-only picture arrives with `HudSnapshotSystem` | `HudSnapshotSystem` (later step) |
 | `commands`, `command_handler_by_type` | the requests from presentation, and the Callable that applies each type | `push_command()`; `register_command_handler()` |
 | `view_commands` | cosmetic instructions for the views (`Commands.play_state`) | `push_view_command()`; consumed by `ViewSyncSystem` |
@@ -477,9 +478,10 @@ ad-hoc edits:
   health carry, removing `VIEW_REF`). The channel that replaces the writes (`world.commands`) exists since
   M3a step 1 but nothing pushes on it yet, and the read-only `HudSnapshot` that replaces the reads is
   still empty: both are moved over in the later steps of M3a and in M3b.
-- `PlayerInputSystem` polls the `Input` singleton, and `game_root.gd` polls raw keys (`R`, `F3`,
-  `F11`, `B`). `world.input_snapshot` exists; the plan moves the system onto it (a later step of M3a) and the
-  keys onto `InputMap` actions (M4).
+- Three shell keys (`F3`, `F11`, `B`) are raw keys, not `InputMap` actions. `InputPoller` publishes them in
+  the snapshot as `debug_view_toggle`, `fullscreen_toggle` and `rule_book_toggle` so nobody else calls
+  `Input`; M4 adds the actions under the same names and deletes the table (`R` is already the
+  `restart_room` action).
 - `ViewSyncSystem` blinks the invulnerability tint from the wall clock.
 - `game_root.gd` (605 lines) still holds travel, death, persistence and HUD wiring together
   (the split is M3b).

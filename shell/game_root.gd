@@ -32,9 +32,8 @@ var room_ending := false
 var player_view: ActorView
 var current_zone_id: StringName = &""
 var travel_in_progress := false
-var _debug_key_was_pressed := false
-var _fullscreen_key_was_pressed := false
-var _book_key_was_pressed := false
+## The only reader of the Input singleton: copies the controls into ecs.input_snapshot once per frame.
+var input_poller := InputPoller.new()
 var _last_token_owner := 0
 
 
@@ -115,18 +114,17 @@ func _make_world() -> EcsWorld:
 
 
 func _process(delta: float) -> void:
-	if Input.is_action_just_pressed("restart_room"):
+	input_poller.poll(delta, ecs.input_snapshot)
+	var controls := ecs.input_snapshot
+	if controls.is_just_pressed(&"restart_room"):
 		get_tree().reload_current_scene()
-	if Input.is_key_pressed(KEY_F3) and not _debug_key_was_pressed:
+	if controls.is_just_pressed(&"debug_view_toggle"):
 		_set_debug_enabled(not debug_enabled)
-	_debug_key_was_pressed = Input.is_key_pressed(KEY_F3)
-	if Input.is_key_pressed(KEY_F11) and not _fullscreen_key_was_pressed:
+	if controls.is_just_pressed(&"fullscreen_toggle"):
 		var window := get_window()
 		window.mode = Window.MODE_WINDOWED if window.mode == Window.MODE_FULLSCREEN else Window.MODE_FULLSCREEN
-	_fullscreen_key_was_pressed = Input.is_key_pressed(KEY_F11)
-	if Input.is_key_pressed(KEY_B) and not _book_key_was_pressed:
+	if controls.is_just_pressed(&"rule_book_toggle"):
 		_toggle_rule_book()
-	_book_key_was_pressed = Input.is_key_pressed(KEY_B)
 
 	if not room_ending:
 		ecs.tick(delta)
