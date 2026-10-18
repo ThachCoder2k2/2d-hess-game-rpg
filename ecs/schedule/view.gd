@@ -1,8 +1,8 @@
 extends SchedulePhase
 
-## Stage 10, the end of every tick: the simulation is published. HudSnapshotSystem (M3a, a later
-## step) builds the read-only snapshot first, then ViewSyncSystem, the only system that touches
-## nodes, moves and animates the puppets from what the tick decided.
+## Stage 10, the end of every tick: the simulation is published. HudSnapshotSystem builds the
+## read-only snapshot first, so the HUD and the board draw what the tick decided, then
+## ViewSyncSystem, the only system that touches nodes, moves and animates the puppets from it.
 
 
 func phase_name() -> StringName:
@@ -11,5 +11,6 @@ func phase_name() -> StringName:
 
 func systems() -> Array[GDScript]:
 	return [
+		HudSnapshotSystem,
 		ViewSyncSystem,
 	]
