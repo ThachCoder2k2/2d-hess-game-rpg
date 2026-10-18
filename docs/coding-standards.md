@@ -103,33 +103,47 @@ These are the rules `CLAUDE.md` makes binding, with the reasoning.
 
 ### Decisions are systems
 
-- A system extends `EcsSystem` (`ecs/core/ecs_system.gd`), lives in `ecs/systems/<phase>/`
-  (`input`, `decide`, `move`, `act`, `resolve`, `view`, and the folders the plan adds), is
-  registered in `_make_world` of `shell/game_root.gd` (and mirrored in `tools/world_dumper.gd`,
-  which the deterministic dump uses), and runs once per frame in registration order. Order is
-  meaningful; do not reorder without reading the dependencies in `docs/ARCHITECTURE.md`. The
-  plan (M3a) moves the order into one file per phase, `ecs/schedule/<phase>.gd`, with a test
-  that fails if a system file is not listed.
+- A system extends `EcsSystem` (`ecs/core/ecs_system.gd`), lives in `ecs/systems/<folder>/`
+  (`command`, `input`, `decide`, `move`, `act`, `resolve`, `view`, and the folders the plan adds)
+  with `const PHASE := &"<stage>"`, and is listed with one line in the stage's file in
+  `ecs/schedule/` (`command`, `input`, `decide`, `cell_effects`, `move`, `act`, `resolve`,
+  `react`, `progress`, `view`). It runs once per frame in the order the schedule gives:
+  `shell/game_root.gd` and `tools/world_dumper.gd` both call `Schedule.populate(world)` and keep
+  no list of their own. A stage is named for when it runs, a folder for what its systems are about,
+  so they differ where the plan's order visits one folder several times. `test_schedule_order` holds
+  the whole planned order and `test_schedule_complete` fails on a system file that is not listed once.
+  Order is meaningful; do not reorder without reading the dependencies in `docs/ARCHITECTURE.md`.
 - A system reads and writes components (through `world.query`, `get_component`, ...) and the
   grid. It **never calls another system**, never reads another system's private state, and
-  never touches a node. Systems talk through components, `world.damage_events` and
-  `world.emit_event`.
+  never touches a node. Systems talk through components, `world.damage_events`,
+  `world.heal_events` and `world.emit_event`. The one indirect path is a command handler: a system
+  that owns the state a command changes registers it with `world.register_command_handler()`, and
+  `CommandSystem` calls it at the head of the tick.
+- A frozen world (`world.frozen`) ticks only the systems that answer yes to `runs_while_frozen()`
+  (the command and view systems). A new system answers no unless it keeps the frozen world alive.
 - Only `ViewSyncSystem` may touch nodes. If a system seems to need a node, it needs an event
   or a component field that `ViewSyncSystem` (or the bridge) turns into the node change.
 - Do not use the `Input` singleton in a new system. `PlayerInputSystem` is the one existing
-  exception and is slated to move behind an input snapshot.
+  exception and is slated to move behind an input snapshot (`world.input_snapshot`).
 - Give a system a `##` header saying what it reads, what it writes and what it emits.
 - Port-then-refactor: when moving logic into a system, port the math verbatim first and
   clean up after behavior parity is proven by the tests.
 
 ### Events go out, data comes through components
 
-- `world.emit_event({"type": &"name", ...})` is the only channel from the simulation to
+- `world.emit_event({"type": Events.NAME, ...})` is the only channel from the simulation to
   presentation. Presentation (the `shell/game_root.gd` bridge, HUD, board, camera, sound) reads
-  `drain_events()` once per frame. Every key in the payload is documented where the event
-  is emitted; see the table in `docs/ARCHITECTURE.md`.
-- Damage is a request: append `{target, amount, direction}` to `world.damage_events`;
-  `HealthSystem` is the only consumer.
+  `drain_events()` once per frame. Every event is declared once in `ecs/events/events.gd`: a const,
+  and a row with its status, what happened and every payload key; `emit_event` asserts in debug
+  builds that an event matches its row, and `test_events_declared` reads the code for every emitted
+  name. A new event is a const and a row inside your own banner there.
+- Damage and healing are requests: `Events.emit_damage(world, target, amount, direction, source, tags)`
+  and `Events.emit_heal(world, target, amount, source)` are the only ways to queue them, and
+  `HealthSystem` is the only consumer. `source` is the acting entity (0 for none) and travels on into
+  the `damaged` and `defeated` events.
+- The way back is `world.commands`: presentation pushes typed requests built by `ecs/events/commands.gd`
+  (`world.push_command(Commands.set_flag(...))`), and `CommandSystem` applies them at the head of the
+  next tick. A bridge never sets a flag, a freeze or a setting itself.
 - Presentation must not decide gameplay. Where the current bridge reads or writes components
   directly, that is a listed deviation in `docs/ARCHITECTURE.md`, not a pattern to copy.
 
@@ -333,6 +347,7 @@ Deliberately not used (do not add them without a real need and the owner's say):
 ## What the plan adds next
 
 `docs/game-base-plan.md` §13.3 lists conventions that M1b did not need and later milestones add:
-systems grouped by phase with the order kept as data in `ecs/schedule/` (M3a), the file-naming suffixes `*_effect.gd`, `*_handler.gd`, `*_bridge.gd` as
-those kinds appear, and `.po` text keys instead of literal strings. Those are targets, not rules
-yet; the rules above are the ones the code and the guards already hold.
+the file-naming suffixes `*_effect.gd`, `*_handler.gd`, `*_bridge.gd` as those kinds appear, and `.po`
+text keys instead of literal strings. Those are targets, not rules yet; the rules above are the
+ones the code and the guards already hold (the schedule, the declared events and commands landed
+with M3a).

@@ -147,7 +147,7 @@ may name which). The top-level folders are layers:
 
 The folders reached this shape in milestone M1b (`docs/migration-notes.md` records where every file
 went); M2 added `shell/content/` (`ContentDb`, the content registry) and `content/feel/`. The plan's tree has
-more folders than exist yet (`ecs/events/`, `ecs/schedule/`, `content/story|audio|ui|...`); they appear
+more folders than exist yet (`content/story|audio|ui|...`; `ecs/events/` and `ecs/schedule/` arrived with M3a); they appear
 with the milestones that need them.
 
 ## License

@@ -19,12 +19,15 @@ session. Read `AGENTS.md` for the full workflow, and `docs/ARCHITECTURE.md` +
 - **Where things go (the ECS map):**
   - New state → a pure-data class with a `KEY` const in its own file under
 	`ecs/components/`. `ecs_components.gd` is frozen except for edits to existing classes.
-  - New decision/behavior → a system in `ecs/systems/<phase>/` plus one line in
-	`ecs/schedule/<phase>.gd`; `test_schedule_complete` fails if a system file is
-	unlisted. (The schedule files arrive in M3a; until then the tick order is the
-	list in `shell/game_root.gd`, mirrored in `tools/world_dumper.gd`: add the
-	system to both.) ONLY `ViewSyncSystem` may touch nodes. Systems talk via
-	components and the event/damage queues, never by calling each other or presentation.
+  - New decision/behavior → a system in `ecs/systems/<phase>/` (with `const PHASE`
+	naming its stage) plus one line in `ecs/schedule/<phase>.gd`;
+	`test_schedule_complete` fails if a system file is unlisted. The tick order is data
+	there and nowhere else: `shell/game_root.gd` and `tools/world_dumper.gd` both call
+	`Schedule.populate`, so never add a system to either. ONLY `ViewSyncSystem` may
+	touch nodes. Systems talk via components and the event/damage queues, never by
+	calling each other or presentation. A new event is a const and a row in
+	`ecs/events/events.gd` (payload keys documented; `test_events_declared`); damage and
+	heals are queued only through `Events.emit_damage()` / `Events.emit_heal()`.
   - New editor-draggable component → extend `EntityComponent` in
 	`authoring/entity_components/` (Inspector data + one `apply()`; `EcsBoot` bakes
 	it at spawn; a node on an instance beats the definition; zero logic). Runtime
@@ -40,10 +43,12 @@ session. Read `AGENTS.md` for the full workflow, and `docs/ARCHITECTURE.md` +
   - The cell-to-cell slide is procedural (MovementSystem/ViewSync) — gameplay
 	timing for the reserve→commit dodge window; never keyframe it.
   - Presentation consumes `drain_events()` and the read-only `HudSnapshot`. It
-	writes the simulation only by pushing typed requests on `world.commands`,
-	never by setting components. (`HudSnapshot` and `world.commands` arrive in
-	M3a; until then presentation consumes `drain_events()` only, and the one
-	known reader of components is listed as undecided in
+	writes the simulation only by pushing typed requests on `world.commands`
+	(`world.push_command(Commands.set_flag(...))`, declared in `ecs/events/commands.gd`;
+	`CommandSystem` applies them at the head of the next tick), never by setting
+	components. (`world.commands` exists since M3a; the `HudSnapshot` arrives later in
+	M3a, and until then presentation reads `drain_events()` only, and the one known
+	reader of components is listed as undecided in
 	`tests/architecture/test_dependency_edges.gd`.)
   - Sound (three layers, one owner each): motion sounds → audio tracks inside
 	the actor's clips (keying its `AudioPlayer`, bus `SFX`); mixing →

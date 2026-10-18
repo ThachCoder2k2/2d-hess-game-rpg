@@ -511,3 +511,28 @@ June note).
   that mix git with another directory. What works: a tiny wrapper script that exports `HOME` and `exec`s Godot, `GODOT` and
   `UNBOUND_GODOT_HOME` for `tools/run_all_tests.py`, `BOOTSTRAP_HOME` and `GODOT_BIN` for the bootstrap script, plain separate `git
   clone` and `git -C <dir>` calls.
+
+## Runtime Seam Facts (M3a step 1, 2026-10-19)
+
+- `StringName` `sort()` orders by memory address, not by letters. Anything that must print in a stable order sorts
+  `String(name)` or uses an explicit list (`COMPONENT_DUMP_ORDER`); the room dumps broke once because scripts loaded in another order.
+- A failed `assert` in a headless debug run prints `SCRIPT ERROR: Assertion failed: <message>` and the function returns at
+  once. The runner fails any suite that prints a `SCRIPT ERROR`, so `EcsWorld.emit_event`'s assert on a bad event stops the
+  first test that emits it (and costs nothing in an exported build, where asserts are removed).
+- A ternary such as `weapon.tags if weapon != null else []` is an untyped `Array`: returning it from a function declared
+  `-> Array[StringName]` is a runtime `SCRIPT ERROR`, only on the path that takes the `[]`. Build a typed array and `assign()`.
+- `a == b as T` parses as `(a == b) as T`; compare against a typed local instead.
+- A script's constants are read with `script.get_script_constant_map()` and its `class_name` with `script.get_global_name()`;
+  `get_property_list()` entries with `PROPERTY_USAGE_SCRIPT_VARIABLE` are exactly the variables a script declares (the engine's
+  own `script` property is not among them), which is how `tuning_set` knows its keys.
+- The schedule's stage names are not the system folders: the plan's order visits `world/` three times. A system's `PHASE` const
+  names its stage; its folder says what it is about.
+- A command handler is a `Callable(command: Dictionary) -> String` returning `""` when it applied the command or the reason it
+  refused; one that returns anything else is reported as a bug. Handlers are registered in `setup()`, so a test world that lacks a
+  system lacks its handlers and the request is dropped with `command_rejected`.
+- `world.commands` and `world.view_commands` are drained with `duplicate()` then `clear()`, never by swapping in a new array, so a
+  caller that kept the array keeps a live queue. (`damage_events` still swaps; nothing holds it.)
+- `ViewSyncSystem` can only play an animation state on a view that has an `AnimationTree`; a bare view or one without the state is
+  refused with `command_rejected`. `bow` and `hesitate` have no clips yet (only `wake` exists), which is the owner's art work.
+- The trailer on every commit of this branch is `Co-Authored-By: Claude Sonnet 5.5` (the session's attribution), not the
+  `Opus 5.5` line the task text named, as in M2.

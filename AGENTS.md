@@ -69,10 +69,15 @@ layer may name which (`tests/architecture/test_dependency_edges.gd` enforces it)
   `content/_placeholders.json` lists which art and audio are still stand-ins.
 - `schema/` — Resource classes (`EnemyDefinition`, `MovementConfig`, `AttackPattern`, ...), one
   class per file, no behaviour beyond `validate()`-style checks.
-- `ecs/` — the simulation: `core/` (`EcsWorld`, `EcsGrid`, `EcsSystem`), `components/`
-  (`ecs_components.gd`, frozen), `systems/<phase>/`. No art, prose or tuning numbers.
+- `ecs/` — the simulation: `core/` (`EcsWorld`, `EcsGrid`, `EcsSystem`, `WorldFlags`,
+  `InputSnapshot`, `HudSnapshot`), `components/` (`ecs_components.gd`, frozen; every new component
+  its own file, such as `tuning.gd`), `systems/<folder>/`, `events/` (`events.gd` declares every
+  event, `commands.gd` every request presentation may push) and `schedule/` (one file per stage of
+  the tick plus `schedule.gd`: the order the systems run in is data there and nowhere else). No art,
+  prose or tuning numbers.
 - `authoring/` — things dragged into a scene: `entity_components/` (`EntityComponent` nodes),
-  `markers/`, `room_encounter`, and the baker (`ecs_boot.gd`, `ecs_actor_factory.gd`). No logic.
+  `markers/`, `room_encounter`, and the baker (`ecs_boot.gd` with its `EcsBootOptions`,
+  `ecs_actor_factory.gd`). No logic.
 - `presentation/` — how the world is shown: `views/` (`ActorView`, pickup views, and
   `views/actors/`: `actor_view_base.tscn`, the one actor view, plus the thin scenes inheriting it), `ui/hud/`, `ui/codex/`, `board/`, `camera/`, `audio/`. Reads events;
   never decides.
@@ -84,9 +89,9 @@ layer may name which (`tests/architecture/test_dependency_edges.gd` enforces it)
 
 Do not move authored room layout or gameplay placement into scripts. Do not move or rename a
 file by hand: `tools/move_res.py` does it with the sidecars and every `res://` string
-(`tools/README.md`). The rest of the plan's tree (`ecs/events/`, `ecs/schedule/`,
-`content/story|audio|ui|...` and the rest of `content/feel/`) appears with the milestones that need it
-(`shell/content/` and `content/feel/piece_sizes.tres` came with M2).
+(`tools/README.md`). The rest of the plan's tree (`content/story|audio|ui|...` and the rest of
+`content/feel/`) appears with the milestones that need it (`shell/content/` and
+`content/feel/piece_sizes.tres` came with M2; `ecs/events/` and `ecs/schedule/` with M3a).
 
 ## Current Priority
 

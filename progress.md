@@ -1270,3 +1270,55 @@ ten commits (the last is this record), the strict runner green after each.
 - **Verification.** `python3 tools/run_all_tests.py --strict`: 35 suites, 0 failed, 0 warnings, GREEN, baseline labels 235 of 235
   (9 through `label_renames.txt`); `--self-test` and `move_res.py --self-test` 0 failures; `stamp_uids.gd -- --check` CLEAN;
   `git diff --check` clean. Tag `m2-done` moved to the last commit of this branch.
+
+## M3a step 1 - the runtime seams: schedule, events, commands, world fields - 2026-10-19
+
+Branch `base/m3a-1` (from `game-base`), seven code commits and this record, the strict runner green after each. M3a is "L"
+in the plan and is built in three steps; this is the first. Nothing the player can feel changed.
+
+- **The schedule.** `ecs/schedule/` holds one file per stage (`command`, `input`, `decide`, `cell_effects`, `move`, `act`,
+  `resolve`, `react`, `progress`, `view`; `SchedulePhase` is their base) and `schedule.gd` (`Schedule.populate(world)`,
+  `system_scripts()`, `build_systems()`). The plan names phases after folders, but its own order (13.4) visits the `world` folder
+  three times, so a stage is named for when it runs and each system carries `const PHASE` naming its stage. `game_root.gd` and
+  `tools/world_dumper.gd` lost their copies of the list. `test_schedule_order` holds the whole planned order (18 systems, the
+  ones that exist and the ones later milestones add) and proves its own check can fail; `test_schedule_complete` fails on an
+  unlisted, doubly listed or misfiled `*_system.gd`, and on a list reappearing in `game_root` or the dumper.
+- **Events.** `ecs/events/events.gd`: a const per event, a row per event (status, what happened, every payload key with its
+  type and meaning) in banner tables, so lanes append inside their own. The 19 types the plan counted are `emitted`; the 27 the
+  plan adds are reserved as `future`; `healed`, `flag_set` and `command_rejected` are new and emitted. `EcsWorld.emit_event`
+  asserts the declaration in debug builds (a bad emit is a `SCRIPT ERROR`, which the runner fails); producers say
+  `Events.STEP_STARTED`. `test_events_declared` reads the code for every emitted name, both ways.
+- **Damage and heals.** `Events.emit_damage(world, target, amount, direction, source, tags)` is the only way to queue damage;
+  `CombatSystem` (source: the player) and `EnemyAISystem` (source: the enemy; tags: the held weapon's tags, empty for an unarmed
+  pattern) call it, and so do the tests that used to build the dictionary by hand. `HealthSystem` carries `source`, `tags` and
+  `direction` into `damaged` and `source`, `tags` into `defeated` (what R8, R10 and R14 read). `Events.emit_heal` and
+  `world.heal_events` are served by `HealthSystem` after the damage of the same tick, clamped to the maximum, never reviving.
+  `test_emit_damage`, `test_heal_queue`.
+- **The world's fields.** All eight in one commit: `frozen`, `flags` (`WorldFlags`), `tuning` (`Tuning`, neutral defaults,
+  nothing reads it yet), `input_snapshot` (`InputSnapshot`), `hud_snapshot` (`HudSnapshot`, a revision counter for now),
+  `commands` (+ `command_handler_by_type`), `view_commands`, `heal_events`. `EcsSystem.runs_while_frozen()` (false by default);
+  a frozen world ticks only `CommandSystem` and `ViewSyncSystem`, checked before each system. `test_world_fields`,
+  `test_frozen_world` (nine of its checks fail if the freeze check is removed).
+- **Commands.** `ecs/events/commands.gd` declares the requests like events.gd declares events. `CommandSystem` (first in the
+  schedule, runs while frozen) drains `world.commands` in push order, validates each against its row, calls the handler
+  registered for its type and emits `command_rejected` with the reason for anything malformed, unhandled or refused. Four
+  requests are handled (`freeze_requested`, `unfreeze_requested`, `set_flag`, `tuning_set`); `actor_command` (M6) and
+  `equip_page` (M7c) are reserved. A system that owns the state a command changes registers its handler with
+  `world.register_command_handler()`, so a lane adds a command without editing `CommandSystem`. `ViewSyncSystem` plays
+  `world.view_commands` (`play_state` travels the actor's graph; it works while frozen). `test_commands_channel`,
+  `test_view_commands`.
+- **The pins.** `systems.size() == 6` (`encounter_hud_runtime_test`, `test_bridge_travel`) now asks the live world for exactly
+  the schedule's list in its order; its baseline label is renamed in `label_renames.txt`. The `EcsBoot` call sites the plan
+  names (and the other ten) moved to `EcsBoot.boot(world, EcsBootOptions)`; `test_boot_options`.
+- **One dump-tool fix.** The first run of the dump baselines after the schedule went in failed in all six rooms: the
+  dumper printed an entity's components `sort()`ed by StringName, which sorts by memory address, so loading scripts in a
+  different order (the schedule does) moved lines with nothing changed. The order the M1a baselines recorded is now an explicit
+  list, `COMPONENT_DUMP_ORDER` in `tools/world_dumper.gd`; no baseline line changed.
+- **Verification.** `python3 tools/run_all_tests.py --strict`: 45 suites (35 at the end of M2), 0 failed, 0 warnings, GREEN, baseline labels 235 of 235
+  (10 through `label_renames.txt`); `--self-test` and `move_res.py --self-test` 0 failures; `stamp_uids.gd -- --check` CLEAN;
+  import pass clean; `git diff --check` clean. The six room dumps equal their baselines byte for byte.
+- **Not done in this step (the rest of M3a).** `InputPoller` and `PlayerInputSystem` reading only the snapshot; the grid
+  (`cell_kind_by_cell`, the TileSet `kind` layer and paint-tool support, `begin_leap`, `ray_cells`, `layout_version` with a cached
+  `AStarGrid2D`, the bounded attack-setup search, per-room centred `grid_origin`); the `CameraRig` clamp; `PlayerSnapshot`;
+  `HudSnapshot` fields and `HudSnapshotSystem`; `tests/perf/test_room_tick_budget.gd`. Nothing pushes on `world.commands` or
+  `view_commands` yet, and the bridge still reads components directly (the listed deviation).

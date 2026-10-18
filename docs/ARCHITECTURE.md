@@ -1,8 +1,9 @@
 # Architecture
 
 The Unbound Pawn — a 2D top-down grid-combat RPG in Godot 4.6.3. This document
-describes the code **as it is built today** (checked against the tree on 2026-10-13, at
-the end of milestone M2, the content registry and the actor collapse). The simulation is a full ECS; the
+describes the code **as it is built today** (checked against the tree on 2026-10-19, after
+step 1 of milestone M3a, the runtime seams: the schedule, the declared events, the commands
+channel and the world's shared fields; the milestone's other steps are still to come). The simulation is a full ECS; the
 node-composition architecture that older docs described (`GridWorld`, `FreeEnemy`,
 `PawnHero`, `EnemyActor`, `EncounterDirector`, per-actor component nodes) was deleted in
 the ECS conversion (`docs/ecs-conversion-plan.md`, owner decision 2026-07-19). The folders
@@ -35,15 +36,21 @@ camera shake, sound and zone travel. Tuning lives in `.tres` Resources under `co
 | Entity | an `int` from `EcsWorld.create_entity()` | no behaviour, no node |
 | Component | an inner class of `ecs/components/ecs_components.gd` (`EcsComponents.Health`, ...) plus a `StringName` key const (`EcsComponents.HEALTH`) | pure data; no decisions. The file is frozen except for edits to existing classes: a new component is its own file in `ecs/components/` with a `KEY` const |
 | Store | `EcsWorld.store_by_component`: component key -> `{entity id -> component}` | access only through `add_component` / `get_component` / `has_component` / `remove_component` / `query` |
-| System | a class extending `EcsSystem` in `ecs/systems/<phase>/` | reads and writes components, never calls another system, never touches a node (except `ViewSyncSystem`) |
-| World | `EcsWorld` (a `Node`) in `ecs/core/` | owns the stores, the systems list, the grid, the event and damage queues, and the attack token |
-| Events | `EcsWorld.emit_event({"type": &"...", ...})`, read once per frame with `drain_events()` | the only channel from simulation to presentation |
-| Damage queue | `EcsWorld.damage_events`: `[{target, amount, direction}]` | written by `CombatSystem` and `EnemyAISystem`, drained only by `HealthSystem` |
+| System | a class extending `EcsSystem` in `ecs/systems/<folder>/`, with `const PHASE` naming its stage | reads and writes components, never calls another system, never touches a node (except `ViewSyncSystem`) |
+| Schedule | `ecs/schedule/`: one file per stage plus `schedule.gd` (`Schedule.populate(world)`) | the order the systems tick in; data, and the only list of it |
+| World | `EcsWorld` (a `Node`) in `ecs/core/` | owns the stores, the systems list, the grid, the queues and records listed in "The world's shared fields" below, and the attack token |
+| Events | `EcsWorld.emit_event({"type": Events.NAME, ...})`, read once per frame with `drain_events()`; declared in `ecs/events/events.gd` | the only channel from simulation to presentation |
+| Commands | `EcsWorld.push_command(Commands.x(...))`, declared in `ecs/events/commands.gd`, applied by `CommandSystem` at the head of the next tick | the only channel from presentation and settings into the simulation |
+| Damage and heal queues | `EcsWorld.damage_events`: `[{target, source, amount, direction, tags}]`, `EcsWorld.heal_events`: `[{target, source, amount}]` | built only by `Events.emit_damage()` and `Events.emit_heal()` (from `CombatSystem` and `EnemyAISystem`, later checkpoints), drained only by `HealthSystem` |
 | Spatial index | `EcsWorld.grid` (`EcsGrid`) in `ecs/core/` | cell occupancy, blocks, move reservations, A*, doors, gates, floor items |
 
-`EcsWorld.tick(delta)` calls every system in registration order. `game_root.gd` sets
-`manual_tick = true` and ticks the world from its own `_process`, so a room that has
-ended (`room_ending`) simply stops ticking. Tests also drive `tick(delta)` by hand.
+`EcsWorld.tick(delta)` calls every system in registration order, and `Schedule.populate(world)` registers
+them in the order of `ecs/schedule/`. A frozen world (`frozen`) ticks only the systems whose
+`runs_while_frozen()` is true: `CommandSystem`, so a freeze can be lifted, and `ViewSyncSystem`, so the
+picture keeps being drawn; the check is made before each system, so a freeze applied at the head of a
+tick stops the rest of that tick. `game_root.gd` sets `manual_tick = true` and ticks the world from its
+own `_process`, so a room that has ended (`room_ending`) simply stops ticking. Tests also drive
+`tick(delta)` by hand.
 
 ## Folder structure (what exists today)
 
@@ -78,13 +85,16 @@ schema/                  THE SHAPE OF CONTENT: one Resource class per file
   feel/                  DifficultyProfile, PieceSizeTable, PieceSize
 
 ecs/                     THE SIMULATION: rules only; no art, prose or tuning numbers
-  core/                  EcsWorld, EcsGrid, EcsSystem
-  components/            ecs_components.gd (frozen)
-  systems/<phase>/       input/PlayerInputSystem  decide/EnemyAISystem  move/MovementSystem
-                         act/CombatSystem  resolve/HealthSystem  view/ViewSyncSystem
+  core/                  EcsWorld, EcsGrid, EcsSystem, WorldFlags, InputSnapshot, HudSnapshot
+  components/            ecs_components.gd (frozen); tuning.gd (Tuning), and every new component in its own file
+  systems/<folder>/      command/CommandSystem  input/PlayerInputSystem  decide/EnemyAISystem
+                         move/MovementSystem  act/CombatSystem  resolve/HealthSystem  view/ViewSyncSystem
+  events/                events.gd (every event, its payload, emit_damage/emit_heal), commands.gd (every request)
+  schedule/              one file per stage of the tick + schedule.gd (the order is data here)
 
 authoring/               THINGS YOU DRAG INTO A SCENE: Inspector data + apply(); no logic
-  ecs_boot.gd            the baker: reads a room scene, builds the world (EcsBoot)
+  ecs_boot.gd            the baker: reads a room scene, builds the world (EcsBoot.boot(world, EcsBootOptions))
+  ecs_boot_options.gd    everything boot() needs besides the world, as named fields (EcsBootOptions)
   ecs_actor_factory.gd   builds actor entities from definitions (EcsActorFactory)
   entity_components/     EntityComponent nodes (Combat, Health, Input, Movement, AI, Weapon)
   markers/               zone entry/exit, gate, player unlock, pickup spawn, blocker (+ their scenes)
@@ -115,7 +125,7 @@ tests/                   run_tests.gd + six runtime tests + architecture/ audio/
 docs/                    this file, coding-standards.md, OWNER_GUIDE.md, plans, design/, archive/
 ```
 
-Not built yet (the plan's later milestones): `ecs/events/`, `ecs/schedule/`, `schema/skills`,
+Not built yet (the plan's later milestones): `schema/skills`,
 `schema/progression`, `schema/story`, `schema/audio`,
 `shell/title|pause|settings|credits`, `presentation/story|vfx|bridges`, `content/story|audio|ui|bosses|props|progression` and the rest of `content/feel`,
 `authoring/markers/` beyond today's.
@@ -147,8 +157,8 @@ allowed-edge table is not frozen until the owner decides them (`docs/migration-n
 shell/game_root.tscn  ->  Main (shell/game_root.gd)
   _ready()      reads WorldState (which zone, which entry), swaps the zone node if the
                 run was saved elsewhere, then calls _boot_zone(entry_id)
-  _boot_zone()  1. _make_world(): new EcsWorld + the six systems (order below)
-                2. EcsBoot.boot(world, player_view, room_root, ...) -> the "cast"
+  _boot_zone()  1. _make_world(): new EcsWorld + Schedule.populate (the systems, order below)
+                2. EcsBoot.boot(world, EcsBootOptions) -> the "cast"
                 3. reapply persistence (taken pickups, opened gates, unlocks, health carry)
                 4. board.setup(grid, world), camera_rig.setup(grid), HUD setup
   _process()    ecs.tick(delta)  ->  _handle_events(ecs.drain_events())  ->  HUD refresh
@@ -160,20 +170,27 @@ swaps the zone scene node, **rebuilds the whole `EcsWorld`**, and fades in. No e
 survives. What carries over is the player view node, `WorldState` (including the carried
 health), and the HUD, board and camera nodes, which are re-bound by `setup()`.
 
-### System order (the schedule, set in `Main._make_world`)
+### System order (the schedule, `ecs/schedule/`)
 
-The order is the list in `shell/game_root.gd`, mirrored by `tools/world_dumper.gd` (the
-deterministic dump). The plan (M3a) turns it into data: one file per phase in
-`ecs/schedule/`. The phase folders under `ecs/systems/` already exist.
+The order is data: one file per stage in `ecs/schedule/` (`command`, `input`, `decide`, `cell_effects`,
+`move`, `act`, `resolve`, `react`, `progress`, `view`) and `Schedule.populate(world)`, which both
+`shell/game_root.gd` and `tools/world_dumper.gd` call. A system file carries `const PHASE` naming the
+stage that lists it. A stage is named for when it runs and a folder for what its systems are about, so
+they differ where the plan's order (`docs/game-base-plan.md` 13.4) visits one folder several times; the
+empty stages (`cell_effects`, `react`, `progress`) wait for the milestones that fill them.
+`tests/ecs/test_schedule_order.gd` holds the whole planned order, including systems that do not exist
+yet, and `tests/architecture/test_schedule_complete.gd` fails on a system file that is not listed
+exactly once.
 
-| # | System (phase folder) | Reads | Writes / emits |
+| # | System (stage, folder) | Reads | Writes / emits |
 |---|---|---|---|
-| 1 | `PlayerInputSystem` (`input/`) | the `Input` singleton, `PLAYER_TAG`, `PLAYER_INPUT`, `MOVE_STATE` | `MOVE_INTENT` (buffered and held-key steps), `FACING` (turn in place), `ATTACK_INTENT` |
-| 2 | `EnemyAISystem` (`decide/`) | `ENEMY_AI`, `GRID_POS`, `FACING`, `MOVE_STATE`, the grid, the hero | `MOVE_INTENT`, `FACING`, `ENEMY_AI` state, `WEAPON_SLOT` (pickup), `damage_events`; owns the attack token; emits `intent_changed`, `telegraph_started/finished`, `attack_resolved`, `pickup_taken`, `weapon_changed` |
-| 3 | `MovementSystem` (`move/`) | `MOVE_INTENT`, `MOVE_STATE`, `GRID_POS` | reserve -> commit through the grid; `GRID_POS`, `MOVE_STATE`; emits `step_started/finished/blocked`, `gate_opened`, `zone_exit`, `zone_exit_locked`, `player_unlock` |
-| 4 | `CombatSystem` (`act/`) | `ATTACK_INTENT`, `PLAYER_COMBAT`, `GRID_POS`, `FACING` | attack lifecycle as timers; `damage_events`; emits `attack_started`, `attack_landed`, `attack_locked`, `skill_cooldown` |
-| 5 | `HealthSystem` (`resolve/`) | `damage_events` | `HEALTH`; defeat (disables player control, or unregisters an enemy and frees the token); emits `damaged`, `defeated` |
-| 6 | `ViewSyncSystem` (`view/`) | almost everything, read-only | the **only** node writes: position, depth (`z_index = 2 + row`), tint, aura, facing arrow, weapon, health pips, `AnimationTree` conditions and `travel()` |
+| 1 | `CommandSystem` (`command`, `command/`) | `world.commands`, `world.command_handler_by_type` | `world.frozen`, `world.flags`, `world.tuning`; whatever a registered handler changes; emits `flag_set`, `command_rejected`. Runs while the world is frozen |
+| 2 | `PlayerInputSystem` (`input`, `input/`) | the `Input` singleton, `PLAYER_TAG`, `PLAYER_INPUT`, `MOVE_STATE` | `MOVE_INTENT` (buffered and held-key steps), `FACING` (turn in place), `ATTACK_INTENT` |
+| 3 | `EnemyAISystem` (`decide`, `decide/`) | `ENEMY_AI`, `GRID_POS`, `FACING`, `MOVE_STATE`, the grid, the hero | `MOVE_INTENT`, `FACING`, `ENEMY_AI` state, `WEAPON_SLOT` (pickup), `damage_events`; owns the attack token; emits `intent_changed`, `telegraph_started/finished`, `attack_resolved`, `pickup_taken`, `weapon_changed` |
+| 4 | `MovementSystem` (`move`, `move/`) | `MOVE_INTENT`, `MOVE_STATE`, `GRID_POS` | reserve -> commit through the grid; `GRID_POS`, `MOVE_STATE`; emits `step_started/finished/blocked`, `gate_opened`, `zone_exit`, `zone_exit_locked`, `player_unlock` |
+| 5 | `CombatSystem` (`act`, `act/`) | `ATTACK_INTENT`, `PLAYER_COMBAT`, `GRID_POS`, `FACING` | attack lifecycle as timers; `damage_events`; emits `attack_started`, `attack_landed`, `attack_locked`, `skill_cooldown` |
+| 6 | `HealthSystem` (`resolve`, `resolve/`) | `damage_events`, `heal_events` | `HEALTH`; defeat (disables player control, or unregisters an enemy and frees the token); emits `damaged`, `defeated`, `healed` |
+| 7 | `ViewSyncSystem` (`view`, `view/`) | almost everything, read-only; `view_commands`. Runs while the world is frozen | the **only** node writes: position, depth (`z_index = 2 + row`), tint, aura, facing arrow, weapon, health pips, `AnimationTree` conditions and `travel()` |
 
 Enemy AI is a utility scorer (`EnemyIntent`: attack, move, pickup, turn, wait) driving a
 state machine (`STATE_OBSERVE -> TELEGRAPH -> RECOVER -> OBSERVE`, plus `DEFEATED`;
@@ -205,7 +222,27 @@ inside its `aggro_radius` (the leash).
 
 `ecs_components.gd` is one file of inner classes (135 lines) and is frozen except for edits
 to existing classes. New state means a new file in `ecs/components/` with a `KEY` const (see
-`docs/coding-standards.md`).
+`docs/coding-standards.md`); the first such file is `tuning.gd` (`Tuning`, the assist knobs, held by the
+world as `EcsWorld.tuning`).
+
+## The world's shared fields (`EcsWorld`)
+
+Every field a later milestone needs landed in one commit of M3a (plan 14.5), so later work adds
+behaviour and never a field to the hot file. Each is documented where it is declared.
+
+| Field | Holds | Changed by |
+|---|---|---|
+| `frozen` | the simulation is held still (cutscene, pause) | the `freeze_requested` / `unfreeze_requested` commands |
+| `flags` | `WorldFlags`: switches (bool) and counters (int) the story and progression ask about; `to_dictionary()` for the save | the `set_flag` command, or a system that owns a counter |
+| `tuning` | `Tuning`: `telegraph_time_scale`, `enemy_pace_scale`, `input_buffer_window`, `extra_courage`; neutral by default, nothing reads them yet | the `tuning_set` command |
+| `input_snapshot` | `InputSnapshot`: per action pressed, just pressed, just released, held time, press timestamp (the shell fills it; `PlayerInputSystem` still reads the `Input` singleton until a later step of M3a) | the shell |
+| `hud_snapshot` | `HudSnapshot`: a revision counter for now; the HUD's read-only picture arrives with `HudSnapshotSystem` | `HudSnapshotSystem` (later step) |
+| `commands`, `command_handler_by_type` | the requests from presentation, and the Callable that applies each type | `push_command()`; `register_command_handler()` |
+| `view_commands` | cosmetic instructions for the views (`Commands.play_state`) | `push_view_command()`; consumed by `ViewSyncSystem` |
+| `heal_events` | heal requests `{target, source, amount}` | `Events.emit_heal()`; consumed by `HealthSystem` |
+
+`flags` is a fresh object for every world, and the shell rebuilds the world for every room, so what must
+outlive a room (flags, the player's carry) is carried by the shell and the save in M3b.
 
 ## The grid (`EcsGrid`)
 
@@ -230,7 +267,7 @@ dictionaries are all documented in the file:
 | Actor scenes | `presentation/views/actors/` | **One actor view**: `actor_view_base.tscn` holds the nodes, every clip and the one animation graph; `player.tscn`, `black_pawn.tscn`, `knight_enemy.tscn` and `bishop_enemy.tscn` inherit it and say only what is theirs (13 to 20 lines each; `test_one_actor_view` holds that). A new enemy needs no scene: instance the base and set `definition`. |
 | `PieceSizeTable` | `schema/feel/piece_size_table.gd` (+ `piece_size.gd`), `content/feel/piece_sizes.tres` | the owner's rule that a piece is smaller than its cell, as data: per kind a body box, a base line (px below the cell centre) and a footprint in cells; `validate()` holds the margin and the chess heights; `body_top_left()` is the one placement formula. |
 | `EntityComponent` nodes | `authoring/entity_components/` | Inspector-draggable children of an `ActorView`; `EcsBoot` calls `apply(world, entity_id)` at spawn. Six exist: `CombatComponent`, `HealthComponent`, `InputComponent`, `MovementComponent` (overrides of the player's `PlayerDefinition`; the player scene carries none, so `content/player/player.tres` is the only source) and `AIComponent`/`WeaponComponent` (per-instance enemy overrides). A node on an instance beats the definition, field by field. Zero logic. |
-| `EcsBoot` | `authoring/ecs_boot.gd` | static `boot(...)`: sizes the grid from `RoomEncounter.board_size`, bakes solid tiles, `ZoneExitMarker`, `PlayerUnlockMarker` and `GateMarker`; spawns the player from the view's `PlayerDefinition` (class defaults when it names none) and applies its `EntityComponent` nodes, then every `ActorView` child of the room that has a `definition`, then pickups. Returns the cast dictionary (`player`, `enemies`, `view_by_entity`, `piece_name_by_entity`, pickup maps). |
+| `EcsBoot` | `authoring/ecs_boot.gd` | static `boot(world, options)`, where `options` is an `EcsBootOptions` (`authoring/ecs_boot_options.gd`: `player_view`, `room_root`, `fallback_player_cell`, `skipped_pickup_names`, `opened_gate_ids`; a new need is a new field, never a new argument; `EcsBootOptions.for_scene(hero, room)` is the common case): sizes the grid from `RoomEncounter.board_size`, bakes solid tiles, `ZoneExitMarker`, `PlayerUnlockMarker` and `GateMarker`; spawns the player from the view's `PlayerDefinition` (class defaults when it names none) and applies its `EntityComponent` nodes, then every `ActorView` child of the room that has a `definition`, then pickups. Returns the cast dictionary (`player`, `enemies`, `view_by_entity`, `piece_name_by_entity`, pickup maps). |
 | `EcsActorFactory` | `authoring/ecs_actor_factory.gd` | `spawn_player` (bare hero, kept), `spawn_player_from_definition` (what `EcsBoot` calls), `spawn_enemy`, `spawn_pickup`: assemble an entity's components from the `.tres` data and apply the difficulty multipliers. |
 | `ContentDb` | `shell/content/content_db.gd` (+ `content_kind.gd`) | the content registry, a static class (no autoload, so it works inside a suite's `_init()`). Ids are folder names under `content/<kind>/`, listed lazily once per kind. `ids(kind)`, `fetch(kind, id)`, `all(kind)`, `player()`, `world()`, `piece_sizes()`, `validate()`, `validate_cross_refs()`. Ten kinds registered (one line each in `_ensure_kinds()`). Only the shell may name it; tests and tools call the two validators, nothing calls them at game start. |
 | `RoomEncounter` | `authoring/room_encounter.gd` | a room scene root: `board_size`, `zone_id`, prose, and a `RoomObjective`. It carries data only. |
@@ -341,9 +378,18 @@ are the shared helpers of the last two.
 
 ## The event contract
 
-19 event types exist. `game_root.gd` `_handle_events` matches 15 of them; the other four
-(`step_started`, `step_finished`, `step_blocked`, `attack_started`) are emitted for tests
-and future presentation.
+`ecs/events/events.gd` declares every event once: a const for its name, and a row with its status
+(`emitted` or `future`), what happened and every payload key with its type and meaning. That file is the
+contract and this section only summarises it. `EcsWorld.emit_event()` asserts in debug builds that an event
+is declared, is `emitted` and carries exactly the documented keys, and
+`tests/architecture/test_events_declared.gd` reads the code for every emitted name (an emitted event must be
+declared, a declared `emitted` one must be emitted, and a `future` one must not be). The 27 events the plan adds
+later are reserved by name as `future` and gain their payload when their milestone starts emitting them.
+
+22 types are emitted today (the 19 the plan counted when M3a began, plus `healed`, `flag_set` and
+`command_rejected`). `game_root.gd` `_handle_events` matches 15 of them; the others (`step_started`,
+`step_finished`, `step_blocked`, `attack_started`, and the three new ones) are emitted for tests and future
+presentation.
 
 | Event | Payload keys | Handled by |
 |---|---|---|
@@ -356,14 +402,27 @@ and future presentation.
 | `telegraph_started` / `telegraph_finished` | `entity` (+ `cells`) | board overlay |
 | `attack_resolved` | `entity`, `cells` | board overlay |
 | `intent_changed` | `entity`, `intent` | board debug paths |
-| `damaged` | `entity`, `amount`, `remaining` | bridge: shake, HUD courage, damage flash |
-| `defeated` | `entity` | bridge: despawn timer, room completion, player death/reload |
+| `damaged` | `entity`, `amount`, `remaining`, `direction`, `source`, `tags` | bridge: shake, HUD courage, damage flash |
+| `defeated` | `entity`, `source`, `tags` | bridge: despawn timer, room completion, player death/reload |
+| `healed` | `entity`, `amount`, `remaining`, `source` | — |
 | `pickup_taken` | `item`, `cell` | bridge: `WorldState`, pickup sound, free the pickup view |
 | `weapon_changed` | `entity`, `weapon` | bridge: status text |
 | `player_unlock` | `entity`, `id`, `message` | bridge: `WorldState`, unlock the sword |
 | `gate_opened` | `entity`, `gate`, `cell` | bridge: `WorldState`, hide the gate visual |
 | `zone_exit` | `entity`, `zone`, `entry` | bridge: zone travel |
 | `zone_exit_locked` | `entity`, `zone`, `entry`, `cell` | bridge: locked-door message |
+| `flag_set` | `flag`, `value` | — |
+| `command_rejected` | `command`, `reason` | — |
+
+Damage carries who dealt it: `Events.emit_damage(world, target, amount, direction, source, tags)` is the only
+way to queue a request, `source` is the attacking entity (0 for none) and `tags` the attack's own tags (an armed
+enemy's weapon tags; empty for the player's attacks and unarmed patterns until the attack framework of M8a).
+`HealthSystem` passes both on, which is what the death frame (R8) and the player-kill check (R14) read.
+
+The way back into the simulation is the same kind of contract: `ecs/events/commands.gd` declares each request
+(`freeze_requested`, `unfreeze_requested`, `set_flag`, `tuning_set` handled today; `actor_command` and
+`equip_page` reserved) and the cosmetic `play_state` view command; `CommandSystem` drains `world.commands` first
+in every tick and drops a request that is malformed, unhandled or refused with a `command_rejected` event.
 
 ## Presentation and the bridge
 
@@ -415,10 +474,12 @@ ad-hoc edits:
 
 - The bridge and `PrototypeBoard` read components directly (`ecs.get_component(...)`), and
   `game_root.gd` writes a few (`PlayerTag.control_enabled`, `PlayerCombat.sword_unlocked`, the
-  health carry, removing `VIEW_REF`). The plan replaces this with a `world.commands` request
-  queue and a read-only `HudSnapshot` (M3a).
+  health carry, removing `VIEW_REF`). The channel that replaces the writes (`world.commands`) exists since
+  M3a step 1 but nothing pushes on it yet, and the read-only `HudSnapshot` that replaces the reads is
+  still empty: both are moved over in the later steps of M3a and in M3b.
 - `PlayerInputSystem` polls the `Input` singleton, and `game_root.gd` polls raw keys (`R`, `F3`,
-  `F11`, `B`). The plan moves input behind an `InputSnapshot` and `InputMap` actions.
+  `F11`, `B`). `world.input_snapshot` exists; the plan moves the system onto it (a later step of M3a) and the
+  keys onto `InputMap` actions (M4).
 - `ViewSyncSystem` blinks the invulnerability tint from the wall clock.
 - `game_root.gd` (605 lines) still holds travel, death, persistence and HUD wiring together
   (the split is M3b).
@@ -429,7 +490,8 @@ ad-hoc edits:
 
 ## Reading order
 
-1. `ecs/core/ecs_world.gd`, `ecs/components/ecs_components.gd`, `ecs/core/ecs_system.gd` — the whole ECS in ~250 lines.
+1. `ecs/core/ecs_world.gd`, `ecs/components/ecs_components.gd`, `ecs/core/ecs_system.gd` — the whole ECS in ~400 lines,
+   then `ecs/schedule/schedule.gd` (the order), `ecs/events/events.gd` and `ecs/events/commands.gd` (the two channels).
 2. `ecs/core/ecs_grid.gd` — the board and the reserve -> commit protocol.
 3. `ecs/systems/input/player_input_system.gd` -> `ecs/systems/move/movement_system.gd` — one full step.
 4. `ecs/systems/act/combat_system.gd` -> `ecs/systems/resolve/health_system.gd` — one full attack.
@@ -451,7 +513,8 @@ kind:
 
 | Folder | What it holds |
 |---|---|
-| `tests/architecture/` | the guards: `test_dependency_edges`, `test_content_references`, `test_content_has_no_gd`, `test_sidecars_tracked`, `test_no_path_only_ext_resource`, `test_no_old_res_paths`, `test_fixtures_present`, `test_tools_keep_uids`, `test_all_scripts_load`, `test_dump_baselines` |
+| `tests/architecture/` | the guards: `test_dependency_edges`, `test_content_references`, `test_content_has_no_gd`, `test_sidecars_tracked`, `test_no_path_only_ext_resource`, `test_no_old_res_paths`, `test_fixtures_present`, `test_tools_keep_uids`, `test_all_scripts_load`, `test_dump_baselines`, `test_schedule_complete`, `test_events_declared` |
+| `tests/ecs/` | the runtime seams of M3a: `test_schedule_order`, `test_world_fields`, `test_frozen_world`, `test_commands_channel`, `test_view_commands`, `test_emit_damage`, `test_heal_queue`, `test_boot_options` |
 | `tests/bridge/` | `game_root.gd` characterization: travel, death and respawn, persistence, health carry, the Book |
 | `tests/audio/`, `tests/content/` | the bus layout; the requirements ledger and the placeholder manifest |
 | `tests/support/` | `UnboundTest`, `TestPaths` (the only place a new test names a `res://` path), the harness's own test |
@@ -472,11 +535,14 @@ HOME=/tmp/unbound-pawn-godot ../Godot.app/Contents/MacOS/Godot --headless --path
 
 ## What is built and what is next
 
-The tree above is the part of `docs/game-base-plan.md` §13 that M1b and M2 built: the folders, the
-moves, the guards that keep code and content where they belong, the placeholder tools, and, from M2, the content
-registry, the hero as data, the one actor view and the in-cell size table (the section above). The ECS contract is
-kept as it was. Still to come, in plan order: the runtime seams — commands, the input snapshot, the `HudSnapshot`, the
-schedule files, `events.gd` (M3a) — the split of `game_root.gd` and the save service (M3b),
+The tree above is the part of `docs/game-base-plan.md` §13 that M1b, M2 and the first step of M3a built: the folders, the
+moves, the guards that keep code and content where they belong, the placeholder tools, the content
+registry, the hero as data, the one actor view and the in-cell size table (M2), and, from M3a step 1, the schedule files,
+`events.gd` with `Events.emit_damage`, the commands channel with `CommandSystem`, the frozen world and the
+world's other shared fields, and the `EcsBoot` options object. The ECS contract is kept as it was. Still to come, in plan
+order: the rest of the runtime seams of M3a — the `InputPoller` and `PlayerInputSystem` reading the `InputSnapshot`, the
+grid's cell kinds, leaps, rays and cached paths, the `HudSnapshot` and its system, the `PlayerSnapshot` — then the split of
+`game_root.gd` and the save service (M3b),
 then the shell, input, text, story, skills, bosses and the other five districts. The
 owner-facing "how do I change X" table, with real paths for what exists today, is
 `docs/OWNER_GUIDE.md`.
