@@ -3696,7 +3696,7 @@
    ],
    "anchor": "cell centre at (16,16); brackets hug the cell corners",
    "subject_en": "Focus (hold or toggle) emphasises every live telegraph WITHOUT slowing time: four bold L-shaped corner brackets drawn just outside the telegraph shape. They sit on top of any telegraph cell while Focus is on. Pattern-based, so colour is not the only cue.",
-   "details_en": "Four corner L-brackets, 6 px arms, 2 px thick, drawn at the very corners of the cell (inset 1 px). Cream main colour with a charcoal 1 px inner keyline so they read on any square. A tiny 2x2 dot at each bracket's elbow.",
+   "details_en": "Four corner L-brackets, 6 px arms, 2 px thick, drawn at the very corners of the cell (inset 1 px). Cream main colour with a charcoal 1 px inner keyline so they read on any square. A tiny 2 px square dot at each bracket's elbow.",
    "avoid_en": "No red; no fill; no actor art; no text.",
    "palette_en": "Cream #fff4d6 brackets with charcoal #1e2229 keyline; elbow dots in pale orange #ffcf9a.",
    "notes_vi": "Bốn khung góc nổi bật bật lên khi giữ Focus. Không làm chậm game.",
@@ -4044,7 +4044,7 @@
      "fps": 15,
      "poses_en": [
       "SWORD HIT 1/5: a pure white 8-point starburst 24 px across at the centre with four short pale-yellow rays; no fragments yet.",
-      "SWORD HIT 2/5: starburst shrinks to 18 px and turns pale yellow with a white 6 px core; three 2x2 yellow fragments fly out at 20-degree offsets, 8 px from the centre.",
+      "SWORD HIT 2/5: starburst shrinks to 18 px and turns pale yellow with a white 6 px core; three 2 px square yellow fragments fly out at 20-degree offsets, 8 px from the centre.",
       "SWORD HIT 3/5: starburst 12 px pale yellow; the fragments are now 2 px streaks 12 px from the centre.",
       "SWORD HIT 4/5: a small 4-point star 8 px at 60% alpha; fragments are 1x1 dots 16 px from the centre.",
       "SWORD HIT 5/5: only 3 single pixels at 18-20 px from the centre at 30% alpha; the centre is empty."
@@ -4170,7 +4170,7 @@
      "fps": 15,
      "poses_en": [
       "PAWN HURT 1/5: a pure white round flash 26 px across with six short rays.",
-      "PAWN HURT 2/5: flash shrinks to 20 px cream; six 2x2 pale-orange fragments fly out evenly spaced at 9 px.",
+      "PAWN HURT 2/5: flash shrinks to 20 px cream; six 2 px square pale-orange fragments fly out evenly spaced at 9 px.",
       "PAWN HURT 3/5: flash 14 px; the fragments are 2 px streaks at 14 px, a thin cream ring 22 px across at 50% alpha.",
       "PAWN HURT 4/5: ring 28 px at 30% alpha, a small 6 px cream core; fragments are dots at 18 px.",
       "PAWN HURT 5/5: only a faint ring at 12% alpha and two dots; centre empty."
@@ -4335,7 +4335,7 @@
      "fps": 14,
      "poses_en": [
       "CLINK 1/4: a white plus-shaped glint: horizontal 22x4 px bar and vertical 4x14 px bar, nothing else.",
-      "CLINK 2/4: glint shrinks to 16 px wide; four steel-grey 2x2 sparks fly out diagonally at 8 px.",
+      "CLINK 2/4: glint shrinks to 16 px wide; four steel-grey 2 px square sparks fly out diagonally at 8 px.",
       "CLINK 3/4: glint 10 px wide at 60% alpha; sparks at 14 px, 1x1 px.",
       "CLINK 4/4: a faint pale-blue dot at the centre at 30% alpha; two sparks at 18 px at 25% alpha."
      ],
@@ -4978,7 +4978,7 @@
    ],
    "anchor": "burst centre at (24,24)",
    "subject_en": "Rubble burst for a crumbling piece of low cover (B1 phase 3: the arena shrinks as cover crumbles) and for a weak block cracking. Wooden toy-block fragments and dust.",
-   "details_en": "Six chunky fragments (3x3 to 4x4 px) flying outward with a puff of dust. 6 frames, plays once.",
+   "details_en": "Six thick fragments (3x3 to 4x4 px) flying outward with a puff of dust. 6 frames, plays once.",
    "avoid_en": "No red fragments; no gore; no text.",
    "palette_en": "Natural wood #d9b98a, painted blue #4a7fc1, yellow #e0b13b, green #6bb25a (NO red), dust #c9bfae.",
    "notes_vi": "Mảnh khối gỗ đồ chơi nhiều màu (không có mảnh đỏ).",
@@ -5020,8 +5020,8 @@
     48
    ],
    "anchor": "burst centre at (24,24)",
-   "subject_en": "A toy block shattering when the Rook smashes it or when a Chalk Block breaks under a charge. Bigger and chunkier than an ordinary small rubble burst, with a pulse ring.",
-   "details_en": "Eight chunky fragments with a flat painted face each and a ring pulse. 6 frames, plays once.",
+   "subject_en": "A toy block shattering when the Rook smashes it or when a Chalk Block breaks under a charge. Bigger and heavier than an ordinary small rubble burst, with a pulse ring.",
+   "details_en": "Eight thick fragments with a flat painted face each and a ring pulse. 6 frames, plays once.",
    "avoid_en": "No red fragments; no text.",
    "palette_en": "Natural wood #d9b98a, painted blue #4a7fc1, yellow #e0b13b, green #6bb25a, dust #c9bfae.",
    "notes_vi": "Khối gỗ vỡ thành 8 mảnh, không có mảnh đỏ.",
@@ -5579,7 +5579,7 @@
     },
     {
      "name": "chip_c.png",
-     "what_en": "a tiny chunky wood cube corner.",
+     "what_en": "a tiny stout wood cube corner.",
      "title_vi": "Góc khối gỗ",
      "needed_by": "M11",
      "priority": "should"
@@ -6059,7 +6059,7 @@
     },
     {
      "name": "dot_2.png",
-     "what_en": "a 2x2 px gold dot with one white pixel.",
+     "what_en": "a 2 px square gold dot with one white pixel.",
      "title_vi": "Chấm vàng",
      "needed_by": "M6",
      "priority": "must"
@@ -6107,7 +6107,7 @@
     },
     {
      "name": "dot_2.png",
-     "what_en": "a 2x2 px mint dot with one white pixel.",
+     "what_en": "a 2 px square mint dot with one white pixel.",
      "title_vi": "Chấm xanh",
      "needed_by": "M3b",
      "priority": "should"
@@ -6155,7 +6155,7 @@
     },
     {
      "name": "dot_2.png",
-     "what_en": "a 2x2 px blue dot with one white pixel.",
+     "what_en": "a 2 px square blue dot with one white pixel.",
      "title_vi": "Chấm xanh",
      "needed_by": "M10",
      "priority": "should"
@@ -6347,7 +6347,7 @@
     },
     {
      "name": "spark_b.png",
-     "what_en": "a tiny 2x2 coral dot.",
+     "what_en": "a tiny 2 px square coral dot.",
      "title_vi": "Chấm nhỏ",
      "needed_by": "M8a",
      "priority": "should"
@@ -8218,7 +8218,7 @@
    ],
    "anchor": "cell centre at (16,16); drawn pointing EAST (east = right); the engine rotates it to the facing",
    "subject_en": "The Wooden Sword's one-cell slash effect (a pale-yellow arc with two or three pixel fragments; swing impact 0.07 s, recovery 0.30 s). It is drawn in the cell directly in front of the pawn, pointing east, and is the quick slash that makes the sword silhouette unique against the Pencil's long thrust and the Ruler's wide sweep.",
-   "details_en": "A crescent arc sweeping from the upper-left of the cell through the centre to the lower-right, 4 px thick at its middle and tapering to points. Two or three tiny 2x2 px fragments follow the arc. 5 frames, plays once at 24 fps. The arc is brightest on the impact frame (frame 2). It stays inside the 32x32 cell.",
+   "details_en": "A crescent arc sweeping from the upper-left of the cell through the centre to the lower-right, 4 px thick at its middle and tapering to points. Two or three tiny 2 px square fragments follow the arc. 5 frames, plays once at 24 fps. The arc is brightest on the impact frame (frame 2). It stays inside the 32x32 cell.",
    "avoid_en": "No red or coral (red is reserved for danger); no text; no actor art; no bloom blur; must not hide the enemy.",
    "palette_en": "Pale yellow #fff2a8 arc with a cream #fff4d6 core line and white #ffffff only on the impact frame.",
    "notes_vi": "Cung chém vàng nhạt trong 1 ô phía trước, có 2-3 mảnh pixel bay theo.",
@@ -8238,7 +8238,7 @@
      "fps": 24,
      "poses_en": [
       "SWORD SLASH 1/5: anticipation: a thin 6 px pale-yellow arc just starting at the upper-left of the cell, 50% alpha.",
-      "SWORD SLASH 2/5: IMPACT: the full crescent through the cell centre 4 px thick, white core, three 2x2 fragments at its tip.",
+      "SWORD SLASH 2/5: IMPACT: the full crescent through the cell centre 4 px thick, white core, three 2 px square fragments at its tip.",
       "SWORD SLASH 3/5: the crescent fading toward the lower-right, 3 px thick, fragments trailing 6 px behind.",
       "SWORD SLASH 4/5: a thin 2 px arc remnant at the lower-right at 50% alpha, two fragments.",
       "SWORD SLASH 5/5: one fragment dot at 20% alpha."
@@ -8741,7 +8741,7 @@
    ],
    "anchor": "feet-anchored: the pawn's base-bottom centre is at (16,30); the ring lies on the floor around the base (ring centre (16,26)) and never covers the pawn's face",
    "subject_en": "The hero's Charging Pawn Page 'armed' cue. The Page (margin cost 1) rewrites the pawn's step: after standing still for 1.0 s, the next step becomes a two-cell double step. Without a cue the player cannot tell when the double step is available. While it is armed, a ring of short ivory dust-lines gathers around the pawn's base on the floor and draws slowly inward, like a held breath before a sprint. Pawn-owned: ivory, warm dust beige and a little neutral graphite only.",
-   "details_en": "Eight short dashes (each 6 px long and 2 px thick, a multiple of the 2 px art pixel) lie on a flat ellipse around the base (radii 13 px east-west and 5 px north-south around the centre (16,26), matching the 65-degree view, so the whole ring fits the 32x32 cell) and drift inward as the loop plays, so the eye reads 'gathering'. Four frames loop at 6 fps (0.67 s per cycle); frame 4 leads into frame 1 with no jump, because the dashes that vanish into the base at the end of a cycle reappear on the outer ring at the start of the next. Each dash is one flat translucent fill at the alpha written for it. Dashes on the near (south) half are horizontal ticks, those on the far (north) half are shorter. Nothing is drawn on the pawn's body.",
+   "details_en": "Eight short dashes (each 6 px long and 2 px thick) lie on a flat ellipse around the base (radii 13 px east-west and 5 px north-south around the centre (16,26), matching the 65-degree view, so the whole ring fits the 32x32 cell) and drift inward as the loop plays, so the eye reads 'gathering'. Four frames loop at 6 fps (0.67 s per cycle); frame 4 leads into frame 1 with no jump, because the dashes that vanish into the base at the end of a cycle reappear on the outer ring at the start of the next. Each dash is one flat translucent fill at the alpha written for it. Dashes on the near (south) half are horizontal ticks, those on the far (north) half are shorter. Nothing is drawn on the pawn's body.",
    "avoid_en": "No blue of any kind (blue belongs to the child), no red or coral (red is danger), no glow or bloom, no rim light, no sparks or stars, no arrows, no text, no pawn body or face drawn (the pawn is a separate sprite), nothing covering the pawn's face or the cell it stands on.",
    "palette_en": "ivory dust-line #F1E8D2, warm dust beige #D9CCAE, neutral graphite specks #6B7380 (two at most). No blue and no red of any kind.",
    "notes_vi": "Vòng bụi ngà tụ vào chân pawn, báo là bước kép (double step) của trang Tốt Xung Phong đã sẵn sàng. Không dùng xanh, không dùng đỏ.",
@@ -9111,7 +9111,7 @@
    ],
    "anchor": "cell centre at (16,16)",
    "subject_en": "The crumbs of the eraser rub: while the pawn holds the guard on a Rule Mark (the forced use at bt4, bto, ub1) pink eraser crumbs and specks of graphite dust lift off the mark. Effect only: the Rule Mark prop and its rub, erased and restore frames are drawn as separate floor-prop files; this overlay never draws the mark or the eraser.",
-   "details_en": "Crumbs: 2x2 and 4x2 art-pixel pink and grey specks on a transparent canvas, centred on the cell, drifting up and falling. The clip loops while the guard is held.",
+   "details_en": "Crumbs: pink and grey specks, 2 px square and 4 px by 2 px, on a transparent canvas, centred on the cell, drifting up and falling. The clip loops while the guard is held.",
    "avoid_en": "No red; no text; the glyph itself is not drawn here.",
    "palette_en": "Pink-white #f3e1e1, graphite #6B7380, printed ink #3b3a4a at 50% alpha.",
    "notes_vi": "Chà xóa Rule Mark: 3 clip chà, đã xóa, quay lại sau 6 giây.",
@@ -9872,7 +9872,7 @@
    ],
    "anchor": "centre of the Rule Mark cell at (24,16)",
    "subject_en": "Erase Rule Mark (deferred extension E5, the child's call): the child's hand rubs a Rule Mark out with a pink eraser. This is the eraser dust over the mark's cell: soft pink-white swipe arcs, pink crumbs and a little graphite dust lifting off. It is larger and slower than the pawn's Eraser Guard crumbs. Overlay only: the Rule Mark prop, its erased frames and the hand with its eraser are separate files, and this effect never draws the mark.",
-   "details_en": "Two swipe arcs drawn one after the other (a 2 px band, flat translucent fill), then crumbs of 2x2 and 4x2 art pixels drifting up and falling, and graphite specks. 6 frames, plays once at 10 fps (child motion is slow and heavy).",
+   "details_en": "Two swipe arcs drawn one after the other (a 2 px band, flat translucent fill), then crumbs 2 px square and 4 px by 2 px drifting up and falling, and graphite specks. 6 frames, plays once at 10 fps (child motion is slow and heavy).",
    "avoid_en": "No blue of any kind, no red or coral, no text, no hand, no eraser, no Rule Mark drawn, no glow.",
    "palette_en": "pink-white #F3E1E1, eraser crumb pink #E8C6B8, neutral graphite dust #6B7380, paper white #F2EBDC. No blue.",
    "notes_vi": "Hai nét chà hồng-trắng, mạt tẩy hồng và bụi chì bay lên khi bé xóa Rule Mark. Kỹ năng mở rộng (công thức §6.10), chưa có trong bản gốc; làm sau (M14, could).",
@@ -11797,7 +11797,7 @@
    ],
    "anchor": "centre at (48,60), at the throne",
    "subject_en": "The peak of the Rook Warden fight: in P3 the Rook refuses to turn, the player stands so the charge smashes the throne behind the lane (3 s stun). The throne (a wooden block castle) bursts into chunks, a big dust ring and a long 3-second settling. Heavy, cathartic, still no gore.",
-   "details_en": "A throne-sized burst: a bright flash, twelve chunky block pieces, a shockwave ring and a rising dust column. 8 frames, plays once at 12 fps.",
+   "details_en": "A throne-sized burst: a bright flash, twelve thick block pieces, a shockwave ring and a rising dust column. 8 frames, plays once at 12 fps.",
    "avoid_en": "No red or coral decoration (boss patterns never use decorative particles that resemble damage); no text; no gore; no bloom. No red blocks.",
    "palette_en": "Wood #d9b98a, painted blue #4a7fc1, yellow #e0b13b, green #6bb25a, dust #c9bfae, flash cream #fff4d6.",
    "notes_vi": "Ngai gỗ vỡ tung thành các khối lớn, vòng bụi và cột bụi.",
@@ -13563,7 +13563,7 @@
    ],
    "anchor": "centre (16,8), at the actor's feet",
    "subject_en": "The ground shadow under pawn-family actors, white soldiers, the Crayon Target and the hub's white pawns. Actor sprites carry no baked floor shadow, so this separate sprite gives them height and weight on the board (shadows establish height but never hide telegraphs).",
-   "details_en": "A flat soft contact shadow, chunky world pixels, NO outline: a charcoal-blue #1E2230 oval in two stepped rings (outer ring 24x8 px, inner ring 14x4 px; outer ring 20 percent alpha, inner ring 40 percent alpha); the edge is a crisp stepped pixel line, never feathered. Centred on the canvas; the engine places it under the actor's anchor and never rotates it. It never hides a telegraph: it is light enough that the dark-orange and coral cell markers stay readable on top of it. The shadow fits the 32x32 cell of the piece it sits under, like the piece itself: the outer ring leaves at least 2 px of empty canvas at its left and right ends, so it never touches a canvas edge.",
+   "details_en": "A flat soft contact shadow, 1x1 pixels, NO outline: a charcoal-blue #1E2230 oval in two stepped rings (outer ring 24x8 px, inner ring 14x4 px; outer ring 20 percent alpha, inner ring 40 percent alpha); the edge is a crisp stepped pixel line, never feathered. Centred on the canvas; the engine places it under the actor's anchor and never rotates it. It never hides a telegraph: it is light enough that the dark-orange and coral cell markers stay readable on top of it. The shadow fits the 32x32 cell of the piece it sits under, like the piece itself: the outer ring leaves at least 2 px of empty canvas at its left and right ends, so it never touches a canvas edge.",
    "avoid_en": "an outline, a gradient, a highlight, a floor tile or any object, text, a hard black fill",
    "palette_en": "shadow charcoal-blue #1E2230 at 20 and 40 percent alpha",
    "notes_vi": "Bóng nền mềm, không viền; engine đặt dưới điểm neo của nhân vật.",
@@ -13597,7 +13597,7 @@
    ],
    "anchor": "centre (16,8), at the actor's feet",
    "subject_en": "The ground shadow under Knight, Bishop, Rook, Promoted Zealot, Marble Launcher, Wind-Up Hammer, Pebble, Slant and Stout. Actor sprites carry no baked floor shadow, so this separate sprite gives them height and weight on the board (shadows establish height but never hide telegraphs).",
-   "details_en": "A flat soft contact shadow, chunky world pixels, NO outline: a charcoal-blue #1E2230 oval in two stepped rings (outer ring 28x10 px, inner ring 18x6 px; outer ring 20 percent alpha, inner ring 40 percent alpha); the edge is a crisp stepped pixel line, never feathered. Centred on the canvas; the engine places it under the actor's anchor and never rotates it. It never hides a telegraph: it is light enough that the dark-orange and coral cell markers stay readable on top of it. The shadow fits the 32x32 cell of the piece it sits under, like the piece itself: the outer ring leaves at least 2 px of empty canvas at its left and right ends, so it never touches a canvas edge.",
+   "details_en": "A flat soft contact shadow, 1x1 pixels, NO outline: a charcoal-blue #1E2230 oval in two stepped rings (outer ring 28x10 px, inner ring 18x6 px; outer ring 20 percent alpha, inner ring 40 percent alpha); the edge is a crisp stepped pixel line, never feathered. Centred on the canvas; the engine places it under the actor's anchor and never rotates it. It never hides a telegraph: it is light enough that the dark-orange and coral cell markers stay readable on top of it. The shadow fits the 32x32 cell of the piece it sits under, like the piece itself: the outer ring leaves at least 2 px of empty canvas at its left and right ends, so it never touches a canvas edge.",
    "avoid_en": "an outline, a gradient, a highlight, a floor tile or any object, text, a hard black fill",
    "palette_en": "shadow charcoal-blue #1E2230 at 20 and 40 percent alpha",
    "notes_vi": "Bóng nền mềm, không viền; engine đặt dưới điểm neo của nhân vật.",
@@ -13631,7 +13631,7 @@
    ],
    "anchor": "centre (16,8), at the actor's feet",
    "subject_en": "The ground shadow under all six bosses (Black Pawn Captain, Knight Captain, Bishop Oracle, Rook Warden, Queen of Tricks, Black King). Actor sprites carry no baked floor shadow, so this separate sprite gives them height and weight on the board (shadows establish height but never hide telegraphs).",
-   "details_en": "A flat soft contact shadow, chunky world pixels, NO outline: a charcoal-blue #1E2230 oval in two stepped rings (outer ring 28x12 px, inner ring 20x6 px; outer ring 20 percent alpha, inner ring 40 percent alpha); the edge is a crisp stepped pixel line, never feathered. Centred on the canvas; the engine places it under the actor's anchor and never rotates it. It never hides a telegraph: it is light enough that the dark-orange and coral cell markers stay readable on top of it. The shadow fits the 32x32 cell of the piece it sits under, like the piece itself: the outer ring leaves at least 2 px of empty canvas at its left and right ends, so it never touches a canvas edge.",
+   "details_en": "A flat soft contact shadow, 1x1 pixels, NO outline: a charcoal-blue #1E2230 oval in two stepped rings (outer ring 28x12 px, inner ring 20x6 px; outer ring 20 percent alpha, inner ring 40 percent alpha); the edge is a crisp stepped pixel line, never feathered. Centred on the canvas; the engine places it under the actor's anchor and never rotates it. It never hides a telegraph: it is light enough that the dark-orange and coral cell markers stay readable on top of it. The shadow fits the 32x32 cell of the piece it sits under, like the piece itself: the outer ring leaves at least 2 px of empty canvas at its left and right ends, so it never touches a canvas edge.",
    "avoid_en": "an outline, a gradient, a highlight, a floor tile or any object, text, a hard black fill",
    "palette_en": "shadow charcoal-blue #1E2230 at 20 and 40 percent alpha",
    "notes_vi": "Bóng nền mềm, không viền; engine đặt dưới điểm neo của nhân vật.",
@@ -13665,7 +13665,7 @@
    ],
    "anchor": "centre (48,12), at the actor's feet",
    "subject_en": "The ground shadow under the Rule Engine, the one big non-piece actor (every chess piece, bosses included, uses a shadow that fits its cell). Actor sprites carry no baked floor shadow, so this separate sprite gives them height and weight on the board (shadows establish height but never hide telegraphs).",
-   "details_en": "A flat soft contact shadow, chunky world pixels, NO outline: a charcoal-blue #1E2230 oval in two stepped rings (outer ring 20 percent alpha, inner ring 40 percent alpha); the edge is a crisp stepped pixel line, never feathered. Centred on the canvas; the engine places it under the actor's anchor and never rotates it. It never hides a telegraph: it is light enough that the dark-orange and coral cell markers stay readable on top of it.",
+   "details_en": "A flat soft contact shadow, 1x1 pixels, NO outline: a charcoal-blue #1E2230 oval in two stepped rings (outer ring 20 percent alpha, inner ring 40 percent alpha); the edge is a crisp stepped pixel line, never feathered. Centred on the canvas; the engine places it under the actor's anchor and never rotates it. It never hides a telegraph: it is light enough that the dark-orange and coral cell markers stay readable on top of it.",
    "avoid_en": "an outline, a gradient, a highlight, a floor tile or any object, text, a hard black fill",
    "palette_en": "shadow charcoal-blue #1E2230 at 20 and 40 percent alpha",
    "notes_vi": "Bóng nền mềm, không viền; engine đặt dưới điểm neo của nhân vật.",
@@ -13699,7 +13699,7 @@
    ],
    "anchor": "centre (8,8)",
    "subject_en": "The small FacingArrow shown at an actor's front edge, inside its own cell so a turn is readable even when the body art is symmetric. Drawn pointing EAST; the engine rotates it in 90-degree steps.",
-   "details_en": "A small chunky chevron with a 1 px outline, 8 px long and 8 px tall (4x4 art pixels), never larger than a quarter of a cell, so it sits inside the cell at the front edge of the piece's base. Distinct per side without using reserved colours: the pawn's arrow is warm ivory, the enemy arrow is bone grey. Frame-free, one static image each.",
+   "details_en": "A small bold chevron with a 1 px outline, 8 px long and 8 px tall, never larger than a quarter of a cell, so it sits inside the cell at the front edge of the piece's base. Distinct per side without using reserved colours: the pawn's arrow is warm ivory, the enemy arrow is bone grey. Frame-free, one static image each.",
    "avoid_en": "red, orange, yellow, blue, glow, text, any actor part",
    "palette_en": "pawn arrow ivory #F1E8D2 with outline #14141C; enemy arrow bone grey #BDB6A6 with outline #14141C",
    "notes_vi": "Mũi tên nhỏ, vẽ hướng sang phải; không dùng màu đã có nghĩa.",
@@ -13741,7 +13741,7 @@
    ],
    "anchor": "centre (4,4)",
    "subject_en": "The tiny HealthPips shown above common enemies (Pip0 to Pip2 on the actor view): full, empty and armoured. Bosses use the boss bar instead.",
-   "details_en": "A chunky 4x4 art-pixel disc with a 1 px dark outline; readable on both ivory and charcoal squares. full = bone-ivory fill, empty = outline only with a dark centre, armour = a small grey plate with a lighter top edge (the Iron Rook's armoured front, shown while the front face is shielded). Three pips side by side are 24 px wide, so the whole row fits inside one 32 px cell above the piece's head.",
+   "details_en": "A bold round disc, 8x8 px with a 1 px dark outline included; readable on both ivory and charcoal squares. full = bone-ivory fill, empty = outline only with a dark centre, armour = a small grey plate with a lighter top edge (the Iron Rook's armoured front, shown while the front face is shielded). Three pips side by side are 24 px wide, so the whole row fits inside one 32 px cell above the piece's head.",
    "avoid_en": "red, text, glow",
    "palette_en": "full bone ivory #F1E8D2, outline #14141C, empty centre #1B1E27, armour plate #8C8A84 / #BDB6A6",
    "notes_vi": "Chấm 8x8, không đỏ.",
@@ -13791,7 +13791,7 @@
    ],
    "anchor": "centre at (8,8), the marble's centre; drawn rolling EAST (east = right); the engine moves it along the lane and rotates it in 90 degree steps",
    "subject_en": "The projectile of the deferred Marble Launcher (extension recipe E7): a smoky glass toy marble rolling along its row or column. It is the object the telegraphed lane is about, so it must read as a small hard round toy at a glance, rolling and not sliding. The launcher's own sprite and sounds already exist as separate files.",
-   "details_en": "A round marble about 12 px across (6 art pixels) centred on the 16x16 canvas, smoky grey glass with one twisted ribbon inside that makes the rolling visible, a small ivory highlight dot on the upper left, a darker crescent along the lower right. 4 frames, loops at 12 fps; the ribbon turns 45 degrees per frame and the pattern repeats every half turn, so frame 4 flows into frame 1.",
+   "details_en": "A round marble about 12 px across centred on the 16x16 canvas, smoky grey glass with one twisted ribbon inside that makes the rolling visible, a small ivory highlight dot on the upper left, a darker crescent along the lower right. 4 frames, loops at 12 fps; the ribbon turns 45 degrees per frame and the pattern repeats every half turn, so frame 4 flows into frame 1.",
    "avoid_en": "No coral red, no crayon blue, no golden yellow (red is imminent damage only, blue is the child, yellow is interactable); no text; no gore; no bloom; no actor art; must not hide the chess square or the hero. No motion trail and no baked shadow (the engine draws the shadow).",
    "palette_en": "smoky glass #7C8794 (light #B7C0CB, shadow #3C4350), twist ribbon #3C4350, highlight ivory #F1E8D2.",
    "notes_vi": "Viên bi thuỷ tinh khói, 4 khung lăn lặp; vẽ hướng sang phải, engine xoay theo làn.",

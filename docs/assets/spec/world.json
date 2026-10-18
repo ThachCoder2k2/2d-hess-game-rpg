@@ -1496,7 +1496,7 @@
     },
     {
      "name": "cover_toy_block_a.png",
-     "what_en": "A chunky natural-beech wooden toy block sitting on the rug, one face shown with a rounded bevel and a small embossed star, tiny chip.",
+     "what_en": "A sturdy natural-beech wooden toy block sitting on the rug, one face shown with a rounded bevel and a small embossed star, tiny chip.",
      "title_vi": "Khối gỗ đồ chơi (mộc)",
      "tile_data": {
       "solid": true,
@@ -1505,7 +1505,7 @@
     },
     {
      "name": "cover_toy_block_b.png",
-     "what_en": "A chunky wooden toy block painted faded blue with chipped paint at the corners and a small embossed moon.",
+     "what_en": "A sturdy wooden toy block painted faded blue with chipped paint at the corners and a small embossed moon.",
      "title_vi": "Khối gỗ đồ chơi (xanh)",
      "tile_data": {
       "solid": true,
@@ -4824,7 +4824,7 @@
     },
     {
      "name": "cover_folded_paper_a.png",
-     "what_en": "A chunky folded-paper block (origami-like), cream with sharp white crease lines, shaped like a low cube with a diagonal fold.",
+     "what_en": "A sturdy folded-paper block (origami-like), cream with sharp white crease lines, shaped like a low cube with a diagonal fold.",
      "title_vi": "Khối giấy gấp A",
      "tile_data": {
       "solid": true,
@@ -12429,7 +12429,7 @@
     40
    ],
    "anchor": "base centre at (16,36)",
-   "subject_en": "The child's Chalk Block: a chunky toy block drawn in crayon-blue chalk that the huge hand sets on a free cell. It stops Rook charges, straight beams and Knight landings. It looks hand-made: rough waxy chalk strokes forming a cube with visible outline strokes, chalk dust on its top, and a few stray crayon marks. This group owns every state of the Block body: place (the hand sets it down), hold, crumble (destroyed by a charge or beam or at room end) and vanish (a new cast moves it).",
+   "subject_en": "The child's Chalk Block: a sturdy toy block drawn in crayon-blue chalk that the huge hand sets on a free cell. It stops Rook charges, straight beams and Knight landings. It looks hand-made: rough waxy chalk strokes forming a cube with visible outline strokes, chalk dust on its top, and a few stray crayon marks. This group owns every state of the Block body: place (the hand sets it down), hold, crumble (destroyed by a charge or beam or at room end) and vanish (a new cast moves it).",
    "details_en": "A cube about 24 px wide with a 12 px front face: crayon-blue chalk fill with crisscross hatch strokes, thicker outline strokes on the edges, a tiny star doodle on the front face. Cracked state: a bold dark zigzag crack and a missing chunk at one corner.",
    "avoid_en": "No wood grain, no paint, no bright red, no text. No hand in the image.",
    "palette_en": "crayon blue #3A6FE0 (light #8DB0F0, dark #284CA0), chalk white #EAF0FA, dust #CFD6E6.",
@@ -13856,7 +13856,7 @@
    ],
    "anchor": "base centre at (16,30): the base sits on the line y=30 with 2 px of empty canvas under it",
    "subject_en": "The ordinary white pawns that gather in the hub after the Queen falls: simple standing and sitting ivory pawns around the chess box, a warm small crowd of bystanders. They are decor props (not Pebble, Slant or Stout, who have their own sprites): the world has become a little safer.",
-   "details_en": "Pawn bodies 18x22 px at the camera angle, ivory with repaired seams; poses are 'standing facing the box', 'sitting', 'huddle' (two single-pawn files that lean toward each other when placed side by side), 'leaning' and 'waving', all in one soft idle frame. Cast shadow south-east. CELL FIT (owner decision 2026-10-12: a chess piece is smaller than its cell). The canvas is 32x32, exactly one cell. Each standing pawn body is at most 18x22 px (9x11 art pixels), outline included, centred on x=16 with its base rim on y=30, so its top sits at y=8 and at least 2 px of empty canvas remain on every side: never exactly cell-sized, never taller than the cell, never touching or crossing a canvas edge. Relative heights follow a real chess set (pawn 22 px, knight, bishop and rook 24, queen 26, king 28; bosses are a little wider than their class and never beyond 24x28). In EVERY frame, squash, stretch, tilt, lean, lunge and lift included, every pixel of the piece stays inside x 2..29 and y 2..29: the headroom above the resting top is 6 px, a lift and a stretch together never use more than that, and a tilt or lean never pushes a side past x=2 or x=29; if a pose would not fit, shorten the stretch or the lift first and never the margin. The pixel measures written in the poses are already scaled to this body size.",
+   "details_en": "Pawn bodies 18x22 px at the camera angle, ivory with repaired seams; poses are 'standing facing the box', 'sitting', 'huddle' (two single-pawn files that lean toward each other when placed side by side), 'leaning' and 'waving', all in one soft idle frame. Cast shadow south-east. CELL FIT (owner decision 2026-10-12: a chess piece is smaller than its cell). The canvas is 32x32, exactly one cell. Each standing pawn body is at most 18x22 px, outline included, centred on x=16 with its base rim on y=30, so its top sits at y=8 and at least 2 px of empty canvas remain on every side: never exactly cell-sized, never taller than the cell, never touching or crossing a canvas edge. Relative heights follow a real chess set (pawn 22 px, knight, bishop and rook 24, queen 26, king 28; bosses are a little wider than their class and never beyond 24x28). In EVERY frame, squash, stretch, tilt, lean, lunge and lift included, every pixel of the piece stays inside x 2..29 and y 2..29: the headroom above the resting top is 6 px, a lift and a stretch together never use more than that, and a tilt or lean never pushes a side past x=2 or x=29; if a pose would not fit, shorten the stretch or the lift first and never the margin. The pixel measures written in the poses are already scaled to this body size.",
    "avoid_en": "No faces, no weapons, no bright red.",
    "palette_en": "ivory #E6DAC0, shade #CDBF9F, pale-blue seam thread #8FA6C4.",
    "notes_vi": "Đám tốt trắng tụ lại quanh hộp. Cặp tốt dựa nhau được tách thành hai file một quân (A/B).",
@@ -13916,7 +13916,7 @@
     32
    ],
    "anchor": "base centre at (16,30)",
-   "subject_en": "The loose building blocks of the hub's post-game state: free building. Plain chunky wooden toy blocks in different shapes the player can pile up for fun; no gameplay, pure play.",
+   "subject_en": "The loose building blocks of the hub's post-game state: free building. Plain sturdy wooden toy blocks in different shapes the player can pile up for fun; no gameplay, pure play.",
    "details_en": "Classic block shapes: cube, arch, cylinder, triangle roof, half-cylinder, long brick east-west and long brick north-south, painted faded colours with worn corners and simple embossed star or circle marks (never letters).",
    "avoid_en": "Only the global avoid list applies.",
    "palette_en": "beech #C89B5E, faded red #B3473E (paint), blue #3C5F9E, yellow #D4AF3A, green #4F8A47.",
@@ -14244,7 +14244,7 @@
     48
    ],
    "anchor": "base centre at (16,44)",
-   "subject_en": "The Toybox Gate arch (room tb1): the gateway into the Toybox kingdom, built from two chunky wooden posts, a lintel plank and a blue banner with a horse-head emblem. A cavalry yard's entrance in toy form: proud, a little lopsided. Modular 32-wide pieces so the arch can be assembled.",
+   "subject_en": "The Toybox Gate arch (room tb1): the gateway into the Toybox kingdom, built from two sturdy wooden posts, a lintel plank and a blue banner with a horse-head emblem. A cavalry yard's entrance in toy form: proud, a little lopsided. Modular 32-wide pieces so the arch can be assembled.",
    "details_en": "Posts: faded-yellow and beech painted with chipped paint and a brass stud row; lintel: a long plank in three pieces (left end, middle, right end) with a painted blue border; banner: a blue cloth banner on two rings with a cream horse-head emblem. A short front face on every piece. Transparent background.",
    "avoid_en": "Only the global avoid list applies.",
    "palette_en": "meadow green #5C8A3E, chest green #2F5B3A, beech #C89B5E (shade #8E6D3F), brass #C9A24B, faded paint: blue #3E63A6, yellow #D8B23A, red #B8473D (paint only), cream #EFE3C2, tin grey #9AA3AD.",
@@ -14262,12 +14262,12 @@
    "files": [
     {
      "name": "arch_post_left/prop.png",
-     "what_en": "Left post of the arch: a chunky faded-yellow post with a brass stud row and a beech base block.",
+     "what_en": "Left post of the arch: a sturdy faded-yellow post with a brass stud row and a beech base block.",
      "title_vi": "Trụ cổng - trái"
     },
     {
      "name": "arch_post_right/prop.png",
-     "what_en": "Right post of the arch: a chunky faded-blue post with a brass stud row and a beech base block.",
+     "what_en": "Right post of the arch: a sturdy faded-blue post with a brass stud row and a beech base block.",
      "title_vi": "Trụ cổng - phải"
     },
     {
@@ -14781,7 +14781,7 @@
     40
    ],
    "anchor": "base centre at (20,36); the front overhangs the cell by 4 px",
-   "subject_en": "Toy train engine: a rounded steam-engine toy with a blue boiler, a yellow cab, a brass funnel and bell, a cow-catcher and a little brass whistle. Part of the toy train that is the hazard of the Toy Track Ambush (room tb3), the train crossing a row in the Knight Captain's arena (tbb) and, as a gift, the hub's state-3 train. It is a wooden-and-tin toy train: friendly, chunky, glossy paint, brass fittings. As a hazard it must read clearly as a solid moving object with a strong silhouette; the telegraph of its lane is a separate effect.",
+   "subject_en": "Toy train engine: a rounded steam-engine toy with a blue boiler, a yellow cab, a brass funnel and bell, a cow-catcher and a little brass whistle. Part of the toy train that is the hazard of the Toy Track Ambush (room tb3), the train crossing a row in the Knight Captain's arena (tbb) and, as a gift, the hub's state-3 train. It is a wooden-and-tin toy train: friendly, sturdy, glossy paint, brass fittings. As a hazard it must read clearly as a solid moving object with a strong silhouette; the telegraph of its lane is a separate effect.",
    "details_en": "Files: the horizontal still is the part travelling EAST (left-right; mirror for west) and the vertical still is the part travelling SOUTH (top-down; mirror for north). Wheels turn through the clip frames (spoke positions alternate). Cars are exactly one cell long along their travel direction so they couple end to end with no gap.",
    "avoid_en": "Only the global avoid list applies.",
    "palette_en": "paint blue #3E63A6, red #B8473D (paint only), yellow #D8B23A, brass #C9A24B, beech #C89B5E, black wheels #2B2D3A, tin grey #9AA3AD.",
@@ -14851,7 +14851,7 @@
     32
    ],
    "anchor": "base centre at (16,30)",
-   "subject_en": "Toy train wagon A: an open wooden goods wagon painted yellow with a stack of small coloured blocks as its load. Part of the toy train that is the hazard of the Toy Track Ambush (room tb3), the train crossing a row in the Knight Captain's arena (tbb) and, as a gift, the hub's state-3 train. It is a wooden-and-tin toy train: friendly, chunky, glossy paint, brass fittings. As a hazard it must read clearly as a solid moving object with a strong silhouette; the telegraph of its lane is a separate effect.",
+   "subject_en": "Toy train wagon A: an open wooden goods wagon painted yellow with a stack of small coloured blocks as its load. Part of the toy train that is the hazard of the Toy Track Ambush (room tb3), the train crossing a row in the Knight Captain's arena (tbb) and, as a gift, the hub's state-3 train. It is a wooden-and-tin toy train: friendly, sturdy, glossy paint, brass fittings. As a hazard it must read clearly as a solid moving object with a strong silhouette; the telegraph of its lane is a separate effect.",
    "details_en": "Files: the horizontal still is the part travelling EAST (left-right; mirror for west) and the vertical still is the part travelling SOUTH (top-down; mirror for north). Wheels turn through the clip frames (spoke positions alternate). Cars are exactly one cell long along their travel direction so they couple end to end with no gap.",
    "avoid_en": "Only the global avoid list applies.",
    "palette_en": "paint blue #3E63A6, red #B8473D (paint only), yellow #D8B23A, brass #C9A24B, beech #C89B5E, black wheels #2B2D3A, tin grey #9AA3AD.",
@@ -14917,7 +14917,7 @@
     32
    ],
    "anchor": "base centre at (16,30)",
-   "subject_en": "Toy train wagon B: a blue box wagon with a small cream horse head peeking over the top and slatted sides. Part of the toy train that is the hazard of the Toy Track Ambush (room tb3), the train crossing a row in the Knight Captain's arena (tbb) and, as a gift, the hub's state-3 train. It is a wooden-and-tin toy train: friendly, chunky, glossy paint, brass fittings. As a hazard it must read clearly as a solid moving object with a strong silhouette; the telegraph of its lane is a separate effect.",
+   "subject_en": "Toy train wagon B: a blue box wagon with a small cream horse head peeking over the top and slatted sides. Part of the toy train that is the hazard of the Toy Track Ambush (room tb3), the train crossing a row in the Knight Captain's arena (tbb) and, as a gift, the hub's state-3 train. It is a wooden-and-tin toy train: friendly, sturdy, glossy paint, brass fittings. As a hazard it must read clearly as a solid moving object with a strong silhouette; the telegraph of its lane is a separate effect.",
    "details_en": "Files: the horizontal still is the part travelling EAST (left-right; mirror for west) and the vertical still is the part travelling SOUTH (top-down; mirror for north). Wheels turn through the clip frames (spoke positions alternate). Cars are exactly one cell long along their travel direction so they couple end to end with no gap.",
    "avoid_en": "Only the global avoid list applies.",
    "palette_en": "paint blue #3E63A6, red #B8473D (paint only), yellow #D8B23A, brass #C9A24B, beech #C89B5E, black wheels #2B2D3A, tin grey #9AA3AD.",
@@ -14983,7 +14983,7 @@
     32
    ],
    "anchor": "base centre at (16,30)",
-   "subject_en": "Toy train caboose: a red-painted (paint only) guard van with a little cupola and a brass lamp at the back. Part of the toy train that is the hazard of the Toy Track Ambush (room tb3), the train crossing a row in the Knight Captain's arena (tbb) and, as a gift, the hub's state-3 train. It is a wooden-and-tin toy train: friendly, chunky, glossy paint, brass fittings. As a hazard it must read clearly as a solid moving object with a strong silhouette; the telegraph of its lane is a separate effect.",
+   "subject_en": "Toy train caboose: a red-painted (paint only) guard van with a little cupola and a brass lamp at the back. Part of the toy train that is the hazard of the Toy Track Ambush (room tb3), the train crossing a row in the Knight Captain's arena (tbb) and, as a gift, the hub's state-3 train. It is a wooden-and-tin toy train: friendly, sturdy, glossy paint, brass fittings. As a hazard it must read clearly as a solid moving object with a strong silhouette; the telegraph of its lane is a separate effect.",
    "details_en": "Files: the horizontal still is the part travelling EAST (left-right; mirror for west) and the vertical still is the part travelling SOUTH (top-down; mirror for north). Wheels turn through the clip frames (spoke positions alternate). Cars are exactly one cell long along their travel direction so they couple end to end with no gap.",
    "avoid_en": "Only the global avoid list applies.",
    "palette_en": "paint blue #3E63A6, red #B8473D (paint only), yellow #D8B23A, brass #C9A24B, beech #C89B5E, black wheels #2B2D3A, tin grey #9AA3AD.",
@@ -17628,7 +17628,7 @@
    ],
    "anchor": "base centre at (32,60); the throne footprint is 2x2 cells",
    "subject_en": "The Rook Warden's throne collapsing when the charge smashes it: one 64x64 animation of the whole throne (back, seat and arms together) breaking into block chunks and rubble.",
-   "details_en": "The throne is built from chunky painted toy blocks and boxwood rulers (faded red, yellow, blue and green blocks, a natural beech seat, rulers with tick marks). Debris chunks are painted block pieces and rulers, never red-glowing fragments.",
+   "details_en": "The throne is built from sturdy painted toy blocks and boxwood rulers (faded red, yellow, blue and green blocks, a natural beech seat, rulers with tick marks). Debris chunks are painted block pieces and rulers, never red-glowing fragments.",
    "avoid_en": "Only the global avoid list applies.",
    "palette_en": "natural beech #D2A669 (shade #A6783E), ruler boxwood #E4C77A, tick black #2B2B2B, faded paint red #B3473E (paint only) / blue #3C5F9E / yellow #D4AF3A / green #4F8A47, dark seam #5A3E24, rubble beige #B79B6E, pencil graphite #3A3640.",
    "notes_vi": "Cả ngai sụp đổ trong 6 khung.",

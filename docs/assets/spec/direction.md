@@ -5,7 +5,7 @@ Written by the art director pass over `characters.json`, `world.json`, `ui_story
 ## 0. Tóm tắt cho anh (Vietnamese summary)
 
 - Anh nói số lượng phải nhiều vì đây là cả game, nên mình KHÔNG cắt bớt. Tổng cộng vẫn là **7953 file / 821 nhóm** (trước đó 7872 file). Các nhóm bị gỡ chỉ là bản trùng (cùng một vật bị hai nhóm vẽ), không phải nội dung bị bỏ; phần thêm vào nhiều hơn phần gỡ.
-- Một quy tắc pixel duy nhất: tranh thế giới (tile, vật cảnh, quân cờ, boss, hiệu ứng) vẽ theo **lưới 2x2** (vẽ trên lưới nửa kích thước rồi phóng gấp đôi) giống bộ quân cờ anh đã duyệt; giao diện, icon, chân dung và bàn tay của bé vẽ pixel 1x1 (bàn tay mịn gấp đôi thế giới, đúng như bible).
+- (Đã thay thế 2026-10-13, mục 15: mọi ảnh là 1x1.) Một quy tắc pixel duy nhất: tranh thế giới (tile, vật cảnh, quân cờ, boss, hiệu ứng) vẽ theo **lưới 2x2** (vẽ trên lưới nửa kích thước rồi phóng gấp đôi) giống bộ quân cờ anh đã duyệt; giao diện, icon, chân dung và bàn tay của bé vẽ pixel 1x1 (bàn tay mịn gấp đôi thế giới, đúng như bible).
 - Mỗi file là MỘT vật: đã bỏ các ảnh nguyên cảnh (vista 704x360, nền màn hình chính 640x360, thảm 384x288, vignette toàn màn hình). Thay bằng bộ phần nhỏ 64x64 để anh thay từng mảnh; công cụ sẽ ghép.
 - Đã gỡ các vật bị vẽ hai lần (Vua trắng, quân ngã, ngai Xe, 4 quân phong cấp, bia tập, khối phấn, đường Đen, bóng của Mã, cầu phấn, vết chà Rule Mark) và giao mỗi vật cho đúng một nhóm.
 - Đã thêm các thứ còn thiếu: vật cầm của Pawn và kẻ địch (kiếm, bút chì, thước, cục tẩy), bóng chạm sàn dưới nhân vật, mũi tên hướng nhìn, chấm máu kẻ địch, cục tẩy và mẩu phấn là vật mở khoá, ô thảm khuyết ở màn hình chính, thanh thời gian và chấm đợt, hai kẻ địch E7 còn lại (cùng âm thanh), đủ 6 cảm xúc chân dung cho mọi nhân vật.
@@ -13,7 +13,7 @@ Written by the art director pass over `characters.json`, `world.json`, `ui_story
 
 ## 1. Decisions taken as art director
 
-- **Pixel scale.** World art is CHUNKY: each art pixel is a 2x2 block (draw on a half-size grid, upscale 2x nearest). UI, icons, portraits, fonts and the child hand are FINE (1:1). The approved chess family (`tools/generate_chess_sprites.gd`, `block_size_in_world_pixels: 2`) and the tile generator are already chunky, and the bible says the hand is 'twice the pixel density of the chess world', which only holds if the world is 2x2. This answers characters open question 1 and ui_story question 1 (the hand stays 192x144 at 1:1, no 384x288).
+- **Pixel scale.** (Superseded 2026-10-13, section 15: every image is 1x1 and the chunky 2x2 world scale no longer exists.) World art is CHUNKY: each art pixel is a 2x2 block (draw on a half-size grid, upscale 2x nearest). UI, icons, portraits, fonts and the child hand are FINE (1:1). The approved chess family (`tools/generate_chess_sprites.gd`, `block_size_in_world_pixels: 2`) and the tile generator are already chunky, and the bible says the hand is 'twice the pixel density of the chess world', which only holds if the world is 2x2. This answers characters open question 1 and ui_story question 1 (the hand stays 192x144 at 1:1, no 384x288).
 - **Pawn canvas.** (Superseded 2026-10-12, section 13: a piece is smaller than its cell, 32x32.) 32x40 stays (16x20 art pixels). The hero body is restated as about 26x32 px inside it, because the approved generator pawn is 18 art pixels wide with its outline and would not fit; the owner may widen every pawn-family canvas to 36x40 later by editing one scale-table row.
 - **Eyes and mouths.** Chess pieces have no mouths, ever. The hero has two small dark dot eyes (answers characters question 2). Portraits of pieces were rewritten to carry emotion through eyes, brow ridge, lids and tilt (Pebble, Knight Captain and the Queen had smiles in their text).
 - **One view convention.** Camera 65 degrees above the floor (`tools/generate_demo_map.gd`): flat things from straight above, standing things show a short south face, actors are symmetric front elevations with shallow bands for rings. One fixed light from the upper left. Documented once in `style.json`.
@@ -162,9 +162,9 @@ Suggested order: all `must` of M2-M6 first (first playable and Act 1), then M4 s
 
 ## 8. Still needs a human decision before the first prompt is generated
 
-(Answered on 2026-10-12, see section 13: the pawn canvas, the glyphs, the audio format and the stems, the deferred files. Still open: the 2x2 scale, the hand, the story language, the logo wording, the White Queen, the real motif.)
+(Superseded on 2026-10-13, section 15: the 2x2 chunky scale is gone, everything is 1x1. Answered on 2026-10-12, see section 13: the pawn canvas, the glyphs, the audio format and the stems, the deferred files. Still open: the 2x2 scale, the hand, the story language, the logo wording, the White Queen, the real motif.)
 
-- Confirm the 2x2 chunky world scale (section 1) and the 26x32 hero body inside 32x40, or widen the pawn canvas to 36x40.
+- (Answered 2026-10-13, section 15: no 2x2 chunky scale, everything is 1x1.) Confirm the 2x2 chunky world scale (section 1) and the 26x32 hero body inside 32x40, or widen the pawn canvas to 36x40.
 - Child hand: skin tone, age, sleeve; the child's portrait style (crayon self-drawing is the default).
 - Source language of the story (O-4) and the fonts; if Vietnamese, run `python3 tools/asset_requests/build_requests.py --check-font <font>` (automated, reads the cmap table that `FontFile.has_char` reads) and then judge the diacritic clearance at real size by eye.
 - Logo wording (`THE UNBOUND PAWN` is the only image allowed to contain text).
@@ -467,3 +467,27 @@ paths, same priorities, same milestones.
 - **Bosses are pieces** (24x28 at most) until you say otherwise; only `piece_boss_32` and the six boss groups change.
 - **Kenney tile pictures**: still to be looked at once next to the pack preview; 9 `locate` and 12 `compose` entries need your judgement.
 - The scene must change with this list (M2): sprite offset, pips, arrow, weapon pivot, shadows.
+
+## 15. Owner answers applied 2026-10-13: all art at 1x1, boss size per boss
+
+Source: `docs/owner-decisions.md` (the 2026-10-13 entry quotes the owner: "Tất cả 1×1" and "tuỳ boss"). Two commits on the branch `assets/1x1-bosses`, one per decision. Only `docs/assets/` and `tools/asset_requests/` changed.
+
+### 1. "Tất cả 1×1": everything is drawn at 1x1 pixels
+
+Tóm tắt cho anh: mọi ảnh (quân cờ, tile, vật cảnh, hiệu ứng thế giới, giao diện, icon, chân dung, bàn tay của bé) giờ là một pixel vẽ = một pixel game ở 640x360. Không còn lưới 2x2 "chunky", không còn "vẽ nửa kích thước rồi phóng đôi". Canvas 32x32 có đủ 32x32 pixel thật để vẽ chi tiết nên các mô tả đếm chi tiết bằng "art pixel" được viết lại bằng pixel.
+
+What changed:
+
+- **Style block** (`style.json`): the RESOLUTION AND PIXEL SCALE paragraph now says one scale, 1x1, for every file, and states the detail budget (a 32x32 piece or tile has 32x32 individually placed pixels, so single-pixel eye glints, rivets, stitches and grain lines are expected). The two-scale text (CHUNKY 2x2 world, FINE UI, "steps of 2", "2 canvas pixels in world art") is gone; a "1 px" outline is exactly one pixel.
+- **Scale table**: every row has `block_px` 1 (it was 2 on 47 world rows: 21 effect, 16 prop, 9 sprite and 1 tile). The `(NxM art pixels)` counts in the piece rows were dropped (the px size beside them was already right). The child's hand row no longer calls the hand "the only fine-pixel world sprite": it keeps its 192x144 canvas, drawn at the same 1x1 as everything else.
+- **Group texts**: the 67 `(NxM art pixels)` counts in the CELL FIT and body-size sentences were removed (the pixel sizes stay); 7 pawn groups no longer compare the pawn with "the 16-pixel-wide generator output"; the remaining art-pixel counts (marble 6 art pixels, health pip 4x4 art-pixel disc, facing arrow, guard crumbs, swipe crumbs, a dash "a multiple of the 2 px art pixel") are restated in pixels; "chunky" in pixel-art senses (the Rule Engine, vista kits, title overlays, actor shadows, HUD shapes, the wordmark) became "1x1 pixels" or "bold", and in object senses (a chunky toy block, post, train) "sturdy" or "thick"; "2x2" fragments, sparks and dots became "2 px square"; the child hand is no longer "twice the pixel density of the chess pieces".
+- **Generator** (`build_requests.py`): `resolve_block_px` is always 1; the CANVAS line of every image prompt reads "1 art pixel = 1 game pixel"; the acceptance line asks for real 1x1 pixels; README/STYLE text and the relaxed-rule notes follow. New lint `lint_pixel_scale` (below).
+
+The new lint fails the build when any image prompt still mentions a 2x2 block, "chunky" art, half-size or half-resolution drawing, upscaling, art pixels as a unit of their own, a block of identical pixels, "steps of 2", or a "world" versus "fine" pixel scale; it also requires the RESOLUTION AND PIXEL SCALE paragraph, `block_px` 1 on every scale row and the 1x1 CANVAS wording. A bare "2x2" is rejected unless it counts cells ("a 2x2-cell emblem", "the 2x2 hub emblem", "a 2x2 round table"). `python3 tools/asset_requests/build_requests.py --self-test` proves it on sample phrases.
+
+Totals did not change: **8300 files in 856 groups**, same paths, ids, priorities and milestones. Every one of the 6758 image prompts changed (the style block and the CANVAS line); 2098 files in 109 groups also changed in their own text.
+
+### Still open
+
+- The placeholder generators that still draw 2x2 blocks (kingdom tiles, Stage 1 room art, `tools/generate_chess_sprites.gd`) are brought to 1x1 when next touched; this list does not depend on them.
+- The hand is no longer "twice as fine" as the world. Its 192x144 canvas is unchanged; if you want it to read as bigger or smaller next to a pawn, that is one scale-table row.

@@ -39,8 +39,14 @@ Validation (exit code 1 on any failure, nothing is written then):
     canvas of its cell, no prompt names another group or points at a sibling
     file by name ("as path_pink_h", "identical to prop_closed.png", "idle frame 1"),
     music is one complete
-    track (no stems). Warnings (not blocking): pair-style file names and images
-    larger than 128x96.
+    track (no stems). Pixel scale (owner decision 2026-10-13, "Tat ca 1x1", lint_pixel_scale):
+    every image is drawn at 1x1, so every scale-table row has block_px 1, every CANVAS line
+    says "1 art pixel = 1 game pixel", and no image prompt may still talk about 2x2 blocks,
+    "chunky" art, half-size or half-resolution drawing, upscaling, art pixels as a unit of
+    their own or a "world" versus "fine" pixel scale; the build fails with the group and the
+    phrase. Warnings (not blocking): pair-style file names and images larger than 128x96.
+    --self-test proves the rules catch those phrases and spare plain cell counts ("a 2x2-cell
+    emblem").
 
 Fonts (Vietnamese coverage, no spec needed):
     python3 tools/asset_requests/build_requests.py --check-font assets/fonts/ui_body_pixel.ttf
@@ -70,7 +76,10 @@ AUDIO_KINDS = ("sfx", "music", "ambience", "voice_blip")
 FONT_KINDS = ("font",)
 SOURCING_KINDS = ("sourcing",)  # files the owner copies out of a licensed pack (nothing is drawn): the Kenney CC0 input glyphs
 PRIORITIES = ("must", "should", "could")
-UI_LIKE_KINDS = ("ui", "icon", "portrait", "font", "sourcing")  # fine 1x1 pixels (style: UI, HUD, icons, portraits)
+# Owner decision 2026-10-13 ("Tat ca 1x1"): EVERY image is drawn at 1x1 pixels on the native 640x360, so there is exactly one
+# pixel scale and no per-kind or per-group block size. block_px stays in the entries and the manifest (always 1) so tools that
+# read them keep working; lint_pixel_scale rejects any spec that asks for something else.
+PIXEL_SCALE = 1
 IMAGE_EXT = (".png",)
 AUDIO_EXT = (".wav", ".ogg")
 # Owner decision 2026-10-12 ("SFX WAV, nhac OGG"): sound effects and voice blips are WAV, music and ambience are OGG Vorbis.
@@ -90,11 +99,9 @@ RELAXED = [
     "Fonts (kind 'font', 4 entries): the owner supplies a font file, nothing is drawn, so these "
     "prompts are sourcing briefs. They are exempt from the 'prompt contains the style block' rule, "
     "from the 'image entries have a size' rule and from the PNG checks (they must end in .ttf or .otf).",
-    "CANVAS wording: the brief asked for '1 art pixel = 1 game pixel' on every image. The style block "
-    "makes world art (tiles, props, actors, bosses, world effects) CHUNKY, one art pixel = a 2x2 block, "
-    "so those prompts say that instead; only UI, icons, portraits, fonts and the child's hand keep "
-    "'1 art pixel = 1 game pixel'. Tiles, and the other files flagged opaque (map ground tiles, paper tiles, "
-    "vista tile_ fills), say 'fully opaque' instead of 'transparent background'.",
+    "CANVAS wording: every image prompt says '1 art pixel = 1 game pixel' (owner decision 2026-10-13: all art is 1x1, so the "
+    "old chunky exception for world art is gone). Only opaque files (tiles, map ground tiles, paper tiles, vista tile_ fills) say "
+    "'fully opaque' instead of 'transparent background'.",
     "DO NOT wording: the shared DO NOT line is written for one free-standing object on a transparent canvas. "
     "Tiles and opaque ground pieces use the 'surface' variant and UI, 9-patch, frame and fence files use the "
     "'frame' variant (style.json global_avoid_variants_en), so a floor, a wall, a panel or a fence is never "
@@ -107,10 +114,8 @@ RELAXED_VI = [
     "Font (loại `font`, 4 mục): font do anh cung cấp, không có gì để vẽ, nên prompt của chúng là bản hướng dẫn tìm "
     "file. Các mục này được miễn quy tắc 'prompt chứa khối phong cách', quy tắc 'mục ảnh có kích thước' và kiểm tra "
     "PNG (thay bằng: đuôi phải là `.ttf` hoặc `.otf`).",
-    "Dòng CANVAS trong prompt ảnh: yêu cầu gốc ghi 'một pixel vẽ = một pixel game' cho mọi ảnh. Khối phong cách quy định "
-    "tranh thế giới (tile, vật cảnh, nhân vật, boss, hiệu ứng thế giới) vẽ lưới 2x2, một pixel vẽ = một khối 2x2 pixel "
-    "game, nên các prompt đó ghi như vậy; chỉ giao diện, icon, chân dung, font và bàn tay của bé giữ "
-    "'một pixel vẽ = một pixel game'. Tile và các file đánh dấu đặc (ô nền bản đồ, ô giấy, mảnh tile_ của vista) ghi "
+    "Dòng CANVAS trong prompt ảnh: mọi ảnh ghi 'một pixel vẽ = một pixel game' (quyết định của anh, 2026-10-13: tất cả 1x1, không còn "
+    "ngoại lệ pixel to hơn cho tranh thế giới). Chỉ các file đánh dấu đặc (ô nền bản đồ, ô giấy, mảnh tile_ của vista, tile) ghi "
     "'đặc hoàn toàn' thay cho 'nền trong suốt'.",
     "Dòng DO NOT: dòng chung viết cho MỘT vật đứng riêng trên nền trong suốt. Tile và ô nền đặc dùng biến thể `surface`, "
     "UI/9-patch/khung/hàng rào dùng biến thể `frame` (style.json, global_avoid_variants_en) để sàn, tường, bảng, hàng rào "
@@ -299,19 +304,9 @@ def load_specs(spec_dir, problems):
 # --------------------------------------------------------------------------- scale / pixel grid
 
 def resolve_block_px(group, scale_table):
-    """Pixel block of an image group: 1 (fine, UI-like) or 2 (chunky world art)."""
-    explicit = group.get("block_px")
-    if isinstance(explicit, int) and explicit > 0:
-        return explicit
-    kind = group.get("kind")
-    if kind in UI_LIKE_KINDS:
-        return 1
-    size = group.get("size")
-    if size:
-        for row in scale_table:
-            if row.get("kind") == kind and list(row.get("size", [])) == list(size):
-                return int(row.get("block_px", 2))
-    return 2
+    """Pixel block of an image group. Owner decision 2026-10-13 ('Tat ca 1x1'): always 1, for every kind and size.
+    A spec that still asks for another block (a group 'block_px', a scale-table row) is rejected by lint_pixel_scale."""
+    return PIXEL_SCALE
 
 
 def colour_limit(group):
@@ -433,7 +428,7 @@ def tile_data_line(tile_data):
     return head
 
 
-def canvas_line(group, block_px, opaque):
+def canvas_line(group, opaque):
     width, height = group["size"]
     if opaque:
         exception = ""
@@ -441,16 +436,13 @@ def canvas_line(group, block_px, opaque):
             exception = " (except the hole the description names, which shows the floor below)"
         return ("CANVAS: exactly %dx%d pixels, fully opaque%s - alpha 255 on every pixel, the art fills the canvas "
                 "edge to edge with no transparent background, %s, no anti-aliasing." %
-                (width, height, exception, grid_phrase(width, height, block_px)))
+                (width, height, exception, GRID_PHRASE))
     return ("CANVAS: exactly %dx%d pixels, transparent background, %s, no anti-aliasing to transparency." %
-            (width, height, grid_phrase(width, height, block_px)))
+            (width, height, GRID_PHRASE))
 
 
-def grid_phrase(width, height, block_px):
-    if block_px == 1:
-        return "1 art pixel = 1 game pixel"
-    return ("1 art pixel = a %dx%d block of identical game pixels (draw on a %dx%d grid, then upscale %dx with "
-            "nearest-neighbour)" % (block_px, block_px, width // block_px, height // block_px, block_px))
+# Owner decision 2026-10-13 ("Tat ca 1x1"): the same wording on every image prompt, as the original brief asked.
+GRID_PHRASE = "1 art pixel = 1 game pixel (every pixel of the canvas is placed individually at native size)"
 
 
 def frame_subject(entry, group, reference_path, is_first_of_group):
@@ -472,7 +464,7 @@ def frame_subject(entry, group, reference_path, is_first_of_group):
     return text
 
 
-def compose_image_prompt(style, group, entry, block_px, reference_path, is_first_of_group):
+def compose_image_prompt(style, group, entry, reference_path, is_first_of_group):
     lines = [style["style_block_en"].rstrip(), ""]
     if entry["is_frame"]:
         lines.append("SUBJECT: " + group["subject_en"].strip())
@@ -482,7 +474,7 @@ def compose_image_prompt(style, group, entry, block_px, reference_path, is_first
         lines.append("THIS FILE: " + entry["what_en"].strip())
     if group.get("details_en", "").strip():
         lines.append("DETAILS: " + group["details_en"].strip())
-    lines.append(canvas_line(group, block_px, entry["opaque"]))
+    lines.append(canvas_line(group, entry["opaque"]))
     lines.append("ANCHOR: " + (group.get("anchor") or "none").strip())
     palette = (entry.get("palette_text") or "").strip()
     lines.append("PALETTE: " + (palette if palette else "the shared palette of the style above only; no extra colours."))
@@ -591,7 +583,7 @@ def uses_translucency(text):
     return bool(TRANSLUCENT_HINT.search(text) or OPACITY_PERCENT.search(text))
 
 
-def image_acceptance(group, entry, block_px):
+def image_acceptance(group, entry):
     width, height = group["size"]
     bits = ["PNG RGBA 8-bit đúng %dx%d px" % (width, height)]
     if entry["opaque"]:
@@ -607,11 +599,7 @@ def image_acceptance(group, entry, block_px):
                         "alpha = % x 255, tô phẳng), viền ngoài vẫn cứng")
         else:
             bits.append("có kênh alpha, nền trong suốt, alpha chỉ 0 hoặc 255 (không viền mờ)")
-    if block_px == 1:
-        bits.append("pixel 1x1, không phóng to, không nội suy")
-    else:
-        bits.append("lưới %dx%d: mỗi khối %dx%d pixel (căn theo toạ độ chẵn) đồng màu và đồng alpha" %
-                    (block_px, block_px, block_px, block_px))
+    bits.append("pixel 1x1 thật (một pixel vẽ = một pixel game), không phóng to, không nội suy, không có khối pixel lớn hơn")
     bits.append("tối đa %d màu khác nhau (cảnh báo, không chặn)" % colour_limit(group))
     anchor = (group.get("anchor") or "none").strip()
     if anchor.lower().startswith("none"):
@@ -904,8 +892,6 @@ def build_entries(style, specs, problems):
                     problems.error("%s: image group has no valid size (%r)" % (where, size))
                     continue
                 block_px = resolve_block_px(group, scale_table)
-                if size[0] % block_px or size[1] % block_px:
-                    problems.error("%s: size %s is not divisible by the %dx%d pixel block" % (where, size, block_px, block_px))
             if media == "audio":
                 audio = group.get("audio")
                 if not isinstance(audio, dict):
@@ -1021,8 +1007,8 @@ def build_entries(style, specs, problems):
                     entry["avoid_profile"] = image_avoid_profile(group, item)
                     if kind == "tile" and not item.get("tile_data"):
                         problems.error("%s: tile file %s has no tile_data" % (where, name))
-                    entry["prompt"] = compose_image_prompt(style, group, entry, block_px, reference_path, False)
-                    entry["acceptance"] = image_acceptance(group, entry, block_px)
+                    entry["prompt"] = compose_image_prompt(style, group, entry, reference_path, False)
+                    entry["acceptance"] = image_acceptance(group, entry)
                 elif media == "audio":
                     audio = group["audio"]
                     duration = item.get("duration_s", audio.get("duration_s"))
@@ -1097,8 +1083,8 @@ def build_entries(style, specs, problems):
                         placeholder=group.get("placeholder_now") or "none",
                         opaque=is_opaque(group), avoid_profile=image_avoid_profile(group, None),
                     )
-                    entry["prompt"] = compose_image_prompt(style, group, entry, block_px, reference_path, first_of_group)
-                    entry["acceptance"] = image_acceptance(group, entry, block_px)
+                    entry["prompt"] = compose_image_prompt(style, group, entry, reference_path, first_of_group)
+                    entry["acceptance"] = image_acceptance(group, entry)
                     entries.append(entry)
                     group_info["entry_ids"].append(entry["id"])
     return groups, entries
@@ -1501,6 +1487,133 @@ def lint_sourcing(specs, problems):
                         problems.error("%s/%s: file %s needs 'source' and a coverage of %s" % (category, group.get("group_id"), item.get("name"), SOURCING_COVERAGE))
 
 
+# --------------------------------------------------------------------------- 1x1 pixel scale (owner decision 2026-10-13)
+
+# Owner decision 2026-10-13 ("Tat ca 1x1"): EVERY image is drawn at 1x1 pixels on the native 640x360: pieces, tiles, props, world
+# effects, UI, icons, portraits. There is no 2x2 chunky world scale any more. A prompt that still talks about blocks of pixels, a
+# half-size grid, upscaling, "chunky" art, art pixels as a unit of its own or "world" versus "fine" pixels is stale and would make
+# an image tool draw the wrong density, so the build fails on it. The rules read the words an author writes about the pixel scale;
+# a count of CELLS ("a 2x2-cell emblem", "the 2x2 hub emblem", "a 2x2 round table") and the plain adjective "fine" for a material
+# are not pixel talk and pass; any other bare "2x2" (a 2x2 dot, 2x2 fragments) must be restated ("2 px square").
+STALE_PIXEL_SCALE_RULES = (
+    ("a 2x2 block of pixels", re.compile(
+        r"\b2\s*[x\u00d7]\s*2\b(?![ -]*(?:cells?|emblem|hub|rug|table|drum|footprint|centre|center|round|quarters?))", re.I)),
+    ("chunky art", re.compile(r"\bchunk(?:y|ier|iest|iness)\b", re.I)),
+    ("half-resolution or half-size drawing", re.compile(
+        r"\bhalf[- ](?:size|sized|resolution|res|scale|scaled|grid|density)\b|\b(?:low|reduced|coarse)[- ]res(?:olution)?\b", re.I)),
+    ("upscaling or doubling", re.compile(
+        r"\bup[- ]?scal\w*|\bdoubl(?:e|ed|ing)\s+(?:it|up|the size|the grid|each pixel|every pixel)\b|\benlarged?\s+(?:2x|twice|by 2)\b", re.I)),
+    ("art pixels counted as their own unit", re.compile(r"\b\d+\s*(?:[x\u00d7]\s*\d+\s*)?art[- ]pixels?\b(?!\s*=)", re.I)),
+    ("a block of identical pixels", re.compile(
+        r"\b(?:pixel|px)[- ]blocks?\b|\bblocks? of (?:identical|\d+\s*[x\u00d7]\s*\d+|\d+ ?px|game|delivered|\d+ pixels)"
+        r"|\bidentical (?:game |delivered )?pixels\b|\bdraw(?:n)? on a \d+\s*[x\u00d7]\s*\d+ grid\b", re.I)),
+    ("even-step or canvas-pixel measures", re.compile(
+        r"\bsteps? of 2\b|\b2 canvas pixels?\b|\bmultiples? of (?:the )?2 px\b|\ba 2 px art pixel\b", re.I)),
+    ("two pixel scales (world versus fine)", re.compile(
+        r"\btwo pixel scales\b|\b(?:world|chess|chunky) pixels\b|(?-i:\bFINE\b)|\btwice as fine\b|\btwice the pixel density\b"
+        r"|\bfiner pixel work\b|\bfine pixels?\b|\bpixel density of the\b", re.I)),
+)
+
+
+def stale_pixel_scale_hits(text):
+    """Every stale pixel-scale phrase of one text as (rule name, matched text)."""
+    hits = []
+    for name, pattern in STALE_PIXEL_SCALE_RULES:
+        for match in pattern.finditer(text):
+            hits.append((name, match.group(0)))
+    return hits
+
+
+# Sample texts for --self-test: each of the first group must be caught by the named rule, none of the second may be.
+PIXEL_SCALE_LINT_MUST_FAIL = (
+    ("a 2x2 block of pixels", "every art pixel is a 2x2 block of identical delivered pixels"),
+    ("a 2x2 block of pixels", "a 2x2 px gold dot with one white pixel"),
+    ("a 2x2 block of pixels", "drawn on a 2x2 pixel grid"),
+    ("a 2x2 block of pixels", "three 2x2 yellow fragments fly out"),
+    ("a 2x2 block of pixels", "a rosette (2x2 ivory/charcoal squares)"),
+    ("chunky art", "Chunky machine pixel art with a near-black outline"),
+    ("chunky art", "a chunkier burst"),
+    ("half-resolution or half-size drawing", "draw on a half-size grid"),
+    ("half-resolution or half-size drawing", "drawn at half resolution"),
+    ("upscaling or doubling", "then upscale 2x with nearest-neighbour"),
+    ("art pixels counted as their own unit", "body box 18x22 px (9x11 art pixels)"),
+    ("art pixels counted as their own unit", "a 4x4 art-pixel disc"),
+    ("a block of identical pixels", "each pixel is a block of 2x2 pixels"),
+    ("even-step or canvas-pixel measures", "rounded to steps of 2"),
+    ("two pixel scales (world versus fine)", "Two pixel scales exist"),
+    ("two pixel scales (world versus fine)", "drawn in chunky world pixels"),
+    ("two pixel scales (world versus fine)", "UI is FINE"),
+)
+PIXEL_SCALE_LINT_MUST_PASS = (
+    "1 art pixel = 1 game pixel (every pixel of the canvas is placed individually at native size)",
+    "a 2x2-cell emblem split into four 32x32 quarters",
+    "Nw/ne/sw/se is the quarter's position in the 2x2 hub emblem",
+    "the footprint is 2x2 cells",
+    "a round tea-party table (four 32x32 quarters forming a 2x2 table)",
+    "the pawn silhouette is cut exactly at the 2x2 centre",
+    "plain meadow-green felt with fine fibres",
+    "a sturdy wooden toy block and a thick painted post",
+    "a 2 px square dot, 4 px by 2 px specks and a 1 px outline",
+    "the chess-piece body is 18x22 px",
+)
+
+
+def run_pixel_scale_lint_self_test(out=sys.stdout):
+    """Prove the stale-pixel-scale rules catch what they must and spare what they must: exit code 0 or 1."""
+    failures = 0
+    for rule, sample in PIXEL_SCALE_LINT_MUST_FAIL:
+        names = {name for name, _text in stale_pixel_scale_hits(sample)}
+        if rule not in names:
+            failures += 1
+            print("SELF-TEST FAIL: rule %r did not catch %r (caught: %s)" % (rule, sample, sorted(names) or "nothing"), file=out)
+    for sample in PIXEL_SCALE_LINT_MUST_PASS:
+        hits = stale_pixel_scale_hits(sample)
+        if hits:
+            failures += 1
+            print("SELF-TEST FAIL: %r must pass but the lint flags %s" % (sample, hits), file=out)
+    if failures:
+        return 1
+    print("pixel-scale lint self-test OK: %d stale samples caught, %d clean samples passed" % (
+        len(PIXEL_SCALE_LINT_MUST_FAIL), len(PIXEL_SCALE_LINT_MUST_PASS)), file=out)
+    return 0
+
+
+def lint_pixel_scale(style, specs, entries, problems):
+    """Owner decision 2026-10-13 ('Tat ca 1x1'): one pixel scale for every image, and no prompt talks about another one."""
+    block = style.get("style_block_en", "")
+    if "RESOLUTION AND PIXEL SCALE" not in block or "1x1" not in block:
+        problems.error("style.json: the style block must keep its RESOLUTION AND PIXEL SCALE paragraph and say that every image is drawn at 1x1")
+    for row in style.get("scale_table", []):
+        if row.get("block_px") != PIXEL_SCALE:
+            problems.error("style.json: scale row %s has block_px %r; every image is drawn at 1x1 (block_px %d)" % (
+                row.get("id"), row.get("block_px"), PIXEL_SCALE))
+    for category, groups in specs.items():
+        for group in groups:
+            if "block_px" in group and group["block_px"] != PIXEL_SCALE:
+                problems.error("%s/%s: block_px %r; every image is drawn at 1x1" % (category, group.get("group_id"), group["block_px"]))
+    # The style block and the shared DO NOT lines are read once; every image prompt is the style block plus its own text.
+    shared = [("style block", block), ("global_avoid_en", style.get("global_avoid_en", ""))]
+    shared += [("avoid variant %s" % name, text) for name, text in (style.get("global_avoid_variants_en") or {}).items()]
+    for label, text in shared:
+        for rule, found in stale_pixel_scale_hits(text):
+            problems.error("style.json: %s still talks about the old pixel scale (%s: %r)" % (label, rule, found))
+    reported = set()
+    for entry in entries:
+        if entry["media"] != "image":
+            continue
+        prompt = entry["prompt"]
+        if GRID_PHRASE not in prompt:
+            problems.error("%s: the CANVAS line must say %r" % (entry["id"], GRID_PHRASE))
+        own = prompt[len(block.rstrip()):] if prompt.startswith(block.rstrip()) else prompt
+        for rule, found in stale_pixel_scale_hits(own):
+            key = (entry["category"], entry["group_id"], rule)
+            if key in reported:
+                continue
+            reported.add(key)
+            problems.error("%s/%s: the prompt of %s still mentions the old pixel scale (%s: %r); every image is 1x1, restate it in pixels" % (
+                entry["category"], entry["group_id"], entry["path"], rule, found))
+
+
 # --------------------------------------------------------------------------- statistics
 
 def collect_stats(groups, entries):
@@ -1723,8 +1836,8 @@ def render_style_md(style):
     for name, text in style.get("global_avoid_audio_variants_en", {}).items():
         lines += ["### Điều không được làm trong âm thanh, biến thể `%s`" % name, "", audio_descriptions.get(name, ""), "", "```text", text.rstrip(), "```", ""]
     lines += ["## Bảng kích thước (scale table)", "",
-              "Mọi canvas và điểm neo trong danh sách khớp một hàng của bảng này. Cột lưới: `2x2` nghĩa là vẽ trên lưới nửa "
-              "kích thước rồi phóng gấp đôi bằng nearest-neighbour; `1x1` là pixel thật.", ""]
+              "Mọi canvas và điểm neo trong danh sách khớp một hàng của bảng này. Cột lưới: mọi hàng là `1x1` (quyết định của anh, "
+              "2026-10-13): một pixel vẽ = một pixel game ở độ phân giải gốc 640x360, không có khối pixel lớn hơn ở đâu cả.", ""]
     lines += table(["Lớp", "Loại", "Canvas", "Lưới", "Điểm neo", "Dùng cho"], scale_table_rows(style))
     lines += ["", "## Quy tắc giao file", ""]
     for rule in style.get("delivery_rules_vi", []):
@@ -1764,6 +1877,9 @@ def render_readme(style, groups, stats, spec_link):
               "(khung/viền chính là vật cần vẽ); nhóm âm thanh người của bé và nền buổi sáng có chim dùng biến thể âm thanh riêng. Xem `STYLE.md`.",
               "- **Mỗi mục có dòng `Kiểm tra`**: tiêu chí nghiệm thu tự động (kích thước đúng, RGBA có alpha, lưới pixel, điểm neo; "
               "với âm thanh: định dạng, thời lượng ±10%, đỉnh, điểm lặp).",
+              "- **Mọi ảnh vẽ pixel 1x1 (quyết định của anh, 2026-10-13: \"Tất cả 1×1\").** Quân cờ, boss, tile, vật cảnh, hiệu ứng thế giới, giao diện, "
+              "icon, chân dung và bàn tay của bé đều là một pixel vẽ = một pixel game ở độ phân giải gốc 640x360: không vẽ trên lưới nhỏ rồi phóng to, "
+              "không có khối pixel lớn hơn ở đâu cả. Canvas 32x32 nghĩa là có đủ 32x32 pixel thật để vẽ chi tiết (đinh tán, mũi khâu, thớ gỗ, điểm sáng một pixel).",
               "- **Quân cờ nhỏ hơn ô (quyết định của anh, 2026-10-12).** Mọi quân cờ (pawn của anh, mọi kẻ địch và biến thể, quân trắng được cứu, Vua trắng đã ngã, "
               "sáu boss) vẽ trên canvas 32x32 = đúng một ô, thân quân nằm gọn bên trong và chừa ít nhất 2 px trống mỗi cạnh: không bằng ô, không cao hơn ô. "
               "Chiều cao theo bộ cờ thật: Tốt thấp nhất, rồi Mã/Tượng/Xe, rồi Hậu, Vua cao nhất. Bảng cỡ ở mục 4 ghi từng hạng quân.",
@@ -1784,8 +1900,8 @@ def render_readme(style, groups, stats, spec_link):
     lines += ["## 3. Danh sách kiểm tra khi giao file", "",
               "1. File đúng đường dẫn và đúng tên ghi ở mục `File` (chữ thường, không dấu cách).",
               "2. Ảnh: PNG RGBA 8-bit, đúng kích thước canvas, nền trong suốt (tile, nền bản đồ và mảnh vista đặc thì đặc hoàn toàn), không làm mờ, không răng cưa.",
-              "3. Tranh thế giới vẽ lưới 2x2 (vẽ trên lưới nửa kích thước rồi phóng gấp đôi, nearest-neighbour); giao diện, icon, "
-              "chân dung và bàn tay của bé vẽ pixel 1x1.",
+              "3. Mọi ảnh vẽ pixel 1x1 (quyết định của anh, 2026-10-13): quân cờ, boss, tile, vật cảnh, hiệu ứng thế giới, giao diện, icon, "
+              "chân dung và bàn tay của bé đều là một pixel vẽ = một pixel game ở độ phân giải gốc 640x360, không phóng to, không khối pixel lớn hơn.",
               "4. Điểm neo (chân/đế) đúng toạ độ ghi trong `Spec`; các khung của một clip không lệch ngang quá 3 px. Mọi khung sau được tạo từ "
               "ảnh tham chiếu đã duyệt (xem mục 1), không vẽ rời từng khung.",
               "5. Không có chữ hoặc số trong ảnh (trừ logo và phím); đỏ san hô chỉ cho sát thương sắp xảy ra.",
@@ -1868,7 +1984,11 @@ def render_readme(style, groups, stats, spec_link):
 
     lines += ["## 8. Kiểm tra tự động khi sinh danh sách", "",
               "- Đường dẫn là duy nhất (kể cả khi bỏ phân biệt chữ hoa thường) và id là duy nhất.",
-              "- Mọi mục ảnh có kích thước hợp lệ, chia hết cho khối pixel (2x2 hoặc 1x1) và có đuôi `.png`; SFX và giọng có đuôi `.wav`, nhạc và ambience có đuôi `.ogg`.",
+              "- Mọi mục ảnh có kích thước hợp lệ, có đuôi `.png`; SFX và giọng có đuôi `.wav`, nhạc và ambience có đuôi `.ogg`.",
+              "- Mọi ảnh vẽ pixel 1x1: khối phong cách còn đoạn RESOLUTION AND PIXEL SCALE, mọi hàng bảng cỡ có `block_px` 1, mọi dòng CANVAS ghi "
+              "'1 art pixel = 1 game pixel', và không prompt ảnh nào còn nhắc khối pixel 2x2, chữ 'chunky', vẽ nửa kích thước hoặc nửa độ phân giải, "
+              "'upscale', 'art pixel' làm đơn vị riêng hay hai thang pixel 'world' và 'fine' (build thất bại, nêu nhóm và cụm từ). "
+              "`python3 tools/asset_requests/build_requests.py --self-test` chứng minh luật bắt được những cụm đó và bỏ qua số ô như '2x2 cells'.",
               "- Mọi quân cờ (nhóm có `piece_class`) vẽ trên canvas 32x32, có đoạn CELL FIT trong mô tả và đúng một hàng trong bảng cỡ; không sprite nào của "
               "lane nhân vật lớn hơn một ô trừ bàn tay của bé và Cỗ máy Luật (không phải quân cờ).",
               "- Prompt tự đủ ý: không prompt nào nêu tên nhóm khác (id kiểu `ten_nhom`); thứ cần từ nhóm khác phải được viết thẳng vào prompt (màu thì dùng `{palette:<id>}`).",
@@ -2024,6 +2144,9 @@ def main(argv=None):
     parser.add_argument("--slim-manifest", action="store_true", help="leave the prompt text out of asset-manifest.json "
                                                                       "(it is about as large as all the Markdown together)")
     parser.add_argument("--quiet", action="store_true", help="only print problems")
+    parser.add_argument("--self-test", action="store_true",
+                        help="do nothing else: prove that the 1x1 pixel-scale lint catches 2x2 blocks, chunky art, half-size grids "
+                             "and the other stale phrases, and spares plain cell counts, then exit 0 (or 1 on a miss)")
     parser.add_argument("--check-font", nargs="+", metavar="FONT",
                         help="do nothing else: check that each .ttf/.otf covers the full Vietnamese set (reads the font's cmap table, "
                              "the table FontFile.has_char reads) and exit 1 when a character is missing")
@@ -2032,6 +2155,8 @@ def main(argv=None):
                              "exists under <REPO_ROOT>/assets/fonts (fonts not delivered yet are skipped); a failing font fails the build")
     args = parser.parse_args(argv)
 
+    if args.self_test:
+        return run_pixel_scale_lint_self_test()
     if args.check_font:
         return run_font_check(args.check_font)
 
@@ -2075,6 +2200,7 @@ def main(argv=None):
     groups, entries = build_entries(style, specs, problems)
     validate(style, groups, entries, gitignore_rules, problems)
     lint_specs(style, specs, problems)
+    lint_pixel_scale(style, specs, entries, problems)
     if args.check_fonts:
         for font in owner_font_paths(args.check_fonts):
             try:
