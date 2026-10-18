@@ -429,7 +429,7 @@ New kind and media `sourcing`; `.ogg` for music and ambience and `.wav` for SFX 
 
 - Decide whether the credits should be a one-shot with a final chord (a different file) or the looping piece now specified.
 - The Kenney tile numbers marked `tile` come from a community listing, not from the pack: check each against the preview. Tab, Ctrl, Alt, Enter and the D-pad are `locate`.
-- Bosses are treated as pieces (24x28 at most) by default; tell me if a boss may be larger and only `piece_boss_32` and the six boss groups change.
+- (Answered 2026-10-13, section 15: boss size is per boss.) Bosses are treated as pieces (24x28 at most) by default; tell me if a boss may be larger and only `piece_boss_32` and the six boss groups change.
 - The scene must change with this list (M2): sprite offset, pips, arrow, weapon pivot, shadows.
 
 ## 14. Owner answers applied 2026-10-12, round 5: fixes after the verifier
@@ -464,7 +464,7 @@ paths, same priorities, same milestones.
 
 - **The 28 `remains` files are not all `could`**: 10 are, 11 (active enemies) are `should` and 7 (the six boss toys and the Rule Engine's open box, which the 'cleared rooms stay clean' decision needs) are `must`. Answer 4 said "no change", so priorities are untouched. Setting all 28 to `could` is one line in each of the 18 groups; say so and it moves them to the end of their milestone.
 - **Anchor**: (16,30) is the only anchor a 28 px king can use with a 2 px margin. If "slightly below the centre" meant the sprite node's origin should be the cell centre instead, that is a scene offset of (0,-14), not a change to the art.
-- **Bosses are pieces** (24x28 at most) until you say otherwise; only `piece_boss_32` and the six boss groups change.
+- (Answered 2026-10-13, section 15: boss size is per boss.) **Bosses are pieces** (24x28 at most) until you say otherwise; only `piece_boss_32` and the six boss groups change.
 - **Kenney tile pictures**: still to be looked at once next to the pack preview; 9 `locate` and 12 `compose` entries need your judgement.
 - The scene must change with this list (M2): sprite offset, pips, arrow, weapon pivot, shadows.
 
@@ -487,7 +487,32 @@ The new lint fails the build when any image prompt still mentions a 2x2 block, "
 
 Totals did not change: **8300 files in 856 groups**, same paths, ids, priorities and milestones. Every one of the 6758 image prompts changed (the style block and the CANVAS line); 2098 files in 109 groups also changed in their own text.
 
+### 2. "Tuỳ boss": boss size per boss
+
+Tóm tắt cho anh: mỗi boss có chỗ đứng riêng. Đội Trưởng Tốt Đen, Mã Đội Trưởng, Giáo chủ Tượng, Nữ hoàng Mánh Khóe và Vua Đen đứng trên MỘT ô (canvas 32x32, thân gọn trong đó chừa 2 px). Xe Cai Ngục chiếm 2x2 ô ở giai đoạn 1 và 2 (canvas 64x64, thân tối đa 56x52, đế ở (32,62) sát đáy, chừa 2 px mỗi cạnh) rồi chỉ còn một ô ở giai đoạn 3 sau khi tự phá ngai. Cỗ máy Luật sau lưng Vua chiếm 3x3 ô (canvas 96x96, thân tối đa 92x92, đế ở (48,94)). Các số thân boss ở bảng dưới là đề xuất của mình (anh sửa được: mỗi dòng là một hàng của bảng cỡ).
+
+| boss | footprint | canvas | body box (px) | base-bottom anchor | groups |
+|---|---|---|---|---|---|
+| Black Pawn Captain | 1 cell | 32x32 | at most 24x22 | (16,30) | `boss_captain_looks`, `_combat`, `_story` |
+| Knight Captain | 1 cell | 32x32 | at most 24x24 | (16,30) | `boss_knight_captain_*` |
+| Bishop Oracle | 1 cell | 32x32 | at most 22x24 | (16,30) | `boss_bishop_oracle_*` |
+| Rook Warden, phases 1 and 2 | 2x2 cells | 64x64 | at most 56x52, top y=10 | (32,62) | `boss_rook_warden_looks`, `_combat`, `_story` |
+| Rook Warden, phase 3 | 1 cell | 32x32 | at most 24x24 | (16,30) | `boss_rook_warden_looks_p3`, `_combat_p3`, `_story_p3` |
+| Queen of Tricks | 1 cell | 32x32 | at most 24x26 | (16,30) | `boss_queen_*` |
+| Black King | 1 cell | 32x32 | at most 24x28 | (16,30) | `boss_king_*` |
+| Rule Engine (machine behind the King) | 3x3 cells | 96x96 | at most 92x92 (squat cabinet about 88x80) | (48,94) | `boss_rule_engine` |
+
+What changed:
+
+- **Scale table**: `piece_boss_32` now lists the five one-cell bosses and the Warden's phase 3; new rows `piece_boss_2x2_64` (Warden, phases 1 and 2) and `boss_engine_3x3_96` replace `boss_engine_96x80`. The style block says a boss's size is its own, and that a body on a larger footprint obeys the rule of a piece on one cell (smaller than the footprint, 2 px margin, base line near the bottom).
+- **Bodies, phase looks and every frame**: the five one-cell bosses keep their canvas and gain the sentence that this boss stands on one cell. The Rook Warden is split by phase because a group has one canvas: the looks, combat and story groups (phases 1 and 2, 64x64) each get a sibling `_p3` group (phase 3, 32x32). The Warden's 17 combat clips and 5 story clips on the big canvas are re-measured for a 56x52 body (every px measure x2.4: a 2 px squash is now 5 px); phase 3 keeps its clips. The charge loops had one look for any phase, so three one-cell `charge_p3_s/n/e` loops (9 frames) were added. The phase 2 to phase 3 transition starts on the full footprint, so it stays on the 64x64 canvas and its last two frames show the Warden shrinking to one cell (24x24 body) in the footprint's south-west cell: that cell is my proposal for where the shrunk piece stands (the engine can keep another cell; the art would then be mirrored). The Rule Engine goes from 96x80 to 96x96 with a CELL FIT paragraph (92x92 at most, 2 px margin, base rim y=94).
+- **Boss-owned overlays sized to the footprint**: the boss shadow `actor_shadow_l` (32x16) now covers the five one-cell bosses and the Warden's phase 3; a new `actor_shadow_2x2_cells` (64x24, rings 60x20 and 44x10) is the Warden's shadow in phases 1 and 2; `actor_shadow_xl` (96x24) is the Rule Engine's, with rings 92x20 and 68x10; the heavy stun bar `status_stunned_boss` (64x24) now serves the Warden's phase 2 stun (Breach Wall) and the 3 s stun after the throne smash, which is phase 3, uses the one-cell stun bar. Auras and bursts (the six idle auras, the large telegraph aura, the phase bursts, the kill star and the toy-transform ring, all 96x96) are effects and stay as they are; their text says they may extend beyond the footprint.
+- **Generator**: groups may carry `footprint_cells` (default 1x1); a piece's canvas must be 32 px per cell and carry a CELL FIT paragraph; `BOSS_FOOTPRINTS` pins every boss group to its footprint (an unlisted boss group fails the build); scale-table rows exist for the 2x2 and 3x3 footprints and only those rows (and the hand) may be larger than a cell; a Warden pose that names the wrong phase for its canvas fails the build; the horizontal drift allowed between the frames of a clip is 3 px on one cell, 7 px on 2x2 cells and 11 px on 3x3; README, STYLE and delivery rule 8 are rewritten.
+
+Totals: **8310 files in 860 groups** (before this decision: 8300 in 856; +4 groups: three Warden `_p3` groups and the 2x2-cell shadow; +10 files: 9 `charge_p3` frames and the shadow). 32 files kept their path but moved to a `_p3` group, so their ids changed (ids carry the group name); no path was removed.
+
 ### Still open
 
 - The placeholder generators that still draw 2x2 blocks (kingdom tiles, Stage 1 room art, `tools/generate_chess_sprites.gd`) are brought to 1x1 when next touched; this list does not depend on them.
+- Which cell the shrunk Warden keeps (south-west here) and the 56x52 / 92x92 body boxes are proposals; each is one data row.
 - The hand is no longer "twice as fine" as the world. Its 192x144 canvas is unchanged; if you want it to read as bigger or smaller next to a pawn, that is one scale-table row.

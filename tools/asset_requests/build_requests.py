@@ -36,7 +36,9 @@ Validation (exit code 1 on any failure, nothing is written then):
     rules (lint_specs): the style block keeps its PERCENTAGES AND TRANSLUCENCY
     paragraph, a tile group names at most 10 colours, a voice-blip group
     describes the takes it really has, every chess piece is drawn on the 32x32
-    canvas of its cell, no prompt names another group or points at a sibling
+    canvas of its cell (a boss stands on the footprint the owner chose, BOSS_FOOTPRINTS:
+    32 px per cell, 64x64 for the Rook Warden in phases 1 and 2, 96x96 for the Rule Engine),
+    no prompt names another group or points at a sibling
     file by name ("as path_pink_h", "identical to prop_closed.png", "idle frame 1"),
     music is one complete
     track (no stems). Pixel scale (owner decision 2026-10-13, "Tat ca 1x1", lint_pixel_scale):
@@ -89,7 +91,24 @@ PIECE_CLASSES = ("pawn", "knight", "bishop", "rook", "queen", "king", "boss", "f
 # Sprites that are deliberately NOT a chess piece and therefore may be larger than one cell (everything else drawn as a
 # sprite in the characters lane is a piece or a piece overlay and lives on the 32x32 canvas of its cell).
 NON_PIECE_LARGE_SPRITES = ("boss_rule_engine", "child_hand", "child_hand_shadow")
-PIECE_CANVAS = [32, 32]
+CELL_PX = 32
+PIECE_CANVAS = [CELL_PX, CELL_PX]
+# Owner decision 2026-10-13 ("tuy boss"): boss size is per boss. A sprite stands on a footprint of columns x rows cells and its canvas
+# is 32 px per cell. Everything is one cell except what BOSS_FOOTPRINTS names. A footprint larger than one cell has one scale-table row.
+FOOTPRINT_SCALE_ROWS = {(2, 2): "piece_boss_2x2_64", (3, 3): "boss_engine_3x3_96"}
+# How far the base may slide sideways between the frames of one clip: 3 px on one cell, scaled with the footprint (the cell-to-cell slide is code).
+FOOTPRINT_MAX_DRIFT_PX = {(1, 1): 3, (2, 2): 7, (3, 3): 11}
+BOSS_FOOTPRINTS = (
+    # (group id, footprint in cells, why)
+    (re.compile(r"^boss_(?:captain|knight_captain|bishop_oracle|queen|king)_(?:looks|combat|story)$"), (1, 1),
+     "Black Pawn Captain, Knight Captain, Bishop Oracle, Queen of Tricks and Black King stand on one cell"),
+    (re.compile(r"^boss_rook_warden_(?:looks|combat|story)$"), (2, 2),
+     "the Rook Warden fills 2x2 cells in phases 1 and 2"),
+    (re.compile(r"^boss_rook_warden_(?:looks|combat|story)_p3$"), (1, 1),
+     "the Rook Warden is one cell in phase 3, after it breaks its own throne"),
+    (re.compile(r"^boss_rule_engine$"), (3, 3),
+     "the Rule Engine machine behind the Black King fills 3x3 cells"),
+)
 MILESTONE_RE = re.compile(r"^M(\d+)([a-z]?)$")
 GROUP_ID_RE = re.compile(r"^[a-z0-9_]+$")
 
@@ -607,8 +626,9 @@ def image_acceptance(group, entry):
     else:
         bits.append("điểm neo: %s" % anchor)
     if entry["is_frame"]:
-        bits.append("khung %d/%d của clip '%s': cùng canvas, cùng điểm neo (lệch ngang không quá 3 px), cùng bảng màu "
-                    "với các khung khác của clip" % (entry["frame"], entry["frames"], entry["clip"]))
+        bits.append("khung %d/%d của clip '%s': cùng canvas, cùng điểm neo (lệch ngang không quá %d px), cùng bảng màu "
+                    "với các khung khác của clip" % (entry["frame"], entry["frames"], entry["clip"],
+                                                      FOOTPRINT_MAX_DRIFT_PX.get(group_footprint(group), 3)))
         if entry["frame"] == 1:
             bits.append("khung 01 cũng là ảnh tĩnh cho chế độ giảm chuyển động")
     return "; ".join(bits) + "."
@@ -1424,8 +1444,20 @@ def lint_sibling_pointers(specs, problems):
                     problems.error("%s/%s: %s points at %s; describe what it looks like inline instead" % (category, gid, label, found))
 
 
+def group_footprint(group):
+    """(columns, rows) of cells a group's sprite stands on: 'footprint_cells' in the spec, else one cell. None when malformed."""
+    raw = group.get("footprint_cells")
+    if raw is None:
+        return (1, 1)
+    if (isinstance(raw, list) and len(raw) == 2 and all(isinstance(v, int) and not isinstance(v, bool) and 1 <= v <= 4 for v in raw)):
+        return (raw[0], raw[1])
+    return None
+
+
 def lint_pieces(style, specs, problems):
-    """Owner decision 2026-10-12: a chess piece is smaller than its cell. Every piece is drawn on the 32x32 canvas of one cell."""
+    """Owner decisions 2026-10-12 (a chess piece is smaller than its cell) and 2026-10-13 ('tuy boss': boss size is per boss).
+    Every piece is drawn on the 32x32 canvas of the cell(s) it stands on, with a 2 px margin; only the bosses the owner named
+    stand on more than one cell, and BOSS_FOOTPRINTS pins which group gets which footprint."""
     rows = {row.get("id"): row for row in style.get("scale_table", [])}
     for piece_class in PIECE_CLASSES:
         row = rows.get("piece_%s_32" % piece_class)
@@ -1433,27 +1465,87 @@ def lint_pieces(style, specs, problems):
             problems.error("style.json: scale_table has no row 'piece_%s_32' (one row per chess-piece class)" % piece_class)
         elif list(row.get("size", [])) != PIECE_CANVAS:
             problems.error("style.json: scale row piece_%s_32 must be %s, it is %s" % (piece_class, PIECE_CANVAS, row.get("size")))
+    for cells, row_id in sorted(FOOTPRINT_SCALE_ROWS.items()):
+        row = rows.get(row_id)
+        canvas = [CELL_PX * cells[0], CELL_PX * cells[1]]
+        if row is None:
+            problems.error("style.json: scale_table has no row %r for the %dx%d-cell footprint (a %s canvas)" % (row_id, cells[0], cells[1], canvas))
+        elif list(row.get("size", [])) != canvas:
+            problems.error("style.json: scale row %s is the %dx%d-cell footprint, its canvas must be %s, it is %s" % (
+                row_id, cells[0], cells[1], canvas, row.get("size")))
+    big_rows_allowed = set(FOOTPRINT_SCALE_ROWS.values()) | {"child_hand_192x144"}
     for row in style.get("scale_table", []):
         size = row.get("size") or [0, 0]
-        if (row.get("kind") == "sprite" and (size[0] > 32 or size[1] > 32)
-                and row.get("id") not in ("boss_engine_96x80", "child_hand_192x144")):
-            problems.error("style.json: scale row %s is a %s sprite larger than one cell; chess pieces and their overlays fit 32x32" % (row.get("id"), size))
+        if row.get("kind") == "sprite" and (size[0] > CELL_PX or size[1] > CELL_PX) and row.get("id") not in big_rows_allowed:
+            problems.error("style.json: scale row %s is a %s sprite larger than one cell; chess pieces and their overlays fit 32x32 "
+                           "(only a boss footprint row or the child's hand may be larger)" % (row.get("id"), size))
     for category, groups in specs.items():
         for group in groups:
             gid = group.get("group_id")
             piece_class = group.get("piece_class")
             size = group.get("size")
+            cells = group_footprint(group)
+            if cells is None:
+                problems.error("%s/%s: footprint_cells must be [columns, rows] with each between 1 and 4, it is %r" % (
+                    category, gid, group.get("footprint_cells")))
+                continue
+            canvas = [CELL_PX * cells[0], CELL_PX * cells[1]]
             if piece_class is not None:
                 if piece_class not in PIECE_CLASSES:
                     problems.error("%s/%s: piece_class %r is not one of %s" % (category, gid, piece_class, PIECE_CLASSES))
-                if size != PIECE_CANVAS:
-                    problems.error("%s/%s: a chess piece is smaller than its cell; the canvas must be %s, it is %s" % (category, gid, PIECE_CANVAS, size))
+                if size != canvas:
+                    problems.error("%s/%s: a chess piece is smaller than the cell(s) it stands on; its canvas is %s for a %dx%d-cell footprint, it is %s" % (
+                        category, gid, canvas, cells[0], cells[1], size))
+                if cells != (1, 1) and piece_class != "boss":
+                    problems.error("%s/%s: only a boss may stand on more than one cell (footprint_cells %s)" % (category, gid, list(cells)))
                 if "CELL FIT" not in (group.get("details_en") or ""):
                     problems.error("%s/%s: a piece group must carry the CELL FIT paragraph in details_en" % (category, gid))
+            elif "footprint_cells" in group:
+                if size != canvas:
+                    problems.error("%s/%s: footprint_cells %s needs a %s canvas, it is %s" % (category, gid, list(cells), canvas, size))
+                if "CELL FIT" not in (group.get("details_en") or ""):
+                    problems.error("%s/%s: a group with a footprint must carry the CELL FIT paragraph in details_en" % (category, gid))
             elif (category == "characters" and group.get("kind") in ("sprite", "prop") and isinstance(size, list) and len(size) == 2
-                  and (size[0] > 32 or size[1] > 32) and gid not in NON_PIECE_LARGE_SPRITES):
+                  and (size[0] > CELL_PX or size[1] > CELL_PX) and gid not in NON_PIECE_LARGE_SPRITES):
                 problems.error("%s/%s: %sx%s is larger than one cell; a piece is drawn on 32x32 (set piece_class) or the group is a non-piece (NON_PIECE_LARGE_SPRITES)" % (
                     category, gid, size[0], size[1]))
+            # The boss table: every boss group is on the footprint the owner chose for it.
+            if category == "characters" and gid.startswith("boss_") and gid != "boss_remains_as_toys":
+                wanted = None
+                for pattern, expected_cells, _why in BOSS_FOOTPRINTS:
+                    if pattern.match(gid):
+                        wanted = expected_cells
+                        break
+                if wanted is None:
+                    problems.error("characters/%s: a boss group with no entry in BOSS_FOOTPRINTS; say how many cells this boss stands on" % gid)
+                elif cells != wanted:
+                    problems.error("characters/%s: this boss stands on %dx%d cells (owner decision 2026-10-13), the group says %dx%d" % (
+                        gid, wanted[0], wanted[1], cells[0], cells[1]))
+    lint_warden_phases(specs, problems)
+
+
+# The Rook Warden changes size between phases 2 and 3, and a group has one canvas, so its groups are split by phase. A pose or file
+# text that names the wrong phase would be drawn on the wrong canvas: the 2x2-cell groups hold phases 1 and 2 (and the transition
+# into 3, which starts on the full footprint), the one-cell groups hold phase 3 only.
+WARDEN_PHASE_BAD_IN_BIG = re.compile(r"\[P3 look|phase 3 look 'Throneless'", re.I)
+WARDEN_PHASE_BAD_IN_P3 = re.compile(r"\[P1 look|\[P2 look|\[P1 to P2\]|\[P2 to P3\]|phase [12] look '(?:Decree|Breach)'", re.I)
+
+
+def lint_warden_phases(specs, problems):
+    for group in specs.get("characters", []):
+        gid = group.get("group_id", "")
+        if not gid.startswith("boss_rook_warden_"):
+            continue
+        is_p3 = gid.endswith("_p3")
+        bad = WARDEN_PHASE_BAD_IN_P3 if is_p3 else WARDEN_PHASE_BAD_IN_BIG
+        for label, text in prompt_texts(group):
+            if label in ("subject_en", "details_en", "avoid_en", "palette_en"):
+                continue
+            hit = bad.search(text)
+            if hit:
+                problems.error("characters/%s: %s names %r, but this group is drawn on the %s canvas of %s" % (
+                    gid, label, hit.group(0), "one-cell" if is_p3 else "2x2-cell",
+                    "phase 3 only" if is_p3 else "phases 1 and 2 (and the transition into 3)"))
 
 
 def lint_audio_formats(specs, problems):
@@ -1880,9 +1972,14 @@ def render_readme(style, groups, stats, spec_link):
               "- **Mọi ảnh vẽ pixel 1x1 (quyết định của anh, 2026-10-13: \"Tất cả 1×1\").** Quân cờ, boss, tile, vật cảnh, hiệu ứng thế giới, giao diện, "
               "icon, chân dung và bàn tay của bé đều là một pixel vẽ = một pixel game ở độ phân giải gốc 640x360: không vẽ trên lưới nhỏ rồi phóng to, "
               "không có khối pixel lớn hơn ở đâu cả. Canvas 32x32 nghĩa là có đủ 32x32 pixel thật để vẽ chi tiết (đinh tán, mũi khâu, thớ gỗ, điểm sáng một pixel).",
-              "- **Quân cờ nhỏ hơn ô (quyết định của anh, 2026-10-12).** Mọi quân cờ (pawn của anh, mọi kẻ địch và biến thể, quân trắng được cứu, Vua trắng đã ngã, "
-              "sáu boss) vẽ trên canvas 32x32 = đúng một ô, thân quân nằm gọn bên trong và chừa ít nhất 2 px trống mỗi cạnh: không bằng ô, không cao hơn ô. "
+              "- **Quân cờ nhỏ hơn ô (quyết định của anh, 2026-10-12).** Mọi quân cờ (pawn của anh, mọi kẻ địch và biến thể, quân trắng được cứu, Vua trắng đã ngã) "
+              "vẽ trên canvas 32x32 = đúng một ô, thân quân nằm gọn bên trong và chừa ít nhất 2 px trống mỗi cạnh: không bằng ô, không cao hơn ô. "
               "Chiều cao theo bộ cờ thật: Tốt thấp nhất, rồi Mã/Tượng/Xe, rồi Hậu, Vua cao nhất. Bảng cỡ ở mục 4 ghi từng hạng quân.",
+              "- **Cỡ boss tuỳ boss (quyết định của anh, 2026-10-13: \"tuỳ boss\").** Đội Trưởng Tốt Đen, Mã Đội Trưởng, Giáo chủ Tượng, Nữ hoàng Mánh Khóe và Vua Đen "
+              "đứng trên MỘT ô (canvas 32x32). Xe Cai Ngục chiếm 2x2 ô ở giai đoạn 1 và 2 (canvas 64x64, thân gọn trong đó chừa ít nhất 2 px mỗi cạnh, đế sát đáy) "
+              "rồi chỉ còn MỘT ô ở giai đoạn 3 (32x32) sau khi tự phá ngai của nó; vì một nhóm chỉ có một canvas nên các nhóm Xe Cai Ngục tách theo giai đoạn. "
+              "Cỗ máy Luật sau lưng Vua là 3x3 ô (canvas 96x96, cũng chừa 2 px mỗi cạnh). Bóng dưới chân, thanh choáng và các lớp phủ gắn với boss theo đúng chỗ đứng; "
+              "hào quang và hiệu ứng nổ là hiệu ứng nên được tràn ra ngoài chỗ đứng. Bảng cỡ ở mục 4 có một hàng cho mỗi cỡ chỗ đứng của boss.",
               "- **Nhạc: một bài cho mỗi khu, không tách stem.** Mỗi vùng (title, Act 1, hub, năm khu, cảnh kết) và mỗi boss có đúng một bản phối hoàn chỉnh `.ogg`; "
               "đổi giai đoạn boss dùng thêm một tiếng 'phase sting' `.wav`. SFX và tiếng blip giọng là `.wav`.",
               "- **Glyph phím/tay cầm không vẽ.** Nhóm `glyphs_kenney` chỉ ghi file nào của bộ CC0 'Input Prompts Pixel' (Kenney) cần chép vào đường dẫn nào; "
@@ -1902,7 +1999,7 @@ def render_readme(style, groups, stats, spec_link):
               "2. Ảnh: PNG RGBA 8-bit, đúng kích thước canvas, nền trong suốt (tile, nền bản đồ và mảnh vista đặc thì đặc hoàn toàn), không làm mờ, không răng cưa.",
               "3. Mọi ảnh vẽ pixel 1x1 (quyết định của anh, 2026-10-13): quân cờ, boss, tile, vật cảnh, hiệu ứng thế giới, giao diện, icon, "
               "chân dung và bàn tay của bé đều là một pixel vẽ = một pixel game ở độ phân giải gốc 640x360, không phóng to, không khối pixel lớn hơn.",
-              "4. Điểm neo (chân/đế) đúng toạ độ ghi trong `Spec`; các khung của một clip không lệch ngang quá 3 px. Mọi khung sau được tạo từ "
+              "4. Điểm neo (chân/đế) đúng toạ độ ghi trong `Spec`; các khung của một clip không lệch ngang quá 3 px (7 px với boss chiếm 2x2 ô, 11 px với boss 3x3 ô). Mọi khung sau được tạo từ "
               "ảnh tham chiếu đã duyệt (xem mục 1), không vẽ rời từng khung.",
               "5. Không có chữ hoặc số trong ảnh (trừ logo và phím); đỏ san hô chỉ cho sát thương sắp xảy ra.",
               "6. Âm thanh: SFX và giọng là WAV 44.1 kHz 16-bit (mono hoặc stereo theo `Spec`), đỉnh -1 dBFS, không clip, không click; "
@@ -1989,8 +2086,10 @@ def render_readme(style, groups, stats, spec_link):
               "'1 art pixel = 1 game pixel', và không prompt ảnh nào còn nhắc khối pixel 2x2, chữ 'chunky', vẽ nửa kích thước hoặc nửa độ phân giải, "
               "'upscale', 'art pixel' làm đơn vị riêng hay hai thang pixel 'world' và 'fine' (build thất bại, nêu nhóm và cụm từ). "
               "`python3 tools/asset_requests/build_requests.py --self-test` chứng minh luật bắt được những cụm đó và bỏ qua số ô như '2x2 cells'.",
-              "- Mọi quân cờ (nhóm có `piece_class`) vẽ trên canvas 32x32, có đoạn CELL FIT trong mô tả và đúng một hàng trong bảng cỡ; không sprite nào của "
-              "lane nhân vật lớn hơn một ô trừ bàn tay của bé và Cỗ máy Luật (không phải quân cờ).",
+              "- Mọi quân cờ (nhóm có `piece_class`) vẽ trên canvas 32 px nhân số ô chỗ đứng (`footprint_cells`, mặc định 1x1 ô = 32x32), có đoạn CELL FIT trong mô tả "
+              "và đúng một hàng trong bảng cỡ; không sprite nào của lane nhân vật lớn hơn một ô trừ bàn tay của bé, Xe Cai Ngục giai đoạn 1-2 (2x2 ô = 64x64) "
+              "và Cỗ máy Luật (3x3 ô = 96x96). Chỗ đứng của từng nhóm boss bị khoá theo bảng `BOSS_FOOTPRINTS` trong script (quyết định 2026-10-13), "
+              "và nhóm Xe Cai Ngục giai đoạn 1-2 không được nhắc tới giai đoạn 3 (và ngược lại) vì hai bên khác canvas.",
               "- Prompt tự đủ ý: không prompt nào nêu tên nhóm khác (id kiểu `ten_nhom`); thứ cần từ nhóm khác phải được viết thẳng vào prompt (màu thì dùng `{palette:<id>}`).",
               "- Prompt cũng không được chỉ tới một file anh em bằng tên ('giống gate_closed_h', 'y hệt prop_closed.png', 'như path_pink_h', 'khung 1 của clip idle'): "
               "hình dạng, kích thước và màu cần có phải được mô tả thẳng trong prompt. Script bắt tên file có đuôi, tên file/thư mục/clip của mục khác đứng sau từ so sánh "

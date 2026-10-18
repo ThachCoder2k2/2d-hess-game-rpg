@@ -3916,7 +3916,7 @@
    ],
    "anchor": "ring centre at (48,48), concentric with the actor's base",
    "subject_en": "The TelegraphAura: a soft ring drawn around the base of a boss (Captain, Knight Captain, Oracle, Warden, Queen, King) while it winds up an attack, then flashes on commit. It is the actor-attached half of the telegraph language (the cell markers are the board half). Top-down ring, slightly squashed vertically like a ground ring.",
-   "details_en": "Ring outer diameter about 92 px, 3 px thick, with a thin inner ring 4 px inside. Three tiny triangular tick marks at the north, south-west and south-east. Clips: 'windup' loops while telegraphing, 'commit' plays once at impact, 'recover' plays once when the piece becomes vulnerable (calmer, desaturated).",
+   "details_en": "Ring outer diameter about 92 px, 3 px thick, with a thin inner ring 4 px inside. Three tiny triangular tick marks at the north, south-west and south-east. Clips: 'windup' loops while telegraphing, 'commit' plays once at impact, 'recover' plays once when the piece becomes vulnerable (calmer, desaturated). The ring is an effect, not a body: it is deliberately larger than a one-cell boss and may extend beyond the footprint of any boss (one cell for five bosses and for the Rook Warden in phase 3, 2x2 cells for the Rook Warden in phases 1 and 2).",
    "avoid_en": "No red in 'windup'; no actor art; no bloom; no fill.",
    "palette_en": "Windup: pale orange #ffcf9a ring with dark orange #e0762a ticks. Commit: cream #fff4d6 flash with coral #d84a3a flecks. Recover: pale ivory ring at low alpha.",
    "notes_vi": "Vòng sáng quanh chân quân khi chuẩn bị ra đòn. Thay cho warning_aura.png tạm hiện tại.",
@@ -11832,7 +11832,7 @@
   },
   {
    "group_id": "status_stunned_boss",
-   "title_vi": "Dấu choáng nặng cho boss (3 giây)",
+   "title_vi": "Dấu choáng nặng cho Xe Cai Ngục chiếm 2x2 ô (sau Breach Wall)",
    "kind": "vfx",
    "folder": "content/feel/vfx/boss/rook_warden/status_stunned_boss",
    "needed_by": "M11",
@@ -11842,12 +11842,12 @@
     24
    ],
    "anchor": "centre at (32,12), above the boss's head",
-   "subject_en": "The stun cue for the Rook Warden's 3 s stun after smashing its throne (and the 1.10 s stun after Breach Wall): little swirl stars orbiting like a toy's 'dizzy' marks (4-point stars in cream #fff4d6 and pale gold #fff2a8), scaled for a boss.",
+   "subject_en": "The stun cue for the Rook Warden's 1.10 s stun after Breach Wall in phase 2, while it fills its 2x2-cell footprint: little swirl stars orbiting like a toy's 'dizzy' marks (4-point stars in cream #fff4d6 and pale gold #fff2a8), sized to the 64 px width of that footprint. (Its 3 s stun after smashing its throne comes in phase 3, when it is one cell wide, and uses the one-cell stun cue.)",
    "details_en": "Four cream stars (6 px) orbiting an ellipse 52x14 px. 4 frames loop at 8 fps.",
    "avoid_en": "No red or coral decoration (boss patterns never use decorative particles that resemble damage); no text; no gore; no bloom.",
    "palette_en": "Cream #fff4d6, pale gold #fff2a8.",
    "notes_vi": "Bốn ngôi sao xoay quanh đầu boss khi bị choáng.",
-   "used_in": "btb stun",
+   "used_in": "btb P2 stun (Breach Wall)",
    "reference_files": [
     "docs/design/fx5-boss-phase-feedback-spec.md",
     "docs/design/enemy-behavior-bible.md",
@@ -13130,7 +13130,7 @@
    ],
    "anchor": "centre at (48,60), concentric with the boss's base",
    "subject_en": "Idle authority aura for the Black Pawn Captain (the 'idle_authority' presence, the Queen animates less often but with greater authority). Tiny black ruler tick marks drift upward off the Captain like dust off a drill sergeant. It is a quiet loop behind the boss sprite that makes the boss feel like a presence on the board without touching any danger cell.",
-   "details_en": "Loops over 6 frames at 6 fps. Sits under the boss sprite and above the floor; at most 45% alpha; stays inside a flat ellipse 80x44 px around the base so it never covers telegraph cells.",
+   "details_en": "Loops over 6 frames at 6 fps. Sits under the boss sprite and above the floor; at most 45% alpha; stays inside a flat ellipse 80x44 px around the base so it never covers telegraph cells. It is an effect, not a body: it may extend beyond the boss's footprint (this boss stands on one cell).",
    "avoid_en": "No red or coral; no text; no bloom; must not resemble a telegraph or damage marker.",
    "palette_en": "Charcoal #2b303a, pale ruler wood #f1d58a ticks.",
    "notes_vi": "Các vạch thước nhỏ bay lên khỏi Captain như bụi.",
@@ -13174,7 +13174,7 @@
    ],
    "anchor": "centre at (48,60), concentric with the boss's base",
    "subject_en": "Idle authority aura for the Knight Captain (the 'idle_authority' presence, the Queen animates less often but with greater authority). Faint toy-track dust and tiny wooden hoofprint marks flickering in a loose ring on the floor around it. It is a quiet loop behind the boss sprite that makes the boss feel like a presence on the board without touching any danger cell.",
-   "details_en": "Loops over 6 frames at 6 fps. Sits under the boss sprite and above the floor; at most 45% alpha; stays inside a flat ellipse 80x44 px around the base so it never covers telegraph cells.",
+   "details_en": "Loops over 6 frames at 6 fps. Sits under the boss sprite and above the floor; at most 45% alpha; stays inside a flat ellipse 80x44 px around the base so it never covers telegraph cells. It is an effect, not a body: it may extend beyond the boss's footprint (this boss stands on one cell).",
    "avoid_en": "No red or coral; no text; no bloom; must not resemble a telegraph or damage marker.",
    "palette_en": "Wood #8a6a4a at 30%, dust #c9bfae.",
    "notes_vi": "Dấu móng ngựa mờ và bụi quanh chân.",
@@ -13218,7 +13218,7 @@
    ],
    "anchor": "centre at (48,60), concentric with the boss's base",
    "subject_en": "Idle authority aura for the Bishop Oracle (the 'idle_authority' presence, the Queen animates less often but with greater authority). Thin ink wisps and a drifting bookmark ribbon curling around it like a page being turned. It is a quiet loop behind the boss sprite that makes the boss feel like a presence on the board without touching any danger cell.",
-   "details_en": "Loops over 6 frames at 6 fps. Sits under the boss sprite and above the floor; at most 45% alpha; stays inside a flat ellipse 80x44 px around the base so it never covers telegraph cells.",
+   "details_en": "Loops over 6 frames at 6 fps. Sits under the boss sprite and above the floor; at most 45% alpha; stays inside a flat ellipse 80x44 px around the base so it never covers telegraph cells. It is an effect, not a body: it may extend beyond the boss's footprint (this boss stands on one cell).",
    "avoid_en": "No red or coral; no text; no bloom; must not resemble a telegraph or damage marker.",
    "palette_en": "Ink #3b3a4a at 40%, teal ribbon #2e565c, page cream #f2e6c9.",
    "notes_vi": "Dải mực và dải đánh dấu trang cuộn quanh Oracle.",
@@ -13262,7 +13262,7 @@
    ],
    "anchor": "centre at (48,60), concentric with the boss's base",
    "subject_en": "Idle authority aura for the Rook Warden (the 'idle_authority' presence, the Queen animates less often but with greater authority). A heavy grey stone dust drifts down from its crenellations and small block chips shiver on the floor around it. It is a quiet loop behind the boss sprite that makes the boss feel like a presence on the board without touching any danger cell.",
-   "details_en": "Loops over 6 frames at 6 fps. Sits under the boss sprite and above the floor; at most 45% alpha; stays inside a flat ellipse 80x44 px around the base so it never covers telegraph cells.",
+   "details_en": "Loops over 6 frames at 6 fps. Sits under the boss sprite and above the floor; at most 45% alpha; stays inside a flat ellipse 80x44 px around the base so it never covers telegraph cells. It is an effect, not a body: it may extend beyond the boss's footprint (the Warden fills 2x2 cells in phases 1 and 2 and one cell in phase 3).",
    "avoid_en": "No red or coral; no text; no bloom; must not resemble a telegraph or damage marker.",
    "palette_en": "Stone grey #8e8e96 dust, wood chips #d9b98a.",
    "notes_vi": "Bụi đá rơi nhẹ từ lỗ châu mai.",
@@ -13306,7 +13306,7 @@
    ],
    "anchor": "centre at (48,60), concentric with the boss's base",
    "subject_en": "Idle authority aura for the Queen of Tricks (the 'idle_authority' presence, the Queen animates less often but with greater authority). A very slow ring of dusty-pink petals and one tiny gold sparkle circling at her hem, sweet and slightly too still. It is a quiet loop behind the boss sprite that makes the boss feel like a presence on the board without touching any danger cell.",
-   "details_en": "Loops over 6 frames at 6 fps. Sits under the boss sprite and above the floor; at most 45% alpha; stays inside a flat ellipse 80x44 px around the base so it never covers telegraph cells.",
+   "details_en": "Loops over 6 frames at 6 fps. Sits under the boss sprite and above the floor; at most 45% alpha; stays inside a flat ellipse 80x44 px around the base so it never covers telegraph cells. It is an effect, not a body: it may extend beyond the boss's footprint (this boss stands on one cell).",
    "avoid_en": "No red or coral; no text; no bloom; must not resemble a telegraph or damage marker.",
    "palette_en": "Dusty pink #d7a9b0 at 45%, cream #f2e3d6, gold #ffd34e sparkle.",
    "notes_vi": "Vòng cánh hoa hồng quay thật chậm quanh váy Hậu.",
@@ -13350,7 +13350,7 @@
    ],
    "anchor": "centre at (48,60), concentric with the boss's base",
    "subject_en": "Idle authority aura for the Black King and the Rule Engine (the 'idle_authority' presence, the Queen animates less often but with greater authority). A cold slow scatter of violet rule-glyph blocks flickering at the base and a few thin cracks pulsing, the system as a presence. It is a quiet loop behind the boss sprite that makes the boss feel like a presence on the board without touching any danger cell.",
-   "details_en": "Loops over 6 frames at 6 fps. Sits under the boss sprite and above the floor; at most 45% alpha; stays inside a flat ellipse 80x44 px around the base so it never covers telegraph cells.",
+   "details_en": "Loops over 6 frames at 6 fps. Sits under the boss sprite and above the floor; at most 45% alpha; stays inside a flat ellipse 80x44 px around the base so it never covers telegraph cells. It is an effect, not a body: it may extend beyond the boss's footprint (this boss stands on one cell).",
    "avoid_en": "No red or coral; no text; no bloom; must not resemble a telegraph or damage marker.",
    "palette_en": "Violet #5a3a8a at 40%, near-black #12151c blocks, cream cracks #fff4d6 at 20%.",
    "notes_vi": "Khối ký hiệu tím nhấp nháy ở chân Vua.",
@@ -13630,7 +13630,7 @@
     16
    ],
    "anchor": "centre (16,8), at the actor's feet",
-   "subject_en": "The ground shadow under all six bosses (Black Pawn Captain, Knight Captain, Bishop Oracle, Rook Warden, Queen of Tricks, Black King). Actor sprites carry no baked floor shadow, so this separate sprite gives them height and weight on the board (shadows establish height but never hide telegraphs).",
+   "subject_en": "The ground shadow under the bosses that stand on one cell (Black Pawn Captain, Knight Captain, Bishop Oracle, Queen of Tricks, Black King and the Rook Warden in its third phase). Actor sprites carry no baked floor shadow, so this separate sprite gives them height and weight on the board (shadows establish height but never hide telegraphs).",
    "details_en": "A flat soft contact shadow, 1x1 pixels, NO outline: a charcoal-blue #1E2230 oval in two stepped rings (outer ring 28x12 px, inner ring 20x6 px; outer ring 20 percent alpha, inner ring 40 percent alpha); the edge is a crisp stepped pixel line, never feathered. Centred on the canvas; the engine places it under the actor's anchor and never rotates it. It never hides a telegraph: it is light enough that the dark-orange and coral cell markers stay readable on top of it. The shadow fits the 32x32 cell of the piece it sits under, like the piece itself: the outer ring leaves at least 2 px of empty canvas at its left and right ends, so it never touches a canvas edge.",
    "avoid_en": "an outline, a gradient, a highlight, a floor tile or any object, text, a hard black fill",
    "palette_en": "shadow charcoal-blue #1E2230 at 20 and 40 percent alpha",
@@ -13653,6 +13653,40 @@
    ]
   },
   {
+   "group_id": "actor_shadow_2x2_cells",
+   "title_vi": "Bóng chạm sàn dưới boss chiếm 2x2 ô (Xe Cai Ngục giai đoạn 1 và 2)",
+   "kind": "vfx",
+   "folder": "content/feel/vfx/actor/shadow_2x2_cells",
+   "needed_by": "M11",
+   "priority": "should",
+   "size": [
+    64,
+    24
+   ],
+   "anchor": "centre (32,12), at the actor's feet",
+   "subject_en": "The ground shadow under the Rook Warden while it fills its footprint of 2x2 cells (phases 1 and 2, a 64x64 body canvas). Actor sprites carry no baked floor shadow, so this separate sprite gives it height and weight on the board (shadows establish height but never hide telegraphs).",
+   "details_en": "A flat soft contact shadow, 1x1 pixels, NO outline: a charcoal-blue #1E2230 oval in two stepped rings (outer ring 60x20 px, inner ring 44x10 px; outer ring 20 percent alpha, inner ring 40 percent alpha); the edge is a crisp stepped pixel line, never feathered. Centred on the canvas; the engine places it under the actor's anchor and never rotates it. It never hides a telegraph: it is light enough that the dark-orange and coral cell markers stay readable on top of it. The shadow fits the 2x2-cell footprint of the boss it sits under, like the boss itself: the outer ring leaves at least 2 px of empty canvas at its left and right ends, so it never touches a canvas edge.",
+   "avoid_en": "an outline, a gradient, a highlight, a floor tile or any object, text, a hard black fill",
+   "palette_en": "shadow charcoal-blue #1E2230 at 20 and 40 percent alpha",
+   "notes_vi": "Bóng nền mềm cho boss chiếm 2x2 ô, không viền; engine đặt dưới điểm neo của nhân vật.",
+   "used_in": "Rook Warden phases 1 and 2 (shared Shadow node)",
+   "reference_files": [
+    "docs/design/pixel-art-bible.md",
+    "docs/design/fx6-accessibility-readability-pass-spec.md",
+    "docs/game-base-plan.md"
+   ],
+   "placeholder_now": "none",
+   "files": [
+    {
+     "name": "shadow.png",
+     "what_en": "One flat oval shadow, 64x24, two stepped alpha rings, centred.",
+     "title_vi": "Bóng dưới boss 2x2 ô",
+     "needed_by": "M11",
+     "priority": "should"
+    }
+   ]
+  },
+  {
    "group_id": "actor_shadow_xl",
    "title_vi": "Bóng chạm sàn dưới nhân vật cỡ xl",
    "kind": "vfx",
@@ -13664,8 +13698,8 @@
     24
    ],
    "anchor": "centre (48,12), at the actor's feet",
-   "subject_en": "The ground shadow under the Rule Engine, the one big non-piece actor (every chess piece, bosses included, uses a shadow that fits its cell). Actor sprites carry no baked floor shadow, so this separate sprite gives them height and weight on the board (shadows establish height but never hide telegraphs).",
-   "details_en": "A flat soft contact shadow, 1x1 pixels, NO outline: a charcoal-blue #1E2230 oval in two stepped rings (outer ring 20 percent alpha, inner ring 40 percent alpha); the edge is a crisp stepped pixel line, never feathered. Centred on the canvas; the engine places it under the actor's anchor and never rotates it. It never hides a telegraph: it is light enough that the dark-orange and coral cell markers stay readable on top of it.",
+   "subject_en": "The ground shadow under the Rule Engine, the one big non-piece actor: it fills a footprint of 3x3 cells (a 96x96 canvas) and the shadow fits that footprint the way a piece's shadow fits its cell (the Rook Warden's 2x2-cell shadow and the one-cell shadows are separate files). Actor sprites carry no baked floor shadow, so this separate sprite gives them height and weight on the board (shadows establish height but never hide telegraphs).",
+   "details_en": "A flat soft contact shadow, 1x1 pixels, NO outline: a charcoal-blue #1E2230 oval in two stepped rings (outer ring 92x20 px, inner ring 68x10 px; outer ring 20 percent alpha, inner ring 40 percent alpha); the edge is a crisp stepped pixel line, never feathered. Centred on the canvas; the engine places it under the actor's anchor and never rotates it. It never hides a telegraph: it is light enough that the dark-orange and coral cell markers stay readable on top of it. The outer ring leaves at least 2 px of empty canvas at its left and right ends, so it never touches a canvas edge.",
    "avoid_en": "an outline, a gradient, a highlight, a floor tile or any object, text, a hard black fill",
    "palette_en": "shadow charcoal-blue #1E2230 at 20 and 40 percent alpha",
    "notes_vi": "Bóng nền mềm, không viền; engine đặt dưới điểm neo của nhân vật.",

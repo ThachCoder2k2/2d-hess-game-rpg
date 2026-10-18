@@ -17,11 +17,11 @@ Làm theo thứ tự mốc từ nhỏ đến lớn; trong mỗi mốc làm `must
 | [M8c](#m8c) | 218 | 75 | 110 | 33 |
 | [M9](#m9) | 771 | 427 | 218 | 126 |
 | [M10](#m10) | 893 | 502 | 231 | 160 |
-| [M11](#m11) | 992 | 639 | 250 | 103 |
+| [M11](#m11) | 1002 | 648 | 251 | 103 |
 | [M12](#m12) | 697 | 399 | 188 | 110 |
 | [M13](#m13) | 1296 | 739 | 385 | 172 |
 | [M14](#m14) | 755 | 0 | 1 | 754 |
-| **Tổng** | **8300** | **4250** | **2260** | **1790** |
+| **Tổng** | **8310** | **4259** | **2261** | **1790** |
 
 <a id="m2"></a>
 
@@ -3664,7 +3664,7 @@ Làm theo thứ tự mốc từ nhỏ đến lớn; trong mỗi mốc làm `must
 - [`CHARACTERS-BOSS_BISHOP_ORACLE_LOOKS-BODY_P3_N`](requests/characters/boss_bishop_oracle_looks.md#CHARACTERS-BOSS_BISHOP_ORACLE_LOOKS-BODY_P3_N) · `content/bosses/bishop_oracle/body_p3_n.png`
 - [`CHARACTERS-BOSS_BISHOP_ORACLE_LOOKS-BODY_P3_E`](requests/characters/boss_bishop_oracle_looks.md#CHARACTERS-BOSS_BISHOP_ORACLE_LOOKS-BODY_P3_E) · `content/bosses/bishop_oracle/body_p3_e.png`
 
-**Boss Xe Cai Ngục (Rook Warden): dáng theo giai đoạn** (`characters/boss_rook_warden_looks`)
+**Boss Xe Cai Ngục (Rook Warden): dáng giai đoạn 1 và 2, chiếm 2x2 ô (canvas 64x64)** (`characters/boss_rook_warden_looks`)
 
 - [`CHARACTERS-BOSS_ROOK_WARDEN_LOOKS-BODY`](requests/characters/boss_rook_warden_looks.md#CHARACTERS-BOSS_ROOK_WARDEN_LOOKS-BODY) · `content/bosses/rook_warden/body.png`
 - [`CHARACTERS-BOSS_ROOK_WARDEN_LOOKS-BODY_N`](requests/characters/boss_rook_warden_looks.md#CHARACTERS-BOSS_ROOK_WARDEN_LOOKS-BODY_N) · `content/bosses/rook_warden/body_n.png`
@@ -3672,9 +3672,12 @@ Làm theo thứ tự mốc từ nhỏ đến lớn; trong mỗi mốc làm `must
 - [`CHARACTERS-BOSS_ROOK_WARDEN_LOOKS-BODY_P2`](requests/characters/boss_rook_warden_looks.md#CHARACTERS-BOSS_ROOK_WARDEN_LOOKS-BODY_P2) · `content/bosses/rook_warden/body_p2.png`
 - [`CHARACTERS-BOSS_ROOK_WARDEN_LOOKS-BODY_P2_N`](requests/characters/boss_rook_warden_looks.md#CHARACTERS-BOSS_ROOK_WARDEN_LOOKS-BODY_P2_N) · `content/bosses/rook_warden/body_p2_n.png`
 - [`CHARACTERS-BOSS_ROOK_WARDEN_LOOKS-BODY_P2_E`](requests/characters/boss_rook_warden_looks.md#CHARACTERS-BOSS_ROOK_WARDEN_LOOKS-BODY_P2_E) · `content/bosses/rook_warden/body_p2_e.png`
-- [`CHARACTERS-BOSS_ROOK_WARDEN_LOOKS-BODY_P3`](requests/characters/boss_rook_warden_looks.md#CHARACTERS-BOSS_ROOK_WARDEN_LOOKS-BODY_P3) · `content/bosses/rook_warden/body_p3.png`
-- [`CHARACTERS-BOSS_ROOK_WARDEN_LOOKS-BODY_P3_N`](requests/characters/boss_rook_warden_looks.md#CHARACTERS-BOSS_ROOK_WARDEN_LOOKS-BODY_P3_N) · `content/bosses/rook_warden/body_p3_n.png`
-- [`CHARACTERS-BOSS_ROOK_WARDEN_LOOKS-BODY_P3_E`](requests/characters/boss_rook_warden_looks.md#CHARACTERS-BOSS_ROOK_WARDEN_LOOKS-BODY_P3_E) · `content/bosses/rook_warden/body_p3_e.png`
+
+**Boss Xe Cai Ngục (Rook Warden): dáng giai đoạn 3, thu về 1 ô (canvas 32x32)** (`characters/boss_rook_warden_looks_p3`)
+
+- [`CHARACTERS-BOSS_ROOK_WARDEN_LOOKS_P3-BODY_P3`](requests/characters/boss_rook_warden_looks_p3.md#CHARACTERS-BOSS_ROOK_WARDEN_LOOKS_P3-BODY_P3) · `content/bosses/rook_warden/body_p3.png`
+- [`CHARACTERS-BOSS_ROOK_WARDEN_LOOKS_P3-BODY_P3_N`](requests/characters/boss_rook_warden_looks_p3.md#CHARACTERS-BOSS_ROOK_WARDEN_LOOKS_P3-BODY_P3_N) · `content/bosses/rook_warden/body_p3_n.png`
+- [`CHARACTERS-BOSS_ROOK_WARDEN_LOOKS_P3-BODY_P3_E`](requests/characters/boss_rook_warden_looks_p3.md#CHARACTERS-BOSS_ROOK_WARDEN_LOOKS_P3-BODY_P3_E) · `content/bosses/rook_warden/body_p3_e.png`
 
 **Boss Nữ hoàng Mánh Khóe (Queen of Tricks): dáng theo giai đoạn** (`characters/boss_queen_looks`)
 
@@ -6935,9 +6938,9 @@ Làm theo thứ tự mốc từ nhỏ đến lớn; trong mỗi mốc làm `must
 
 <a id="m11"></a>
 
-## M11 · 992 file · must 639 · should 250 · could 103
+## M11 · 1002 file · must 648 · should 251 · could 103
 
-### M11 · must (639)
+### M11 · must (648)
 
 **Pawn: Eraser Guard (giữ thế, đỡ, Perfect Rub)** (`characters/hero_guard`)
 
@@ -7072,7 +7075,7 @@ Làm theo thứ tự mốc từ nhỏ đến lớn; trong mỗi mốc làm `must
 - [`CHARACTERS-ENEMY_ROOK_IRON-CHARGE_E-02`](requests/characters/enemy_rook_iron.md#CHARACTERS-ENEMY_ROOK_IRON-CHARGE_E-02) · `content/enemies/rook_iron/anim/charge_e/02.png`
 - [`CHARACTERS-ENEMY_ROOK_IRON-CHARGE_E-03`](requests/characters/enemy_rook_iron.md#CHARACTERS-ENEMY_ROOK_IRON-CHARGE_E-03) · `content/enemies/rook_iron/anim/charge_e/03.png`
 
-**Boss Xe Cai Ngục: windup, commit, lao tới, choáng** (`characters/boss_rook_warden_combat`)
+**Boss Xe Cai Ngục: windup, commit, lao tới, choáng, dội giáp (giai đoạn 1 và 2, 2x2 ô, canvas 64x64)** (`characters/boss_rook_warden_combat`)
 
 - [`CHARACTERS-BOSS_ROOK_WARDEN_COMBAT-WINDUP_STRAIGHT_DECREE-01`](requests/characters/boss_rook_warden_combat.md#CHARACTERS-BOSS_ROOK_WARDEN_COMBAT-WINDUP_STRAIGHT_DECREE-01) · `content/bosses/rook_warden/anim/windup_straight_decree/01.png`
 - [`CHARACTERS-BOSS_ROOK_WARDEN_COMBAT-WINDUP_STRAIGHT_DECREE-02`](requests/characters/boss_rook_warden_combat.md#CHARACTERS-BOSS_ROOK_WARDEN_COMBAT-WINDUP_STRAIGHT_DECREE-02) · `content/bosses/rook_warden/anim/windup_straight_decree/02.png`
@@ -7096,20 +7099,9 @@ Làm theo thứ tự mốc từ nhỏ đến lớn; trong mỗi mốc làm `must
 - [`CHARACTERS-BOSS_ROOK_WARDEN_COMBAT-COMMIT_CROSS_CORRIDOR-01`](requests/characters/boss_rook_warden_combat.md#CHARACTERS-BOSS_ROOK_WARDEN_COMBAT-COMMIT_CROSS_CORRIDOR-01) · `content/bosses/rook_warden/anim/commit_cross_corridor/01.png`
 - [`CHARACTERS-BOSS_ROOK_WARDEN_COMBAT-COMMIT_CROSS_CORRIDOR-02`](requests/characters/boss_rook_warden_combat.md#CHARACTERS-BOSS_ROOK_WARDEN_COMBAT-COMMIT_CROSS_CORRIDOR-02) · `content/bosses/rook_warden/anim/commit_cross_corridor/02.png`
 - [`CHARACTERS-BOSS_ROOK_WARDEN_COMBAT-COMMIT_CROSS_CORRIDOR-03`](requests/characters/boss_rook_warden_combat.md#CHARACTERS-BOSS_ROOK_WARDEN_COMBAT-COMMIT_CROSS_CORRIDOR-03) · `content/bosses/rook_warden/anim/commit_cross_corridor/03.png`
-- [`CHARACTERS-BOSS_ROOK_WARDEN_COMBAT-WINDUP_REFUSE_TO_TURN-01`](requests/characters/boss_rook_warden_combat.md#CHARACTERS-BOSS_ROOK_WARDEN_COMBAT-WINDUP_REFUSE_TO_TURN-01) · `content/bosses/rook_warden/anim/windup_refuse_to_turn/01.png`
-- [`CHARACTERS-BOSS_ROOK_WARDEN_COMBAT-WINDUP_REFUSE_TO_TURN-02`](requests/characters/boss_rook_warden_combat.md#CHARACTERS-BOSS_ROOK_WARDEN_COMBAT-WINDUP_REFUSE_TO_TURN-02) · `content/bosses/rook_warden/anim/windup_refuse_to_turn/02.png`
-- [`CHARACTERS-BOSS_ROOK_WARDEN_COMBAT-WINDUP_REFUSE_TO_TURN-03`](requests/characters/boss_rook_warden_combat.md#CHARACTERS-BOSS_ROOK_WARDEN_COMBAT-WINDUP_REFUSE_TO_TURN-03) · `content/bosses/rook_warden/anim/windup_refuse_to_turn/03.png`
-- [`CHARACTERS-BOSS_ROOK_WARDEN_COMBAT-WINDUP_REFUSE_TO_TURN-04`](requests/characters/boss_rook_warden_combat.md#CHARACTERS-BOSS_ROOK_WARDEN_COMBAT-WINDUP_REFUSE_TO_TURN-04) · `content/bosses/rook_warden/anim/windup_refuse_to_turn/04.png`
-- [`CHARACTERS-BOSS_ROOK_WARDEN_COMBAT-COMMIT_REFUSE_TO_TURN-01`](requests/characters/boss_rook_warden_combat.md#CHARACTERS-BOSS_ROOK_WARDEN_COMBAT-COMMIT_REFUSE_TO_TURN-01) · `content/bosses/rook_warden/anim/commit_refuse_to_turn/01.png`
-- [`CHARACTERS-BOSS_ROOK_WARDEN_COMBAT-COMMIT_REFUSE_TO_TURN-02`](requests/characters/boss_rook_warden_combat.md#CHARACTERS-BOSS_ROOK_WARDEN_COMBAT-COMMIT_REFUSE_TO_TURN-02) · `content/bosses/rook_warden/anim/commit_refuse_to_turn/02.png`
-- [`CHARACTERS-BOSS_ROOK_WARDEN_COMBAT-COMMIT_REFUSE_TO_TURN-03`](requests/characters/boss_rook_warden_combat.md#CHARACTERS-BOSS_ROOK_WARDEN_COMBAT-COMMIT_REFUSE_TO_TURN-03) · `content/bosses/rook_warden/anim/commit_refuse_to_turn/03.png`
 - [`CHARACTERS-BOSS_ROOK_WARDEN_COMBAT-TURN_TELL-01`](requests/characters/boss_rook_warden_combat.md#CHARACTERS-BOSS_ROOK_WARDEN_COMBAT-TURN_TELL-01) · `content/bosses/rook_warden/anim/turn_tell/01.png`
 - [`CHARACTERS-BOSS_ROOK_WARDEN_COMBAT-TURN_TELL-02`](requests/characters/boss_rook_warden_combat.md#CHARACTERS-BOSS_ROOK_WARDEN_COMBAT-TURN_TELL-02) · `content/bosses/rook_warden/anim/turn_tell/02.png`
 - [`CHARACTERS-BOSS_ROOK_WARDEN_COMBAT-TURN_TELL-03`](requests/characters/boss_rook_warden_combat.md#CHARACTERS-BOSS_ROOK_WARDEN_COMBAT-TURN_TELL-03) · `content/bosses/rook_warden/anim/turn_tell/03.png`
-- [`CHARACTERS-BOSS_ROOK_WARDEN_COMBAT-STUNNED-01`](requests/characters/boss_rook_warden_combat.md#CHARACTERS-BOSS_ROOK_WARDEN_COMBAT-STUNNED-01) · `content/bosses/rook_warden/anim/stunned/01.png`
-- [`CHARACTERS-BOSS_ROOK_WARDEN_COMBAT-STUNNED-02`](requests/characters/boss_rook_warden_combat.md#CHARACTERS-BOSS_ROOK_WARDEN_COMBAT-STUNNED-02) · `content/bosses/rook_warden/anim/stunned/02.png`
-- [`CHARACTERS-BOSS_ROOK_WARDEN_COMBAT-STUNNED-03`](requests/characters/boss_rook_warden_combat.md#CHARACTERS-BOSS_ROOK_WARDEN_COMBAT-STUNNED-03) · `content/bosses/rook_warden/anim/stunned/03.png`
-- [`CHARACTERS-BOSS_ROOK_WARDEN_COMBAT-STUNNED-04`](requests/characters/boss_rook_warden_combat.md#CHARACTERS-BOSS_ROOK_WARDEN_COMBAT-STUNNED-04) · `content/bosses/rook_warden/anim/stunned/04.png`
 - [`CHARACTERS-BOSS_ROOK_WARDEN_COMBAT-ARMOR_CLANG-01`](requests/characters/boss_rook_warden_combat.md#CHARACTERS-BOSS_ROOK_WARDEN_COMBAT-ARMOR_CLANG-01) · `content/bosses/rook_warden/anim/armor_clang/01.png`
 - [`CHARACTERS-BOSS_ROOK_WARDEN_COMBAT-ARMOR_CLANG-02`](requests/characters/boss_rook_warden_combat.md#CHARACTERS-BOSS_ROOK_WARDEN_COMBAT-ARMOR_CLANG-02) · `content/bosses/rook_warden/anim/armor_clang/02.png`
 - [`CHARACTERS-BOSS_ROOK_WARDEN_COMBAT-CHARGE_S-01`](requests/characters/boss_rook_warden_combat.md#CHARACTERS-BOSS_ROOK_WARDEN_COMBAT-CHARGE_S-01) · `content/bosses/rook_warden/anim/charge_s/01.png`
@@ -7131,13 +7123,36 @@ Làm theo thứ tự mốc từ nhỏ đến lớn; trong mỗi mốc làm `must
 - [`CHARACTERS-BOSS_ROOK_WARDEN_COMBAT-RECOVER_P2-01`](requests/characters/boss_rook_warden_combat.md#CHARACTERS-BOSS_ROOK_WARDEN_COMBAT-RECOVER_P2-01) · `content/bosses/rook_warden/anim/recover_p2/01.png`
 - [`CHARACTERS-BOSS_ROOK_WARDEN_COMBAT-RECOVER_P2-02`](requests/characters/boss_rook_warden_combat.md#CHARACTERS-BOSS_ROOK_WARDEN_COMBAT-RECOVER_P2-02) · `content/bosses/rook_warden/anim/recover_p2/02.png`
 - [`CHARACTERS-BOSS_ROOK_WARDEN_COMBAT-RECOVER_P2-03`](requests/characters/boss_rook_warden_combat.md#CHARACTERS-BOSS_ROOK_WARDEN_COMBAT-RECOVER_P2-03) · `content/bosses/rook_warden/anim/recover_p2/03.png`
-- [`CHARACTERS-BOSS_ROOK_WARDEN_COMBAT-HURT_P3-01`](requests/characters/boss_rook_warden_combat.md#CHARACTERS-BOSS_ROOK_WARDEN_COMBAT-HURT_P3-01) · `content/bosses/rook_warden/anim/hurt_p3/01.png`
-- [`CHARACTERS-BOSS_ROOK_WARDEN_COMBAT-HURT_P3-02`](requests/characters/boss_rook_warden_combat.md#CHARACTERS-BOSS_ROOK_WARDEN_COMBAT-HURT_P3-02) · `content/bosses/rook_warden/anim/hurt_p3/02.png`
-- [`CHARACTERS-BOSS_ROOK_WARDEN_COMBAT-RECOVER_P3-01`](requests/characters/boss_rook_warden_combat.md#CHARACTERS-BOSS_ROOK_WARDEN_COMBAT-RECOVER_P3-01) · `content/bosses/rook_warden/anim/recover_p3/01.png`
-- [`CHARACTERS-BOSS_ROOK_WARDEN_COMBAT-RECOVER_P3-02`](requests/characters/boss_rook_warden_combat.md#CHARACTERS-BOSS_ROOK_WARDEN_COMBAT-RECOVER_P3-02) · `content/bosses/rook_warden/anim/recover_p3/02.png`
-- [`CHARACTERS-BOSS_ROOK_WARDEN_COMBAT-RECOVER_P3-03`](requests/characters/boss_rook_warden_combat.md#CHARACTERS-BOSS_ROOK_WARDEN_COMBAT-RECOVER_P3-03) · `content/bosses/rook_warden/anim/recover_p3/03.png`
 
-**Boss Xe Cai Ngục: ra mắt, đứng, chuyển giai đoạn, vỡ thành khối gỗ** (`characters/boss_rook_warden_story`)
+**Boss Xe Cai Ngục: chiêu và phản ứng giai đoạn 3 (1 ô, canvas 32x32)** (`characters/boss_rook_warden_combat_p3`)
+
+- [`CHARACTERS-BOSS_ROOK_WARDEN_COMBAT_P3-WINDUP_REFUSE_TO_TURN-01`](requests/characters/boss_rook_warden_combat_p3.md#CHARACTERS-BOSS_ROOK_WARDEN_COMBAT_P3-WINDUP_REFUSE_TO_TURN-01) · `content/bosses/rook_warden/anim/windup_refuse_to_turn/01.png`
+- [`CHARACTERS-BOSS_ROOK_WARDEN_COMBAT_P3-WINDUP_REFUSE_TO_TURN-02`](requests/characters/boss_rook_warden_combat_p3.md#CHARACTERS-BOSS_ROOK_WARDEN_COMBAT_P3-WINDUP_REFUSE_TO_TURN-02) · `content/bosses/rook_warden/anim/windup_refuse_to_turn/02.png`
+- [`CHARACTERS-BOSS_ROOK_WARDEN_COMBAT_P3-WINDUP_REFUSE_TO_TURN-03`](requests/characters/boss_rook_warden_combat_p3.md#CHARACTERS-BOSS_ROOK_WARDEN_COMBAT_P3-WINDUP_REFUSE_TO_TURN-03) · `content/bosses/rook_warden/anim/windup_refuse_to_turn/03.png`
+- [`CHARACTERS-BOSS_ROOK_WARDEN_COMBAT_P3-WINDUP_REFUSE_TO_TURN-04`](requests/characters/boss_rook_warden_combat_p3.md#CHARACTERS-BOSS_ROOK_WARDEN_COMBAT_P3-WINDUP_REFUSE_TO_TURN-04) · `content/bosses/rook_warden/anim/windup_refuse_to_turn/04.png`
+- [`CHARACTERS-BOSS_ROOK_WARDEN_COMBAT_P3-COMMIT_REFUSE_TO_TURN-01`](requests/characters/boss_rook_warden_combat_p3.md#CHARACTERS-BOSS_ROOK_WARDEN_COMBAT_P3-COMMIT_REFUSE_TO_TURN-01) · `content/bosses/rook_warden/anim/commit_refuse_to_turn/01.png`
+- [`CHARACTERS-BOSS_ROOK_WARDEN_COMBAT_P3-COMMIT_REFUSE_TO_TURN-02`](requests/characters/boss_rook_warden_combat_p3.md#CHARACTERS-BOSS_ROOK_WARDEN_COMBAT_P3-COMMIT_REFUSE_TO_TURN-02) · `content/bosses/rook_warden/anim/commit_refuse_to_turn/02.png`
+- [`CHARACTERS-BOSS_ROOK_WARDEN_COMBAT_P3-COMMIT_REFUSE_TO_TURN-03`](requests/characters/boss_rook_warden_combat_p3.md#CHARACTERS-BOSS_ROOK_WARDEN_COMBAT_P3-COMMIT_REFUSE_TO_TURN-03) · `content/bosses/rook_warden/anim/commit_refuse_to_turn/03.png`
+- [`CHARACTERS-BOSS_ROOK_WARDEN_COMBAT_P3-CHARGE_P3_S-01`](requests/characters/boss_rook_warden_combat_p3.md#CHARACTERS-BOSS_ROOK_WARDEN_COMBAT_P3-CHARGE_P3_S-01) · `content/bosses/rook_warden/anim/charge_p3_s/01.png`
+- [`CHARACTERS-BOSS_ROOK_WARDEN_COMBAT_P3-CHARGE_P3_S-02`](requests/characters/boss_rook_warden_combat_p3.md#CHARACTERS-BOSS_ROOK_WARDEN_COMBAT_P3-CHARGE_P3_S-02) · `content/bosses/rook_warden/anim/charge_p3_s/02.png`
+- [`CHARACTERS-BOSS_ROOK_WARDEN_COMBAT_P3-CHARGE_P3_S-03`](requests/characters/boss_rook_warden_combat_p3.md#CHARACTERS-BOSS_ROOK_WARDEN_COMBAT_P3-CHARGE_P3_S-03) · `content/bosses/rook_warden/anim/charge_p3_s/03.png`
+- [`CHARACTERS-BOSS_ROOK_WARDEN_COMBAT_P3-CHARGE_P3_N-01`](requests/characters/boss_rook_warden_combat_p3.md#CHARACTERS-BOSS_ROOK_WARDEN_COMBAT_P3-CHARGE_P3_N-01) · `content/bosses/rook_warden/anim/charge_p3_n/01.png`
+- [`CHARACTERS-BOSS_ROOK_WARDEN_COMBAT_P3-CHARGE_P3_N-02`](requests/characters/boss_rook_warden_combat_p3.md#CHARACTERS-BOSS_ROOK_WARDEN_COMBAT_P3-CHARGE_P3_N-02) · `content/bosses/rook_warden/anim/charge_p3_n/02.png`
+- [`CHARACTERS-BOSS_ROOK_WARDEN_COMBAT_P3-CHARGE_P3_N-03`](requests/characters/boss_rook_warden_combat_p3.md#CHARACTERS-BOSS_ROOK_WARDEN_COMBAT_P3-CHARGE_P3_N-03) · `content/bosses/rook_warden/anim/charge_p3_n/03.png`
+- [`CHARACTERS-BOSS_ROOK_WARDEN_COMBAT_P3-CHARGE_P3_E-01`](requests/characters/boss_rook_warden_combat_p3.md#CHARACTERS-BOSS_ROOK_WARDEN_COMBAT_P3-CHARGE_P3_E-01) · `content/bosses/rook_warden/anim/charge_p3_e/01.png`
+- [`CHARACTERS-BOSS_ROOK_WARDEN_COMBAT_P3-CHARGE_P3_E-02`](requests/characters/boss_rook_warden_combat_p3.md#CHARACTERS-BOSS_ROOK_WARDEN_COMBAT_P3-CHARGE_P3_E-02) · `content/bosses/rook_warden/anim/charge_p3_e/02.png`
+- [`CHARACTERS-BOSS_ROOK_WARDEN_COMBAT_P3-CHARGE_P3_E-03`](requests/characters/boss_rook_warden_combat_p3.md#CHARACTERS-BOSS_ROOK_WARDEN_COMBAT_P3-CHARGE_P3_E-03) · `content/bosses/rook_warden/anim/charge_p3_e/03.png`
+- [`CHARACTERS-BOSS_ROOK_WARDEN_COMBAT_P3-STUNNED-01`](requests/characters/boss_rook_warden_combat_p3.md#CHARACTERS-BOSS_ROOK_WARDEN_COMBAT_P3-STUNNED-01) · `content/bosses/rook_warden/anim/stunned/01.png`
+- [`CHARACTERS-BOSS_ROOK_WARDEN_COMBAT_P3-STUNNED-02`](requests/characters/boss_rook_warden_combat_p3.md#CHARACTERS-BOSS_ROOK_WARDEN_COMBAT_P3-STUNNED-02) · `content/bosses/rook_warden/anim/stunned/02.png`
+- [`CHARACTERS-BOSS_ROOK_WARDEN_COMBAT_P3-STUNNED-03`](requests/characters/boss_rook_warden_combat_p3.md#CHARACTERS-BOSS_ROOK_WARDEN_COMBAT_P3-STUNNED-03) · `content/bosses/rook_warden/anim/stunned/03.png`
+- [`CHARACTERS-BOSS_ROOK_WARDEN_COMBAT_P3-STUNNED-04`](requests/characters/boss_rook_warden_combat_p3.md#CHARACTERS-BOSS_ROOK_WARDEN_COMBAT_P3-STUNNED-04) · `content/bosses/rook_warden/anim/stunned/04.png`
+- [`CHARACTERS-BOSS_ROOK_WARDEN_COMBAT_P3-HURT_P3-01`](requests/characters/boss_rook_warden_combat_p3.md#CHARACTERS-BOSS_ROOK_WARDEN_COMBAT_P3-HURT_P3-01) · `content/bosses/rook_warden/anim/hurt_p3/01.png`
+- [`CHARACTERS-BOSS_ROOK_WARDEN_COMBAT_P3-HURT_P3-02`](requests/characters/boss_rook_warden_combat_p3.md#CHARACTERS-BOSS_ROOK_WARDEN_COMBAT_P3-HURT_P3-02) · `content/bosses/rook_warden/anim/hurt_p3/02.png`
+- [`CHARACTERS-BOSS_ROOK_WARDEN_COMBAT_P3-RECOVER_P3-01`](requests/characters/boss_rook_warden_combat_p3.md#CHARACTERS-BOSS_ROOK_WARDEN_COMBAT_P3-RECOVER_P3-01) · `content/bosses/rook_warden/anim/recover_p3/01.png`
+- [`CHARACTERS-BOSS_ROOK_WARDEN_COMBAT_P3-RECOVER_P3-02`](requests/characters/boss_rook_warden_combat_p3.md#CHARACTERS-BOSS_ROOK_WARDEN_COMBAT_P3-RECOVER_P3-02) · `content/bosses/rook_warden/anim/recover_p3/02.png`
+- [`CHARACTERS-BOSS_ROOK_WARDEN_COMBAT_P3-RECOVER_P3-03`](requests/characters/boss_rook_warden_combat_p3.md#CHARACTERS-BOSS_ROOK_WARDEN_COMBAT_P3-RECOVER_P3-03) · `content/bosses/rook_warden/anim/recover_p3/03.png`
+
+**Boss Xe Cai Ngục: ra mắt, đứng giai đoạn 1 và 2, chuyển giai đoạn (2x2 ô, canvas 64x64)** (`characters/boss_rook_warden_story`)
 
 - [`CHARACTERS-BOSS_ROOK_WARDEN_STORY-INTRO-01`](requests/characters/boss_rook_warden_story.md#CHARACTERS-BOSS_ROOK_WARDEN_STORY-INTRO-01) · `content/bosses/rook_warden/anim/intro/01.png`
 - [`CHARACTERS-BOSS_ROOK_WARDEN_STORY-INTRO-02`](requests/characters/boss_rook_warden_story.md#CHARACTERS-BOSS_ROOK_WARDEN_STORY-INTRO-02) · `content/bosses/rook_warden/anim/intro/02.png`
@@ -7151,9 +7166,6 @@ Làm theo thứ tự mốc từ nhỏ đến lớn; trong mỗi mốc làm `must
 - [`CHARACTERS-BOSS_ROOK_WARDEN_STORY-IDLE_AUTHORITY_P2-01`](requests/characters/boss_rook_warden_story.md#CHARACTERS-BOSS_ROOK_WARDEN_STORY-IDLE_AUTHORITY_P2-01) · `content/bosses/rook_warden/anim/idle_authority_p2/01.png`
 - [`CHARACTERS-BOSS_ROOK_WARDEN_STORY-IDLE_AUTHORITY_P2-02`](requests/characters/boss_rook_warden_story.md#CHARACTERS-BOSS_ROOK_WARDEN_STORY-IDLE_AUTHORITY_P2-02) · `content/bosses/rook_warden/anim/idle_authority_p2/02.png`
 - [`CHARACTERS-BOSS_ROOK_WARDEN_STORY-IDLE_AUTHORITY_P2-03`](requests/characters/boss_rook_warden_story.md#CHARACTERS-BOSS_ROOK_WARDEN_STORY-IDLE_AUTHORITY_P2-03) · `content/bosses/rook_warden/anim/idle_authority_p2/03.png`
-- [`CHARACTERS-BOSS_ROOK_WARDEN_STORY-IDLE_AUTHORITY_P3-01`](requests/characters/boss_rook_warden_story.md#CHARACTERS-BOSS_ROOK_WARDEN_STORY-IDLE_AUTHORITY_P3-01) · `content/bosses/rook_warden/anim/idle_authority_p3/01.png`
-- [`CHARACTERS-BOSS_ROOK_WARDEN_STORY-IDLE_AUTHORITY_P3-02`](requests/characters/boss_rook_warden_story.md#CHARACTERS-BOSS_ROOK_WARDEN_STORY-IDLE_AUTHORITY_P3-02) · `content/bosses/rook_warden/anim/idle_authority_p3/02.png`
-- [`CHARACTERS-BOSS_ROOK_WARDEN_STORY-IDLE_AUTHORITY_P3-03`](requests/characters/boss_rook_warden_story.md#CHARACTERS-BOSS_ROOK_WARDEN_STORY-IDLE_AUTHORITY_P3-03) · `content/bosses/rook_warden/anim/idle_authority_p3/03.png`
 - [`CHARACTERS-BOSS_ROOK_WARDEN_STORY-TRANSITION_P1_P2-01`](requests/characters/boss_rook_warden_story.md#CHARACTERS-BOSS_ROOK_WARDEN_STORY-TRANSITION_P1_P2-01) · `content/bosses/rook_warden/anim/transition_p1_p2/01.png`
 - [`CHARACTERS-BOSS_ROOK_WARDEN_STORY-TRANSITION_P1_P2-02`](requests/characters/boss_rook_warden_story.md#CHARACTERS-BOSS_ROOK_WARDEN_STORY-TRANSITION_P1_P2-02) · `content/bosses/rook_warden/anim/transition_p1_p2/02.png`
 - [`CHARACTERS-BOSS_ROOK_WARDEN_STORY-TRANSITION_P1_P2-03`](requests/characters/boss_rook_warden_story.md#CHARACTERS-BOSS_ROOK_WARDEN_STORY-TRANSITION_P1_P2-03) · `content/bosses/rook_warden/anim/transition_p1_p2/03.png`
@@ -7166,12 +7178,18 @@ Làm theo thứ tự mốc từ nhỏ đến lớn; trong mỗi mốc làm `must
 - [`CHARACTERS-BOSS_ROOK_WARDEN_STORY-TRANSITION_P2_P3-04`](requests/characters/boss_rook_warden_story.md#CHARACTERS-BOSS_ROOK_WARDEN_STORY-TRANSITION_P2_P3-04) · `content/bosses/rook_warden/anim/transition_p2_p3/04.png`
 - [`CHARACTERS-BOSS_ROOK_WARDEN_STORY-TRANSITION_P2_P3-05`](requests/characters/boss_rook_warden_story.md#CHARACTERS-BOSS_ROOK_WARDEN_STORY-TRANSITION_P2_P3-05) · `content/bosses/rook_warden/anim/transition_p2_p3/05.png`
 - [`CHARACTERS-BOSS_ROOK_WARDEN_STORY-TRANSITION_P2_P3-06`](requests/characters/boss_rook_warden_story.md#CHARACTERS-BOSS_ROOK_WARDEN_STORY-TRANSITION_P2_P3-06) · `content/bosses/rook_warden/anim/transition_p2_p3/06.png`
-- [`CHARACTERS-BOSS_ROOK_WARDEN_STORY-DEFEAT-01`](requests/characters/boss_rook_warden_story.md#CHARACTERS-BOSS_ROOK_WARDEN_STORY-DEFEAT-01) · `content/bosses/rook_warden/anim/defeat/01.png`
-- [`CHARACTERS-BOSS_ROOK_WARDEN_STORY-DEFEAT-02`](requests/characters/boss_rook_warden_story.md#CHARACTERS-BOSS_ROOK_WARDEN_STORY-DEFEAT-02) · `content/bosses/rook_warden/anim/defeat/02.png`
-- [`CHARACTERS-BOSS_ROOK_WARDEN_STORY-DEFEAT-03`](requests/characters/boss_rook_warden_story.md#CHARACTERS-BOSS_ROOK_WARDEN_STORY-DEFEAT-03) · `content/bosses/rook_warden/anim/defeat/03.png`
-- [`CHARACTERS-BOSS_ROOK_WARDEN_STORY-DEFEAT-04`](requests/characters/boss_rook_warden_story.md#CHARACTERS-BOSS_ROOK_WARDEN_STORY-DEFEAT-04) · `content/bosses/rook_warden/anim/defeat/04.png`
-- [`CHARACTERS-BOSS_ROOK_WARDEN_STORY-DEFEAT-05`](requests/characters/boss_rook_warden_story.md#CHARACTERS-BOSS_ROOK_WARDEN_STORY-DEFEAT-05) · `content/bosses/rook_warden/anim/defeat/05.png`
-- [`CHARACTERS-BOSS_ROOK_WARDEN_STORY-DEFEAT-06`](requests/characters/boss_rook_warden_story.md#CHARACTERS-BOSS_ROOK_WARDEN_STORY-DEFEAT-06) · `content/bosses/rook_warden/anim/defeat/06.png`
+
+**Boss Xe Cai Ngục: đứng giai đoạn 3 và vỡ thành khối gỗ (1 ô, canvas 32x32)** (`characters/boss_rook_warden_story_p3`)
+
+- [`CHARACTERS-BOSS_ROOK_WARDEN_STORY_P3-IDLE_AUTHORITY_P3-01`](requests/characters/boss_rook_warden_story_p3.md#CHARACTERS-BOSS_ROOK_WARDEN_STORY_P3-IDLE_AUTHORITY_P3-01) · `content/bosses/rook_warden/anim/idle_authority_p3/01.png`
+- [`CHARACTERS-BOSS_ROOK_WARDEN_STORY_P3-IDLE_AUTHORITY_P3-02`](requests/characters/boss_rook_warden_story_p3.md#CHARACTERS-BOSS_ROOK_WARDEN_STORY_P3-IDLE_AUTHORITY_P3-02) · `content/bosses/rook_warden/anim/idle_authority_p3/02.png`
+- [`CHARACTERS-BOSS_ROOK_WARDEN_STORY_P3-IDLE_AUTHORITY_P3-03`](requests/characters/boss_rook_warden_story_p3.md#CHARACTERS-BOSS_ROOK_WARDEN_STORY_P3-IDLE_AUTHORITY_P3-03) · `content/bosses/rook_warden/anim/idle_authority_p3/03.png`
+- [`CHARACTERS-BOSS_ROOK_WARDEN_STORY_P3-DEFEAT-01`](requests/characters/boss_rook_warden_story_p3.md#CHARACTERS-BOSS_ROOK_WARDEN_STORY_P3-DEFEAT-01) · `content/bosses/rook_warden/anim/defeat/01.png`
+- [`CHARACTERS-BOSS_ROOK_WARDEN_STORY_P3-DEFEAT-02`](requests/characters/boss_rook_warden_story_p3.md#CHARACTERS-BOSS_ROOK_WARDEN_STORY_P3-DEFEAT-02) · `content/bosses/rook_warden/anim/defeat/02.png`
+- [`CHARACTERS-BOSS_ROOK_WARDEN_STORY_P3-DEFEAT-03`](requests/characters/boss_rook_warden_story_p3.md#CHARACTERS-BOSS_ROOK_WARDEN_STORY_P3-DEFEAT-03) · `content/bosses/rook_warden/anim/defeat/03.png`
+- [`CHARACTERS-BOSS_ROOK_WARDEN_STORY_P3-DEFEAT-04`](requests/characters/boss_rook_warden_story_p3.md#CHARACTERS-BOSS_ROOK_WARDEN_STORY_P3-DEFEAT-04) · `content/bosses/rook_warden/anim/defeat/04.png`
+- [`CHARACTERS-BOSS_ROOK_WARDEN_STORY_P3-DEFEAT-05`](requests/characters/boss_rook_warden_story_p3.md#CHARACTERS-BOSS_ROOK_WARDEN_STORY_P3-DEFEAT-05) · `content/bosses/rook_warden/anim/defeat/05.png`
+- [`CHARACTERS-BOSS_ROOK_WARDEN_STORY_P3-DEFEAT-06`](requests/characters/boss_rook_warden_story_p3.md#CHARACTERS-BOSS_ROOK_WARDEN_STORY_P3-DEFEAT-06) · `content/bosses/rook_warden/anim/defeat/06.png`
 
 **Sáu boss: xác thành đồ chơi bình thường (ảnh tĩnh)** (`characters/boss_remains_as_toys`)
 
@@ -7639,7 +7657,7 @@ Làm theo thứ tự mốc từ nhỏ đến lớn; trong mỗi mốc làm `must
 - [`VFX-THRONE_SMASH_BURST-SMASH-07`](requests/vfx/throne_smash_burst.md#VFX-THRONE_SMASH_BURST-SMASH-07) · `content/feel/vfx/boss/rook_warden/throne_smash_burst/anim/smash/07.png`
 - [`VFX-THRONE_SMASH_BURST-SMASH-08`](requests/vfx/throne_smash_burst.md#VFX-THRONE_SMASH_BURST-SMASH-08) · `content/feel/vfx/boss/rook_warden/throne_smash_burst/anim/smash/08.png`
 
-**Dấu choáng nặng cho boss (3 giây)** (`vfx/status_stunned_boss`)
+**Dấu choáng nặng cho Xe Cai Ngục chiếm 2x2 ô (sau Breach Wall)** (`vfx/status_stunned_boss`)
 
 - [`VFX-STATUS_STUNNED_BOSS-LOOP-01`](requests/vfx/status_stunned_boss.md#VFX-STATUS_STUNNED_BOSS-LOOP-01) · `content/feel/vfx/boss/rook_warden/status_stunned_boss/anim/loop/01.png`
 - [`VFX-STATUS_STUNNED_BOSS-LOOP-02`](requests/vfx/status_stunned_boss.md#VFX-STATUS_STUNNED_BOSS-LOOP-02) · `content/feel/vfx/boss/rook_warden/status_stunned_boss/anim/loop/02.png`
@@ -7764,7 +7782,7 @@ Làm theo thứ tự mốc từ nhỏ đến lớn; trong mỗi mốc làm `must
 
 - [`AUDIO-MUSIC_BOSS_BTB-BTB_THEME`](requests/audio/music_boss_btb.md#AUDIO-MUSIC_BOSS_BTB-BTB_THEME) · `assets/music/boss/btb_rook_warden/btb_theme.ogg`
 
-### M11 · should (250)
+### M11 · should (251)
 
 **Pawn: Eraser Guard (giữ thế, đỡ, Perfect Rub)** (`characters/hero_guard`)
 
@@ -7784,7 +7802,7 @@ Làm theo thứ tự mốc từ nhỏ đến lớn; trong mỗi mốc làm `must
 - [`CHARACTERS-ENEMY_PAWN_ARMED-IN_CHECK-02`](requests/characters/enemy_pawn_armed.md#CHARACTERS-ENEMY_PAWN_ARMED-IN_CHECK-02) · `content/enemies/pawn_armed/anim/in_check/02.png`
 - [`CHARACTERS-ENEMY_PAWN_ARMED-IN_CHECK-03`](requests/characters/enemy_pawn_armed.md#CHARACTERS-ENEMY_PAWN_ARMED-IN_CHECK-03) · `content/enemies/pawn_armed/anim/in_check/03.png`
 
-**Boss Xe Cai Ngục: windup, commit, lao tới, choáng** (`characters/boss_rook_warden_combat`)
+**Boss Xe Cai Ngục: windup, commit, lao tới, choáng, dội giáp (giai đoạn 1 và 2, 2x2 ô, canvas 64x64)** (`characters/boss_rook_warden_combat`)
 
 - [`CHARACTERS-BOSS_ROOK_WARDEN_COMBAT-MOVE-01`](requests/characters/boss_rook_warden_combat.md#CHARACTERS-BOSS_ROOK_WARDEN_COMBAT-MOVE-01) · `content/bosses/rook_warden/anim/move/01.png`
 - [`CHARACTERS-BOSS_ROOK_WARDEN_COMBAT-MOVE-02`](requests/characters/boss_rook_warden_combat.md#CHARACTERS-BOSS_ROOK_WARDEN_COMBAT-MOVE-02) · `content/bosses/rook_warden/anim/move/02.png`
@@ -8038,6 +8056,10 @@ Làm theo thứ tự mốc từ nhỏ đến lớn; trong mỗi mốc làm `must
 - [`VFX-CHALK_BLOCK_HIT_SPARK-THUD-03`](requests/vfx/chalk_block_hit_spark.md#VFX-CHALK_BLOCK_HIT_SPARK-THUD-03) · `content/feel/vfx/skill/chalk_block/chalk_block_hit_spark/anim/thud/03.png`
 - [`VFX-CHALK_BLOCK_HIT_SPARK-THUD-04`](requests/vfx/chalk_block_hit_spark.md#VFX-CHALK_BLOCK_HIT_SPARK-THUD-04) · `content/feel/vfx/skill/chalk_block/chalk_block_hit_spark/anim/thud/04.png`
 
+**Bóng chạm sàn dưới boss chiếm 2x2 ô (Xe Cai Ngục giai đoạn 1 và 2)** (`vfx/actor_shadow_2x2_cells`)
+
+- [`VFX-ACTOR_SHADOW_2X2_CELLS-SHADOW`](requests/vfx/actor_shadow_2x2_cells.md#VFX-ACTOR_SHADOW_2X2_CELLS-SHADOW) · `content/feel/vfx/actor/shadow_2x2_cells/shadow.png`
+
 **Chấm máu trên đầu kẻ địch** (`vfx/enemy_health_pips`)
 
 - [`VFX-ENEMY_HEALTH_PIPS-PIP_ARMOR`](requests/vfx/enemy_health_pips.md#VFX-ENEMY_HEALTH_PIPS-PIP_ARMOR) · `content/feel/vfx/actor/health_pip/pip_armor.png`
@@ -8170,16 +8192,19 @@ Làm theo thứ tự mốc từ nhỏ đến lớn; trong mỗi mốc làm `must
 
 - [`CHARACTERS-ENEMY_ROOK_IRON-REMAINS`](requests/characters/enemy_rook_iron.md#CHARACTERS-ENEMY_ROOK_IRON-REMAINS) · `content/enemies/rook_iron/remains.png`
 
-**Boss Xe Cai Ngục: windup, commit, lao tới, choáng** (`characters/boss_rook_warden_combat`)
+**Boss Xe Cai Ngục: windup, commit, lao tới, choáng, dội giáp (giai đoạn 1 và 2, 2x2 ô, canvas 64x64)** (`characters/boss_rook_warden_combat`)
 
 - [`CHARACTERS-BOSS_ROOK_WARDEN_COMBAT-MOVE_P2-01`](requests/characters/boss_rook_warden_combat.md#CHARACTERS-BOSS_ROOK_WARDEN_COMBAT-MOVE_P2-01) · `content/bosses/rook_warden/anim/move_p2/01.png`
 - [`CHARACTERS-BOSS_ROOK_WARDEN_COMBAT-MOVE_P2-02`](requests/characters/boss_rook_warden_combat.md#CHARACTERS-BOSS_ROOK_WARDEN_COMBAT-MOVE_P2-02) · `content/bosses/rook_warden/anim/move_p2/02.png`
 - [`CHARACTERS-BOSS_ROOK_WARDEN_COMBAT-MOVE_P2-03`](requests/characters/boss_rook_warden_combat.md#CHARACTERS-BOSS_ROOK_WARDEN_COMBAT-MOVE_P2-03) · `content/bosses/rook_warden/anim/move_p2/03.png`
 - [`CHARACTERS-BOSS_ROOK_WARDEN_COMBAT-MOVE_P2-04`](requests/characters/boss_rook_warden_combat.md#CHARACTERS-BOSS_ROOK_WARDEN_COMBAT-MOVE_P2-04) · `content/bosses/rook_warden/anim/move_p2/04.png`
-- [`CHARACTERS-BOSS_ROOK_WARDEN_COMBAT-MOVE_P3-01`](requests/characters/boss_rook_warden_combat.md#CHARACTERS-BOSS_ROOK_WARDEN_COMBAT-MOVE_P3-01) · `content/bosses/rook_warden/anim/move_p3/01.png`
-- [`CHARACTERS-BOSS_ROOK_WARDEN_COMBAT-MOVE_P3-02`](requests/characters/boss_rook_warden_combat.md#CHARACTERS-BOSS_ROOK_WARDEN_COMBAT-MOVE_P3-02) · `content/bosses/rook_warden/anim/move_p3/02.png`
-- [`CHARACTERS-BOSS_ROOK_WARDEN_COMBAT-MOVE_P3-03`](requests/characters/boss_rook_warden_combat.md#CHARACTERS-BOSS_ROOK_WARDEN_COMBAT-MOVE_P3-03) · `content/bosses/rook_warden/anim/move_p3/03.png`
-- [`CHARACTERS-BOSS_ROOK_WARDEN_COMBAT-MOVE_P3-04`](requests/characters/boss_rook_warden_combat.md#CHARACTERS-BOSS_ROOK_WARDEN_COMBAT-MOVE_P3-04) · `content/bosses/rook_warden/anim/move_p3/04.png`
+
+**Boss Xe Cai Ngục: chiêu và phản ứng giai đoạn 3 (1 ô, canvas 32x32)** (`characters/boss_rook_warden_combat_p3`)
+
+- [`CHARACTERS-BOSS_ROOK_WARDEN_COMBAT_P3-MOVE_P3-01`](requests/characters/boss_rook_warden_combat_p3.md#CHARACTERS-BOSS_ROOK_WARDEN_COMBAT_P3-MOVE_P3-01) · `content/bosses/rook_warden/anim/move_p3/01.png`
+- [`CHARACTERS-BOSS_ROOK_WARDEN_COMBAT_P3-MOVE_P3-02`](requests/characters/boss_rook_warden_combat_p3.md#CHARACTERS-BOSS_ROOK_WARDEN_COMBAT_P3-MOVE_P3-02) · `content/bosses/rook_warden/anim/move_p3/02.png`
+- [`CHARACTERS-BOSS_ROOK_WARDEN_COMBAT_P3-MOVE_P3-03`](requests/characters/boss_rook_warden_combat_p3.md#CHARACTERS-BOSS_ROOK_WARDEN_COMBAT_P3-MOVE_P3-03) · `content/bosses/rook_warden/anim/move_p3/03.png`
+- [`CHARACTERS-BOSS_ROOK_WARDEN_COMBAT_P3-MOVE_P3-04`](requests/characters/boss_rook_warden_combat_p3.md#CHARACTERS-BOSS_ROOK_WARDEN_COMBAT_P3-MOVE_P3-04) · `content/bosses/rook_warden/anim/move_p3/04.png`
 
 **Quân trắng được giải cứu: Stout (Xe trắng)** (`characters/rescue_stout`)
 
@@ -9484,7 +9509,7 @@ Làm theo thứ tự mốc từ nhỏ đến lớn; trong mỗi mốc làm `must
 - [`CHARACTERS-BOSS_KING_STORY-DEFEAT-05`](requests/characters/boss_king_story.md#CHARACTERS-BOSS_KING_STORY-DEFEAT-05) · `content/bosses/black_king/anim/defeat/05.png`
 - [`CHARACTERS-BOSS_KING_STORY-DEFEAT-06`](requests/characters/boss_king_story.md#CHARACTERS-BOSS_KING_STORY-DEFEAT-06) · `content/bosses/black_king/anim/defeat/06.png`
 
-**Cỗ máy Luật (Rule Engine) trong phòng boss Vua** (`characters/boss_rule_engine`)
+**Cỗ máy Luật (Rule Engine) trong phòng boss Vua, chiếm 3x3 ô (canvas 96x96)** (`characters/boss_rule_engine`)
 
 - [`CHARACTERS-BOSS_RULE_ENGINE-BODY`](requests/characters/boss_rule_engine.md#CHARACTERS-BOSS_RULE_ENGINE-BODY) · `content/bosses/rule_engine/body.png`
 - [`CHARACTERS-BOSS_RULE_ENGINE-BODY_ACTIVE`](requests/characters/boss_rule_engine.md#CHARACTERS-BOSS_RULE_ENGINE-BODY_ACTIVE) · `content/bosses/rule_engine/body_active.png`
@@ -10308,7 +10333,7 @@ Làm theo thứ tự mốc từ nhỏ đến lớn; trong mỗi mốc làm `must
 - [`CHARACTERS-BOSS_KING_COMBAT-MOVE-03`](requests/characters/boss_king_combat.md#CHARACTERS-BOSS_KING_COMBAT-MOVE-03) · `content/bosses/black_king/anim/move/03.png`
 - [`CHARACTERS-BOSS_KING_COMBAT-MOVE-04`](requests/characters/boss_king_combat.md#CHARACTERS-BOSS_KING_COMBAT-MOVE-04) · `content/bosses/black_king/anim/move/04.png`
 
-**Cỗ máy Luật (Rule Engine) trong phòng boss Vua** (`characters/boss_rule_engine`)
+**Cỗ máy Luật (Rule Engine) trong phòng boss Vua, chiếm 3x3 ô (canvas 96x96)** (`characters/boss_rule_engine`)
 
 - [`CHARACTERS-BOSS_RULE_ENGINE-BODY_N`](requests/characters/boss_rule_engine.md#CHARACTERS-BOSS_RULE_ENGINE-BODY_N) · `content/bosses/rule_engine/body_n.png`
 
