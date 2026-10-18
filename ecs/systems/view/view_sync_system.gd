@@ -25,6 +25,7 @@ func runs_while_frozen() -> bool:
 
 
 func tick(_delta: float) -> void:
+	_play_view_commands()
 	for entity_id in world.query([EcsComponents.GRID_POS, EcsComponents.VIEW_REF]):
 		var view: EcsComponents.ViewRef = world.get_component(entity_id, EcsComponents.VIEW_REF)
 		if view.node == null or not is_instance_valid(view.node):
@@ -46,6 +47,44 @@ func tick(_delta: float) -> void:
 			_play_clip(view.node, &"step" if moving else &"idle")
 			continue
 		_sync_appearance(entity_id, view, appearance, moving)
+
+
+## Plays the cosmetic instructions staged on world.view_commands (Commands.play_state), in the order
+## they were pushed, before the views are synced: whoever stages a scene (a cutscene beat) says
+## "wake" or "bow", and only this system touches the node. Works on a frozen world, which is the
+## point of a cutscene. A view command never changes the simulation.
+func _play_view_commands() -> void:
+	if world.view_commands.is_empty():
+		return
+	var batch := world.view_commands.duplicate()
+	world.view_commands.clear()
+	for view_command in batch:
+		var problem := Commands.view_command_problem_with(view_command)
+		if problem.is_empty():
+			problem = _play_state(int(view_command["entity"]), view_command["state"])
+		if not problem.is_empty():
+			var command_type: StringName = view_command["type"] if view_command.get("type") is StringName else &""
+			world.emit_event({"type": Events.COMMAND_REJECTED, "command": command_type, "reason": problem})
+
+
+## Sends the entity's animation graph to `state`. "" when it did, or when the entity has no view any
+## more (it was despawned; nothing to say); otherwise why it could not.
+func _play_state(entity_id: int, state: StringName) -> String:
+	var view: EcsComponents.ViewRef = world.get_component(entity_id, EcsComponents.VIEW_REF)
+	if view == null or view.node == null or not is_instance_valid(view.node):
+		return ""
+	var no_graph_problem := "the view of entity %d has no animation graph to play '%s' on" % [entity_id, state]
+	var tree := view.node.get_node_or_null("AnimationTree") as AnimationTree
+	if tree == null:
+		return no_graph_problem
+	var state_machine := tree.tree_root as AnimationNodeStateMachine
+	var playback: AnimationNodeStateMachinePlayback = tree.get("parameters/playback")
+	if state_machine == null or playback == null:
+		return no_graph_problem
+	if not state_machine.has_node(state):
+		return "the animation graph of entity %d has no state '%s'" % [entity_id, state]
+	playback.travel(state)
+	return ""
 
 
 func _sync_appearance(entity_id: int, view: EcsComponents.ViewRef, appearance: ActorView, moving: bool) -> void:

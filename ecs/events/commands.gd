@@ -82,15 +82,16 @@ const PROGRESSION_COMMANDS: Dictionary = {
 const PLAY_STATE := &"play_state"
 
 ## The cosmetic instructions for the puppet views. They never change the simulation, so they are
-## not requests: ViewSyncSystem plays them as they come and drops one it cannot (a view that is
-## gone, a state the actor's graph does not have).
+## not requests: ViewSyncSystem plays them as they come. It drops one whose entity has no view any
+## more without a word, and one it cannot play (a view without an animation graph, a state the
+## graph does not have) with a `command_rejected` event.
 const VIEW_COMMANDS: Dictionary = {
 	PLAY_STATE: {
 		"status": STATUS_HANDLED,
-		"about": "Send an actor's animation graph to a state, or play that clip on a view that has no graph (wake, bow, hesitate).",
+		"about": "Send an actor's animation graph to one of its states (wake today; bow and hesitate once the clips exist).",
 		"payload": {
 			"entity": "int: the entity whose view plays it",
-			"state": "StringName: the graph state or clip name",
+			"state": "StringName: the name of a state of the actor's animation graph",
 		},
 	},
 }
