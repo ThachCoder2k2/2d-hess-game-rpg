@@ -38,6 +38,7 @@ Validation (exit code 1 on any failure, nothing is written then):
     describes the takes it really has, every chess piece is drawn on the 32x32
     canvas of its cell (a boss stands on the footprint the owner chose, BOSS_FOOTPRINTS:
     32 px per cell, 64x64 for the Rook Warden in phases 1 and 2, 96x96 for the Rule Engine),
+    a clip may state a per-frame anchor exception (anchor_overrides_en) only on a footprint of more than one cell,
     no prompt names another group or points at a sibling
     file by name ("as path_pink_h", "identical to prop_closed.png", "idle frame 1"),
     music is one complete
@@ -494,7 +495,7 @@ def compose_image_prompt(style, group, entry, reference_path, is_first_of_group)
     if group.get("details_en", "").strip():
         lines.append("DETAILS: " + group["details_en"].strip())
     lines.append(canvas_line(group, entry["opaque"]))
-    lines.append("ANCHOR: " + (group.get("anchor") or "none").strip())
+    lines.append("ANCHOR: " + (entry.get("anchor") or group.get("anchor") or "none").strip())
     palette = (entry.get("palette_text") or "").strip()
     lines.append("PALETTE: " + (palette if palette else "the shared palette of the style above only; no extra colours."))
     if entry.get("tile_data"):
@@ -620,12 +621,17 @@ def image_acceptance(group, entry):
             bits.append("có kênh alpha, nền trong suốt, alpha chỉ 0 hoặc 255 (không viền mờ)")
     bits.append("pixel 1x1 thật (một pixel vẽ = một pixel game), không phóng to, không nội suy, không có khối pixel lớn hơn")
     bits.append("tối đa %d màu khác nhau (cảnh báo, không chặn)" % colour_limit(group))
-    anchor = (group.get("anchor") or "none").strip()
+    anchor = (entry.get("anchor") or group.get("anchor") or "none").strip()
+    has_anchor_exception = entry["is_frame"] and anchor != (group.get("anchor") or "none").strip()
     if anchor.lower().startswith("none"):
         bits.append("không có điểm neo")
     else:
         bits.append("điểm neo: %s" % anchor)
-    if entry["is_frame"]:
+    if has_anchor_exception:
+        bits.append("khung %d/%d của clip '%s': cùng canvas và cùng bảng màu với các khung khác của clip; điểm neo của khung này là "
+                    "ngoại lệ đã nêu ở trên (đế dời ngang so với điểm neo chung của nhóm, vì quân đổi từ cả chỗ đứng sang một ô)" % (
+                        entry["frame"], entry["frames"], entry["clip"]))
+    elif entry["is_frame"]:
         bits.append("khung %d/%d của clip '%s': cùng canvas, cùng điểm neo (lệch ngang không quá %d px), cùng bảng màu "
                     "với các khung khác của clip" % (entry["frame"], entry["frames"], entry["clip"],
                                                       FOOTPRINT_MAX_DRIFT_PX.get(group_footprint(group), 3)))
@@ -1089,6 +1095,7 @@ def build_entries(style, specs, problems):
                 if not (isinstance(fps, int) and fps > 0):
                     problems.error("%s: bad fps %r" % (cwhere, fps))
                     continue
+                anchor_overrides = clip_anchor_overrides(group, clip, frames, cwhere, problems)
                 priority = clip.get("priority") or group.get("priority")
                 needed_by = clip.get("needed_by") or group.get("needed_by")
                 for number in range(1, frames + 1):
@@ -1100,6 +1107,7 @@ def build_entries(style, specs, problems):
                         name="anim/%s/%02d.png" % (clip_name, number), needed_by=needed_by, priority=priority,
                         is_frame=True, clip=clip_name, frame=number, frames=frames, loop=bool(clip.get("loop")),
                         fps=fps, pose=poses[number - 1], tile_data=reference_tile_data,
+                        anchor=anchor_overrides[number - 1] or group.get("anchor"),
                         placeholder=group.get("placeholder_now") or "none",
                         opaque=is_opaque(group), avoid_profile=image_avoid_profile(group, None),
                     )
@@ -1111,6 +1119,27 @@ def build_entries(style, specs, problems):
 
 
 # --------------------------------------------------------------------------- validation
+
+def clip_anchor_overrides(group, clip, frames, where, problems):
+    """Per-frame anchor text of a clip: a list with one item per frame, None where the group's own anchor holds.
+    'anchor_overrides_en' in the spec states an exception for single frames, for the one case where a body on a larger footprint
+    changes cell inside a clip (the Rook Warden's last two frames of its transition into phase 3). Only a group that stands
+    on more than one cell may use it, and every override has to say that it is an exception."""
+    raw = clip.get("anchor_overrides_en")
+    none = [None] * frames
+    if raw is None:
+        return none
+    if not (isinstance(raw, list) and len(raw) == frames and all(item is None or (isinstance(item, str) and item.strip()) for item in raw)):
+        problems.error("%s: anchor_overrides_en must be a list with one item per frame (%d), each null or a non-empty text" % (where, frames))
+        return none
+    if group_footprint(group) in (None, (1, 1)):
+        problems.error("%s: only a group on more than one cell may state a per-frame anchor exception (anchor_overrides_en)" % where)
+        return none
+    for number, item in enumerate(raw, 1):
+        if item is not None and "exception" not in item.lower():
+            problems.error("%s: the anchor override of frame %d must say that it is an exception to the group's anchor" % (where, number))
+    return [item.strip() if item else None for item in raw]
+
 
 def validate(style, groups, entries, gitignore_rules, problems):
     seen_paths = {}
@@ -1323,6 +1352,9 @@ def prompt_texts(group):
         for index, pose in enumerate(clip.get("poses_en") or []):
             if isinstance(pose, str):
                 out.append(("clip %s pose %d" % (clip.get("clip"), index + 1), pose))
+        for index, override in enumerate(clip.get("anchor_overrides_en") or []):
+            if isinstance(override, str):
+                out.append(("clip %s anchor override %d" % (clip.get("clip"), index + 1), override))
     audio = group.get("audio")
     if isinstance(audio, dict):
         for key in ("mood_en", "materials_en", "references_en"):
@@ -1400,6 +1432,9 @@ def sibling_slots(group):
         for index, pose in enumerate(clip.get("poses_en") or []):
             if isinstance(pose, str):
                 yield "clip %s pose %d" % (clip.get("clip"), index + 1), pose, {clip.get("clip"), base}
+        for index, override in enumerate(clip.get("anchor_overrides_en") or []):
+            if isinstance(override, str):
+                yield "clip %s anchor override %d" % (clip.get("clip"), index + 1), override, {clip.get("clip"), base}
 
 
 def lint_sibling_pointers(specs, problems):
@@ -2089,7 +2124,9 @@ def render_readme(style, groups, stats, spec_link):
               "- Mọi quân cờ (nhóm có `piece_class`) vẽ trên canvas 32 px nhân số ô chỗ đứng (`footprint_cells`, mặc định 1x1 ô = 32x32), có đoạn CELL FIT trong mô tả "
               "và đúng một hàng trong bảng cỡ; không sprite nào của lane nhân vật lớn hơn một ô trừ bàn tay của bé, Xe Cai Ngục giai đoạn 1-2 (2x2 ô = 64x64) "
               "và Cỗ máy Luật (3x3 ô = 96x96). Chỗ đứng của từng nhóm boss bị khoá theo bảng `BOSS_FOOTPRINTS` trong script (quyết định 2026-10-13), "
-              "và nhóm Xe Cai Ngục giai đoạn 1-2 không được nhắc tới giai đoạn 3 (và ngược lại) vì hai bên khác canvas.",
+              "và nhóm Xe Cai Ngục giai đoạn 1-2 không được nhắc tới giai đoạn 3 (và ngược lại) vì hai bên khác canvas. "
+              "Một clip của nhóm chiếm nhiều ô được phép ghi điểm neo riêng cho từng khung (`anchor_overrides_en`), mỗi câu phải nói rõ đó là ngoại lệ; "
+              "hiện chỉ có khung 5 và 6 của clip chuyển giai đoạn 2 sang 3 của Xe Cai Ngục, nơi thân đã thu về một ô ở góc tây nam.",
               "- Prompt tự đủ ý: không prompt nào nêu tên nhóm khác (id kiểu `ten_nhom`); thứ cần từ nhóm khác phải được viết thẳng vào prompt (màu thì dùng `{palette:<id>}`).",
               "- Prompt cũng không được chỉ tới một file anh em bằng tên ('giống gate_closed_h', 'y hệt prop_closed.png', 'như path_pink_h', 'khung 1 của clip idle'): "
               "hình dạng, kích thước và màu cần có phải được mô tả thẳng trong prompt. Script bắt tên file có đuôi, tên file/thư mục/clip của mục khác đứng sau từ so sánh "
