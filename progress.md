@@ -1322,3 +1322,60 @@ in the plan and is built in three steps; this is the first. Nothing the player c
   `AStarGrid2D`, the bounded attack-setup search, per-room centred `grid_origin`); the `CameraRig` clamp; `PlayerSnapshot`;
   `HudSnapshot` fields and `HudSnapshotSystem`; `tests/perf/test_room_tick_budget.gd`. Nothing pushes on `world.commands` or
   `view_commands` yet, and the bridge still reads components directly (the listed deviation).
+
+## M3a step 2 - input, the HUD and player snapshots, room origin - 2026-10-19
+
+Branch `base/m3a-2` (from `base/m3a-1`), five code commits and this record, the strict runner green after each. Nothing the
+player can feel changed: the six room dumps are byte-identical to their baselines and all 235 baseline labels still pass.
+
+- **The controls have one reader.** `shell/input/input_poller.gd` is the only file that calls `Input`; `game_root` polls once
+  per frame, right before the world ticks, into `world.input_snapshot`, and `PlayerInputSystem` reads only that. The poller copies
+  the engine's own pressed / just-pressed / just-released flags verbatim (not edges of its own), so a tick that runs several times
+  inside one engine frame, the way the bridge suites pump, sees what the system saw when it asked `Input` itself; `held_time` and
+  the press timestamp are new and nothing reads them yet. `game_root`'s three raw keys (F3, F11, B) are published by the poller
+  as `debug_view_toggle`, `fullscreen_toggle`, `rule_book_toggle` (edges worked out there) and `restart_room` is read from the
+  snapshot; M4 turns the names into `InputMap` actions and deletes the table. **Byte-identical, proved two ways:** the bridge
+  suites pass unchanged, and a one-off comparison of the old system (from `git show`) against the new one with the poller ran
+  7,472 ticks of random play of every control (random frame times, several ticks per engine frame, control toggled, "moving"
+  toggled) and left identical state after every tick; with the poll removed the same comparison reports 2,724 differences, so it
+  can fail. `test_input_snapshot` (61 checks) holds the buffer (newest wins, never expires until M7b), the chord, the tap window
+  (a tap is one step, a hold repeats on the tick that reaches `held_repeat_delay`), the attack keys, a hero without control, and the
+  poller against the real `Input`. `test_input_only_in_poller` is the lint.
+- **The HUD and the board read a snapshot.** `HudSnapshot` holds the hero's courage, cell, facing, sword and skill cooldown, the
+  attack token owner and one `EnemyBrief` (cell, committed goal, telegraph progress) per enemy; `HudSnapshotSystem` rebuilds it in
+  place at the end of every tick (view stage, before `ViewSyncSystem`; not while frozen) and the shell builds it once after a boot.
+  `game_root` reads courage, cell and facing, the skill length and the token owner from it; `PrototypeBoard.setup(grid, snapshot)`
+  draws telegraph progress and the F3 intent paths from the briefs. **No script under `presentation/` names `EcsComponents` or
+  `EcsWorld`** (`test_hud_snapshot` and the edge test both fail if one does), and the board's two undecided dependency edges are
+  deleted. 13.1's presentation row names `HudSnapshot`, so `test_dependency_edges` gained `CLASS_ALLOWANCES`, an exact list like the
+  other two. The cadence of the HUD is unchanged (the skill slot is still redrawn on `skill_cooldown` events), which keeps one
+  pre-existing quirk: after the sword is found the slot says "find sword" until the first skill is used. The M4 widgets draw the
+  snapshot every frame and end it. `test_hud_snapshot` (39), `test_board_draws_from_snapshot` (9, runs the overlay's real draw
+  code on a snapshot with no world behind it); the `encounter_hud_runtime_test` pin `board.ecs == ecs` is retargeted and its
+  label renamed in `label_renames.txt`.
+- **`PlayerSnapshot`.** The plan's 14.2 carry table as data (`ecs/core/player_snapshot.gd`): courage current and max, Believe,
+  unlocked skills and applied upgrades, equipped pages and Margin, the direction lock, the facing, the flags. The per-room rows are
+  not fields, so they reset with the world. Plain data with a dictionary form (not a Resource: the save is a versioned dictionary);
+  `capture(world, hero)`, `apply_to(world, hero, restore_facing)`, `to_dictionary()`/`from_dictionary()` (JSON-safe, tolerant of a
+  damaged or older save, null for a newer one). Rows whose component does not exist yet have fields and round-trip now. The facing
+  is captured but restored only on request (a room change leaves it to the entry marker). `EcsBootOptions.player_snapshot` and
+  `restore_player_facing`; `EcsBoot.boot` applies it right after the hero. Nothing in the shell passes one yet (M3b's zone swap).
+  `test_player_snapshot_roundtrip` (52): dictionary, JSON string and JSON file; damaged, partial and newer saves; capture and apply
+  between two worlds; two room changes through JSON; no aliasing; the boot. Two mutations turn it red in 8 places.
+- **Per-room centred origin and the camera.** `EcsBoot.shape_grid` gives every room its bounds and the origin that centres its
+  board (`EcsGrid.centred_origin`: x 64 for 16 wide, 32 for 18 wide, y 36 for 9 rows; a board larger than the picture keeps the
+  fixed anchor on that axis, which keeps the 72x40 kingdom fixture where it was). The picture size is read from `project.godot`,
+  once. The shell shapes the grid before reading the entry marker as a cell. `CameraRig.limits_for_board` makes "a room that fits
+  the picture is held still, centred, every cell on screen" a contract instead of an accident of Godot's limit handling, and a
+  larger world scrolls and stops at its edges; the limits are redone on zoom, on a viewport change and on `setup()` for the next
+  room. `test_room_origin` (30) and `test_camera_frames` (37, ledger req 118, measured with a real `Camera2D` in a 640x360
+  `SubViewport`). Every shipped room is 16x9, so no dump moved.
+- **Verification.** `python3 tools/run_all_tests.py --strict`: 52 suites (45 at the end of step 1), 0 failed, 0 warnings, GREEN,
+  baseline labels 235 of 235 (11 through `label_renames.txt`; the new one is the board overlay's wiring); `--self-test` and
+  `move_res.py --self-test` 0 failures; the import pass clean; `stamp_uids.gd -- --check` CLEAN; `git diff --check` clean; every
+  new `.gd` has its `.gd.uid` committed. The six room dumps equal their baselines byte for byte (no baseline line changed).
+- **Not done in this step (the rest of M3a, step 3).** The grid: `cell_kind_by_cell`, the TileSet `kind` layer and the paint tool,
+  `begin_leap`, `ray_cells`, `layout_version` with a cached `AStarGrid2D`, the bounded attack-setup search, and
+  `tests/perf/test_room_tick_budget.gd`. `game_root` still WRITES `PlayerTag.control_enabled`, `PlayerCombat.sword_unlocked`, the
+  health carry and `VIEW_REF` (M3b moves them to commands and the `PlayerSnapshot`); nothing pushes on `world.commands` or
+  `view_commands` yet.

@@ -536,3 +536,29 @@ June note).
   refused with `command_rejected`. `bow` and `hesitate` have no clips yet (only `wake` exists), which is the owner's art work.
 - The trailer on every commit of this branch is `Co-Authored-By: Claude Sonnet 5.5` (the session's attribution), not the
   `Opus 5.5` line the task text named, as in M2.
+
+## Runtime Seam Facts (M3a step 2, 2026-10-19)
+
+- The engine's "just pressed" is a frame comparison: `Input.is_action_just_pressed` stays true for every call inside the frame of the
+  press, even after a release. The bridge suites pump many ticks inside one frame and depend on that, so `InputPoller` copies the
+  engine's flags verbatim; edges it worked out itself would have turned a held key into one press. Raw keys have no such flag, so the
+  three shell keys get their edge from the poller's memory of the previous poll.
+- A one-off equivalence check beats a claim: put the old script from `git show <commit>:path` (minus its `class_name`) in /tmp, load it
+  by absolute path, drive both with the same random play and compare state after every tick. Sabotage the new side once to see it fail.
+- `Camera2D` in Godot 4.6: when an axis's limits span less than the screen, the camera is centred on the limit rect (it is not
+  anchored to the left or top limit). The 16x9 room was centred by that accident; `CameraRig.limits_for_board` states it. `offset`
+  (screen shake) may pass the limits. A camera needs `is_inside_tree()` to `make_current()`, and a suite's `_init()` runs before the
+  tree is up, so `await process_frame` first. `get_screen_center_position()` in a `SubViewport` of the game's size measures framing
+  without a window.
+- JSON hands every number back as a float and StringNames as Strings; anything saved goes through `int()` and `StringName()` on the
+  way in (`PlayerSnapshot.from_dictionary`). `value is int` is false for a bool in GDScript.
+- In tests, build the typed array first (`[..] as Array[StringName]`) before comparing arrays of StringName or Vector2i.
+- Presentation reads a plain-data DTO that is rebuilt IN PLACE, never replaced: a widget that kept the reference sees every rebuild
+  (`HudSnapshotSystem`), and a steady room allocates nothing per tick.
+- The HUD's skill slot is redrawn on `skill_cooldown` events, so after the sword is found it keeps saying "find sword" until the first
+  skill is used (pre-existing, kept on purpose in M3a; M4's widgets draw the snapshot each frame).
+- A scene authored for a centred origin other than 16x9's (an 18x9 arena at x 32) must place its art, its `GridLinesOverlay` and its
+  markers for that origin; the grid only reports it (`EcsGrid.centred_origin`, `EcsBoot.shape_grid`). The first non-16x9 room is M8b.
+- The sandbox of a worktree-isolated agent refuses a command that combines a heredoc with git, and refuses `HOME=` in front of Godot.
+  What works: a heredoc that runs alone (a python edit script), the file tools for writing, and a small python wrapper that sets
+  `HOME` in the environment of the Godot subprocess.

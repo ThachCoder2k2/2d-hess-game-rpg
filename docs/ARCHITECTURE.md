@@ -121,7 +121,7 @@ assets/                  shared raw art and audio not owned by one content item
   concept-art/           references, never shipped   _generated/   generator output (gitignored)
 
 tools/                   generators, the runner, the migration scripts (never shipped; tools/README.md)
-tests/                   run_tests.gd + six runtime tests + architecture/ audio/ bridge/ content/ support/
+tests/                   run_tests.gd + six runtime tests + architecture/ audio/ bridge/ content/ ecs/ presentation/ support/
                          fixtures/ (the 72x40 kingdom, first_encounter, the harness fixtures) baselines/
 docs/                    this file, coding-standards.md, OWNER_GUIDE.md, plans, design/, archive/
 ```
@@ -547,9 +547,10 @@ kind:
 
 | Folder | What it holds |
 |---|---|
-| `tests/architecture/` | the guards: `test_dependency_edges`, `test_content_references`, `test_content_has_no_gd`, `test_sidecars_tracked`, `test_no_path_only_ext_resource`, `test_no_old_res_paths`, `test_fixtures_present`, `test_tools_keep_uids`, `test_all_scripts_load`, `test_dump_baselines`, `test_schedule_complete`, `test_events_declared` |
-| `tests/ecs/` | the runtime seams of M3a: `test_schedule_order`, `test_world_fields`, `test_frozen_world`, `test_commands_channel`, `test_view_commands`, `test_emit_damage`, `test_heal_queue`, `test_boot_options` |
+| `tests/architecture/` | the guards: `test_dependency_edges`, `test_content_references`, `test_content_has_no_gd`, `test_sidecars_tracked`, `test_no_path_only_ext_resource`, `test_no_old_res_paths`, `test_fixtures_present`, `test_tools_keep_uids`, `test_all_scripts_load`, `test_dump_baselines`, `test_schedule_complete`, `test_events_declared`, `test_input_only_in_poller` |
+| `tests/ecs/` | the runtime seams of M3a: `test_schedule_order`, `test_world_fields`, `test_frozen_world`, `test_commands_channel`, `test_view_commands`, `test_emit_damage`, `test_heal_queue`, `test_boot_options`, `test_input_snapshot`, `test_hud_snapshot`, `test_player_snapshot_roundtrip`, `test_room_origin` |
 | `tests/bridge/` | `game_root.gd` characterization: travel, death and respawn, persistence, health carry, the Book |
+| `tests/presentation/` | the board overlay drawing from the snapshot, and the camera framing the room (`test_board_draws_from_snapshot`, `test_camera_frames`) |
 | `tests/audio/`, `tests/content/` | the bus layout; the requirements ledger and the placeholder manifest |
 | `tests/support/` | `UnboundTest`, `TestPaths` (the only place a new test names a `res://` path), the harness's own test |
 | `tests/fixtures/`, `tests/baselines/` | the kingdom, `first_encounter` and the harness fixtures; the six deterministic room dumps |

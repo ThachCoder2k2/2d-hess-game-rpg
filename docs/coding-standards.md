@@ -309,7 +309,7 @@ Collision is cell-based through `EcsGrid`, not physics.
 - A new test names a `res://` file through `TestPaths` (`tests/support/paths.gd`), which asserts
   the file exists. Folder moves then edit one file instead of every suite. Suites live in a
   folder by kind: `tests/architecture/` (guards), `tests/bridge/`, `tests/audio/`,
-  `tests/content/`; the dump baselines are `tests/baselines/dump_<room>.txt` (change one in the
+  `tests/content/`, `tests/ecs/` (the simulation's seams), `tests/presentation/`; the dump baselines are `tests/baselines/dump_<room>.txt` (change one in the
   same commit as the change that explains it, and say so in the message).
 - Never rename or delete a `PASS:` label that is in `tests/baseline_labels.txt`; if a label
   must change, record `old label -> new label` in `tests/label_renames.txt`.

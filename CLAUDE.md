@@ -50,6 +50,10 @@ session. Read `AGENTS.md` for the full workflow, and `docs/ARCHITECTURE.md` +
 	`HudSnapshotSystem`, exist since M3a; no script under `presentation/` names
 	`EcsComponents` or `EcsWorld`, and `tests/architecture/test_dependency_edges.gd`
 	fails if one does.)
+  - Controls: `shell/input/input_poller.gd` is the only code that calls the `Input`
+	singleton. It fills `world.input_snapshot` once per frame and a system reads that
+	(`test_input_only_in_poller`); test a control rule by injecting an `InputSnapshot`
+	(`tests/ecs/test_input_snapshot.gd`).
   - Sound (three layers, one owner each): motion sounds → audio tracks inside
 	the actor's clips (keying its `AudioPlayer`, bus `SFX`); mixing →
 	`default_bus_layout.tres` (Master ← SFX/Music/UI); event sounds with no
