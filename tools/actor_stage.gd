@@ -62,7 +62,7 @@ static func _boot_view(tree: SceneTree, view: ActorView, role: String) -> Dictio
 	world.manual_tick = true
 	host.add_child(world)
 	world.add_system(ViewSyncSystem.new())
-	var cast := EcsBoot.boot(world, view if role == ROLE_PLAYER else null, room)
+	var cast := EcsBoot.boot(world, EcsBootOptions.for_scene(view if role == ROLE_PLAYER else null, room))
 	var entity_id := int(cast["player"]) if role == ROLE_PLAYER else int(cast["enemies"][0])
 	var stage := {"host": host, "view": view, "world": world, "entity": entity_id}
 	tick(stage)

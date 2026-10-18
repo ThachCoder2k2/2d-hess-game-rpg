@@ -28,7 +28,10 @@ func _boot_kingdom(player_cell: Vector2i, opened_gates: Array = [], with_ai := f
 	var player_view := (load("res://presentation/views/actors/player.tscn") as PackedScene).instantiate() as ActorView
 	root.add_child(player_view)
 	player_view.position = world.grid.cell_to_world(player_cell)
-	var cast := EcsBoot.boot(world, player_view, zone, player_cell, [], opened_gates)
+	var boot_options := EcsBootOptions.for_scene(player_view, zone)
+	boot_options.fallback_player_cell = player_cell
+	boot_options.opened_gate_ids = opened_gates
+	var cast := EcsBoot.boot(world, boot_options)
 	return {"world": world, "cast": cast}
 
 

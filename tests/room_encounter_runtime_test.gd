@@ -32,7 +32,7 @@ func _init() -> void:
 	player_view.position = Vector2(110, 229)
 	root.add_child(player_view)
 
-	var cast := EcsBoot.boot(world, player_view, room)
+	var cast := EcsBoot.boot(world, EcsBootOptions.for_scene(player_view, room))
 	var player_id := int(cast["player"])
 	var enemies: Array = cast["enemies"]
 
@@ -89,7 +89,7 @@ func _init() -> void:
 	var spec_room := Node2D.new()
 	spec_room.add_child(spec_view)
 	root.add_child(spec_room)
-	var spec_cast := EcsBoot.boot(spec_world, null, spec_room)
+	var spec_cast := EcsBoot.boot(spec_world, EcsBootOptions.for_scene(null, spec_room))
 	var spec_id: int = spec_cast["enemies"][0]
 	var spec_health: EcsComponents.Health = spec_world.get_component(spec_id, EcsComponents.HEALTH)
 	_expect(spec_health != null and spec_health.max_value == 5 and spec_health.current == 5, "HealthComponent node overrides the definition's health at boot")

@@ -228,7 +228,7 @@ func _init() -> void:
 					_expect(child.requires_room_clear, "boss hub exit requires clearing the boss room")
 
 	var t2_world := EcsWorld.new()
-	EcsBoot.boot(t2_world, null, zone_roots[&"t2_fallen_sword_tile"])
+	EcsBoot.boot(t2_world, EcsBootOptions.for_scene(null, zone_roots[&"t2_fallen_sword_tile"]))
 	var t2_unlock: Dictionary = t2_world.grid.player_unlock_by_cell.get(Vector2i(6, 5), {})
 	_expect(not t2_unlock.is_empty() and t2_unlock.get("id") == &"wooden_sword", "T2 sword unlock sits on the obvious reachable sword cell")
 	_expect(t2_world.grid.is_walkable(Vector2i(6, 5)), "T2 sword unlock cell is walkable")

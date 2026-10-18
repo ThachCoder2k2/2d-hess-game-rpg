@@ -7,13 +7,19 @@ extends RefCounted
 ## WYSIWYG authoring survives the conversion — the scene is spawn data.
 
 
-## Boots everything and returns the cast:
+## Boots everything `options` (EcsBootOptions) names and returns the cast:
 ## { "player": id, "enemies": [ids], "view_by_entity": {id: Node2D},
 ##   "piece_name_by_entity": {id: String}, "pickup_view_by_entity": {id: Node2D},
 ##   "pickup_name_by_entity": {id: String} }
-## skipped_pickup_names: marker node names the bridge already recorded as
-## taken (WorldState) — they never respawn.
-static func boot(world: EcsWorld, player_view: ActorView, room_root: Node, fallback_player_cell := Vector2i(3, 7), skipped_pickup_names: Array = [], opened_gate_ids: Array = []) -> Dictionary:
+## What the save already knows (taken pickups, opened gates) arrives in the options: the bridge
+## reads WorldState and EcsBoot never does.
+static func boot(world: EcsWorld, options: EcsBootOptions) -> Dictionary:
+	var player_view := options.player_view as ActorView
+	assert(options.player_view == null or player_view != null, "EcsBootOptions.player_view must be an ActorView")
+	var room_root := options.room_root
+	var fallback_player_cell := options.fallback_player_cell
+	var skipped_pickup_names := options.skipped_pickup_names
+	var opened_gate_ids := options.opened_gate_ids
 	var cast := {
 		"player": 0,
 		"enemies": [],

@@ -30,7 +30,7 @@ func _boot_hero() -> Dictionary:
 	world.manual_tick = true
 	host.add_child(world)
 	world.add_system(ViewSyncSystem.new())
-	var cast := EcsBoot.boot(world, view, null)
+	var cast := EcsBoot.boot(world, EcsBootOptions.for_scene(view, null))
 	world.tick(0.016)
 	return {"host": host, "view": view, "world": world, "hero": int(cast["player"])}
 

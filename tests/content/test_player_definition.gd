@@ -117,7 +117,7 @@ func _boot_player(player_definition: PlayerDefinition, component_nodes: Array) -
 	for component_node in component_nodes:
 		view.add_child(component_node)
 	root.add_child(view)
-	var cast := EcsBoot.boot(world, view, null)
+	var cast := EcsBoot.boot(world, EcsBootOptions.for_scene(view, null))
 	return {"world": world, "player_id": int(cast["player"]), "cast": cast, "view": view}
 
 

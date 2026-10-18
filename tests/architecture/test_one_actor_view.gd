@@ -135,7 +135,7 @@ func _boot_actor(scene_path: String, as_player: bool) -> Dictionary:
 	world.manual_tick = true
 	host.add_child(world)
 	world.add_system(ViewSyncSystem.new())
-	EcsBoot.boot(world, view if as_player else null, room)
+	EcsBoot.boot(world, EcsBootOptions.for_scene(view if as_player else null, room))
 	world.tick(0.016)
 	return {"host": host, "view": view, "world": world}
 

@@ -70,7 +70,11 @@ func _boot_zone(entry_id: StringName) -> void:
 	if player_view != null and entry_cell != Vector2i(-1, -1):
 		player_view.position = ecs.grid.cell_to_world(entry_cell)
 
-	cast = EcsBoot.boot(ecs, player_view, current_room, hero_start_cell, _taken_pickup_names(), _opened_gate_ids())
+	var boot_options := EcsBootOptions.for_scene(player_view, current_room)
+	boot_options.fallback_player_cell = hero_start_cell
+	boot_options.skipped_pickup_names = _taken_pickup_names()
+	boot_options.opened_gate_ids = _opened_gate_ids()
+	cast = EcsBoot.boot(ecs, boot_options)
 	_hide_opened_gate_visuals()
 	_unlock_met_rules()
 	player_id = int(cast.get("player", 0))

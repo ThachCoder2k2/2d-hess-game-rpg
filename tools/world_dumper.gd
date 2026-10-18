@@ -146,7 +146,9 @@ func dump_room(tree: SceneTree, room_id: String, tick_count := DEFAULT_TICK_COUN
 	var entry_cell := _find_entry_cell(world, room)
 	if entry_cell != NO_ENTRY_CELL:
 		player_view.position = world.grid.cell_to_world(entry_cell)
-	var cast := EcsBoot.boot(world, player_view, room, FALLBACK_PLAYER_CELL, [], [])
+	var boot_options := EcsBootOptions.for_scene(player_view, room)
+	boot_options.fallback_player_cell = FALLBACK_PLAYER_CELL
+	var cast := EcsBoot.boot(world, boot_options)
 
 	var lines := PackedStringArray()
 	lines.append("# dump_world v%d: deterministic world dump. Regenerate with tools/dump_world.gd (see tools/README.md)." % DUMP_FORMAT_VERSION)
