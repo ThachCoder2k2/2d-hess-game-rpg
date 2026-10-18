@@ -224,13 +224,9 @@ static func walk_through_exit(tree: SceneTree, main: Node, target_zone: StringNa
 
 
 ## Real damage path: HealthSystem consumes world.damage_events (the queue the
-## enemy AI writes to), so this is exactly how an enemy strike lands.
+## enemy AI writes to through Events.emit_damage), so this is exactly how an enemy strike lands.
 static func damage_player(main: Node, amount: int) -> void:
-	ecs_of(main).damage_events.append({
-		"target": player_id_of(main),
-		"amount": amount,
-		"direction": Vector2i.LEFT,
-	})
+	Events.emit_damage(ecs_of(main), player_id_of(main), amount, Vector2i.LEFT, 0)
 	pump(main, SIM_STEP_SECONDS)
 
 

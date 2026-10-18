@@ -80,11 +80,7 @@ func _resolve_impact(entity_id: int, combat: EcsComponents.PlayerCombat) -> void
 	for target_cell in combat.pending_cells:
 		var target := world.grid.entity_at(target_cell)
 		if target != 0 and target != entity_id and world.has_component(target, EcsComponents.HEALTH):
-			world.damage_events.append({
-				"target": target,
-				"amount": combat.active_attack.damage,
-				"direction": facing.direction if facing != null else Vector2i.ZERO,
-			})
+			Events.emit_damage(world, target, combat.active_attack.damage, facing.direction if facing != null else Vector2i.ZERO, entity_id)
 			hit_count += 1
 	world.emit_event({"type": Events.ATTACK_LANDED, "entity": entity_id, "cells": combat.pending_cells, "hit_count": hit_count, "profile": combat.active_attack})
 	combat.pending_cells = []

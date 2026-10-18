@@ -111,7 +111,7 @@ func _init() -> void:
 
 	# Defeat: damage to zero releases the grid cell and parks the AI.
 	world.attack_token_owner = pawn
-	world.damage_events.append({"target": pawn, "amount": 99, "direction": Vector2i.LEFT})
+	Events.emit_damage(world, pawn, 99, Vector2i.LEFT, 0)
 	world.tick(0.016)
 	_expect(pawn_health.current == 0 and pawn_ai.state == EcsComponents.EnemyAI.STATE_DEFEATED, "lethal damage defeats the enemy")
 	_expect(world.grid.entity_at(pawn_pos.cell) == 0, "defeated enemy frees its cell")

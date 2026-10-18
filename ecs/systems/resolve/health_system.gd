@@ -1,8 +1,9 @@
 class_name HealthSystem
 extends EcsSystem
 
-## Applies world.damage_events to Health components and decays hit-feedback
-## timers. Rules ported from the node era: invulnerability window on hit for
+## Applies world.damage_events (requests built by Events.emit_damage: target, source, amount,
+## direction, tags) to Health components, passes the source and tags on in the `damaged` and
+## `defeated` events, and decays hit-feedback timers. Rules ported from the node era: invulnerability window on hit for
 ## player-tagged entities only; defeat disables player control but leaves the
 ## entity, while non-players leave the grid (despawn handled by the view
 ## bridge on the defeated event).
@@ -14,8 +15,10 @@ const PHASE := &"resolve"
 func tick(delta: float) -> void:
 	var queued := world.damage_events
 	world.damage_events = []
-	for event in queued:
-		_apply_damage(int(event.get("target", 0)), int(event.get("amount", 0)), event.get("direction", Vector2i.ZERO))
+	for request in queued:
+		var tags: Array[StringName] = []
+		tags.assign(request.get("tags", []))
+		_apply_damage(int(request.get("target", 0)), int(request.get("amount", 0)), request.get("direction", Vector2i.ZERO), int(request.get("source", 0)), tags)
 
 	for entity_id in world.query([EcsComponents.HEALTH]):
 		var health: EcsComponents.Health = world.get_component(entity_id, EcsComponents.HEALTH)
@@ -25,7 +28,7 @@ func tick(delta: float) -> void:
 		health.recoil = health.recoil.move_toward(Vector2.ZERO, delta * 70.0)
 
 
-func _apply_damage(target_id: int, amount: int, direction := Vector2i.ZERO) -> void:
+func _apply_damage(target_id: int, amount: int, direction: Vector2i, source: int, tags: Array[StringName]) -> void:
 	var health: EcsComponents.Health = world.get_component(target_id, EcsComponents.HEALTH)
 	if health == null or health.current <= 0 or health.invulnerable_left > 0.0:
 		return
@@ -33,7 +36,15 @@ func _apply_damage(target_id: int, amount: int, direction := Vector2i.ZERO) -> v
 	health.flash_left = 0.12
 	health.hurt_visual_time = 0.18
 	health.recoil = Vector2(direction) * 4.0
-	world.emit_event({"type": Events.DAMAGED, "entity": target_id, "amount": amount, "remaining": health.current})
+	world.emit_event({
+		"type": Events.DAMAGED,
+		"entity": target_id,
+		"amount": amount,
+		"remaining": health.current,
+		"direction": direction,
+		"source": source,
+		"tags": tags,
+	})
 	var tag: EcsComponents.PlayerTag = world.get_component(target_id, EcsComponents.PLAYER_TAG)
 	if health.current <= 0:
 		if tag != null:
@@ -45,6 +56,6 @@ func _apply_damage(target_id: int, amount: int, direction := Vector2i.ZERO) -> v
 				ai.state = EcsComponents.EnemyAI.STATE_DEFEATED
 			if world.attack_token_owner == target_id:
 				world.attack_token_owner = 0
-		world.emit_event({"type": Events.DEFEATED, "entity": target_id})
+		world.emit_event({"type": Events.DEFEATED, "entity": target_id, "source": source, "tags": tags})
 	elif tag != null:
 		health.invulnerable_left = health.invulnerability_duration

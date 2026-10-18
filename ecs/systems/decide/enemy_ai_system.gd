@@ -271,11 +271,7 @@ func _resolve_attack(entity_id: int, ai: EcsComponents.EnemyAI, hero_id: int) ->
 	# Damage checks the hero's CURRENT cell against the locked cells — stepping
 	# out during the telegraph dodges the strike.
 	if hero_pos != null and hero_pos.cell in ai.locked_attack_cells:
-		world.damage_events.append({
-			"target": hero_id,
-			"amount": _attack_damage(entity_id, ai),
-			"direction": facing.direction,
-		})
+		Events.emit_damage(world, hero_id, _attack_damage(entity_id, ai), facing.direction, entity_id, _attack_tags(entity_id))
 	world.emit_event({"type": Events.ATTACK_RESOLVED, "entity": entity_id, "cells": ai.locked_attack_cells.duplicate()})
 	ai.locked_attack_cells = []
 	if world.attack_token_owner == entity_id:
@@ -322,6 +318,16 @@ func _telegraph_time(entity_id: int, ai: EcsComponents.EnemyAI) -> float:
 func _recovery_time(entity_id: int, ai: EcsComponents.EnemyAI) -> float:
 	var weapon := _weapon(entity_id)
 	return weapon.recovery_time if weapon != null else ai.unarmed_recovery_time
+
+
+## What the strike is, for the damage it deals: the held weapon's own tags. An unarmed pattern
+## carries none yet (the attack framework of M8a gives every attack tags).
+func _attack_tags(entity_id: int) -> Array[StringName]:
+	var weapon := _weapon(entity_id)
+	var tags: Array[StringName] = []
+	if weapon != null:
+		tags.assign(weapon.tags)
+	return tags
 
 
 func _attack_damage(entity_id: int, ai: EcsComponents.EnemyAI) -> int:

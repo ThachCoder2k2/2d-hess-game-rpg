@@ -8,7 +8,8 @@ extends RefCounted
 ##
 ##   - one const per event name, so a typo is a parse error and not a silently dead event;
 ##   - one entry per event in a banner table below: its status, what happened (`about`) and every
-##     payload key with the type and meaning of its value (`payload`).
+##     payload key with the type and meaning of its value (`payload`);
+##   - emit_damage(), the only way to queue a damage request.
 ##
 ## EcsWorld.emit_event() asserts (in debug builds) that an event is declared, that its status is
 ## EMITTED and that its keys are exactly the documented ones, so an undocumented key, a missing key
@@ -211,6 +212,9 @@ const HEALTH_EVENTS: Dictionary = {
 			"entity": "int: the entity that was hurt",
 			"amount": "int: points of damage dealt",
 			"remaining": "int: its health after the hit",
+			"direction": "Vector2i: the way the blow travelled, ZERO when it has none",
+			"source": "int: the attacking entity, 0 when nothing caused it (the death frame names the cause, R8)",
+			"tags": "Array[StringName]: what kind of attack it was (the attack's own tags; empty when it has none)",
 		},
 	},
 	DEFEATED: {
@@ -218,6 +222,8 @@ const HEALTH_EVENTS: Dictionary = {
 		"about": "An entity's health reached zero. Right after the `damaged` event of the blow that did it.",
 		"payload": {
 			"entity": "int: the entity that fell",
+			"source": "int: the entity whose blow did it, 0 when nothing caused it (R14 checks it is the player)",
+			"tags": "Array[StringName]: the killing attack's tags",
 		},
 	},
 	HEALED: {"status": STATUS_FUTURE, "about": "M3a (heal queue): an entity regained courage.", "payload": {}},
@@ -317,6 +323,9 @@ const FLOW_EVENTS: Dictionary = {
 	ENDING_REACHED: {"status": STATUS_FUTURE, "about": "M13: the player reached the ending.", "payload": {}},
 }
 
+## What a damage request carries (Events.emit_damage builds it, HealthSystem consumes it).
+const DAMAGE_REQUEST_KEYS: Array[String] = ["target", "source", "amount", "direction", "tags"]
+
 ## event type (StringName) -> its declaration ({status, about, payload}); built once from the banners.
 static var _declaration_by_type: Dictionary = {}
 
@@ -365,3 +374,17 @@ static func problem_with(event: Dictionary) -> String:
 		if key != "type" and not payload_docs.has(key):
 			return "event '%s' carries the undocumented key '%s'; document it in ecs/events/events.gd" % [event_type, key]
 	return ""
+
+
+## Queues a damage request on the world; HealthSystem applies it the same tick. The ONLY way to
+## write the queue: no producer builds the dictionary by hand, so the payload cannot drift (plan
+## 14.3). `source` is the attacking entity (0 when nothing caused it: a hazard, a test) and `tags`
+## say what kind of attack it was; both travel on into the `damaged` and `defeated` events.
+static func emit_damage(world: EcsWorld, target: int, amount: int, direction: Vector2i, source: int, tags: Array[StringName] = []) -> void:
+	world.damage_events.append({
+		"target": target,
+		"source": source,
+		"amount": amount,
+		"direction": direction,
+		"tags": tags.duplicate(),
+	})

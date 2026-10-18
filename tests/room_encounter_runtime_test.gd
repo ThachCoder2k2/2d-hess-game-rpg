@@ -63,7 +63,7 @@ func _init() -> void:
 
 	var defeated_count := 0
 	for enemy_id: int in enemies:
-		world.damage_events.append({"target": enemy_id, "amount": 99, "direction": Vector2i.LEFT})
+		Events.emit_damage(world, enemy_id, 99, Vector2i.LEFT, 0)
 	world.tick(0.016)
 	for event in world.drain_events():
 		if event.get("type") == &"defeated":
