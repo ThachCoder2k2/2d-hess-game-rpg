@@ -5,6 +5,9 @@ extends EcsSystem
 ## advances MoveState. Emits step_started / step_finished / step_blocked
 ## events; facing follows the attempted direction (as GridActor.try_step did).
 
+## The schedule stage this system is listed in (ecs/schedule/move.gd).
+const PHASE := &"move"
+
 
 func tick(delta: float) -> void:
 	for entity_id in world.query([EcsComponents.GRID_POS, EcsComponents.MOVE_STATE]):

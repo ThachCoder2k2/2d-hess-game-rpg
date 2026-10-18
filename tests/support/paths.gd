@@ -75,6 +75,11 @@ func actor_view_script() -> String:
 	return _existing_file("res://presentation/views/actor_view.gd")
 
 
+## The deterministic dump's shared logic (it boots a world the way game_root.gd does).
+func world_dumper_script() -> String:
+	return _existing_file("res://tools/world_dumper.gd")
+
+
 # --- Scenes ---
 
 func main_scene() -> String:
@@ -131,6 +136,16 @@ func project_directory() -> String:
 ## The actor scenes: player, pawns, knight, bishop, and so on.
 func actors_directory() -> String:
 	return _existing_directory("res://presentation/views/actors")
+
+
+## The system scripts of the simulation, one sub-folder per area (input, decide, move, ...).
+func ecs_systems_directory() -> String:
+	return _existing_directory("res://ecs/systems")
+
+
+## The schedule: one file per stage plus schedule.gd and schedule_phase.gd.
+func ecs_schedule_directory() -> String:
+	return _existing_directory("res://ecs/schedule")
 
 
 ## The enemy folders (one per enemy id, each holding `enemy.tres`; `_shared` is not an enemy).

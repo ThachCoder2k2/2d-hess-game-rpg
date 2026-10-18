@@ -8,6 +8,9 @@ extends EcsSystem
 ## facing arrow, weapon sprite, health pips, and edge-detected clips.
 ## No other system may touch a node; no view reads game state.
 
+## The schedule stage this system is listed in (ecs/schedule/view.gd).
+const PHASE := &"view"
+
 ## Metadata key on a view: the VisualDefinition whose values were last written into its nodes.
 const APPLIED_VISUAL_META := &"applied_visual_definition"
 ## The AnimationTree parameter that scales one state's clip speed: every state of the graph is a

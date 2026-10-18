@@ -106,12 +106,7 @@ func _make_world() -> EcsWorld:
 	world.name = "EcsWorld"
 	world.manual_tick = true
 	add_child(world)
-	world.add_system(PlayerInputSystem.new())
-	world.add_system(EnemyAISystem.new())
-	world.add_system(MovementSystem.new())
-	world.add_system(CombatSystem.new())
-	world.add_system(HealthSystem.new())
-	world.add_system(ViewSyncSystem.new())
+	Schedule.populate(world)
 	return world
 
 

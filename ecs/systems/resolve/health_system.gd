@@ -7,6 +7,9 @@ extends EcsSystem
 ## entity, while non-players leave the grid (despawn handled by the view
 ## bridge on the defeated event).
 
+## The schedule stage this system is listed in (ecs/schedule/resolve.gd).
+const PHASE := &"resolve"
+
 
 func tick(delta: float) -> void:
 	var queued := world.damage_events

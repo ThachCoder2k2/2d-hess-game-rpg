@@ -11,8 +11,8 @@ extends RefCounted
 ## There is no class_name on purpose: callers preload() this script, which keeps
 ## it usable on a fresh checkout before the editor import pass has run.
 ##
-## The boot path mirrors shell/game_root.gd (_make_world + _boot_zone): the same six
-## systems in the same order, the player view placed on the "start" entry marker,
+## The boot path mirrors shell/game_root.gd (_make_world + _boot_zone): the same systems in
+## the same order (both ask Schedule.populate), the player view placed on the "start" entry marker,
 ## then EcsBoot.boot with no taken pickups and no opened gates (a fresh save).
 ## It deliberately skips WorldState, the HUD, the board overlay and audio: they
 ## depend on the player's save file or on real time, and this dump must not.
@@ -39,6 +39,26 @@ const START_ENTRY_ID: StringName = &"start"
 const DEFAULT_PLAYER_POSITION := Vector2(144, 212)
 const FALLBACK_PLAYER_CELL := Vector2i(3, 7)
 const NO_ENTRY_CELL := Vector2i(-1, -1)
+## The order an entity's components are printed in. The dump used to sort the component keys, but
+## StringName sorts by memory address, not by letters: the order followed the order in which the
+## engine first met each name, so loading scripts in another order (the schedule in M3a does) moved
+## lines in every baseline without anything having changed. This list is exactly the order the
+## M1a baselines recorded, now written down; a key it does not list prints after them, by name.
+const COMPONENT_DUMP_ORDER: Array[StringName] = [
+	EcsComponents.PICKUP_ITEM,
+	EcsComponents.WEAPON_SLOT,
+	EcsComponents.ENEMY_AI,
+	EcsComponents.PLAYER_COMBAT,
+	EcsComponents.VIEW_REF,
+	EcsComponents.PLAYER_INPUT,
+	EcsComponents.PLAYER_TAG,
+	EcsComponents.MOVE_STATE,
+	EcsComponents.MOVE_INTENT,
+	EcsComponents.ATTACK_INTENT,
+	EcsComponents.HEALTH,
+	EcsComponents.FACING,
+	EcsComponents.GRID_POS,
+]
 const MAX_VALUE_DEPTH := 3
 const MAX_COLLECTION_ITEMS := 24
 const MAX_BOARD_WIDTH := 96
@@ -121,12 +141,7 @@ func dump_room(tree: SceneTree, room_id: String, tick_count := DEFAULT_TICK_COUN
 	world.name = "EcsWorld"
 	world.manual_tick = true
 	_dump_root.add_child(world)
-	world.add_system(PlayerInputSystem.new())
-	world.add_system(EnemyAISystem.new())
-	world.add_system(MovementSystem.new())
-	world.add_system(CombatSystem.new())
-	world.add_system(HealthSystem.new())
-	world.add_system(ViewSyncSystem.new())
+	Schedule.populate(world)
 
 	var entry_cell := _find_entry_cell(world, room)
 	if entry_cell != NO_ENTRY_CELL:
@@ -272,10 +287,9 @@ func _entity_label(world: EcsWorld, entity_id: int) -> String:
 	return "entity"
 
 
-## Every component of every entity, with every script variable, sorted by component key.
+## Every component of every entity, with every script variable, in COMPONENT_DUMP_ORDER.
 func _append_entity_details(lines: PackedStringArray, world: EcsWorld) -> void:
-	var component_keys: Array = world.store_by_component.keys()
-	component_keys.sort()
+	var component_keys := _ordered_component_keys(world)
 	for entity_id in _all_entity_ids(world):
 		var grid_pos: EcsComponents.GridPos = world.get_component(entity_id, EcsComponents.GRID_POS)
 		lines.append("entity %d %s cell=%s" % [entity_id, _entity_label(world, entity_id), _format_cell(grid_pos.cell) if grid_pos != null else "none"])
@@ -283,6 +297,22 @@ func _append_entity_details(lines: PackedStringArray, world: EcsWorld) -> void:
 			var component: Object = world.get_component(entity_id, component_key)
 			if component != null:
 				lines.append("  %s: %s" % [component_key, _format_properties(component, 1)])
+
+
+## The component keys the world holds, listed ones first in COMPONENT_DUMP_ORDER and the rest by name.
+func _ordered_component_keys(world: EcsWorld) -> Array[StringName]:
+	var listed_keys: Array[StringName] = []
+	var unlisted_names: Array[String] = []
+	for component_key: StringName in world.store_by_component.keys():
+		if component_key in COMPONENT_DUMP_ORDER:
+			listed_keys.append(component_key)
+		else:
+			unlisted_names.append(String(component_key))
+	listed_keys.sort_custom(func(first: StringName, second: StringName) -> bool: return COMPONENT_DUMP_ORDER.find(first) < COMPONENT_DUMP_ORDER.find(second))
+	unlisted_names.sort()
+	for unlisted_name in unlisted_names:
+		listed_keys.append(StringName(unlisted_name))
+	return listed_keys
 
 
 ## One compact line per entity: where it is and what state it is in.

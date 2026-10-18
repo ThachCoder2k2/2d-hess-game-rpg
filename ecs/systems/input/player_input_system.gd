@@ -6,6 +6,9 @@ extends EcsSystem
 ## turn-in-place while turn_mode is held. Attack/skill keys arrive in plan
 ## phase B as combat events.
 
+## The schedule stage this system is listed in (ecs/schedule/input.gd).
+const PHASE := &"input"
+
 const DIRECTIONS := {
 	"move_up": Vector2i.UP,
 	"move_down": Vector2i.DOWN,

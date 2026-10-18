@@ -34,3 +34,10 @@ enemy_base.tscn definition has no missing configuration -> black_pawn.tscn defin
 enemy_base.tscn is an ActorView with a definition -> black_pawn.tscn is an ActorView with a definition
 enemy_base.tscn owns defeat clip + audio player -> black_pawn.tscn owns defeat clip + audio player
 enemy_base.tscn owns sprites + telegraph clip -> black_pawn.tscn owns sprites + telegraph clip
+
+# M3a step 1: the six-system count was a pin on the old list, not on behaviour (docs/game-base-plan.md
+# 14.1). The schedule (ecs/schedule/) is now the one list of the systems and their order, so the same
+# test asks the live world for exactly that list, in that order; test_schedule_complete checks the list
+# against the system files. Nothing is asserted less: the old check could pass with a wrong system in
+# the right count, the new one cannot.
+main boots the world with all six systems -> main boots the world with every system the schedule lists, in order

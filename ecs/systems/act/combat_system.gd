@@ -7,6 +7,9 @@ extends EcsSystem
 ## HealthSystem applies it. Timing rules ported from the node-era
 ## PlayerCombatComponent (impact_delay wait, then recovery - impact_delay).
 
+## The schedule stage this system is listed in (ecs/schedule/act.gd).
+const PHASE := &"act"
+
 
 func tick(delta: float) -> void:
 	for entity_id in world.query([EcsComponents.PLAYER_COMBAT, EcsComponents.GRID_POS, EcsComponents.FACING]):

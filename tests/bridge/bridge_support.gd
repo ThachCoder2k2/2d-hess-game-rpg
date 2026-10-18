@@ -86,6 +86,19 @@ static func ecs_of(main: Node) -> EcsWorld:
 	return main.get("ecs")
 
 
+## True when the world holds exactly the systems of ecs/schedule/, in the same order. This is
+## what the old `systems.size() == 6` pins protected, without naming a count that every new
+## system would change (docs/game-base-plan.md 14.1).
+static func runs_the_schedule(world: EcsWorld) -> bool:
+	var scheduled_scripts := Schedule.system_scripts()
+	if world.systems.size() != scheduled_scripts.size():
+		return false
+	for index in scheduled_scripts.size():
+		if world.systems[index].get_script() != scheduled_scripts[index]:
+			return false
+	return true
+
+
 static func player_id_of(main: Node) -> int:
 	return int(main.get("player_id"))
 

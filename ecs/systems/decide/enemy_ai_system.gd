@@ -7,6 +7,9 @@ extends EcsSystem
 ## docs/ecs-conversion-plan.md). EnemyIntent (RefCounted) is reused unchanged.
 ## The attack token lives on the world (EncounterDirector port).
 
+## The schedule stage this system is listed in (ecs/schedule/decide.gd).
+const PHASE := &"decide"
+
 
 func tick(delta: float) -> void:
 	var hero_id := _find_player()
