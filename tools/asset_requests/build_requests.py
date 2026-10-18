@@ -36,11 +36,20 @@ Validation (exit code 1 on any failure, nothing is written then):
     rules (lint_specs): the style block keeps its PERCENTAGES AND TRANSLUCENCY
     paragraph, a tile group names at most 10 colours, a voice-blip group
     describes the takes it really has, every chess piece is drawn on the 32x32
-    canvas of its cell, no prompt names another group or points at a sibling
+    canvas of its cell (a boss stands on the footprint the owner chose, BOSS_FOOTPRINTS:
+    32 px per cell, 64x64 for the Rook Warden in phases 1 and 2, 96x96 for the Rule Engine),
+    a clip may state a per-frame anchor exception (anchor_overrides_en) only on a footprint of more than one cell,
+    no prompt names another group or points at a sibling
     file by name ("as path_pink_h", "identical to prop_closed.png", "idle frame 1"),
     music is one complete
-    track (no stems). Warnings (not blocking): pair-style file names and images
-    larger than 128x96.
+    track (no stems). Pixel scale (owner decision 2026-10-13, "Tat ca 1x1", lint_pixel_scale):
+    every image is drawn at 1x1, so every scale-table row has block_px 1, every CANVAS line
+    says "1 art pixel = 1 game pixel", and no image prompt may still talk about 2x2 blocks,
+    "chunky" art, half-size or half-resolution drawing, upscaling, art pixels as a unit of
+    their own or a "world" versus "fine" pixel scale; the build fails with the group and the
+    phrase. Warnings (not blocking): pair-style file names and images larger than 128x96.
+    --self-test proves the rules catch those phrases and spare plain cell counts ("a 2x2-cell
+    emblem").
 
 Fonts (Vietnamese coverage, no spec needed):
     python3 tools/asset_requests/build_requests.py --check-font assets/fonts/ui_body_pixel.ttf
@@ -70,7 +79,10 @@ AUDIO_KINDS = ("sfx", "music", "ambience", "voice_blip")
 FONT_KINDS = ("font",)
 SOURCING_KINDS = ("sourcing",)  # files the owner copies out of a licensed pack (nothing is drawn): the Kenney CC0 input glyphs
 PRIORITIES = ("must", "should", "could")
-UI_LIKE_KINDS = ("ui", "icon", "portrait", "font", "sourcing")  # fine 1x1 pixels (style: UI, HUD, icons, portraits)
+# Owner decision 2026-10-13 ("Tat ca 1x1"): EVERY image is drawn at 1x1 pixels on the native 640x360, so there is exactly one
+# pixel scale and no per-kind or per-group block size. block_px stays in the entries and the manifest (always 1) so tools that
+# read them keep working; lint_pixel_scale rejects any spec that asks for something else.
+PIXEL_SCALE = 1
 IMAGE_EXT = (".png",)
 AUDIO_EXT = (".wav", ".ogg")
 # Owner decision 2026-10-12 ("SFX WAV, nhac OGG"): sound effects and voice blips are WAV, music and ambience are OGG Vorbis.
@@ -80,7 +92,24 @@ PIECE_CLASSES = ("pawn", "knight", "bishop", "rook", "queen", "king", "boss", "f
 # Sprites that are deliberately NOT a chess piece and therefore may be larger than one cell (everything else drawn as a
 # sprite in the characters lane is a piece or a piece overlay and lives on the 32x32 canvas of its cell).
 NON_PIECE_LARGE_SPRITES = ("boss_rule_engine", "child_hand", "child_hand_shadow")
-PIECE_CANVAS = [32, 32]
+CELL_PX = 32
+PIECE_CANVAS = [CELL_PX, CELL_PX]
+# Owner decision 2026-10-13 ("tuy boss"): boss size is per boss. A sprite stands on a footprint of columns x rows cells and its canvas
+# is 32 px per cell. Everything is one cell except what BOSS_FOOTPRINTS names. A footprint larger than one cell has one scale-table row.
+FOOTPRINT_SCALE_ROWS = {(2, 2): "piece_boss_2x2_64", (3, 3): "boss_engine_3x3_96"}
+# How far the base may slide sideways between the frames of one clip: 3 px on one cell, scaled with the footprint (the cell-to-cell slide is code).
+FOOTPRINT_MAX_DRIFT_PX = {(1, 1): 3, (2, 2): 7, (3, 3): 11}
+BOSS_FOOTPRINTS = (
+    # (group id, footprint in cells, why)
+    (re.compile(r"^boss_(?:captain|knight_captain|bishop_oracle|queen|king)_(?:looks|combat|story)$"), (1, 1),
+     "Black Pawn Captain, Knight Captain, Bishop Oracle, Queen of Tricks and Black King stand on one cell"),
+    (re.compile(r"^boss_rook_warden_(?:looks|combat|story)$"), (2, 2),
+     "the Rook Warden fills 2x2 cells in phases 1 and 2"),
+    (re.compile(r"^boss_rook_warden_(?:looks|combat|story)_p3$"), (1, 1),
+     "the Rook Warden is one cell in phase 3, after it breaks its own throne"),
+    (re.compile(r"^boss_rule_engine$"), (3, 3),
+     "the Rule Engine machine behind the Black King fills 3x3 cells"),
+)
 MILESTONE_RE = re.compile(r"^M(\d+)([a-z]?)$")
 GROUP_ID_RE = re.compile(r"^[a-z0-9_]+$")
 
@@ -90,11 +119,9 @@ RELAXED = [
     "Fonts (kind 'font', 4 entries): the owner supplies a font file, nothing is drawn, so these "
     "prompts are sourcing briefs. They are exempt from the 'prompt contains the style block' rule, "
     "from the 'image entries have a size' rule and from the PNG checks (they must end in .ttf or .otf).",
-    "CANVAS wording: the brief asked for '1 art pixel = 1 game pixel' on every image. The style block "
-    "makes world art (tiles, props, actors, bosses, world effects) CHUNKY, one art pixel = a 2x2 block, "
-    "so those prompts say that instead; only UI, icons, portraits, fonts and the child's hand keep "
-    "'1 art pixel = 1 game pixel'. Tiles, and the other files flagged opaque (map ground tiles, paper tiles, "
-    "vista tile_ fills), say 'fully opaque' instead of 'transparent background'.",
+    "CANVAS wording: every image prompt says '1 art pixel = 1 game pixel' (owner decision 2026-10-13: all art is 1x1, so the "
+    "old chunky exception for world art is gone). Only opaque files (tiles, map ground tiles, paper tiles, vista tile_ fills) say "
+    "'fully opaque' instead of 'transparent background'.",
     "DO NOT wording: the shared DO NOT line is written for one free-standing object on a transparent canvas. "
     "Tiles and opaque ground pieces use the 'surface' variant and UI, 9-patch, frame and fence files use the "
     "'frame' variant (style.json global_avoid_variants_en), so a floor, a wall, a panel or a fence is never "
@@ -107,10 +134,8 @@ RELAXED_VI = [
     "Font (loại `font`, 4 mục): font do anh cung cấp, không có gì để vẽ, nên prompt của chúng là bản hướng dẫn tìm "
     "file. Các mục này được miễn quy tắc 'prompt chứa khối phong cách', quy tắc 'mục ảnh có kích thước' và kiểm tra "
     "PNG (thay bằng: đuôi phải là `.ttf` hoặc `.otf`).",
-    "Dòng CANVAS trong prompt ảnh: yêu cầu gốc ghi 'một pixel vẽ = một pixel game' cho mọi ảnh. Khối phong cách quy định "
-    "tranh thế giới (tile, vật cảnh, nhân vật, boss, hiệu ứng thế giới) vẽ lưới 2x2, một pixel vẽ = một khối 2x2 pixel "
-    "game, nên các prompt đó ghi như vậy; chỉ giao diện, icon, chân dung, font và bàn tay của bé giữ "
-    "'một pixel vẽ = một pixel game'. Tile và các file đánh dấu đặc (ô nền bản đồ, ô giấy, mảnh tile_ của vista) ghi "
+    "Dòng CANVAS trong prompt ảnh: mọi ảnh ghi 'một pixel vẽ = một pixel game' (quyết định của anh, 2026-10-13: tất cả 1x1, không còn "
+    "ngoại lệ pixel to hơn cho tranh thế giới). Chỉ các file đánh dấu đặc (ô nền bản đồ, ô giấy, mảnh tile_ của vista, tile) ghi "
     "'đặc hoàn toàn' thay cho 'nền trong suốt'.",
     "Dòng DO NOT: dòng chung viết cho MỘT vật đứng riêng trên nền trong suốt. Tile và ô nền đặc dùng biến thể `surface`, "
     "UI/9-patch/khung/hàng rào dùng biến thể `frame` (style.json, global_avoid_variants_en) để sàn, tường, bảng, hàng rào "
@@ -299,19 +324,9 @@ def load_specs(spec_dir, problems):
 # --------------------------------------------------------------------------- scale / pixel grid
 
 def resolve_block_px(group, scale_table):
-    """Pixel block of an image group: 1 (fine, UI-like) or 2 (chunky world art)."""
-    explicit = group.get("block_px")
-    if isinstance(explicit, int) and explicit > 0:
-        return explicit
-    kind = group.get("kind")
-    if kind in UI_LIKE_KINDS:
-        return 1
-    size = group.get("size")
-    if size:
-        for row in scale_table:
-            if row.get("kind") == kind and list(row.get("size", [])) == list(size):
-                return int(row.get("block_px", 2))
-    return 2
+    """Pixel block of an image group. Owner decision 2026-10-13 ('Tat ca 1x1'): always 1, for every kind and size.
+    A spec that still asks for another block (a group 'block_px', a scale-table row) is rejected by lint_pixel_scale."""
+    return PIXEL_SCALE
 
 
 def colour_limit(group):
@@ -433,7 +448,7 @@ def tile_data_line(tile_data):
     return head
 
 
-def canvas_line(group, block_px, opaque):
+def canvas_line(group, opaque):
     width, height = group["size"]
     if opaque:
         exception = ""
@@ -441,16 +456,13 @@ def canvas_line(group, block_px, opaque):
             exception = " (except the hole the description names, which shows the floor below)"
         return ("CANVAS: exactly %dx%d pixels, fully opaque%s - alpha 255 on every pixel, the art fills the canvas "
                 "edge to edge with no transparent background, %s, no anti-aliasing." %
-                (width, height, exception, grid_phrase(width, height, block_px)))
+                (width, height, exception, GRID_PHRASE))
     return ("CANVAS: exactly %dx%d pixels, transparent background, %s, no anti-aliasing to transparency." %
-            (width, height, grid_phrase(width, height, block_px)))
+            (width, height, GRID_PHRASE))
 
 
-def grid_phrase(width, height, block_px):
-    if block_px == 1:
-        return "1 art pixel = 1 game pixel"
-    return ("1 art pixel = a %dx%d block of identical game pixels (draw on a %dx%d grid, then upscale %dx with "
-            "nearest-neighbour)" % (block_px, block_px, width // block_px, height // block_px, block_px))
+# Owner decision 2026-10-13 ("Tat ca 1x1"): the same wording on every image prompt, as the original brief asked.
+GRID_PHRASE = "1 art pixel = 1 game pixel (every pixel of the canvas is placed individually at native size)"
 
 
 def frame_subject(entry, group, reference_path, is_first_of_group):
@@ -472,7 +484,7 @@ def frame_subject(entry, group, reference_path, is_first_of_group):
     return text
 
 
-def compose_image_prompt(style, group, entry, block_px, reference_path, is_first_of_group):
+def compose_image_prompt(style, group, entry, reference_path, is_first_of_group):
     lines = [style["style_block_en"].rstrip(), ""]
     if entry["is_frame"]:
         lines.append("SUBJECT: " + group["subject_en"].strip())
@@ -482,8 +494,8 @@ def compose_image_prompt(style, group, entry, block_px, reference_path, is_first
         lines.append("THIS FILE: " + entry["what_en"].strip())
     if group.get("details_en", "").strip():
         lines.append("DETAILS: " + group["details_en"].strip())
-    lines.append(canvas_line(group, block_px, entry["opaque"]))
-    lines.append("ANCHOR: " + (group.get("anchor") or "none").strip())
+    lines.append(canvas_line(group, entry["opaque"]))
+    lines.append("ANCHOR: " + (entry.get("anchor") or group.get("anchor") or "none").strip())
     palette = (entry.get("palette_text") or "").strip()
     lines.append("PALETTE: " + (palette if palette else "the shared palette of the style above only; no extra colours."))
     if entry.get("tile_data"):
@@ -591,7 +603,7 @@ def uses_translucency(text):
     return bool(TRANSLUCENT_HINT.search(text) or OPACITY_PERCENT.search(text))
 
 
-def image_acceptance(group, entry, block_px):
+def image_acceptance(group, entry):
     width, height = group["size"]
     bits = ["PNG RGBA 8-bit đúng %dx%d px" % (width, height)]
     if entry["opaque"]:
@@ -607,20 +619,22 @@ def image_acceptance(group, entry, block_px):
                         "alpha = % x 255, tô phẳng), viền ngoài vẫn cứng")
         else:
             bits.append("có kênh alpha, nền trong suốt, alpha chỉ 0 hoặc 255 (không viền mờ)")
-    if block_px == 1:
-        bits.append("pixel 1x1, không phóng to, không nội suy")
-    else:
-        bits.append("lưới %dx%d: mỗi khối %dx%d pixel (căn theo toạ độ chẵn) đồng màu và đồng alpha" %
-                    (block_px, block_px, block_px, block_px))
+    bits.append("pixel 1x1 thật (một pixel vẽ = một pixel game), không phóng to, không nội suy, không có khối pixel lớn hơn")
     bits.append("tối đa %d màu khác nhau (cảnh báo, không chặn)" % colour_limit(group))
-    anchor = (group.get("anchor") or "none").strip()
+    anchor = (entry.get("anchor") or group.get("anchor") or "none").strip()
+    has_anchor_exception = entry["is_frame"] and anchor != (group.get("anchor") or "none").strip()
     if anchor.lower().startswith("none"):
         bits.append("không có điểm neo")
     else:
         bits.append("điểm neo: %s" % anchor)
-    if entry["is_frame"]:
-        bits.append("khung %d/%d của clip '%s': cùng canvas, cùng điểm neo (lệch ngang không quá 3 px), cùng bảng màu "
-                    "với các khung khác của clip" % (entry["frame"], entry["frames"], entry["clip"]))
+    if has_anchor_exception:
+        bits.append("khung %d/%d của clip '%s': cùng canvas và cùng bảng màu với các khung khác của clip; điểm neo của khung này là "
+                    "ngoại lệ đã nêu ở trên (đế dời ngang so với điểm neo chung của nhóm, vì quân đổi từ cả chỗ đứng sang một ô)" % (
+                        entry["frame"], entry["frames"], entry["clip"]))
+    elif entry["is_frame"]:
+        bits.append("khung %d/%d của clip '%s': cùng canvas, cùng điểm neo (lệch ngang không quá %d px), cùng bảng màu "
+                    "với các khung khác của clip" % (entry["frame"], entry["frames"], entry["clip"],
+                                                      FOOTPRINT_MAX_DRIFT_PX.get(group_footprint(group), 3)))
         if entry["frame"] == 1:
             bits.append("khung 01 cũng là ảnh tĩnh cho chế độ giảm chuyển động")
     return "; ".join(bits) + "."
@@ -904,8 +918,6 @@ def build_entries(style, specs, problems):
                     problems.error("%s: image group has no valid size (%r)" % (where, size))
                     continue
                 block_px = resolve_block_px(group, scale_table)
-                if size[0] % block_px or size[1] % block_px:
-                    problems.error("%s: size %s is not divisible by the %dx%d pixel block" % (where, size, block_px, block_px))
             if media == "audio":
                 audio = group.get("audio")
                 if not isinstance(audio, dict):
@@ -1021,8 +1033,8 @@ def build_entries(style, specs, problems):
                     entry["avoid_profile"] = image_avoid_profile(group, item)
                     if kind == "tile" and not item.get("tile_data"):
                         problems.error("%s: tile file %s has no tile_data" % (where, name))
-                    entry["prompt"] = compose_image_prompt(style, group, entry, block_px, reference_path, False)
-                    entry["acceptance"] = image_acceptance(group, entry, block_px)
+                    entry["prompt"] = compose_image_prompt(style, group, entry, reference_path, False)
+                    entry["acceptance"] = image_acceptance(group, entry)
                 elif media == "audio":
                     audio = group["audio"]
                     duration = item.get("duration_s", audio.get("duration_s"))
@@ -1083,6 +1095,7 @@ def build_entries(style, specs, problems):
                 if not (isinstance(fps, int) and fps > 0):
                     problems.error("%s: bad fps %r" % (cwhere, fps))
                     continue
+                anchor_overrides = clip_anchor_overrides(group, clip, frames, cwhere, problems)
                 priority = clip.get("priority") or group.get("priority")
                 needed_by = clip.get("needed_by") or group.get("needed_by")
                 for number in range(1, frames + 1):
@@ -1094,17 +1107,39 @@ def build_entries(style, specs, problems):
                         name="anim/%s/%02d.png" % (clip_name, number), needed_by=needed_by, priority=priority,
                         is_frame=True, clip=clip_name, frame=number, frames=frames, loop=bool(clip.get("loop")),
                         fps=fps, pose=poses[number - 1], tile_data=reference_tile_data,
+                        anchor=anchor_overrides[number - 1] or group.get("anchor"),
                         placeholder=group.get("placeholder_now") or "none",
                         opaque=is_opaque(group), avoid_profile=image_avoid_profile(group, None),
                     )
-                    entry["prompt"] = compose_image_prompt(style, group, entry, block_px, reference_path, first_of_group)
-                    entry["acceptance"] = image_acceptance(group, entry, block_px)
+                    entry["prompt"] = compose_image_prompt(style, group, entry, reference_path, first_of_group)
+                    entry["acceptance"] = image_acceptance(group, entry)
                     entries.append(entry)
                     group_info["entry_ids"].append(entry["id"])
     return groups, entries
 
 
 # --------------------------------------------------------------------------- validation
+
+def clip_anchor_overrides(group, clip, frames, where, problems):
+    """Per-frame anchor text of a clip: a list with one item per frame, None where the group's own anchor holds.
+    'anchor_overrides_en' in the spec states an exception for single frames, for the one case where a body on a larger footprint
+    changes cell inside a clip (the Rook Warden's last two frames of its transition into phase 3). Only a group that stands
+    on more than one cell may use it, and every override has to say that it is an exception."""
+    raw = clip.get("anchor_overrides_en")
+    none = [None] * frames
+    if raw is None:
+        return none
+    if not (isinstance(raw, list) and len(raw) == frames and all(item is None or (isinstance(item, str) and item.strip()) for item in raw)):
+        problems.error("%s: anchor_overrides_en must be a list with one item per frame (%d), each null or a non-empty text" % (where, frames))
+        return none
+    if group_footprint(group) in (None, (1, 1)):
+        problems.error("%s: only a group on more than one cell may state a per-frame anchor exception (anchor_overrides_en)" % where)
+        return none
+    for number, item in enumerate(raw, 1):
+        if item is not None and "exception" not in item.lower():
+            problems.error("%s: the anchor override of frame %d must say that it is an exception to the group's anchor" % (where, number))
+    return [item.strip() if item else None for item in raw]
+
 
 def validate(style, groups, entries, gitignore_rules, problems):
     seen_paths = {}
@@ -1317,6 +1352,9 @@ def prompt_texts(group):
         for index, pose in enumerate(clip.get("poses_en") or []):
             if isinstance(pose, str):
                 out.append(("clip %s pose %d" % (clip.get("clip"), index + 1), pose))
+        for index, override in enumerate(clip.get("anchor_overrides_en") or []):
+            if isinstance(override, str):
+                out.append(("clip %s anchor override %d" % (clip.get("clip"), index + 1), override))
     audio = group.get("audio")
     if isinstance(audio, dict):
         for key in ("mood_en", "materials_en", "references_en"):
@@ -1394,6 +1432,9 @@ def sibling_slots(group):
         for index, pose in enumerate(clip.get("poses_en") or []):
             if isinstance(pose, str):
                 yield "clip %s pose %d" % (clip.get("clip"), index + 1), pose, {clip.get("clip"), base}
+        for index, override in enumerate(clip.get("anchor_overrides_en") or []):
+            if isinstance(override, str):
+                yield "clip %s anchor override %d" % (clip.get("clip"), index + 1), override, {clip.get("clip"), base}
 
 
 def lint_sibling_pointers(specs, problems):
@@ -1438,8 +1479,20 @@ def lint_sibling_pointers(specs, problems):
                     problems.error("%s/%s: %s points at %s; describe what it looks like inline instead" % (category, gid, label, found))
 
 
+def group_footprint(group):
+    """(columns, rows) of cells a group's sprite stands on: 'footprint_cells' in the spec, else one cell. None when malformed."""
+    raw = group.get("footprint_cells")
+    if raw is None:
+        return (1, 1)
+    if (isinstance(raw, list) and len(raw) == 2 and all(isinstance(v, int) and not isinstance(v, bool) and 1 <= v <= 4 for v in raw)):
+        return (raw[0], raw[1])
+    return None
+
+
 def lint_pieces(style, specs, problems):
-    """Owner decision 2026-10-12: a chess piece is smaller than its cell. Every piece is drawn on the 32x32 canvas of one cell."""
+    """Owner decisions 2026-10-12 (a chess piece is smaller than its cell) and 2026-10-13 ('tuy boss': boss size is per boss).
+    Every piece is drawn on the 32x32 canvas of the cell(s) it stands on, with a 2 px margin; only the bosses the owner named
+    stand on more than one cell, and BOSS_FOOTPRINTS pins which group gets which footprint."""
     rows = {row.get("id"): row for row in style.get("scale_table", [])}
     for piece_class in PIECE_CLASSES:
         row = rows.get("piece_%s_32" % piece_class)
@@ -1447,27 +1500,87 @@ def lint_pieces(style, specs, problems):
             problems.error("style.json: scale_table has no row 'piece_%s_32' (one row per chess-piece class)" % piece_class)
         elif list(row.get("size", [])) != PIECE_CANVAS:
             problems.error("style.json: scale row piece_%s_32 must be %s, it is %s" % (piece_class, PIECE_CANVAS, row.get("size")))
+    for cells, row_id in sorted(FOOTPRINT_SCALE_ROWS.items()):
+        row = rows.get(row_id)
+        canvas = [CELL_PX * cells[0], CELL_PX * cells[1]]
+        if row is None:
+            problems.error("style.json: scale_table has no row %r for the %dx%d-cell footprint (a %s canvas)" % (row_id, cells[0], cells[1], canvas))
+        elif list(row.get("size", [])) != canvas:
+            problems.error("style.json: scale row %s is the %dx%d-cell footprint, its canvas must be %s, it is %s" % (
+                row_id, cells[0], cells[1], canvas, row.get("size")))
+    big_rows_allowed = set(FOOTPRINT_SCALE_ROWS.values()) | {"child_hand_192x144"}
     for row in style.get("scale_table", []):
         size = row.get("size") or [0, 0]
-        if (row.get("kind") == "sprite" and (size[0] > 32 or size[1] > 32)
-                and row.get("id") not in ("boss_engine_96x80", "child_hand_192x144")):
-            problems.error("style.json: scale row %s is a %s sprite larger than one cell; chess pieces and their overlays fit 32x32" % (row.get("id"), size))
+        if row.get("kind") == "sprite" and (size[0] > CELL_PX or size[1] > CELL_PX) and row.get("id") not in big_rows_allowed:
+            problems.error("style.json: scale row %s is a %s sprite larger than one cell; chess pieces and their overlays fit 32x32 "
+                           "(only a boss footprint row or the child's hand may be larger)" % (row.get("id"), size))
     for category, groups in specs.items():
         for group in groups:
             gid = group.get("group_id")
             piece_class = group.get("piece_class")
             size = group.get("size")
+            cells = group_footprint(group)
+            if cells is None:
+                problems.error("%s/%s: footprint_cells must be [columns, rows] with each between 1 and 4, it is %r" % (
+                    category, gid, group.get("footprint_cells")))
+                continue
+            canvas = [CELL_PX * cells[0], CELL_PX * cells[1]]
             if piece_class is not None:
                 if piece_class not in PIECE_CLASSES:
                     problems.error("%s/%s: piece_class %r is not one of %s" % (category, gid, piece_class, PIECE_CLASSES))
-                if size != PIECE_CANVAS:
-                    problems.error("%s/%s: a chess piece is smaller than its cell; the canvas must be %s, it is %s" % (category, gid, PIECE_CANVAS, size))
+                if size != canvas:
+                    problems.error("%s/%s: a chess piece is smaller than the cell(s) it stands on; its canvas is %s for a %dx%d-cell footprint, it is %s" % (
+                        category, gid, canvas, cells[0], cells[1], size))
+                if cells != (1, 1) and piece_class != "boss":
+                    problems.error("%s/%s: only a boss may stand on more than one cell (footprint_cells %s)" % (category, gid, list(cells)))
                 if "CELL FIT" not in (group.get("details_en") or ""):
                     problems.error("%s/%s: a piece group must carry the CELL FIT paragraph in details_en" % (category, gid))
+            elif "footprint_cells" in group:
+                if size != canvas:
+                    problems.error("%s/%s: footprint_cells %s needs a %s canvas, it is %s" % (category, gid, list(cells), canvas, size))
+                if "CELL FIT" not in (group.get("details_en") or ""):
+                    problems.error("%s/%s: a group with a footprint must carry the CELL FIT paragraph in details_en" % (category, gid))
             elif (category == "characters" and group.get("kind") in ("sprite", "prop") and isinstance(size, list) and len(size) == 2
-                  and (size[0] > 32 or size[1] > 32) and gid not in NON_PIECE_LARGE_SPRITES):
+                  and (size[0] > CELL_PX or size[1] > CELL_PX) and gid not in NON_PIECE_LARGE_SPRITES):
                 problems.error("%s/%s: %sx%s is larger than one cell; a piece is drawn on 32x32 (set piece_class) or the group is a non-piece (NON_PIECE_LARGE_SPRITES)" % (
                     category, gid, size[0], size[1]))
+            # The boss table: every boss group is on the footprint the owner chose for it.
+            if category == "characters" and gid.startswith("boss_") and gid != "boss_remains_as_toys":
+                wanted = None
+                for pattern, expected_cells, _why in BOSS_FOOTPRINTS:
+                    if pattern.match(gid):
+                        wanted = expected_cells
+                        break
+                if wanted is None:
+                    problems.error("characters/%s: a boss group with no entry in BOSS_FOOTPRINTS; say how many cells this boss stands on" % gid)
+                elif cells != wanted:
+                    problems.error("characters/%s: this boss stands on %dx%d cells (owner decision 2026-10-13), the group says %dx%d" % (
+                        gid, wanted[0], wanted[1], cells[0], cells[1]))
+    lint_warden_phases(specs, problems)
+
+
+# The Rook Warden changes size between phases 2 and 3, and a group has one canvas, so its groups are split by phase. A pose or file
+# text that names the wrong phase would be drawn on the wrong canvas: the 2x2-cell groups hold phases 1 and 2 (and the transition
+# into 3, which starts on the full footprint), the one-cell groups hold phase 3 only.
+WARDEN_PHASE_BAD_IN_BIG = re.compile(r"\[P3 look|phase 3 look 'Throneless'", re.I)
+WARDEN_PHASE_BAD_IN_P3 = re.compile(r"\[P1 look|\[P2 look|\[P1 to P2\]|\[P2 to P3\]|phase [12] look '(?:Decree|Breach)'", re.I)
+
+
+def lint_warden_phases(specs, problems):
+    for group in specs.get("characters", []):
+        gid = group.get("group_id", "")
+        if not gid.startswith("boss_rook_warden_"):
+            continue
+        is_p3 = gid.endswith("_p3")
+        bad = WARDEN_PHASE_BAD_IN_P3 if is_p3 else WARDEN_PHASE_BAD_IN_BIG
+        for label, text in prompt_texts(group):
+            if label in ("subject_en", "details_en", "avoid_en", "palette_en"):
+                continue
+            hit = bad.search(text)
+            if hit:
+                problems.error("characters/%s: %s names %r, but this group is drawn on the %s canvas of %s" % (
+                    gid, label, hit.group(0), "one-cell" if is_p3 else "2x2-cell",
+                    "phase 3 only" if is_p3 else "phases 1 and 2 (and the transition into 3)"))
 
 
 def lint_audio_formats(specs, problems):
@@ -1499,6 +1612,133 @@ def lint_sourcing(specs, problems):
                 for item in group.get("files") or []:
                     if not item.get("source") or item.get("coverage") not in SOURCING_COVERAGE:
                         problems.error("%s/%s: file %s needs 'source' and a coverage of %s" % (category, group.get("group_id"), item.get("name"), SOURCING_COVERAGE))
+
+
+# --------------------------------------------------------------------------- 1x1 pixel scale (owner decision 2026-10-13)
+
+# Owner decision 2026-10-13 ("Tat ca 1x1"): EVERY image is drawn at 1x1 pixels on the native 640x360: pieces, tiles, props, world
+# effects, UI, icons, portraits. There is no 2x2 chunky world scale any more. A prompt that still talks about blocks of pixels, a
+# half-size grid, upscaling, "chunky" art, art pixels as a unit of its own or "world" versus "fine" pixels is stale and would make
+# an image tool draw the wrong density, so the build fails on it. The rules read the words an author writes about the pixel scale;
+# a count of CELLS ("a 2x2-cell emblem", "the 2x2 hub emblem", "a 2x2 round table") and the plain adjective "fine" for a material
+# are not pixel talk and pass; any other bare "2x2" (a 2x2 dot, 2x2 fragments) must be restated ("2 px square").
+STALE_PIXEL_SCALE_RULES = (
+    ("a 2x2 block of pixels", re.compile(
+        r"\b2\s*[x\u00d7]\s*2\b(?![ -]*(?:cells?|emblem|hub|rug|table|drum|footprint|centre|center|round|quarters?))", re.I)),
+    ("chunky art", re.compile(r"\bchunk(?:y|ier|iest|iness)\b", re.I)),
+    ("half-resolution or half-size drawing", re.compile(
+        r"\bhalf[- ](?:size|sized|resolution|res|scale|scaled|grid|density)\b|\b(?:low|reduced|coarse)[- ]res(?:olution)?\b", re.I)),
+    ("upscaling or doubling", re.compile(
+        r"\bup[- ]?scal\w*|\bdoubl(?:e|ed|ing)\s+(?:it|up|the size|the grid|each pixel|every pixel)\b|\benlarged?\s+(?:2x|twice|by 2)\b", re.I)),
+    ("art pixels counted as their own unit", re.compile(r"\b\d+\s*(?:[x\u00d7]\s*\d+\s*)?art[- ]pixels?\b(?!\s*=)", re.I)),
+    ("a block of identical pixels", re.compile(
+        r"\b(?:pixel|px)[- ]blocks?\b|\bblocks? of (?:identical|\d+\s*[x\u00d7]\s*\d+|\d+ ?px|game|delivered|\d+ pixels)"
+        r"|\bidentical (?:game |delivered )?pixels\b|\bdraw(?:n)? on a \d+\s*[x\u00d7]\s*\d+ grid\b", re.I)),
+    ("even-step or canvas-pixel measures", re.compile(
+        r"\bsteps? of 2\b|\b2 canvas pixels?\b|\bmultiples? of (?:the )?2 px\b|\ba 2 px art pixel\b", re.I)),
+    ("two pixel scales (world versus fine)", re.compile(
+        r"\btwo pixel scales\b|\b(?:world|chess|chunky) pixels\b|(?-i:\bFINE\b)|\btwice as fine\b|\btwice the pixel density\b"
+        r"|\bfiner pixel work\b|\bfine pixels?\b|\bpixel density of the\b", re.I)),
+)
+
+
+def stale_pixel_scale_hits(text):
+    """Every stale pixel-scale phrase of one text as (rule name, matched text)."""
+    hits = []
+    for name, pattern in STALE_PIXEL_SCALE_RULES:
+        for match in pattern.finditer(text):
+            hits.append((name, match.group(0)))
+    return hits
+
+
+# Sample texts for --self-test: each of the first group must be caught by the named rule, none of the second may be.
+PIXEL_SCALE_LINT_MUST_FAIL = (
+    ("a 2x2 block of pixels", "every art pixel is a 2x2 block of identical delivered pixels"),
+    ("a 2x2 block of pixels", "a 2x2 px gold dot with one white pixel"),
+    ("a 2x2 block of pixels", "drawn on a 2x2 pixel grid"),
+    ("a 2x2 block of pixels", "three 2x2 yellow fragments fly out"),
+    ("a 2x2 block of pixels", "a rosette (2x2 ivory/charcoal squares)"),
+    ("chunky art", "Chunky machine pixel art with a near-black outline"),
+    ("chunky art", "a chunkier burst"),
+    ("half-resolution or half-size drawing", "draw on a half-size grid"),
+    ("half-resolution or half-size drawing", "drawn at half resolution"),
+    ("upscaling or doubling", "then upscale 2x with nearest-neighbour"),
+    ("art pixels counted as their own unit", "body box 18x22 px (9x11 art pixels)"),
+    ("art pixels counted as their own unit", "a 4x4 art-pixel disc"),
+    ("a block of identical pixels", "each pixel is a block of 2x2 pixels"),
+    ("even-step or canvas-pixel measures", "rounded to steps of 2"),
+    ("two pixel scales (world versus fine)", "Two pixel scales exist"),
+    ("two pixel scales (world versus fine)", "drawn in chunky world pixels"),
+    ("two pixel scales (world versus fine)", "UI is FINE"),
+)
+PIXEL_SCALE_LINT_MUST_PASS = (
+    "1 art pixel = 1 game pixel (every pixel of the canvas is placed individually at native size)",
+    "a 2x2-cell emblem split into four 32x32 quarters",
+    "Nw/ne/sw/se is the quarter's position in the 2x2 hub emblem",
+    "the footprint is 2x2 cells",
+    "a round tea-party table (four 32x32 quarters forming a 2x2 table)",
+    "the pawn silhouette is cut exactly at the 2x2 centre",
+    "plain meadow-green felt with fine fibres",
+    "a sturdy wooden toy block and a thick painted post",
+    "a 2 px square dot, 4 px by 2 px specks and a 1 px outline",
+    "the chess-piece body is 18x22 px",
+)
+
+
+def run_pixel_scale_lint_self_test(out=sys.stdout):
+    """Prove the stale-pixel-scale rules catch what they must and spare what they must: exit code 0 or 1."""
+    failures = 0
+    for rule, sample in PIXEL_SCALE_LINT_MUST_FAIL:
+        names = {name for name, _text in stale_pixel_scale_hits(sample)}
+        if rule not in names:
+            failures += 1
+            print("SELF-TEST FAIL: rule %r did not catch %r (caught: %s)" % (rule, sample, sorted(names) or "nothing"), file=out)
+    for sample in PIXEL_SCALE_LINT_MUST_PASS:
+        hits = stale_pixel_scale_hits(sample)
+        if hits:
+            failures += 1
+            print("SELF-TEST FAIL: %r must pass but the lint flags %s" % (sample, hits), file=out)
+    if failures:
+        return 1
+    print("pixel-scale lint self-test OK: %d stale samples caught, %d clean samples passed" % (
+        len(PIXEL_SCALE_LINT_MUST_FAIL), len(PIXEL_SCALE_LINT_MUST_PASS)), file=out)
+    return 0
+
+
+def lint_pixel_scale(style, specs, entries, problems):
+    """Owner decision 2026-10-13 ('Tat ca 1x1'): one pixel scale for every image, and no prompt talks about another one."""
+    block = style.get("style_block_en", "")
+    if "RESOLUTION AND PIXEL SCALE" not in block or "1x1" not in block:
+        problems.error("style.json: the style block must keep its RESOLUTION AND PIXEL SCALE paragraph and say that every image is drawn at 1x1")
+    for row in style.get("scale_table", []):
+        if row.get("block_px") != PIXEL_SCALE:
+            problems.error("style.json: scale row %s has block_px %r; every image is drawn at 1x1 (block_px %d)" % (
+                row.get("id"), row.get("block_px"), PIXEL_SCALE))
+    for category, groups in specs.items():
+        for group in groups:
+            if "block_px" in group and group["block_px"] != PIXEL_SCALE:
+                problems.error("%s/%s: block_px %r; every image is drawn at 1x1" % (category, group.get("group_id"), group["block_px"]))
+    # The style block and the shared DO NOT lines are read once; every image prompt is the style block plus its own text.
+    shared = [("style block", block), ("global_avoid_en", style.get("global_avoid_en", ""))]
+    shared += [("avoid variant %s" % name, text) for name, text in (style.get("global_avoid_variants_en") or {}).items()]
+    for label, text in shared:
+        for rule, found in stale_pixel_scale_hits(text):
+            problems.error("style.json: %s still talks about the old pixel scale (%s: %r)" % (label, rule, found))
+    reported = set()
+    for entry in entries:
+        if entry["media"] != "image":
+            continue
+        prompt = entry["prompt"]
+        if GRID_PHRASE not in prompt:
+            problems.error("%s: the CANVAS line must say %r" % (entry["id"], GRID_PHRASE))
+        own = prompt[len(block.rstrip()):] if prompt.startswith(block.rstrip()) else prompt
+        for rule, found in stale_pixel_scale_hits(own):
+            key = (entry["category"], entry["group_id"], rule)
+            if key in reported:
+                continue
+            reported.add(key)
+            problems.error("%s/%s: the prompt of %s still mentions the old pixel scale (%s: %r); every image is 1x1, restate it in pixels" % (
+                entry["category"], entry["group_id"], entry["path"], rule, found))
 
 
 # --------------------------------------------------------------------------- statistics
@@ -1723,8 +1963,8 @@ def render_style_md(style):
     for name, text in style.get("global_avoid_audio_variants_en", {}).items():
         lines += ["### Điều không được làm trong âm thanh, biến thể `%s`" % name, "", audio_descriptions.get(name, ""), "", "```text", text.rstrip(), "```", ""]
     lines += ["## Bảng kích thước (scale table)", "",
-              "Mọi canvas và điểm neo trong danh sách khớp một hàng của bảng này. Cột lưới: `2x2` nghĩa là vẽ trên lưới nửa "
-              "kích thước rồi phóng gấp đôi bằng nearest-neighbour; `1x1` là pixel thật.", ""]
+              "Mọi canvas và điểm neo trong danh sách khớp một hàng của bảng này. Cột lưới: mọi hàng là `1x1` (quyết định của anh, "
+              "2026-10-13): một pixel vẽ = một pixel game ở độ phân giải gốc 640x360, không có khối pixel lớn hơn ở đâu cả.", ""]
     lines += table(["Lớp", "Loại", "Canvas", "Lưới", "Điểm neo", "Dùng cho"], scale_table_rows(style))
     lines += ["", "## Quy tắc giao file", ""]
     for rule in style.get("delivery_rules_vi", []):
@@ -1764,9 +2004,17 @@ def render_readme(style, groups, stats, spec_link):
               "(khung/viền chính là vật cần vẽ); nhóm âm thanh người của bé và nền buổi sáng có chim dùng biến thể âm thanh riêng. Xem `STYLE.md`.",
               "- **Mỗi mục có dòng `Kiểm tra`**: tiêu chí nghiệm thu tự động (kích thước đúng, RGBA có alpha, lưới pixel, điểm neo; "
               "với âm thanh: định dạng, thời lượng ±10%, đỉnh, điểm lặp).",
-              "- **Quân cờ nhỏ hơn ô (quyết định của anh, 2026-10-12).** Mọi quân cờ (pawn của anh, mọi kẻ địch và biến thể, quân trắng được cứu, Vua trắng đã ngã, "
-              "sáu boss) vẽ trên canvas 32x32 = đúng một ô, thân quân nằm gọn bên trong và chừa ít nhất 2 px trống mỗi cạnh: không bằng ô, không cao hơn ô. "
+              "- **Mọi ảnh vẽ pixel 1x1 (quyết định của anh, 2026-10-13: \"Tất cả 1×1\").** Quân cờ, boss, tile, vật cảnh, hiệu ứng thế giới, giao diện, "
+              "icon, chân dung và bàn tay của bé đều là một pixel vẽ = một pixel game ở độ phân giải gốc 640x360: không vẽ trên lưới nhỏ rồi phóng to, "
+              "không có khối pixel lớn hơn ở đâu cả. Canvas 32x32 nghĩa là có đủ 32x32 pixel thật để vẽ chi tiết (đinh tán, mũi khâu, thớ gỗ, điểm sáng một pixel).",
+              "- **Quân cờ nhỏ hơn ô (quyết định của anh, 2026-10-12).** Mọi quân cờ (pawn của anh, mọi kẻ địch và biến thể, quân trắng được cứu, Vua trắng đã ngã) "
+              "vẽ trên canvas 32x32 = đúng một ô, thân quân nằm gọn bên trong và chừa ít nhất 2 px trống mỗi cạnh: không bằng ô, không cao hơn ô. "
               "Chiều cao theo bộ cờ thật: Tốt thấp nhất, rồi Mã/Tượng/Xe, rồi Hậu, Vua cao nhất. Bảng cỡ ở mục 4 ghi từng hạng quân.",
+              "- **Cỡ boss tuỳ boss (quyết định của anh, 2026-10-13: \"tuỳ boss\").** Đội Trưởng Tốt Đen, Mã Đội Trưởng, Giáo chủ Tượng, Nữ hoàng Mánh Khóe và Vua Đen "
+              "đứng trên MỘT ô (canvas 32x32). Xe Cai Ngục chiếm 2x2 ô ở giai đoạn 1 và 2 (canvas 64x64, thân gọn trong đó chừa ít nhất 2 px mỗi cạnh, đế sát đáy) "
+              "rồi chỉ còn MỘT ô ở giai đoạn 3 (32x32) sau khi tự phá ngai của nó; vì một nhóm chỉ có một canvas nên các nhóm Xe Cai Ngục tách theo giai đoạn. "
+              "Cỗ máy Luật sau lưng Vua là 3x3 ô (canvas 96x96, cũng chừa 2 px mỗi cạnh). Bóng dưới chân, thanh choáng và các lớp phủ gắn với boss theo đúng chỗ đứng; "
+              "hào quang và hiệu ứng nổ là hiệu ứng nên được tràn ra ngoài chỗ đứng. Bảng cỡ ở mục 4 có một hàng cho mỗi cỡ chỗ đứng của boss.",
               "- **Nhạc: một bài cho mỗi khu, không tách stem.** Mỗi vùng (title, Act 1, hub, năm khu, cảnh kết) và mỗi boss có đúng một bản phối hoàn chỉnh `.ogg`; "
               "đổi giai đoạn boss dùng thêm một tiếng 'phase sting' `.wav`. SFX và tiếng blip giọng là `.wav`.",
               "- **Glyph phím/tay cầm không vẽ.** Nhóm `glyphs_kenney` chỉ ghi file nào của bộ CC0 'Input Prompts Pixel' (Kenney) cần chép vào đường dẫn nào; "
@@ -1784,9 +2032,9 @@ def render_readme(style, groups, stats, spec_link):
     lines += ["## 3. Danh sách kiểm tra khi giao file", "",
               "1. File đúng đường dẫn và đúng tên ghi ở mục `File` (chữ thường, không dấu cách).",
               "2. Ảnh: PNG RGBA 8-bit, đúng kích thước canvas, nền trong suốt (tile, nền bản đồ và mảnh vista đặc thì đặc hoàn toàn), không làm mờ, không răng cưa.",
-              "3. Tranh thế giới vẽ lưới 2x2 (vẽ trên lưới nửa kích thước rồi phóng gấp đôi, nearest-neighbour); giao diện, icon, "
-              "chân dung và bàn tay của bé vẽ pixel 1x1.",
-              "4. Điểm neo (chân/đế) đúng toạ độ ghi trong `Spec`; các khung của một clip không lệch ngang quá 3 px. Mọi khung sau được tạo từ "
+              "3. Mọi ảnh vẽ pixel 1x1 (quyết định của anh, 2026-10-13): quân cờ, boss, tile, vật cảnh, hiệu ứng thế giới, giao diện, icon, "
+              "chân dung và bàn tay của bé đều là một pixel vẽ = một pixel game ở độ phân giải gốc 640x360, không phóng to, không khối pixel lớn hơn.",
+              "4. Điểm neo (chân/đế) đúng toạ độ ghi trong `Spec`; các khung của một clip không lệch ngang quá 3 px (7 px với boss chiếm 2x2 ô, 11 px với boss 3x3 ô). Mọi khung sau được tạo từ "
               "ảnh tham chiếu đã duyệt (xem mục 1), không vẽ rời từng khung.",
               "5. Không có chữ hoặc số trong ảnh (trừ logo và phím); đỏ san hô chỉ cho sát thương sắp xảy ra.",
               "6. Âm thanh: SFX và giọng là WAV 44.1 kHz 16-bit (mono hoặc stereo theo `Spec`), đỉnh -1 dBFS, không clip, không click; "
@@ -1868,9 +2116,17 @@ def render_readme(style, groups, stats, spec_link):
 
     lines += ["## 8. Kiểm tra tự động khi sinh danh sách", "",
               "- Đường dẫn là duy nhất (kể cả khi bỏ phân biệt chữ hoa thường) và id là duy nhất.",
-              "- Mọi mục ảnh có kích thước hợp lệ, chia hết cho khối pixel (2x2 hoặc 1x1) và có đuôi `.png`; SFX và giọng có đuôi `.wav`, nhạc và ambience có đuôi `.ogg`.",
-              "- Mọi quân cờ (nhóm có `piece_class`) vẽ trên canvas 32x32, có đoạn CELL FIT trong mô tả và đúng một hàng trong bảng cỡ; không sprite nào của "
-              "lane nhân vật lớn hơn một ô trừ bàn tay của bé và Cỗ máy Luật (không phải quân cờ).",
+              "- Mọi mục ảnh có kích thước hợp lệ, có đuôi `.png`; SFX và giọng có đuôi `.wav`, nhạc và ambience có đuôi `.ogg`.",
+              "- Mọi ảnh vẽ pixel 1x1: khối phong cách còn đoạn RESOLUTION AND PIXEL SCALE, mọi hàng bảng cỡ có `block_px` 1, mọi dòng CANVAS ghi "
+              "'1 art pixel = 1 game pixel', và không prompt ảnh nào còn nhắc khối pixel 2x2, chữ 'chunky', vẽ nửa kích thước hoặc nửa độ phân giải, "
+              "'upscale', 'art pixel' làm đơn vị riêng hay hai thang pixel 'world' và 'fine' (build thất bại, nêu nhóm và cụm từ). "
+              "`python3 tools/asset_requests/build_requests.py --self-test` chứng minh luật bắt được những cụm đó và bỏ qua số ô như '2x2 cells'.",
+              "- Mọi quân cờ (nhóm có `piece_class`) vẽ trên canvas 32 px nhân số ô chỗ đứng (`footprint_cells`, mặc định 1x1 ô = 32x32), có đoạn CELL FIT trong mô tả "
+              "và đúng một hàng trong bảng cỡ; không sprite nào của lane nhân vật lớn hơn một ô trừ bàn tay của bé, Xe Cai Ngục giai đoạn 1-2 (2x2 ô = 64x64) "
+              "và Cỗ máy Luật (3x3 ô = 96x96). Chỗ đứng của từng nhóm boss bị khoá theo bảng `BOSS_FOOTPRINTS` trong script (quyết định 2026-10-13), "
+              "và nhóm Xe Cai Ngục giai đoạn 1-2 không được nhắc tới giai đoạn 3 (và ngược lại) vì hai bên khác canvas. "
+              "Một clip của nhóm chiếm nhiều ô được phép ghi điểm neo riêng cho từng khung (`anchor_overrides_en`), mỗi câu phải nói rõ đó là ngoại lệ; "
+              "hiện chỉ có khung 5 và 6 của clip chuyển giai đoạn 2 sang 3 của Xe Cai Ngục, nơi thân đã thu về một ô ở góc tây nam.",
               "- Prompt tự đủ ý: không prompt nào nêu tên nhóm khác (id kiểu `ten_nhom`); thứ cần từ nhóm khác phải được viết thẳng vào prompt (màu thì dùng `{palette:<id>}`).",
               "- Prompt cũng không được chỉ tới một file anh em bằng tên ('giống gate_closed_h', 'y hệt prop_closed.png', 'như path_pink_h', 'khung 1 của clip idle'): "
               "hình dạng, kích thước và màu cần có phải được mô tả thẳng trong prompt. Script bắt tên file có đuôi, tên file/thư mục/clip của mục khác đứng sau từ so sánh "
@@ -2024,6 +2280,9 @@ def main(argv=None):
     parser.add_argument("--slim-manifest", action="store_true", help="leave the prompt text out of asset-manifest.json "
                                                                       "(it is about as large as all the Markdown together)")
     parser.add_argument("--quiet", action="store_true", help="only print problems")
+    parser.add_argument("--self-test", action="store_true",
+                        help="do nothing else: prove that the 1x1 pixel-scale lint catches 2x2 blocks, chunky art, half-size grids "
+                             "and the other stale phrases, and spares plain cell counts, then exit 0 (or 1 on a miss)")
     parser.add_argument("--check-font", nargs="+", metavar="FONT",
                         help="do nothing else: check that each .ttf/.otf covers the full Vietnamese set (reads the font's cmap table, "
                              "the table FontFile.has_char reads) and exit 1 when a character is missing")
@@ -2032,6 +2291,8 @@ def main(argv=None):
                              "exists under <REPO_ROOT>/assets/fonts (fonts not delivered yet are skipped); a failing font fails the build")
     args = parser.parse_args(argv)
 
+    if args.self_test:
+        return run_pixel_scale_lint_self_test()
     if args.check_font:
         return run_font_check(args.check_font)
 
@@ -2075,6 +2336,7 @@ def main(argv=None):
     groups, entries = build_entries(style, specs, problems)
     validate(style, groups, entries, gitignore_rules, problems)
     lint_specs(style, specs, problems)
+    lint_pixel_scale(style, specs, entries, problems)
     if args.check_fonts:
         for font in owner_font_paths(args.check_fonts):
             try:
