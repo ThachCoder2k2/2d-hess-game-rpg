@@ -9,7 +9,7 @@ extends RefCounted
 ##   - one const per event name, so a typo is a parse error and not a silently dead event;
 ##   - one entry per event in a banner table below: its status, what happened (`about`) and every
 ##     payload key with the type and meaning of its value (`payload`);
-##   - emit_damage(), the only way to queue a damage request.
+##   - emit_damage() and emit_heal(), the only ways to queue a damage or a heal request.
 ##
 ## EcsWorld.emit_event() asserts (in debug builds) that an event is declared, that its status is
 ## EMITTED and that its keys are exactly the documented ones, so an undocumented key, a missing key
@@ -226,7 +226,16 @@ const HEALTH_EVENTS: Dictionary = {
 			"tags": "Array[StringName]: the killing attack's tags",
 		},
 	},
-	HEALED: {"status": STATUS_FUTURE, "about": "M3a (heal queue): an entity regained courage.", "payload": {}},
+	HEALED: {
+		"status": STATUS_EMITTED,
+		"about": "An entity regained courage. Not sent when it was already full or already down.",
+		"payload": {
+			"entity": "int: the entity that was healed",
+			"amount": "int: points actually restored (never more than the room left up to its maximum)",
+			"remaining": "int: its health after the heal",
+			"source": "int: the entity that healed it, 0 for the world itself (a checkpoint refill)",
+		},
+	},
 
 }
 
@@ -325,6 +334,8 @@ const FLOW_EVENTS: Dictionary = {
 
 ## What a damage request carries (Events.emit_damage builds it, HealthSystem consumes it).
 const DAMAGE_REQUEST_KEYS: Array[String] = ["target", "source", "amount", "direction", "tags"]
+## What a heal request carries (Events.emit_heal builds it, HealthSystem consumes it).
+const HEAL_REQUEST_KEYS: Array[String] = ["target", "source", "amount"]
 
 ## event type (StringName) -> its declaration ({status, about, payload}); built once from the banners.
 static var _declaration_by_type: Dictionary = {}
@@ -387,4 +398,15 @@ static func emit_damage(world: EcsWorld, target: int, amount: int, direction: Ve
 		"amount": amount,
 		"direction": direction,
 		"tags": tags.duplicate(),
+	})
+
+
+## Queues a heal request on the world; HealthSystem applies it the same tick, after the damage and
+## up to the target's maximum (a heal never revives a fallen entity). `source` is whoever heals,
+## 0 for the world itself (a checkpoint refill).
+static func emit_heal(world: EcsWorld, target: int, amount: int, source: int = 0) -> void:
+	world.heal_events.append({
+		"target": target,
+		"source": source,
+		"amount": amount,
 	})

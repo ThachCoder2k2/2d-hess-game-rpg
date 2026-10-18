@@ -7,7 +7,8 @@ extends UnboundTest
 ##
 ## "Emitted" is found by reading the code, the way the plan's lint does: every
 ## `"type": Events.SOME_NAME` or `"type": &"some_name"` inside `emit_event({...})` in ecs/, authoring/,
-## presentation/ and shell/; and no producer there queues damage except through Events.emit_damage.
+## presentation/ and shell/; and no producer there queues damage or a heal except through Events.emit_damage
+## and Events.emit_heal.
 ## The runtime half is EcsWorld.emit_event(), which asserts the same
 ## thing about the event it is handed (declared, status EMITTED, exactly the documented keys),
 ## so a producer that builds an event some other way is stopped by the first test that runs it.
@@ -87,7 +88,7 @@ func _init() -> void:
 				continue
 			source_count += 1
 			var text := ProjectFiles.read_text(script_path)
-			if text.contains("damage_events.append"):
+			if text.contains("damage_events.append") or text.contains("heal_events.append"):
 				hand_built_damage_files.append(script_path)
 			for emit_match in emit_by_constant.search_all(text):
 				var constant_name := emit_match.get_string(1)
@@ -120,7 +121,7 @@ func _init() -> void:
 			future_but_emitted.append(String(event_type))
 	_expect(future_but_emitted.is_empty(), "no event declared FUTURE is emitted: its status flips when its emitter lands (emitted: %s)" % ", ".join(PackedStringArray(future_but_emitted)))
 
-	_expect(hand_built_damage_files.is_empty(), "no producer builds a damage request by hand: they all call Events.emit_damage (hand-built in: %s)" % ", ".join(PackedStringArray(hand_built_damage_files)))
+	_expect(hand_built_damage_files.is_empty(), "no producer builds a damage or heal request by hand: they call Events.emit_damage and Events.emit_heal (hand-built in: %s)" % ", ".join(PackedStringArray(hand_built_damage_files)))
 
 	# --- problem_with() must be able to say no ---
 	_expect(Events.problem_with({"type": Events.STEP_STARTED, "entity": 1, "cell": Vector2i.ZERO}).is_empty(), "a correct event has no problem")

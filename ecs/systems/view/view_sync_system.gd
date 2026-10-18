@@ -18,6 +18,12 @@ const APPLIED_VISUAL_META := &"applied_visual_definition"
 const CLIP_SPEED_PARAMETER_FORMAT := "parameters/%s/TimeScale/scale"
 
 
+## The picture keeps being drawn while the simulation is frozen: a cutscene stages the views through
+## view_commands, and the held world must still show itself (docs/game-base-plan.md 8.4).
+func runs_while_frozen() -> bool:
+	return true
+
+
 func tick(_delta: float) -> void:
 	for entity_id in world.query([EcsComponents.GRID_POS, EcsComponents.VIEW_REF]):
 		var view: EcsComponents.ViewRef = world.get_component(entity_id, EcsComponents.VIEW_REF)
