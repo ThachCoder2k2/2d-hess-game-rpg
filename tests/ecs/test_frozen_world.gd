@@ -127,7 +127,7 @@ func _check_requests_wait_for_the_thaw() -> void:
 
 
 func _check_every_system_of_the_schedule_answers() -> void:
-	var must_run: Array[String] = ["ViewSyncSystem"]
+	var must_run: Array[String] = ["CommandSystem", "ViewSyncSystem"]
 	var running_while_frozen: Array[String] = []
 	for system in Schedule.build_systems():
 		if system.runs_while_frozen():
@@ -135,7 +135,7 @@ func _check_every_system_of_the_schedule_answers() -> void:
 	for system_name in must_run:
 		_expect(system_name in running_while_frozen, "%s keeps running while the world is frozen" % system_name)
 	for system_name in running_while_frozen:
-		_expect(system_name in must_run or system_name == "CommandSystem", "%s is one of the systems allowed to run while frozen (only the command and view systems are)" % system_name)
+		_expect(system_name in must_run, "%s is one of the systems allowed to run while frozen (only the command and view systems are)" % system_name)
 
 
 func _spawn_hero(world: EcsWorld, cell: Vector2i) -> int:

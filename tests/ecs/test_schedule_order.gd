@@ -80,6 +80,7 @@ func _init() -> void:
 			old_systems_in_schedule.append(class_name_text)
 	_expect(old_systems_in_schedule == SYSTEMS_BEFORE_M3A, "the six systems that existed before M3a tick in their old order: %s" % ", ".join(PackedStringArray(old_systems_in_schedule)))
 	_expect(scheduled_classes.back() == "ViewSyncSystem", "ViewSyncSystem, the one system that touches nodes, runs last")
+	_expect(scheduled_classes.front() == "CommandSystem", "CommandSystem, which drains world.commands, runs first: a request lands before anything simulates")
 
 	var every_phase_const_matches := true
 	for stage in Schedule.phases():

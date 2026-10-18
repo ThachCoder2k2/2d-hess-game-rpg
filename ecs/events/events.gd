@@ -244,8 +244,22 @@ const FLAG_SET := &"flag_set"
 const COMMAND_REJECTED := &"command_rejected"
 
 const SEAM_EVENTS: Dictionary = {
-	FLAG_SET: {"status": STATUS_FUTURE, "about": "M3a (commands): a world flag changed value.", "payload": {}},
-	COMMAND_REJECTED: {"status": STATUS_FUTURE, "about": "M3a (commands): a request on world.commands could not be applied and was dropped.", "payload": {}},
+	FLAG_SET: {
+		"status": STATUS_EMITTED,
+		"about": "A world flag changed value (the set_flag command). Not sent when the value was already that.",
+		"payload": {
+			"flag": "StringName: the flag's id",
+			"value": "Variant: its new value (bool for a switch, int for a counter)",
+		},
+	},
+	COMMAND_REJECTED: {
+		"status": STATUS_EMITTED,
+		"about": "A request on world.commands, or a view command, could not be applied and was dropped.",
+		"payload": {
+			"command": "StringName: the request's type, &\"\" when it had none",
+			"reason": "String: why it was dropped, in words",
+		},
+	},
 }
 
 # ------------------------------------------------------------------- attack stages (M8a)

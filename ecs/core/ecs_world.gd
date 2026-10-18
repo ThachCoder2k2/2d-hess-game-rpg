@@ -144,12 +144,17 @@ func drain_events() -> Array[Dictionary]:
 
 
 ## Queues a request for the simulation; CommandSystem applies it at the head of the next tick.
+## Build it with the functions of ecs/events/commands.gd. In debug builds it must match its
+## declaration there.
 func push_command(command: Dictionary) -> void:
+	assert(Commands.problem_with(command).is_empty(), Commands.problem_with(command))
 	commands.append(command)
 
 
-## Queues a cosmetic instruction for the views; ViewSyncSystem plays it on its next tick.
+## Queues a cosmetic instruction for the views; ViewSyncSystem plays it on its next tick. Build it
+## with the functions of ecs/events/commands.gd (Commands.play_state).
 func push_view_command(view_command: Dictionary) -> void:
+	assert(Commands.view_command_problem_with(view_command).is_empty(), Commands.view_command_problem_with(view_command))
 	view_commands.append(view_command)
 
 
