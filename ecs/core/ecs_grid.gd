@@ -6,8 +6,15 @@ extends RefCounted
 ## (scripts/core/grid_world.gd) with int entity ids instead of Node refs.
 ## The flip phase (plan D) decides which of the two survives.
 
+## Where a board's top-left corner sits when the board does not fit the view on that axis (a scrolling
+## world has nothing to centre), and where every board sat before M3a: the margin that centres the
+## default 16x9 board in the 640x360 view. A room that fits the view gets centred_origin() instead.
+const FALLBACK_ORIGIN := Vector2(64, 36)
+
 var cell_size := 32
-var grid_origin := Vector2(64, 36)
+## World position of the top-left corner of cell (0, 0). Each room sets its own (EcsBoot.shape_grid):
+## the board centred in the view, so a 16x9 room starts at (64, 36) and an 18x9 arena at (32, 36).
+var grid_origin := FALLBACK_ORIGIN
 var bounds := Rect2i(0, 0, 16, 9)
 
 ## cell -> true. Walls: cells nothing may enter.
@@ -31,6 +38,20 @@ var player_unlock_by_cell: Dictionary = {}
 ## (also present in blocked_cells); the player moving in opens_from's
 ## direction onto the cell opens the gate permanently.
 var gate_by_cell: Dictionary = {}
+
+
+## The grid origin that centres a board of `board_cells` cells in a view of `view_size` pixels, in whole
+## pixels (docs/game-base-plan.md D-02, D-30: static framing with a per-room centred origin). On an axis
+## where the board is larger than the view there is nothing to centre, the camera scrolls, and the origin
+## keeps FALLBACK_ORIGIN on that axis.
+static func centred_origin(board_cells: Vector2i, board_cell_size: int, view_size: Vector2) -> Vector2:
+	var board_pixels := Vector2(board_cells * board_cell_size)
+	var origin := FALLBACK_ORIGIN
+	if board_pixels.x <= view_size.x:
+		origin.x = floorf((view_size.x - board_pixels.x) * 0.5)
+	if board_pixels.y <= view_size.y:
+		origin.y = floorf((view_size.y - board_pixels.y) * 0.5)
+	return origin
 
 
 ## Unbars a gate: the cell becomes ordinary floor. Persistence is the

@@ -162,10 +162,13 @@ shell/game_root.tscn  ->  Main (shell/game_root.gd)
   _ready()      reads WorldState (which zone, which entry), swaps the zone node if the
                 run was saved elsewhere, then calls _boot_zone(entry_id)
   _boot_zone()  1. _make_world(): new EcsWorld + Schedule.populate (the systems, order below)
+                   and EcsBoot.shape_grid(): the room's bounds and its centred grid origin
                 2. EcsBoot.boot(world, EcsBootOptions) -> the "cast"
                 3. reapply persistence (taken pickups, opened gates, unlocks, health carry)
-                4. board.setup(grid, world), camera_rig.setup(grid), HUD setup
-  _process()    ecs.tick(delta)  ->  _handle_events(ecs.drain_events())  ->  HUD refresh
+                4. HudSnapshotSystem.build(world), board.setup(grid, hud_snapshot),
+                   camera_rig.setup(grid), HUD setup
+  _process()    input_poller.poll(delta, world.input_snapshot)  ->  ecs.tick(delta)
+                ->  _handle_events(ecs.drain_events())  ->  HUD refresh from world.hud_snapshot
 ```
 
 Death and `R` reload the scene; `WorldState` (an autoload) remembers the zone and entry
@@ -265,8 +268,13 @@ built. Nothing in the shell passes one yet: M3b's zone swap does. `test_player_s
 ## The grid (`EcsGrid`)
 
 `EcsWorld.grid` is the spatial service, defaults `cell_size = 32`, `grid_origin = (64, 36)`,
-`bounds = (0, 0, 16, 9)` (a room's `board_size` overrides the bounds at boot). Its
-dictionaries are all documented in the file:
+`bounds = (0, 0, 16, 9)`. A room shapes it at boot (`EcsBoot.shape_grid`): its `board_size` sets the
+bounds and `EcsGrid.centred_origin()` sets the origin that centres that board in the 640x360 picture
+(read from project.godot, not repeated in code): a 16x9 room starts at (64, 36), an 18x9 arena at
+(32, 36), an 18x10 board at (32, 20). A board larger than the picture (the 72x40 kingdom fixture)
+keeps the fixed anchor `EcsGrid.FALLBACK_ORIGIN` on that axis, because the camera scrolls there. The
+art, `GridLinesOverlay` and markers of a room that is not 16x9 are authored for that origin.
+Its dictionaries are all documented in the file:
 
 - `blocked_cells`, `entity_by_cell`, `cell_by_entity`, `move_reservations`, `item_by_cell`.
 - Baked door and gate data: `exit_by_cell` (zone exits), `gate_by_cell` (one-way shortcut
@@ -454,7 +462,11 @@ Presentation consumes `drain_events()` and never decides gameplay.
 - `GameHud` (`presentation/ui/hud/`, a `CanvasLayer`) — courage, skill cooldown, enemy count,
   status, damage flash, result panel. It owns all its own formatting.
 - `CameraRig` (`presentation/camera/`) — a `Camera2D` that is a child of the player view (so it
-  follows by tree parenting), clamps to the board rect and shakes via the built-in offset.
+  follows by tree parenting), clamps to the room and shakes via the built-in offset. A room that fits the
+  picture is held still with the board centred and every cell on screen (the limits are one view wide
+  around the board's centre, `CameraRig.limits_for_board`); a larger one scrolls with the hero and stops
+  at its edges. The shell calls `setup(grid)` after every boot, so the clamp follows the new room
+  (`test_camera_frames`).
 - `RuleBookUI` (`presentation/ui/codex/`) — the Book of House Rules screen (key `B`).
 - `SfxManager` (autoload, `presentation/audio/`) — pooled one-shot playback for event sounds
   with no clip. Motion sounds are audio tracks in the actor's `AnimationPlayer` clips. Only the

@@ -65,6 +65,8 @@ func _boot_zone(entry_id: StringName) -> void:
 		remove_child(ecs)
 		ecs.queue_free()
 	ecs = _make_world()
+	# The room's own grid origin first: the entry cell below is read off the marker's position with it.
+	EcsBoot.shape_grid(ecs, current_room)
 	var entry_cell := _find_entry_cell(current_room, entry_id)
 	if player_view != null and entry_cell != Vector2i(-1, -1):
 		player_view.position = ecs.grid.cell_to_world(entry_cell)

@@ -29,7 +29,7 @@ static func boot(world: EcsWorld, options: EcsBootOptions) -> Dictionary:
 		"pickup_name_by_entity": {},
 	}
 	if room_root != null:
-		_apply_board_size(world, room_root)
+		shape_grid(world, room_root, options.view_size)
 		apply_solid_tiles(world, room_root)
 		_bake_zone_exits(world, room_root)
 		_bake_player_unlocks(world, room_root)
@@ -70,12 +70,32 @@ static func boot(world: EcsWorld, options: EcsBootOptions) -> Dictionary:
 	return cast
 
 
-## Zone/room scenes export board_size (RoomEncounter); the grid takes its
-## bounds from the scene so every zone can be a different board.
-static func _apply_board_size(world: EcsWorld, room_root: Node) -> void:
+## Gives the grid the shape of the room: the bounds from the board_size the room scene exports
+## (RoomEncounter, so every zone can be a different board) and an origin that centres that board in the
+## view (docs/game-base-plan.md D-02). A 16x9 room starts at (64, 36), an 18x9 arena at (32, 36); a board
+## larger than the view keeps the fixed anchor on that axis, because the camera scrolls there. A view_size
+## of zero means the project's own (project_view_size()).
+##
+## boot() calls this first. The shell calls it too, before boot, because it turns the room's entry
+## marker and the hero's view position into cells with the same grid and needs the room's origin for that.
+## It is safe to call twice. A null room leaves the grid as it is.
+static func shape_grid(world: EcsWorld, room_root: Node, view_size := Vector2.ZERO) -> void:
+	if room_root == null:
+		return
 	var size: Variant = room_root.get("board_size")
 	if size is Vector2i and size.x > 0 and size.y > 0:
 		world.grid.bounds = Rect2i(Vector2i.ZERO, size)
+	var shown_size := view_size if view_size != Vector2.ZERO else project_view_size()
+	world.grid.grid_origin = EcsGrid.centred_origin(world.grid.bounds.size, world.grid.cell_size, shown_size)
+
+
+## The size of the picture the game draws in, in pixels: the base size set in project.godot
+## (display/window/size, which the stretch mode keeps whatever the window size is). The one home of
+## that number; nothing in code repeats 640 x 360.
+static func project_view_size() -> Vector2:
+	return Vector2(
+		float(ProjectSettings.get_setting("display/window/size/viewport_width")),
+		float(ProjectSettings.get_setting("display/window/size/viewport_height")))
 
 
 ## Shortcut gates: every GateMarker child blocks its cell unless WorldState

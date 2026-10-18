@@ -31,6 +31,11 @@ var skipped_pickup_names: Array = []
 ## Gate ids the save already recorded as opened: they boot as floor.
 var opened_gate_ids: Array = []
 
+## The size in pixels of the picture the room is shown in, which the board is centred in. Zero means the
+## project's own base size (display/window/size in project.godot); a test or a tool that frames a room
+## differently sets it.
+var view_size := Vector2.ZERO
+
 ## What the pawn carries into this room (PlayerSnapshot, docs/game-base-plan.md 14.2): the shell
 ## captures it from the old world at the room exit and passes it here. boot() applies it to the hero
 ## right after the hero is built, so the carried courage, the sword and the flags win over the
