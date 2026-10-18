@@ -2131,8 +2131,8 @@ Every shared field lands in ONE milestone, so later lanes extend behaviour inste
 
 ### M8b: Boss framework and B1 (L)
 
-- **Scope**: `BossDefinition` and `BossPhase` (`ends_on`, weighted patterns, summons, enter beat, music layer, disable-help, `rule_taught`, `rule_bent`, `checkpoint`, `windup_clip`, `transition_clip`, `defeat_clip`, `active_rule_modifier`); `BossPhaseSystem`; the seal marker (Black Line) and antechamber; permanent defeat; the boss bar; **B1 rebuilt as 3 phases (HP 8)** with real beats and the Ruler Blade drop; the `seen`-flag abbreviation of beats on retry and phase-checkpoint respawn (D-43).
-- **Acceptance**: `test_boss_phase_swaps`, `test_boss_defeat_persists`, `test_player_kill_only` (R14), `test_boss_phase_differs` (R13), `test_boss_phase_checkpoints`.
+- **Scope**: `BossDefinition` and `BossPhase` (`ends_on`, weighted patterns, summons, enter beat, music layer, disable-help, `rule_taught`, `rule_bent`, `checkpoint`, `windup_clip`, `transition_clip`, `defeat_clip`, `active_rule_modifier`); `BossPhaseSystem`; the seal marker (Black Line) and antechamber; permanent defeat; the boss bar; **multi-cell footprints** for the bosses the owner sized per boss on 2026-10-13 (`docs/owner-decisions.md`: Rook Warden 2x2 in phases 1-2 then 1 cell, Rule Engine 3x3; every other boss 1 cell) — a `footprint` on the definition and on `BossPhase`, `EcsGrid` occupancy over every covered cell, movement and reservation of the whole footprint, a hit on any covered cell, telegraph origins from the footprint, and the in-cell rule measured against the footprint; **B1 rebuilt as 3 phases (HP 8)** with real beats and the Ruler Blade drop; the `seen`-flag abbreviation of beats on retry and phase-checkpoint respawn (D-43).
+- **Acceptance**: `test_multi_cell_footprint` (occupancy, movement, hits and the in-cell margin for a 2x2 and a 3x3 piece), `test_boss_phase_swaps`, `test_boss_defeat_persists`, `test_player_kill_only` (R14), `test_boss_phase_differs` (R13), `test_boss_phase_checkpoints`.
 - **Dependencies**: M8a and M6.
 
 ### M8c: Feel, fairness and death flow (L)

@@ -66,7 +66,11 @@ session. Read `AGENTS.md` for the full workflow, and `docs/ARCHITECTURE.md` +
   picture is drawn at scale 1 and is never scaled or offset in a scene. Everything an actor shows
   (pips, facing arrow, held weapon, telegraph aura, every clip's hop and shake) stays inside the
   cell: `tests/architecture/test_pieces_inside_cell.gd` measures it, and
-  `tools/render_actor_preview.gd` draws it for the owner.
+  `tools/render_actor_preview.gd` draws it for the owner. Bosses are sized per boss (owner,
+  2026-10-13, `docs/owner-decisions.md`): most fit one cell; the Rook Warden is 2x2 in phases 1-2,
+  the Rule Engine 3x3 — a multi-cell piece stays inside its footprint with the same 2 px margin.
+- **All art is 1x1 pixels** at the native 640x360 (owner, 2026-10-13): pieces, tiles, props,
+  effects and UI alike. No 2x2 chunky blocks.
 - **Research before building any new mechanic.** Mandatory order:
   1. Search Godot's built-in nodes/engine features for the capability
 	 (Timer, Tween, AnimationPlayer, Area2D signals, TileMapLayer, AStarGrid2D,

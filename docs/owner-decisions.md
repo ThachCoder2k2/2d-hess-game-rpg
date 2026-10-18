@@ -8,6 +8,17 @@ Newest first.
 
 ---
 
+## 2026-10-13 — pixel density and boss size
+
+Picked in chat after viewing the M2 preview (`assets/_generated/previews/pieces_in_cells.png`):
+
+| Question | Owner's answer | What the build does |
+| --- | --- | --- |
+| Pixel density: pieces were placeholdered at 1x1 pixels while the asset list asked for all world art (pieces, tiles, props) in chunky 2x2 blocks | "Tất cả 1×1" (all 1x1) | **Everything is drawn at 1x1 pixels** at the native 640x360: pieces, tiles, props, world effects, UI, icons, portraits. No 2x2 chunky art anywhere. The asset request style block and every prompt change to match; the placeholder generators that still draw 2x2 blocks (kingdom tiles, Stage 1 room art) are brought to 1x1 when next touched. |
+| Does a boss fit in one cell like an ordinary piece? | "tuỳ boss" (it depends on the boss) | **Per boss**, chosen by role (agent proposal, the owner may change any row — one data row each): Black Pawn Captain 1 cell · Knight Captain 1 cell · Bishop Oracle 1 cell · Rook Warden **2x2 cells in phases 1-2, 1 cell in phase 3** (the fortress shrinks when it breaks its own throne) · Queen of Tricks 1 cell · Black King 1 cell, with the Rule Engine machine behind him **3x3 cells**. A multi-cell piece still follows "smaller than its cells": its body stays inside its footprint with a 2 px margin. The engine gains multi-cell footprints (occupancy, movement, hits on any covered cell, telegraph origin) in M8b, the boss framework. |
+
+---
+
 ## 2026-10-12 — asset delivery and the size of a piece
 
 **Assets are the owner's, one file per thing.**
