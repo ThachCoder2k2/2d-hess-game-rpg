@@ -552,6 +552,10 @@ msgstr "Assists are never switched on for you. Change them whenever you like."
 msgid "UI_SETTINGS_COMING_LATER"
 msgstr "(coming later)"
 
+#. surface=settings screen, above the buttons; purpose=the settings could not be written to disk, so they last only until the game is closed
+msgid "UI_SETTINGS_NOT_SAVED"
+msgstr "These settings could not be saved. They last until you close the game."
+
 #. surface=settings screen, next to a slider; placeholders={value} the number from 0 to 100; purpose=the slider's value as a percent
 msgid "UI_SETTINGS_PERCENT"
 msgstr "{value}%"

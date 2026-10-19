@@ -9,10 +9,13 @@ extends UnboundTest
 ##   3. CLOSING: Esc, Back, the pad's B and Start close it, once, and the settings are written to the profile.
 ##   4. REACHABLE. From the title (Settings) and from the pause menu (Settings), with whatever is under it going quiet and
 ##      getting its focus back; the Controls panel opens from it and sits on top of it.
+##   5. A REFUSED WRITE IS SAID. When the profile cannot be written (a newer game's file is never replaced), the screen says
+##      the settings last only until the game is closed, and stops saying it once a write succeeds.
 
 const SettingsSupport := preload("res://tests/settings/settings_support.gd")
 const ShellSupport := preload("res://tests/shell/shell_support.gd")
 const Support := preload("res://tests/bridge/bridge_support.gd")
+const SaveSupport := preload("res://tests/support/save_test_support.gd")
 const SUITE_NAME := "settings_screen"
 const SCREEN_SCENE := "res://shell/settings/settings_screen.tscn"
 
@@ -27,6 +30,7 @@ func _run() -> void:
 	await _built_from_the_table()
 	await _reachable_from_the_title()
 	await _reachable_from_the_pause_menu()
+	await _a_refused_write_is_said_on_the_screen()
 	finish()
 
 
@@ -180,3 +184,32 @@ func _reachable_from_the_pause_menu() -> void:
 	await ShellSupport.tap_key(self, KEY_ESCAPE)
 	_expect(app.game_flow.state == GameFlow.State.PLAYING, "and the next Esc resumes the game")
 	Support.end_suite(self, save_service)
+	# The next section boots its own app on its own isolated save: this one goes away first.
+	Support.release_all_actions()
+	Support.remove_isolated_save(save_service)
+	app.queue_free()
+	save_service.queue_free()
+	await process_frame
+	await process_frame
+
+
+# --------------------------------------------------------------------------- 5: a refused write
+
+func _a_refused_write_is_said_on_the_screen() -> void:
+	var booted := await SettingsSupport.boot_title(self, SUITE_NAME + "_refused")
+	var app: AppRoot = booted["app"]
+	var save_service: Node = booted["save_service"]
+	var screen := app.settings_screen
+	_expect(not screen.not_saved_label.visible, "the screen says nothing about saving while all is well")
+	var profile_path := String(save_service.call("profile_path"))
+	var newer_text := SaveSupport.profile_text_of_version(99, {"setting_volume_master": 0.3})
+	SaveSupport.plant(profile_path, newer_text)
+	app.settings.set_value(GameSettings.VOLUME_UI, 0.3)
+	app.flush_settings()
+	_expect(app.settings_store.last_save_error == ERR_LOCKED and SaveSupport.text_of(profile_path) == newer_text, "a newer game's profile is not replaced (the write was refused)")
+	_expect(screen.not_saved_label.visible and screen.not_saved_label.atr(screen.not_saved_label.text) == "These settings could not be saved. They last until you close the game.", "and the screen says so (%s)" % screen.not_saved_label.atr(screen.not_saved_label.text))
+	DirAccess.remove_absolute(profile_path)
+	app.settings.set_value(GameSettings.VOLUME_UI, 0.6)
+	app.flush_settings()
+	_expect(app.settings_store.last_save_error == OK and not screen.not_saved_label.visible, "once a write succeeds the line goes away")
+	app.settings.set_value(GameSettings.VOLUME_UI, 1.0)

@@ -56,6 +56,8 @@ const ROW_FONT_SIZE := 12
 @export var defaults_button: Button
 ## The container of the buttons and the pages; switched off while a panel is laid over the screen.
 @export var content: Control
+## The line that says the settings could not be written to the profile (shown by set_save_failed).
+@export var not_saved_label: Label
 
 ## The settings the screen edits (the object AppRoot owns).
 var settings: GameSettings = null
@@ -109,6 +111,12 @@ func close() -> void:
 	if is_instance_valid(_focus_before_open) and _focus_before_open.is_visible_in_tree():
 		_focus_before_open.grab_focus()
 	_focus_before_open = null
+
+
+## Shows or hides the line that says the settings could not be written, so they last until the game is closed: the profile
+## is a newer game's, or the disk refused. AppRoot sets it after every write.
+func set_save_failed(failed: bool) -> void:
+	not_saved_label.visible = failed
 
 
 ## Whether the screen is on screen.

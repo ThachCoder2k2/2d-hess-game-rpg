@@ -271,6 +271,8 @@ func flush_settings() -> void:
 		settings_store.save_settings(settings)
 
 
+		if settings_screen != null:
+			settings_screen.set_save_failed(settings_store.last_save_error != OK)
 ## Opens the settings screen on `group`'s page over whatever is up (the title, or the pause menu): its buttons go quiet.
 func _open_settings(group: SettingDefinition.Group) -> void:
 	_cover_what_is_under_the_panels(true)

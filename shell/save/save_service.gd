@@ -330,6 +330,18 @@ func read_profile() -> Dictionary:
 	return values
 
 
+## Why the profile cannot be read, in a sentence for the log; "" when it can be read or has never been written (a first
+## run). A profile that read_profile() answers with nothing for this reason is not "no settings stored yet": the file is
+## there and the game cannot use it (damaged, or written by hand without the footer).
+func profile_problem() -> String:
+	var reading := SaveFile.read(profile_path())
+	if reading.status != SaveFile.STATUS_DAMAGED:
+		return ""
+	if SaveFile.read(profile_path() + SaveFile.BACKUP_SUFFIX).is_readable():
+		return ""
+	return reading.reason
+
+
 ## Writes one profile value now (the whole file, safely). Returns OK or the file error.
 func set_profile_value(key: StringName, value: Variant) -> Error:
 	return set_profile_values({String(key): value})

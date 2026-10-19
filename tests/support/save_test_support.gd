@@ -51,6 +51,24 @@ static func plant(path: String, text: String) -> void:
 	file.close()
 
 
+## Writes `bytes` to `path` exactly (creating the folder): for planting a file that is not even text.
+static func plant_bytes(path: String, bytes: PackedByteArray) -> void:
+	DirAccess.make_dir_recursive_absolute(path.get_base_dir())
+	var file := FileAccess.open(path, FileAccess.WRITE)
+	file.store_buffer(bytes)
+	file.close()
+
+
+## The profile text of a game that is `version` of the profile format and holds these values (key -> value, the
+## profile's own keys): what a newer build would have left in profile.cfg, with a footer that passes the check.
+static func profile_text_of_version(version: int, values: Dictionary) -> String:
+	var config := ConfigFile.new()
+	config.set_value("meta", "version", version)
+	for key: String in values:
+		config.set_value("profile", key, values[key])
+	return SaveFile.encode(config)
+
+
 ## A SaveData with every field set to something other than its default, so a round trip that drops a
 ## field is seen. `courage_current` is below max on purpose: health never saves.
 static func full_data() -> SaveData:

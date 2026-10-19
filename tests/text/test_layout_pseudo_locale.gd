@@ -239,6 +239,11 @@ func _the_settings_screen() -> void:
 			var settings_screen := screen as SettingsScreen
 			settings_screen.configure(GameSettings.new())
 			settings_screen.open(group))
+	await _check_state("the settings screen with the line that the settings could not be saved", SETTINGS_SCENE_PATH, func(screen: Node) -> void:
+		var settings_screen := screen as SettingsScreen
+		settings_screen.configure(GameSettings.new())
+		settings_screen.open(SettingDefinition.Group.ASSISTS)
+		settings_screen.set_save_failed(true))
 
 
 # --------------------------------------------------------------------------- the measuring

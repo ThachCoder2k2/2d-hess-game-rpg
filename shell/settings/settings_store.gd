@@ -22,6 +22,9 @@ const PROFILE_KEY_PREFIX := "setting_"
 var save_service: SaveServiceScript = null
 ## Why the last load_settings() replaced values by defaults, one sentence each (empty when every value was read).
 var last_problems := PackedStringArray()
+## What the last save_settings() returned: OK, or the file error. ERR_LOCKED is a profile a NEWER game wrote, which this
+## game never replaces: the settings then last until the game is closed, and the Settings screen says so.
+var last_save_error: Error = OK
 
 
 func _init(service: SaveServiceScript = null) -> void:
@@ -39,7 +42,11 @@ func load_settings() -> GameSettings:
 			if profile_key.begins_with(PROFILE_KEY_PREFIX):
 				stored[profile_key.trim_prefix(PROFILE_KEY_PREFIX)] = profile[profile_key]
 	if stored.is_empty():
-		last_problems.append("no settings are stored yet; every setting is at its default")
+		var unreadable := save_service.profile_problem() if save_service != null else ""
+		if unreadable.is_empty():
+			last_problems.append("no settings are stored yet; every setting is at its default")
+		else:
+			last_problems.append("the profile that holds the settings cannot be read (%s); every setting is at its default and the next change replaces the file" % unreadable)
 		_log()
 		return GameSettings.new()
 	var settings := GameSettings.from_values(stored)
@@ -53,7 +60,7 @@ func load_settings() -> GameSettings:
 
 
 ## Writes every setting to the profile in one write. Returns OK, or the file error (the game goes on: the settings
-## still hold in memory, and the next change tries again).
+## still hold in memory, and the next change tries again); last_save_error keeps it for whoever tells the player.
 func save_settings(settings: GameSettings) -> Error:
 	if save_service == null:
 		return ERR_UNAVAILABLE
@@ -62,7 +69,10 @@ func save_settings(settings: GameSettings) -> Error:
 	for key: String in settings_values:
 		values[PROFILE_KEY_PREFIX + key] = settings_values[key]
 	var error := save_service.set_profile_values(values)
-	if error != OK:
+	last_save_error = error
+	if error == ERR_LOCKED:
+		push_warning("Settings: the profile was written by a newer version of the game, which this version never replaces; the settings last until the game is closed")
+	elif error != OK:
 		push_warning("Settings: the profile could not be written (error %d: %s); they stay as they are until the next change" % [error, error_string(error)])
 	return error
 

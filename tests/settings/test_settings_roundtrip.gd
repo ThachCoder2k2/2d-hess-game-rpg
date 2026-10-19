@@ -11,7 +11,9 @@ extends UnboundTest
 ##   3. A FIRST RUN has nothing stored: every default, ONE line of reason.
 ##   4. GARBAGE or missing keys fall back to defaults WITH A LOGGED REASON each, and the usable keys around them are kept:
 ##      a wrong type, a number out of range, a value that is not an option, a language the game has no words for, a key a
-##      newer game wrote; a profile that is not a file at all gives every default and no crash.
+##      newer game wrote; a profile that is not a file at all gives every default and no crash; a profile that cannot be
+##      read says so (it is not "no settings stored yet"), also when it is bytes no text can hold, and prints no engine
+##      error for them; a profile a NEWER game wrote is read and never replaced, and the store keeps the refusal.
 ##   5. set_value refuses what the definition refuses, and says `changed` once per real change.
 ## What each setting DRIVES is pinned by test_settings_drive_their_targets.
 
@@ -27,6 +29,8 @@ func _init() -> void:
 	_a_first_run_has_one_line_of_reason()
 	_garbage_falls_back_with_reasons()
 	_a_profile_that_is_not_a_file()
+	_a_profile_that_cannot_be_read_says_so()
+	_a_newer_games_profile_is_read_and_never_replaced()
 	_set_value_refuses_what_the_definition_refuses()
 	for folder in folders_to_remove:
 		SaveSupport.remove_root(folder)
@@ -176,6 +180,42 @@ func _a_profile_that_is_not_a_file() -> void:
 	SaveSupport.plant(service.profile_path(), "[profile]\nsetting_volume_master=\nsetting_fullscreen=oops\n")
 	var half_written := SettingsStore.new(service).load_settings()
 	_expect(half_written.to_values() == GameSettings.new().to_values(), "and so does one whose values are cut off")
+
+
+func _a_profile_that_cannot_be_read_says_so() -> void:
+	var service := SaveSupport.new_service(_new_folder("settings_unreadable"))
+	var store := SettingsStore.new(service)
+	# Written by hand, so it has no integrity footer: the game cannot use it.
+	SaveSupport.plant(service.profile_path(), "[profile]\nsetting_volume_master=0.5\n")
+	var settings := store.load_settings()
+	_expect(settings.to_values() == GameSettings.new().to_values(), "a profile with no footer gives every default")
+	_expect(store.last_problems.size() == 1 and store.last_problems[0].contains("cannot be read") and store.last_problems[0].contains("integrity footer") and not store.last_problems[0].contains("no settings are stored"), "and the log says the file cannot be read and why, not that nothing is stored yet (%s)" % [store.last_problems])
+	# Bytes that are not text at all: decoding them as text would print a line of engine error for every bad byte, and
+	# this suite runs under --strict, so a noisy read fails it.
+	var noise := PackedByteArray()
+	for index in 300:
+		noise.append(0x80 + (index * 7) % 128)
+	noise.append_array(PackedByteArray([0xFF, 0xFE, 0xC0, 0xAF, 0xED, 0xA0, 0x80, 0xF5]))
+	SaveSupport.plant_bytes(service.profile_path(), noise)
+	var from_noise := store.load_settings()
+	_expect(from_noise.to_values() == GameSettings.new().to_values() and store.last_problems.size() == 1 and store.last_problems[0].contains("is not text"), "bytes that are not text give every default and one sentence (%s)" % [store.last_problems])
+	_expect(not SaveFile.is_valid_utf8(PackedByteArray([0xC0, 0xAF])) and not SaveFile.is_valid_utf8(PackedByteArray([0xED, 0xA0, 0x80])) and not SaveFile.is_valid_utf8(PackedByteArray([0xE2, 0x82])) and SaveFile.is_valid_utf8("Tiếng Việt, 日本語, 🙂".to_utf8_buffer()) and SaveFile.is_valid_utf8(PackedByteArray()), "the byte check refuses an overlong form, a surrogate and a cut-off letter, and accepts real text in any script")
+	_expect(service.set_profile_value(&"setting_volume_master", 0.4) == OK and is_equal_approx(float(store.load_settings().value(GameSettings.VOLUME_MASTER)), 0.4), "and the next write replaces the unreadable file")
+
+
+func _a_newer_games_profile_is_read_and_never_replaced() -> void:
+	var service := SaveSupport.new_service(_new_folder("settings_newer"))
+	var newer_text := SaveSupport.profile_text_of_version(99, {"setting_volume_master": 0.3, "a_value_of_the_future": 1})
+	SaveSupport.plant(service.profile_path(), newer_text)
+	var store := SettingsStore.new(service)
+	var settings := store.load_settings()
+	_expect(is_equal_approx(float(settings.value(GameSettings.VOLUME_MASTER)), 0.3), "a profile of a newer game is read: the values this game knows are used")
+	settings.set_value(GameSettings.VOLUME_MASTER, 0.6)
+	_expect(store.save_settings(settings) == ERR_LOCKED and store.last_save_error == ERR_LOCKED, "writing the settings is refused, and the store keeps the refusal")
+	_expect(SaveSupport.text_of(service.profile_path()) == newer_text, "the newer game's file is byte for byte what it was")
+	_expect(is_equal_approx(float(settings.value(GameSettings.VOLUME_MASTER)), 0.6), "while the settings in memory keep the change")
+	DirAccess.remove_absolute(service.profile_path())
+	_expect(store.save_settings(settings) == OK and store.last_save_error == OK, "with the file gone a write succeeds and the refusal is forgotten")
 
 
 # --------------------------------------------------------------------------- 5. set_value
