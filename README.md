@@ -136,9 +136,10 @@ may name which). The top-level folders are layers:
 - `authoring/`: things dragged into a scene: `entity_components/`, `markers/`, the room root, and the
   baker (`EcsBoot`, `EcsActorFactory`).
 - `presentation/`: how the world is shown: `views/` (`ActorView`, pickups, the actor scenes), `ui/` (HUD,
-  the Book), `board/`, `camera/`, `audio/`.
-- `shell/`: the game around the game: `game_root.tscn/.gd` (the one game scene and the bridge from the
-  ECS to presentation), `content/` (`ContentDb`, the content registry) and `save/` (`SaveService`, the save).
+  the Book), `board/`, `camera/`, `audio/`, `bridges/` (the event router and the bridges that draw, say or play).
+- `shell/`: the game around the game: `game_root.tscn/.gd` (the in-game scene), `game_flow.gd` (a death or R
+  starts the room again), `bridges/` (the bridges that write the save, rebuild the world or flip a component),
+  `content/` (`ContentDb`, the content registry) and `save/` (`SaveService`, the save).
 - `assets/`: shared raw art and audio (tile atlases, interface pictures, sound effects, music, the
   hand-drawn bedroom pieces). `tools/`: generators, the test runner and the migration scripts (never
   shipped). `tests/`: headless tests, fixtures and baselines.

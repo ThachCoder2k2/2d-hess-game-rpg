@@ -1,12 +1,13 @@
 extends UnboundTest
 
-## Bridge characterization (M1a): zone travel through shell/game_root.gd.
+## Bridge characterization (M1a, ported in M3b step 2): zone travel through the in-game scene and
+## ZoneTravelBridge (shell/bridges/zone_travel_bridge.gd).
 ## zone_travel_runtime_test.gd covers the simulation side (a door cell emits
 ## zone_exit) but never calls the trip. This suite drives the whole
 ## bridge path through a real exit: the hero steps onto Exit_To_T2, MovementSystem
 ## emits zone_exit, the router hands it to ZoneTravelBridge.travel_to, and the fade, zone
 ## swap, world rebuild and health-carry consumption all run for real.
-## It pins CURRENT behaviour so the game_root.gd split cannot reorder it unnoticed.
+## It pins the behaviour the game_root.gd split must not reorder.
 
 const Support := preload("res://tests/bridge/bridge_support.gd")
 const SUITE_NAME := "travel"

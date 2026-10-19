@@ -1,7 +1,7 @@
 extends UnboundTest
 
 ## Bridge characterization (M1a, ported to the SaveService in M3b): what the world remembers.
-## game_root.gd translates three kinds of simulation events into writes to the run held by
+## SaveBridge (shell/bridges/save_bridge.gd) translates three kinds of simulation events into writes to the run held by
 ## the SaveService (pickup_taken, gate_opened, player_unlock) and feeds the run back into
 ## every boot_zone (taken pickups never respawn, opened gates boot as floor,
 ## the sword unlock re-applies). This suite drives each of them through the

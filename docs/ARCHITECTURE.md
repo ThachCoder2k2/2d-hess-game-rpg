@@ -2,7 +2,7 @@
 
 The Unbound Pawn — a 2D top-down grid-combat RPG in Godot 4.6.3. This document
 describes the code **as it is built today** (checked against the tree on 2026-10-19, after
-milestone M3a, the runtime seams: the schedule, the declared events, the commands channel, the
+milestone M3a and steps 1 and 2 of M3b; M3a built the runtime seams: the schedule, the declared events, the commands channel, the
 world's shared fields, the input and HUD snapshots, the player carry, the per-room origin, and the
 grid's cell kinds, leaps, rays and cached paths). The simulation is a full ECS; the
 node-composition architecture that older docs described (`GridWorld`, `FreeEnemy`,
@@ -12,7 +12,10 @@ were rearranged in M1b to the tree of `docs/game-base-plan.md` section 13; the m
 recorded file by file in `docs/migration-notes.md` and `tools/move_res_log.tsv`. M2 then added the
 content registry (`ContentDb`), the hero as data (`PlayerDefinition`), the one actor view and the table
 that keeps every piece smaller than its cell; the section "The content registry, the hero and the actor
-view" below is where they fit together.
+view" below is where they fit together. M3b then replaced `WorldState` with the `SaveService` (step 1,
+section "Persistence") and split `shell/game_root.gd` into an `EventRouter`, one bridge per
+responsibility and a `GameFlow` that starts a room again without reloading the scene (step 2, section
+"Presentation and the bridges").
 
 Pair this file with `docs/coding-standards.md` (conventions), `AGENTS.md` (workflow),
 `CLAUDE.md` (binding rules), `docs/OWNER_GUIDE.md` (how the owner changes things) and
@@ -26,9 +29,10 @@ what spawns where; at boot `EcsBoot` turns each into an **entity** (an integer i
 **components** (pure data) in an `EcsWorld`. **Systems** read and write components in a
 fixed order each frame, and tell the outside world what happened by pushing **events**
 onto a queue. The `ViewSyncSystem` is the only system that touches nodes: it moves and
-animates the puppet views from component data. `shell/game_root.gd` is a thin **bridge**:
-it builds the world, ticks it, then drains the event queue into HUD text, board overlays,
-camera shake, sound and zone travel. Tuning lives in `.tres` Resources under `content/`.
+animates the puppet views from component data. `shell/game_root.gd` is the in-game scene: it
+builds the world, ticks it, and hands the drained event queue to the **bridges**, one per
+responsibility (HUD, board overlay, camera shake, sound, the status line, the save, zone travel, the
+Book, the end of a room); it holds no rule itself. Tuning lives in `.tres` Resources under `content/`.
 
 ## The ECS contract
 
@@ -50,8 +54,8 @@ them in the order of `ecs/schedule/`. A frozen world (`frozen`) ticks only the s
 `runs_while_frozen()` is true: `CommandSystem`, so a freeze can be lifted, and `ViewSyncSystem`, so the
 picture keeps being drawn; the check is made before each system, so a freeze applied at the head of a
 tick stops the rest of that tick. `game_root.gd` sets `manual_tick = true` and ticks the world from its
-own `_process`, so a room that has ended (`room_ending`) simply stops ticking. Tests also drive
-`tick(delta)` by hand.
+own `_process`, so a room that has ended (`RoomOutcomeBridge.room_ending`) simply stops ticking. Tests
+also drive `tick(delta)` by hand.
 
 ## Folder structure (what exists today)
 
@@ -109,9 +113,16 @@ presentation/            HOW THE WORLD IS SHOWN: reads events, never decides
   board/                 PrototypeBoard (telegraphs, F3 debug) and GridLinesOverlay
   camera/                CameraRig
   audio/                 SfxManager (autoload scene)
+  bridges/               EventRouter and the bridges that only draw, say or play: EventBridge (their base), HudBridge,
+                         BoardBridge, CameraBridge, AudioBridge, MessageBridge. They name no world, save or component.
 
 shell/                   THE GAME AROUND THE GAME
-  game_root.gd/.tscn     the one game scene and its bridge (637 lines; split in M3b)
+  game_root.gd/.tscn     the in-game scene (176 lines, test-capped at 200): builds the world, ticks it, routes events
+  game_flow.gd           GameFlow: a death or the R key starts the room again, with no scene reload
+  zone_stage.gd          ZoneStage: scene-tree plumbing (the world node, the entry cell, zone and hero-view swaps)
+  shell_keys.gd          ShellKeys: R, F3, F11 and B, read from the frame's InputSnapshot
+  bridges/               the bridges that must reach the world, the save or a component: ShellBridge (their base),
+                         SaveBridge, ZoneTravelBridge, BookBridge, RoomOutcomeBridge, DespawnBridge
   content/               ContentDb (the content registry, a static class) and ContentKind
   input/input_poller.gd  InputPoller: the one reader of the Input singleton; fills world.input_snapshot once per frame
   save/                  SaveService (the autoload: the run in memory, the slots on disk, the profile) and its
@@ -130,7 +141,7 @@ docs/                    this file, coding-standards.md, OWNER_GUIDE.md, plans, 
 
 Not built yet (the plan's later milestones): `schema/skills`,
 `schema/progression`, `schema/story`, `schema/audio`,
-`shell/title|pause|settings|credits`, `presentation/story|vfx|bridges`, `content/story|audio|ui|bosses|props|progression` and the rest of `content/feel`,
+`shell/title|pause|settings|credits`, `presentation/story|vfx`, `content/story|audio|ui|bosses|props|progression` and the rest of `content/feel`,
 `authoring/markers/` beyond today's.
 
 ### Which layer may name which
@@ -160,32 +171,40 @@ and the edges are gone.
 ## Runtime flow
 
 ```text
-shell/game_root.tscn  ->  Main (shell/game_root.gd)
-  _ready()      SaveService.ensure_session() (Continue, when no run has begun), reads the run's
-                checkpoint (which zone, which entry), swaps the zone node if the run was saved
-                elsewhere, then calls _boot_zone(entry_id)
-  _boot_zone()  1. _make_world(): new EcsWorld + Schedule.populate (the systems, order below)
+shell/game_root.tscn  ->  Main (shell/game_root.gd, class GameRoot)
+  _ready()      attaches the bridges to the scene's nodes and registers each with the EventRouter, in the
+                order _bridges() lists; SaveBridge.begin() continues the saved run when none has begun; the
+                run's checkpoint says which zone and entry to boot on (the zone node is swapped if the run
+                was saved elsewhere); then boot_zone(entry_id)
+  boot_zone()   1. ZoneStage.make_world(): new EcsWorld + Schedule.populate (the systems, order below)
                    and EcsBoot.shape_grid(): the room's bounds and its centred grid origin
-                2. EcsBoot.boot(world, EcsBootOptions) -> the "cast"
-                3. reapply the run (world flags, taken pickups, opened gates, unlocks, health carry)
-                4. HudSnapshotSystem.build(world), board.setup(grid, hud_snapshot),
-                   camera_rig.setup(grid), HUD setup
-  _process()    input_poller.poll(delta, world.input_snapshot)  ->  ecs.tick(delta)
-                ->  _handle_events(ecs.drain_events())  ->  HUD refresh from world.hud_snapshot
+                2. EcsBoot.boot(world, EcsBootOptions) -> the "cast" (the options carry what the run
+                   already knows: taken pickups, opened gates)
+                3. every bridge is bound to the new world's HudSnapshot and cast; SaveBridge.restore_run()
+                   (world flags, closed-gate pictures), BookBridge.meet_pieces(), SaveBridge.apply_unlocks(),
+                   RoomOutcomeBridge.begin_room(), ZoneTravelBridge.apply_health_carry()
+                4. HudSnapshotSystem.build(world), then the board, camera and HUD bridges draw the room
+  _process()    input_poller.poll(delta, world.input_snapshot)  ->  ShellKeys.handle(snapshot)  ->
+                ecs.tick(delta)  ->  router.route(ecs.drain_events())  ->  HudBridge.refresh()
 ```
 
-Death and `R` reload the scene; the `SaveService` (an autoload) holds the run in memory and
-remembers the zone and entry, so the reload boots in the right place. Zone travel (`zone_exit`
-event) fades out, swaps the zone scene node, **rebuilds the whole `EcsWorld`**, and fades in. No
-entity survives. What carries over is the player view node, the run in the `SaveService` (its
-flags are loaded into every new world), the carried health (`game_root.player_health_carry`),
-and the HUD, board and camera nodes, which are re-bound by `setup()`.
+A death and `R` do not reload the scene. `RoomOutcomeBridge` (after the 0.85 s defeat beat) and `ShellKeys`
+call `GameFlow.request_respawn()`, which raises `respawn_requested`, waits out a zone trip under way,
+and at the end of the frame has `GameRoot.respawn()` rebuild the room: a fresh instance of the
+checkpoint's zone, a fresh hero view in its boot pose (a fallen hero's view rests in its defeat clip),
+the Book closed, nothing carried, then `boot_zone()` on the checkpoint's entry. The `SaveService` (an
+autoload) holds the run in memory and remembers the zone and entry, so the rebuilt room is in the right
+place. What the scene keeps is the run, the music, the F3 switch and the HUD, board and camera nodes (re-bound
+by `setup()`). Zone travel (`zone_exit` event, `ZoneTravelBridge`) fades out, swaps the zone scene node,
+**rebuilds the whole `EcsWorld`**, and fades in. No entity survives. What carries over is the
+hero's view node, the run in the `SaveService` (its flags are loaded into every new world) and the carried health
+(`ZoneTravelBridge.player_health_carry`).
 
 ### System order (the schedule, `ecs/schedule/`)
 
 The order is data: one file per stage in `ecs/schedule/` (`command`, `input`, `decide`, `cell_effects`,
 `move`, `act`, `resolve`, `react`, `progress`, `view`) and `Schedule.populate(world)`, which both
-`shell/game_root.gd` and `tools/world_dumper.gd` call. A system file carries `const PHASE` naming the
+`shell/zone_stage.gd` (for the in-game scene) and `tools/world_dumper.gd` call. A system file carries `const PHASE` naming the
 stage that lists it. A stage is named for when it runs and a folder for what its systems are about, so
 they differ where the plan's order (`docs/game-base-plan.md` 13.4) visits one folder several times; the
 empty stages (`cell_effects`, `react`, `progress`) wait for the milestones that fill them.
@@ -500,30 +519,30 @@ declared, a declared `emitted` one must be emitted, and a `future` one must not 
 later are reserved by name as `future` and gain their payload when their milestone starts emitting them.
 
 22 types are emitted today (the 19 the plan counted when M3a began, plus `healed`, `flag_set` and
-`command_rejected`). `game_root.gd` `_handle_events` matches 15 of them; the others (`step_started`,
+`command_rejected`). The bridges answer 15 of them through the `EventRouter`; the others (`step_started`,
 `step_finished`, `step_blocked`, `attack_started`, and the three new ones) are emitted for tests and future
-presentation.
+presentation, and the router drops a type nobody registered for.
 
 | Event | Payload keys | Handled by |
 |---|---|---|
 | `step_started` / `step_finished` | `entity`, `cell` | — |
 | `step_blocked` | `entity`, `direction` | — |
 | `attack_started` | `entity`, `cells` | — |
-| `attack_landed` | `entity`, `cells`, `hit_count`, `profile` | bridge: board flash, camera shake, status |
-| `attack_locked` | `entity` | bridge: status ("no weapon yet") |
-| `skill_cooldown` | `entity`, `time_left` | bridge: HUD bar |
-| `telegraph_started` / `telegraph_finished` | `entity` (+ `cells`) | board overlay |
-| `attack_resolved` | `entity`, `cells` | board overlay |
-| `intent_changed` | `entity`, `intent` | board debug paths |
-| `damaged` | `entity`, `amount`, `remaining`, `direction`, `source`, `tags` | bridge: shake, HUD courage, damage flash |
-| `defeated` | `entity`, `source`, `tags` | bridge: despawn timer, room completion, player death/reload |
+| `attack_landed` | `entity`, `cells`, `hit_count`, `profile` | BoardBridge (strike flash), CameraBridge (shake), MessageBridge (status) |
+| `attack_locked` | `entity` | MessageBridge ("no weapon yet") |
+| `skill_cooldown` | `entity`, `time_left` | HudBridge (skill slot) |
+| `telegraph_started` / `telegraph_finished` | `entity` (+ `cells`) | BoardBridge |
+| `attack_resolved` | `entity`, `cells` | BoardBridge |
+| `intent_changed` | `entity`, `intent` | BoardBridge (F3 paths) |
+| `damaged` | `entity`, `amount`, `remaining`, `direction`, `source`, `tags` | CameraBridge (shake), HudBridge (Courage, flash), MessageBridge (status) |
+| `defeated` | `entity`, `source`, `tags` | BoardBridge (clear marks), DespawnBridge (view after the clip), RoomOutcomeBridge (counts, a win, the hero's fall) |
 | `healed` | `entity`, `amount`, `remaining`, `source` | — |
-| `pickup_taken` | `item`, `cell` | bridge: the save (`pickup_taken`), pickup sound, free the pickup view |
-| `weapon_changed` | `entity`, `weapon` | bridge: status text |
-| `player_unlock` | `entity`, `id`, `message` | bridge: the save (`unlock_gained`), unlock the sword |
-| `gate_opened` | `entity`, `gate`, `cell` | bridge: the save (`shortcut_opened`), hide the gate visual |
-| `zone_exit` | `entity`, `zone`, `entry` | bridge: zone travel |
-| `zone_exit_locked` | `entity`, `zone`, `entry`, `cell` | bridge: locked-door message |
+| `pickup_taken` | `item`, `cell` | SaveBridge (`pickup_taken`), AudioBridge (chime), DespawnBridge (free the pickup view) |
+| `weapon_changed` | `entity`, `weapon` | MessageBridge |
+| `player_unlock` | `entity`, `id`, `message` | SaveBridge (`unlock_gained`, the sword), AudioBridge, MessageBridge |
+| `gate_opened` | `entity`, `gate`, `cell` | SaveBridge (`shortcut_opened`, hide the gate picture), AudioBridge, MessageBridge |
+| `zone_exit` | `entity`, `zone`, `entry` | ZoneTravelBridge |
+| `zone_exit_locked` | `entity`, `zone`, `entry`, `cell` | MessageBridge (locked-door line) |
 | `flag_set` | `flag`, `value` | — |
 | `command_rejected` | `command`, `reason` | — |
 
@@ -537,12 +556,43 @@ The way back into the simulation is the same kind of contract: `ecs/events/comma
 `equip_page` reserved) and the cosmetic `play_state` view command; `CommandSystem` drains `world.commands` first
 in every tick and drops a request that is malformed, unhandled or refused with a `command_rejected` event.
 
-## Presentation and the bridge
+## Presentation and the bridges
 
-Presentation consumes `drain_events()` and never decides gameplay.
+Presentation consumes `drain_events()` and never decides gameplay. The scene does not react to events
+itself: `EventRouter` (`presentation/bridges/event_router.gd`) hands each drained event to the bridges that
+registered for its type, in the order `GameRoot._bridges()` lists them, and a type nobody registered for is
+dropped. A bridge is ONE responsibility; it learns the running room only through the world's `HudSnapshot` and
+the cast `EcsBoot` returned (`EventBridge.bind_world`, after every boot). The dependency table (13.1) splits them
+in two folders:
 
-- `shell/game_root.gd` — the bridge and zone-travel host (see Runtime flow). It owns fades,
-  the Book toggle, the F3 debug view, F11 fullscreen and scene reload.
+| Bridge | Where | Owns | Events |
+|---|---|---|---|
+| `BoardBridge` | `presentation/bridges/` | telegraph cells, strike flashes, F3 intent paths on `PrototypeBoard` | `telegraph_*`, `attack_resolved`, `attack_landed`, `intent_changed`, `defeated` |
+| `CameraBridge` | `presentation/bridges/` | the two screen shakes (named constants), framing each room | `attack_landed`, `damaged` |
+| `HudBridge` | `presentation/bridges/` | Courage pips and the damage flash, the skill slot, the enemy count, the result panel, and the strike and cell lines it redraws from the snapshot every frame | `damaged`, `skill_cooldown` |
+| `MessageBridge` | `presentation/bridges/` | every sentence an event puts on the status line (constants until M4's text keys) and `say()` for the others | `attack_locked`, `attack_landed`, `damaged`, `weapon_changed`, `player_unlock`, `gate_opened`, `zone_exit_locked` |
+| `AudioBridge` | `presentation/bridges/` | the event sounds through the `SfxManager` registry; the only caller of it | `pickup_taken`, `player_unlock`, `gate_opened` (+ `play()` for the room outcome) |
+| `SaveBridge` | `shell/bridges/` | what the room writes into the run and the run gives back to each room; the ONLY asker of saves (R17) | `pickup_taken`, `player_unlock`, `gate_opened` |
+| `DespawnBridge` | `shell/bridges/` | a taken floor weapon's view; a defeated enemy's view after its 0.6 s defeat clip | `pickup_taken`, `defeated` |
+| `RoomOutcomeBridge` | `shell/bridges/` | the enemy counts, a win, the hero's fall and the 0.85 s defeat beat (interim: step 3 replaces its rules with `ObjectiveSystem` and the checkpoint rules) | `defeated` |
+| `ZoneTravelBridge` | `shell/bridges/` | the trip between zones (guards, fade, swap, boot, fade) and the Courage it carries | `zone_exit` |
+| `BookBridge` | `shell/bridges/` | a met piece writes its page; the B key opens the Book | none (called by the scene and `ShellKeys`) |
+
+The six in `presentation/bridges/` name no world, no save and no component, so 13.1 lets them live in
+presentation. The five in `shell/bridges/` (base class `ShellBridge`, which holds the `GameRoot`) write the
+run, rebuild the world or flip a component, so they sit in the layer allowed to name everything. The plan's
+tree (13.2) lists a `save` handler under `presentation/bridges/`; 13.1 forbids presentation to name the
+`SaveService`, so it is in the shell. Each bridge has a test that drives it through a real router
+(`tests/bridge/test_*_bridge.gd`) or through the real scene.
+
+- `shell/game_root.gd` — the in-game scene (see Runtime flow): finds its nodes, boots the world, ticks it
+  and routes the events. It holds no rule (`test_game_root_is_thin`: at most 200 lines, no event handler, no save
+  request, no scene reload). `shell/zone_stage.gd` holds the scene-tree plumbing, `shell/shell_keys.gd` the
+  game's own keys (R, F3, F11, B).
+- `shell/game_flow.gd` — `GameFlow`, the smallest form of the flow of plan 9.1: a death and the R key
+  `request_respawn()`, it raises `respawn_requested` and, once per frame and after a trip under way,
+  `GameRoot.respawn()` starts the room again. Nothing reloads the scene (`test_no_scene_reload`); M4
+  grows it into `AppRoot`'s state machine.
 - `PrototypeBoard` (`presentation/board/`) — the combat overlay: telegraph cells, hit flashes,
   F3 debug paths. The one place `_draw()` is allowed for gameplay overlays. It reads the board
   geometry from the grid (duck-typed) and everything else from `world.hud_snapshot`.
@@ -557,7 +607,7 @@ Presentation consumes `drain_events()` and never decides gameplay.
 - `RuleBookUI` (`presentation/ui/codex/`) — the Book of House Rules screen (key `B`).
 - `SfxManager` (autoload, `presentation/audio/`) — pooled one-shot playback for event sounds
   with no clip. Motion sounds are audio tracks in the actor's `AnimationPlayer` clips. Only the
-  bridge calls it.
+  `AudioBridge` calls it.
 - Actor scenes (`presentation/views/actors/`) — `Sprite2D`s under `MotionRoot/SpriteRoot`, a
   sibling `AnimationPlayer` for clips, and an `AnimationTree` state graph (states, transitions,
   crossfades are editor-owned; `ViewSyncSystem` publishes conditions and calls `travel()` on
@@ -600,15 +650,15 @@ owner of everything written about a playthrough (`docs/game-base-plan.md` 9.3, D
   newer game is never read as damaged and never overwritten (`new_game` renames it to `.newer_game`).
   Nothing loads by itself: `ensure_session()` continues the active slot when the in-game scene starts and no
   run has begun, until `GameFlow` (M4) loads on Continue.
-- **Who may save**: the shell calls `request_save(reason)` with one of `AUTOSAVE_REASONS`, the success events
-  of R17 (room cleared, shortcut opened, persistent pickup, boss defeated, rescue, checkpoint reached, a beat
+- **Who may save**: one file, `shell/bridges/save_bridge.gd`, calls `request_save(reason)` with one of
+  `AUTOSAVE_REASONS`, the success events of R17 (room cleared, shortcut opened, persistent pickup, boss defeated, rescue, checkpoint reached, a beat
   flagged `save_after`, an unlock, a Book page). A death, a hit or a quit is not one: a death writes nothing.
   `tests/save/test_request_save_callers.gd` lists the callers; `tests/architecture/test_save_written_only_by_save_service.gd`
   holds that nothing else writes a save file.
 - **The profile** (`<root>/profile.cfg`, same writer): what outlives a slot, today the `completed` mark, which
   a New Game keeps.
 
-Health is carried across a zone travel (`game_root.player_health_carry`) but is never saved.
+Health is carried across a zone travel (`ZoneTravelBridge.player_health_carry`) but is never saved.
 
 ## Known deviations from the rules (honest list)
 
@@ -616,10 +666,11 @@ These exist today and are scheduled to be fixed by `docs/game-base-plan.md` §14
 ad-hoc edits:
 
 - Nothing in `presentation/` reads a component any more (the HUD bridge and the board read
-  `world.hud_snapshot`), but `game_root.gd` still WRITES a few: `PlayerTag.control_enabled`,
-  `PlayerCombat.sword_unlocked`, the health carry and removing `VIEW_REF`. The channel that replaces the
-  writes (`world.commands`) exists since M3a step 1 but nothing pushes on it yet; M3b moves the
-  writes over (the carry through the `PlayerSnapshot`). The skill slot is redrawn on `skill_cooldown`
+  `world.hud_snapshot`), but the shell still WRITES a few: `PlayerTag.control_enabled` (`GameRoot.set_player_control`,
+  called by the Book, a trip and a won room), `PlayerCombat.sword_unlocked` (`SaveBridge.apply_unlocks`), the
+  hero's Courage (`ZoneTravelBridge.apply_health_carry`) and `VIEW_REF` (`DespawnBridge`). The channel that
+  replaces the writes (`world.commands`) exists since M3a step 1 but nothing pushes on it yet; step 3 moves the
+  carry through the `PlayerSnapshot`. The skill slot is redrawn on `skill_cooldown`
   events, as it always was, so after the sword is found it says "find sword" until the first
   skill is used; the M4 widgets draw the snapshot every frame and end that.
 - Three shell keys (`F3`, `F11`, `B`) are raw keys, not `InputMap` actions. `InputPoller` publishes them in
@@ -627,8 +678,11 @@ ad-hoc edits:
   `Input`; M4 adds the actions under the same names and deletes the table (`R` is already the
   `restart_room` action).
 - `ViewSyncSystem` blinks the invulnerability tint from the wall clock.
-- `game_root.gd` (637 lines) still holds travel, death, persistence and HUD wiring together
-  (the split is M3b).
+- `RoomOutcomeBridge` still decides when a room is won and when the hero has fallen, in the shell and after the
+  fact (the old `main.gd` rules, ported as they were). `ObjectiveSystem` and `CheckpointSystem` replace it in
+  step 3, and `Events.RESPAWN_REQUESTED` stays reserved until the simulation announces the fall itself.
+- A respawn builds the zone from its scene again, so every enemy and floor weapon is back: the rule that a
+  cleared room stays cleared (D-17) and that floor weapons are room-local (D-16) arrive in step 3, as before.
 - The checkpoint is moved on every zone travel, not only at a hub or a boss-room entry (D-16), and the save is
   requested with `checkpoint_reached` at each of those travels: the interim stand-in for the checkpoint rules
   (M3b step 3). The `cleared_room_ids` and `defeated_boss_ids` sets are saved and loaded but nothing writes them yet.
@@ -647,7 +701,8 @@ ad-hoc edits:
 5. Data schemas: `schema/entity/*`, `schema/attacks/*`, `schema/world/*`, `schema/feel/*`.
 6. `ecs/systems/decide/enemy_ai_system.gd` — the big one (381 lines).
 7. `authoring/ecs_boot.gd`, `ecs_actor_factory.gd`, `presentation/views/actor_view.gd`, `authoring/entity_components/*`.
-8. `ecs/systems/view/view_sync_system.gd`, then `shell/game_root.gd` last.
+8. `ecs/systems/view/view_sync_system.gd`, then `shell/game_root.gd`, `presentation/bridges/event_router.gd` and
+   the bridges (start with `hud_bridge.gd`, then `shell/bridges/zone_travel_bridge.gd`) last.
 
 Read `tests/run_tests.gd` and `tests/ecs_*_test.gd` alongside — the assertion labels are
 the spec.
@@ -662,9 +717,9 @@ kind:
 
 | Folder | What it holds |
 |---|---|
-| `tests/architecture/` | the guards: `test_dependency_edges`, `test_content_references`, `test_content_has_no_gd`, `test_sidecars_tracked`, `test_no_path_only_ext_resource`, `test_no_old_res_paths`, `test_fixtures_present`, `test_tools_keep_uids`, `test_all_scripts_load`, `test_dump_baselines`, `test_world_dumper_entry_cell`, `test_schedule_complete`, `test_events_declared`, `test_input_only_in_poller`, `test_save_written_only_by_save_service`, `test_suites_isolate_the_save` |
+| `tests/architecture/` | the guards: `test_dependency_edges`, `test_content_references`, `test_content_has_no_gd`, `test_sidecars_tracked`, `test_no_path_only_ext_resource`, `test_no_old_res_paths`, `test_fixtures_present`, `test_tools_keep_uids`, `test_all_scripts_load`, `test_dump_baselines`, `test_world_dumper_entry_cell`, `test_schedule_complete`, `test_events_declared`, `test_input_only_in_poller`, `test_save_written_only_by_save_service`, `test_suites_isolate_the_save`, `test_game_root_is_thin`, `test_no_scene_reload` |
 | `tests/ecs/` | the runtime seams of M3a: `test_schedule_order`, `test_world_fields`, `test_frozen_world`, `test_commands_channel`, `test_view_commands`, `test_emit_damage`, `test_heal_queue`, `test_boot_options`, `test_input_snapshot`, `test_hud_snapshot`, `test_player_snapshot_roundtrip`, `test_room_origin`, `test_grid_cell_kinds`, `test_leap_occupancy`, `test_ray_stops_at_blockers`, `test_path_cache`, `test_attack_setup_search` |
-| `tests/bridge/` | `game_root.gd` characterization: travel, death and respawn, persistence, health carry, the Book, the world flags |
+| `tests/bridge/` | the in-game scene and its bridges: the characterization suites (travel, death and respawn, persistence, health carry, the Book, the world flags), `test_game_flow`, `test_event_router`, one suite per bridge (`test_board_bridge`, `test_camera_bridge`, `test_audio_bridge`, `test_message_bridge`, `test_hud_bridge`, `test_bridge_despawn`, `test_bridge_room_outcome`) and `test_shell_keys`; `bridge_support.gd` is their shared fixture |
 | `tests/save/` | the save: `test_save_roundtrip`, `test_save_migration_v2` (with the real v2 file in `tests/fixtures/saves/`), `test_corrupt_save_falls_back`, `test_request_save_callers` (R17), `test_profile_survives_new_game` |
 | `tests/presentation/` | the board overlay drawing from the snapshot, and the camera framing the room (`test_board_draws_from_snapshot`, `test_camera_frames`) |
 | `tests/perf/` | `test_room_tick_budget`: an 18x9 room with eight enemies ticks in 2 ms or less on average, and builds one pathfinder |
@@ -693,8 +748,11 @@ registry, the hero as data, the one actor view and the in-cell size table (M2), 
 `events.gd` with `Events.emit_damage`, the commands channel with `CommandSystem`, the frozen world and the
 world's other shared fields, the `EcsBoot` options object, the `InputPoller` and `PlayerInputSystem` reading the
 `InputSnapshot`, the `HudSnapshot` and its system, the `PlayerSnapshot`, the per-room origin and camera framing,
-and the grid's cell kinds, leaps, rays, cached paths and bounded attack search. The ECS contract is kept as it was.
-Still to come, in plan order: the split of `game_root.gd` and the save service (M3b),
+and the grid's cell kinds, leaps, rays, cached paths and bounded attack search, and from M3b the save service
+(step 1) and the split of `game_root.gd` into the `EventRouter`, the bridges and `GameFlow` (step 2). The ECS
+contract is kept as it was.
+Still to come, in plan order: the rest of M3b (step 3: `ObjectiveSystem`, `CheckpointSystem`, the `PlayerSnapshot` in
+the zone swap, the checkpoint and death rules of D-16 and D-17),
 then the shell, input, text, story, skills, bosses and the other five districts. The
 owner-facing "how do I change X" table, with real paths for what exists today, is
 `docs/OWNER_GUIDE.md`.

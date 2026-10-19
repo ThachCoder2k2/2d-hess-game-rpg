@@ -51,7 +51,7 @@ func _run() -> void:
 	Support.remove_isolated_save(save_service)
 	var hud := main.get("hud") as GameHud
 	# The boot consumes the carry, so it is already -1 here and "death clears it"
-	# would hold even if game_root.gd never cleared anything. Plant a pending carry (what a
+	# would hold even if the room outcome never cleared anything. Plant a pending carry (what a
 	# hero killed mid-fade-out of a travel would have left behind) so the assertion
 	# below can only pass if the death handler really resets it.
 	Support.plant_health_carry(main, 2)

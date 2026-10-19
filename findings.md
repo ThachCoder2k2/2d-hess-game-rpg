@@ -616,3 +616,26 @@ June note).
   it cannot tell what runs (and `time`, `for` loops around Godot); put repeated Godot commands in small wrapper scripts under /tmp,
   write multi-line files with the Write tool, and keep each git command on its own line. In zsh a bare `=====` argument is an
   expansion error, so do not echo it.
+
+## Game Root and Bridge Facts (M3b step 2, 2026-10-19)
+
+- A lambda (a `Tween.tween_callback`, a signal handler) that captures a node or world that is freed before it runs prints an engine
+  ERROR ("Lambda capture at index N was freed"), which the strict runner fails a suite on. Capture `get_instance_id()` and resolve it
+  with `instance_from_id()` inside (it returns null for a freed object). The same lambda also ran against the WRONG world once rooms
+  are rebuilt in place, because entity numbers start over in every world: a timer must name the world it was made for.
+- `class_name GameRoot` and `ShellBridge` (which holds a `GameRoot` and is held by it) reference each other and load fine in 4.6:
+  cyclic `class_name` references are not a problem, a cyclic `preload()` would be. A new `class_name` still needs one import pass.
+- `call_deferred` on a `RefCounted`'s method works and keeps no strong reference; a coroutine started that way (`GameFlow` waiting
+  for a trip with `await get_tree().process_frame`) is fine. A request served "at the end of the frame" is what the scene reload
+  already was, so a `_process` that asks for a respawn never has its world swapped under it.
+- Rebuilding a room inside the scene needs a fresh hero view, not a reset one: a defeated hero's `AnimationTree` rests in a `defeat`
+  state with no exit and its `SpriteRoot` holds the end of the clip, and the base graph's boot pose (the hero wakes up) belongs to a new
+  instance. `ZoneStage.replace_hero_view` instantiates the view's own `scene_file_path` and parks it at the authored position; the
+  camera rig is the view's child, so the camera bridge is handed the new rig.
+- `PrototypeBoard.setup()` used to keep `telegraphs`, `enemy_intents` and the impact flash across rooms. Entity numbers start over per
+  world, so a mark left by the last room could be drawn for an unrelated entity; `setup()` clears them now.
+- A won room can only be left by starting it again (`room_ending` blocks a zone trip), so a suite that wants a second fresh room after a
+  win frees the scene and boots a new one from the run (`test_bridge_room_outcome._boot_again`).
+- The strict runner treats the engine's exit noise ("ObjectDB instances leaked at exit", "resources still in use at exit") as noise but
+  any other `ERROR:` line as a failure. The worktree sandbox refuses a `HOME=` assignment in front of the Godot binary; wrapper scripts
+  under /tmp that `export HOME` and call Godot avoid it.

@@ -1536,3 +1536,51 @@ checkpoint and death rules are not built yet (step 3), so what the player feels 
   are still there); the `PlayerSnapshot` in the zone swap and in the save (the file holds the rows, nothing captures a live hero into
   it yet); room-local floor weapons still persist as taken pickups. M4 owns the load-on-Continue flow, the notices' words and the
   autosave indicator (the `autosaved` signal is ready).
+
+## M3b step 2 - game_root becomes an event router and bridges, GameFlow ends the scene reload - 2026-10-19
+
+Branch `base/m3b-2` (from `base/m3b-1`), the strict runner green after every commit. The second of M3b's three steps: the
+`game_root.gd` split and a minimal `GameFlow`. Behaviour is the same except what the missing scene reload implies (listed below);
+the checkpoint and death rules (D-16, D-17), `ObjectiveSystem` and `CheckpointSystem` are step 3.
+
+- **The split, one responsibility per commit, the old path kept until the ported suites passed.** Order: `EventRouter` (the scene's
+  own reactions registered with it first, so every later commit moved one responsibility with the order unchanged); `BoardBridge`;
+  `CameraBridge`; `AudioBridge`; `MessageBridge`; `HudBridge`; a prep commit that routes every poke the bridge suites made at
+  `game_root` internals (about eighty) through `Support` helpers, so a moved responsibility changes one call site; `DespawnBridge`;
+  `SaveBridge`; `BookBridge`; `RoomOutcomeBridge`; `ZoneTravelBridge`; `GameFlow`; the slimming (`ZoneStage`, `ShellKeys`, the size
+  lint). `shell/game_root.gd` went from 637 to 176 lines. Before each commit the bridge suites ran against the new structure with the
+  assertions untouched.
+- **Where the bridges live.** `presentation/bridges/`: `EventRouter`, `EventBridge` (base), `HudBridge`, `BoardBridge`, `CameraBridge`,
+  `AudioBridge`, `MessageBridge`. `shell/bridges/`: `ShellBridge` (base), `SaveBridge`, `ZoneTravelBridge`, `BookBridge`,
+  `RoomOutcomeBridge`, `DespawnBridge`. The plan's 13.2 tree lists a `save` handler under `presentation/bridges/`, but 13.1 forbids
+  presentation to name the `SaveService`, `EcsComponents` or `EcsWorld` (`test_dependency_edges` enforces it), so what writes the run,
+  rebuilds the world or flips a component is in the shell. The registration order (a pickup is saved before its sound plays and its view
+  goes) is written once in `GameRoot._bridges()`.
+- **`GameFlow`.** `request_respawn(reason)` raises `respawn_requested`, waits out a zone trip under way, and at the end of the frame
+  has `GameRoot.respawn()` rebuild the room: the zone from the checkpoint as a fresh instance, a fresh hero view (a fallen hero's view
+  rests in its defeat clip), the Book closed, no carry; then `respawned`. Both `reload_current_scene()` calls are gone
+  (`test_no_scene_reload`). `Events.RESPAWN_REQUESTED` stays reserved: here the bridge decides the hero fell.
+- **Behaviour that follows from not reloading (intended).** The music is not restarted by a death or R; the F3 switch survives them; R
+  pressed during a zone trip waits for the trip (the checkpoint is the trip's destination, where the reload landed); the board overlay
+  forgets the last world's marks when it is bound to a new room (entity numbers start over; it also clears a phantom telegraph a trip
+  could leave); a death beat whose room the restart key already rebuilt does nothing. `DespawnBridge`'s 0.6 s timer holds instance ids,
+  not nodes: a lambda that captured a freed world or zone is an engine error, and stripping a `VIEW_REF` from a world built meanwhile
+  would freeze somebody else's puppet. Three checks of `test_bridge_death_respawn` pinned the reload itself (the old `Main` freed, "the
+  scene has not reloaded yet", the authored `CurrentZone` node) and say what replaced them; they are not baseline labels.
+- **New suites (12; 68 to 80).** `test_event_router`, `test_board_bridge`, `test_camera_bridge`, `test_audio_bridge`, `test_message_bridge`,
+  `test_hud_bridge` (the reactions had no test before), `test_bridge_despawn`, `test_bridge_room_outcome` (the win half no suite
+  drove: counts, the quiet world-mode clear, a count objective, a standalone room), `test_game_flow` (one rebuild per request, the wait
+  for a trip, the death beat after a restart, the old world's despawn timer, the Book and the board), `test_shell_keys` (F3),
+  `test_game_root_is_thin` (at most 200 lines, no event reaction, no save request, no reload), `test_no_scene_reload`; and
+  `test_request_save_callers` now names `shell/bridges/save_bridge.gd` as the only asker.
+- **Docs.** ARCHITECTURE.md (the tree, the runtime flow, the event table's "handled by", a bridge table, known deviations, the test
+  folders), CLAUDE.md (one rule: a reaction to an event is a bridge, `game_root` stays thin, nothing reloads the scene), AGENTS.md,
+  README.md, coding-standards.md, OWNER_GUIDE.md (where the sentences live), the sound recipe (`/new-sound`) and the plan's M3b entry.
+- **Verification.** `python3 tools/run_all_tests.py --strict`: 80 suites, 0 failed, 0 warnings, GREEN, baseline labels 235 of 235 (14
+  through `label_renames.txt`, unchanged); both `--self-test`s 0 failures; the import pass clean; `stamp_uids.gd -- --check` CLEAN;
+  `git diff --check` clean.
+- **Not done (step 3).** `ObjectiveSystem` (nothing writes `cleared_room_ids`), `CheckpointSystem` and the D-16/D-17 rules (hub and
+  boss-room checkpoints only, a death resets only the current uncleared room, cleared rooms stay cleared, floor weapons room-local),
+  the `PlayerSnapshot` in the zone swap (the carry is still a bare integer on `ZoneTravelBridge`), the Courage and Believe refills.
+  The shell still writes `PlayerTag.control_enabled`, `PlayerCombat.sword_unlocked`, the hero's Courage and `VIEW_REF`
+  (listed in ARCHITECTURE.md); `world.commands` has no handler for them yet.

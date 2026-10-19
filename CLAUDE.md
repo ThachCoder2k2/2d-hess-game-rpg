@@ -22,8 +22,8 @@ session. Read `AGENTS.md` for the full workflow, and `docs/ARCHITECTURE.md` +
   - New decision/behavior → a system in `ecs/systems/<phase>/` (with `const PHASE`
 	naming its stage) plus one line in `ecs/schedule/<phase>.gd`;
 	`test_schedule_complete` fails if a system file is unlisted. The tick order is data
-	there and nowhere else: `shell/game_root.gd` and `tools/world_dumper.gd` both call
-	`Schedule.populate`, so never add a system to either. ONLY `ViewSyncSystem` may
+	there and nowhere else: `shell/zone_stage.gd` (the in-game scene's world) and
+	`tools/world_dumper.gd` both call `Schedule.populate`, so never add a system to either. ONLY `ViewSyncSystem` may
 	touch nodes. Systems talk via components and the event/damage queues, never by
 	calling each other or presentation. A new event is a const and a row in
 	`ecs/events/events.gd` (payload keys documented; `test_events_declared`); damage and
@@ -50,6 +50,16 @@ session. Read `AGENTS.md` for the full workflow, and `docs/ARCHITECTURE.md` +
 	`HudSnapshotSystem`, exist since M3a; no script under `presentation/` names
 	`EcsComponents` or `EcsWorld`, and `tests/architecture/test_dependency_edges.gd`
 	fails if one does.)
+  - A reaction to an event → a bridge, one responsibility each, registered with the `EventRouter`
+	(`presentation/bridges/event_router.gd`). One that only draws, says or plays (HUD, board, camera,
+	sound, the status line) goes in `presentation/bridges/` and extends `EventBridge`; one that writes the
+	save, rebuilds the world or flips a component (the save, the zone trip, the Book, the end of a room, a
+	despawn) goes in `shell/bridges/` and extends `ShellBridge`. It registers its types in `register()`
+	with `router.on(Events.X, handler)` and the scene lists the order in `GameRoot._bridges()`.
+	`shell/game_root.gd` reacts to no event and holds no rule: at most 200 lines
+	(`test_game_root_is_thin`). Nothing reloads the scene (`test_no_scene_reload`): a death or the restart
+	key is `GameFlow.request_respawn()`, which rebuilds the room inside the scene. Only the `SaveBridge`
+	asks for a save (`test_request_save_callers`).
   - Controls: `shell/input/input_poller.gd` is the only code that calls the `Input`
 	singleton. It fills `world.input_snapshot` once per frame and a system reads that
 	(`test_input_only_in_poller`); test a control rule by injecting an `InputSnapshot`

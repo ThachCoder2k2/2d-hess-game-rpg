@@ -5,7 +5,7 @@ extends UnboundTest
 ## player_health_carry, and GameRoot.boot_zone (it was main._boot_zone) applies it to the freshly
 ## spawned player and then consumes
 ## it. This suite pins that contract, including its sharp edges, because the
-## planned game_root.gd split moves exactly this write/apply/consume ordering.
+## game_root.gd split (M3b step 2) moved exactly this write/apply/consume ordering.
 
 const Support := preload("res://tests/bridge/bridge_support.gd")
 const SUITE_NAME := "health_carry"

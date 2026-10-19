@@ -1,7 +1,7 @@
 extends UnboundTest
 
 ## The world flags (WorldFlags, docs/game-base-plan.md 14.2) outlive the room that set them (M3b step 1).
-## Every room is a new EcsWorld with fresh, empty flags, so the shell carries them: game_root.gd loads the
+## Every room is a new EcsWorld with fresh, empty flags, so the shell carries them: the SaveBridge loads the
 ## run's saved flags into the world it boots, copies the live world's flags into the run just before the
 ## SaveService writes (the service's `saving` signal), and a relaunch reads them from the file. This suite
 ## drives it through the real bridge: a flag set through the commands channel in T1 is still set in T2, is

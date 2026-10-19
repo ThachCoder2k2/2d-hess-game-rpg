@@ -31,8 +31,10 @@ Authority order when documents disagree (from `docs/game-base-plan.md`):
 - Build **editor-first**: reusable behavior in scripts; game content in scenes, Resources
   (`.tres`), AnimationPlayers/AnimationTrees, markers and Inspector fields. A new enemy,
   weapon, attack or room is a data edit, never new hardcoded content in a script.
-- `shell/game_root.gd` (the old `main.gd`) is a thin bridge between the ECS and presentation.
-  Do not add room content or gameplay decisions to it.
+- `shell/game_root.gd` (the old `main.gd`) is the in-game scene: it builds the world and ticks it, and the
+  `EventRouter` hands the world's events to one bridge per responsibility (`presentation/bridges/`,
+  `shell/bridges/`). Do not add room content, gameplay decisions or an event reaction to it (a lint keeps it
+  under 200 lines); a new reaction is a new bridge, or a line in the bridge that owns that responsibility.
 - Preserve the current playable slice after every change.
 
 ### The owner's directions of 2026-10-12 (quoted from `docs/game-base-plan.md` section 0)
@@ -79,10 +81,11 @@ layer may name which (`tests/architecture/test_dependency_edges.gd` enforces it)
   `markers/`, `room_encounter`, and the baker (`ecs_boot.gd` with its `EcsBootOptions`,
   `ecs_actor_factory.gd`). No logic.
 - `presentation/` — how the world is shown: `views/` (`ActorView`, pickup views, and
-  `views/actors/`: `actor_view_base.tscn`, the one actor view, plus the thin scenes inheriting it), `ui/hud/`, `ui/codex/`, `board/`, `camera/`, `audio/`. Reads events;
-  never decides.
-- `shell/` — the game around the game: `game_root.tscn/.gd` (the one game scene and its bridge),
-  `content/` (`ContentDb`, the content registry) and `save/` (`SaveService`, the save).
+  `views/actors/`: `actor_view_base.tscn`, the one actor view, plus the thin scenes inheriting it), `ui/hud/`, `ui/codex/`, `board/`, `camera/`, `audio/`, and
+  `bridges/` (the `EventRouter` and the bridges that only draw, say or play). Reads events; never decides.
+- `shell/` — the game around the game: `game_root.tscn/.gd` (the in-game scene), `game_flow.gd` (a death or R
+  starts the room again, no scene reload), `bridges/` (the bridges that write the save, rebuild the world or flip a
+  component), `content/` (`ContentDb`, the content registry) and `save/` (`SaveService`, the save).
 - `assets/` shared raw art and audio (`tiles/`, `ui/`, `sfx/`, `music/`, `map_pieces/`; the
   gitignored `_generated/` is generator output only) · `tools/` build scripts and generators ·
   `tests/` headless tests · `docs/` documentation.
@@ -107,7 +110,7 @@ generated chess family drawn to it, `tools/render_actor_preview.gd`, `test_piece
 every shared field and seam once, with no gameplay change (the tick order as data in `ecs/schedule/`, the
 declared events and the commands channel, the input, HUD and player snapshots, each room's own origin and the
 camera framing it, the grid's cell kinds, leaps, rays and cached pathing, and a per-room tick budget test). Next
-is **M3b**, in three steps: step 1 (the `SaveService` that replaced `WorldState`, the v3 save, world flags) is built; the split of `game_root.gd` and the checkpoint and death rules (D-16, D-17) are next. The owner can browse `content/`, run `tools/list_placeholders.gd` for the art
+is **M3b**, in three steps: step 1 (the `SaveService` that replaced `WorldState`, the v3 save, world flags) and step 2 (`game_root.gd` split into the `EventRouter`, one bridge per responsibility and `GameFlow`, no scene reload) are built; the checkpoint and death rules (D-16, D-17), `ObjectiveSystem` and `CheckpointSystem` are step 3. The owner can browse `content/`, run `tools/list_placeholders.gd` for the art
 and audio TODO, open `assets/_generated/previews/pieces_in_cells.png`, and read `docs/OWNER_GUIDE.md`
 (section 6 is the in-cell rule, in Vietnamese).
 Current status of every area, and what is waiting on the owner, lives in
@@ -479,7 +482,7 @@ registry and the generated art; see `tools/README.md`).
 ## Next Recommended Work
 
 Follow `docs/where-we-are.md` section 5 for the order of work and `docs/game-base-plan.md`
-section 15 for the milestone you are on. M1a, M1b, M2 and M3a are done; the next milestone is M3b (the
-split of `game_root.gd`, the save service). Three dependency edges and six room references are still
+section 15 for the milestone you are on. M1a, M1b, M2 and M3a are done; M3b is under way (steps 1 and 2 are built; step 3 is
+the checkpoint and death rules, `ObjectiveSystem` and `CheckpointSystem`). Three dependency edges and six room references are still
 undecided (listed in `tests/architecture/test_dependency_edges.gd` and `test_content_references.gd`);
 the owner decides them before `tests/architecture/allowed_edges.txt` is frozen.

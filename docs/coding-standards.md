@@ -108,8 +108,8 @@ These are the rules `CLAUDE.md` makes binding, with the reasoning.
   with `const PHASE := &"<stage>"`, and is listed with one line in the stage's file in
   `ecs/schedule/` (`command`, `input`, `decide`, `cell_effects`, `move`, `act`, `resolve`,
   `react`, `progress`, `view`). It runs once per frame in the order the schedule gives:
-  `shell/game_root.gd` and `tools/world_dumper.gd` both call `Schedule.populate(world)` and keep
-  no list of their own. A stage is named for when it runs, a folder for what its systems are about,
+  `shell/zone_stage.gd` (the in-game scene's world) and `tools/world_dumper.gd` both call
+  `Schedule.populate(world)` and keep no list of their own. A stage is named for when it runs, a folder for what its systems are about,
   so they differ where the plan's order visits one folder several times. `test_schedule_order` holds
   the whole planned order and `test_schedule_complete` fails on a system file that is not listed once.
   Order is meaningful; do not reorder without reading the dependencies in `docs/ARCHITECTURE.md`.
@@ -134,8 +134,9 @@ These are the rules `CLAUDE.md` makes binding, with the reasoning.
 ### Events go out, data comes through components
 
 - `world.emit_event({"type": Events.NAME, ...})` is the only channel from the simulation to
-  presentation. Presentation (the `shell/game_root.gd` bridge, HUD, board, camera, sound) reads
-  `drain_events()` once per frame. Every event is declared once in `ecs/events/events.gd`: a const,
+  presentation. The in-game scene (`shell/game_root.gd`) reads
+  `drain_events()` once per frame and its `EventRouter` hands each event to the bridges (HUD, board, camera,
+  sound, status line in `presentation/bridges/`; save, zone trip, Book, room outcome, despawn in `shell/bridges/`). Every event is declared once in `ecs/events/events.gd`: a const,
   and a row with its status, what happened and every payload key; `emit_event` asserts in debug
   builds that an event matches its row, and `test_events_declared` reads the code for every emitted
   name. A new event is a const and a row inside your own banner there.

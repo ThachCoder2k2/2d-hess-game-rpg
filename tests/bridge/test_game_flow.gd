@@ -117,6 +117,34 @@ func _run() -> void:
 	_expect(main.get_node_or_null("MusicPlayer") != null and tree_current_scene_is(main), "the music player and the scene itself were never replaced (no reload)")
 	_expect(Support.run_of(save_service).checkpoint_zone_id == T3, "and the run, which the rebuilds read, names the zone the hero was last sent to")
 
+	# --- With the engine driving the frames (the real loop, not pumped by hand) ---
+	# Everything above ticks the scene by hand. Here the engine calls _process, so a death's request is
+	# served between two real frames, and R goes through the real input path.
+	Support.remove_enemy_ai(main)
+	respawned_reasons.clear()
+	main.set_process(true)
+	await process_frame
+	var live_world := Support.ecs_of(main)
+	Events.emit_damage(live_world, Support.player_id_of(main), 99, Vector2i.LEFT, 0)
+	started_msec = Time.get_ticks_msec()
+	while respawned_reasons.is_empty() and Time.get_ticks_msec() - started_msec < Support.REAL_TIME_WAIT_CAP_MSEC:
+		await process_frame
+	_expect(respawned_reasons == [GameFlow.REASON_DEFEATED], "with the engine ticking the world, a fall is answered by a rebuild after the defeat beat")
+	_expect(Support.ecs_of(main) != live_world and Support.player_tag(main).control_enabled and not Support.room_ending(main), "and the new room is live with the hero in control")
+	main.set_process(false)
+	Support.remove_enemy_ai(main)
+	main.set_process(true)
+	respawned_reasons.clear()
+	await process_frame
+	Input.action_press(&"restart_room")
+	await process_frame
+	Input.action_release(&"restart_room")
+	started_msec = Time.get_ticks_msec()
+	while respawned_reasons.is_empty() and Time.get_ticks_msec() - started_msec < Support.REAL_TIME_WAIT_CAP_MSEC:
+		await process_frame
+	main.set_process(false)
+	_expect(respawned_reasons == [GameFlow.REASON_RESTART_KEY], "the restart key, pressed through the real input path, is answered by one rebuild")
+
 	Support.end_suite(self, save_service)
 
 
