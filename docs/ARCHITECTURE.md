@@ -59,7 +59,7 @@ The top-level folders are layers. Each has one job, and the table after the tree
 layer may name which.
 
 ```text
-project.godot            main scene shell/game_root.tscn; autoloads SfxManager, WorldState
+project.godot            main scene shell/game_root.tscn; autoloads SfxManager, SaveService
 default_bus_layout.tres  audio buses (Master <- SFX / Music / UI / Voice)
 
 content/                 THE OWNER'S FOLDER: data, art, audio, words. Zero .gd files (test-enforced).
@@ -111,10 +111,11 @@ presentation/            HOW THE WORLD IS SHOWN: reads events, never decides
   audio/                 SfxManager (autoload scene)
 
 shell/                   THE GAME AROUND THE GAME
-  game_root.gd/.tscn     the one game scene and its bridge (612 lines; split in M3b)
+  game_root.gd/.tscn     the one game scene and its bridge (637 lines; split in M3b)
   content/               ContentDb (the content registry, a static class) and ContentKind
   input/input_poller.gd  InputPoller: the one reader of the Input singleton; fills world.input_snapshot once per frame
-  save/world_state.gd    WorldState autoload: zone, entry, taken pickups, opened gates, read pages
+  save/                  SaveService (the autoload: the run in memory, the slots on disk, the profile) and its
+                         helpers SaveData, SaveFile, SaveMigration, SaveLoadResult (see Persistence)
 
 assets/                  shared raw art and audio not owned by one content item
   tiles/<kit>/atlas.svg  tile atlases   ui/actor_view/  the overlay pictures every actor view shares
@@ -160,23 +161,25 @@ and the edges are gone.
 
 ```text
 shell/game_root.tscn  ->  Main (shell/game_root.gd)
-  _ready()      reads WorldState (which zone, which entry), swaps the zone node if the
-                run was saved elsewhere, then calls _boot_zone(entry_id)
+  _ready()      SaveService.ensure_session() (Continue, when no run has begun), reads the run's
+                checkpoint (which zone, which entry), swaps the zone node if the run was saved
+                elsewhere, then calls _boot_zone(entry_id)
   _boot_zone()  1. _make_world(): new EcsWorld + Schedule.populate (the systems, order below)
                    and EcsBoot.shape_grid(): the room's bounds and its centred grid origin
                 2. EcsBoot.boot(world, EcsBootOptions) -> the "cast"
-                3. reapply persistence (taken pickups, opened gates, unlocks, health carry)
+                3. reapply the run (world flags, taken pickups, opened gates, unlocks, health carry)
                 4. HudSnapshotSystem.build(world), board.setup(grid, hud_snapshot),
                    camera_rig.setup(grid), HUD setup
   _process()    input_poller.poll(delta, world.input_snapshot)  ->  ecs.tick(delta)
                 ->  _handle_events(ecs.drain_events())  ->  HUD refresh from world.hud_snapshot
 ```
 
-Death and `R` reload the scene; `WorldState` (an autoload) remembers the zone and entry
-so the reload boots in the right place. Zone travel (`zone_exit` event) fades out,
-swaps the zone scene node, **rebuilds the whole `EcsWorld`**, and fades in. No entity
-survives. What carries over is the player view node, `WorldState` (including the carried
-health), and the HUD, board and camera nodes, which are re-bound by `setup()`.
+Death and `R` reload the scene; the `SaveService` (an autoload) holds the run in memory and
+remembers the zone and entry, so the reload boots in the right place. Zone travel (`zone_exit`
+event) fades out, swaps the zone scene node, **rebuilds the whole `EcsWorld`**, and fades in. No
+entity survives. What carries over is the player view node, the run in the `SaveService` (its
+flags are loaded into every new world), the carried health (`game_root.player_health_carry`),
+and the HUD, board and camera nodes, which are re-bound by `setup()`.
 
 ### System order (the schedule, `ecs/schedule/`)
 
@@ -515,10 +518,10 @@ presentation.
 | `damaged` | `entity`, `amount`, `remaining`, `direction`, `source`, `tags` | bridge: shake, HUD courage, damage flash |
 | `defeated` | `entity`, `source`, `tags` | bridge: despawn timer, room completion, player death/reload |
 | `healed` | `entity`, `amount`, `remaining`, `source` | — |
-| `pickup_taken` | `item`, `cell` | bridge: `WorldState`, pickup sound, free the pickup view |
+| `pickup_taken` | `item`, `cell` | bridge: the save (`pickup_taken`), pickup sound, free the pickup view |
 | `weapon_changed` | `entity`, `weapon` | bridge: status text |
-| `player_unlock` | `entity`, `id`, `message` | bridge: `WorldState`, unlock the sword |
-| `gate_opened` | `entity`, `gate`, `cell` | bridge: `WorldState`, hide the gate visual |
+| `player_unlock` | `entity`, `id`, `message` | bridge: the save (`unlock_gained`), unlock the sword |
+| `gate_opened` | `entity`, `gate`, `cell` | bridge: the save (`shortcut_opened`), hide the gate visual |
 | `zone_exit` | `entity`, `zone`, `entry` | bridge: zone travel |
 | `zone_exit_locked` | `entity`, `zone`, `entry`, `cell` | bridge: locked-door message |
 | `flag_set` | `flag`, `value` | — |
@@ -576,11 +579,36 @@ Presentation consumes `drain_events()` and never decides gameplay.
 
 ## Persistence
 
-`WorldState` (autoload, `shell/save/world_state.gd`) is pure data saved to
-`user://world_state.cfg` (`ConfigFile`, `SAVE_VERSION = 2`): current zone and entry,
-taken pickups, opened gates, read Book pages, player unlocks. Health is carried across a
-zone travel but is never saved. The bridge writes it from events and feeds it back into
-`EcsBoot` on every boot.
+`SaveService` (autoload, `shell/save/save_service.gd`; it replaced `WorldState` in M3b step 1) is the one
+owner of everything written about a playthrough (`docs/game-base-plan.md` 9.3, D-16).
+
+- **The run in memory**: `SaveService.state`, a `SaveData`. The bridge writes the facts it learns from events
+  into it (a taken pickup, an opened gate, an unlock, a read Book page, the checkpoint) and reads it back at
+  every room boot. It survives a scene reload because the node is an autoload. The ECS world's flags are
+  loaded into every booted world and copied back into the run through the service's `saving` signal.
+- **The file**: one slot behind a slot id (`SINGLE_SLOT`), a `ConfigFile` at `<root>/saves/slot_<n>.cfg`
+  (root `user://`; `configure(root)` for tests). Sections: `[meta]` (version 3, play time, room, timestamp),
+  `[checkpoint]` (zone, entry), `[world]` (cleared rooms, defeated bosses, taken pickups, opened gates, read
+  Book pages, rescues, Rule Pages, shards), `[player]` (the `PlayerSnapshot` without current Courage: health
+  never saves) and `[flags]` (the `WorldFlags`). Written by write-temp, verify, keep the old file as `.bak`,
+  rename (`SaveFile`); the file ends with an integrity footer (a ConfigFile comment) so a damaged file is
+  recognised before the parser prints an engine error on it.
+- **Loading** (`read_slot`) never wipes and never throws: the file, else its `.bak`, else (first slot) the v2
+  `world_state.cfg`, else a clean new game, each step logged and a notice key set for the title (M4). An older
+  format is migrated by `SaveMigration` (v2 to v3 today; the v2 file is kept as `world_state.cfg.migrated`
+  after the first v3 save); a format too old to migrate is reported obsolete and left on disk; a save from a
+  newer game is never read as damaged and never overwritten (`new_game` renames it to `.newer_game`).
+  Nothing loads by itself: `ensure_session()` continues the active slot when the in-game scene starts and no
+  run has begun, until `GameFlow` (M4) loads on Continue.
+- **Who may save**: the shell calls `request_save(reason)` with one of `AUTOSAVE_REASONS`, the success events
+  of R17 (room cleared, shortcut opened, persistent pickup, boss defeated, rescue, checkpoint reached, a beat
+  flagged `save_after`, an unlock, a Book page). A death, a hit or a quit is not one: a death writes nothing.
+  `tests/save/test_request_save_callers.gd` lists the callers; `tests/architecture/test_save_written_only_by_save_service.gd`
+  holds that nothing else writes a save file.
+- **The profile** (`<root>/profile.cfg`, same writer): what outlives a slot, today the `completed` mark, which
+  a New Game keeps.
+
+Health is carried across a zone travel (`game_root.player_health_carry`) but is never saved.
 
 ## Known deviations from the rules (honest list)
 
@@ -599,8 +627,11 @@ ad-hoc edits:
   `Input`; M4 adds the actions under the same names and deletes the table (`R` is already the
   `restart_room` action).
 - `ViewSyncSystem` blinks the invulnerability tint from the wall clock.
-- `game_root.gd` (612 lines) still holds travel, death, persistence and HUD wiring together
+- `game_root.gd` (637 lines) still holds travel, death, persistence and HUD wiring together
   (the split is M3b).
+- The checkpoint is moved on every zone travel, not only at a hub or a boss-room entry (D-16), and the save is
+  requested with `checkpoint_reached` at each of those travels: the interim stand-in for the checkpoint rules
+  (M3b step 3). The `cleared_room_ids` and `defeated_boss_ids` sets are saved and loaded but nothing writes them yet.
 - The 72x40 kingdom (`tests/fixtures/the_kingdom.tscn`) is still a zone in the shipped world
   graph (`content/world/world.tres`, the one documented exception in
   `test_content_references.gd`, so the H1 exit keeps resolving until M5), and `first_encounter`
@@ -631,14 +662,15 @@ kind:
 
 | Folder | What it holds |
 |---|---|
-| `tests/architecture/` | the guards: `test_dependency_edges`, `test_content_references`, `test_content_has_no_gd`, `test_sidecars_tracked`, `test_no_path_only_ext_resource`, `test_no_old_res_paths`, `test_fixtures_present`, `test_tools_keep_uids`, `test_all_scripts_load`, `test_dump_baselines`, `test_schedule_complete`, `test_events_declared`, `test_input_only_in_poller` |
+| `tests/architecture/` | the guards: `test_dependency_edges`, `test_content_references`, `test_content_has_no_gd`, `test_sidecars_tracked`, `test_no_path_only_ext_resource`, `test_no_old_res_paths`, `test_fixtures_present`, `test_tools_keep_uids`, `test_all_scripts_load`, `test_dump_baselines`, `test_world_dumper_entry_cell`, `test_schedule_complete`, `test_events_declared`, `test_input_only_in_poller`, `test_save_written_only_by_save_service`, `test_suites_isolate_the_save` |
 | `tests/ecs/` | the runtime seams of M3a: `test_schedule_order`, `test_world_fields`, `test_frozen_world`, `test_commands_channel`, `test_view_commands`, `test_emit_damage`, `test_heal_queue`, `test_boot_options`, `test_input_snapshot`, `test_hud_snapshot`, `test_player_snapshot_roundtrip`, `test_room_origin`, `test_grid_cell_kinds`, `test_leap_occupancy`, `test_ray_stops_at_blockers`, `test_path_cache`, `test_attack_setup_search` |
-| `tests/bridge/` | `game_root.gd` characterization: travel, death and respawn, persistence, health carry, the Book |
+| `tests/bridge/` | `game_root.gd` characterization: travel, death and respawn, persistence, health carry, the Book, the world flags |
+| `tests/save/` | the save: `test_save_roundtrip`, `test_save_migration_v2` (with the real v2 file in `tests/fixtures/saves/`), `test_corrupt_save_falls_back`, `test_request_save_callers` (R17), `test_profile_survives_new_game` |
 | `tests/presentation/` | the board overlay drawing from the snapshot, and the camera framing the room (`test_board_draws_from_snapshot`, `test_camera_frames`) |
 | `tests/perf/` | `test_room_tick_budget`: an 18x9 room with eight enemies ticks in 2 ms or less on average, and builds one pathfinder |
 | `tests/audio/`, `tests/content/` | the bus layout; the requirements ledger and the placeholder manifest |
 | `tests/support/` | `UnboundTest`, `TestPaths` (the only place a new test names a `res://` path), `reference_pathing.gd` (the pathing and the attack search as they were before M3a, the yardstick the new code is compared with), the harness's own test |
-| `tests/fixtures/`, `tests/baselines/` | the kingdom, `first_encounter` and the harness fixtures; the six deterministic room dumps |
+| `tests/fixtures/`, `tests/baselines/` | the kingdom, `first_encounter`, the harness fixtures and the v2 save; the six deterministic room dumps |
 
 The canonical runner is `python3 tools/run_all_tests.py --strict`: it runs the editor import
 pass first, then every suite as its own process with a 60 s timeout (a script error in a

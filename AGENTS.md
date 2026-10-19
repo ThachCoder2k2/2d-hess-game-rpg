@@ -82,7 +82,7 @@ layer may name which (`tests/architecture/test_dependency_edges.gd` enforces it)
   `views/actors/`: `actor_view_base.tscn`, the one actor view, plus the thin scenes inheriting it), `ui/hud/`, `ui/codex/`, `board/`, `camera/`, `audio/`. Reads events;
   never decides.
 - `shell/` — the game around the game: `game_root.tscn/.gd` (the one game scene and its bridge),
-  `content/` (`ContentDb`, the content registry) and `save/world_state.gd`.
+  `content/` (`ContentDb`, the content registry) and `save/` (`SaveService`, the save).
 - `assets/` shared raw art and audio (`tiles/`, `ui/`, `sfx/`, `music/`, `map_pieces/`; the
   gitignored `_generated/` is generator output only) · `tools/` build scripts and generators ·
   `tests/` headless tests · `docs/` documentation.
@@ -107,7 +107,7 @@ generated chess family drawn to it, `tools/render_actor_preview.gd`, `test_piece
 every shared field and seam once, with no gameplay change (the tick order as data in `ecs/schedule/`, the
 declared events and the commands channel, the input, HUD and player snapshots, each room's own origin and the
 camera framing it, the grid's cell kinds, leaps, rays and cached pathing, and a per-room tick budget test). Next
-is **M3b** (the split of `game_root.gd` and the save service). The owner can browse `content/`, run `tools/list_placeholders.gd` for the art
+is **M3b**, in three steps: step 1 (the `SaveService` that replaced `WorldState`, the v3 save, world flags) is built; the split of `game_root.gd` and the checkpoint and death rules (D-16, D-17) are next. The owner can browse `content/`, run `tools/list_placeholders.gd` for the art
 and audio TODO, open `assets/_generated/previews/pieces_in_cells.png`, and read `docs/OWNER_GUIDE.md`
 (section 6 is the in-cell rule, in Vietnamese).
 Current status of every area, and what is waiting on the owner, lives in
@@ -413,8 +413,9 @@ Gate 12: Release polish
   (`piece_name`, `id`), never from class checks.
 - Damage is a request on `world.damage_events`, applied only by `HealthSystem`. Systems talk
   through components and events, never by calling each other.
-- Persistent facts (taken pickups, opened gates, unlocks, current zone) live in the
-  `WorldState` autoload and are fed back into `EcsBoot` at boot.
+- Persistent facts (taken pickups, opened gates, unlocks, the checkpoint, flags) live in the
+  `SaveService` autoload (`SaveService.state`) and are fed back into `EcsBoot` at boot. Only
+  `SaveService` writes a save file, and only through `request_save(reason)` on a success event (R17).
 
 ## Visual And Feedback Rules
 

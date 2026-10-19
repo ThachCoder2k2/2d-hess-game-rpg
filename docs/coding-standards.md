@@ -357,7 +357,7 @@ Deliberately not used (do not add them without a real need and the owner's say):
 - **No ECS addon or framework.** The small in-repo `EcsWorld` is the runtime; the plan keeps
   it (`docs/game-base-plan.md` D-28).
 - **No global event-bus autoload.** The event queue is on the world; the bridge drains it.
-  Only `SfxManager` and `WorldState` are autoloads.
+  Only `SfxManager` and `SaveService` are autoloads.
 - **No node-based gameplay components.** Gameplay behavior never lives on a node. Nodes are
   authoring data (`EntityComponent`) or presentation.
 

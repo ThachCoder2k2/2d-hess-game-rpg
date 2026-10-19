@@ -244,7 +244,7 @@ The dump mirrors `shell/game_root.gd` (`_make_world` + `_boot_zone`): the same s
 `start` entry marker, then `EcsBoot.boot` with no taken pickups and no opened gates, then 120 manual ticks
 of 1/60 s with the player idle. An entity's components print in `COMPONENT_DUMP_ORDER` (a list in
 `world_dumper.gd`, not a sort: StringNames sort by memory address, so a sort moved lines whenever scripts
-loaded in another order); a component it does not list prints after them, by name. It skips `WorldState`, the HUD, the
+loaded in another order); a component it does not list prints after them, by name. It skips the `SaveService`, the HUD, the
 board overlay and audio on purpose: they depend on the save file or on real time. Output sections:
 `[grid]`, `[board]` (ASCII map), `[entities at boot]` (every component field), `[entities after 120 ticks]`,
 `[nodes]` (sorted paths with type, script, position) and `[textures]` (sorted sprite and tile-set paths). The grid

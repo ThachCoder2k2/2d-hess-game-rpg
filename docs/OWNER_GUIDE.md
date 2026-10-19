@@ -23,7 +23,7 @@
    hai. Game không còn phụ thuộc vào thư mục đó: các hình tạm game dùng là file được track trong
    `content/`.
 3. Game vào thẳng phòng T1 và đi theo tuyến Stage 1: T1 → T2 → T3 → T4 → B1 → H1 (greybox, chưa
-   chỉnh art). Muốn chơi lại từ đầu: xoá file save `world_state.cfg` trong thư mục user data của
+   chỉnh art). Muốn chơi lại từ đầu: xoá file save `saves/slot_0.cfg` (và `saves/slot_0.cfg.bak`) trong thư mục user data của
    game (trong Godot: menu **Project → Open User Data Folder**).
 4. Phím:
 
@@ -41,7 +41,7 @@
 
 *EN: Open `project.godot` in Godot 4.6 and press F5 (main scene `shell/game_root.tscn`), or run the
 binary with `--path .`. On a fresh clone run `tools/bootstrap_worktree.sh` first. Delete
-`world_state.cfg` in the user data folder to restart the run. No title, pause, settings or gamepad yet
+`saves/slot_0.cfg` (and `slot_0.cfg.bak`) in the user data folder to restart the run. No title, pause, settings or gamepad yet
 (milestone M4).*
 
 ## 2. Trạng thái nằm ở đâu (Where status lives)

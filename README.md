@@ -138,7 +138,7 @@ may name which). The top-level folders are layers:
 - `presentation/`: how the world is shown: `views/` (`ActorView`, pickups, the actor scenes), `ui/` (HUD,
   the Book), `board/`, `camera/`, `audio/`.
 - `shell/`: the game around the game: `game_root.tscn/.gd` (the one game scene and the bridge from the
-  ECS to presentation), `content/` (`ContentDb`, the content registry) and `save/world_state.gd`.
+  ECS to presentation), `content/` (`ContentDb`, the content registry) and `save/` (`SaveService`, the save).
 - `assets/`: shared raw art and audio (tile atlases, interface pictures, sound effects, music, the
   hand-drawn bedroom pieces). `tools/`: generators, the test runner and the migration scripts (never
   shipped). `tests/`: headless tests, fixtures and baselines.

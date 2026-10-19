@@ -1452,3 +1452,87 @@ changed: the six room dumps are byte-identical to their baselines and all 235 ba
   `PlayerCombat.sword_unlocked`, the health carry and `VIEW_REF`, and nothing pushes on `world.commands` or `view_commands` yet; the
   shell does not pass a `PlayerSnapshot` to `EcsBoot` yet. Multi-cell footprints are M8b's. No tile of the shipped TileSets says `gap`,
   `leapable_block`, `chalk` or `corruption`: the art comes with the milestones that use them.
+
+
+## M3b step 1 - save v3, world flags, the M3a leftovers - 2026-10-19
+
+Branch `base/m3b-1` (from `game-base`), the strict runner green after each commit. M3b is "L" and is built in three steps; this
+is the first: the save and the flags, plus three small things M3a left. `shell/game_root.gd` is NOT split yet (step 2) and the
+checkpoint and death rules are not built yet (step 3), so what the player feels is the same, except the two changes below.
+
+- **M3a leftovers, one commit each.** (1) `tools/world_dumper.gd` shaped the grid AFTER it found the entry cell, so the
+  `entry_cell:` header of any board that is not 16x9 was off by one (an 18x9 arena starts at x 32, not 64); it shapes first now, as
+  `game_root` does, and `resolve_room` also accepts a `user://` scene. No baseline moved (all six rooms are 16x9, which is why
+  nothing showed it); `test_world_dumper_entry_cell` builds an 18x9 room in code and fails against the old order. (2) The generic
+  `EcsGrid.marker_by_cell[kind][cell]` of plan 14.1 was the one hot-spot field M3a did not land: it is there now
+  (`add_marker`, `remove_marker`, `has_marker`, `marker_at`, `marker_cells`; a cell holds one marker per kind), unused until M5's
+  traversal gap and M6's triggers; `test_grid_markers`. (3) `docs/ARCHITECTURE.md`: `game_root.gd` is 612 lines, not 605, and the
+  multi-cell note now lists every single-cell assumption M8b has to change (`cell_by_entity`, `register_entity`/`begin_move`/
+  `begin_leap`, `unregister_entity`, `finish_move`, `get_reserved_cell`, `leap_by_entity`, `leap_landing_cell`, the pathfinder's
+  one-cell solid marks).
+- **The save (`shell/save/`).** `SaveService` (the autoload; it replaced `WorldState`, which is gone with its test double and every
+  caller migrated in the same commit), `SaveData` (the slot in memory and as a `ConfigFile`), `SaveFile` (the bytes), `SaveMigration`
+  (the version chain), `SaveLoadResult` (what a load found). One slot behind a slot id (`SINGLE_SLOT`, `slot_path(n)`);
+  `configure(root)` for tests; `<root>/saves/slot_0.cfg`. v3 sections: `[meta]` (version, play time, room, timestamp),
+  `[checkpoint]`, `[world]` (cleared rooms, defeated bosses, taken pickups, opened gates, read Book pages, rescues, Rule Pages,
+  shards), `[player]` (the `PlayerSnapshot` WITHOUT current Courage: health never saves, the pawn resumes at full Courage) and
+  `[flags]` (the `WorldFlags`, one key per flag, names with dots and spaces survive). Atomic write: temp file, read back, the old
+  file becomes `.bak`, rename; an existing damaged file becomes `.corrupt` instead so it cannot push a good `.bak` out. **Where it
+  differs from the plan text:** the file carries an integrity footer, a ConfigFile comment holding the sha256 of the text above.
+  Reason: `ConfigFile.load()` and `parse()` print an engine `ERROR` line on text they cannot parse and say nothing about why, and the
+  strict runner fails a suite on an engine ERROR, so "corrupt falls back" could not be tested (or logged) without recognising the
+  damage first. A footer-less slot file is damaged to the reader; the file stays a plain ConfigFile for any editor.
+- **The loader never wipes.** `read_slot(n)`: the file, else its `.bak`, else (first slot) the v2 `world_state.cfg`, else a clean
+  new game; each step is logged, `SaveLoadResult.notice_key` names the notice the title will show (M4 owns the words). A save from a
+  NEWER game is recognised even when it fails this build's footer, is never read as damaged and never overwritten (`write_slot`
+  returns `ERR_LOCKED`; `new_game` renames it to `.newer_game`). A format older than v2 (it booted into the retired kingdom; that is
+  why v2 existed) is reported obsolete and left on disk; the first save of the new run keeps it as the `.bak`.
+- **Migration v2 to v3.** `tests/fixtures/saves/world_state_v2.cfg` is a REAL v2 file, written by the old `WorldState.save_state()`
+  before it was deleted. Every fact moves: zone and entry become the checkpoint (and `meta.room`), `player_unlock_ids` become
+  `[player] unlocked_skill_ids`, taken pickups, gates and Book pages stay. The v2 file is read where `WorldState` left it
+  (`<root>/world_state.cfg`), loading has no side effect, and after the first v3 save it is renamed `world_state.cfg.migrated`, byte
+  for byte, so a New Game can never resurrect it. Smoke-tested through the real autoload and the real main scene in a throwaway
+  HOME: the v2 file became a v3 slot and the `.migrated` copy with no error line.
+- **R17 is enforced, not only stated.** The shell asks with `request_save(reason)`; the reasons are the success events of plan 5.2
+  (`room_cleared`, `shortcut_opened`, `pickup_taken`, `boss_defeated`, `rescue_completed`, `checkpoint_reached`, `beat_save_after`)
+  plus two persistent unlocks (`unlock_gained`, `rule_page_unlocked`). Anything else is refused with a warning and writes nothing, as
+  is a request before any run has begun (an empty run can never overwrite a real save). `test_request_save_callers` reads the callers
+  off the source: `game_root.gd` is the only one and each call passes a literal from the list. **`checkpoint_reached` is interim:**
+  until step 3 the shell reports every zone travel with it, because the checkpoint still moves on every travel, where
+  `last_entry_id` moved. Nothing yet stops a `pickup_taken` save while an enemy that picked a weapon up is mid-fight (the
+  `pickup_taken` event is raised by enemies too, as before); D-16 makes floor weapons room-local, which is step 3's to settle.
+- **Two behaviour changes, both D-16 / R17.** A death no longer writes the save (`test_bridge_death_respawn` pinned "death saves
+  WorldState before the reload"; it now pins that nothing is written and that the reload boots from the run in memory). And a save
+  of another version is no longer wiped silently (see the loader). Everything else the bridge suites pin is unchanged; they only
+  changed where they read the state. The health carry, which lived on `WorldState` and was never saved, is now a member of
+  `game_root` (`player_health_carry`); step 3 replaces it with the `PlayerSnapshot`.
+- **World flags are real.** The shell loads the run's flags into every booted world and copies the live world's flags into the run
+  through the service's `saving` signal just before it writes, so a flag set in one room (through `world.commands`) survives the
+  room swap, the file (`[flags]`, with its type) and a relaunch (`test_bridge_flags`). Play time is counted once a frame.
+- **The profile.** `<root>/profile.cfg`, the same writer: `is_completed()`, `mark_completed()`, `set_profile_value()`; a New Game
+  keeps it (`test_profile_survives_new_game`). Nothing calls `mark_completed` yet (the Ending, M13). Settings stay M4's.
+- **Tests that never touch the real save.** `tests/support/save_test_support.gd` makes a `SaveService` on `user://test_saves/<suite>_<pid>_<t>/`;
+  `tests/architecture/test_suites_isolate_the_save.gd` fails a suite that boots the game without isolating the service, or that names
+  `user://saves`, `user://profile.cfg` or `user://world_state.cfg`; `test_save_written_only_by_save_service` fails on any other caller
+  of `write_slot`/`save_state`, any mention of `SaveFile` or `WorldState` outside `shell/save/`, a save file's name spelled elsewhere,
+  or any file write inside the save folder outside `save_file.gd`.
+- **New suites.** `test_save_roundtrip` (59 checks), `test_save_migration_v2` (42), `test_corrupt_save_falls_back` (65: six kinds of
+  damage, a missing file, both files damaged, the next save keeps the good `.bak`, a newer game and a newer pawn section are never
+  overwritten, an obsolete format is kept), `test_request_save_callers` (42), `test_profile_survives_new_game` (11),
+  `test_bridge_flags` (12), `test_grid_markers` (13), `test_world_dumper_entry_cell` (4), and the two architecture guards (14 and 7).
+- **Labels.** Three baseline labels renamed in `tests/label_renames.txt` (the WorldState trio of `tests/run_tests.gd`: two follow the
+  autoload, the third changes its claim from "resets" to "not read and not wiped"). Bridge labels are not in the baseline; the ones that
+  changed say CHANGED and name the decision.
+- **Docs.** `docs/ARCHITECTURE.md` (a rewritten Persistence section, the tree, the runtime flow, the event table, the test folders, the
+  known deviations), `CLAUDE.md` (one rule: one owner for the save), `AGENTS.md`, `README.md`, `docs/coding-standards.md`,
+  `docs/OWNER_GUIDE.md` and `docs/design/room-authoring-guide.md` (the file to delete to restart is `saves/slot_0.cfg` now),
+  `docs/migration-notes.md`, `docs/game-base-plan.md` (what step 1 built and where it differs from 9.3), `task_plan.md` (row 83).
+- **Verification.** `python3 tools/run_all_tests.py --strict`: 68 suites, 0 failed, 0 warnings, GREEN, baseline labels 235 of 235 (14
+  through `label_renames.txt`); both `--self-test`s 0 failures; the import pass clean; `stamp_uids.gd -- --check` CLEAN; `git diff
+  --check` clean; every new `.gd` has its `.gd.uid`. The six room dumps equal their baselines.
+- **Not done (steps 2 and 3).** The `game_root` split and `EventRouter`/bridges; `ObjectiveSystem` (nothing writes
+  `cleared_room_ids` yet); `CheckpointSystem` and the death rules (D-16: hub and boss-room checkpoints, a death resets only the
+  current uncleared room, D-17 cleared rooms stay cleared); `GameFlow` and `respawn_requested` (both `reload_current_scene()` calls
+  are still there); the `PlayerSnapshot` in the zone swap and in the save (the file holds the rows, nothing captures a live hero into
+  it yet); room-local floor weapons still persist as taken pickups. M4 owns the load-on-Continue flow, the notices' words and the
+  autosave indicator (the `autosaved` signal is ready).

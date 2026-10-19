@@ -599,3 +599,20 @@ June note).
   `git clone` or other git call chained after a `cd` into another directory. What works: plain separate commands, `git clone -q -b <branch>
   . <dir>` run from the worktree, a wrapper script that exports `HOME` and `exec`s Godot, and `GODOT` / `UNBOUND_GODOT_HOME` /
   `BOOTSTRAP_HOME` for the project's own tools.
+
+- `ConfigFile.get_value(section, key)` with no default, or with `null` as the default, prints an engine ERROR line when the key is
+  missing; so do `erase_section_key` on a missing key and `load()`/`parse()` on text that does not parse (with no hint why). The strict
+  runner fails a suite on an engine ERROR, so the save code asks `has_section_key` first, passes real defaults, and recognises a damaged
+  file by its integrity footer BEFORE the parser sees it (`shell/save/save_file.gd`). A `;` comment line at the end keeps the file a
+  plain ConfigFile.
+- A `StringName` array sorts by memory address, not by letters (the dump tool already found this): to compare lists of ids in a test,
+  convert to `String` first.
+- An autoload cannot also be a `class_name` (the name is a global): `SaveService` has none, the shell types it with
+  `const SaveServiceScript := preload(...)` and `get_node_or_null("/root/SaveService") as SaveServiceScript`, and tests make their own
+  instance with `SaveSupport.new_service(root)`. In `_init`-time suites the autoload does not exist yet.
+- `DirAccess.rename_absolute` replaces an existing target on macOS and works for both `user://` and absolute paths, which is what makes
+  "write temp, rename over" the atomic step; `FileAccess.get_modified_time` is the best timestamp a v2 save has.
+- The worktree-isolated sandbox also refuses a heredoc-fed `python3` or `git commit -F -` chained with `git add` in one command when
+  it cannot tell what runs (and `time`, `for` loops around Godot); put repeated Godot commands in small wrapper scripts under /tmp,
+  write multi-line files with the Write tool, and keep each git command on its own line. In zsh a bare `=====` argument is an
+  expansion error, so do not echo it.

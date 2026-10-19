@@ -76,6 +76,14 @@ session. Read `AGENTS.md` for the full workflow, and `docs/ARCHITECTURE.md` +
   `authoring/` or `presentation/`: a scene names a resource by uid, the shell asks `ContentDb`. A new
   kind is one line in `ContentDb._ensure_kinds()`, a `validate()` on its class and a minimum in
   `tests/content/test_validate_all.gd`. The hero's tuning is `content/player/player.tres`.
+- **One owner for the save.** What the game remembers (the checkpoint, taken pickups, opened gates, unlocks,
+  flags) lives in `SaveService.state` (`shell/save/`, the autoload that replaced `WorldState`); only the
+  service writes a save file, and the shell asks it with `request_save(reason)` where `reason` is a literal
+  success event from `SaveService.AUTOSAVE_REASONS` (never a death, a hit or a quit, R17). A new
+  persistent fact is a field of `SaveData` (and a step in `SaveMigration` when it changes the format), not a
+  new file. A test that boots the game gives the service a throwaway folder first
+  (`tests/support/save_test_support.gd`). Enforced by `test_save_written_only_by_save_service`,
+  `test_request_save_callers` and `test_suites_isolate_the_save`.
 - **A piece is smaller than its cell** (owner, 2026-10-12). Never exactly cell-sized, never
   taller than the cell, heights as in a real chess set (pawn lowest, king tallest). The numbers are
   data: `content/feel/piece_sizes.tres` (a box and a base line per kind of piece, 2 px margin to

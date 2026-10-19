@@ -125,7 +125,7 @@ Trạng thái từng việc (77 ID) nằm ở phụ lục cuối trang.
 | **Cao** | `hero_pawn_unarmed.png` (Stage 1 đang dùng) **chưa từng có trong commit nào** và không có generator | mất đĩa là mất file |
 | Trung bình | Nền T1/T2 phụ thuộc vào output bị gitignore của một tool chưa commit (`tools/generate_stage1_room_art.gd`) | README không có lệnh build lại |
 | Trung bình | **Ba mô hình thế giới, hai tỉ lệ:** (a) kingdom 72×40 trên `main` — cửa ra của H1 vẫn dẫn về đây; (b) Stage 1: 16×9 ô, 32 px; (c) phòng ngủ pawn-scale 128×96 ô, 1 ô = 1.5 inch — **không scene nào dùng** | chưa doc nào nối ba mô hình với nhau |
-| Thấp | File save trong máy có thể làm game khởi động sang phòng khác thay vì T1 | muốn test từ đầu thì xoá `user://world_state.cfg` |
+| Thấp | File save trong máy có thể làm game khởi động sang phòng khác thay vì T1 | muốn test từ đầu thì xoá `user://saves/slot_0.cfg` (từ M3b; trước đó là `user://world_state.cfg`) |
 
 ---
 

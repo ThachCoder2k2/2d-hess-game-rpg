@@ -117,9 +117,9 @@ file to swap the art, and `tools/seed_placeholders.gd` records a generated stand
 
 ## 5. Running and reviewing a room
 
-1. Save the room scene and press F5. The game boots the zone remembered in `user://world_state.cfg`,
-   or T1 on a first run. Walk to your room through the exits, or restart from T1 by deleting that
-   file (editor menu Project > Open User Data Folder). Pressing R reloads the current zone.
+1. Save the room scene and press F5. The game boots the zone remembered in `user://saves/slot_0.cfg`
+   (its checkpoint), or T1 on a first run. Walk to your room through the exits, or restart from T1 by deleting that
+   file and `slot_0.cfg.bak` (editor menu Project > Open User Data Folder). Pressing R reloads the current zone.
 2. If the first ten seconds feel messy, move fewer things at once and retest.
 3. Run `/verify`. The room dump test (`tests/architecture/test_dump_baselines.gd`) compares every
    baseline room against `tests/baselines/dump_<room>.txt`. Changing a room on purpose turns it red
