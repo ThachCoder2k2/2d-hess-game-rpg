@@ -58,7 +58,7 @@ func _run() -> void:
 	_expect(relaunched_flags.to_dictionary() == last_flags and relaunched_flags.get_flag(&"child.trust") == 3, "after a relaunch the world has the saved flags")
 
 	# A room boot never loses the flags it did not touch: a bare re-boot starts from the run, not from nothing.
-	relaunched.call("_boot_zone", &"west_entry")
+	Support.reboot_zone(relaunched, &"west_entry")
 	_expect(Support.ecs_of(relaunched).flags.get_flag(&"beat.intro seen") == true, "a re-boot of the room keeps the run's flags")
 
 	Support.end_suite(self, save_service)

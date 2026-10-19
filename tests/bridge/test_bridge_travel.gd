@@ -44,18 +44,18 @@ func _run() -> void:
 	_expect(Support.teleport_player(main, t1_exit + Vector2i.LEFT), "setup: the hero stands next to the exit")
 	var intent: EcsComponents.MoveIntent = ecs_before.get_component(Support.player_id_of(main), EcsComponents.MOVE_INTENT)
 	intent.direction = Vector2i.RIGHT
-	var travel_started := Support.pump_until(main, func() -> bool: return bool(main.get("travel_in_progress")), 1.0)
+	var travel_started := Support.pump_until(main, func() -> bool: return Support.travel_in_progress(main), 1.0)
 	_expect(travel_started, "stepping onto the exit cell starts a travel through the bridge")
 
 	# --- Ordering at the moment travel starts: persist first, swap only after the fade ---
-	_expect(main.get("player_health_carry") == 2, "travel start records the hero's current health as the carry")
+	_expect(Support.health_carry(main) == 2, "travel start records the hero's current health as the carry")
 	_expect(Support.run_of(save_service).checkpoint_zone_id == T2 and Support.run_of(save_service).checkpoint_entry_id == &"west_entry", "travel start records the destination zone and entry in the run")
 	var saved_at_start := Support.read_save_file(save_service)
 	_expect(String(saved_at_start.get_value("checkpoint", "zone_id", "")) == String(T2) and String(saved_at_start.get_value("checkpoint", "entry_id", "")) == "west_entry", "travel start saves the destination to disk before the fade")
 	_expect(not Support.player_tag(main).control_enabled, "player control is off for the whole trip")
 	_expect(main.get("current_room") == room_before and main.get("ecs") == ecs_before, "the old zone and world are still live while the fade-out runs")
 	var travel_ignored_zone: StringName = &"t4_broken_rule_yard"
-	main._travel_to(travel_ignored_zone, &"west_entry")
+	Support.travel_to(main, travel_ignored_zone, &"west_entry")
 	_expect(Support.run_of(save_service).checkpoint_zone_id == T2, "a second travel request during a trip is ignored")
 
 	# Watch the fade layer frame by frame: the swap must happen behind a fully
@@ -64,12 +64,12 @@ func _run() -> void:
 	var highest_fade_alpha := 0.0
 	var fade_alpha_at_swap := -1.0
 	var wait_started_msec := Time.get_ticks_msec()
-	while bool(main.get("travel_in_progress")) and Time.get_ticks_msec() - wait_started_msec < Support.REAL_TIME_WAIT_CAP_MSEC:
+	while Support.travel_in_progress(main) and Time.get_ticks_msec() - wait_started_msec < Support.REAL_TIME_WAIT_CAP_MSEC:
 		await process_frame
 		highest_fade_alpha = maxf(highest_fade_alpha, fade_rect.modulate.a)
 		if fade_alpha_at_swap < 0.0 and main.get("current_room") != room_before:
 			fade_alpha_at_swap = fade_rect.modulate.a
-	_expect(not bool(main.get("travel_in_progress")), "the trip finishes (fade out, swap, boot, fade in)")
+	_expect(not Support.travel_in_progress(main), "the trip finishes (fade out, swap, boot, fade in)")
 	_expect(highest_fade_alpha >= 0.99, "the screen fades fully to black during the trip")
 	_expect(fade_alpha_at_swap >= 0.95, "the zone swap happens behind the black screen, not before the fade-out completes")
 
@@ -102,11 +102,11 @@ func _run() -> void:
 
 	# --- The health carry: applied by the boot, then consumed ---
 	_expect(Support.player_health(main).current == 2, "the carried health (2) is applied to the new hero")
-	_expect(main.get("player_health_carry") == -1, "the health carry is consumed by the boot")
+	_expect(Support.health_carry(main) == -1, "the health carry is consumed by the boot")
 	_expect(Support.hud_courage_pips(main) == 2, "the HUD courage shows the carried health")
-	_expect(Support.player_tag(main).control_enabled and not bool(main.get("travel_in_progress")), "control returns and the trip flag clears")
+	_expect(Support.player_tag(main).control_enabled and not Support.travel_in_progress(main), "control returns and the trip flag clears")
 	_expect(is_zero_approx(fade_rect.modulate.a), "the fade layer is fully transparent again")
-	_expect(not bool(main.get("room_ending")) and int(main.get("total_enemies")) == 0, "the new zone starts with a clean encounter state")
+	_expect(not Support.room_ending(main) and Support.total_enemies(main) == 0, "the new zone starts with a clean encounter state")
 
 	# --- Backtracking: the way back lands on the matching entry marker ---
 	# FINDING (content, not bridge): T2's Exit_To_T1 marker sits in the west wall
@@ -116,37 +116,37 @@ func _run() -> void:
 	_expect(ecs_after.grid.exit_by_cell.has(t2_exit_to_t1), "T2's Exit_To_T1 is baked as a door cell")
 	if not ecs_after.grid.is_walkable(t2_exit_to_t1):
 		print("NOTE: T2's Exit_To_T1 at %s is a solid wall cell, so the way back is not walkable yet (content issue, not pinned)" % t2_exit_to_t1)
-	await main._travel_to(T1, &"from_t2")
+	await Support.travel_to(main, T1, &"from_t2")
 	var room_back: Node = main.get("current_room")
 	_expect(room_back.get("zone_id") == T1 and main.get("current_zone_id") == T1, "backtracking returns to T1")
 	_expect(Support.player_cell(main) == Support.entry_cell(main, room_back, &"from_t2"), "backtracking lands on T1's from_t2 entry")
-	_expect(Support.player_health(main).current == 2 and main.get("player_health_carry") == -1, "health survives the round trip and the carry is consumed again")
+	_expect(Support.player_health(main).current == 2 and Support.health_carry(main) == -1, "health survives the round trip and the carry is consumed again")
 	_expect(Support.run_of(save_service).checkpoint_zone_id == T1 and Support.run_of(save_service).checkpoint_entry_id == &"from_t2", "the run tracks the return trip")
 
 	# --- Guards: requests the bridge must ignore ---
 	var zone_before_guard: StringName = Support.run_of(save_service).checkpoint_zone_id
-	var carry_before_guard: int = main.get("player_health_carry")
-	await main._travel_to(&"no_such_zone", &"start")
-	_expect(Support.run_of(save_service).checkpoint_zone_id == zone_before_guard and main.get("player_health_carry") == carry_before_guard, "a zone id missing from the world graph is ignored without touching the run")
-	_expect(Support.player_tag(main).control_enabled and not bool(main.get("travel_in_progress")), "an ignored request leaves control on and the trip flag clear")
-	main.set("room_ending", true)
-	await main._travel_to(T2, &"west_entry")
+	var carry_before_guard: int = Support.health_carry(main)
+	await Support.travel_to(main, &"no_such_zone", &"start")
+	_expect(Support.run_of(save_service).checkpoint_zone_id == zone_before_guard and Support.health_carry(main) == carry_before_guard, "a zone id missing from the world graph is ignored without touching the run")
+	_expect(Support.player_tag(main).control_enabled and not Support.travel_in_progress(main), "an ignored request leaves control on and the trip flag clear")
+	Support.set_room_ending(main, true)
+	await Support.travel_to(main, T2, &"west_entry")
 	_expect(Support.run_of(save_service).checkpoint_zone_id == zone_before_guard and main.get("current_zone_id") == T1, "no travel starts while the room is ending (death or result screen)")
-	main.set("room_ending", false)
+	Support.set_room_ending(main, false)
 	var graph_before: Resource = main.get("world_graph")
 	main.set("world_graph", null)
-	await main._travel_to(T2, &"west_entry")
+	await Support.travel_to(main, T2, &"west_entry")
 	_expect(Support.run_of(save_service).checkpoint_zone_id == zone_before_guard and main.get("current_zone_id") == T1, "without a world graph (standalone room) no travel starts")
 	main.set("world_graph", graph_before)
 
 	# --- A locked door: T3's exit needs the room cleared, so the bridge only talks ---
-	await main._travel_to(T3, &"west_entry")
+	await Support.travel_to(main, T3, &"west_entry")
 	var room_t3: Node = main.get("current_room")
-	_expect(room_t3.get("zone_id") == T3 and int(main.get("total_enemies")) == 1, "setup: T3 holds its single living pawn")
+	_expect(room_t3.get("zone_id") == T3 and Support.total_enemies(main) == 1, "setup: T3 holds its single living pawn")
 	var t3_locked_exit := Support.exit_cell(main, room_t3, &"t4_broken_rule_yard")
 	Support.teleport_player(main, t3_locked_exit + Vector2i.LEFT)
 	Support.step_player(main, Vector2i.RIGHT)
-	_expect(not bool(main.get("travel_in_progress")) and main.get("current_zone_id") == T3, "a requires_room_clear exit does not travel while an enemy lives")
+	_expect(not Support.travel_in_progress(main) and main.get("current_zone_id") == T3, "a requires_room_clear exit does not travel while an enemy lives")
 	_expect(String(hud.get("objective_label").text).begins_with("The captain still holds the rug edge"), "the bridge answers a locked door with the captain message")
 	_expect(Support.run_of(save_service).checkpoint_zone_id == T3, "a locked door leaves the run on the current zone")
 

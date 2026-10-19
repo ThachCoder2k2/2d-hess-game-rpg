@@ -63,10 +63,10 @@ func _check_player_unlock(main: Node) -> void:
 	_expect(_saved_list("player", "unlocked_skill_ids").has("wooden_sword"), "unlock: the unlock is written to the save file immediately")
 
 	# Persists across a re-boot of the zone (the same path every travel and death uses).
-	await main._travel_to(T2, &"west_entry")
+	await Support.travel_to(main, T2, &"west_entry")
 	_expect(Support.player_combat(main).sword_unlocked, "unlock: the sword survives re-entering the zone")
 	_expect(not _first_unlock_marker(main).visible, "unlock: the taken marker stays hidden after re-entering")
-	main._boot_zone(&"west_entry")
+	Support.reboot_zone(main, &"west_entry")
 	_expect(Support.player_combat(main).sword_unlocked, "unlock: the sword survives a bare _boot_zone")
 
 	# Persists across a save/load round trip; and the lock really is save-driven.
@@ -75,7 +75,7 @@ func _check_player_unlock(main: Node) -> void:
 	_expect(not Support.run_of(save_service).has_unlock(&"wooden_sword"), "unlock: reset clears the flag (the check below is meaningful)")
 	save_service.call("load_slot")
 	_expect(Support.run_of(save_service).has_unlock(&"wooden_sword"), "unlock: load_state restores the flag from disk")
-	await main._travel_to(T2, &"west_entry")
+	await Support.travel_to(main, T2, &"west_entry")
 	_expect(Support.player_combat(main).sword_unlocked and not _first_unlock_marker(main).visible, "unlock: a boot after the round trip is armed with the marker hidden")
 
 
@@ -83,7 +83,7 @@ func _check_player_unlock(main: Node) -> void:
 
 
 func _check_taken_pickup(main: Node) -> void:
-	await main._travel_to(T4, &"west_entry")
+	await Support.travel_to(main, T4, &"west_entry")
 	var ecs := Support.ecs_of(main)
 	var cast: Dictionary = main.get("cast")
 	var item_cells := ecs.grid.get_item_cells()
@@ -111,22 +111,22 @@ func _check_taken_pickup(main: Node) -> void:
 	_expect(_saved_list("world", "unlocked_rule_ids").has("pawn_recruit"), "pickup: the Book pages from meeting T4's pieces are saved too")
 
 	# Never respawns: re-boot, bare _boot_zone, save/load.
-	await main._travel_to(T4, &"west_entry")
+	await Support.travel_to(main, T4, &"west_entry")
 	_expect(Support.ecs_of(main).grid.get_item_cells().is_empty() and main.get("cast")["pickup_name_by_entity"].is_empty(), "pickup: the spear does not respawn after re-entering T4")
 	_expect(main.get("cast")["pickup_view_by_entity"].is_empty(), "pickup: no floor view is rebuilt for the taken spear")
-	main._boot_zone(&"west_entry")
+	Support.reboot_zone(main, &"west_entry")
 	_expect(Support.ecs_of(main).grid.get_item_cells().is_empty(), "pickup: the spear does not respawn after a bare _boot_zone")
 	Support.write_the_run(save_service)
 	Support.forget_the_run(save_service)
 	save_service.call("load_slot")
 	_expect(Support.run_of(save_service).taken_pickup_ids.has(SPEAR_KEY) and Support.run_of(save_service).unlocked_rule_ids.has("pawn_recruit"), "pickup: load_state restores the taken pickup and the Book pages")
-	await main._travel_to(T4, &"west_entry")
+	await Support.travel_to(main, T4, &"west_entry")
 	_expect(Support.ecs_of(main).grid.get_item_cells().is_empty(), "pickup: the spear stays gone after the save/load round trip")
 
 	# Zone-scoped: the same marker name taken elsewhere does not hide this spear.
 	Support.run_of(save_service).taken_pickup_ids.erase(SPEAR_KEY)
 	Support.run_of(save_service).taken_pickup_ids["some_other_zone/PencilSpearPickup"] = true
-	await main._travel_to(T4, &"west_entry")
+	await Support.travel_to(main, T4, &"west_entry")
 	_expect(Support.ecs_of(main).grid.get_item_cells().size() == 1, "pickup: ids are zone-scoped (another zone's spear name does not hide this one)")
 	Support.run_of(save_service).taken_pickup_ids.erase("some_other_zone/PencilSpearPickup")
 	Support.run_of(save_service).taken_pickup_ids[SPEAR_KEY] = true
@@ -141,7 +141,7 @@ func _check_taken_pickup(main: Node) -> void:
 
 
 func _check_opened_gate(main: Node) -> void:
-	await main._travel_to(KINGDOM, &"start")
+	await Support.travel_to(main, KINGDOM, &"start")
 	Support.remove_enemy_ai(main)
 	var ecs := Support.ecs_of(main)
 	var pass_gate := _gate_marker(main, &"pass_home_gate")
@@ -167,19 +167,19 @@ func _check_opened_gate(main: Node) -> void:
 	_expect(_saved_list("world", "opened_gate_ids").has("pass_home_gate"), "gate: the opened gate is written to the save file immediately")
 
 	# Persists across a re-boot, a bare _boot_zone and a save/load round trip.
-	await main._travel_to(KINGDOM, &"start")
+	await Support.travel_to(main, KINGDOM, &"start")
 	ecs = Support.ecs_of(main)
 	pass_gate = _gate_marker(main, &"pass_home_gate")
 	lane_gate = _gate_marker(main, &"gardens_lane_gate")
 	_expect(ecs.grid.is_walkable(gate_cell) and ecs.grid.gate_by_cell.size() == 1 and not pass_gate.visible and lane_gate.visible, "gate: re-entering keeps the pass gate open and the lane gate closed")
-	main._boot_zone(&"start")
+	Support.reboot_zone(main, &"start")
 	_expect(Support.ecs_of(main).grid.is_walkable(gate_cell) and not _gate_marker(main, &"pass_home_gate").visible, "gate: a bare _boot_zone keeps the pass gate open")
 	Support.write_the_run(save_service)
 	Support.forget_the_run(save_service)
 	_expect(Support.run_of(save_service).opened_gate_ids.is_empty(), "gate: reset forgets the gate (the check below is meaningful)")
 	save_service.call("load_slot")
 	_expect(Support.run_of(save_service).opened_gate_ids.has("pass_home_gate"), "gate: load_state restores the opened gate from disk")
-	await main._travel_to(KINGDOM, &"start")
+	await Support.travel_to(main, KINGDOM, &"start")
 	_expect(Support.ecs_of(main).grid.is_walkable(gate_cell) and Support.ecs_of(main).grid.gate_by_cell.size() == 1, "gate: a boot after the round trip still has the pass gate open")
 	Support.write_the_run(save_service)
 
@@ -201,7 +201,7 @@ func _check_relaunch(old_main: Node) -> Node:
 	_expect(Support.player_combat(main).sword_unlocked, "relaunch: the sword unlock is applied to the new hero")
 	_expect(Support.ecs_of(main).grid.is_walkable(gate_cell), "relaunch: the opened gate boots as floor")
 	_expect(Support.ecs_of(main).grid.gate_by_cell.size() == 1, "relaunch: the other gate is still closed")
-	await main._travel_to(T4, &"west_entry")
+	await Support.travel_to(main, T4, &"west_entry")
 	_expect(Support.ecs_of(main).grid.get_item_cells().is_empty(), "relaunch: the taken spear is still gone")
 	return main
 

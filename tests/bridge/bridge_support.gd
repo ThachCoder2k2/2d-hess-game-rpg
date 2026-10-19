@@ -96,6 +96,54 @@ static func boot_main(suite: UnboundTest) -> Node:
 	return main
 
 
+## --- The scene's own state and entry points -----------------------------------
+## Every suite reaches game_root's state and entry points through these, so when the scene moves
+## one (M3b step 2 moved the trip, the carry, the room outcome and the Book into bridges) the call
+## site changes here and nowhere else.
+
+
+static func travel_in_progress(main: Node) -> bool:
+	return bool(main.get("travel_in_progress"))
+
+
+## The health carry that waits for the next boot (-1 = none).
+static func health_carry(main: Node) -> int:
+	return int(main.get("player_health_carry"))
+
+
+## Plants a health carry as a trip would have left it, for the next boot to apply.
+static func plant_health_carry(main: Node, value: int) -> void:
+	main.set("player_health_carry", value)
+
+
+static func room_ending(main: Node) -> bool:
+	return bool(main.get("room_ending"))
+
+
+static func set_room_ending(main: Node, value: bool) -> void:
+	main.set("room_ending", value)
+
+
+static func total_enemies(main: Node) -> int:
+	return int(main.get("total_enemies"))
+
+
+## Starts a zone trip the way the zone_exit event does and waits for it to finish. Called without
+## `await` it returns at the first suspension, with the trip under way.
+static func travel_to(main: Node, zone_id: StringName, entry_id: StringName) -> void:
+	await main._travel_to(zone_id, entry_id)
+
+
+## Rebuilds the room the hero is in without a trip (a boot with no pending travel).
+static func reboot_zone(main: Node, entry_id: StringName) -> void:
+	main._boot_zone(entry_id)
+
+
+## The B key's handler, called directly.
+static func toggle_book(main: Node) -> void:
+	main._toggle_rule_book()
+
+
 ## --- Reading the live simulation ------------------------------------------
 
 
@@ -199,9 +247,9 @@ static func pump_until(main: Node, condition: Callable, max_seconds: float) -> b
 ## false if it is still travelling after the real-time cap.
 static func wait_for_travel(tree: SceneTree, main: Node) -> bool:
 	var started := Time.get_ticks_msec()
-	while bool(main.get("travel_in_progress")) and Time.get_ticks_msec() - started < REAL_TIME_WAIT_CAP_MSEC:
+	while travel_in_progress(main) and Time.get_ticks_msec() - started < REAL_TIME_WAIT_CAP_MSEC:
 		await tree.process_frame
-	return not bool(main.get("travel_in_progress"))
+	return not travel_in_progress(main)
 
 
 ## Puts the hero on `cell` at rest (grid, GridPos, MoveState and the puppet view).
@@ -240,7 +288,7 @@ static func walk_through_exit(tree: SceneTree, main: Node, target_zone: StringNa
 		return false
 	var intent: EcsComponents.MoveIntent = ecs_of(main).get_component(player_id_of(main), EcsComponents.MOVE_INTENT)
 	intent.direction = direction
-	if not pump_until(main, func() -> bool: return bool(main.get("travel_in_progress")), 1.0):
+	if not pump_until(main, func() -> bool: return travel_in_progress(main), 1.0):
 		return false
 	return await wait_for_travel(tree, main)
 

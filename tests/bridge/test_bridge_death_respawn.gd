@@ -46,13 +46,13 @@ func _run() -> void:
 	# would hold even if game_root.gd never cleared anything. Plant a pending carry (what a
 	# hero killed mid-fade-out of a travel would have left behind) so the assertion
 	# below can only pass if the death handler really resets it.
-	main.set("player_health_carry", 2)
-	_expect(main.get("player_health_carry") == 2, "setup: a stale health carry of 2 is pending when the fatal blow lands")
+	Support.plant_health_carry(main, 2)
+	_expect(Support.health_carry(main) == 2, "setup: a stale health carry of 2 is pending when the fatal blow lands")
 	Support.damage_player(main, 99)
 	_expect(Support.player_health(main).current == 0, "the damage path takes the hero to 0 courage")
-	_expect(bool(main.get("room_ending")), "death marks the room as ending")
+	_expect(Support.room_ending(main), "death marks the room as ending")
 	_expect(not Support.player_tag(main).control_enabled, "control is off after the fatal blow")
-	_expect(main.get("player_health_carry") == -1, "death clears the pending health carry")
+	_expect(Support.health_carry(main) == -1, "death clears the pending health carry")
 	_expect(not FileAccess.file_exists(String(save_service.call("slot_path", 0))), "CHANGED (R17, D-16): a death writes no save; autosave is for success events only")
 	_expect(hud.result_panel.visible and hud.result_label.text.begins_with("THE PAWN FALLS"), "the result panel shows the defeat message")
 	_expect(hud.result_label.text.contains("THE CHILD RESETS THE BOARD"), "the result panel shows the reset subtitle")
@@ -63,7 +63,7 @@ func _run() -> void:
 	intent.direction = Vector2i.RIGHT
 	Support.pump(main, 0.45)
 	_expect(Support.player_cell(main) == cell_at_death and intent.direction == Vector2i.RIGHT, "CHARACTERIZATION: once the room is ending the simulation stops ticking")
-	_expect(not bool(main.get("travel_in_progress")), "death is not a travel")
+	_expect(not Support.travel_in_progress(main), "death is not a travel")
 
 	# --- The reload boots the same zone and gives control back ---
 	var reloaded := await Support.wait_for_reload(self, main)
@@ -77,7 +77,7 @@ func _run() -> void:
 	_expect(Support.run_of(save_service).checkpoint_zone_id == T2, "the run still names T2 after the reboot")
 	_expect(Support.player_cell(main) == Support.entry_cell(main, main.get("current_room"), &"west_entry"), "the hero respawns on the entry cell the run last used")
 	_expect(Support.player_health(main).current == max_courage, "the respawned hero has full courage (death drops the carry)")
-	_expect(Support.player_tag(main).control_enabled and not bool(main.get("room_ending")), "control returns and the room is live again")
+	_expect(Support.player_tag(main).control_enabled and not Support.room_ending(main), "control returns and the room is live again")
 	_expect(not (main.get("hud") as GameHud).result_panel.visible, "the defeat panel is gone after the reload")
 	_expect(Support.player_combat(main).sword_unlocked, "progress survives death: the sword stays unlocked")
 	var start_cell := Support.player_cell(main)
@@ -85,7 +85,7 @@ func _run() -> void:
 	_expect(Support.player_cell(main).x > start_cell.x, "real key input moves the respawned hero (control is truly back)")
 
 	# --- Death in the scene-default zone: no zone swap is needed on reload ---
-	await main._travel_to(T1, &"start")
+	await Support.travel_to(main, T1, &"start")
 	_expect(main.get("current_zone_id") == T1, "setup: the hero is back in T1")
 	Support.damage_player(main, 99)
 	var reloaded_t1 := await Support.wait_for_reload(self, main)
@@ -99,7 +99,7 @@ func _run() -> void:
 	_expect(main.get_node_or_null("CurrentZone") != null, "CHARACTERIZATION: with no swap needed the scene's own CurrentZone node is the live zone")
 
 	# --- The restart key reloads the same way without a death ---
-	await main._travel_to(T2, &"west_entry")
+	await Support.travel_to(main, T2, &"west_entry")
 	Support.damage_player(main, 1)
 	_expect(Support.player_health(main).current == max_courage - 1, "setup: a wounded hero presses the restart key")
 	Input.action_press(&"restart_room")
