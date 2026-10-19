@@ -7,7 +7,9 @@ extends UnboundTest
 ##   - each file is well formed: the header names its language, every key is UPPER_SNAKE with a prefix that belongs
 ##     in that file (TextService.PREFIXES_BY_DOMAIN), no key is written twice (not in a file, not across files:
 ##     the engine would let one silently shadow the other), every English row has a translator comment and words;
-##   - a {placeholder} of a Vietnamese row is one the English row has;
+##   - a {placeholder} of a Vietnamese row is one the English row has, and an English row holds exactly the {placeholders} its
+##     `#.` comment lists (`placeholders={room} the room, {time} ...`): a row that loses one silently drops the word the
+##     game fills in (the save card without its room), and one the comment does not list is a name no code fills;
 ##   - the engine resolves every English row of every file, and a language with no row for a key reads the English
 ##     one (Vietnamese is empty on purpose, D-25) while a row it has wins.
 ## The lint runs on the real files and on a bad sample, so it is shown to be able to fail.
@@ -38,6 +40,14 @@ msgstr ""
 #. lower
 msgid "ui_lower"
 msgstr "{Bad Name}"
+
+#. placeholders={room} the room's name; purpose=a row that lost its placeholder
+msgid "UI_LOSES"
+msgstr "the room name is gone"
+
+#. purpose=a row with a placeholder nobody listed
+msgid "UI_UNDECLARED"
+msgstr "hello {oops}"
 """
 
 
@@ -133,12 +143,33 @@ func _problems_of_file(po_text: String, language: String, domain: String, is_sou
 				problems.append("line %d: %s has no words" % [entry["line"], key])
 			if entry["comments"].is_empty():
 				problems.append("line %d: %s has no #. comment for the translator" % [entry["line"], key])
+			var used := PoReader.placeholders_of(entry["text"])
+			var declared := _declared_placeholders(entry["comments"])
+			for placeholder in declared:
+				if placeholder not in used:
+					problems.append("line %d: %s lists %s in its #. comment and the row does not have it" % [entry["line"], key, placeholder])
+			for placeholder in used:
+				if placeholder not in declared and placeholder_regex.search(placeholder) != null:
+					problems.append("line %d: %s has %s and its #. comment does not list it" % [entry["line"], key, placeholder])
 	return problems
+
+
+## The {names} a translator comment promises: the ones after `placeholders=` up to the next `;`.
+func _declared_placeholders(comments: PackedStringArray) -> PackedStringArray:
+	var declared := PackedStringArray()
+	var list_match := RegEx.create_from_string("placeholders=([^;]*)").search(" ".join(comments))
+	if list_match == null:
+		return declared
+	for placeholder in PoReader.placeholders_of(list_match.get_string(1)):
+		if placeholder not in declared:
+			declared.append(placeholder)
+	return declared
 
 
 func _the_lint_can_fail() -> void:
 	var problems := "\n".join(_problems_of_file(BAD_SAMPLE, "en", "ui", true))
 	_expect(problems.contains("Language: en") and problems.contains("UI_SAME is written twice") and problems.contains("belongs in the rooms file") and problems.contains("has no words") and problems.contains("not an UPPER_SNAKE key") and problems.contains("odd placeholder") and problems.contains("no #. comment"), "the lint names a wrong language, a repeated key, a key in the wrong file, an empty row, a lower-case key, an odd placeholder and a missing comment")
+	_expect(problems.contains("UI_LOSES lists {room}") and problems.contains("UI_UNDECLARED has {oops}"), "and a row that lost a placeholder its comment promises, and one that has a placeholder the comment does not list")
 	_expect(_problems_of_file(BAD_SAMPLE.replace("xx", "en"), "en", "ui", false).size() > 0, "and a bad sample is still bad in a translation file")
 
 
