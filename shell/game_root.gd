@@ -49,6 +49,8 @@ var board_bridge := BoardBridge.new()
 var camera_bridge := CameraBridge.new()
 ## The event sounds that belong to no clip, played through the SfxManager registry.
 var audio_bridge := AudioBridge.new()
+## The words on the status line that events cause (and the line the scene and other bridges write through).
+var message_bridge := MessageBridge.new()
 var _last_token_owner := 0
 
 
@@ -62,6 +64,7 @@ func _ready() -> void:
 		camera_rig = player_view.get_node_or_null("Camera2D") as CameraRig
 	camera_bridge.attach(camera_rig)
 	audio_bridge.attach(self)
+	message_bridge.attach(hud)
 
 	# Death and R both reload this scene; the SaveService (autoload) holds the run, so the
 	# reload boots in the zone the run is in, not the default. A game that has just launched
@@ -101,6 +104,7 @@ func _boot_zone(entry_id: StringName) -> void:
 	cast = EcsBoot.boot(ecs, boot_options)
 	board_bridge.bind_world(ecs.hud_snapshot, cast)
 	camera_bridge.bind_world(ecs.hud_snapshot, cast)
+	message_bridge.bind_world(ecs.hud_snapshot, cast)
 	current_zone_id = _zone_id_of(current_room)
 	# The run's facts enter the new world before anything can ask for a save: the world's flags are
 	# the saved ones, and the save knows which zone this is.
@@ -177,7 +181,7 @@ func _setup_hud() -> void:
 	var room_message := "Break the black line."
 	if current_room != null and current_room.has_method("get_start_message"):
 		room_message = String(current_room.call("get_start_message"))
-	hud.set_status(room_message)
+	message_bridge.say(room_message)
 
 
 ## Every event type the scene reacts to, and what reacts. The router calls these in registration order.
@@ -185,21 +189,14 @@ func _register_event_handlers() -> void:
 	board_bridge.register(router)
 	camera_bridge.register(router)
 	audio_bridge.register(router)
-	router.on(Events.ATTACK_LANDED, _on_player_attack_landed)
-	router.on(Events.ATTACK_LOCKED, _on_attack_locked)
 	router.on(Events.DAMAGED, _on_damaged)
 	router.on(Events.SKILL_COOLDOWN, _on_skill_cooldown)
-	router.on(Events.WEAPON_CHANGED, _on_enemy_weapon_changed)
 	router.on(Events.PICKUP_TAKEN, _on_pickup_taken)
 	router.on(Events.PLAYER_UNLOCK, _on_player_unlock)
 	router.on(Events.DEFEATED, _on_defeated)
 	router.on(Events.ZONE_EXIT, _on_zone_exit)
-	router.on(Events.ZONE_EXIT_LOCKED, _on_zone_exit_locked)
 	router.on(Events.GATE_OPENED, _on_gate_opened)
-
-
-func _on_attack_locked(_event: Dictionary) -> void:
-	_update_status("The pawn has no weapon yet. Find the fallen sword.")
+	message_bridge.register(router)
 
 
 func _on_skill_cooldown(event: Dictionary) -> void:
@@ -215,13 +212,6 @@ func _on_zone_exit(event: Dictionary) -> void:
 	_travel_to(StringName(event.get("zone", &"")), StringName(event.get("entry", &"start")))
 
 
-func _on_player_attack_landed(event: Dictionary) -> void:
-	var profile := event.get("profile") as AttackProfile
-	if int(event.get("hit_count", 0)) > 0:
-		if profile != null:
-			_update_status("%s connects. Keep pressing the broken line." % profile.display_name)
-
-
 func _on_damaged(event: Dictionary) -> void:
 	if int(event.get("entity", 0)) != player_id:
 		return
@@ -229,19 +219,6 @@ func _on_damaged(event: Dictionary) -> void:
 	if hud != null:
 		hud.flash_damage()
 		hud.set_courage(remaining)
-	if remaining == 1:
-		_update_status("One courage left. Wait for the warning, then cut through.")
-	elif remaining > 1:
-		_update_status("The pawn is hit. Move out before the next strike.")
-
-
-func _on_enemy_weapon_changed(event: Dictionary) -> void:
-	var entity := int(event.get("entity", 0))
-	var weapon = event.get("weapon")
-	if weapon == null:
-		return
-	var piece_name := String(cast.get("piece_name_by_entity", {}).get(entity, "Enemy"))
-	_update_status("%s picked up %s. Its chess attack has been replaced." % [piece_name, weapon.display_name])
 
 
 func _free_pickup_view(item_id: int) -> void:
@@ -297,7 +274,7 @@ func _check_completion() -> void:
 	_set_player_control(false)
 	audio_bridge.play(AudioBridge.ROOM_CLEAR_SOUND)
 	var clear_message := _room_text("get_clear_message", "ROOM CLEARED")
-	_update_status(clear_message)
+	message_bridge.say(clear_message)
 	_show_result(clear_message, _room_text("get_clear_subtitle", "PRESS R TO RESET"))
 
 
@@ -310,7 +287,7 @@ func _on_player_defeated() -> void:
 	player_health_carry = -1
 	audio_bridge.play(AudioBridge.DEFEAT_JINGLE_SOUND)
 	var defeat_message := _room_text("get_defeat_message", "THE PAWN FALLS")
-	_update_status(defeat_message)
+	message_bridge.say(defeat_message)
 	_show_result(defeat_message, _room_text("get_defeat_subtitle", "THE CHILD RESETS THE BOARD"))
 	var tree := get_tree()
 	if tree == null:
@@ -360,18 +337,13 @@ func _set_player_control(value: bool) -> void:
 func _set_debug_enabled(value: bool) -> void:
 	debug_enabled = value
 	board_bridge.set_debug_view(value)
-	_update_status("DEBUG VIEW ON: boundaries, paths, and behavior labels." if value else "DEBUG VIEW OFF.")
+	message_bridge.say("DEBUG VIEW ON: boundaries, paths, and behavior labels." if value else "DEBUG VIEW OFF.")
 
 
 func _room_text(getter: StringName, fallback: String) -> String:
 	if current_room != null and current_room.has_method(getter):
 		return String(current_room.call(getter))
 	return fallback
-
-
-func _update_status(text: String) -> void:
-	if hud != null:
-		hud.set_status(text)
 
 
 func _show_result(title: String, subtitle: String) -> void:
@@ -405,10 +377,6 @@ func _travel_to(zone_id: StringName, entry_id: StringName) -> void:
 	travel_in_progress = false
 
 
-func _on_zone_exit_locked(_event: Dictionary) -> void:
-	_update_status("The captain still holds the rug edge. Break the black line first.")
-
-
 func _apply_player_unlocks() -> void:
 	var combat: EcsComponents.PlayerCombat = ecs.get_component(player_id, EcsComponents.PLAYER_COMBAT)
 	if combat == null:
@@ -423,7 +391,6 @@ func _apply_player_unlocks() -> void:
 
 func _on_player_unlock(event: Dictionary) -> void:
 	var unlock_id := StringName(event.get("id", &""))
-	var message := String(event.get("message", ""))
 	if unlock_id == &"":
 		return
 	var save := _save_service()
@@ -431,7 +398,6 @@ func _on_player_unlock(event: Dictionary) -> void:
 		save.state.add_unlock(unlock_id)
 		save.request_save(&"unlock_gained")
 	_apply_player_unlocks()
-	_update_status(message if not message.is_empty() else "The pawn grips the sword. The rules crack.")
 
 
 func _hide_taken_player_unlocks() -> void:
@@ -505,7 +471,6 @@ func _on_gate_opened(event: Dictionary) -> void:
 		save.state.opened_gate_ids[String(gate_id)] = true
 		save.request_save(&"shortcut_opened")
 	_hide_opened_gate_visuals()
-	_update_status("The gate unbars. It will never close again.")
 
 
 func _opened_gate_ids() -> Array:
@@ -582,7 +547,7 @@ func _unlock_met_rules() -> void:
 				newly_met = true
 		if newly_met:
 			save.request_save(&"rule_page_unlocked")
-			_update_status("New pieces on the board. The book writes their rules. [B]")
+			message_bridge.say("New pieces on the board. The book writes their rules. [B]")
 	var book := _rule_book_ui()
 	if book != null:
 		book.refresh(_unlocked_rule_ids())

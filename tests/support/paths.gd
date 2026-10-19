@@ -124,6 +124,11 @@ func sfx_manager_scene() -> String:
 	return _existing_resource("res://presentation/audio/sfx_manager.tscn")
 
 
+## The HUD scene (GameHud: courage, skill slot, status line, result panel).
+func hud_scene() -> String:
+	return _existing_resource("res://presentation/ui/hud/hud.tscn")
+
+
 # --- Directories (list them with `list_files`) ---
 
 ## The room folders (one per room id, each holding `room.tscn`): list the scenes
