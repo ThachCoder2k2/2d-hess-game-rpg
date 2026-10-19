@@ -375,3 +375,127 @@ msgstr "Left Stick Down"
 #. surface=a control prompt; purpose=the gamepad's right stick
 msgid "PROMPT_PAD_RIGHT_STICK"
 msgstr "Right Stick"
+
+#. surface=pause menu button; purpose=open the Controls panel
+msgid "UI_PAUSE_CONTROLS"
+msgstr "Controls"
+
+#. surface=Controls panel heading
+msgid "UI_CONTROLS_TITLE"
+msgstr "Controls"
+
+#. surface=Controls panel tab; purpose=the controls that move and turn the pawn
+msgid "UI_CONTROLS_TAB_MOVING"
+msgstr "Moving"
+
+#. surface=Controls panel tab; purpose=the controls that strike, use skills and call for help
+msgid "UI_CONTROLS_TAB_ACTING"
+msgstr "Acting"
+
+#. surface=Controls panel tab; purpose=the controls of the game itself: pause, the Book, the debug view, fullscreen
+msgid "UI_CONTROLS_TAB_GAME"
+msgstr "Game"
+
+#. surface=Controls panel column heading
+msgid "UI_CONTROLS_KEYBOARD"
+msgstr "Keyboard"
+
+#. surface=Controls panel column heading
+msgid "UI_CONTROLS_GAMEPAD"
+msgstr "Gamepad"
+
+#. surface=Controls panel button; purpose=close the panel
+msgid "UI_CONTROLS_BACK"
+msgstr "Back"
+
+#. surface=Controls panel footer, after the glyph of the cancel control; purpose=reads as "[Esc] to close"
+msgid "UI_CONTROLS_PROMPT_CLOSE"
+msgstr "to close"
+
+#. surface=Controls panel row; placeholders={name} what the control does; purpose=the control exists but does nothing you can see yet
+msgid "UI_CONTROLS_ACTION_COMING_LATER"
+msgstr "{name} (coming later)"
+
+#. surface=Controls panel row; purpose=what the control does
+msgid "UI_ACTION_MOVE_UP"
+msgstr "Step up"
+
+#. surface=Controls panel row; purpose=what the control does
+msgid "UI_ACTION_MOVE_DOWN"
+msgstr "Step down"
+
+#. surface=Controls panel row; purpose=what the control does
+msgid "UI_ACTION_MOVE_LEFT"
+msgstr "Step left"
+
+#. surface=Controls panel row; purpose=what the control does
+msgid "UI_ACTION_MOVE_RIGHT"
+msgstr "Step right"
+
+#. surface=Controls panel row; purpose=hold it and a direction turns the pawn on the spot
+msgid "UI_ACTION_TURN_MODE"
+msgstr "Turn without stepping"
+
+#. surface=Controls panel row; purpose=the modifier that allows diagonal steps
+msgid "UI_ACTION_FREE_STEP"
+msgstr "Free Step (diagonals)"
+
+#. surface=Controls panel row; purpose=swing the weapon in hand
+msgid "UI_ACTION_ATTACK"
+msgstr "Strike"
+
+#. surface=Controls panel row; purpose=the first skill slot
+msgid "UI_ACTION_SKILL_SLOT_1"
+msgstr "Skill 1: Pencil Thrust"
+
+#. surface=Controls panel row; purpose=the second skill slot
+msgid "UI_ACTION_SKILL_SLOT_2"
+msgstr "Skill 2: Rule Step"
+
+#. surface=Controls panel row (hidden today); purpose=the third skill slot
+msgid "UI_ACTION_SKILL_SLOT_3"
+msgstr "Skill 3"
+
+#. surface=Controls panel row (hidden today); purpose=the fourth skill slot
+msgid "UI_ACTION_SKILL_SLOT_4"
+msgstr "Skill 4"
+
+#. surface=Controls panel row; purpose=raise the guard
+msgid "UI_ACTION_GUARD"
+msgstr "Guard"
+
+#. surface=Controls panel row; purpose=look closely at the threats
+msgid "UI_ACTION_FOCUS"
+msgstr "Focus"
+
+#. surface=Controls panel row; purpose=ask the child for help
+msgid "UI_ACTION_CALL_CHILD"
+msgstr "Call the child"
+
+#. surface=Controls panel row; purpose=choose the next kind of help the child can give
+msgid "UI_ACTION_HELP_NEXT"
+msgstr "Next help"
+
+#. surface=Controls panel row; purpose=use or open what is in front of the pawn
+msgid "UI_ACTION_INTERACT"
+msgstr "Interact"
+
+#. surface=Controls panel row; purpose=open the pause menu
+msgid "UI_ACTION_PAUSE"
+msgstr "Pause"
+
+#. surface=Controls panel row; purpose=open and close the Book
+msgid "UI_ACTION_RULE_BOOK_TOGGLE"
+msgstr "Book of House Rules"
+
+#. surface=Controls panel row; purpose=show the next line of a conversation
+msgid "UI_ACTION_DIALOGUE_ADVANCE"
+msgstr "Continue dialogue"
+
+#. surface=Controls panel row; purpose=the developer's view of the board
+msgid "UI_ACTION_DEBUG_VIEW_TOGGLE"
+msgstr "Debug view"
+
+#. surface=Controls panel row; purpose=switch between fullscreen and a window
+msgid "UI_ACTION_FULLSCREEN_TOGGLE"
+msgstr "Fullscreen"

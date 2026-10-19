@@ -1,4 +1,4 @@
-[gd_scene load_steps=10 format=3 uid="uid://b5nlhff7eg0"]
+[gd_scene load_steps=12 format=3 uid="uid://b5nlhff7eg0"]
 
 [ext_resource type="Script" uid="uid://ow7tsp4t06n1" path="res://shell/app_root.gd" id="1"]
 [ext_resource type="PackedScene" uid="uid://b3gbvey14c4sf" path="res://shell/title/title_screen.tscn" id="2"]
@@ -8,8 +8,10 @@
 [ext_resource type="PackedScene" uid="uid://ccxfosjgdbody" path="res://presentation/ui/autosave_indicator/autosave_indicator.tscn" id="6"]
 [ext_resource type="Script" uid="uid://kl4cwkn5o6qu" path="res://shell/transition_layer.gd" id="7"]
 [ext_resource type="PackedScene" uid="uid://c786nm2vjluik" path="res://shell/pause/pause_menu.tscn" id="8"]
+[ext_resource type="PackedScene" uid="uid://bfg6wxk433s3p" path="res://presentation/ui/controls/controls_panel.tscn" id="9"]
+[ext_resource type="Script" uid="uid://bmkllnjyr22pm" path="res://presentation/ui/input_glyphs/last_input_device.gd" id="10"]
 
-[node name="AppRoot" type="Node" node_paths=PackedStringArray("screen_host", "transition", "autosave_indicator", "pause_menu")]
+[node name="AppRoot" type="Node" node_paths=PackedStringArray("screen_host", "transition", "autosave_indicator", "pause_menu", "controls_panel", "last_input_device")]
 script = ExtResource("1")
 title_scene = ExtResource("2")
 game_scene = ExtResource("3")
@@ -18,6 +20,8 @@ screen_host = NodePath("ScreenHost")
 transition = NodePath("TransitionLayer")
 autosave_indicator = NodePath("OverlayLayer/AutosaveIndicator")
 pause_menu = NodePath("MenuLayer/PauseMenu")
+controls_panel = NodePath("MenuLayer/ControlsPanel")
+last_input_device = NodePath("LastInputDevice")
 
 [node name="ScreenHost" type="Node" parent="."]
 
@@ -39,6 +43,11 @@ process_mode = 3
 layer = 60
 
 [node name="PauseMenu" parent="MenuLayer" instance=ExtResource("8")]
+
+[node name="ControlsPanel" parent="MenuLayer" instance=ExtResource("9")]
+
+[node name="LastInputDevice" type="Node" parent="."]
+script = ExtResource("10")
 
 [node name="TransitionLayer" type="CanvasLayer" parent="." node_paths=PackedStringArray("cover_rect")]
 process_mode = 3

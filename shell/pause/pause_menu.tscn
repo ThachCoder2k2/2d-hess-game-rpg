@@ -3,7 +3,7 @@
 [ext_resource type="Script" uid="uid://c12m8hd65550i" path="res://shell/pause/pause_menu.gd" id="1"]
 [ext_resource type="PackedScene" uid="uid://b4ov7nqob0pme" path="res://presentation/ui/menu/confirm_panel.tscn" id="2"]
 
-[node name="PauseMenu" type="Control" node_paths=PackedStringArray("resume_button", "book_button", "restart_button", "quit_button", "menu", "confirm_panel")]
+[node name="PauseMenu" type="Control" node_paths=PackedStringArray("resume_button", "book_button", "controls_button", "restart_button", "quit_button", "menu", "confirm_panel")]
 process_mode = 3
 layout_mode = 3
 anchors_preset = 15
@@ -14,6 +14,7 @@ grow_vertical = 2
 script = ExtResource("1")
 resume_button = NodePath("Center/Panel/Margin/Rows/Menu/ResumeButton")
 book_button = NodePath("Center/Panel/Margin/Rows/Menu/BookButton")
+controls_button = NodePath("Center/Panel/Margin/Rows/Menu/ControlsButton")
 restart_button = NodePath("Center/Panel/Margin/Rows/Menu/RestartButton")
 quit_button = NodePath("Center/Panel/Margin/Rows/Menu/QuitButton")
 menu = NodePath("Center/Panel/Margin/Rows/Menu")
@@ -73,6 +74,13 @@ custom_minimum_size = Vector2(190, 24)
 layout_mode = 2
 theme_override_font_sizes/font_size = 12
 text = "UI_PAUSE_BOOK"
+alignment = 0
+
+[node name="ControlsButton" type="Button" parent="Center/Panel/Margin/Rows/Menu"]
+custom_minimum_size = Vector2(190, 24)
+layout_mode = 2
+theme_override_font_sizes/font_size = 12
+text = "UI_PAUSE_CONTROLS"
 alignment = 0
 
 [node name="RestartButton" type="Button" parent="Center/Panel/Margin/Rows/Menu"]

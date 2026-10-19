@@ -16,6 +16,9 @@ extends Node
 ## double request can never build two screens or leave the fade half done. A pause is not a screen change: the tree
 ## is paused at once and the pause menu is laid in the menu layer, which keeps running (PROCESS_MODE_ALWAYS).
 ##
+## The Controls panel is laid over the pause menu from here (the menu's buttons go quiet under it, Esc closes only the
+## panel). AppRoot also owns the two things every prompt needs: the glyph finder and the tracker of the last input device.
+##
 ## The pause menu's answers become GameFlow requests here: Resume, Book (resume, then open the Book), Restart Room
 ## (`request_respawn(REASON_RESTART_MENU)`, the only way to restart a room, D-18) and Quit to Title. The game also
 ## pauses when the window loses focus (`NOTIFICATION_APPLICATION_FOCUS_OUT`, 9.2); when the flow refuses (a zone trip
@@ -48,6 +51,10 @@ signal settings_requested
 @export var transition: TransitionLayer
 @export var autosave_indicator: AutosaveIndicator
 @export var pause_menu: PauseMenu
+## The Controls panel, laid over the pause menu (and over the settings screen). Read from the InputMap when it opens.
+@export var controls_panel: ControlsPanel
+## Which device the player used last, so prompts show the keyboard's glyphs or the pad's.
+@export var last_input_device: LastInputDevice
 ## Whether Quit ends the program. A test turns it off.
 @export var quits_the_tree := true
 
@@ -55,6 +62,8 @@ var game_flow := GameFlow.new()
 ## The screen on show (a TitleScreen, a GameRoot or a CreditsScreen), null between two screens.
 var screen: Node = null
 var save_service: SaveServiceScript = null
+## Finds the glyph pictures of the prompts and the Controls panel (the owner's Kenney files, or the words that stand in).
+var input_glyphs := InputGlyphs.new()
 
 var _queued_steps: Array[Callable] = []
 var _running_steps := false
@@ -75,6 +84,9 @@ func _ready() -> void:
 	pause_menu.book_requested.connect(_on_pause_book_requested)
 	pause_menu.restart_confirmed.connect(func() -> void: game_flow.request_respawn(GameFlow.REASON_RESTART_MENU))
 	pause_menu.quit_confirmed.connect(game_flow.quit_to_title)
+	pause_menu.controls_requested.connect(_on_controls_requested)
+	controls_panel.configure(input_glyphs, last_input_device)
+	controls_panel.closed.connect(_on_controls_closed)
 	if save_service != null:
 		save_service.autosaved.connect(_on_autosaved)
 	transition.cover()
@@ -117,6 +129,7 @@ func _on_state_changed(previous: GameFlow.State, current: GameFlow.State) -> voi
 	if current == GameFlow.State.PAUSED:
 		pause_menu.open(PauseSummary.from_run(save_service))
 	elif previous == GameFlow.State.PAUSED:
+		controls_panel.close()
 		pause_menu.close()
 	match current:
 		GameFlow.State.TITLE:
@@ -208,6 +221,16 @@ func _on_pause_book_requested() -> void:
 	var game := screen as GameRoot
 	if game_flow.request_resume() and game != null:
 		game.book_bridge.open()
+
+
+## The pause menu's Controls entry: the panel opens over the menu, whose buttons go quiet meanwhile.
+func _on_controls_requested() -> void:
+	pause_menu.set_covered(true)
+	controls_panel.open()
+
+
+func _on_controls_closed() -> void:
+	pause_menu.set_covered(false)
 
 
 func _on_autosaved(_slot: int, _reason: StringName) -> void:

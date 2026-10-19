@@ -22,6 +22,7 @@ const SaveSupport := preload("res://tests/support/save_test_support.gd")
 
 const SCREEN_SIZE := Vector2i(640, 360)
 const SETTINGS_SCENE_PATH := "res://shell/settings/settings_screen.tscn"
+const CONTROLS_SCENE_PATH := "res://presentation/ui/controls/controls_panel.tscn"
 ## A pixel of play is not an overflow: rectangles are compared with this much tolerance.
 const TOLERANCE := 0.5
 ## Fewer measured states than this means the walk is broken, not clean.
@@ -51,6 +52,7 @@ func _init() -> void:
 	await _the_hud()
 	await _the_title()
 	await _the_pause_menu()
+	await _the_controls_panel()
 	await _the_settings_screen()
 	_expect(checked_states >= MINIMUM_STATES, "the walk measured %d states of the screens (at least %d)" % [checked_states, MINIMUM_STATES])
 	for root_to_remove in roots_to_remove:
@@ -187,6 +189,15 @@ func _pause_menu_asking_to_quit_from_the_longest_room(screen: Node) -> void:
 	summary.checkpoint_zone_id = StringName(longest_room_key.trim_prefix("ROOM_").trim_suffix("_NAME").to_lower())
 	menu.open(summary)
 	menu.quit_button.pressed.emit()
+
+
+func _the_controls_panel() -> void:
+	var panel_path := CONTROLS_SCENE_PATH
+	for page_index in ControlsCatalog.Group.size():
+		await _check_state("the Controls panel, page %d (the words stand in for the glyph pictures)" % (page_index + 1), panel_path, func(screen: Node) -> void:
+			var panel := screen as ControlsPanel
+			panel.open()
+			panel.tabs.current_tab = page_index)
 
 
 func _the_settings_screen() -> void:
