@@ -38,7 +38,9 @@ func tick(_delta: float) -> void:
 		var moving := move != null and move.moving
 		if moving:
 			var eased := 1.0 - (1.0 - move.progress) * (1.0 - move.progress)
-			view.node.position = world.grid.cell_to_world(move.from_cell).lerp(world.grid.cell_to_world(move.to_cell), eased)
+			# The picture is drawn at 1x1 pixels, so a piece between two pixels is blurred (requirement 10): the slide
+			# is worked out in floats and drawn on the nearest whole pixel. The simulation never sees this position.
+			view.node.position = world.grid.cell_to_world(move.from_cell).lerp(world.grid.cell_to_world(move.to_cell), eased).round()
 			view.node.z_index = 2 + move.to_cell.y
 		else:
 			view.node.position = world.grid.cell_to_world(grid_pos.cell)
