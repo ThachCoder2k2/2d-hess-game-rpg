@@ -23,6 +23,10 @@ const KINGDOM := &"kingdom"
 const SPEAR_KEY := "t4_broken_rule_yard/PencilSpearPickup"
 
 var save_service: Node
+## The world graph's own T4 scene, kept while a test swaps in a copy whose spear is a persistent pickup.
+var original_t4_scene: PackedScene
+## The world graph that was edited, held so that it is not unloaded (and reloaded unedited) when a scene is freed.
+var edited_world_graph: WorldGraph
 
 
 func _init() -> void:
@@ -138,7 +142,9 @@ func _check_taken_pickup(main: Node) -> void:
 	_expect(_saved_list("world", "taken_pickup_ids").has(SPEAR_KEY), "persistent: the taken pickup is written to the save file immediately")
 	_expect(_saved_list("world", "unlocked_rule_ids").has("pawn_recruit"), "persistent: the Book pages from meeting T4's pieces are saved too")
 
-	# Never respawns: re-boot, bare boot_zone, save/load.
+	# Never respawns: re-boot, bare boot_zone, save/load. Re-entering builds the room from its scene again, so
+	# the scene must carry a persistent spear: the test swaps in a copy of T4 whose marker is persistent.
+	_make_t4_spear_persistent(main, true)
 	await Support.travel_to(main, T4, &"west_entry")
 	_expect(Support.ecs_of(main).grid.get_item_cells().is_empty() and main.get("cast")["pickup_name_by_entity"].is_empty(), "persistent: the spear does not respawn after re-entering T4")
 	_expect(main.get("cast")["pickup_view_by_entity"].is_empty(), "persistent: no floor view is rebuilt for the taken spear")
@@ -160,9 +166,35 @@ func _check_taken_pickup(main: Node) -> void:
 	Support.run_of(save_service).taken_pickup_ids[SPEAR_KEY] = true
 	Support.write_the_run(save_service)
 
+	# The marker's flag is the truth: a record the run holds for a floor weapon (a save from before D-16 kept
+	# every weapon an enemy took) is ignored, and the spear is on the floor again.
+	_make_t4_spear_persistent(main, false)
+	await Support.travel_to(main, T4, &"west_entry")
+	_expect(Support.run_of(save_service).taken_pickup_ids.has(SPEAR_KEY) and Support.ecs_of(main).grid.get_item_cells().size() == 1, "CHANGED (D-16): a stale record for a floor weapon hides nothing")
+	_make_t4_spear_persistent(main, true)
+
 	# The Book pages are visible in the Book after a boot.
 	var book := main.get_node("RuleBookUI") as RuleBookUI
 	_expect(book.unlocked_piece_ids.has(&"pawn_recruit"), "pickup: a boot feeds the unlocked pages to the Book")
+
+
+## Makes the T4 spear of every later T4 boot a persistent pickup (true), or the shipped floor weapon (false):
+## the world graph's T4 scene is swapped for a copy whose marker has `persistent` set, or put back. A
+## room's scene is what a boot builds from, so this is the way to give a whole trip a persistent marker.
+func _make_t4_spear_persistent(main: Node, persistent: bool) -> void:
+	var graph: WorldGraph = main.get("world_graph")
+	edited_world_graph = graph
+	if original_t4_scene == null:
+		original_t4_scene = graph.get_zone_scene(T4)
+	if not persistent:
+		graph.zone_scene_by_id[T4] = original_t4_scene
+		return
+	var room := original_t4_scene.instantiate()
+	(room.get_node("PencilSpearPickup") as PickupSpawnPoint).persistent = true
+	var patched := PackedScene.new()
+	_expect(patched.pack(room) == OK, "setup: a copy of T4 with a persistent spear packs")
+	room.free()
+	graph.zone_scene_by_id[T4] = patched
 
 
 ## Stands the enemy on the pickup's cell and lets its AI take it (EnemyAISystem._collect_local_item, the one

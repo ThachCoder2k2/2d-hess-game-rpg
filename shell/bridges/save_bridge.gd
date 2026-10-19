@@ -108,7 +108,7 @@ func rule_page_ids() -> Array:
 ## enemies stay gone (D-17), persistent pickups that were taken never respawn, opened gates boot as floor.
 func fill_boot_options(options: EcsBootOptions, zone_root: Node) -> void:
 	var zone_id := ZoneStage.zone_id_of(zone_root)
-	options.skipped_pickup_names = _taken_pickup_names(zone_id)
+	options.skipped_pickup_names = _taken_pickup_names(zone_id, zone_root)
 	options.opened_gate_ids = _opened_gate_ids()
 	options.room_already_cleared = is_room_cleared(zone_id)
 
@@ -238,16 +238,23 @@ func _opened_gate_ids() -> Array:
 	return ids
 
 
-## Pickup marker names already taken in this zone: EcsBoot skips them so grabbed weapons never respawn.
-func _taken_pickup_names(zone_id: StringName) -> Array:
+## Pickup marker names already taken in this zone: EcsBoot skips them so a taken reward never respawns.
+## Only a PERSISTENT marker is honoured: the marker's flag is the truth, so a record the run holds for a
+## floor weapon (a save from before D-16 kept every weapon an enemy took) is ignored and the weapon is on
+## the floor again like every other room-local weapon.
+func _taken_pickup_names(zone_id: StringName, zone_root: Node) -> Array:
 	var save := root.save_service()
 	var names: Array = []
-	if save == null or zone_id == &"":
+	if save == null or zone_id == &"" or zone_root == null:
 		return names
 	var prefix := String(zone_id) + "/"
 	for key: String in save.state.taken_pickup_ids:
-		if key.begins_with(prefix):
-			names.append(key.substr(prefix.length()))
+		if not key.begins_with(prefix):
+			continue
+		var marker_name := key.substr(prefix.length())
+		var marker := zone_root.get_node_or_null(NodePath(marker_name)) as PickupSpawnPoint
+		if marker != null and marker.persistent:
+			names.append(marker_name)
 	return names
 
 
