@@ -13,7 +13,7 @@ extends RefCounted
 ##   "piece_name_by_entity": {id: String}, "pickup_view_by_entity": {id: Node2D},
 ##   "pickup_name_by_entity": {id: String} }
 ## What the save already knows (taken pickups, opened gates) arrives in the options: the bridge
-## reads WorldState and EcsBoot never does.
+## reads the save and EcsBoot never does.
 static func boot(world: EcsWorld, options: EcsBootOptions) -> Dictionary:
 	var player_view := options.player_view as ActorView
 	assert(options.player_view == null or player_view != null, "EcsBootOptions.player_view must be an ActorView")
@@ -99,7 +99,7 @@ static func project_view_size() -> Vector2:
 		float(ProjectSettings.get_setting("display/window/size/viewport_height")))
 
 
-## Shortcut gates: every GateMarker child blocks its cell unless WorldState
+## Shortcut gates: every GateMarker child blocks its cell unless the save
 ## already opened it (the bridge passes those ids in) — then it is floor.
 static func _bake_gates(world: EcsWorld, room_root: Node, opened_gate_ids: Array) -> void:
 	for child in room_root.get_children():

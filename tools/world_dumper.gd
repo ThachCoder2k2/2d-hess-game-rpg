@@ -14,7 +14,7 @@ extends RefCounted
 ## The boot path mirrors shell/game_root.gd (_make_world + _boot_zone): the same systems in
 ## the same order (both ask Schedule.populate), the player view placed on the "start" entry marker,
 ## then EcsBoot.boot with no taken pickups and no opened gates (a fresh save).
-## It deliberately skips WorldState, the HUD, the board overlay and audio: they
+## It deliberately skips the SaveService, the HUD, the board overlay and audio: they
 ## depend on the player's save file or on real time, and this dump must not.
 ## The player gives no input, so the ticks show what the room does by itself.
 ##

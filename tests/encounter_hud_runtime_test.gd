@@ -4,6 +4,8 @@ extends SceneTree
 ## binds HUD/board/camera, and the bridge answers events. Drives main._process
 ## by hand (headless _init has no frame loop).
 
+const SaveSupport := preload("res://tests/support/save_test_support.gd")
+
 var failures := 0
 
 
@@ -21,20 +23,21 @@ func _init() -> void:
 
 ## _ready only fires once the tree loop starts, so boot checks wait one frame.
 func _run() -> void:
-	# Autoloads DO load in -s script mode, so use the real WorldState and
-	# plant a pending health carry — the boot must apply and consume it
+	# Autoloads DO load in -s script mode, so the real SaveService node exists; it is pointed at a
+	# throwaway folder so this test never reads or writes the player's own save, and begins a clean
+	# run. A pending health carry is planted on the new main: the boot must apply and consume it
 	# (the live travel path that shipped broken once).
-	var world_state: Node = root.get_node_or_null("/root/WorldState")
-	if world_state == null:
-		world_state = load("res://shell/save/world_state.gd").new()
-		world_state.name = "WorldState"
-		root.add_child(world_state)
-	world_state.set("current_zone_id", &"")
-	world_state.set("last_entry_id", &"start")
-	world_state.set("player_health_carry", 2)
-	world_state.get("player_unlock_ids").clear()
+	var save_root := SaveSupport.make_root("encounter_hud")
+	var save_service: Node = root.get_node_or_null("/root/SaveService")
+	if save_service == null:
+		save_service = load("res://shell/save/save_service.gd").new()
+		save_service.name = "SaveService"
+		root.add_child(save_service)
+	save_service.configure(save_root)
+	save_service.new_game(0)
 
 	var main := (load("res://shell/game_root.tscn") as PackedScene).instantiate()
+	main.set("player_health_carry", 2)
 	root.add_child(main)
 	await process_frame
 
@@ -50,7 +53,7 @@ func _run() -> void:
 	_expect(int(main.get("total_enemies")) == 0, "main starts in the quiet T1 opening room")
 	var player_health: EcsComponents.Health = ecs.get_component(player_id, EcsComponents.HEALTH)
 	_expect(player_health != null and player_health.current == 2, "a pending health carry applies to the booted player")
-	_expect(int(world_state.get("player_health_carry")) == -1, "the health carry is consumed by the boot")
+	_expect(int(main.get("player_health_carry")) == -1, "the health carry is consumed by the boot")
 	var player_combat: EcsComponents.PlayerCombat = ecs.get_component(player_id, EcsComponents.PLAYER_COMBAT)
 	_expect(player_combat != null and not player_combat.sword_unlocked, "world-mode combat starts locked before T2 sword pickup")
 	var weapon_pivot := main.get_node_or_null("PawnHero/MotionRoot/SpriteRoot/WeaponPivot") as Node2D
@@ -78,6 +81,7 @@ func _run() -> void:
 	main._process(0.016)
 	_expect(String(hud.objective_label.text).begins_with("The pawn has no weapon yet"), "locked attack gives sword-search feedback")
 
+	SaveSupport.remove_root(save_root)
 	var succeeded := failures == 0
 	print("ENCOUNTER HUD TEST: %s" % ["PASS" if succeeded else "FAIL (%d)" % failures])
 	quit(0 if succeeded else 1)

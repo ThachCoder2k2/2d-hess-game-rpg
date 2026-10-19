@@ -1,11 +1,15 @@
 extends UnboundTest
 
-## Bridge characterization (M1a): death and respawn through shell/game_root.gd.
+## Bridge characterization (M1a, ported in M3b): death and respawn through shell/game_root.gd.
 ## The hero is killed through the real damage path (HealthSystem consuming
 ## world.damage_events, exactly like an enemy strike). main._on_defeated then
-## calls _on_player_defeated, which freezes the room, resets the carry, saves,
+## calls _on_player_defeated, which freezes the room, resets the carry,
 ## shows the result panel, waits 0.85 s and reloads the scene. The reloaded
-## main must boot the SAME zone from WorldState and hand control back.
+## main must boot the SAME zone from the run the SaveService holds and hand control back.
+##
+## CHANGED BY D-16/R17 (M3b): the death handler used to write the save before the reload. Autosave is
+## for success events only and a death is not one, so a death now writes nothing (the run in memory
+## already holds everything the hero earned: each earning wrote the save when it happened).
 
 const Support := preload("res://tests/bridge/bridge_support.gd")
 const SUITE_NAME := "death_respawn"
@@ -19,7 +23,7 @@ func _init() -> void:
 
 
 func _run() -> void:
-	var world_state := Support.install_isolated_world_state(self, SUITE_NAME)
+	var save_service := Support.install_isolated_save_service(self, SUITE_NAME)
 	var main := await Support.boot_main(self)
 	var max_courage := Support.player_health(main).max_value
 
@@ -36,23 +40,23 @@ func _run() -> void:
 	_expect(Support.player_health(main).current == max_courage - 1, "setup: the hero is wounded when the fatal blow lands")
 
 	# --- The fatal blow, through the real damage path ---
-	Support.remove_isolated_save(world_state)
+	Support.remove_isolated_save(save_service)
 	var hud := main.get("hud") as GameHud
 	# The boot consumes the carry, so it is already -1 here and "death clears it"
 	# would hold even if game_root.gd never cleared anything. Plant a pending carry (what a
 	# hero killed mid-fade-out of a travel would have left behind) so the assertion
 	# below can only pass if the death handler really resets it.
-	world_state.set("player_health_carry", 2)
-	_expect(world_state.get("player_health_carry") == 2, "setup: a stale health carry of 2 is pending when the fatal blow lands")
+	main.set("player_health_carry", 2)
+	_expect(main.get("player_health_carry") == 2, "setup: a stale health carry of 2 is pending when the fatal blow lands")
 	Support.damage_player(main, 99)
 	_expect(Support.player_health(main).current == 0, "the damage path takes the hero to 0 courage")
 	_expect(bool(main.get("room_ending")), "death marks the room as ending")
 	_expect(not Support.player_tag(main).control_enabled, "control is off after the fatal blow")
-	_expect(world_state.get("player_health_carry") == -1, "death clears the pending health carry")
-	_expect(FileAccess.file_exists(String(world_state.get("isolated_save_path"))), "death saves WorldState before the reload")
+	_expect(main.get("player_health_carry") == -1, "death clears the pending health carry")
+	_expect(not FileAccess.file_exists(String(save_service.call("slot_path", 0))), "CHANGED (R17, D-16): a death writes no save; autosave is for success events only")
 	_expect(hud.result_panel.visible and hud.result_label.text.begins_with("THE PAWN FALLS"), "the result panel shows the defeat message")
 	_expect(hud.result_label.text.contains("THE CHILD RESETS THE BOARD"), "the result panel shows the reset subtitle")
-	_expect(world_state.get("current_zone_id") == T2 and world_state.get("last_entry_id") == &"west_entry", "death leaves the run's zone and entry in WorldState")
+	_expect(Support.run_of(save_service).checkpoint_zone_id == T2 and Support.run_of(save_service).checkpoint_entry_id == &"west_entry", "death leaves the run's zone and entry in the run")
 	_expect(tree_current_scene_is(main), "the scene has not reloaded yet (the 0.85 s defeat beat)")
 	var cell_at_death := Support.player_cell(main)
 	var intent: EcsComponents.MoveIntent = Support.ecs_of(main).get_component(Support.player_id_of(main), EcsComponents.MOVE_INTENT)
@@ -65,12 +69,12 @@ func _run() -> void:
 	var reloaded := await Support.wait_for_reload(self, main)
 	_expect(reloaded != null, "death reloads the main scene after its beat")
 	if reloaded == null:
-		_finish(world_state)
+		_finish(save_service)
 		return
 	_expect(not is_instance_valid(main), "the old main is freed by the reload")
 	main = reloaded
 	_expect(main.get("current_zone_id") == T2 and main.get("current_room").get("zone_id") == T2, "death reboots the SAME zone (T2), not the scene default")
-	_expect(world_state.get("current_zone_id") == T2, "WorldState still names T2 after the reboot")
+	_expect(Support.run_of(save_service).checkpoint_zone_id == T2, "the run still names T2 after the reboot")
 	_expect(Support.player_cell(main) == Support.entry_cell(main, main.get("current_room"), &"west_entry"), "the hero respawns on the entry cell the run last used")
 	_expect(Support.player_health(main).current == max_courage, "the respawned hero has full courage (death drops the carry)")
 	_expect(Support.player_tag(main).control_enabled and not bool(main.get("room_ending")), "control returns and the room is live again")
@@ -87,7 +91,7 @@ func _run() -> void:
 	var reloaded_t1 := await Support.wait_for_reload(self, main)
 	_expect(reloaded_t1 != null, "death in T1 reloads the scene")
 	if reloaded_t1 == null:
-		_finish(world_state)
+		_finish(save_service)
 		return
 	main = reloaded_t1
 	_expect(main.get("current_zone_id") == T1 and Support.player_cell(main) == Support.entry_cell(main, main.get("current_room"), &"start"), "death in T1 respawns on T1's start entry")
@@ -104,18 +108,18 @@ func _run() -> void:
 	var restarted := await Support.wait_for_reload(self, main)
 	_expect(restarted != null, "the restart key reloads the main scene")
 	if restarted == null:
-		_finish(world_state)
+		_finish(save_service)
 		return
 	main = restarted
 	_expect(main.get("current_zone_id") == T2, "the restart key reboots the same zone")
 	_expect(Support.player_health(main).current == max_courage, "the restart key heals (the reload carries nothing)")
 
-	_finish(world_state)
+	_finish(save_service)
 
 
 func tree_current_scene_is(candidate: Node) -> bool:
 	return current_scene != null and current_scene == candidate
 
 
-func _finish(world_state: Node) -> void:
-	Support.end_suite(self, world_state)
+func _finish(save_service: Node) -> void:
+	Support.end_suite(self, save_service)

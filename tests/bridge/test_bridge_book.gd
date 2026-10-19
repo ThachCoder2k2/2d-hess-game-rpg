@@ -25,7 +25,7 @@ func _init() -> void:
 
 
 func _run() -> void:
-	var world_state := Support.install_isolated_world_state(self, SUITE_NAME)
+	var save_service := Support.install_isolated_save_service(self, SUITE_NAME)
 	var main := await Support.boot_main(self)
 	var book := main.get_node("RuleBookUI") as RuleBookUI
 	var hud := main.get("hud") as GameHud
@@ -125,7 +125,7 @@ func _run() -> void:
 	main._toggle_rule_book()
 	_expect(not book.visible and Support.player_tag(main).control_enabled, "the Book closes normally afterwards")
 
-	Support.end_suite(self, world_state)
+	Support.end_suite(self, save_service)
 
 
 ## Puts the hero back at rest on a known cell with no queued input.

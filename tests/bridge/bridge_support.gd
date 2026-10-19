@@ -15,16 +15,17 @@ extends RefCounted
 ## - game_root.gd's own _process is switched off after boot and driven by hand in
 ##   fixed steps (pump), so a run is deterministic and has no real-time races.
 ##   Only the fade tweens and the death timer use real engine time.
-## - The WorldState autoload is replaced by a test double that starts empty and
-##   saves to a throwaway file in the OS temp folder, so no suite writes the
-##   player's real save (user://world_state.cfg) or inherits state from it.
+## - The SaveService autoload is replaced by a fresh instance of the same script,
+##   pointed at a throwaway folder (user://test_saves/<suite>_<process>/) and
+##   starting empty, so no suite writes the player's real save or inherits state
+##   from it (tests/architecture/test_suites_isolate_the_save.gd holds that).
 ##
 ## Every suite extends UnboundTest, which supplies the checks, the 30 s watchdog
 ## (a script error inside a coroutine otherwise leaves Godot waiting forever) and
 ## the verdict line. The main scene's path comes from TestPaths, so the folder
 ## migration edits it in tests/support/paths.gd only.
 
-const IsolatedWorldState := preload("res://tests/bridge/isolated_world_state.gd")
+const SaveSupport := preload("res://tests/support/save_test_support.gd")
 
 ## Delta handed to each manual main._process call. Smaller than a 0.18 s step.
 const SIM_STEP_SECONDS := 0.05
@@ -34,33 +35,49 @@ const REAL_TIME_WAIT_CAP_MSEC := 6000
 const MOVE_ACTIONS: Array[StringName] = [&"move_up", &"move_down", &"move_left", &"move_right"]
 
 
-## Swaps the WorldState autoload for the throwaway-save test double and returns it.
-## The real autoload node is only renamed and left idle (nothing in the project
-## names the autoload as a script global; game_root.gd finds it by node path).
-static func install_isolated_world_state(tree: SceneTree, suite_name: String) -> Node:
-	var real_autoload := tree.root.get_node_or_null("WorldState")
+## Swaps the SaveService autoload for a fresh instance of its script that saves to a throwaway folder,
+## and returns it. The real autoload node is only renamed and left idle (game_root.gd finds the service
+## by node path, so the new node named SaveService is the one it uses).
+static func install_isolated_save_service(tree: SceneTree, suite_name: String) -> Node:
+	var real_autoload := tree.root.get_node_or_null("SaveService")
 	if real_autoload != null:
-		real_autoload.name = "WorldStateBypassedByBridgeTest"
-	var world_state: Node = IsolatedWorldState.new()
-	world_state.name = "WorldState"
-	world_state.set("isolated_save_path", OS.get_temp_dir().path_join("unbound_pawn_bridge_%s_%d.cfg" % [suite_name, OS.get_process_id()]))
-	tree.root.add_child(world_state)
-	return world_state
+		real_autoload.name = "SaveServiceBypassedByBridgeTest"
+	var save_service := SaveSupport.new_service(SaveSupport.make_root("bridge_" + suite_name))
+	save_service.name = "SaveService"
+	tree.root.add_child(save_service)
+	return save_service
 
 
-## Deletes the throwaway save file. Call once at the end of a suite.
-static func remove_isolated_save(world_state: Node) -> void:
-	var path := String(world_state.get("isolated_save_path"))
-	if not path.is_empty() and FileAccess.file_exists(path):
-		DirAccess.remove_absolute(path)
+## Deletes the throwaway save folder (every file the service wrote). Call once at the end of a suite,
+## or to start a test over with no save at all.
+static func remove_isolated_save(save_service: Node) -> void:
+	SaveSupport.remove_root(String(save_service.call("root_directory")))
 
 
 ## The last call of a bridge suite: lets go of any held input action, deletes the
-## throwaway save, then prints the verdict and quits through UnboundTest.finish().
-static func end_suite(suite: UnboundTest, world_state: Node) -> void:
+## throwaway saves, then prints the verdict and quits through UnboundTest.finish().
+static func end_suite(suite: UnboundTest, save_service: Node) -> void:
 	release_all_actions()
-	remove_isolated_save(world_state)
+	remove_isolated_save(save_service)
 	suite.finish()
+
+
+## The run the save service holds in memory right now. Read it through here each time: the service
+## replaces it (new game, load) rather than editing it.
+static func run_of(save_service: Node) -> SaveData:
+	return save_service.get("state")
+
+
+## What a process that was quit and relaunched has: nothing in memory. The next game_root (or
+## load_slot) reads the disk.
+static func forget_the_run(save_service: Node) -> void:
+	save_service.call("configure", save_service.call("root_directory"))
+
+
+## Writes the active slot with the run as it is in memory, as a success event would (the file is the
+## one the next relaunch reads).
+static func write_the_run(save_service: Node) -> Error:
+	return save_service.call("write_slot", save_service.get("active_slot"), save_service.get("state"))
 
 
 ## Instantiates the main scene under the root, makes it the current scene and
@@ -308,8 +325,9 @@ static func release_all_actions() -> void:
 		Input.action_release(action)
 
 
-## Reads a ConfigFile save written by WorldState straight from disk.
-static func read_save_file(world_state: Node) -> ConfigFile:
+## Reads the active slot's save file straight from disk, as a plain ConfigFile (its integrity footer is a
+## comment). Empty when there is no file.
+static func read_save_file(save_service: Node) -> ConfigFile:
 	var file := ConfigFile.new()
-	file.load(String(world_state.get("isolated_save_path")))
+	file.load(String(save_service.call("slot_path", save_service.get("active_slot"))))
 	return file

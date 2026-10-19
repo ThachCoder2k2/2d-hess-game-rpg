@@ -6,6 +6,9 @@ extends Node2D
 ## event queue into HUD text, board overlay calls, camera shake, and view
 ## despawns. No gameplay decision lives here.
 
+## The save service autoload has no class_name (an autoload's name is a global), so its script is the type.
+const SaveServiceScript := preload("res://shell/save/save_service.gd")
+
 @export var hero_path: NodePath = ^"PawnHero"
 @export var room_path: NodePath = ^"FirstEncounter"
 @export var board_path: NodePath = ^"PrototypeBoard"
@@ -32,6 +35,10 @@ var room_ending := false
 var player_view: ActorView
 var current_zone_id: StringName = &""
 var travel_in_progress := false
+## Courage carried across a zone travel: the hero's health when the trip started, applied to the next
+## world's hero by _boot_zone and consumed there. -1 = no carry (a fresh boot, or a death). Never saved:
+## every launch starts the room with full Courage. The PlayerSnapshot (M3b) replaces it.
+var player_health_carry := -1
 ## The only reader of the Input singleton: copies the controls into ecs.input_snapshot once per frame.
 var input_poller := InputPoller.new()
 var _last_token_owner := 0
@@ -45,21 +52,25 @@ func _ready() -> void:
 	if player_view != null:
 		camera_rig = player_view.get_node_or_null("Camera2D") as CameraRig
 
-	# Death and R both reload this scene; WorldState (autoload) remembers
-	# which zone the run is in, so the reload boots there, not the default.
+	# Death and R both reload this scene; the SaveService (autoload) holds the run, so the
+	# reload boots in the zone the run is in, not the default. A game that has just launched
+	# has no run yet: ensure_session() continues the saved one.
 	var entry_id: StringName = &"start"
-	var world_state := _world_state()
-	if world_state != null:
-		entry_id = world_state.last_entry_id
-		if world_graph != null and world_state.current_zone_id != &"" \
-			and world_state.current_zone_id != _zone_id_of(current_room):
-			current_room = _swap_zone_node(world_state.current_zone_id)
+	var save := _save_service()
+	if save != null:
+		save.ensure_session()
+		# A save asks the shell for the facts only the live world knows (its flags) before it writes.
+		save.saving.connect(_on_save_service_saving)
+		entry_id = save.state.checkpoint_entry_id
+		if world_graph != null and save.state.checkpoint_zone_id != &"" \
+			and save.state.checkpoint_zone_id != _zone_id_of(current_room):
+			current_room = _swap_zone_node(save.state.checkpoint_zone_id)
 	_boot_zone(entry_id)
 
 
 ## Builds a fresh EcsWorld from the current zone node. Called at scene start
 ## and again after every zone swap — the whole simulation is rebuilt, only
-## the player view node and WorldState persist.
+## the player view node and the SaveService persist.
 func _boot_zone(entry_id: StringName) -> void:
 	if ecs != null:
 		remove_child(ecs)
@@ -76,6 +87,15 @@ func _boot_zone(entry_id: StringName) -> void:
 	boot_options.skipped_pickup_names = _taken_pickup_names()
 	boot_options.opened_gate_ids = _opened_gate_ids()
 	cast = EcsBoot.boot(ecs, boot_options)
+	current_zone_id = _zone_id_of(current_room)
+	# The run's facts enter the new world before anything can ask for a save: the world's flags are
+	# the saved ones, and the save knows which zone this is.
+	var save := _save_service()
+	if save != null:
+		ecs.flags.load_dictionary(save.state.player.flags)
+		if current_zone_id != &"":
+			save.state.checkpoint_zone_id = current_zone_id
+			save.current_room_id = current_zone_id
 	_hide_opened_gate_visuals()
 	_unlock_met_rules()
 	player_id = int(cast.get("player", 0))
@@ -85,17 +105,12 @@ func _boot_zone(entry_id: StringName) -> void:
 	defeated_enemies = 0
 	room_ending = false
 	_last_token_owner = -1
-	current_zone_id = _zone_id_of(current_room)
 
-	var world_state := _world_state()
-	if world_state != null:
-		if current_zone_id != &"":
-			world_state.current_zone_id = current_zone_id
-		if world_state.player_health_carry > 0:
-			var health: EcsComponents.Health = ecs.get_component(player_id, EcsComponents.HEALTH)
-			if health != null:
-				health.current = mini(world_state.player_health_carry, health.max_value)
-		world_state.player_health_carry = -1
+	if player_health_carry > 0:
+		var health: EcsComponents.Health = ecs.get_component(player_id, EcsComponents.HEALTH)
+		if health != null:
+			health.current = mini(player_health_carry, health.max_value)
+	player_health_carry = -1
 
 	# The HUD and the board draw from the snapshot, so it must hold the booted room (with the carried
 	# health and the unlocks written above) before the first tick builds it again.
@@ -119,6 +134,9 @@ func _make_world() -> EcsWorld:
 
 
 func _process(delta: float) -> void:
+	var save := _save_service()
+	if save != null:
+		save.add_play_time(delta)
 	input_poller.poll(delta, ecs.input_snapshot)
 	var controls := ecs.input_snapshot
 	if controls.is_just_pressed(&"restart_room"):
@@ -288,10 +306,9 @@ func _on_player_defeated() -> void:
 	if room_ending:
 		return
 	room_ending = true
-	var world_state := _world_state()
-	if world_state != null:
-		world_state.player_health_carry = -1
-		world_state.save_state()
+	# A death writes no save: autosave is for success events only (R17, D-16), and the run already
+	# wrote down everything it learned when it learned it.
+	player_health_carry = -1
 	_play_sfx(&"defeat_jingle")
 	var defeat_message := _room_text("get_defeat_message", "THE PAWN FALLS")
 	_update_status(defeat_message)
@@ -382,20 +399,20 @@ func _play_sfx(sound_name: StringName) -> void:
 
 
 ## The player stepped on a door cell: fade out, swap the zone scene, rebuild
-## the simulation, fade back in. WorldState carries health and remembers the
-## destination so death/R reloads land in the right zone.
+## the simulation, fade back in. The shell carries health and the save remembers
+## the destination (as the checkpoint) so death/R reloads land in the right zone.
 func _travel_to(zone_id: StringName, entry_id: StringName) -> void:
 	if travel_in_progress or room_ending or world_graph == null or not world_graph.has_zone(zone_id):
 		return
 	travel_in_progress = true
 	_set_player_control(false)
-	var world_state := _world_state()
-	if world_state != null:
-		var health: EcsComponents.Health = ecs.get_component(player_id, EcsComponents.HEALTH)
-		world_state.player_health_carry = health.current if health != null else -1
-		world_state.current_zone_id = zone_id
-		world_state.last_entry_id = entry_id
-		world_state.save_state()
+	var health: EcsComponents.Health = ecs.get_component(player_id, EcsComponents.HEALTH)
+	player_health_carry = health.current if health != null else -1
+	var save := _save_service()
+	if save != null:
+		save.state.checkpoint_zone_id = zone_id
+		save.state.checkpoint_entry_id = entry_id
+		save.request_save(&"checkpoint_reached")
 	await _fade_to(1.0)
 	current_room = _swap_zone_node(zone_id)
 	_boot_zone(entry_id)
@@ -412,9 +429,9 @@ func _apply_player_unlocks() -> void:
 	var combat: EcsComponents.PlayerCombat = ecs.get_component(player_id, EcsComponents.PLAYER_COMBAT)
 	if combat == null:
 		return
-	var world_state := _world_state()
-	if world_graph != null and world_state != null:
-		combat.sword_unlocked = world_state.player_unlock_ids.has("wooden_sword")
+	var save := _save_service()
+	if world_graph != null and save != null:
+		combat.sword_unlocked = save.state.has_unlock(PlayerSnapshot.SWORD_UNLOCK_ID)
 		# The shell just wrote a component the snapshot copies; publish it now rather than a tick late.
 		HudSnapshotSystem.build(ecs)
 	_hide_taken_player_unlocks()
@@ -423,22 +440,22 @@ func _apply_player_unlocks() -> void:
 func _on_player_unlock(unlock_id: StringName, message: String) -> void:
 	if unlock_id == &"":
 		return
-	var world_state := _world_state()
-	if world_state != null:
-		world_state.player_unlock_ids[String(unlock_id)] = true
-		world_state.save_state()
+	var save := _save_service()
+	if save != null:
+		save.state.add_unlock(unlock_id)
+		save.request_save(&"unlock_gained")
 	_apply_player_unlocks()
 	_play_sfx(&"pickup")
 	_update_status(message if not message.is_empty() else "The pawn grips the sword. The rules crack.")
 
 
 func _hide_taken_player_unlocks() -> void:
-	var world_state := _world_state()
-	if world_state == null or current_room == null:
+	var save := _save_service()
+	if save == null or current_room == null:
 		return
 	for child in current_room.get_children():
 		var marker := child as PlayerUnlockMarker
-		if marker != null and world_state.player_unlock_ids.has(String(marker.unlock_id)):
+		if marker != null and save.state.has_unlock(marker.unlock_id):
 			marker.visible = false
 
 
@@ -485,33 +502,33 @@ func _fade_to(target_alpha: float) -> void:
 
 
 func _record_pickup_taken(item_id: int) -> void:
-	var world_state := _world_state()
-	if world_state == null or current_zone_id == &"":
+	var save := _save_service()
+	if save == null or current_zone_id == &"":
 		return
 	var marker_name := String(cast.get("pickup_name_by_entity", {}).get(item_id, ""))
 	if not marker_name.is_empty():
-		world_state.taken_pickup_ids[world_state.pickup_id(current_zone_id, marker_name)] = true
-		world_state.save_state()
+		save.state.taken_pickup_ids[SaveData.pickup_id(current_zone_id, marker_name)] = true
+		save.request_save(&"pickup_taken")
 
 
 ## A shortcut gate unbarred: permanent from this moment, across deaths and
 ## launches. The marker's closed-gate visual disappears.
 func _on_gate_opened(gate_id: StringName) -> void:
-	var world_state := _world_state()
-	if world_state != null and gate_id != &"":
-		world_state.opened_gate_ids[String(gate_id)] = true
-		world_state.save_state()
+	var save := _save_service()
+	if save != null and gate_id != &"":
+		save.state.opened_gate_ids[String(gate_id)] = true
+		save.request_save(&"shortcut_opened")
 	_hide_opened_gate_visuals()
 	_play_sfx(&"gate_open")
 	_update_status("The gate unbars. It will never close again.")
 
 
 func _opened_gate_ids() -> Array:
-	var world_state := _world_state()
-	if world_state == null:
+	var save := _save_service()
+	if save == null:
 		return []
 	var ids: Array = []
-	for key in world_state.opened_gate_ids:
+	for key in save.state.opened_gate_ids:
 		ids.append(StringName(key))
 	return ids
 
@@ -526,16 +543,16 @@ func _hide_opened_gate_visuals() -> void:
 			gate_marker.visible = gate_marker.gate_id not in opened
 
 
-## Pickup marker names already taken in this zone (WorldState) — EcsBoot
+## Pickup marker names already taken in this zone (the save) — EcsBoot
 ## skips them so grabbed weapons never respawn.
 func _taken_pickup_names() -> Array:
-	var world_state := _world_state()
+	var save := _save_service()
 	var zone_id := _zone_id_of(current_room)
-	if world_state == null or zone_id == &"":
+	if save == null or zone_id == &"":
 		return []
 	var names: Array = []
 	var prefix := String(zone_id) + "/"
-	for key: String in world_state.taken_pickup_ids:
+	for key: String in save.state.taken_pickup_ids:
 		if key.begins_with(prefix):
 			names.append(key.substr(prefix.length()))
 	return names
@@ -548,9 +565,17 @@ func _zone_id_of(zone_root: Node) -> StringName:
 	return value if value is StringName else &""
 
 
-## WorldState autoload, null-safe so headless tests without autoloads run.
-func _world_state() -> Node:
-	return get_node_or_null("/root/WorldState")
+## The SaveService autoload, null-safe so headless tests without autoloads run.
+func _save_service() -> SaveServiceScript:
+	return get_node_or_null("/root/SaveService") as SaveServiceScript
+
+
+## The save is about to be written: it learns the flags of the world that is running now, because the
+## world is where they change (the save only holds them between rooms).
+func _on_save_service_saving(_reason: StringName) -> void:
+	var save := _save_service()
+	if save != null and ecs != null:
+		save.state.player.flags = ecs.flags.to_dictionary()
 
 
 ## --- The Book of House Rules -------------------------------------------
@@ -559,19 +584,19 @@ func _world_state() -> Node:
 ## Meeting a piece = sharing a zone with it. Every definition present in the
 ## freshly booted zone writes its page into the book, once, forever.
 func _unlock_met_rules() -> void:
-	var world_state := _world_state()
-	if world_state != null and current_room != null:
+	var save := _save_service()
+	if save != null and current_room != null:
 		var newly_met := false
 		for child in current_room.get_children():
 			var view := child as ActorView
 			if view == null or view.definition == null:
 				continue
 			var piece_id := String(view.definition.id)
-			if not world_state.unlocked_rule_ids.has(piece_id):
-				world_state.unlocked_rule_ids[piece_id] = true
+			if not save.state.unlocked_rule_ids.has(piece_id):
+				save.state.unlocked_rule_ids[piece_id] = true
 				newly_met = true
 		if newly_met:
-			world_state.save_state()
+			save.request_save(&"rule_page_unlocked")
 			_update_status("New pieces on the board. The book writes their rules. [B]")
 	var book := _rule_book_ui()
 	if book != null:
@@ -593,11 +618,11 @@ func _rule_book_ui() -> RuleBookUI:
 
 
 func _unlocked_rule_ids() -> Array:
-	var world_state := _world_state()
-	if world_state == null:
+	var save := _save_service()
+	if save == null:
 		return []
 	var ids: Array = []
-	for key in world_state.unlocked_rule_ids:
+	for key in save.state.unlocked_rule_ids:
 		ids.append(StringName(key))
 	return ids
 

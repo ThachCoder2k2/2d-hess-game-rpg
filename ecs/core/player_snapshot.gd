@@ -29,7 +29,7 @@ extends RefCounted
 ## The format of to_dictionary(). Bump it when a field changes meaning, and read the old one in from_dictionary().
 const FORMAT_VERSION := 1
 
-## The unlock id of the wooden sword, as a PlayerUnlockMarker names it and as WorldState saves it.
+## The unlock id of the wooden sword, as a PlayerUnlockMarker names it and as the save stores it.
 ## Until SkillBook (M7a) is the list of unlocked skills, this one id is what "has the sword" means.
 const SWORD_UNLOCK_ID := &"wooden_sword"
 
