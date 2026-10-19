@@ -23,6 +23,7 @@ const CONTENT_MARGIN := 6.0
 ## theme type -> the stylebox names this class sets while it is on.
 const BOX_NAMES_BY_TYPE := {
 	&"PanelContainer": [&"panel"],
+	&"OverMenuPanel": [&"panel"],
 	&"Panel": [&"panel"],
 	&"PopupMenu": [&"panel", &"hover"],
 	&"TabContainer": [&"panel", &"tab_selected", &"tab_unselected", &"tab_hovered", &"tab_focus"],

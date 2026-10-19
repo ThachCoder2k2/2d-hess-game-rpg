@@ -36,6 +36,7 @@ grow_vertical = 2
 mouse_filter = 2
 
 [node name="Panel" type="PanelContainer" parent="Center"]
+theme_type_variation = &"OverMenuPanel"
 layout_mode = 2
 
 [node name="Margin" type="MarginContainer" parent="Center/Panel"]

@@ -52,7 +52,7 @@ func _run() -> void:
 	_expect(keys_on_the_page == ASSIST_KEYS and GameSettings.definitions_of_group(SettingDefinition.Group.ASSISTS).size() == 4, "the page holds the four assists and nothing else")
 	_expect((screen.control_of(GameSettings.ASSIST_TELEGRAPH_TIME) as OptionButton).selected == 0 and not (screen.control_of(GameSettings.ASSIST_INPUT_FORGIVENESS) as CheckButton).button_pressed, "all at the standard game: nothing was switched on for the player")
 	var page := screen.tabs.get_child(SettingDefinition.Group.ASSISTS)
-	var note := page.get_child(0) as Label
+	var note := page.find_children("*", "Label", true, false)[0] as Label
 	_expect(note != null and note.text.begins_with("Assists are never switched on for you"), "with the note that the choice is theirs (%s)" % [note.text if note != null else "none"])
 
 	var courage := screen.control_of(GameSettings.ASSIST_EXTRA_COURAGE) as OptionButton

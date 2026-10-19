@@ -2,7 +2,9 @@ extends UnboundTest
 
 ## High-contrast menus give menus and dialogue an opaque background (docs/game-base-plan.md 9.2, 10). On the real AppRoot and
 ## the project theme every Control in the game inherits:
-##   - off, a menu panel is the engine's own look, which is see-through (the game ships it that way);
+##   - off, a menu panel is the engine's own look, which is see-through (the game ships it that way), except the panels laid
+##     OVER another menu (Settings, Controls, the questions), which are opaque in the theme's OverMenuPanel so the menu under
+##     them does not show through their rows;
 ##   - on, the panels, tabs and buttons get an OPAQUE box with an ivory outline, the focus ring is thick and yellow, the
 ##     text is white: asked of a real panel of the pause menu, not of the theme's table;
 ##   - off again, every entry is back exactly as it was (the owner's own theme entries included: a stylebox the theme had
@@ -31,6 +33,14 @@ func _run() -> void:
 	var ordinary_panel_box := panel.get_theme_stylebox(&"panel") as StyleBoxFlat
 	_expect(ordinary_panel_box == null or ordinary_panel_box.bg_color.a < 1.0, "off: a menu panel is see-through (alpha %s)" % [ordinary_panel_box.bg_color.a if ordinary_panel_box != null else "n/a"])
 	var ordinary_text_color := button.get_theme_color(&"font_color")
+	var overlay_panels: Dictionary[String, PanelContainer] = {
+		"Settings screen": app.settings_screen.get_node("Center/Panel"),
+		"Controls panel": app.controls_panel.get_node("Center/Panel"),
+		"question": app.pause_menu.confirm_panel.get_node("Center/Panel"),
+	}
+	for panel_name in overlay_panels:
+		var overlay_box := overlay_panels[panel_name].get_theme_stylebox(&"panel") as StyleBoxFlat
+		_expect(overlay_box != null and is_equal_approx(overlay_box.bg_color.a, 1.0) and overlay_box.border_color != UiContrast.BORDER_COLOR, "off: the %s is laid over another menu and is opaque, in its own look" % panel_name)
 
 	app.settings.set_value(GameSettings.UI_HIGH_CONTRAST, true)
 	_expect(UiContrast.is_on(theme), "the setting reaches the theme")
@@ -42,6 +52,9 @@ func _run() -> void:
 	var focus_box := button.get_theme_stylebox(&"focus") as StyleBoxFlat
 	_expect(focus_box != null and focus_box.border_width_left == UiContrast.FOCUS_BORDER_WIDTH and focus_box.border_color == UiContrast.FOCUS_COLOR, "the focus ring is thick and yellow")
 	_expect(button.get_theme_color(&"font_color") == UiContrast.TEXT_COLOR and app.pause_menu.get_node("Center/Panel/Margin/Rows/TitleLabel").get_theme_color(&"font_color") == UiContrast.TEXT_COLOR, "the text is white")
+	for panel_name in overlay_panels:
+		var overlay_box := overlay_panels[panel_name].get_theme_stylebox(&"panel") as StyleBoxFlat
+		_expect(overlay_box != null and is_equal_approx(overlay_box.bg_color.a, 1.0) and overlay_box.border_color == UiContrast.BORDER_COLOR, "on: the %s takes the high-contrast outline" % panel_name)
 	var tab_box := app.controls_panel.tabs.get_theme_stylebox(&"panel") as StyleBoxFlat
 	_expect(tab_box != null and is_equal_approx(tab_box.bg_color.a, 1.0), "the Controls panel's pages are opaque")
 
@@ -51,6 +64,9 @@ func _run() -> void:
 	_expect(not UiContrast.is_on(theme), "off again: the theme is in its ordinary look")
 	var back_box := panel.get_theme_stylebox(&"panel") as StyleBoxFlat
 	_expect(back_box == null or back_box.bg_color.a < 1.0, "the panel is see-through again")
+	for panel_name in overlay_panels:
+		var overlay_box := overlay_panels[panel_name].get_theme_stylebox(&"panel") as StyleBoxFlat
+		_expect(overlay_box != null and overlay_box.border_color != UiContrast.BORDER_COLOR and theme.has_stylebox(&"panel", &"OverMenuPanel"), "off again: the %s has its own opaque look back" % panel_name)
 	_expect(button.get_theme_color(&"font_color") == ordinary_text_color, "and the text colour is as it was")
 	_expect(not theme.has_stylebox(&"panel", &"PanelContainer") and not theme.has_color(&"font_color", &"Label"), "and the theme holds none of the entries it set")
 

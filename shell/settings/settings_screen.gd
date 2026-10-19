@@ -161,7 +161,7 @@ func rebuild() -> void:
 		tabs.add_child(page)
 		tabs.set_tab_title(tabs.get_tab_count() - 1, TextService.t(GROUP_TAB_KEYS[group]))
 		if group == SettingDefinition.Group.ASSISTS:
-			page.add_child(_note_label(ASSIST_NOTE_KEY))
+			page.add_child(_indented(_note_label(ASSIST_NOTE_KEY)))
 		for definition in GameSettings.definitions_of_group(group):
 			page.add_child(_row_of(definition))
 	tabs.current_tab = clampi(page_on_show, 0, tabs.get_tab_count() - 1)
@@ -267,7 +267,7 @@ func _row_of(definition: SettingDefinition) -> Control:
 			_control_by_key[definition.key] = check
 			_add_coming_later_note(row, definition)
 		SettingDefinition.Kind.SLIDER:
-			row.add_child(_name_label(definition))
+			row.add_child(_indented(_name_label(definition)))
 			var slider := HSlider.new()
 			slider.min_value = definition.minimum
 			slider.max_value = definition.maximum
@@ -284,7 +284,7 @@ func _row_of(definition: SettingDefinition) -> Control:
 			_control_by_key[definition.key] = slider
 			_percent_label_by_key[definition.key] = percent_label
 		SettingDefinition.Kind.CHOICE:
-			row.add_child(_name_label(definition))
+			row.add_child(_indented(_name_label(definition)))
 			var options := _option_button()
 			for option in definition.choices:
 				options.add_item(TextService.t(String(option["label_key"])))
@@ -293,7 +293,7 @@ func _row_of(definition: SettingDefinition) -> Control:
 			_control_by_key[definition.key] = options
 			_add_coming_later_note(row, definition)
 		SettingDefinition.Kind.LANGUAGE:
-			row.add_child(_name_label(definition))
+			row.add_child(_indented(_name_label(definition)))
 			var languages := _option_button()
 			for code in TextService.languages():
 				languages.add_item(TextService.language_name(code))
@@ -312,6 +312,15 @@ func _add_coming_later_note(row: Control, definition: SettingDefinition) -> void
 	note.text = TextService.t(COMING_LATER_KEY)
 	note.add_theme_font_size_override(&"font_size", ROW_FONT_SIZE)
 	row.add_child(note)
+
+
+## `label` with the space the engine leaves at the left of a switch's text, so the names of the sliders and drop-downs and the
+## text of the switches start at the same x (a Label sits flush left, a CheckButton keeps the margin of its box).
+func _indented(label: Label) -> Control:
+	var cell := MarginContainer.new()
+	cell.add_theme_constant_override(&"margin_left", int(get_theme_stylebox(&"normal", &"CheckButton").get_margin(SIDE_LEFT)))
+	cell.add_child(label)
+	return cell
 
 
 func _name_label(definition: SettingDefinition) -> Label:

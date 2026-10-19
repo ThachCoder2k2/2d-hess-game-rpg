@@ -33,6 +33,7 @@ grow_vertical = 2
 mouse_filter = 2
 
 [node name="Panel" type="PanelContainer" parent="Center"]
+theme_type_variation = &"OverMenuPanel"
 custom_minimum_size = Vector2(300, 0)
 layout_mode = 2
 
