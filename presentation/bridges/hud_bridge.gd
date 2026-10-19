@@ -5,9 +5,10 @@ extends EventBridge
 ## the cell the hero stands on, the result panel) true to the room. Two kinds of change:
 ##   - events: a hit on the hero flashes the screen and redraws the Courage pips, and so does a heal (a
 ##     checkpoint refill); the skill's cooldown changing redraws the slot;
-##   - the snapshot, every frame: the enemy count, whose strike is next and the hero's cell and facing are
-##     read from the HudSnapshot (refresh()), never from a component. M4's widgets draw the snapshot
-##     themselves and this half goes away.
+##   - the snapshot, every frame: the enemy count, whose strike is next, the hero's cell and facing, and
+##     whether the sword has been found (the skill slot stops saying "find sword" the frame the hero takes
+##     it) are read from the HudSnapshot (refresh()), never from a component. M4's widgets draw the
+##     snapshot themselves and this half goes away.
 ## The status line (the words) is the MessageBridge's, not this one's.
 ## Reads: events and the HudSnapshot. Writes: the HUD. Decides: nothing.
 
@@ -21,6 +22,9 @@ var last_enemy_count := Vector2i(-1, -1)
 ## The attack-token owner the strike line was last drawn for, so it is redrawn only when it changes.
 ## -1 means "never drawn for this room".
 var last_token_owner := 0
+## Whether the skill slot was last drawn as "the sword is found" (the snapshot's sword_unlocked at that
+## draw), so it is redrawn the frame the snapshot says that changed. Not set until the slot is first drawn.
+var last_sword_shown := false
 
 
 func attach(hud_node: GameHud) -> void:
@@ -46,10 +50,12 @@ func show_room() -> void:
 	_refresh_token_owner()
 
 
-## Once per frame, after the events: the enemy count, the strike line and the cell line follow the snapshot.
+## Once per frame, after the events: the enemy count, the strike line, the skill slot's sword line and the
+## cell line follow the snapshot.
 func refresh() -> void:
 	_refresh_enemy_count()
 	_refresh_token_owner()
+	_refresh_sword_line()
 	if hud != null and snapshot.player_entity != 0:
 		hud.set_cell_status(snapshot.player_cell, facing_name(snapshot.player_facing))
 
@@ -88,11 +94,19 @@ func _on_skill_cooldown(event: Dictionary) -> void:
 
 
 ## Shows the skill slot for `time_left` seconds of cooldown. The slot is redrawn when a
-## skill_cooldown event arrives (and at boot), as it always was, from the snapshot's length and
-## sword flag. M4's widgets draw the snapshot every frame instead.
+## skill_cooldown event arrives (and at boot), from the snapshot's length and sword flag, and when the
+## sword flag itself changes (_refresh_sword_line). M4's widgets draw the snapshot every frame instead.
 func _show_skill_cooldown(time_left: float) -> void:
+	last_sword_shown = snapshot.sword_unlocked
 	if hud != null:
 		hud.set_skill_cooldown(time_left, snapshot.skill_cooldown_duration, snapshot.sword_unlocked)
+
+
+## The hero took the sword (or lost it with a new room): no cooldown event comes with that, so the slot,
+## which said "find sword", is redrawn from the snapshot the frame the flag changes.
+func _refresh_sword_line() -> void:
+	if snapshot.sword_unlocked != last_sword_shown:
+		_show_skill_cooldown(snapshot.skill_cooldown_left)
 
 
 func _refresh_enemy_count() -> void:

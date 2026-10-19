@@ -17,6 +17,7 @@ func _init() -> void:
 	_check_a_hit_on_the_hero_flashes_and_redraws_courage()
 	_check_a_heal_on_the_hero_redraws_courage()
 	_check_the_skill_slot_follows_the_cooldown_event()
+	_check_the_skill_slot_follows_the_sword()
 	_check_show_room_draws_the_room()
 	_check_the_strike_line_follows_the_token()
 	_check_the_cell_line_follows_the_hero()
@@ -82,6 +83,33 @@ func _check_the_skill_slot_follows_the_cooldown_event() -> void:
 	_expect(hud.skill_label.text == "Q THRUST 0.5", "a cooldown event redraws the slot with the time left")
 	router.route([{"type": Events.SKILL_COOLDOWN, "entity": HERO, "time_left": 0.0}])
 	_expect(hud.skill_label.text == "Q THRUST READY", "and with the ready line when it is over")
+
+
+## Taking the sword raises no skill_cooldown event, so the slot kept saying "FIND SWORD" until the next room
+## or the first swing (found by playing T2 to the sword on foot). The snapshot's flag redraws it.
+func _check_the_skill_slot_follows_the_sword() -> void:
+	var parts := _make_bridge()
+	var bridge: HudBridge = parts[0]
+	var hud: GameHud = parts[1]
+	var snapshot: HudSnapshot = parts[3]
+	snapshot.sword_unlocked = false
+	snapshot.skill_cooldown_duration = 2.0
+	bridge.show_room()
+	bridge.refresh()
+	_expect(hud.skill_label.text == "FIND SWORD", "before the sword the slot says to find it, and a frame that changes nothing keeps it so")
+	snapshot.sword_unlocked = true
+	bridge.refresh()
+	_expect(hud.skill_label.text == "Q THRUST READY", "the frame the snapshot says the sword is found, the slot reads ready: no cooldown event is needed")
+	hud.skill_label.text = "touched"
+	bridge.refresh()
+	_expect(hud.skill_label.text == "touched", "and it is redrawn only when the flag changes, not every frame")
+	snapshot.sword_unlocked = false
+	bridge.refresh()
+	_expect(hud.skill_label.text == "FIND SWORD", "a hero without the sword (a new room, a standalone scene) puts the line back")
+	snapshot.sword_unlocked = true
+	snapshot.skill_cooldown_left = 0.5
+	bridge.refresh()
+	_expect(hud.skill_label.text == "Q THRUST 0.5", "a sword found in the middle of a cooldown shows the time left")
 
 
 func _check_show_room_draws_the_room() -> void:

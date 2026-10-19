@@ -40,7 +40,11 @@ func _run() -> void:
 
 	_expect(await Support.walk_through_door(self, main, T2) and main.get("current_zone_id") == T2, "T1 -> T2 on foot")
 	var sword_cell: Vector2i = Support.ecs_of(main).grid.player_unlock_by_cell.keys()[0]
+	var skill_slot := (main.get("hud") as GameHud).skill_label
+	_expect(skill_slot.text == "FIND SWORD", "T2: before the sword the skill slot says to find it")
 	_expect(await Support.walk_to_cell(self, main, sword_cell) and Support.player_combat(main).sword_unlocked, "T2: the hero walks onto the sword and takes it")
+	Support.pump(main, 0.1)
+	_expect(skill_slot.text == "Q THRUST READY", "T2: and the skill slot reads ready at once, not after the next room or the first swing")
 	_expect(await Support.walk_through_door(self, main, T3) and main.get("current_zone_id") == T3, "T2 -> T3 on foot")
 
 	for zone: StringName in NEXT_ROOM_AFTER_THE_FIGHT:
