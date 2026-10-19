@@ -1,11 +1,13 @@
 # Hướng dẫn cho chủ dự án (Owner Guide)
 
-> **Trạng thái (Status): CẬP NHẬT Ở M4 bước 3 (2026-10-19).** Tạo ở M1a, M1b điền đường dẫn thật vào mục 5,
+> **Trạng thái (Status): CẬP NHẬT Ở M4 bước 4 (2026-10-19).** Tạo ở M1a, M1b điền đường dẫn thật vào mục 5,
 > M2 thêm mục 6 (quân cờ nhỏ hơn ô) và cập nhật các hàng về con tốt, enemy, sprite, M3b thêm mục 7
 > (lưu game, checkpoint, chết và hồi sinh). M4 bước 1 thêm màn title (New Game, Continue), credits và dấu tick
 > lưu game, và đổi cảnh chính thành `shell/app_root.tscn` (mục 1, 5, 7). M4 bước 2 thêm menu pause (`Esc`), đổi `R`
-> thành phím gọi đứa trẻ và đưa việc chơi lại phòng vào menu pause. **M4 bước 3 thêm mục 8: mọi chữ trong game nằm
-> trong file `.po` (sửa một dòng rồi thấy ngay), chỗ đặt font và glyph phím của bạn, màn Settings và bảng Controls.** Các milestone M4-M14 của
+> thành phím gọi đứa trẻ và đưa việc chơi lại phòng vào menu pause. M4 bước 3 thêm mục 8: mọi chữ trong game nằm
+> trong file `.po` (sửa một dòng rồi thấy ngay), chỗ đặt font và glyph phím của bạn, màn Settings và bảng Controls. **M4 bước 4 làm HUD thành
+> các mảnh riêng (mỗi mảnh một scene), không còn đè lên hàng ô nào của bàn, thêm bảng phím có cột tay cầm, danh sách "thử gì" của M4 và cách
+> đọc HUD (mục 1), và camera luôn đặt hình đúng trên một pixel.** Các milestone M4-M14 của
 > `docs/game-base-plan.md` sẽ điền tiếp phần còn lại của bảng đích; M14 viết bản đầy đủ.
 >
 > **Ngôn ngữ:** tiếng Việt đứng trước, thuật ngữ tiếng Anh giữ nguyên. Nếu hai bản khác nhau thì
@@ -19,7 +21,9 @@
 > file lives, how to start clean, what a death keeps and resets, and what to try. M4 step 2 moved restarting a
 > room to the pause menu (R is Call child, D-18). M4 step 3 added section 8: every word of the game is a row of a
 > `.po` file (how to edit one and see it), where the owner's font files and key-glyph files go, what each setting of the
-> Settings screen does, and the Controls panel.*
+> Settings screen does, and the Controls panel. M4 step 4 made the HUD a set of widgets (one scene each) that stay in two strips and
+never cover a row of the board, gave section 1 the controls table with the gamepad column, what to try in M4 and how to read the HUD, and
+made the camera start its picture on a whole pixel.*
 
 ## 1. Chơi bản build hiện tại (How to play the current build)
 
@@ -39,24 +43,71 @@
    (hoặc xoá file save `saves/slot_0.cfg` và `saves/slot_0.cfg.bak` trong thư mục user data của
    game; trong Godot: menu **Project → Open User Data Folder**; trên macOS là
    `~/Library/Application Support/Godot/app_userdata/The Unbound Pawn/`). Chi tiết ở mục 7.
-4. Phím:
+4. Phím (bảng này giống bảng **Controls** trong game, bảng đó đọc thẳng từ InputMap; nếu hai nơi khác nhau thì `project.godot` đúng):
 
-| Phím | Việc |
-|---|---|
-| `WASD` hoặc mũi tên | đi một ô |
-| `Shift` + hướng | xoay tại chỗ, không đi |
-| `Space` hoặc `K` | Wooden Sword (có sau khi nhặt kiếm ở T2) |
-| `Q` | Pencil Thrust |
-| `R` | **gọi đứa trẻ** (call child, D-18). Phím đã có nhưng **chưa làm gì thấy được**: đứa trẻ giúp từ M10 |
-| `Esc` (tay cầm: `Start`) | **menu pause**: Resume, Book of House Rules, **Settings**, **Controls** (bảng phím, đọc từ InputMap), **Assist options** (các tuỳ chọn làm game dễ hơn, luôn có từ lần chơi đầu), **Restart Room** (chơi lại phòng như khi chết; hỏi xác nhận; đây là cách duy nhất), Quit to Title (hỏi xác nhận và nêu tên checkpoint gần nhất). Game cũng tự pause khi cửa sổ mất focus |
-| `B` | mở Book of House Rules |
-| `F3` / `F11` | bật tắt debug view / toàn màn hình |
+| Việc | Bàn phím | Tay cầm | Hôm nay |
+|---|---|---|---|
+| đi một ô | `WASD` hoặc mũi tên | cần trái (hướng trội nhất) hoặc d-pad | có |
+| xoay tại chỗ, không đi | `Shift` + hướng (giữ, hoặc bật tắt ở Settings) | `LB` | có |
+| Wooden Sword | `Space` hoặc `K` | `A` | có (sau khi nhặt kiếm ở T2) |
+| Pencil Thrust (ô kỹ năng 1) | `Q` | `X` | có |
+| ô kỹ năng 2 (Rule Step) | `F` | `B` | **chưa** (M7a) |
+| Guard (đỡ) | `G` | `LT` | **chưa** (M8a) |
+| Focus | `Ctrl` trái | `RT` | **chưa** (M8a) |
+| **gọi đứa trẻ** (call child, D-18) | `R` | `RB` | **chưa làm gì thấy được**: đứa trẻ giúp từ M10 |
+| chọn lệnh gọi kế tiếp | `Tab` | `R3` | chưa (M7a) |
+| tương tác (giải cứu, vật trong truyện) | `E` | `Y` | chưa (M6) |
+| Book of House Rules | `B` | `L3` | có |
+| **menu pause** | `Esc` | `Start` | có |
+| debug view, toàn màn hình | `F3`, `F11` | (không có) | có |
 
-5. Đã có (M4 bước 1-3): màn title, credits (đọc `content/story/credits.tres`), dấu tick nhỏ ở góc trên bên phải mỗi khi game
+   Menu pause (`Esc` hoặc `Start`) gồm: Resume, Book of House Rules, **Settings**, **Controls** (bảng phím), **Assist options** (các tuỳ chọn làm game dễ hơn,
+   luôn có từ lần chơi đầu), **Restart Room** (chơi lại phòng như khi chết; hỏi xác nhận; **đây là cách duy nhất**, `R` không còn làm việc này), Quit to Title (hỏi
+   xác nhận và nêu tên checkpoint gần nhất). Game cũng tự pause khi cửa sổ mất focus. Ô kỹ năng 3 và 4 (`C`, `V`) đã khai báo nhưng chưa dùng.
+   Bạn chuyển giữa bàn phím và tay cầm lúc nào cũng được: hình phím trên HUD và trong bảng Controls đổi theo thiết bị bạn vừa chạm.
+5. Đã có (M4 bước 1-4): màn title, credits (đọc `content/story/credits.tres`), dấu tick nhỏ ở góc trên bên phải mỗi khi game
    tự lưu, thông báo một dòng khi save bị hỏng hoặc của bản game mới hơn, menu pause (`Esc`/`Start`; mọi phím có thêm nút tay
    cầm), **màn Settings** (từ title và từ menu pause), **bảng Controls** (từ menu pause và từ Settings), **mọi chữ nằm trong
-   file `.po`**, **chỗ đặt font** và **chỗ đặt glyph phím/tay cầm của bạn** (mục 8). Chưa có: HUD mới (bước sau của M4).
+   file `.po`**, **chỗ đặt font** và **chỗ đặt glyph phím/tay cầm của bạn** (mục 8), và, ở bước 4, **HUD mới** và **camera đặt hình đúng pixel**.
    `R` là phím gọi đứa trẻ (chưa làm gì thấy được; bảng Controls ghi "(coming later)" bên cạnh).
+
+6. **Đọc HUD (bước 4 của M4).** HUD nằm trong **hai dải**, và không dải nào đè lên hàng ô nào của bàn cờ (bàn lớn nhất, 18×9 ô, chiếm từ y 36 đến y 324 của khung
+   640×360; trước đây bảng trên cùng lấn vào hàng 0 khoảng 10 px):
+
+   ```text
+   dải trên (y 0-32)
+     COURAGE (o)(o)(o)   [chỗ để dành: Believe]   [ô kỹ năng: THRUST READY]   [chỗ để dành: thanh boss]   ENEMIES 3/4   RANK ||||
+   dải dưới (y 326-360)
+     dòng trạng thái:  They broke the rules first. Armed pawns reach farther than chess allows.
+     gợi ý phím:       [W][A][S][D] MOVE   [Space] SWORD   [Q] THRUST   [Esc] PAUSE      (tay cầm: [A] SWORD, [X] THRUST, [Start] PAUSE...)
+   ```
+
+   - **COURAGE:** mỗi chấm là một điểm Courage còn lại, hình chiếc đế quân cờ màu ngà; chấm rỗng là điểm đã mất. Tối đa 5 chấm (Extra Courage của Assists làm tăng số chấm).
+   - **Ô kỹ năng:** ô vuông 24×24 đầy dần từ đáy khi kỹ năng hồi lại; chữ bên cạnh nói `FIND SWORD` (chưa nhặt kiếm), `THRUST READY` hay `THRUST 0.5`.
+     Phím bấm không còn viết cứng trong chữ này: dòng gợi ý phím ở dải dưới lấy phím từ InputMap (đổi phím trong `project.godot` là HUD đổi theo).
+   - **ENEMIES 3/4:** còn bao nhiêu địch trong phòng. **RANK:** nhãn Rank bằng các vạch kiểm đếm màu xanh (nhãn câu chuyện, không phải cấp độ); **ẩn cho tới M7c**.
+   - **Hai chỗ để dành** (Believe của đứa trẻ, thanh máu boss) có sẵn trong dải trên nhưng ẩn và chưa vẽ gì: M10 và M8b điền vào mà không phải dời chỗ nào.
+   - **Số liệu cho người làm game** (ô con tốt đang đứng, hướng nhìn, địch nào đánh tiếp) **không** hiện cho người chơi: bấm **F3** để chúng thế chỗ dòng gợi ý phím (và bật lớp debug trên bàn cờ);
+     bấm F3 lần nữa để tắt. Game luôn mở với F3 tắt.
+   - **Muốn đổi vị trí hay kích thước một mảnh HUD:** mở scene của nó (`presentation/ui/hud/widgets/<tên>.tscn`) hoặc vị trí của nó trong `presentation/ui/hud/hud.tscn`
+     (các ô **Offset** trong Inspector). Bài test `test_hud_safe_zone` đỏ và nêu tên mảnh nếu bạn kéo nó ra khỏi hai dải hoặc đè lên một hàng ô của bất kỳ phòng nào.
+   - **Muốn thay hình cho HUD** (chấm Courage, khung ô kỹ năng, dải nền...): danh sách asset có sẵn các nhóm `hud_*` (`docs/assets/spec/ui_story.json`). Hôm nay các mảnh là
+     hình vẽ bằng node đơn giản; hình của bạn sẽ được gắn vào scene của từng mảnh (chấm Courage đã có sẵn hai ô **Full Style** và **Empty Style** trong Inspector).
+   - **Camera:** hình luôn bắt đầu đúng trên một pixel của thế giới (không nằm giữa hai pixel), kể cả khi rung màn hình; độ rung vẫn theo thanh **Screen shake** trong Settings.
+     (Cửa sổ lớn gấp đôi 640×360 là vừa đẹp nhất; cửa sổ không phải bội số nguyên vẫn bị vỡ pixel nhẹ, đó là chuyện của cách co giãn cửa sổ, một quyết định để dành cho bạn:
+     `Project Settings → Display → Window → Stretch → Scale Mode = integer` sẽ chỉ phóng theo số nguyên và để viền đen.)
+
+7. **Thử gì ở M4 (Owner can try).** Mỗi bước dưới đây là một việc bạn tự làm được, không cần sửa code:
+   1. Mở game (F5): màn **title** hiện ra, nhạc không dứt khi bạn đi qua các màn. Bấm **New Game** (hoặc **Continue** nếu đã có save).
+   2. Đi tới phòng T3 (kiếm nằm ở T2) và **bấm `Esc` giữa lúc con tốt đen đang tiến lại**: mọi thứ **đứng yên** (kẻ địch cũng đứng), nhạc vẫn chạy. **Resume** để chơi tiếp. Thử đổi cửa sổ sang
+      ứng dụng khác: game tự pause.
+   3. **Chơi T1 → T3 bằng tay cầm.** Cắm tay cầm rồi bấm một nút: dòng gợi ý phím ở đáy màn hình đổi từ `[Space]` sang `[A]`, từ `[Q]` sang `[X]`, từ `[Esc]` sang `[Start]` (chữ thay cho hình tới khi
+      bạn chép file Kenney vào `assets/ui/glyphs/`, mục 8). Mở menu bằng `Start` và đi bằng cần trái. Bấm một phím bàn phím: gợi ý đổi lại ngay.
+   4. **Chơi lại phòng:** `Esc` → **Restart Room** → xác nhận. (Bấm `R` không còn chơi lại phòng: nó là phím gọi đứa trẻ.)
+   5. **Sửa một dòng chữ rồi thấy nó:** mở `content/story/text/en/ui.po`, đổi dòng `msgstr` của `UI_HUD_PROMPT_SWORD` từ `"SWORD"` thành `"STRIKE"`, lưu, chạy lại game: dải dưới đổi theo
+      (mục 8 nói chi tiết).
+   6. Mở **Settings** (từ title hoặc `Esc`): kéo Screen shake về 0, bật Reduce flashing, đổi Language sang Tiếng Việt rồi sang Pseudo-language: chữ trên HUD đổi ngay, và mọi thứ vẫn nằm trong hộp của nó.
+   7. Bấm **F3** giữa trận để xem số liệu debug, rồi F3 để tắt.
 
 *EN: Open `project.godot` in Godot 4.6 and press F5 (main scene `shell/app_root.tscn`, which opens the title;
 the room scene `shell/game_root.tscn` still runs alone with F6), or run the binary with `--path .`. On a fresh
@@ -70,8 +121,13 @@ Restart Room with a confirm, Quit to Title with a confirm that names the last ch
 window loses focus), gamepad events on every action, and R as Call child (it does nothing visible until M10; restarting
 a room is the menu's job). M4 step 3 added the Settings screen (from the title and from the pause menu; the pause menu also has Controls and
 Assist options), the Controls panel (read from the InputMap), the key and gamepad glyphs (the owner's files, with words in
-their place), and section 8: all text is in `.po` files and the font files go in `assets/fonts/`. The new HUD comes in the
-last step of M4.*
+their place), and section 8: all text is in `.po` files and the font files go in `assets/fonts/`. M4 step 4 made the HUD a set of widgets (one scene
+each, `presentation/ui/hud/widgets/`) that live in two strips, the top one (y 0 to 32: Courage pips, the reserved Believe slot, the skill slot, the
+reserved boss bar, the enemy count, the Rank badge) and the bottom one (y 326 to 360: the status line and the control hints, built from the InputMap
+for the device in use), so none covers a row of the board (`test_hud_safe_zone`); the pawn's cell and who strikes next are debug fields behind F3, off
+at the start. The controls table above has the gamepad column. The camera starts its picture on a whole pixel (`test_camera_snap`), shake included.
+"What to try in M4": launch and see the title, pause in the middle of a fight (the enemies freeze), play T1 to T3 on a gamepad (the hints change to
+[A], [X], [Start]), restart a room from the pause menu, edit a line of `ui.po` and see it, try the settings and F3.*
 
 ## 2. Trạng thái nằm ở đâu (Where status lives)
 
@@ -206,7 +262,8 @@ are later work, and nothing in the tree blocks them.*
 | Đổi bộ tile của sàn/tường | `content/tilesets/<bộ>/tileset.tres` và `tilemap.tscn` (đừng sửa tay `tile_map_data`, dùng `tools/paint_*.gd`); atlas ở `assets/tiles/<bộ>/atlas.svg` là đồ cũ; bạn vẽ từng tile riêng (`assets/tiles/<khu>/<tile_id>.png`), công cụ sẽ tự ghép atlas |
 | Đánh dấu một tile là hố, khối nhảy qua được, phấn hay sàn bị hỏng (Mark a tile as a gap, a leapable block, chalk or corrupted floor) | **1 file**, trong Godot: mở `content/tilesets/<bộ>/tileset.tres`, ở TileSet editor chọn tile, trong Inspector mục **Custom Data** điền ô **kind**: `gap` (hố: không đi vào được, đường đạn và cú nhảy bay qua), `leapable_block` (khối: không đi qua được, chắn đường đạn, nhảy qua được), `chalk` (phấn: đi được), `corruption` (sàn hỏng: đi được); `wall` và `floor` cũng dùng được. Để trống thì tile là tường khi `solid` bật, còn không là sàn, nên mọi tile cũ vẫn như cũ. Hiện chưa tile nào điền `kind`: hình cho hố, khối, phấn và sàn hỏng thuộc về các milestone dùng chúng (M10, M13). Muốn tô chúng vào bản đồ thì công cụ `tools/paint_*.gd` nêu loại ô qua `tools/cell_kind_painter.gd`; đừng sửa tay `tile_map_data` |
 | Đổi âm thanh sự kiện / âm thanh chuyển động | ghi đè `assets/sfx/<tên>.wav` (cùng tên là mọi chỗ dùng tự nâng cấp), hoặc `presentation/audio/sfx_manager.tscn` (mục `streams` trong Inspector) / track âm thanh trong clip của actor |
-| Đổi phím | `project.godot`, mục `[input]` (hoặc Project Settings → Input Map). Bảng **Controls** (menu pause) tự đọc InputMap nên tự cập nhật; một action mới cần một dòng tên `UI_ACTION_<TÊN>` trong `ui.po` và một hàng trong `presentation/ui/controls/controls_catalog.gd` (bài test `test_controls_panel_from_inputmap` nhắc nếu quên) |
+| Đổi bố cục HUD (vị trí và kích thước từng mảnh) | **1 file**: vị trí của mảnh trong `presentation/ui/hud/hud.tscn` (ô **Offset** của node đó), hoặc bên trong scene của chính nó `presentation/ui/hud/widgets/<tên>.tscn`. Mỗi mảnh HUD là một scene riêng. Mảnh phải nằm trong dải trên (y 0-32, cao tối đa 28 px) hoặc dải dưới (y 326-360) và không đè hàng ô nào: `test_hud_safe_zone` nhắc nếu sai (mục 1, mảnh 6) |
+| Đổi một phím | `project.godot`, mục `[input]` (hoặc Project Settings → Input Map). Bảng **Controls** (menu pause) tự đọc InputMap nên tự cập nhật; một action mới cần một dòng tên `UI_ACTION_<TÊN>` trong `ui.po` và một hàng trong `presentation/ui/controls/controls_catalog.gd` (bài test `test_controls_panel_from_inputmap` nhắc nếu quên) |
 | Đặt hình phím và nút tay cầm (glyph) | **1 file mỗi phím**, trong `assets/ui/glyphs/keyboard/` và `assets/ui/glyphs/gamepad/` (tên như danh sách asset, nhóm `glyphs_kenney`: `key_w.png`, `key_space.png`, `btn_a.png`, `dpad_up.png`...). Bạn tải bộ CC0 "Input Prompts Pixel" của Kenney rồi chép từng tile vào đúng tên; chưa có file nào thì game hiện chữ thay thế như `[Space]`, `[A]`. Chi tiết ở mục 8 |
 | Đổi giá trị mặc định của một cài đặt, hay thêm một cài đặt | `schema/settings/game_settings.gd` (một hàng `SettingDefinition`: khoá, loại, trang, mặc định, khoảng giá trị) + một dòng tên trong `ui.po` + dòng làm cho nó có tác dụng (`shell/settings/settings_applier.gd` cho cả app, `shell/bridges/settings_bridge.gd` cho phòng). `test_every_setting_has_a_target` đỏ nếu không có bài test nào chứng minh nó chạm tới mục tiêu |
 | Đổi chữ (thoại, thông báo, tên, menu, HUD) | **1 dòng** trong một file `content/story/text/en/*.po` (sửa phần sau `msgstr`, lưu, chạy lại game): `ui.po` (title, pause, HUD, các câu trên dòng trạng thái `MSG_...`), `rooms.po` (tên phòng, câu khi vào phòng, câu cửa khoá), `skills.po` (tên kỹ năng và vũ khí), `story.po` (Book, tên quân, credits). Ô chữ trong scene hay `.tres` chỉ chứa **mã** (ví dụ `ROOM_T3_FIRST_PAWN_CLASH_LOCKED`): đừng gõ chữ vào đó. Làm từng bước ở mục 8 |
@@ -261,12 +318,12 @@ cách làm thật một lần), đổi cảm giác con tốt, đổi sprite (the
 | Thêm nhạc hoặc đổi bài nhạc đang phát (Add music or change which track plays) | drop the file in `assets/music/` + a row in `music_cues.tres` | 2 | no | available after M6 |
 | Thêm hoặc đổi âm thanh sự kiện (pickup, jingle, UI) (Add or swap an event sound (pickup, jingle, UI)) | drop the file + a row in `sound_bank.tres` | 2 | no | available after M6 |
 | Đổi âm thanh chuyển động hoặc sửa một animation clip (Swap a motion sound or edit an animation clip) | an **editor task** in `presentation/views/actors/actor_view_base.tscn` (changes every actor that inherits it) or in a bespoke inherited view; how fast a clip plays for one kind of piece is `clip_speed_scales` in its `visual.tres`, no scene edit. Keep hops and shakes within the 2 px margin: `test_pieces_inside_cell` samples every clip | 1 scene | no | **available now** |
-| Đổi bố cục HUD (Change the HUD layout) | the widget scene in `presentation/ui/hud/` | 1 | no | available after M4 |
+| Đổi bố cục HUD (Change the HUD layout) | the widget scene in `presentation/ui/hud/widgets/`, or its offsets in `hud.tscn` | 1 | no | **available now** (M4 step 4): one scene per widget; `test_hud_safe_zone` keeps each in a strip and off every row of every board |
 | Chỉnh độ khó hoặc assist (Tune difficulty or assists) | `content/difficulty/<profile>.tres` (global health and damage multipliers live here); for one enemy, its `enemy.tres` | 1 | no | available after M8a |
 | Chỉnh cảm giác chơi (rung, nháy, hit-stop, màu telegraph, chord window) (Tune game feel (shake, flash, hit-stop, telegraph colours, chord window)) | `content/feel/feel_profile.tres` | 1 | no | available after M7b |
 | Đổi cảm giác của con tốt (thời gian mỗi bước, courage, invulnerability) (Change how the pawn feels (step time, courage, invulnerability)) | `content/player/player.tres` (`PlayerDefinition`: Courage, invulnerability, step time, hold-repeat delay, skill cooldown, sword unlocked or not; the player scene holds none of these any more, and a node on a room's instance still beats the file) | 1 | no | **available now** (M2; `tests/content/test_player_definition.gd` proves every field reaches the hero) |
 | Đổi luật kinh tế (Believe, shard, stagger, ngưỡng assist) (Change economy rules (Believe, shards, stagger, assist thresholds)) | `content/progression/rules.tres` | 1 | no | available after M7c |
-| Đổi phím mặc định (Change input defaults) | the `[input]` section of `project.godot` | 1 | no | available after M4 |
+| Đổi phím mặc định (Change input defaults) | the `[input]` section of `project.godot` (keyboard and gamepad events); the HUD hints and the Controls panel read it | 1 | no | **available now** (M4: every played action has a keyboard and a gamepad event, `test_input_actions_have_pad_events`) |
 | Đổi chữ ở màn title hoặc credits (Change title text or credits) | `credits.tres` + `.po` rows | 2 | no | credits: **available now** (the rows `CREDIT_...` of `content/story/text/en/story.po`; `content/story/credits.tres` holds their keys, 1 file; the Licenses block is generated from `THIRD_PARTY_NOTICES.md`); title words: **available now** (the rows `UI_TITLE_...` of `content/story/text/en/ui.po`) |
 | Thêm cơ chế sàn mới (gai, công tắc) (Add a new floor mechanic (spikes, switch)) | marker + component + system + one schedule line (+ an event) | 4-5 | yes | **available now** (ô nguy hiểm tạm thời như phấn hay sàn hỏng: M10) |
 
@@ -643,4 +700,9 @@ options (antialiasing and hinting disabled, an integer size) are set in the edit
 | base line / `body_box` | vạch đáy của quân (14 px dưới tâm ô) và hộp lớn nhất của hình, trong `content/feel/piece_sizes.tres` (mục 6) |
 | key (mã chữ) | tên viết hoa có gạch dưới của một dòng chữ, ví dụ `UI_PAUSE_RESUME`. Scene, `.tres` và code giữ mã; chữ thật nằm trong file `.po` (mục 8) |
 | `.po`, `msgid`, `msgstr` | file chữ kiểu gettext: `msgid` là mã (đừng sửa), `msgstr` là chữ hiện trong game (sửa ở đây). Dòng `#.` phía trên là ghi chú cho người viết |
+| widget (mảnh HUD) | một phần của HUD có scene và script riêng trong `presentation/ui/hud/widgets/` (chấm Courage, ô kỹ năng, số địch...). Nó chỉ vẽ những gì `HudSnapshot` nói, và chỉ vẽ lại khi có gì đổi |
+| dải trên, dải dưới (strip) | hai vùng của khung 640×360 dành cho HUD: y 0-32 và y 326-360. Bàn cờ nằm giữa (y 36-324 với bàn 18×9), nên HUD không bao giờ che ô nào. Bài `test_hud_safe_zone` giữ điều đó |
+| chỗ để dành (reserved slot) | mảnh HUD đã có scene và đã có chỗ trong dải nhưng ẩn và chưa vẽ gì, để milestone sau điền vào mà không phải dời mảnh khác (Believe: M10, thanh boss: M8b) |
+| debug readout | dòng số liệu cho người làm game (ô con tốt đang đứng, hướng nhìn, địch nào đánh tiếp), chỉ hiện sau khi bấm `F3` và thế chỗ dòng gợi ý phím |
+| snap (đặt đúng pixel) | camera luôn đặt hình bắt đầu đúng trên một pixel của thế giới, để hình pixel art không bị nhoè giữa hai pixel khi camera đuổi theo hay rung (`test_camera_snap`) |
 | `qps` | "ngôn ngữ giả" do game tự sinh: mọi dòng dài hơn 40% và có dấu, để thử xem chữ dài có tràn khỏi ô không (mục 8) |

@@ -26,6 +26,11 @@ Trang này trả lời hai câu: **làm việc theo quy trình nào**, và **m�
 > rung màn hình, nháy, tương phản, toàn màn hình, ngôn ngữ, assists, bật/tắt thay vì giữ phím) và **bảng Controls** đọc từ InputMap. HUD mới là bước 4. Xem
 > `docs/OWNER_GUIDE.md` mục 8.
 >
+> **Ghi chú M4 bước 4 (2026-10-19):** **HUD mới**: mỗi mảnh (chấm Courage, ô kỹ năng, số địch, dòng trạng thái, gợi ý phím...) là một scene riêng trong
+> `presentation/ui/hud/widgets/`, nằm trong hai dải (y 0-32 và y 326-360) nên **không còn đè lên hàng ô nào của bàn cờ**; dòng gợi ý phím lấy phím từ InputMap và đổi theo
+> bàn phím/tay cầm; số liệu debug (ô đang đứng, địch nào đánh tiếp) chỉ hiện khi bấm **F3**; camera luôn đặt hình đúng một pixel. M4 xong và chờ bạn duyệt. Xem
+> `docs/OWNER_GUIDE.md` mục 1 (bảng phím có cột tay cầm, cách đọc HUD, "thử gì ở M4"); `tools/render_hud_preview.gd` vẽ HUD ra ảnh cho bạn xem.
+>
 > **Ghi chú cuối M2 (2026-10-13):** M2 cũng không đổi luật chơi. Đổi ở phần hiển thị và dữ liệu: **quân cờ giờ nhỏ
 > hơn ô** theo quyết định của bạn ngày 2026-10-12 (bảng kích thước `content/feel/piece_sizes.tres`; thay phase 66, quân
 > cao 1,5 ô), chỉ còn **một** cảnh actor (`presentation/views/actors/actor_view_base.tscn`) thay cho bốn bản chép,

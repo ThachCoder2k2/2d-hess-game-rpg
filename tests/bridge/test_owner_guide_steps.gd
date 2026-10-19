@@ -85,7 +85,7 @@ func _run() -> void:
 	_expect(saved_reasons.is_empty(), "step 1: the fall saved nothing")
 	var world_after_the_fall := Support.ecs_of(main)
 	await _choose_restart_room(main)
-	_expect(Support.ecs_of(main) != world_after_the_fall and main.get("current_zone_id") == T3 and Support.player_cell(main) == t3_entry and Support.player_health(main).current == max_courage, "step 1: R does the same without falling")
+	_expect(Support.ecs_of(main) != world_after_the_fall and main.get("current_zone_id") == T3 and Support.player_cell(main) == t3_entry and Support.player_health(main).current == max_courage, "step 1: Restart Room in the pause menu does the same without falling")
 
 	# --- Step 2: a cleared room stays clear, an uncleared one comes back whole ---
 	Support.remove_enemy_ai(main)
@@ -96,7 +96,7 @@ func _run() -> void:
 	_expect(await Support.walk_through_door(self, main, T3), "step 2: the hero walks back out of T4 by its west door")
 	_expect(main.get("current_zone_id") == T3 and Support.total_enemies(main) == 0, "step 2: T3 is empty")
 	await _choose_restart_room(main)
-	_expect(main.get("current_zone_id") == T3 and Support.total_enemies(main) == 0 and run.cleared_room_ids.has(String(T3)), "step 2: and R in T3 does not bring the pawn back")
+	_expect(main.get("current_zone_id") == T3 and Support.total_enemies(main) == 0 and run.cleared_room_ids.has(String(T3)), "step 2: and Restart Room in T3 does not bring the pawn back")
 	_expect(await Support.walk_through_door(self, main, T4), "step 2: the hero goes into T4 again")
 	Support.remove_enemy_ai(main)
 	_expect(await Support.kill_with_sword(self, main, main.get("cast")["enemies"][0]), "step 2: the hero walks up to one of T4's three pawns and brings it down with the sword")
@@ -134,7 +134,7 @@ func _run() -> void:
 		waited_for_the_blade += 0.25
 	_expect(Support.ecs_of(main).grid.get_item_cells().is_empty() and _enemies_holding_a_weapon(main) == weapons_held_at_the_start + 1, "step 4: standing on the entry, the hero watches a guard walk over and pick the blade up (%.1f s)" % waited_for_the_blade)
 	await _choose_restart_room(main)
-	_expect(main.get("current_zone_id") == B1 and Support.player_cell(main) == b1_entry and Support.player_health(main).current == max_courage, "step 4: R: B1 starts again, the hero on the entry it walked in by")
+	_expect(main.get("current_zone_id") == B1 and Support.player_cell(main) == b1_entry and Support.player_health(main).current == max_courage, "step 4: Restart Room: B1 starts again, the hero on the entry it walked in by")
 	_expect(Support.ecs_of(main).grid.get_item_cells().size() == 1 and _enemies_holding_a_weapon(main) == weapons_held_at_the_start, "step 4: the blade is on the floor again and the guard's hands are empty")
 	_expect(Support.total_enemies(main) == 3 and _all_enemies_are_whole(main), "step 4: the boss and its two guards are whole")
 

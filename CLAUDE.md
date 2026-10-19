@@ -76,7 +76,17 @@ session. Read `AGENTS.md` for the full workflow, and `docs/ARCHITECTURE.md` +
   - Controls: `shell/input/input_poller.gd` is the only code that calls the `Input`
 	singleton. It fills `world.input_snapshot` once per frame and a system reads that
 	(`test_input_only_in_poller`); test a control rule by injecting an `InputSnapshot`
-	(`tests/ecs/test_input_snapshot.gd`).
+	(`tests/ecs/test_input_snapshot.gd`). **R is Call child** (D-18); restarting a room is a command of the pause menu
+	(`GameFlow.request_respawn`), not a bound action (`test_pause_restart_is_menu_only`).
+  - The HUD: a layer (`GameHud`) of widgets, each its own scene and script under `presentation/ui/hud/widgets/`, extending
+	`HudWidget` and drawing only the `HudSnapshot` (`refresh`; new data = a `HudSnapshot` field and a line of
+	`HudSnapshotSystem.build()`, never a component read). Widgets live in the top strip (y 0-32, bars at most 28 px) or the
+	bottom strip (y 326-360) and never on a board row (`test_hud_safe_zone`, run against every room). The pawn's cell and
+	who strikes next are debug fields (`DebugReadout`) behind F3, off at the start and in every release export. A control hint
+	is built from the InputMap (`ControlPrompts`), never typed ("Q THRUST" is gone). A later milestone's widget is a hidden
+	RESERVED slot until it has data. The camera is the exception to "no scripted camera": `CameraRig` starts the view on a
+	whole pixel (`snap_to_whole_pixels`, `test_camera_snap`) and nothing else sets a camera's offset or position; shake goes
+	through `CameraBridge.shake()`, scaled by the Screen shake setting.
   - The board: what a cell is made of is a kind (`CellKinds` in `ecs/core/cell_kinds.gd`: floor, wall,
 	gap, leapable_block, chalk, corruption, each with three rules: walkable, stops a ray, a leap may cross).
 	`EcsGrid.set_cell_kind()` is the ONLY writer of the terrain (`blocked_cells` is derived from it;

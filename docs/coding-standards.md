@@ -306,7 +306,7 @@ Never re-implement what a node already does.
 | Tile floors, walls and gaps | `TileMapLayer` + `TileSet` (`kind` and `solid` custom data) | per-cell Polygon2D or Sprite nodes |
 | UI layout | Containers, anchors | manual position math on Controls |
 | Screen-fixed UI | `CanvasLayer` | moving UI to follow the camera |
-| Camera follow, limits, shake | `Camera2D` properties | scripted camera math |
+| Camera follow, limits, shake | `Camera2D` properties (the one scripted step is `CameraRig`'s whole-pixel snap, below) | scripted camera math anywhere else |
 | Node lookup | scene-unique names (`%Node`), `@export` NodePath | brittle absolute paths |
 | Sound | `AnimationPlayer` audio tracks (motion), `SfxManager` registry (events), `default_bus_layout.tres` (mixing) | ad-hoc `AudioStreamPlayer.new()` in code |
 
@@ -412,6 +412,27 @@ Deliberately not used (do not add them without a real need and the owner's say):
 - Controls are never hard-coded text: a prompt or the Controls panel asks `InputGlyphs` for the glyph of an InputMap action for a
   device, and shows the owner's picture when its file is there and the words (`[Space]`) when it is not. Only the InputPoller reads
   the `Input` singleton; `LastInputDevice` listens to events.
+
+## The HUD and the camera (M4 step 4)
+
+- **Each HUD widget is a scene and a script of its own** under `presentation/ui/hud/widgets/`, extends `HudWidget`, and has ONE instance
+  in `hud.tscn`. A widget draws only what the `HudSnapshot` says (`refresh(snapshot)`, and only when it changed): a number a widget
+  needs and the snapshot does not have is a field of `HudSnapshot` and a line of `HudSnapshotSystem.build()`, never a read of a
+  component. A widget names no component, no `EcsWorld`, no `Input` and pushes no command (`test_hud_widgets` scans the scripts). What a
+  snapshot cannot say (a piece's name, the words of a sentence) a bridge hands in through the `GameHud` facade, as a text key or a `TextKey`.
+- **A widget lives in a strip**: the top strip (y 0 to 32, a bar at most 28 px tall) or the bottom strip (y 326 to 360), 4 px from the
+  edges of the picture, and off every row of every board (`test_hud_safe_zone` measures each widget, shown or reserved, against the board of
+  every room). Only a moment's effect (`DamageFlash`) or the end of a room (`ResultPanel`) may cover the board. A new widget is placed by
+  its offsets in `hud.tscn`, with the room it needs, and the test says whether it fits.
+- **A production widget shows what a player decides with.** The pawn's cell, who strikes next and anything else for a developer is a
+  field of `DebugReadout`, behind F3 and hidden at the start. A widget that will exist later is a RESERVED slot: a scene and a script
+  whose doc says which milestone fills it and what it needs, hidden, with its rectangle in the strip; it reads nothing before that.
+- **Never write a key's name in a text row** ("Q THRUST"): a control hint is built from the `InputMap` by `ControlPrompts` /
+  `ActionPrompt` and follows the device in use. A row names what a control DOES.
+- **The camera's view starts on a whole pixel** (D-30, requirement 10). `CameraRig` is the only code that sets a camera's `offset` or
+  `position`, and its `snap_to_whole_pixels` stays on unless the view must move between pixels; everything else asks for a shake through
+  `CameraBridge.shake()` (which the Screen shake setting scales) or moves the hero. A camera is measured by the SubViewport's own
+  `canvas_transform` (`test_camera_snap`), not by numbers the rig computed itself.
 
 ## What the plan adds next
 

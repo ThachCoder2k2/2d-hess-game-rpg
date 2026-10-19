@@ -847,3 +847,31 @@ was the commit attribution line, which matches the harness and is no defect).
 - Control `size` can never be smaller than its minimum size, so a label with too much text GROWS (towards the right) instead of being clipped;
   an overflow test compares the grown rectangle with the English one and the drawn text extent with the panel behind it. A wrapped Label reports
   `get_line_count()`; a line box is `get_line_height()` (39 px for a size-28 Label, so two wrapped lines of the title logo need 78 px).
+
+## HUD and Camera Facts (M4 step 4, 2026-10-19)
+
+- `Camera2D.offset` is applied after `limit_*` (the docs say the offset "is able to move it past" the limit) and `get_screen_center_position()`
+  includes it. Setting `offset` updates the camera at once only when the value CHANGES (the same value again leaves the old transform), and the
+  setter keeps the smoothed position around its update. The engine's own smoothing advances on every `_update_scroll`, which also runs from
+  `force_update_scroll()`, so anything that updates the camera more than once a frame must switch the engine's smoothing off and ease by itself.
+  A node's internal process (where `Camera2D` updates) runs before that node's own `_process` in the same frame, so a camera moved from
+  `_process` needs `force_update_scroll()` to take effect that frame. Probed on 4.6.3 (scratch script, not kept).
+- A camera is measured by the viewport's own `canvas_transform` (its origin is minus the view's top-left corner times the zoom); a whole-pixel check
+  on that cannot be fooled by what the rig thinks it computed.
+- `rendering/2d/snap/snap_2d_transforms_to_pixel` rounds each canvas item's origin after the stretch scale, so under `canvas_items` at 1280 x 720 it
+  rounds to HALF a game pixel; `window/stretch/scale_mode = "integer"` is the setting that makes every game pixel a whole number of screen pixels
+  (and letterboxes a window that is not a multiple of 640 x 360). Neither is set; both are the owner's call.
+- A scene-unique name (`%Name`) inside an instanced scene is not reachable from the parent scene's script (the scope is the scene's owner): the HUD
+  reaches its widgets by path (`$CouragePips`) and each widget its own children by `$Child`. A Label a scene authored with a key in `text` keeps the
+  KEY in `.text` (read it through `atr(text)`), and a child's own `visible` stays true when its parent is hidden (use `is_visible_in_tree()`).
+- `Array[HudWidget].has(some_node)` logs an engine error when the node's class cannot be a `HudWidget` (typed arrays validate `has()`), and
+  `x is HudWidget` with an `x` statically typed as a class that cannot be one is a parse error: compare through an `Array[Node]` or a plain `Node`.
+- `Control.get_global_rect()` of a Control under a `CanvasLayer` is in canvas coordinates, which is what a 640 x 360 safe-zone test needs; a
+  reserved widget keeps its rectangle while `visible` is false, so one test holds shown and reserved widgets alike.
+- The first pad event of `move_up` is the left stick (project.godot lists the stick before the d-pad), so a hint that takes the first glyph shows
+  "[Left Stick Up]" for Move on a pad until the owner's glyph files exist; the hint limits itself to one glyph on a pad.
+- The tallest board the strips leave room for is 18 x 9 (y 36 to 324 in 640 x 360): the top strip is y 0 to 32 and the bottom y 326 to 360, which is
+  why a bar is at most 28 px and the boss bar frame of the asset list is 96 x 20. Every room of the game is 16 x 9 or 18 x 9 today.
+- Agent environment: a worktree-isolated agent's shell refuses a `for` loop, a computed command name and some long heredocs; a wrapper script in
+  `/tmp` that takes the suite paths as arguments (`bash /tmp/<name>.sh tests/a.gd tests/b.gd`) runs them, and `python3 script.py` with the script written
+  by the file tool edits many docs at once. BSD `sed` needs `-i ''`.

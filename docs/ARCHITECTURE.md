@@ -2,7 +2,7 @@
 
 The Unbound Pawn — a 2D top-down grid-combat RPG in Godot 4.6.3. This document
 describes the code **as it is built today** (checked against the tree on 2026-10-19, after
-milestone M3a, M3b and step 1 of M4; M3a built the runtime seams: the schedule, the declared events, the commands channel, the
+milestone M3a, M3b and M4; M3a built the runtime seams: the schedule, the declared events, the commands channel, the
 world's shared fields, the input and HUD snapshots, the player carry, the per-room origin, and the
 grid's cell kinds, leaps, rays and cached paths). The simulation is a full ECS; the
 node-composition architecture that older docs described (`GridWorld`, `FreeEnemy`,
@@ -17,9 +17,13 @@ section "Persistence") and split `shell/game_root.gd` into an `EventRouter`, one
 responsibility and a `GameFlow` that starts a room again without reloading the scene (step 2, section
 "Presentation and the bridges"), and step 3 moved the rules of a room's end into the simulation
 (`ObjectiveSystem`, `CheckpointSystem`: sections "System order" and "Rooms, checkpoints and deaths").
-M4 step 1 made `AppRoot` the main scene: the whole run is now a `GameFlow` state machine (boot, title, playing,
-paused, ending, credits), the title, the credits and the autosave tick exist, and the music and the fade live in
-`AppRoot` and survive every screen (section "The app around the game").
+M4 then built the shell in four steps. Step 1 made `AppRoot` the main scene: the whole run is a `GameFlow` state machine (boot,
+title, playing, paused, ending, credits), the title, the credits and the autosave tick exist, and the music and the fade live in
+`AppRoot` and survive every screen (section "The app around the game"). Step 2 gave the game its full `InputMap` with a gamepad
+event on every played action and the pause menu. Step 3 added the settings screen, the Controls panel, the glyph lookup and the
+text pipeline (sections "Text" and "Settings, controls and glyphs"). Step 4 made the HUD a layer of widgets, each a scene of its own,
+kept in two strips so none covers a row of the board (section "The HUD: widgets in two strips"), and gave the camera its
+integer-pixel snap.
 
 Pair this file with `docs/coding-standards.md` (conventions), `AGENTS.md` (workflow),
 `CLAUDE.md` (binding rules), `docs/OWNER_GUIDE.md` (how the owner changes things) and
@@ -122,7 +126,10 @@ presentation/            HOW THE WORLD IS SHOWN: reads events, never decides
   views/                 actor_view.gd, weapon_pickup + pickup_visual, and actors/: actor_view_base.tscn
                          (the one actor view) and the thin scenes that inherit it (player, black_pawn,
                          knight_enemy, bishop_enemy)
-  ui/hud/  ui/codex/     GameHud scene, the Book of House Rules screen
+  ui/hud/                GameHud (the layer), HudWidget (the base of a widget) and widgets/: one scene and script per widget
+                         (CouragePips + CouragePip, RankBadge, SkillSlots + SkillSlot, EnemyCount, ObjectiveLine, ControlPrompts,
+                         DebugReadout, the reserved BelieveSlot and BossBarSlot) and the two effects, DamageFlash and ResultPanel
+  ui/codex/              the Book of House Rules screen
   ui/menu/               ConfirmPanel: the shared yes-or-no question (New Game over a used slot; the pause menu's confirms)
   ui/autosave_indicator/ AutosaveIndicator: the tick that shows for a second after every autosave
   ui/theme/              UiFonts: puts the owner's font files on the project theme when the game starts; UiContrast: the
@@ -132,7 +139,7 @@ presentation/            HOW THE WORLD IS SHOWN: reads events, never decides
   ui/controls/           ControlsPanel (built from the InputMap each time it opens) and ControlsCatalog (names, pages, "coming later")
   text/                  TextService (the ONE caller of the engine's translation), TextKey, LiveText, PseudoLocale
   board/                 PrototypeBoard (telegraphs, F3 debug) and GridLinesOverlay
-  camera/                CameraRig
+  camera/                CameraRig (frames the room; the view always starts on a whole pixel)
   audio/                 SfxManager (autoload scene)
   bridges/               EventRouter and the bridges that only draw, say or play: EventBridge (their base), HudBridge,
                          BoardBridge, CameraBridge, AudioBridge, MessageBridge. They name no world, save or component.
@@ -145,7 +152,8 @@ shell/                   THE GAME AROUND THE GAME
   game_root.gd/.tscn     the in-game scene (test-capped at 200 lines): builds the world, ticks it, routes events; runs alone too
   game_flow.gd           GameFlow: the state machine of the run (boot, title, playing, paused, respawning, ending, credits)
   zone_stage.gd          ZoneStage: scene-tree plumbing (the world node, the entry cell, zone and hero-view swaps)
-  shell_keys.gd          ShellKeys: pause (Esc, Start), F3, F11 and B, read from the frame's InputSnapshot
+  shell_keys.gd          ShellKeys: pause (Esc, Start), F3 (the debug view: the board's layer and the HUD's readout), F11 and B,
+                         read from the frame's InputSnapshot
   pause/                 PauseMenu (Resume, Book, Settings, Controls, Assist options, Restart Room, Quit to Title; the two last ask
                          first) and PauseSummary (what its questions say)
   settings/              SettingsScreen (four pages built from the table), SettingsStore (the profile file), SettingsApplier
@@ -656,7 +664,7 @@ in two folders:
 |---|---|---|---|
 | `BoardBridge` | `presentation/bridges/` | telegraph cells, strike flashes, F3 intent paths on `PrototypeBoard` | `telegraph_*`, `attack_resolved`, `attack_landed`, `intent_changed`, `defeated` |
 | `CameraBridge` | `presentation/bridges/` | the two screen shakes (named constants), framing each room | `attack_landed`, `damaged` |
-| `HudBridge` | `presentation/bridges/` | Courage pips and the damage flash, the skill slot, the result panel, and the enemy count, the strike line, the cell line and the skill slot's sword line (the slot stops saying "find sword" the frame the snapshot says the sword is found) it redraws from the snapshot every frame | `damaged`, `healed`, `skill_cooldown` |
+| `HudBridge` | `presentation/bridges/` | the HUD: it hands the snapshot to the widgets every frame (Courage, the skill slot, the enemy count, the Rank badge and the debug readout's cell line draw themselves from it), flashes the screen on a hit on the hero, puts the result panel up and names the enemy that strikes next on the debug readout (a name is the cast's, not the snapshot's) | `damaged` |
 | `MessageBridge` | `presentation/bridges/` | every sentence an event puts on the status line (as text keys, `MSG_...` rows of ui.po) and `say(key, params)` for the others | `attack_locked`, `attack_landed`, `damaged`, `weapon_changed`, `player_unlock`, `gate_opened`, `zone_exit_locked` |
 | `AudioBridge` | `presentation/bridges/` | the event sounds through the `SfxManager` registry; the only caller of it | `pickup_taken`, `player_unlock`, `gate_opened` (+ `play()` for the room outcome) |
 | `SaveBridge` | `shell/bridges/` | what the room writes into the run and the run gives back to each room (cleared rooms, the checkpoint, the room and entry the pawn is in, persistent pickups, gates, unlocks, flags); the ONLY asker of saves (R17) | `pickup_taken`, `player_unlock`, `gate_opened`, `room_cleared`, `checkpoint_set`, `respawn_requested` |
@@ -684,15 +692,25 @@ tree (13.2) lists a `save` handler under `presentation/bridges/`; 13.1 forbids p
 - `PrototypeBoard` (`presentation/board/`) — the combat overlay: telegraph cells, hit flashes,
   F3 debug paths. The one place `_draw()` is allowed for gameplay overlays. It reads the board
   geometry from the grid (duck-typed) and everything else from `world.hud_snapshot`.
-- `GameHud` (`presentation/ui/hud/`, a `CanvasLayer`) — courage, skill cooldown, enemy count,
-  status, damage flash, result panel. It owns all its own formatting; every word it shows is a text key
-  resolved by `TextService` and kept in the player's language by a `LiveText` (see "Text").
+- `GameHud` (`presentation/ui/hud/`, a `CanvasLayer`) — the layer that holds the widgets and routes to them (see "The HUD:
+  widgets in two strips"). It decides nothing; every word it shows is a text key resolved by `TextService` and kept in the
+  player's language by a `LiveText` (see "Text").
 - `CameraRig` (`presentation/camera/`) — a `Camera2D` that is a child of the player view (so it
   follows by tree parenting), clamps to the room and shakes via the built-in offset. A room that fits the
   picture is held still with the board centred and every cell on screen (the limits are one view wide
   around the board's centre, `CameraRig.limits_for_board`); a larger one scrolls with the hero and stops
   at its edges. The shell calls `setup(grid)` after every boot, so the clamp follows the new room
-  (`test_camera_frames`).
+  (`test_camera_frames`). **The view always starts on a whole pixel of the world** (D-30, requirement 10;
+  `snap_to_whole_pixels`, on by default): all art is drawn 1x1 at 640 x 360, so a view between two pixels would
+  shimmer as the follow point eases or the screen shakes. The engine's own smoothing runs after anything the rig
+  can do, so with the snap on the rig eases the follow point itself (the same exponential catch-up, cut on
+  `setup()`), asks the engine where the view lands (`force_update_scroll`), and moves it by less than half a
+  pixel through the camera's `offset`, which the engine adds after the board's limits. The shake is rounded to
+  whole pixels and is still scaled by the Screen shake setting (`CameraBridge.shake_scale`). Measured on the
+  SubViewport's own canvas transform (`test_camera_snap`). The slide of a piece between cells is procedural gameplay
+  timing and is not snapped; the project's `snap_2d_transforms_to_pixel` rounds in window pixels (half a game pixel at
+  1280 x 720) and was left alone, as was `stretch/scale_mode = integer` (the owner's call: it letterboxes a window that is not a
+  multiple of 640 x 360).
 - `RuleBookUI` (`presentation/ui/codex/`) — the Book of House Rules screen (key `B`).
 - `SfxManager` (autoload, `presentation/audio/`) — pooled one-shot playback for event sounds
   with no clip. Motion sounds are audio tracks in the actor's `AnimationPlayer` clips. Only the
@@ -715,6 +733,49 @@ tree (13.2) lists a `save` handler under `presentation/bridges/`; 13.1 forbids p
   within 14 px of the cell centre. Clips cap their hops and shakes at the 2 px margin. Row-based
   depth (z by row) is kept; nothing needs it any more. Measured by `test_pieces_inside_cell`,
   drawn for the owner by `tools/render_actor_preview.gd`.
+
+## The HUD: widgets in two strips
+
+The HUD (docs/game-base-plan.md D-29, 9.2, 10) is a `CanvasLayer` (`GameHud`, `presentation/ui/hud/hud.tscn`) that holds one scene
+per widget (`presentation/ui/hud/widgets/`), so a milestone adds a skill slot, a boss bar or a Believe mark by editing that
+widget's scene and not a shared one. A widget extends `HudWidget` (a `Control` that takes no mouse): `refresh(snapshot)` draws what
+the `HudSnapshot` says and does nothing when nothing changed, `forget_drawn()` makes the next frame draw it all again (a room that
+just booted). A widget decides nothing and names no component, no world and no `Input` (`test_hud_widgets` scans the scripts).
+
+```text
+top strip, y 0 to 32 (a bar at most 28 px tall)                                 bottom strip, y 326 to 360
+  CouragePips    x   6..152  the caption and one pip per point (at most 5)        ObjectiveLine    y 327..341  the status line
+  BelieveSlot    x 156..192  RESERVED, hidden (M10)                               ControlPrompts   y 342..358  the control hints
+  SkillSlots     x 198..318  room for four 24 px slots; slot 1 is the thrust      DebugReadout     y 342..358  F3: takes the hints' place
+  BossBarSlot    x 322..418  RESERVED, hidden (M8b); 96 x 20, the asset list's frame
+  EnemyCount     x 420..552  "ENEMIES 3/4"
+  RankBadge      x 556..630  the Rank label as blue tally marks; hidden until the snapshot has one (M7c)
+effects, not widgets of a strip:  DamageFlash (a fifth of a second after a hit; off with Reduce flashing)
+                                  ResultPanel (the end of a room; hidden at the next one)
+```
+
+- **Who feeds what.** The snapshot feeds Courage (`player_courage_current/max`), the skill slot (`sword_unlocked`,
+  `skill_cooldown_left/duration`), the enemy count (`room_enemies_remaining/total`), the Rank badge (`rank_label`, 0 until M7c) and the debug
+  readout's cell line (`player_cell`, `player_facing`). The words of the status line come from the `MessageBridge`
+  (`GameHud.set_status`); the damage flash and the result panel from the `HudBridge`; the strike line of the debug readout from the
+  `HudBridge` too, because the name of a piece is the cast's. Courage needs no event: `HudSnapshotSystem` runs at the end of the tick
+  that took the Courage, before the events are routed, so the frame that routes the hit draws it.
+- **The safe zone** (`test_hud_safe_zone`, requirement 180). Every widget, shown or reserved, lies inside a strip, 4 px from the
+  edges of the picture, and intersects no board: not that of any room, nor the largest 18 x 9 board the strips leave room for (its rows run
+  y 36 to 324). The old HUD covered row 0 by about 10 px. The result panel is the one piece that sits over the board, and only when
+  the room has ended. A board larger than the picture scrolls under the strips by design.
+- **Control hints** are built from the `InputMap` and `LastInputDevice` (`ControlPrompts`): the first glyph of each action for the device
+  in use, the owner's Kenney picture when the file is there and the words otherwise (`[Space]`, `[A]`), in the language in use;
+  Move shows four glyphs on a keyboard and one on a pad. AppRoot owns the glyph finder and the device tracker and hands them to
+  the game scene, which hands them to the HUD (`GameHud.configure_controls`); a scene run alone shows the keyboard.
+- **Debug fields** (requirement 181): the pawn's cell and facing and the enemy that strikes next are in `DebugReadout`, hidden at the
+  start. F3 (`ShellKeys`, the `debug_view_toggle` action) switches the board's debug layer and the readout together; the readout
+  takes the place of the control hints. The scene's `debug_enabled` is forced off in a release export
+  (`ShellKeys.debug_view_at_start`), whatever the scene says; `test_debug_overlay_default` drives it on the real scene.
+- **Art.** The widgets are plain nodes today (a `Panel` with a `StyleBoxFlat` for a pip, `ColorRect`s, labels). The owner's pictures
+  (the asset list's `hud_*` groups: pips, plates, frames, strips) arrive as textures and styles on these scenes; the Courage pip
+  already takes its two looks as `StyleBox` exports. Nothing loads `content/ui/hud/` by path (the content rule): a scene names its
+  picture by uid.
 
 ## Text: keys, rows and the language
 
@@ -884,19 +945,22 @@ ad-hoc edits:
   called by the Book, a trip and a won room), `PlayerCombat.sword_unlocked` (`SaveBridge.apply_unlocks`) and
   `VIEW_REF` (`DespawnBridge`). The channel that replaces the writes (`world.commands`) exists since M3a
   step 1 but nothing pushes on it yet; the hero's Courage is no longer one of them (the zone swap carries a
-  `PlayerSnapshot`). The skill slot is redrawn on `skill_cooldown`
-  events, as it always was, so after the sword is found it says "find sword" until the first
-  skill is used; the M4 widgets draw the snapshot every frame and end that.
+  `PlayerSnapshot`). (The skill slot used to be redrawn on `skill_cooldown` events and said "find sword" after the
+  sword was found; the M4 widgets draw the snapshot every frame and ended that.)
 - (Removed in M4 step 2: the shell keys `F3`, `F11` and `B` are `InputMap` actions now, `debug_view_toggle`,
   `fullscreen_toggle` and `rule_book_toggle`, and `restart_room` is gone: restarting is the pause menu's command.)
 - `ViewSyncSystem` blinks the invulnerability tint from the wall clock.
 - Nothing returns the pawn to the checkpoint. D-16 says both "return to the latest checkpoint" and "a death
   resets only the current uncleared room"; the least punishing reading is built (a death puts the pawn back on
   the entry of the room it fell in, and a Continue on the room and entry of the last save, plan 5.2), so the
-  checkpoint is recorded, is where Courage refills and is what the pause menu will name (M4). `defeated_boss_ids` is saved and loaded but nothing writes it until M8b, and a
+  checkpoint is recorded, is where Courage refills and is what the pause menu's Quit question names. `defeated_boss_ids` is saved and loaded but nothing writes it until M8b, and a
   boss's phases (the "highest checkpointed phase" of D-43) are M8b's: a boss room starts over whole.
-- `Tuning.extra_courage` is not read at the checkpoint refill (the assist settings arrive in M4 and nothing
-  sets it), and the refill names Believe in its event only once M10 adds the component.
+- `Tuning.extra_courage` is set by the Extra Courage assist (a `tuning_set` command) but not read at the checkpoint
+  refill, and the other three assists reach `world.tuning` with no system reading them yet (M7b, M8a, M8c are named on
+  each field); the refill names Believe in its event only once M10 adds the component.
+- The HUD's rank badge, Believe slot and boss bar are inert: the Rank label (`HudSnapshot.rank_label`) stays 0 until M7c fills it, and
+  the other two draw nothing before M10 and M8b. Skill slots 2 to 4 are declared in the `InputMap` and absent from the HUD until M7a gives
+  the snapshot a list of skills.
 - The 72x40 kingdom (`tests/fixtures/the_kingdom.tscn`) is still a zone in the shipped world
   graph (`content/world/world.tres`, the one documented exception in
   `test_content_references.gd`, so the H1 exit keeps resolving until M5), and `first_encounter`
@@ -930,13 +994,13 @@ kind:
 |---|---|
 | `tests/architecture/` | the guards: `test_dependency_edges`, `test_content_references`, `test_content_has_no_gd`, `test_sidecars_tracked`, `test_no_path_only_ext_resource`, `test_no_old_res_paths`, `test_fixtures_present`, `test_tools_keep_uids`, `test_all_scripts_load`, `test_dump_baselines`, `test_world_dumper_entry_cell`, `test_schedule_complete`, `test_events_declared`, `test_input_only_in_poller`, `test_save_written_only_by_save_service`, `test_suites_isolate_the_save`, `test_game_root_is_thin`, `test_no_scene_reload` |
 | `tests/ecs/` | the runtime seams of M3a and the two systems of M3b: `test_objective_system`, `test_checkpoint_system`, `test_schedule_order`, `test_world_fields`, `test_frozen_world`, `test_commands_channel`, `test_view_commands`, `test_emit_damage`, `test_heal_queue`, `test_boot_options`, `test_input_snapshot`, `test_hud_snapshot`, `test_player_snapshot_roundtrip`, `test_room_origin`, `test_grid_cell_kinds`, `test_leap_occupancy`, `test_ray_stops_at_blockers`, `test_path_cache`, `test_attack_setup_search` |
-| `tests/bridge/` | the in-game scene and its bridges: the characterization suites (travel, death and respawn, persistence, health carry, the Book, the world flags), `test_game_flow`, `test_event_router`, one suite per bridge (`test_board_bridge`, `test_camera_bridge`, `test_audio_bridge`, `test_message_bridge`, `test_hud_bridge`, `test_bridge_despawn`, `test_bridge_room_outcome`), `test_shell_keys`, and the rules of M3b step 3 through the real scene: `test_checkpoint_rules`, `test_cleared_rooms`, `test_player_carry_zone_swaps`; `test_bridge_backtracking` walks the pawn home from H1 to T1 on foot, by key presses, through every west door, and `test_bridge_route_on_foot` walks it forward from a clean T1 to the hub (the sword in T2, every piece of T3, T4 and B1 brought down with the sword, each east door the clear opened); `test_owner_guide_steps` does the "things to try" of `docs/OWNER_GUIDE.md` section 7 in the rooms as they are, in the guide's order from a clean save (a fall, `R`, a cleared room, a checkpoint, a floor weapon, a relaunch); a suite that follows a player brings a pawn down with the sword by the real input path (`Support.kill_with_sword`: walk beside it, face it, press attack), never with a damage request, which needs no cell and let a pawn on a wall go unnoticed; `test_kill_with_sword` proves that helper can say no; `bridge_support.gd` is their shared fixture (it also walks: `tap_direction`, `walk_to_cell`, `walk_through_door`, and fights: `kill_with_sword`) |
+| `tests/bridge/` | the in-game scene and its bridges: the characterization suites (travel, death and respawn, persistence, health carry, the Book, the world flags), `test_game_flow`, `test_event_router`, one suite per bridge (`test_board_bridge`, `test_camera_bridge`, `test_audio_bridge`, `test_message_bridge`, `test_hud_bridge`, `test_bridge_despawn`, `test_bridge_room_outcome`), `test_shell_keys`, and the rules of M3b step 3 through the real scene: `test_checkpoint_rules`, `test_cleared_rooms`, `test_player_carry_zone_swaps`; `test_bridge_backtracking` walks the pawn home from H1 to T1 on foot, by key presses, through every west door, and `test_bridge_route_on_foot` walks it forward from a clean T1 to the hub (the sword in T2, every piece of T3, T4 and B1 brought down with the sword, each east door the clear opened); `test_owner_guide_steps` does the "things to try" of `docs/OWNER_GUIDE.md` section 7 in the rooms as they are, in the guide's order from a clean save (a fall, Restart Room from the pause menu, a cleared room, a checkpoint, a floor weapon, a relaunch); a suite that follows a player brings a pawn down with the sword by the real input path (`Support.kill_with_sword`: walk beside it, face it, press attack), never with a damage request, which needs no cell and let a pawn on a wall go unnoticed; `test_kill_with_sword` proves that helper can say no; `bridge_support.gd` is their shared fixture (it also walks: `tap_direction`, `walk_to_cell`, `walk_through_door`, and fights: `kill_with_sword`) |
 | `tests/shell/` | the app around the game (M4 step 1): `test_app_flow` (boot, title, New Game into T1, pause, a rebuild behind the fade, Quit to Title, Continue, the credits, the ending), `test_game_flow_states` (the state machine's table), `test_new_game_resets_slot`, `test_continue_loads_checkpoint`, `test_title_summary`, `test_title_screen`, `test_credits_screen`, `test_credits_licenses_current`, `test_transition_layer`, `test_autosave_indicator`, `test_confirm_panel`, `test_app_root_is_main_scene`; `shell_support.gd` boots AppRoot for them |
 | `tests/save/` | the save: `test_save_roundtrip`, `test_save_migration_v2` (with the real v2 file in `tests/fixtures/saves/`), `test_corrupt_save_falls_back`, `test_request_save_callers` (R17), `test_profile_survives_new_game` |
 | `tests/input/` | the controls (M4 steps 2 and 3): `test_input_actions_have_pad_events`, `test_input_poller_rules` (dominant axis, hold-or-toggle), `test_input_glyphs` (every path is the asset list's, every bound control has a slot, the words stand in, the device is followed), `test_controls_panel_from_inputmap` |
 | `tests/settings/` | the settings (M4 step 3): `test_settings_roundtrip` (the table, the profile, garbage and missing keys with a logged reason), one `test_setting_*` suite per setting that looks at the real target (volumes, fullscreen, language, shake scale, reduce flash, high-contrast danger, high-contrast menus, assists, hold-or-toggle), `test_every_setting_has_a_target` (fails a setting no suite moves), `test_settings_screen` (built from the table, reachable from the title and the pause menu), `test_pause_assist_options`; `settings_support.gd` boots the app for them |
 | `tests/text/` | the words (M4 step 3): `test_text_service`, `test_pseudo_locale`, `test_po_domains_merge`, `test_text_keys`, `test_language_switch_redraws_live`, `test_layout_pseudo_locale`, `test_font_slots`, `test_font_vietnamese_coverage` |
-| `tests/presentation/` | the board overlay drawing from the snapshot, and the camera framing the room (`test_board_draws_from_snapshot`, `test_camera_frames`) |
+| `tests/presentation/` | the board overlay drawing from the snapshot, the camera framing the room and starting on a whole pixel (`test_board_draws_from_snapshot`, `test_camera_frames`, `test_camera_snap`), and the HUD (M4 step 4): `test_hud_widgets` (each widget alone, from a snapshot), `test_hud_safe_zone` (every widget in a strip and off every board), `test_debug_overlay_default` (F3 on the real scene) |
 | `tests/perf/` | `test_room_tick_budget`: an 18x9 room with eight enemies ticks in 2 ms or less on average, and builds one pathfinder |
 | `tests/audio/`, `tests/content/` | the bus layout; the requirements ledger and the placeholder manifest; `test_room_doors_reachable` (every room of the world graph booted for real: every entry on floor, every door floor, reachable from every entry and leading to an entry that exists); `test_room_markers_on_floor` (the same boot: every parked enemy stands on floor and is in the grid, every pickup and unlock marker is on floor and can be walked to from every entry, every gate is on floor and can be pushed) |
 | `tests/support/` | `UnboundTest`, `TestPaths` (the only place a new test names a `res://` path), `reference_pathing.gd` (the pathing and the attack search as they were before M3a, the yardstick the new code is compared with), the harness's own test |
@@ -969,7 +1033,8 @@ and the grid's cell kinds, leaps, rays, cached paths and bounded attack search, 
 cleared-room rules of D-16 and D-17 (step 3), and, from M4 step 3, the settings screen, the Controls panel and the glyph lookup (built on the gamepad events and the pause menu of step 2), the text pipeline (the `.po` files, `TextService`, the pseudo-language, every literal a key) and the font slot, and, from M4 step 1, `AppRoot` as the main scene with the `GameFlow`
 state machine, the persistent fade, the title, the credits (data in `content/story/credits.tres`, licences generated
 from `THIRD_PARTY_NOTICES.md`), the autosave tick and the corrupt-save notice. The ECS contract is kept as it was.
-Still to come, in plan order: the rest of the shell (the production HUD, camera snap, first-run card), story, skills,
-bosses and the other five districts. The
+and, from M4 step 4, the HUD as widgets in two strips with its safe-zone test, the control hints from the `InputMap`, the F3 debug
+readout and the camera's integer-pixel snap, which closes M4's Tier A. Still to come, in plan order: the first-run card (Tier B), story, skills, bosses
+and the other five districts. The
 owner-facing "how do I change X" table, with real paths for what exists today, is
 `docs/OWNER_GUIDE.md`.

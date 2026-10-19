@@ -1896,3 +1896,58 @@ apply: nothing is downloaded, the font and the Kenney glyphs are "owner-supplied
 - **Not done, and why.** The production HUD (its help line should become hints made from the InputMap, `ActionPrompt` is ready for it) and the
   camera snap: step 4. The first-run card (Tier B). `vi` rows, the font files and the glyph files: the owner's (D-25, the asset rules). Dialogue,
   ambient and story rows: M6. The assists reach `world.tuning` and no system reads them yet (M7b, M8a, M8c).
+
+## M4 step 4 - the production HUD, the camera snap and the docs - 2026-10-19
+
+Branch `base/m4-4`, from `base/m4-3`. Four commits of work (camera, HUD, the preview tool, the docs) and the tag `m4-done`.
+
+- **The camera first (D-30, requirement 10).** `CameraRig` now ends every frame with the view's top-left corner on a whole pixel (`snap_to_whole_pixels`,
+  on). Probed on 4.6.3 before building: `Camera2D.offset` is added AFTER the limits ("offset is able to move it past this") and
+  `get_screen_center_position()` includes it; setting `offset` to the SAME value does not update the camera, a different one does; the engine's
+  own smoothing advances on every update, so a rig that pokes the camera twice a frame would ease twice as fast. So with the snap on the engine's
+  smoothing is off and the rig eases the follow point itself (`1 - exp(-speed * delta)`, cut on `setup()` and when follow changes), asks the engine
+  where the view lands with `offset = 0` and `force_update_scroll()`, then sets the offset to the sub-pixel correction plus the shake rounded to whole
+  pixels and updates once more. The measuring is the SubViewport's own canvas transform (`test_camera_snap`, 24 checks): fractional hero positions, the
+  ease (kept: a frame after a 120 px jump the view is still behind, then catches up and never steps back), the four room sizes pinned and still,
+  zoom 2, the world's corners (the snap never pushes the view past the board's edge), the clamp off, the shake (whole pixels every frame, still moves
+  the view 6 px at strength 6, back exactly at rest), the Screen shake scale (0 moves nothing, 0.25 stays in 2 px, 1.0 moves further), and the shipped
+  hero rig. **Not** a project setting: `rendering/2d/snap/snap_2d_transforms_to_pixel` rounds in WINDOW pixels (half a game pixel at 1280 x 720) and
+  no test can see it; `stretch/scale_mode = integer` letterboxes any window that is not a multiple of 640 x 360, which is the owner's call. The
+  piece's cell-to-cell slide is procedural gameplay timing and was left alone.
+- **The HUD (D-29, requirements 180 and 181).** The old `hud.tscn` was twenty loose nodes in one scene, a top panel at y 4 to 46 and a strike line at
+  y 322 to 336 (both over board rows, the M2 review's finding), and a `GameHud` with a setter per label. It is now `GameHud` (a `CanvasLayer` that
+  holds widgets, `widgets()`, `show_room(snapshot)`, `refresh(snapshot)`, and the few things a bridge hands in: `set_status`, `flash_damage`,
+  `show_result`, `set_strike_owner`, `set_debug_visible`, `configure_controls`) and one scene and script per widget under `widgets/`. See the plan's
+  M4 "step 4" entry for the list and the layout numbers. The `HudBridge` lost `set_courage`, the skill and count bookkeeping and the `healed` and
+  `skill_cooldown` handlers: the widgets read the snapshot, which is rebuilt at the end of the tick that took the Courage, before the events are
+  routed, so the frame that routes a hit already draws it (`test_hud_bridge` drives that order). `HudBridge.facing_key` moved to
+  `DebugReadout.compass_key`. `HudSnapshot.rank_label` is the one new field.
+- **Decisions taken, and why.** (1) Every widget, shown or reserved, is held to the strips by one test over `GameHud.widgets()`, so a later milestone
+  that fills the Believe slot or the boss bar cannot drift out of it. (2) The debug readout takes the control hints' place on F3 instead of sharing
+  the row: with +40 percent text the two cannot sit side by side in 624 px, and a developer view may replace a player hint. The test says the two
+  have exactly the same rectangle. (3) The Rank badge reads a snapshot field that stays 0 (hidden) until M7c, rather than showing "Rank 2" from the
+  first minute: the first-chain HUD must not show a system that has not started (ui1-hud-scope-spec). (4) The skill line lost its "Q": the hint beside
+  it is built from the InputMap, so a pad shows X. (5) No red for one Courage left: the plan (10) says the low-Courage cue is a pulse and a vignette,
+  never red-saturated, and the old red text is gone with the text; the pulse is M8c's. (6) The widgets are plain nodes (a `Panel` with a `StyleBoxFlat`
+  for a pip, `ColorRect`s, labels) with the pip's two looks as `StyleBox` exports; the owner's pictures (the `hud_*` groups of the asset list) arrive as
+  textures on these scenes. Nothing in `presentation/` loads `content/ui/hud/` by path. (7) `GameRoot` is 198 lines of its 200: the HUD wiring is a few
+  lines (the controls handed to the HUD, the debug flag clamped for a release build, the debug view after a boot).
+- **The scene the player sees.** Looked at with real-renderer screenshots in this sandbox (`godot --path . -s <script>` without `--headless`; the
+  scratch script rendered `game_root.tscn` in T4): the hero's Courage as three ivory ovals, the enemy count at the top right, the hints and the status
+  line at the bottom, row 0 of the board clear; F3 puts "CELL 02,05 FACE S" and "ENEMY STRIKE READY" where the hints were; the pseudo-language fits.
+  `tools/render_hud_preview.gd` now does the same for the owner (six pictures; it exits 2 without a renderer).
+- **Tests.** New: `test_hud_widgets` (44: each widget alone from a snapshot, the hints on a keyboard and on a pad and from a rebound key, the language,
+  the flash, and a scan that no widget script touches the simulation), `test_hud_safe_zone`, `test_debug_overlay_default`, `test_camera_snap`. Changed:
+  `test_hud_bridge`, `test_layout_pseudo_locale` (the HUD states are built from snapshots now: at rest, sword ready, cooling down, the top strip at its
+  fullest, the pad's words, the debug readout with the longest piece name, a win, a fall, and every status line), `test_language_switch_redraws_live`,
+  and the suites that read a label (the labels did not change; the baseline run still finds all 235). The owner-guide steps test says "Restart Room"
+  where it said "R" in three labels. 134 to 137 suites.
+- **Docs.** ARCHITECTURE ("The HUD: widgets in two strips", the camera paragraph, the bridge table, deviations, the test table), coding-standards ("The
+  HUD and the camera"), CLAUDE.md (one rule for the HUD and the camera, and the R/Restart sentence), AGENTS.md (the stale "a death or R", the M4
+  status), README (the controls with the pad), tools/README, OWNER_GUIDE in Vietnamese (the controls table with the gamepad column, how to read the
+  HUD, what to try in M4, the camera and `Scale Mode = integer`, the glossary, section 5 rows), where-we-are, task_plan (M4 `human_review`), the
+  plan's M4 entry, findings.
+- **Not done, and why.** The first-run card (Tier B). The HUD's pictures (the owner's). `test_hud_slots_from_data`, the equipped-weapon readout and skill
+  slots 2 to 4 (M7a: the snapshot has one skill). The Rank, Believe and boss-bar widgets are inert until M7c, M10 and M8b. The pad's Move hint
+  says "[Left Stick Up]" until the glyph files exist (the first pad event of `move_up` is the stick). Pixel-snapping the piece slide. `scale_mode =
+  integer`. The assists are still unread by any system (M7b, M8a, M8c).
