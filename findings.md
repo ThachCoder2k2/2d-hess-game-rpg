@@ -287,9 +287,10 @@ June note).
   doors of T2, T3, T4, B1 and H1 (and H1's top door to the Toybox) stood on the ring of wall of the shared
   tilemap, cells (0,5) and (2,0), so the hero could never walk back; the doors now sit one cell inside the
   ring, like the east doors, each entry one cell further in (`tests/content/test_room_doors_reachable.gd`,
-  `tests/bridge/test_bridge_backtracking.gd`). STILL OPEN: T4's `PencilSpearPickup` at (7,6) is on a solid cell
-  (the wall column), so no pawn can walk to the spear; the tests that "let a pawn take it" stand the pawn on the
-  cell by hand. Only the Ruler Blade in B1 (cell (8,6), floor) can be taken by a pawn in play.
+  `tests/bridge/test_bridge_backtracking.gd`). FIXED in the second review round (`base/m3b-fix2`, see "M3b review
+  fixes, second round" below): T4's `PencilSpearPickup` and its Backstep pawn were both parked at (7,6), a solid cell
+  (the wall column); the spear moved to (13,2) and the pawn to (10,6). Until then only the Ruler Blade in B1
+  (cell (8,6), floor) could be taken by a pawn in play.
 - Dependency edges the plan's 13.1 starting table does not allow today (report only): `EcsBoot`,
   `EntityComponent` and `PickupSpawnPoint` name `ActorView` / `WeaponPickup`, and `PrototypeBoard` reads
   `EcsWorld` and `EcsComponents`. Decide what to freeze in `tests/architecture/allowed_edges.txt` before M1b
@@ -686,9 +687,56 @@ June note).
   walks up to it is struck down in 4 to 6 s; in B1 the guards take the Ruler Blade within about 1 to 2 s and two of the three
   pieces already hold a weapon of their own (the captain's and a guard's default weapon).
 - The T4 Backstep pawn is parked at (7,6) as well, a wall cell: it is counted as an enemy of the room but starts on a cell the grid
-  does not list as walkable. Not fixed; the owner decides where T4's spear and that pawn stand.
+  does not list as walkable. Found here and not fixed; an independent verifier then showed it makes T4 impossible to clear, and it is
+  fixed in the second round below.
 - A write that dies between the two renames of `SaveFile.write` leaves the NEW save as `<file>.tmp`; the loader takes it when it is not
   older than the `.bak` (`SaveFile.read_unfinished_write`) and `load_slot` finishes the rename. File times are whole seconds, so the
   comparison is "not older"; the one test that needs an older `.tmp` waits 1.1 s.
 - A Continue resumes at `[meta] room` and `room_entry` (the room of the LAST SAVE), not at the `[checkpoint]` record; the two coincide
   only when the last save was the checkpoint's. Nothing in the build reads `checkpoint_zone_id` to place the pawn.
+
+## M3b review fixes, second round (base/m3b-fix2)
+
+- **T4 could not be cleared, so B1 and the hub could not be reached.** T4 parked its Backstep Pawn and its Pencil Spear on (7,6), a cell of
+  the wall column of the shared tilemap. `EcsBoot` spawns an enemy and calls `EcsGrid.register_entity`, which refuses a wall cell, and
+  nothing looks at the answer: the pawn counted toward the room (`enemies_total` 3) but `entity_at((7,6))` was 0, so the sword could not
+  hit it, it never moved, and the room (cleared when all three fall) was never cleared; the east door (`requires_room_clear`) never
+  opened. In the old T4 world dump the pawn even "took" the spear by standing on it (a pawn on an item cell with no weapon picks it up at
+  its next decision), and a hero beside the wall was struck by a pawn nobody could reach. M3b's own suites hid it: the owner-guide suite
+  killed enemies with a damage request (`Events.emit_damage` with the hero as source), which needs no cell.
+- **Fix: the cells.** Backstep Pawn (10,6): open floor in the lower east yard, four cells to its east and five to its north to back off
+  into, two clear columns from the wall column, 9 cells from the entry so it is outside the 7-cell aggro radius of a hero arriving.
+  Pencil Spear (13,2): the end of the room, just past the Armed Pawn (12,4) on its way to the east door (14,1), one step off both
+  approach cells of that door ((13,1), (14,2)), not on the way-back entry, not in the Armed Pawn's first strike. The flow map and D-11
+  ask for exactly that (an optional reward on the exit path beyond the Armed Pawn; the Backstep Pawn teaching its step in open floor).
+  The hero cannot take the spear in this build (a Pencil grant that unlocks Q is M7, D-11); only weaponless pawns take floor weapons.
+- **A guard against the class.** `tests/content/test_room_markers_on_floor.gd` boots every room of the world graph for real (EcsBoot,
+  closed doors) and checks: entries walkable and not under a pawn; every parked enemy on a walkable cell AND in the grid
+  (`entity_at(cell)` is that entity, which also finds two pawns on one cell) and its cell connected to every entry; every pickup on a
+  walkable cell, listed by the grid (`register_item` silently drops a second item on a cell) and connected; every unlock marker the same;
+  every gate over floor in the painted tiles and with a walkable, connected approach cell. It fails on copies of rooms that are right
+  (a pawn on a wall, two pawns on a cell, a spear on a wall, a spear or a pawn walled in, the sword on the ring, an entry under a pawn, a
+  gate in a wall, a gate nobody can push). Every other room (T1, T2, T3, B1, H1 and the kingdom fixture) was clean.
+- **Markers place themselves two ways, and the scan reads each as `EcsBoot` does.** `PickupSpawnPoint` is read by its `grid_cell`
+  (`position` is only the editor preview, computed for a 16x9 board at the preview origin); `ZoneEntryMarker`, `ZoneExitMarker`,
+  `PlayerUnlockMarker`, `GateMarker` and the parked `ActorView`s are read by `position` through the room's own grid origin.
+- **A damage request is not a sword.** `Support.kill_with_sword` (`tests/bridge/bridge_support.gd`) walks the hero by key presses to the
+  floor cell beside the pawn with the shortest walk, pushes toward it (a step into a piece is blocked and only turns the hero) and
+  presses attack, swing by swing, until it falls. The owner-guide, cleared-rooms and room-outcome suites use it, so a pawn the sword
+  cannot reach fails them (the old T4 fails the owner-guide suite at the third pawn of step 3); `test_kill_with_sword` proves it says no
+  for no sword, a pawn not in the grid and a pawn walled in. Direct damage stays only as a stand-in: `Support.damage_player` for "take a
+  wound" or "fall", and the boss's one point, the old world's despawn timer and the despawn view lifecycle in the suites whose subject is
+  something else (each says so in the file).
+- **The idle-room facts behind the new T4.** A pawn only decides once the hero is within its aggro radius (7 cells, Manhattan, from
+  `DecisionConfig`), so a hero standing on T4's entry sees nothing move for 40 s; walking to the middle gap (7,4) wakes all three, and a
+  weaponless pawn (the Recruit, the Backstep Pawn) goes for the nearest floor weapon before it goes for the hero: the Recruit walks to the
+  spear at (13,2), arrives out of its own leash and stands on it, still empty-handed.
+- **The B1 dump explanation was backwards.** `test_actor_collapse_golden` said that with the hero one cell further east the guard beside
+  the Ruler Blade "has not stepped onto it after 120 idle ticks". The recorded dumps say the opposite: before the door fix the guard had
+  stepped onto the blade's cell (8,6) and not yet taken it (blade still listed, 3 events); after it the guard has taken the blade and
+  walked back to (8,5) (blade gone, 9 events). The guard takes the blade either way; the entry move only changed how far it got in two
+  seconds. The allowance now says so.
+- **The guide's step 3 asked for something impossible.** "Redo it from T3 if needed" (let the T3 pawn wound you, then kill it) cannot be
+  done once step 2 has cleared T3, and the suite got its wound in the empty room by a request. Step 3 now starts in T4, where step 2
+  ended: wound, west door and back (an ordinary door heals nothing), sword clears T4, B1's door refills. Steps 1-3 are once-per-save;
+  deleting `slot_0.cfg` and `slot_0.cfg.bak` is how the owner repeats them (the guide says so).

@@ -1679,4 +1679,36 @@ strict runner green after each (85 suites before, 88 now, 235 of 235 baseline la
   in T1 (no enemy), a gate in Stage 1 (none), a spear no pawn can reach (T4's, on a wall cell), a way back no pawn could walk, and a
   "death in a cleared room" (impossible). `tests/bridge/test_owner_guide_steps.gd` walks the new steps by key presses with the real
   enemy AI (the fall in T3, a guard taking the Ruler Blade in B1), a damage request standing in for a sword stroke and a wound.
-- **Found and not fixed.** T4's `PencilSpearPickup` (7,6) and its Backstep pawn (7,6) are on a wall cell (findings.md).
+- **Found and not fixed.** T4's `PencilSpearPickup` (7,6) and its Backstep pawn (7,6) are on a wall cell (findings.md). Fixed in the
+  second round below.
+
+## M3b review fixes, second round - 2026-10-19
+
+An independent verifier found a dead end that was older than M3b and that the first round had recorded as "found and not fixed" without
+seeing what it cost: in T4 the Backstep Pawn and the Pencil Spear were both parked on (7,6), a wall cell. The pawn was never in the grid
+(`entity_at((7,6))` was 0), could not be hit, never moved and struck a hero beside the wall, so T4 could never be cleared, its east door
+never opened and no real player could reach B1 or the hub. Fixed on branch `base/m3b-fix2` (from `base/m3b-fix`), one commit each, the
+strict runner green after each (88 suites before, 90 now; 235 of 235 baseline labels, 14 through `label_renames.txt`, unchanged; both
+`--self-test`s 0 failures; stamp-uids CLEAN; `git diff --check` clean). Tag `m3b-done` moved to the last commit.
+
+1. **`test_room_markers_on_floor` first.** It boots every room of the world graph for real and checks entries, parked enemies (on floor AND
+   in the grid, connected to every entry), pickups, unlock markers and gates; run against the unfixed tree it fails on T4 (two problems:
+   the Backstep Pawn and the spear on (7,6)) and nowhere else. The commit carried a temporary table naming those two nodes so the runner
+   stayed green; the next commit deleted it.
+2. **T4's pieces on floor.** Backstep Pawn (7,6) -> (10,6), Pencil Spear (7,6) -> (13,2), no other change; the reasons are in the commit and
+   in findings.md. `dump_t4` regenerated (the other five dumps are byte for byte unchanged) and every changed line explained in the commit;
+   the actor golden's T4 head fingerprint moves with it (82 -> 83 lines: the spear is still on the floor after the 120 ticks now, where the
+   old pawn had "taken" it by standing on its cell).
+3. **The sword, not a request.** `Support.kill_with_sword` (walk, face, press attack by the real input path). `test_owner_guide_steps`,
+   `test_cleared_rooms` and `test_bridge_room_outcome` bring pawns down with it; `test_kill_with_sword` proves it says no; the old T4 now
+   fails the owner-guide suite. Direct damage stays only where the subject is something else, and each file says so. The guide's step 3
+   moved to T4 (the wound taken there, west door and back, the sword clears T4, B1 refills) because step 2 had already cleared T3.
+4. **Docs.** OWNER_GUIDE section 7: every step in order from a clean save, step 3 rewritten, the "once per save, delete the save to
+   repeat steps 1-3" paragraph, the T4 spear no longer called unreachable. findings.md and this file record the bug, the cells and the
+   idle-room facts. The B1 dump explanation in `test_actor_collapse_golden` was backwards and is corrected: with the hero on (2,5) the
+   guard beside the Ruler Blade takes the blade inside the 120 ticks (blade gone, 9 events, was 3); before the move it had only stepped
+   onto the blade's cell, and it takes the blade either way.
+
+- **Not done, and why.** The spear cannot be taken by the hero yet (the Pencil grant that unlocks Q is M7, D-11); a weaponless T4 pawn
+  can still carry it off before the hero arrives, which is how floor weapons have always worked and stays so until the grant replaces
+  the pickup. `GrantMarker` does not exist yet, so the scan covers `PlayerUnlockMarker`; a new kind of marker adds a check there.

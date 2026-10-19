@@ -365,10 +365,13 @@ D-17; "Giữ sạch" là câu trả lời của bạn trong `docs/owner-decision
 | Checkpoint: bước qua cửa vào hub hoặc vào một phòng boss | không đưa bạn đi đâu: đó là nơi **Courage được hồi đầy** (Believe cũng thế, từ M10) | game ghi lại "checkpoint gần nhất" (hub hoặc phòng boss, kèm ô vào) rồi lưu; màn pause sẽ gọi tên nó (M4). Chết **không** đưa bạn về đó |
 | Mở game lại (Continue) | phòng và ô vào của **lần lưu cuối**, không phải phòng cuối cùng bạn đứng | game chỉ lưu khi có việc tốt vừa xảy ra, nên ngay sau khi bước vào checkpoint thì lần lưu cuối chính là checkpoint và bạn tiếp tục ở đó; sau khi dọn xong một phòng khác thì bạn tiếp tục ở phòng đó |
 
-**Chơi thử (Owner can try).** Mọi bước dưới đây làm được trong các phòng hiện có. Bài test
-`tests/bridge/test_owner_guide_steps.gd` đi đúng các bước này: mọi bước chân là phím mũi tên qua các cửa, còn con tốt đen
-đánh gục bạn ở bước 1 và lính gác nhặt thước ở bước 4 là AI địch thật (chỉ nhát kiếm hạ địch và cú đánh làm bạn bị
-thương ở bước 2-3 được thay bằng một yêu cầu sát thương), nên nếu một phòng đổi mà bước không còn làm được thì test đỏ.
+**Chơi thử (Owner can try).** Mọi bước dưới đây làm được trong các phòng hiện có, **theo đúng thứ tự, từ một file save
+sạch**: mỗi bước làm tiếp từ chỗ bước trước dừng. Bài test `tests/bridge/test_owner_guide_steps.gd` đi đúng các bước này:
+mọi bước chân là phím mũi tên qua các cửa, mọi con tốt bị hạ bằng **nhát kiếm thật** (đi tới sát nó, quay mặt về phía nó,
+bấm đánh; một con tốt mà kiếm không với tới thì test đỏ), còn con tốt đen đánh gục bạn ở bước 1 và lính gác nhặt thước ở
+bước 4 là AI địch thật. Chỗ duy nhất được thay bằng một yêu cầu sát thương là **vết thương một điểm ở bước 3** (để một
+trong ba con tốt đang thức đánh trúng đúng một lần là chuyện canh giờ, không phải điều cần thử). Nên nếu một phòng đổi mà
+bước không còn làm được thì test đỏ.
 Các cửa đi được **hai chiều**: cửa đi tiếp nằm ở góc đông-bắc của
 phòng, cửa quay lại nằm ở phía tây, sát tường, ngay cạnh ô vào (một bước sang trái từ ô vào là về phòng trước). Mở game
 (F5), rồi:
@@ -383,18 +386,27 @@ phòng, cửa quay lại nằm ở phía tây, sát tường, ngay cạnh ô và
 2. *Phòng đã dọn thì giữ sạch, phòng chưa dọn thì làm lại.* Hạ con tốt đen của T3 bằng kiếm: cửa đông của T3 mở. Sang T4,
    rồi đi **cửa tây của T4** (một bước sang trái từ ô vào) để về T3: T3 vẫn trống. Bấm `R` trong T3: vẫn trống. Ngược lại
    T4 chưa dọn: vào T4, hạ một trong ba con, rồi về T3 bằng cửa tây và sang T4 lần nữa: địch về đủ 3 con và đủ máu.
-3. *Checkpoint hồi Courage, cửa thường thì không.* Làm lại từ T3 nếu cần: để con tốt đen của T3 đánh trúng bạn ít nhất một
-   lần (đừng để hết 3 Courage; HUD cho thấy còn mấy chấm) rồi hạ nó. Sang T4: số chấm vẫn y như vậy (đi qua cửa phòng thường không hồi và không phải checkpoint). Hạ cả 3 con của
-   T4 để cửa đông mở, đi sang B1: các chấm Courage đầy lại, vì cửa phòng boss là checkpoint (hub H1 cũng vậy, nhưng cửa
-   sang H1 chỉ mở khi hạ boss).
+3. *Checkpoint hồi Courage, cửa thường thì không.* Bạn đang ở T4 với cả ba con tốt còn sống (cuối bước 2). Để một con của
+   T4 đánh trúng bạn **đúng một lần**: HUD mất một chấm (đừng để hết 3 Courage). Đi **cửa tây của T4** sang T3 (trống) rồi
+   quay lại T4: số chấm vẫn y như vậy (đi qua cửa phòng thường không hồi, và T3, T4 không phải checkpoint), còn ba con tốt
+   của T4 về đủ. Hạ cả ba con bằng kiếm để cửa đông mở, đi sang B1: các chấm Courage đầy lại, vì cửa phòng boss là
+   checkpoint (hub H1 cũng vậy, nhưng cửa sang H1 chỉ mở khi hạ boss).
 4. *Vũ khí rơi trên sàn thì về chỗ (B1).* Trong B1 có thanh thước (Ruler Blade) nằm trên sàn. Đứng yên ở ô vào vài giây:
    một lính gác chưa cầm gì đi tới nhặt nó. Bấm `R` (hoặc để bị hạ): thước lại nằm trên sàn và tay lính trống như cũ. Đó
-   là luật "vũ khí trên sàn thuộc về phòng" (D-16). *Đừng thử ở T4:* cây giáo bút chì ở T4 đang nằm trên một ô tường nên
-   chưa con tốt nào nhặt được (lỗi nội dung đã ghi trong `findings.md`, chưa sửa).
+   là luật "vũ khí trên sàn thuộc về phòng" (D-16). Cây giáo bút chì ở T4 là một vũ khí rơi như vậy: nó nằm ở cuối phòng,
+   ngay sau con tốt cầm giáo, cạnh cửa đông, và con tốt chưa cầm gì của T4 sẽ đi về phía nó khi bạn lại gần. Nhưng ở bước
+   này T4 đã được dọn (bước 3), nên bước thước ở B1 là bước làm được; muốn thấy cây giáo thì làm trên save sạch và dừng ở T4
+   trước khi hạ ba con. Bạn chưa nhặt được cây giáo: việc nhặt nó để mở phím Q thuộc M7 (D-11), bản build này chỉ có con tốt nhặt.
 5. *Thoát game rồi mở lại.* Đang ở B1 sau bước 3, đi cửa tây của B1 về T4, cửa tây của T4 về T3 (hai chuyến qua phòng
    thường, không lưu), rồi thoát. Mở lại: game đang ở **B1**, đúng ô vào, Courage đầy, kiếm còn, T3 và T4 vẫn trống, vì
    lần lưu cuối là lúc bước vào B1 chứ không phải T3. (Muốn thấy "phòng đã dọn" làm điểm tiếp tục: hạ con tốt của T3 rồi
    thoát ngay, lần sau game mở ở T3, T3 trống.)
+
+**Muốn làm lại một bước.** Phòng đã dọn thì trống mãi (D-17), nên các bước 1-3 chỉ làm được **một lần trên một file save**:
+bước 1 cần con tốt của T3 còn sống, bước 2 hạ nó, bước 3 hạ ba con của T4. Muốn làm lại từ bước 0 (hoặc từ bước 1, 2, 3):
+thoát game rồi **xoá `slot_0.cfg` và `slot_0.cfg.bak`** (xem "File save nằm ở đâu" ở dưới), mở lại: game bắt đầu ở T1, chưa có
+kiếm. Chừng nào chưa dọn T4 thì phần "địch về đủ 3 con" của bước 2 làm lại thoải mái (ra cửa tây rồi vào lại). Bước 4 và 5
+làm lại tùy ý, không cần xoá save (bấm `R` trong B1 đưa thước về sàn; bước 5 là thoát rồi mở lại).
 
 **Game lưu khi nào.** Chỉ khi một việc tốt vừa xảy ra, không bao giờ khi chết, khi bị đánh hay khi chỉ đi sang phòng
 khác: dọn xong một phòng, bước vào hub hoặc phòng boss (checkpoint), nhặt kiếm, lần đầu gặp một loại quân (ghi thêm một
@@ -433,9 +445,14 @@ places that are easy to confuse: a death (or `R`) sends you to the entry of the 
 the CHECKPOINT (the entry of a hub or a boss room, reached through a door) is where Courage refills, it is recorded in
 the save and the pause menu will name it (M4), but nothing sends you to it; a Continue opens the room and entry of the
 LAST SAVE, which right after a checkpoint is the checkpoint, and after clearing another room is that room. The
-"Chơi thử" steps are the ones the rooms allow today (T1 and T2 have no enemy, Stage 1 has no gate, and the pencil spear
-in T4 lies on a wall cell no pawn can reach, so the floor-weapon step is done in B1 with the Ruler Blade);
-`tests/bridge/test_owner_guide_steps.gd` walks them with the arrow keys. The game saves only on a success event (a
+"Chơi thử" steps are the ones the rooms allow today, in order, from a clean save (T1 and T2 have no enemy, Stage 1 has no
+gate, and the floor-weapon step is done in B1 with the Ruler Blade because step 3 has already cleared T4);
+`tests/bridge/test_owner_guide_steps.gd` walks them with the arrow keys and brings every pawn down with the real sword (walk
+beside it, face it, press attack: a pawn the sword cannot reach fails the test), keeping one stand-in, the one point wound
+of step 3. Steps 1-3 can be done once per save, because a cleared room is empty for good: to repeat them, delete the save
+(below). T4's Backstep Pawn and Pencil Spear used to be parked on a wall cell, so T4 could never be cleared and its east
+door never opened; they stand on floor now, and `tests/content/test_room_markers_on_floor.gd` boots every room and checks
+that every pawn, pickup, unlock and gate is on ground the pawn can use. The game saves only on a success event (a
 room cleared, a hub or boss door, the sword, a first meeting with a piece, an opened gate, a persistent pickup), never
 on a death or a plain trip. The save file is `saves/slot_0.cfg` (+ `.bak`) in the project's user data folder (macOS:
 `~/Library/Application Support/Godot/app_userdata/The Unbound Pawn/`; Godot: Project -> Open User Data Folder);
