@@ -94,6 +94,8 @@ func _on_tuning_set(command: Dictionary) -> String:
 		world.tuning.set(key, float(value))
 	elif current is int and value is int:
 		world.tuning.set(key, value)
+	elif current is bool and value is bool:
+		world.tuning.set(key, value)
 	else:
 		return "'%s' holds a %s, not a %s" % [key, type_string(typeof(current)), type_string(typeof(value))]
 	return ""

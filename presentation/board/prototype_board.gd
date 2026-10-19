@@ -46,6 +46,23 @@ var debug_enabled := true
 ## entity id -> the EnemyIntent it chose last (F3 path drawing).
 var enemy_intents: Dictionary = {}
 var effect_time := 0.0
+## Reduce flashing (the setting, docs/game-base-plan.md 10): the strike flash is an outline instead of a filled blink and
+## a danger mark stops pulsing. The danger marks themselves stay: reduce-flash removes effects, never telegraphs.
+var reduce_flash := false:
+	set(value):
+		reduce_flash = value
+		queue_redraw()
+## High-contrast danger (the setting, 10): a cell that is about to hurt is drawn with a thick outline and stripes over a
+## near-opaque fill, so it can be read without the colour or the pulse.
+var high_contrast_danger := false:
+	set(value):
+		high_contrast_danger = value
+		queue_redraw()
+
+const HIGH_CONTRAST_OUTLINE_WIDTH := 4.0
+const HIGH_CONTRAST_STRIPE_SPACING := 6.0
+const HIGH_CONTRAST_STRIPE_WIDTH := 2.0
+const HIGH_CONTRAST_FILL_ALPHA := 0.85
 
 
 ## Binds the overlay to a room's grid and snapshot. Every room is a new world whose entity numbers start
@@ -133,7 +150,11 @@ func _draw() -> void:
 	if impact_time > 0.0:
 		for cell in impact_cells:
 			if grid_world.is_inside(cell):
-				draw_rect(Rect2(origin + Vector2(cell * size), Vector2.ONE * size), Color(impact_color, 0.68))
+				var impact_rect := Rect2(origin + Vector2(cell * size), Vector2.ONE * size)
+				if reduce_flash:
+					draw_rect(impact_rect.grow(-1.0), Color(impact_color, 0.9), false, 2.0)
+				else:
+					draw_rect(impact_rect, Color(impact_color, 0.68))
 
 	if debug_enabled:
 		_draw_debug_layer(origin, size)
@@ -141,7 +162,10 @@ func _draw() -> void:
 
 func _draw_danger_cell(origin: Vector2, size: int, cell: Vector2i, progress: float) -> void:
 	var rect := Rect2(origin + Vector2(cell * size), Vector2.ONE * size)
-	var pulse := 0.5 + 0.5 * sin(effect_time * TAU * 4.0)
+	if high_contrast_danger:
+		_draw_high_contrast_danger_cell(rect, progress)
+		return
+	var pulse := 0.0 if reduce_flash else 0.5 + 0.5 * sin(effect_time * TAU * 4.0)
 	var warning_alpha := lerpf(0.30, 0.68, progress) + pulse * 0.08
 	draw_rect(rect, Color(danger_cell_color, warning_alpha))
 
@@ -155,6 +179,25 @@ func _draw_danger_cell(origin: Vector2, size: int, cell: Vector2i, progress: flo
 	draw_line(rect.position + Vector2(6, 6), rect.end - Vector2(6, 6), slash_color, 2.0 + progress)
 	draw_line(rect.position + Vector2(size - 6, 6), rect.position + Vector2(6, size - 6), slash_color, 2.0 + progress)
 	draw_circle(center, 2.0 + progress * 3.0 + pulse * 1.5, Color(danger_center_color, 0.55 + progress * 0.32))
+
+
+## The danger cell of the High-contrast danger setting: a near-opaque fill, light diagonal stripes, a thick outline and a
+## cross, none of it moving, so the cell reads by its pattern and not by its colour or a pulse. The stripes grow
+## closer as the blow comes (progress).
+func _draw_high_contrast_danger_cell(rect: Rect2, progress: float) -> void:
+	draw_rect(rect, Color(danger_cell_color, HIGH_CONTRAST_FILL_ALPHA))
+	var cell_size := rect.size.x
+	var spacing := lerpf(HIGH_CONTRAST_STRIPE_SPACING * 1.5, HIGH_CONTRAST_STRIPE_SPACING, progress)
+	var offset := spacing
+	while offset < cell_size * 2.0:
+		# An anti-diagonal stripe: the points of the cell where x + y equals the offset.
+		var from_point := Vector2(minf(offset, cell_size), maxf(offset - cell_size, 0.0))
+		var to_point := Vector2(maxf(offset - cell_size, 0.0), minf(offset, cell_size))
+		draw_line(rect.position + from_point, rect.position + to_point, danger_inner_color, HIGH_CONTRAST_STRIPE_WIDTH)
+		offset += spacing
+	draw_rect(rect.grow(-HIGH_CONTRAST_OUTLINE_WIDTH / 2.0), danger_outline_color, false, HIGH_CONTRAST_OUTLINE_WIDTH)
+	draw_line(rect.position, rect.end, danger_outline_color, HIGH_CONTRAST_STRIPE_WIDTH)
+	draw_line(rect.position + Vector2(cell_size, 0.0), rect.position + Vector2(0.0, cell_size), danger_outline_color, HIGH_CONTRAST_STRIPE_WIDTH)
 
 
 func _draw_debug_layer(origin: Vector2, size: int) -> void:

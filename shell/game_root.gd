@@ -40,6 +40,9 @@ var router := EventRouter.new()
 ## already PLAYING.
 var game_flow := GameFlow.new(GameFlow.State.PLAYING)
 var shell_keys := ShellKeys.new()
+## The player's settings. AppRoot hands in the one it owns before the scene is added (so a change on the settings screen
+## reaches this room at once); a scene run alone has its own, at the defaults. SettingsBridge makes them true here.
+var settings := GameSettings.new()
 # One bridge per responsibility; the header of each file says what it owns.
 var board_bridge := BoardBridge.new()
 var camera_bridge := CameraBridge.new()
@@ -51,6 +54,7 @@ var despawn_bridge := DespawnBridge.new()
 var outcome_bridge := RoomOutcomeBridge.new()
 var zone_travel_bridge := ZoneTravelBridge.new()
 var book_bridge := BookBridge.new()
+var settings_bridge := SettingsBridge.new()
 
 
 func _ready() -> void:
@@ -65,7 +69,7 @@ func _ready() -> void:
 	audio_bridge.attach(self)
 	game_flow.attach(self)
 	shell_keys.attach(self)
-	for bridge: ShellBridge in [save_bridge, despawn_bridge, outcome_bridge, zone_travel_bridge, book_bridge]:
+	for bridge: ShellBridge in [save_bridge, despawn_bridge, outcome_bridge, zone_travel_bridge, book_bridge, settings_bridge]:
 		bridge.attach(self)
 	for bridge in _bridges():
 		bridge.register(router)
@@ -166,7 +170,7 @@ func save_service() -> SaveServiceScript:
 ## plays and its view goes, a defeat clears the board before the room counts it, the status line speaks last.
 func _bridges() -> Array[EventBridge]:
 	return [board_bridge, camera_bridge, hud_bridge, save_bridge, audio_bridge, despawn_bridge, outcome_bridge,
-		message_bridge, zone_travel_bridge, book_bridge]
+		message_bridge, zone_travel_bridge, book_bridge, settings_bridge]
 
 
 ## The hero's view and the camera rig that is its child: the camera bridge follows a replaced view.

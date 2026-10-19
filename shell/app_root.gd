@@ -24,6 +24,11 @@ extends Node
 ## pauses when the window loses focus (`NOTIFICATION_APPLICATION_FOCUS_OUT`, 9.2); when the flow refuses (a zone trip
 ## is under way) the pause is asked again every frame until it is accepted, or the player is back.
 ##
+## The player's settings (docs/game-base-plan.md 9.2) are read from the profile when the app starts and applied at once:
+## the volumes, fullscreen, the language and the high-contrast menus by the SettingsApplier here, the rest by the
+## SettingsBridge of the game scene, which is handed the same GameSettings object. A change is written back to the profile a
+## moment after the last one (a slider drag is many changes and one write), and when the window closes.
+##
 ## The save facts it shows: the SaveService autoload's `autosaved` signal flashes the tick; the title reads the
 ## slot for Continue, the card and the corrupt-save notice (TitleSummary); a Continue that had to fall back to the
 ## previous save says so on the status line of the room.
@@ -32,6 +37,8 @@ const SaveServiceScript := preload("res://shell/save/save_service.gd")
 
 ## The seconds of the fade to black and back around a room being rebuilt after a death.
 const RESPAWN_FADE_SECONDS := 0.18
+## How long after the last change to a setting the settings are written to the profile.
+const SETTINGS_SAVE_DELAY_SECONDS := 0.5
 
 ## A screen change finished and nothing else is waiting.
 signal settled
@@ -62,9 +69,16 @@ var game_flow := GameFlow.new()
 ## The screen on show (a TitleScreen, a GameRoot or a CreditsScreen), null between two screens.
 var screen: Node = null
 var save_service: SaveServiceScript = null
+## What the player chose in the settings screen: one object for the whole app, handed to the game scene.
+var settings := GameSettings.new()
+var settings_store: SettingsStore = null
+## Makes the app-level settings true (volumes, fullscreen, language, high-contrast menus).
+var settings_applier: SettingsApplier = null
 ## Finds the glyph pictures of the prompts and the Controls panel (the owner's Kenney files, or the words that stand in).
 var input_glyphs := InputGlyphs.new()
 
+## A settings write is waiting for the delay to pass.
+var _settings_save_pending := false
 var _queued_steps: Array[Callable] = []
 var _running_steps := false
 ## The window lost focus while a pause was refused (a zone trip); asked again until it is accepted.
@@ -75,6 +89,11 @@ func _ready() -> void:
 	# The owner's fonts, where the files exist (schema/ui/ui_theme.gd names them; none is the engine's default font).
 	UiFonts.apply(ThemeDB.get_project_theme() as UiTheme)
 	save_service = get_node_or_null("/root/SaveService") as SaveServiceScript
+	settings_store = SettingsStore.new(save_service)
+	settings = settings_store.load_settings()
+	settings_applier = SettingsApplier.new(get_window(), ThemeDB.get_project_theme())
+	settings_applier.apply_all(settings)
+	settings.changed.connect(_on_settings_changed)
 	game_flow.save_service = save_service
 	game_flow.state_changed.connect(_on_state_changed)
 	game_flow.before_respawn = _fade_out_before_respawn
@@ -110,7 +129,9 @@ func _process(_delta: float) -> void:
 
 
 func _notification(what: int) -> void:
-	if what == NOTIFICATION_APPLICATION_FOCUS_OUT:
+	if what == NOTIFICATION_WM_CLOSE_REQUEST:
+		flush_settings()
+	elif what == NOTIFICATION_APPLICATION_FOCUS_OUT:
 		pause_for_lost_focus()
 	elif what == NOTIFICATION_APPLICATION_FOCUS_IN:
 		_focus_pause_pending = false
@@ -175,6 +196,7 @@ func _show_game() -> void:
 	_free_screen()
 	var game := game_scene.instantiate() as GameRoot
 	game.game_flow = game_flow
+	game.settings = settings
 	_put_screen(game)
 	var notice_text_key := String(TitleSummary.NOTICE_TEXT_KEY_BY_KEY.get(game_flow.load_notice_key, ""))
 	if not notice_text_key.is_empty():
@@ -211,6 +233,7 @@ func _on_continue_chosen() -> void:
 
 
 func _on_quit_chosen() -> void:
+	flush_settings()
 	quit_requested.emit()
 	if quits_the_tree:
 		get_tree().quit()
@@ -221,6 +244,21 @@ func _on_pause_book_requested() -> void:
 	var game := screen as GameRoot
 	if game_flow.request_resume() and game != null:
 		game.book_bridge.open()
+
+
+## A setting moved: make it true now, and write the settings once the player has stopped changing them.
+func _on_settings_changed() -> void:
+	settings_applier.apply_all(settings)
+	if not _settings_save_pending:
+		_settings_save_pending = true
+		get_tree().create_timer(SETTINGS_SAVE_DELAY_SECONDS, true, false, true).timeout.connect(flush_settings)
+
+
+## Writes the settings to the profile now if a change is waiting to be written.
+func flush_settings() -> void:
+	if _settings_save_pending:
+		_settings_save_pending = false
+		settings_store.save_settings(settings)
 
 
 ## The pause menu's Controls entry: the panel opens over the menu, whose buttons go quiet meanwhile.

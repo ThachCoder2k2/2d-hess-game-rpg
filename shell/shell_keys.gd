@@ -41,6 +41,8 @@ func handle(controls: InputSnapshot) -> void:
 	if _is_fresh(controls, &"fullscreen_toggle"):
 		var window := _root.get_window()
 		window.mode = Window.MODE_WINDOWED if window.mode == Window.MODE_FULLSCREEN else Window.MODE_FULLSCREEN
+		# The Fullscreen setting follows the window, so the key and the settings screen agree and the choice is kept.
+		_root.settings.set_value(GameSettings.FULLSCREEN, SettingsApplier.is_fullscreen(window))
 	if _is_fresh(controls, &"rule_book_toggle"):
 		_root.book_bridge.toggle()
 

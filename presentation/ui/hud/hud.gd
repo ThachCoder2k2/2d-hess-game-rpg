@@ -21,6 +21,16 @@ extends CanvasLayer
 const SKILL_BAR_WIDTH := 92.0
 const DAMAGE_FLASH_DURATION := 0.22
 
+## Reduce flashing (the setting, docs/game-base-plan.md 10): the red screen flash is left out. The Courage pips still
+## change, so the hit is shown; the flash is the part that can hurt.
+var reduce_flash := false:
+	set(value):
+		reduce_flash = value
+		if value and _damage_flash_tween != null and _damage_flash_tween.is_valid():
+			_damage_flash_tween.kill()
+		if value and damage_flash != null:
+			damage_flash.visible = false
+
 ## The running fade tween for the damage flash; killed and restarted on each hit.
 var _damage_flash_tween: Tween
 ## Keeps the labels set from code in the player's language. Made on first use, so a HUD that is not in the tree yet
@@ -108,7 +118,7 @@ func set_status(key: String, params: Dictionary = {}) -> void:
 ## One red screen flash that fades out on its own. Callers fire-and-forget;
 ## the HUD owns the whole lifecycle (no per-frame driving from outside).
 func flash_damage() -> void:
-	if damage_flash == null:
+	if damage_flash == null or reduce_flash:
 		return
 	if _damage_flash_tween != null and _damage_flash_tween.is_valid():
 		_damage_flash_tween.kill()

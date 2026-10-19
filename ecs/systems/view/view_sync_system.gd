@@ -16,6 +16,8 @@ const APPLIED_VISUAL_META := &"applied_visual_definition"
 ## The AnimationTree parameter that scales one state's clip speed: every state of the graph is a
 ## small blend tree (Animation -> TimeScale -> output), so the scale is a parameter of the state.
 const CLIP_SPEED_PARAMETER_FORMAT := "parameters/%s/TimeScale/scale"
+## How opaque the hero is while it cannot be hurt, when Reduce flashing is on (it blinks otherwise): steady and fainter.
+const REDUCED_FLASH_INVULNERABLE_ALPHA := 0.6
 
 
 ## The picture keeps being drawn while the simulation is frozen: a cutscene stages the views through
@@ -104,10 +106,14 @@ func _sync_appearance(entity_id: int, view: EcsComponents.ViewRef, appearance: A
 		var tint := Color.WHITE
 		if telegraphing:
 			tint = appearance.telegraph_modulate
-		elif hurt and combat != null:
+		elif hurt and combat != null and not world.tuning.reduce_flash:
 			tint = appearance.hurt_modulate
-		if health != null and health.invulnerable_left > 0.0 and int(Time.get_ticks_msec() / 70.0) % 2 == 0:
-			tint.a = 0.35
+		if health != null and health.invulnerable_left > 0.0:
+			# The hero blinks while it cannot be hurt; with Reduce flashing it shows a steady, fainter colour instead.
+			if world.tuning.reduce_flash:
+				tint.a = REDUCED_FLASH_INVULNERABLE_ALPHA
+			elif int(Time.get_ticks_msec() / 70.0) % 2 == 0:
+				tint.a = 0.35
 		body_sprite.modulate = tint
 
 	var motion_root := appearance.get_node_or_null("MotionRoot") as Node2D
