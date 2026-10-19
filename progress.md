@@ -1584,3 +1584,62 @@ the checkpoint and death rules (D-16, D-17), `ObjectiveSystem` and `CheckpointSy
   the `PlayerSnapshot` in the zone swap (the carry is still a bare integer on `ZoneTravelBridge`), the Courage and Believe refills.
   The shell still writes `PlayerTag.control_enabled`, `PlayerCombat.sword_unlocked`, the hero's Courage and `VIEW_REF`
   (listed in ARCHITECTURE.md); `world.commands` has no handler for them yet.
+
+## M3b step 3 - objectives, checkpoints, the death rules and the carry - 2026-10-19
+
+Branch `base/m3b-3` (from `base/m3b-2`), the strict runner green after every commit. The third and last step of M3b: the rules of a
+room's end move into the simulation (`ObjectiveSystem`, `CheckpointSystem`), D-16 and D-17 are built, and the zone swap carries a
+`PlayerSnapshot`. M3b is `human_review`; the next milestone is M4.
+
+- **Commits (oldest first).** `ObjectiveSystem` judges the room; a cleared room stays cleared and a floor weapon stays on its room's
+  floor (D-17, D-16); checkpoints at hub and boss-room doors and a death resets only the room it happened in (D-16); only a persistent
+  marker honours a taken-pickup record; the zone swap carries a `PlayerSnapshot`; docs and records.
+- **`ObjectiveSystem`** (`ecs/systems/react/`, state `RoomObjectiveState`): counts the enemies each tick, evaluates the room's
+  `RoomObjective` (default: all down), says `room_cleared` once; marks the room failed when the hero's Courage is 0 (a failed room is
+  never cleared: a simultaneous last kill and fall is a fall). The room is an entity of its own, made last by `EcsBoot` only when the
+  shell sets `EcsBootOptions.with_room_rules`, because the six room dumps and the actor golden fingerprint every entity and the golden
+  may not be re-recorded. The HUD's enemy count became the `HudSnapshot`'s (`room_enemies_total`, `room_enemies_remaining`); the
+  bridge's own tally is gone.
+- **`CheckpointSystem`** (`ecs/systems/progress/`, state `RoomCheckpoint`): the first tick after the pawn came through a door into a
+  room whose scene says `checkpoint_on_entry` sets the checkpoint, queues a Courage refill on the heal queue (source 0) and says
+  `checkpoint_set` (zone, entry, what it refilled). `_refill_believe` is the named seam for M10 and refills nothing. The room's
+  failed mark becomes `respawn_requested` (zone, entry), once. A launch, a respawn and a plain trip are not checkpoints.
+- **The gap in D-16, and what was built.** The plan says "back to the latest checkpoint" (req#60) and "a death resets only the
+  current uncleared room"; with checkpoints only at the hub and boss doors, the first reading sends a death in T3 back to the start of
+  Stage 1. The least punishing reading is built and recorded in the plan's 5.2: a death (and a Continue) puts the pawn back on the
+  entry of the room it is in; the checkpoint refills and is what the pause menu will name. The run keeps the two apart:
+  `[meta] room_entry` (new key; absent reads as the checkpoint entry) beside `[meta] room`, and `[checkpoint]` is the latest hub or
+  boss door only (a v2 save migrates its position to the room pair, with no checkpoint).
+- **D-17 and the room-local half of D-16.** `SaveBridge` writes `cleared_room_ids` on `room_cleared` and saves it; every later boot
+  of that zone spawns none of its enemies (the parked puppets are removed) and the exits that need the room cleared are open. A floor
+  weapon taken by an enemy is no longer written into the run or saved; `PickupSpawnPoint.persistent` marks a reward, and only a
+  persistent marker honours a taken record, so a stale record from an older save hides nothing.
+- **The carry.** `ZoneTravelBridge` captures a `PlayerSnapshot` when a trip starts; `GameRoot.boot_zone` hands it to `EcsBoot`
+  (`player_snapshot`); the bridge forgets it. Courage (current and max), the sword and the flags arrive; the per-room rows (skill
+  cooldown and swing, invulnerability) reset and the facing is the entry's. A snapshot of a hero with no Courage is not carried. The
+  run takes the world's flags when a trip begins and when the hero falls (a death keeps them); the file learns them at the next
+  success event.
+- **Behaviour changes, all required by D-16/D-17.** Cleared rooms stay empty; floor weapons come back with their room; a plain trip
+  no longer saves (`checkpoint_reached` was written at every trip); a hub or boss door refills Courage; a death goes to the room's
+  entry by rule (before it was the last trip's destination, the same cell). Nothing else moved: movement, combat, AI, timings and room
+  contents are untouched, the six room dumps and the actor golden are byte-identical, and all 235 baseline labels pass (14 through
+  `label_renames.txt`, which did not change: the labels of the two baseline tests that planted an integer carry kept their text).
+- **Tests changed, each with its reason in the commit message.** `test_bridge_persistence` (the spear "never respawns" holds for a
+  persistent pickup only; a copy of the T4 scene with a persistent spear is swapped into the world graph for the re-entry half),
+  `test_bridge_room_outcome` and `test_game_flow` (a cleared room no longer gives a pawn back: they forget the clear, or use T4, whose
+  three pawns are not all killed), `test_bridge_travel`, `test_bridge_death_respawn` (the run's position is the room pair),
+  `test_bridge_flags` (a plain trip does not write the file), `test_save_migration_v2`, `test_save_roundtrip`,
+  `test_request_save_callers` (room_cleared is a reason), `test_hud_bridge`, `test_hud_snapshot`, and `encounter_hud_runtime_test`.
+  New: `test_objective_system`, `test_checkpoint_system`, `test_checkpoint_rules`, `test_cleared_rooms`,
+  `test_player_carry_zone_swaps`.
+- **Docs.** ARCHITECTURE.md (the tree, the runtime flow, the system and event tables, the bridge table, Persistence with the
+  save-file location, a new section "Rooms, checkpoints and deaths", the deviation list, the tests), coding-standards.md (room state
+  on the room entity, rules are systems and bridges only answer), CLAUDE.md (two rules), AGENTS.md, OWNER_GUIDE.md (section 7 in
+  Vietnamese: the one-sentence rule, five things to try, what a death keeps and resets, where the save lives, how to start clean, the
+  choice the owner may flip; two rows and three glossary entries), tools/README.md (the dump boots without room rules), the plan's 5.2,
+  9.3 and M3b entries.
+- **Not done, and why.** `Tuning.extra_courage` is not read at the refill (nothing sets it before M4's settings); a boss's phases,
+  `defeated_boss_ids` and the "highest checkpointed phase" are M8b (a boss room starts over whole); the `rescue_completed` and
+  `beat_save_after` saves wait for their events (M6); the `deaths` counter and the reset presentation by relationship flags are M8c;
+  nothing returns a pawn to the checkpoint (see the gap above); the shell still writes `PlayerTag.control_enabled`,
+  `PlayerCombat.sword_unlocked` and `VIEW_REF` (`world.commands` has no handler for them yet; listed in ARCHITECTURE.md).

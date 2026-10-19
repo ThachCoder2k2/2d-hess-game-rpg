@@ -241,8 +241,10 @@ stamped tree:
 
 The dump mirrors `shell/game_root.gd` (`_make_world` + `boot_zone`): the same systems in the same order
 (both call `Schedule.populate`, the order lives only in `ecs/schedule/`), the player view on the room's
-`start` entry marker, then `EcsBoot.boot` with no taken pickups and no opened gates, then 120 manual ticks
-of 1/60 s with the player idle. An entity's components print in `COMPONENT_DUMP_ORDER` (a list in
+`start` entry marker, then `EcsBoot.boot` with no taken pickups, no opened gates and without
+`EcsBootOptions.with_room_rules` (so no room entity is made: the dump holds exactly the entities the scene
+spawns, and the objective and checkpoint systems, which judge only the room entity, stay silent), then 120
+manual ticks of 1/60 s with the player idle. An entity's components print in `COMPONENT_DUMP_ORDER` (a list in
 `world_dumper.gd`, not a sort: StringNames sort by memory address, so a sort moved lines whenever scripts
 loaded in another order); a component it does not list prints after them, by name. It skips the `SaveService`, the HUD, the
 board overlay and audio on purpose: they depend on the save file or on real time. Output sections:

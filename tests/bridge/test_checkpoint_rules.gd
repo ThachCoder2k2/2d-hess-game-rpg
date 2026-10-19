@@ -27,6 +27,10 @@ const B1 := &"b1_black_pawn_captain"
 const H1 := &"h1_chess_rug_hub"
 
 var saved_reasons: Array[StringName] = []
+## Every reason the run was saved for, from the first frame to the last (saved_reasons is cleared stage by stage).
+var every_saved_reason: Array[StringName] = []
+## Every `respawn_requested` event the scene's router handed out.
+var respawn_requests: Array[Dictionary] = []
 
 
 func _init() -> void:
@@ -38,8 +42,11 @@ func _init() -> void:
 
 func _run() -> void:
 	var save_service := Support.install_isolated_save_service(self, SUITE_NAME)
-	save_service.autosaved.connect(func(_slot: int, reason: StringName) -> void: saved_reasons.append(reason))
+	save_service.autosaved.connect(func(_slot: int, reason: StringName) -> void:
+		saved_reasons.append(reason)
+		every_saved_reason.append(reason))
 	var main := await Support.boot_main(self)
+	(main.get("router") as EventRouter).on(Events.RESPAWN_REQUESTED, func(event: Dictionary) -> void: respawn_requests.append(event))
 	var max_courage := Support.player_health(main).max_value
 	var run := Support.run_of(save_service)
 
@@ -86,6 +93,8 @@ func _run() -> void:
 	Support.remove_enemy_ai(main)
 	_expect(main.get("current_zone_id") == B1 and Support.player_cell(main) == Support.entry_cell(main, main.get("current_room"), &"west_entry"), "in the same room, on the entry the pawn came in by")
 	_expect(Support.player_health(main).current == max_courage and Support.player_tag(main).control_enabled, "with full Courage and the hero in control")
+	_expect(respawn_requests.size() == 1 and respawn_requests[0]["zone"] == B1 and respawn_requests[0]["entry"] == &"west_entry" and respawn_requests[0]["entity"] == Support.player_id_of(main), "the simulation asked once, naming the boss room, the entry the pawn came by and the hero")
+	_expect(respawn_requests[0]["zone"] == run.room_id and respawn_requests[0]["entry"] == run.room_entry_id, "which is what the run names, and what the rebuild used")
 	var reborn_captain: int = main.get("cast")["enemies"][0]
 	var reborn_health: EcsComponents.Health = Support.ecs_of(main).get_component(reborn_captain, EcsComponents.HEALTH)
 	_expect(reborn_health.current == reborn_health.max_value and Support.total_enemies(main) == 3, "the boss is back at full health and its guards with it: a boss room starts over from the first phase (phases themselves arrive with M8b)")
@@ -141,6 +150,14 @@ func _run() -> void:
 	_expect(run.checkpoint_zone_id == H1 and run.checkpoint_entry_id == &"from_boss", "and the file still names the hub as the checkpoint")
 	_expect(Support.player_health(relaunched).current == max_courage, "with full Courage: health never saves")
 	_expect(run.player.unlocked_skill_ids.has(&"wooden_sword") and run.cleared_room_ids.has("t1_cleared_for_test"), "and what the run held is still held")
+
+	var allowed_reasons: Array[StringName] = [&"checkpoint_reached", &"rule_page_unlocked"]
+	var unexpected_reasons: Array[String] = []
+	for reason in every_saved_reason:
+		if reason not in allowed_reasons:
+			unexpected_reasons.append(String(reason))
+	_expect(not every_saved_reason.is_empty() and every_saved_reason.has(&"checkpoint_reached") and unexpected_reasons.is_empty(), "over the whole session the run was saved only for the success events in it (a checkpoint, a Book page): %s" % [every_saved_reason])
+	_expect(respawn_requests.size() == 2, "and the simulation asked for a room to start again exactly twice, once per fall (the boss room, T3); the restart key is the player's own request and not one of them (%d)" % respawn_requests.size())
 
 	Support.end_suite(self, save_service)
 

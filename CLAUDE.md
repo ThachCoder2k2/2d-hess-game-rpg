@@ -60,6 +60,12 @@ session. Read `AGENTS.md` for the full workflow, and `docs/ARCHITECTURE.md` +
 	(`test_game_root_is_thin`). Nothing reloads the scene (`test_no_scene_reload`): a death or the restart
 	key is `GameFlow.request_respawn()`, which rebuilds the room inside the scene. Only the `SaveBridge`
 	asks for a save (`test_request_save_callers`).
+  - How a room goes (cleared, the pawn fell, a door that is a checkpoint) is judged by a system, not a
+	bridge: `ObjectiveSystem` and `CheckpointSystem` read the room's own entity (`RoomObjectiveState`,
+	`RoomCheckpoint`, made by `EcsBoot` for the room the shell plays) and say `room_cleared`,
+	`checkpoint_set`, `respawn_requested`; the bridges only answer. Which room is a checkpoint is data on
+	the room (`RoomEncounter.checkpoint_on_entry`) and which pickup is a reward is data on the marker
+	(`PickupSpawnPoint.persistent`): no script names a room or a pickup by id (`test_checkpoint_rules`).
   - Controls: `shell/input/input_poller.gd` is the only code that calls the `Input`
 	singleton. It fills `world.input_snapshot` once per frame and a system reads that
 	(`test_input_only_in_poller`); test a control rule by injecting an `InputSnapshot`
@@ -86,12 +92,15 @@ session. Read `AGENTS.md` for the full workflow, and `docs/ARCHITECTURE.md` +
   `authoring/` or `presentation/`: a scene names a resource by uid, the shell asks `ContentDb`. A new
   kind is one line in `ContentDb._ensure_kinds()`, a `validate()` on its class and a minimum in
   `tests/content/test_validate_all.gd`. The hero's tuning is `content/player/player.tres`.
-- **One owner for the save.** What the game remembers (the checkpoint, taken pickups, opened gates, unlocks,
-  flags) lives in `SaveService.state` (`shell/save/`, the autoload that replaced `WorldState`); only the
+- **One owner for the save.** What the game remembers (the room the pawn is in and the entry it came by, the
+  latest checkpoint, cleared rooms, taken persistent pickups, opened gates, unlocks, flags) lives in
+  `SaveService.state` (`shell/save/`, the autoload that replaced `WorldState`); only the
   service writes a save file, and the shell asks it with `request_save(reason)` where `reason` is a literal
   success event from `SaveService.AUTOSAVE_REASONS` (never a death, a hit or a quit, R17). A new
   persistent fact is a field of `SaveData` (and a step in `SaveMigration` when it changes the format), not a
-  new file. A test that boots the game gives the service a throwaway folder first
+  new file. A death resets only the room it happened in and keeps everything in the run (D-16); a cleared
+  room stays cleared (D-17); a floor weapon is room-local and a plain trip between rooms saves nothing.
+  A test that boots the game gives the service a throwaway folder first
   (`tests/support/save_test_support.gd`). Enforced by `test_save_written_only_by_save_service`,
   `test_request_save_callers` and `test_suites_isolate_the_save`.
 - **A piece is smaller than its cell** (owner, 2026-10-12). Never exactly cell-sized, never

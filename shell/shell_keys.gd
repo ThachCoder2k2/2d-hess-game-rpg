@@ -3,7 +3,7 @@ extends RefCounted
 
 ## The keys that belong to the game and not to the hero, answered once per frame from the controls the
 ## InputPoller copied into the world's InputSnapshot (only the poller reads the Input singleton):
-##   R    start the room again at the checkpoint (a GameFlow request; M4 moves it to the pause menu)
+##   R    start the room again, as after a death (a GameFlow request; M4 moves it to the pause menu)
 ##   F3   the debug layer on the board: boundaries, paths and behaviour labels
 ##   F11  fullscreen and windowed
 ##   B    open and close the Book of House Rules

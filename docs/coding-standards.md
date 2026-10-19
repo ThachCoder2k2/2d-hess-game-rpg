@@ -97,6 +97,11 @@ These are the rules `CLAUDE.md` makes binding, with the reasoning.
   that method is a system.
 - A component stays small: it holds what a system needs to remember between ticks
   (timers, current state, targets), not what the designer tunes. Tuning lives in `.tres`.
+- State about the ROOM (not about an actor) goes on the room's own entity: `EcsBoot` makes one per played room
+  (only when `EcsBootOptions.with_room_rules` is set) and the systems that judge the room query for its
+  component (`RoomObjectiveState`, `RoomCheckpoint`). Do not add a field to `EcsWorld` for it: the world's
+  fields all landed in M3a. A fact only the shell knows (how the pawn arrived, what the run has cleared) reaches
+  the room entity through `EcsBootOptions`, so `EcsBoot` and the systems never read the save.
 - Add a component field with a sensible default, document it with `##` when the meaning
   is not obvious from the name, and update every spawn path that must set it
   (`EcsActorFactory`, `EntityComponent.apply()`).
@@ -149,6 +154,17 @@ These are the rules `CLAUDE.md` makes binding, with the reasoning.
   next tick. A bridge never sets a flag, a freeze or a setting itself.
 - Presentation must not decide gameplay. Where the current bridge reads or writes components
   directly, that is a listed deviation in `docs/ARCHITECTURE.md`, not a pattern to copy.
+- A rule about how a room goes (is it cleared, did the pawn fall, is this door a checkpoint, what refills) is a
+  SYSTEM that says so with an event (`room_cleared`, `respawn_requested`, `checkpoint_set`); the bridges only
+  answer: `SaveBridge` writes the fact into the run and saves, `RoomOutcomeBridge` shows the result screen and
+  the defeat beat, `HudBridge` redraws. A bridge that counts, compares or decides has taken a system's job
+  (`test_game_root_is_thin` and the bridge tests keep the scene and the bridges to reactions).
+- The state a bridge keeps in the run (`SaveService.state`) is for what must outlive a room: write it where the
+  success event is handled, never in a system, and ask for a save only there, with a literal reason from
+  `SaveService.AUTOSAVE_REASONS` (`test_request_save_callers`). What a death must not lose is in the run; what
+  a death resets is in the room's scene. Which rooms are checkpoints is data on the room
+  (`RoomEncounter.checkpoint_on_entry`), which pickups are rewards is data on the marker
+  (`PickupSpawnPoint.persistent`): no script names a room or a pickup by id.
 
 ### The board answers, systems ask
 

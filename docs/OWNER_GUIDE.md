@@ -1,8 +1,9 @@
 # Hướng dẫn cho chủ dự án (Owner Guide)
 
-> **Trạng thái (Status): CẬP NHẬT Ở M2 (2026-10-13).** Tạo ở M1a, M1b điền đường dẫn thật vào mục 5,
-> M2 thêm mục 6 (quân cờ nhỏ hơn ô) và cập nhật các hàng về con tốt, enemy, sprite. Các milestone
-> M3-M14 của `docs/game-base-plan.md` sẽ điền tiếp phần còn lại của bảng đích; M14 viết bản đầy đủ.
+> **Trạng thái (Status): CẬP NHẬT Ở M3b (2026-10-19).** Tạo ở M1a, M1b điền đường dẫn thật vào mục 5,
+> M2 thêm mục 6 (quân cờ nhỏ hơn ô) và cập nhật các hàng về con tốt, enemy, sprite, M3b thêm mục 7
+> (lưu game, checkpoint, chết và hồi sinh). Các milestone M4-M14 của `docs/game-base-plan.md` sẽ điền tiếp
+> phần còn lại của bảng đích; M14 viết bản đầy đủ.
 >
 > **Ngôn ngữ:** tiếng Việt đứng trước, thuật ngữ tiếng Anh giữ nguyên. Nếu hai bản khác nhau thì
 > **bản tiếng Anh là bản chuẩn** (plan D19). Phần tiếng Việt do agent viết, chưa có người bản ngữ
@@ -11,7 +12,8 @@
 > *EN: Updated at the end of M2. Vietnamese first, English authoritative where they differ. Section 5
 > lists what you can change today at its real path, with file counts; the target table below it says
 > which milestone makes each remaining row true. Section 6 is the new rule that a piece is smaller than
-> its cell, where its size table lives, and the picture that shows it.*
+> its cell, where its size table lives, and the picture that shows it. M3b added section 7: where the save
+> file lives, how to start clean, what a death keeps and resets, and what to try.*
 
 ## 1. Chơi bản build hiện tại (How to play the current build)
 
@@ -24,7 +26,8 @@
    `content/`.
 3. Game vào thẳng phòng T1 và đi theo tuyến Stage 1: T1 → T2 → T3 → T4 → B1 → H1 (greybox, chưa
    chỉnh art). Muốn chơi lại từ đầu: xoá file save `saves/slot_0.cfg` (và `saves/slot_0.cfg.bak`) trong thư mục user data của
-   game (trong Godot: menu **Project → Open User Data Folder**).
+   game (trong Godot: menu **Project → Open User Data Folder**; trên macOS là
+   `~/Library/Application Support/Godot/app_userdata/The Unbound Pawn/`). Chi tiết ở mục 7.
 4. Phím:
 
 | Phím | Việc |
@@ -33,7 +36,7 @@
 | `Shift` + hướng | xoay tại chỗ, không đi |
 | `Space` hoặc `K` | Wooden Sword (có sau khi nhặt kiếm ở T2) |
 | `Q` | Pencil Thrust |
-| `R` | reset phòng |
+| `R` | chơi lại phòng (như khi chết, mục 7) |
 | `B` | mở Book of House Rules |
 | `F3` / `F11` | bật tắt debug view / toàn màn hình |
 
@@ -166,6 +169,8 @@ are later work, and nothing in the tree blocks them.*
 | Đổi bố cục phòng hoặc chỗ đứng của enemy | mở `content/rooms/<id>/room.tscn`, kéo node (enemy là node `ActorView` đậu trên một ô) |
 | Chỉnh cảm giác con tốt (thời gian bước, thời gian giữ phím để lặp bước, courage, invulnerability, hồi chiêu kỹ năng, có kiếm ngay từ đầu hay không) | **1 file**: `content/player/player.tres` (Inspector: nhóm **Courage** = `max_courage`, `invulnerability_duration`; nhóm **Movement** = `step_duration`, `held_repeat_delay`; nhóm **Combat** = `skill_cooldown_duration`, `starts_with_sword`; `piece_name` là tên con tốt trong chữ trạng thái). Hai đòn đánh của nó là `content/skills/wooden_sword/wooden_sword.tres` và `content/skills/pencil_thrust/pencil_thrust.tres` (1 file mỗi đòn). Tốc độ clip `idle` của nó nằm ở `content/player/visual.tres` (`clip_speed_scales`). Con tốt trong `presentation/views/actors/player.tscn` không còn mang con số chỉnh nào (chỉ trỏ tới `player.tres`); muốn một phòng riêng khác đi thì kéo node `HealthComponent`/`MovementComponent`/... vào con tốt trong phòng đó, node đó thắng file |
 | Đổi sprite (con tốt, enemy, icon, pickup) | **1 file**: ghi đè `body.png` / `icon.png` / `pickup.png` trong thư mục của nó: `content/player/body.png` (con tốt trắng của bạn), `content/enemies/<id>/body.png`, `content/skills/<id>/icon.png`, `content/pickups/<id>/icon.png` (xem mục 4). Quân cờ **nhỏ hơn ô** (quyết định của bạn ngày 2026-10-12, mục 6): vẽ hình ở tỉ lệ 1:1, **không lớn hơn hộp của loại quân** trong `content/feel/piece_sizes.tres` (tốt 18×22 px, mã và tượng 20×24, xe 20×24, hậu 22×26, vua 22×28; ô là 32×32). Đáy hình tự đứng trên vạch cách tâm ô 14 px, không cần chỉnh vị trí (nếu cần xê dịch một chút: `anchor_offset` trong `visual.tres`, **+1 file**). Mọi pawn đen dùng chung hình `content/enemies/pawn_recruit/body.png` (qua `_shared/visuals/pawn_compatibility.tres`); mã có `knight_tracker/body.png`; tượng có hình riêng `bishop_zoner/body.png`. Muốn mỗi pawn một hình: cho nó `visual.tres` riêng (hàng "enemy có hình riêng" ở trên). Hình lớn hơn hộp thì bài kiểm `test_validate_all` báo đỏ và nêu tên hình, cỡ hình, cỡ hộp |
+| Đặt một phòng là checkpoint (hub, phòng boss: vào cửa là hồi đầy Courage, game ghi lại và lưu) | **1 file**, trong Godot: mở `content/rooms/<id>/room.tscn`, chọn node gốc, trong Inspector bật **Checkpoint On Entry**. Hiện chỉ `h1_chess_rug_hub` và `b1_black_pawn_captain` bật; không có tên phòng nào nằm trong code |
+| Biến một vật nhặt trên sàn thành phần thưởng giữ mãi (được nhặt một lần cho cả lần chơi, không bao giờ quay lại; chưa phòng nào dùng, dành cho mảnh Courage và trang Rule ở các milestone sau) | **1 file**: trong `content/rooms/<id>/room.tscn`, chọn node `PickupSpawnPoint` của nó và bật **Persistent**. Để tắt, đó là vũ khí rơi trên sàn của phòng: phòng bắt đầu lại là nó về chỗ cũ (mục 7) |
 | Đổi hình bàn đồ vẽ tay | `assets/map_pieces/` (hình bạn vẽ tay, được track; thay thế bản sinh tự động) |
 | Đổi hình nền của phòng T1 hoặc T2 | **Tạm thời:** ghi đè `content/rooms/t1_white_kings_fall/background.png` hoặc `content/rooms/t2_fallen_sword_tile/background.png`. Hai tấm nền vẽ sẵn này là đồ cũ: theo quyết định của bạn (vẽ từng thứ một, `docs/owner-decisions.md`), phòng sẽ được ghép từ từng tile và từng đồ vật riêng, nên đừng vẽ lại cả tấm — hãy vẽ theo danh sách trong `docs/assets/`. |
 | Đổi một trang của Book of House Rules | `content/rules/<id>/page.tres` (chữ nằm trong file này tới khi có hệ `.po` ở M4); danh sách trang: `content/rules/rule_book.tres` |
@@ -346,7 +351,70 @@ facing, shoved by a hit and about 600 clip poses; an enemy that is only a `defin
 Not yet: rook, queen, king and boss pictures exist only as table rows; the four bodies are placeholders (the knight was
 retraced on 15 rows to fit its box, an edit to an approved shape recorded in `THIRD_PARTY_NOTICES.md`).*
 
-## 7. Từ điển nhỏ (Glossary)
+## 7. Lưu game, checkpoint và khi con tốt ngã (Save, checkpoints and death)
+
+**Quy tắc trong một câu:** chết chỉ làm phòng bạn vừa ngã bắt đầu lại; phòng đã dọn thì giữ sạch; mọi thứ bạn đã
+kiếm được giữ nguyên. (Quyết định D-16 và D-17; "Giữ sạch" là câu trả lời của bạn trong `docs/owner-decisions.md`.)
+
+**Chơi thử (Owner can try).** Mở game (F5) rồi:
+
+1. *Chết và hồi sinh.* Để con tốt đen đánh hết 3 Courage của bạn. Sau chừng một giây, bạn đứng lại **ở ô vào của
+   chính phòng đó**, Courage đầy, địch trong phòng đầy máu trở lại, tay có kiếm nếu đã nhặt. Chết trong phòng boss B1
+   (cửa B1 là checkpoint): bạn đứng lại ở cửa B1, boss và hai lính đầy máu (vòng đầu của boss). Phím `R` làm
+   y như chết, không cần ngã.
+2. *Phòng đã dọn thì giữ sạch.* Hạ con tốt duy nhất của T3, sang phòng khác rồi quay lại, hoặc chết ngay trong T3:
+   T3 vẫn trống và cửa sang T4 đã mở. Phòng chưa dọn hết thì ngược lại: T4 có 3 con, hạ một con rồi rời đi, quay
+   lại là địch về đủ 3 con và đủ máu.
+3. *Checkpoint hồi Courage.* Bị thương ở T1, đi T2, T3: vẫn bị thương (đi qua phòng thường không hồi). Qua cửa phòng
+   boss B1, hoặc qua cửa hub H1: Courage đầy lại (các chấm trên HUD đầy lại).
+4. *Thoát game rồi mở lại.* Game mở đúng phòng bạn đang đứng ở lần lưu cuối, đúng ô vào, Courage đầy. Kiếm đã
+   nhặt, cổng đã mở và phòng đã dọn đều còn.
+5. *Vũ khí rơi trên sàn thì về chỗ.* Ở T4, để một con tốt nhặt cây giáo bút chì; chết hoặc bấm `R`: giáo lại nằm trên
+   sàn và con tốt tay không. Đó là luật "vũ khí trên sàn thuộc về phòng" (D-16).
+
+**Game lưu khi nào.** Chỉ khi một việc tốt vừa xảy ra, không bao giờ khi chết, khi bị đánh hay khi chỉ đi sang phòng
+khác: dọn xong một phòng, vào hub hoặc phòng boss (checkpoint), nhặt kiếm, mở một cổng tắt, ghi thêm một trang Book,
+nhặt một vật thưởng giữ mãi. Vì vậy nếu bạn đi sang hai phòng thường rồi thoát luôn, lần sau game mở ở phòng của lần lưu
+trước đó, không phải phòng cuối cùng bạn đứng.
+
+**Sau khi chết, cái gì còn và cái gì mất.**
+
+| Còn nguyên (nằm trong lần chơi) | Về lại như ban đầu (thuộc về phòng) |
+|---|---|
+| kiếm và các kỹ năng đã mở, các cờ của truyện, phòng đã dọn, boss đã hạ, cổng tắt đã mở, giải cứu, trang Book, mảnh Courage, vật thưởng giữ mãi đã nhặt, checkpoint gần nhất | địch của phòng chưa dọn (đủ máu), vũ khí rơi trên sàn, vũ khí địch đang cầm, mọi bộ đếm giờ và vùng báo đòn, Courage (về đầy) |
+
+**File save nằm ở đâu.** Trong thư mục user data của dự án, thư mục con `saves/`: `slot_0.cfg` và `slot_0.cfg.bak`
+(bản lưu liền trước). Trên macOS: `~/Library/Application Support/Godot/app_userdata/The Unbound Pawn/saves/`.
+Trong Godot: menu **Project → Open User Data Folder**. File `profile.cfg` nằm cạnh `saves/` (dấu "đã xem kết thúc") và
+sống sót qua New Game. **Muốn bắt đầu sạch:** thoát game rồi xoá `slot_0.cfg` và `slot_0.cfg.bak` (nếu có thêm
+`world_state.cfg` từ bản cũ thì xoá luôn). Game không bao giờ tự xoá save của bạn: file hỏng thì nó thử bản `.bak`, file
+của bản game mới hơn thì nó không đọc và không ghi đè. Chưa có màn hình title với "Continue / New Game" (M4), nên hiện
+tại game luôn tiếp tục lần chơi đã lưu.
+
+**Một chỗ agent đã tự chọn, bạn có thể đảo lại.** Kế hoạch viết cả "về checkpoint gần nhất" lẫn "chỉ phòng đang chơi
+bắt đầu lại". Nếu hiểu đúng từng chữ, chết ở T3 sẽ đưa bạn về đầu Stage 1, quá nặng so với "chết nhẹ nhàng". Agent chọn
+cách nhẹ nhất: **chết đưa bạn về ô vào của phòng vừa ngã** (không bao giờ xa hơn), còn checkpoint là nơi hồi Courage
+(và sau này Believe) và là nơi màn pause sẽ nhắc tên (M4). Nếu bạn muốn chết đưa về hẳn checkpoint: nói với agent,
+việc sửa nhỏ (`docs/game-base-plan.md` mục 5.2 ghi đúng chỗ phải sửa).
+
+**Chưa có:** màn title và pause (M4), bàn tay của đứa trẻ đặt con tốt lại (M8c), Believe (M10), boss nhiều pha với "pha
+đã qua điểm lưu" (M8b; hiện phòng boss bắt đầu lại từ đầu).
+
+*EN: Section 7 is what M3b added for you. One sentence: a death restarts only the room you fell in (on the entry you
+came by, full Courage, enemies back at full health, a boss room starts over), cleared rooms stay cleared (your answer
+"Giữ sạch"), and everything you earned stays. Things to try: die and respawn; clear T3 and see it stay empty after you
+leave or die; walk through T2 and T3 wounded (no heal) and through B1's or H1's door (full heal); quit and relaunch
+(it resumes in the room you stood in at the last save); watch the pencil spear come back after a death. The game saves
+only on a success event (a room cleared, a hub or boss door, the sword, an opened gate, a new Book page, a persistent
+pickup), never on a death or a plain trip. The save file is `saves/slot_0.cfg` (+ `.bak`) in the project's user data
+folder (macOS: `~/Library/Application Support/Godot/app_userdata/The Unbound Pawn/`; Godot: Project -> Open User Data
+Folder); delete both to start clean. The plan says both "back to the latest checkpoint" and "only the current room
+resets"; the least punishing reading was built (a death goes to the entry of the room you fell in), recorded in
+`docs/game-base-plan.md` 5.2, and flipping it is a small change if you disagree. To make a room a checkpoint, tick
+Checkpoint On Entry on its root node; to make a floor pickup a reward that never comes back, tick Persistent on its
+PickupSpawnPoint.*
+
+## 8. Từ điển nhỏ (Glossary)
 
 | Thuật ngữ | Nghĩa trong dự án này |
 |---|---|
@@ -364,4 +432,7 @@ retraced on 15 rows to fit its box, an edit to an approved shape recorded in `TH
 | `ContentDb` | sổ đăng ký nội dung của game: tra mọi thứ trong `content/` theo id (tên thư mục), và có hai hàm kiểm tra (`validate()`, `validate_cross_refs()`) mà các bài test chạy để chắc mọi file hợp lệ và mọi tham chiếu trỏ tới một id có thật. Bạn không phải gọi nó |
 | `actor_view_base.tscn` | **một** cảnh duy nhất vẽ mọi con tốt/enemy (`presentation/views/actors/`); enemy mới chỉ cần kéo cảnh này vào phòng rồi đặt `definition`. `player.tscn`, `black_pawn.tscn`, `knight_enemy.tscn`, `bishop_enemy.tscn` là cảnh mỏng kế thừa nó |
 | `PlayerDefinition` | file `content/player/player.tres`: mọi con số của con tốt (Courage, thời gian bước, hồi chiêu...) |
+| checkpoint | cửa hub hoặc phòng boss mà con tốt đi qua (bật **Checkpoint On Entry** trên phòng): hồi đầy Courage, game ghi lại và lưu. Chết **không** đưa bạn về đó, mà về ô vào của phòng vừa ngã (mục 7) |
+| phòng đã dọn (cleared room) | phòng mà mục tiêu đã xong (mặc định: hết địch); nó giữ sạch cho tới hết lần chơi (D-17) |
+| persistent pickup | vật nhặt là phần thưởng giữ mãi (**Persistent** bật trên `PickupSpawnPoint`); mọi vật nhặt khác là vũ khí rơi của phòng và về chỗ cũ khi phòng bắt đầu lại |
 | base line / `body_box` | vạch đáy của quân (14 px dưới tâm ô) và hộp lớn nhất của hình, trong `content/feel/piece_sizes.tres` (mục 6) |

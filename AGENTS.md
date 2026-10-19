@@ -110,7 +110,7 @@ generated chess family drawn to it, `tools/render_actor_preview.gd`, `test_piece
 every shared field and seam once, with no gameplay change (the tick order as data in `ecs/schedule/`, the
 declared events and the commands channel, the input, HUD and player snapshots, each room's own origin and the
 camera framing it, the grid's cell kinds, leaps, rays and cached pathing, and a per-room tick budget test). Next
-is **M3b**, in three steps: step 1 (the `SaveService` that replaced `WorldState`, the v3 save, world flags) and step 2 (`game_root.gd` split into the `EventRouter`, one bridge per responsibility and `GameFlow`, no scene reload) are built; the checkpoint and death rules (D-16, D-17), `ObjectiveSystem` and `CheckpointSystem` are step 3. The owner can browse `content/`, run `tools/list_placeholders.gd` for the art
+was **M3b**, in three steps, all built and waiting for the owner (`human_review`): the `SaveService` that replaced `WorldState` with the v3 save and world flags; `game_root.gd` split into the `EventRouter`, one bridge per responsibility and `GameFlow` (no scene reload); and `ObjectiveSystem`, `CheckpointSystem`, the `PlayerSnapshot` in the zone swap and the checkpoint, death and cleared-room rules (D-16, D-17). The owner can browse `content/`, run `tools/list_placeholders.gd` for the art
 and audio TODO, open `assets/_generated/previews/pieces_in_cells.png`, and read `docs/OWNER_GUIDE.md`
 (section 6 is the in-cell rule, in Vietnamese).
 Current status of every area, and what is waiting on the owner, lives in
@@ -416,9 +416,12 @@ Gate 12: Release polish
   (`piece_name`, `id`), never from class checks.
 - Damage is a request on `world.damage_events`, applied only by `HealthSystem`. Systems talk
   through components and events, never by calling each other.
-- Persistent facts (taken pickups, opened gates, unlocks, the checkpoint, flags) live in the
-  `SaveService` autoload (`SaveService.state`) and are fed back into `EcsBoot` at boot. Only
-  `SaveService` writes a save file, and only through `request_save(reason)` on a success event (R17).
+- Persistent facts (cleared rooms, taken persistent pickups, opened gates, unlocks, the room the pawn is in and
+  the latest checkpoint, flags) live in the `SaveService` autoload (`SaveService.state`) and are fed back into
+  `EcsBoot` at boot. Only `SaveService` writes a save file, and only through `request_save(reason)` on a success
+  event (R17): a death, a plain trip between rooms and a floor weapon taken by an enemy are not one. Whether a room
+  is cleared or failed, and whether a door is a checkpoint, is judged by `ObjectiveSystem` and `CheckpointSystem`
+  from data on the room scene; a bridge only answers their events.
 
 ## Visual And Feedback Rules
 
@@ -482,7 +485,7 @@ registry and the generated art; see `tools/README.md`).
 ## Next Recommended Work
 
 Follow `docs/where-we-are.md` section 5 for the order of work and `docs/game-base-plan.md`
-section 15 for the milestone you are on. M1a, M1b, M2 and M3a are done; M3b is under way (steps 1 and 2 are built; step 3 is
-the checkpoint and death rules, `ObjectiveSystem` and `CheckpointSystem`). Three dependency edges and six room references are still
+section 15 for the milestone you are on. M1a, M1b, M2 and M3a are done; M3b is built and waits for the owner (`human_review`; the next milestone is M4,
+the shell, input and text). Three dependency edges and six room references are still
 undecided (listed in `tests/architecture/test_dependency_edges.gd` and `test_content_references.gd`);
 the owner decides them before `tests/architecture/allowed_edges.txt` is frozen.

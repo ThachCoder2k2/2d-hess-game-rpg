@@ -6,8 +6,8 @@ extends RefCounted
 ## AGAIN, which a death and the R key both raise. Before this class both reloaded the whole scene
 ## (`get_tree().reload_current_scene()`), which would reload the title once AppRoot is the main scene
 ## (M4), restarted the music, and threw away the hero's view and every node with it. Now the scene
-## stays, the run (the SaveService autoload) stays, and GameRoot.respawn() rebuilds the zone from the
-## run's checkpoint.
+## stays, the run (the SaveService autoload) stays, and GameRoot.respawn() rebuilds the zone the run says
+## the pawn is in, on the entry it came by (D-16: a death resets only the room it happened in).
 ##
 ##   PLAYING -> RESPAWNING -> PLAYING          a death or the restart key (`request_respawn`)
 ##
@@ -16,13 +16,13 @@ extends RefCounted
 ## testable alone: it makes its own GameFlow when no AppRoot gave it one.
 ##
 ## A request is served at the end of the frame (like the scene reload it replaces was), once, and
-## after a zone trip that is under way has ended: the trip already moved the checkpoint to its
+## after a zone trip that is under way has ended: the trip already moved the run's room to its
 ## destination, so the room is rebuilt there, exactly where the reload used to land.
 
 enum State {
 	## The room is live.
 	PLAYING,
-	## The zone is being rebuilt at the checkpoint (inside one frame, never across frames).
+	## The room is being rebuilt on its entry (inside one frame, never across frames).
 	RESPAWNING,
 }
 
@@ -33,7 +33,7 @@ const REASON_RESTART_KEY := &"restart_key"
 
 ## A request was accepted; the rebuild follows at the end of the frame. `reason` is one of REASON_*.
 signal respawn_requested(reason: StringName)
-## The zone was rebuilt at the checkpoint and the hero stands on its entry with full Courage.
+## The room was rebuilt and the hero stands on its entry with full Courage.
 signal respawned(reason: StringName)
 
 var state := State.PLAYING
@@ -52,7 +52,7 @@ func attach(game_root: GameRoot) -> void:
 	_root = game_root
 
 
-## The hero fell or the restart key was pressed: start the room again at the run's checkpoint. Ignored
+## The hero fell or the restart key was pressed: start the room again on the entry the pawn came by. Ignored
 ## while a request is already waiting (a held key or a death beat and a key in the same frame
 ## rebuilds once).
 func request_respawn(reason: StringName) -> void:

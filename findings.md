@@ -639,3 +639,32 @@ June note).
 - The strict runner treats the engine's exit noise ("ObjectDB instances leaked at exit", "resources still in use at exit") as noise but
   any other `ERROR:` line as a failure. The worktree sandbox refuses a `HOME=` assignment in front of the Godot binary; wrapper scripts
   under /tmp that `export HOME` and call Godot avoid it.
+
+## Room, Checkpoint and Carry Facts (M3b step 3, 2026-10-19)
+
+- The world dump prints every component of every entity, and `tests/baselines/actor_collapse_golden.txt` fingerprints the heads of the
+  six dumps and refuses to be re-recorded. A bookkeeping entity added to every booted room would move all of them, so the room's own
+  entity is opt-in (`EcsBootOptions.with_room_rules`, set by the shell) and made last, which also keeps every other entity's number.
+- D-16 reads two ways ("return to the latest checkpoint" and "a death resets only the current uncleared room"). With checkpoints at
+  the hub and boss doors only, the first sends a death in T3 to the start of Stage 1 (T1..T4 have none). Built: the room entry; the
+  position and the checkpoint are two facts in the run. A save written before the rule has no `room_entry`; it resumes on its
+  checkpoint entry, which is where the position used to be kept.
+- A checkpoint's refill is a heal request (source 0) queued by a system that runs AFTER `HealthSystem`, so the Courage is restored on
+  the next tick and `healed` is what the HUD hears; `HudBridge` redraws the pips on it. The first tick of a room runs during the
+  fade-in, so the checkpoint is recorded and saved a fraction of a second after the boot, not before the fade.
+- `checkpoint_reached` used to be written at the start of every trip, which also carried the world's flags to the run. With a trip no
+  longer a success event, the flags reach the run by `SaveBridge.remember_world()` (a trip begins, the hero falls, just before a
+  write) and the file learns them at the next success event; a flag set in a room that is then lost to a death survives it.
+- A resource nobody holds is unloaded and read again from disk: a test that edits the shared `WorldGraph` has to keep a reference
+  (`edited_world_graph`), or the next `main.free()` throws the edit away. `PackedScene.pack()` of an instance of an inherited room
+  scene works, so a test can swap in a copy of a room with one export changed.
+- `ObjectiveSystem` counts `defeated` from Courage 0 or the AI's defeated state each tick and never lets the defeated count or the
+  total go backwards, so a corpse cleaned away later does not un-clear a room. When the last enemy and the hero fall in one tick the
+  fall wins (the room is not cleared), which the old event-order rule left to chance.
+- `PlayerSnapshot.apply_to` writes the maximum Courage too, so a fresh run must not pass the run's own `player` snapshot to it
+  (its default 3 would override the `PlayerDefinition`); only a snapshot captured from a live hero is passed, and only by a trip.
+- Order of reactions matters in `GameRoot._bridges()`: `SaveBridge` is before `RoomOutcomeBridge`, so a cleared room is written and
+  saved before its result screen goes up, and the world's flags are taken before the defeat beat starts.
+- The worktree sandbox refuses `HOME=` in front of any command and refuses to run a quoted binary path directly; the runner reads
+  `GODOT` and `UNBOUND_GODOT_HOME` from the environment, and a short Python wrapper that sets `HOME` in a child process runs the
+  UID check (`stamp_uids.gd -- --check`).

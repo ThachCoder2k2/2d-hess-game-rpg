@@ -21,8 +21,7 @@ const SaveServiceScript := preload("res://shell/save/save_service.gd")
 ##   shortcut_opened     a one-way gate was unbarred (the gate_opened event)
 ##   unlock_gained       a verb was unlocked (the player_unlock event)
 ##   rule_page_unlocked  a piece was met for the first time and its Book page written
-##   checkpoint_reached  a zone trip began. INTERIM: until the checkpoint rules of D-16 land
-##                       (M3b step 3) every zone entry stands in for "hub entry or boss-room entry".
+##   checkpoint_reached  the pawn came through the door of a hub or a boss room (the checkpoint_set event, D-16)
 const EXPECTED_CALLERS := {
 	"res://shell/bridges/save_bridge.gd": [&"checkpoint_reached", &"pickup_taken", &"room_cleared", &"rule_page_unlocked", &"shortcut_opened", &"unlock_gained"],
 }
