@@ -111,7 +111,7 @@ presentation/            HOW THE WORLD IS SHOWN: reads events, never decides
   audio/                 SfxManager (autoload scene)
 
 shell/                   THE GAME AROUND THE GAME
-  game_root.gd/.tscn     the one game scene and its bridge (605 lines; split in M3b)
+  game_root.gd/.tscn     the one game scene and its bridge (612 lines; split in M3b)
   content/               ContentDb (the content registry, a static class) and ContentKind
   input/input_poller.gd  InputPoller: the one reader of the Input singleton; fills world.input_snapshot once per frame
   save/world_state.gd    WorldState autoload: zone, entry, taken pickups, opened gates, read pages
@@ -292,8 +292,17 @@ Its dictionaries are all documented in the file:
   destination reserved, so nobody can race into either.
 - Gameplay is cell-based; there is no physics collision.
 - Multi-cell footprints (the 2x2 and 3x3 bosses) are M8b's, not M3a's. `entity_by_cell` can already name one entity
-  from several cells; the single-cell entry points (`register_entity`, `begin_move`, `begin_leap`) are what M8b
-  extends, and nothing else here assumes an entity is one cell wide.
+  from several cells, but the rest of the grid still assumes an entity is ONE cell wide, and M8b has to change
+  each of these:
+  - `cell_by_entity` maps an entity to a single cell (a footprint needs an anchor cell plus its offsets, or a list);
+  - `register_entity`, `begin_move` and `begin_leap` claim one cell (and `can_begin_move`, `can_begin_leap` test one);
+  - `unregister_entity` erases the one cell `cell_by_entity` names from `entity_by_cell`, so it would leave the
+    rest of a footprint standing on the board;
+  - `finish_move` vacates one origin cell and occupies one destination cell, and `get_reserved_cell` answers with
+    the first reserved cell it finds;
+  - `leap_by_entity` holds one `from` and one `to` cell, and `leap_landing_cell` answers with one cell.
+  `get_grid_path` also marks other pieces solid one cell each. Everything that only asks "who stands on this
+  cell?" (`entity_at`, `ray_cells`, the telegraph cells) already works for a piece that fills several.
 
 ### What a cell is made of (cell kinds)
 
@@ -590,7 +599,7 @@ ad-hoc edits:
   `Input`; M4 adds the actions under the same names and deletes the table (`R` is already the
   `restart_room` action).
 - `ViewSyncSystem` blinks the invulnerability tint from the wall clock.
-- `game_root.gd` (605 lines) still holds travel, death, persistence and HUD wiring together
+- `game_root.gd` (612 lines) still holds travel, death, persistence and HUD wiring together
   (the split is M3b).
 - The 72x40 kingdom (`tests/fixtures/the_kingdom.tscn`) is still a zone in the shipped world
   graph (`content/world/world.tres`, the one documented exception in
