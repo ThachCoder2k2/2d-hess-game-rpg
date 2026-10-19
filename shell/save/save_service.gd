@@ -85,7 +85,9 @@ var state := SaveData.new()
 ## True once a slot was loaded or a new game began. Nothing is written before.
 var has_session := false
 ## The zone the pawn is in now. The shell sets it at every room boot through note_room(); request_save()
-## writes it to [meta].
+## writes it to [meta] once it names a room. A loaded run starts out in the room it was saved in (load_slot
+## copies it from the file) and a new game in none, so a save asked for before the shell has noted any room
+## carries the room of the run in memory and never blanks it.
 var current_room_id: StringName = &""
 ## What the last load_slot() found, for the title screen's notice. Null before the first load.
 var last_load: SaveLoadResult = null
@@ -144,6 +146,7 @@ func new_game(slot := SINGLE_SLOT) -> void:
 	_write_locked_slots.erase(slot)
 	active_slot = slot
 	state = SaveData.new()
+	current_room_id = &""
 	has_session = true
 	last_load = null
 
@@ -154,6 +157,7 @@ func load_slot(slot := SINGLE_SLOT) -> SaveLoadResult:
 	var result := read_slot(slot)
 	active_slot = slot
 	state = result.data
+	current_room_id = state.room_id
 	has_session = true
 	last_load = result
 	_write_locked_slots.erase(slot)
@@ -251,7 +255,8 @@ func request_save(reason: StringName) -> bool:
 		push_warning("SaveService: a save was requested for '%s' before any run began; refused" % reason)
 		return false
 	saving.emit(reason)
-	state.room_id = current_room_id
+	if current_room_id != &"":
+		state.room_id = current_room_id
 	state.saved_at_unix = int(Time.get_unix_time_from_system())
 	var error := write_slot(active_slot, state)
 	if error != OK:

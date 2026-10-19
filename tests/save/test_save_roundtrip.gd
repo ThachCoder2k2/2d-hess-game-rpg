@@ -8,7 +8,8 @@ extends UnboundTest
 ##     the checkpoint, the PlayerSnapshot rows and the flags (names with dots and spaces, bools and counters);
 ##   - the slot-aware API: two slots do not see each other;
 ##   - the atomic write: the temp file is gone, the previous save is kept as the .bak;
-##   - request_save(): it writes the run in memory with the room, the time and the autosaved signal;
+##   - request_save(): it writes the run in memory with the room, the time and the autosaved signal, and it
+##     keeps the room a loaded run was saved in until the shell names another (note_room);
 ##   - configure(): a new root is a new world.
 
 const SaveSupport := preload("res://tests/support/save_test_support.gd")
@@ -26,6 +27,7 @@ func _init() -> void:
 	_check_slots_do_not_see_each_other()
 	_check_the_write_is_atomic_and_keeps_a_backup()
 	_check_request_save_writes_the_run()
+	_check_request_save_keeps_the_loaded_room()
 	_check_configure_is_a_new_world()
 	_check_flags_of_a_world_round_trip()
 	for root_directory in roots_to_remove:
@@ -191,6 +193,36 @@ func _check_request_save_writes_the_run() -> void:
 	reader.load_slot(0)
 	_expect(reader.state.taken_pickup_ids.has("t4_broken_rule_yard/PencilSpearPickup") and reader.state.has_unlock(&"wooden_sword"), "the saved run holds what was learned")
 	_expect(reader.state.room_id == &"t4_broken_rule_yard" and reader.state.saved_at_unix > 1700000000 and is_equal_approx(reader.state.play_time_seconds, 3.0), "and the room, a real timestamp and the play time")
+
+
+## A Continue loads the run and some success event may ask for a save before the shell has named the room again
+## (note_room runs at the next room boot): that save must carry the room the run was in, not blank it.
+func _check_request_save_keeps_the_loaded_room() -> void:
+	var root_directory := _new_root("keep_room")
+	var first_launch := SaveSupport.new_service(root_directory)
+	first_launch.new_game(0)
+	first_launch.note_room(&"t3_first_pawn_clash", &"west_entry")
+	_expect(first_launch.request_save(&"room_cleared"), "setup: a run saved in T3, entered by west_entry")
+
+	var relaunch := SaveSupport.new_service(root_directory)
+	relaunch.load_slot(0)
+	_expect(relaunch.state.room_id == &"t3_first_pawn_clash" and relaunch.state.room_entry_id == &"west_entry", "setup: a Continue loads that room and entry")
+	_expect(relaunch.request_save(&"shortcut_opened"), "a success event asks for a save before any room has been noted")
+	var after_request := SaveFile.read(relaunch.slot_path(0))
+	_expect(after_request.is_readable() and String(after_request.config.get_value("meta", "room", "")) == "t3_first_pawn_clash", "the file still names T3, the room is not blanked")
+	_expect(String(after_request.config.get_value("meta", "room_entry", "")) == "west_entry", "and still names the entry")
+	_expect(relaunch.state.room_id == &"t3_first_pawn_clash" and relaunch.current_room_id == &"t3_first_pawn_clash", "and so does the run in memory, with the service's own idea of the current room")
+
+	relaunch.note_room(&"t4_broken_rule_yard", &"from_b1")
+	relaunch.request_save(&"room_cleared")
+	var after_note := SaveFile.read(relaunch.slot_path(0))
+	_expect(String(after_note.config.get_value("meta", "room", "")) == "t4_broken_rule_yard" and String(after_note.config.get_value("meta", "room_entry", "")) == "from_b1", "once the shell notes another room the next save names that one")
+
+	# A New Game forgets the old room: its first save must not carry the room of the run before it.
+	relaunch.new_game(0)
+	_expect(relaunch.current_room_id == &"" and relaunch.state.room_id == &"", "a new game starts with no room")
+	relaunch.request_save(&"room_cleared")
+	_expect(String(SaveFile.read(relaunch.slot_path(0)).config.get_value("meta", "room", "x")) == "", "and its first save names no room, not the one the run before it ended in")
 
 
 func _on_autosaved(slot: int, reason: StringName) -> void:
