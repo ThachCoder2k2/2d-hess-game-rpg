@@ -49,7 +49,7 @@ polygon = PackedVector2Array(-38, -8, 42, -14, 50, 16, -30, 22)
 
 [node name="PencilSpearPickup" parent="." instance=ExtResource("9_pickup")]
 pickup_scene = ExtResource("10_pickup_scene")
-grid_cell = Vector2i(7, 6)
+grid_cell = Vector2i(13, 2)
 weapon = ExtResource("11_spear")
 
 [node name="PawnRecruit" parent="." instance=ExtResource("6_pawn")]
@@ -60,7 +60,7 @@ position = Vector2(464, 180)
 definition = ExtResource("7_armed")
 
 [node name="BackstepPawn" parent="." instance=ExtResource("6_pawn")]
-position = Vector2(304, 244)
+position = Vector2(400, 244)
 definition = ExtResource("8_backstep")
 
 [node name="Entry_West" type="Marker2D" parent="."]

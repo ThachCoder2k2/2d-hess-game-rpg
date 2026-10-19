@@ -6,7 +6,8 @@ extends UnboundTest
 ## answer, so the pawn was counted as an enemy of the room, was never in the grid, could not be hit, never
 ## moved and struck anything beside it; the room could not be cleared, so its east door, which waits for a
 ## clear, never opened, and nobody could reach B1 or the hub. Nothing noticed, because the owner-guide test
-## killed enemies with a damage request that needs no cell).
+## killed enemies with a damage request that needs no cell; the pawn had even "taken" the spear in the world
+## dump, by standing on its cell).
 ##
 ## For each zone of content/world/world.tres the room is booted the way the game boots it (EcsBoot: the
 ## painted tiles become walls and the markers bake themselves) and the check is made on that grid, not on the
@@ -14,7 +15,9 @@ extends UnboundTest
 ## pawn arrives, never somewhere it walks through (stepping on it leaves the room).
 ##   - every ENTRY stands on a cell the pawn can stand on, and no enemy is parked on it;
 ##   - every ENEMY (every parked ActorView with a definition) stands on a walkable cell, and the grid has it
-##     there: entity_at(its cell) is that entity, so a second enemy parked on the same cell is found too;
+##     there: entity_at(its cell) is that entity, so a second enemy parked on the same cell is found too, and
+##     its cell can be walked to from every entry (a room is cleared by killing, and the sword needs a cell
+##     beside the piece);
 ##   - every PICKUP (every PickupSpawnPoint that spawns a weapon) is on a walkable cell, the grid lists the
 ##     item there (a second item on one cell is silently dropped by EcsGrid.register_item), and the cell can
 ##     be walked to from every entry of the room;
@@ -24,7 +27,7 @@ extends UnboundTest
 ##     wall into floor when it opened) and its approach cell, the one the pawn pushes in from, can be walked
 ##     to from every entry (a gate nobody can push is a gate that never opens).
 ## The last part of the suite proves the scan can fail: a pawn put on a wall, two pawns on one cell, a spear
-## put on a wall, a spear walled in, the sword put on the ring of wall, an entry under a pawn, a gate in a
+## put on a wall, a spear walled in, a pawn walled in, the sword put on the ring of wall, an entry under a pawn, a gate in a
 ## wall and a gate nobody can push, each in a copy of a room that is right, produce a sentence, and the same
 ## kinds of marker put on floor produce none.
 
@@ -38,14 +41,6 @@ const MINIMUM_GATES := 2
 ## The cell size and the board of a Stage 1 room, for placing a marker by cell in a copy of one.
 const STAGE_ONE_BOARD := Vector2i(16, 9)
 const CELL_SIZE := 32
-
-## TEMPORARY, and removed by the commit that moves these pieces onto floor: the problems this scan already
-## finds in a room that has not been fixed yet, by the name of the node that has them. A zone listed here must
-## still have exactly these problems (a listed piece that stopped being a problem fails, so the list cannot go
-## stale and cannot hide a new one). zone id -> [node names].
-const KNOWN_UNFIXED_PIECES := {
-	&"t4_broken_rule_yard": ["BackstepPawn", "PencilSpearPickup"],
-}
 
 var zones_checked := 0
 var entries_checked := 0
@@ -78,19 +73,9 @@ func _init() -> void:
 func _check_zone(graph: WorldGraph, zone_id: StringName) -> void:
 	var booted := _boot(graph.get_zone_scene(zone_id))
 	var problems := _problems_in(booted)
-	var known_nodes: Array = KNOWN_UNFIXED_PIECES.get(zone_id, [])
-	var unexpected: Array[Dictionary] = []
-	var still_problems_of: Dictionary = {}
 	for problem in problems:
-		if String(problem["node"]) in known_nodes:
-			still_problems_of[problem["node"]] = true
-		else:
-			unexpected.append(problem)
-	for problem in problems:
-		printerr("  %s: %s %s" % [zone_id, problem["node"], problem["text"]])
-	_expect(unexpected.is_empty(), "%s: every entry, enemy, pickup, unlock and gate stands on floor the pawn can use (%d problem(s) besides the known ones)" % [zone_id, unexpected.size()])
-	for node_name: String in known_nodes:
-		_expect(still_problems_of.has(node_name), "%s: %s is listed as a known unfixed piece and the scan still finds it (a fixed piece must leave the list)" % [zone_id, node_name])
+		printerr("  %s: %s: %s" % [zone_id, problem["node"], problem["text"]])
+	_expect(problems.is_empty(), "%s: every entry, enemy, pickup, unlock and gate stands on floor the pawn can use (%d problem(s))" % [zone_id, problems.size()])
 	zones_checked += 1
 	_free(booted)
 
@@ -134,7 +119,7 @@ func _problems_in(booted: Dictionary) -> Array[Dictionary]:
 	for entry_id: StringName in entry_cell_by_id:
 		reached_by_entry[entry_id] = _walkable_cells_reached_from(grid, entry_cell_by_id[entry_id])
 
-	var enemy_cells: Dictionary = _check_enemies(room, world, cast, problems)
+	var enemy_cells: Dictionary = _check_enemies(room, world, cast, entry_cell_by_id, reached_by_entry, problems)
 	_check_entries(room, grid, entry_cell_by_id, enemy_cells, problems)
 	_check_pickups(room, world, cast, entry_cell_by_id, reached_by_entry, problems)
 	_check_unlocks(room, grid, entry_cell_by_id, reached_by_entry, problems)
@@ -148,7 +133,7 @@ func _problem(problems: Array[Dictionary], node_name: Variant, text: String) -> 
 
 ## The enemies: each parked ActorView that EcsBoot made an enemy of. Returns the set of cells they were
 ## parked on (cell -> true), for the entry check.
-func _check_enemies(room: Node, world: EcsWorld, cast: Dictionary, problems: Array[Dictionary]) -> Dictionary:
+func _check_enemies(room: Node, world: EcsWorld, cast: Dictionary, entry_cell_by_id: Dictionary, reached_by_entry: Dictionary, problems: Array[Dictionary]) -> Dictionary:
 	var grid := world.grid
 	var parked_cells: Dictionary = {}
 	var parked_views := 0
@@ -172,6 +157,8 @@ func _check_enemies(room: Node, world: EcsWorld, cast: Dictionary, problems: Arr
 			_problem(problems, view.name, "is parked at %s, which entity %d already holds: it is not in the grid" % [cell, grid.entity_at(cell)])
 		elif grid.cell_by_entity.get(enemy_id, EcsGrid.NO_CELL) != cell:
 			_problem(problems, view.name, "is parked at %s and the grid places it at %s" % [cell, grid.cell_by_entity.get(enemy_id, EcsGrid.NO_CELL)])
+		else:
+			_check_reachable(String(view.name), "its cell", cell, grid, entry_cell_by_id, reached_by_entry, problems)
 	return parked_cells
 
 
@@ -211,7 +198,7 @@ func _check_pickups(room: Node, world: EcsWorld, cast: Dictionary, entry_cell_by
 			_problem(problems, node_name, "is at %s, a %s cell: nothing can stand there to pick it up" % [cell, grid.kind_at(cell)])
 		if grid.item_at(cell) != item_id:
 			_problem(problems, node_name, "is at %s, where the grid lists item %d instead: this one is not on the floor" % [cell, grid.item_at(cell)])
-		_check_reachable(node_name, "the pickup", cell, grid, entry_cell_by_id, reached_by_entry, problems)
+		_check_reachable(node_name, "its cell", cell, grid, entry_cell_by_id, reached_by_entry, problems)
 
 
 func _check_unlocks(room: Node, grid: EcsGrid, entry_cell_by_id: Dictionary, reached_by_entry: Dictionary, problems: Array[Dictionary]) -> void:
@@ -225,7 +212,7 @@ func _check_unlocks(room: Node, grid: EcsGrid, entry_cell_by_id: Dictionary, rea
 			_problem(problems, marker.name, "is at %s and the grid has no unlock baked there" % [cell])
 		if not grid.is_walkable(cell):
 			_problem(problems, marker.name, "is at %s, a cell the pawn cannot stand on: the unlock can never be taken" % [cell])
-		_check_reachable(String(marker.name), "the unlock", cell, grid, entry_cell_by_id, reached_by_entry, problems)
+		_check_reachable(String(marker.name), "its cell", cell, grid, entry_cell_by_id, reached_by_entry, problems)
 
 
 ## A gate is a wall at boot (the pawn pushes it open from `opens_from`). Two things must hold: the tiles under
@@ -258,7 +245,7 @@ func _check_reachable(node_name: String, what: String, cell: Vector2i, grid: Ecs
 		return
 	for entry_id: StringName in entry_cell_by_id:
 		if not (reached_by_entry[entry_id] as Dictionary).has(cell):
-			_problem(problems, node_name, "%s at %s cannot be reached on foot from entry '%s' (%s), with the gates closed" % [what, cell, entry_id, entry_cell_by_id[entry_id]])
+			_problem(problems, node_name, "%s %s cannot be reached on foot from entry '%s' (%s), with the gates closed" % [what, cell, entry_id, entry_cell_by_id[entry_id]])
 
 
 ## Every cell the pawn can reach on foot from `start`: cardinal steps over cells the grid says are walkable
@@ -328,6 +315,15 @@ func _check_the_scan_can_fail(graph: WorldGraph) -> void:
 	_expect(_any_about(walled_problems, "PencilSpearPickup", "cannot be reached on foot"), "the scan can fail: a spear walled in on all four sides is reported (%s)" % [_describe(walled_problems)])
 	_free(spear_walled_in)
 
+	var pawn_walled_in := _boot(t3)
+	var pawn_walls_grid := (pawn_walled_in["world"] as EcsWorld).grid
+	var walled_pawn_cell := _cell_of(pawn_walled_in["room"], "PawnRecruit")
+	for step in [Vector2i.UP, Vector2i.DOWN, Vector2i.LEFT, Vector2i.RIGHT]:
+		pawn_walls_grid.add_block(walled_pawn_cell + step)
+	var walled_pawn_problems := _problems_in(pawn_walled_in)
+	_expect(_any_about(walled_pawn_problems, "PawnRecruit", "cannot be reached on foot"), "the scan can fail: a pawn walled in on all four sides is reported (%s)" % [_describe(walled_pawn_problems)])
+	_free(pawn_walled_in)
+
 	var sword_on_the_ring := _boot(t2, func(room: Node) -> void:
 		_place(room, "FallenSwordUnlock", ring_cell))
 	var sword_problems := _problems_in(sword_on_the_ring)
@@ -357,7 +353,7 @@ func _check_the_scan_can_fail(graph: WorldGraph) -> void:
 func _describe(problems: Array[Dictionary]) -> String:
 	var sentences: PackedStringArray = []
 	for problem in problems:
-		sentences.append("%s %s" % [problem["node"], problem["text"]])
+		sentences.append("%s: %s" % [problem["node"], problem["text"]])
 	return " | ".join(sentences)
 
 
