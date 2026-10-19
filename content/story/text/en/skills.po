@@ -1,0 +1,40 @@
+# The Unbound Pawn: the names of the pawn's skills and of the weapons that lie about. English is the source
+# language (D-25).
+#
+# To change a name, edit the text after "msgstr" and save. Do not change the "msgid": it is the key the skill and
+# weapon files (content/skills/<id>/, content/pickups/<id>/) look the name up by.
+# SKILL_ is a thing the pawn can do, ITEM_ is a weapon or object on the floor.
+#
+# Cách sửa một dòng: đổi chữ sau "msgstr", đừng đổi "msgid" (đó là mã mà game và các scene dùng để tìm chữ).
+# Lưu tệp rồi chạy game (F5). Giữ nguyên mọi phần trong ngoặc nhọn, ví dụ {room}.
+msgid ""
+msgstr ""
+"Project-Id-Version: The Unbound Pawn\n"
+"Language: en\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#. surface=status line; used_in=fills {attack} of "{attack} connects"; purpose=the sword swing, the pawn's first verb
+msgid "SKILL_WOODEN_SWORD_NAME"
+msgstr "Wooden Sword"
+
+#. surface=status line; used_in=fills {attack} of "{attack} connects"; purpose=the thrust on the Q key
+msgid "SKILL_PENCIL_THRUST_NAME"
+msgstr "Pencil Thrust"
+
+#. surface=status line; used_in=fills {attack} of "{attack} connects"; purpose=what an attack that was given no name is called
+msgid "SKILL_UNNAMED_NAME"
+msgstr "Attack"
+
+#. surface=status line; used_in=fills {weapon} of "{piece} picked up {weapon}"; purpose=a weapon that lies on the floor for a piece to pick up
+msgid "ITEM_PENCIL_SPEAR_NAME"
+msgstr "Pencil Spear"
+
+#. surface=status line; used_in=fills {weapon} of "{piece} picked up {weapon}"; purpose=a weapon that lies on the floor for a piece to pick up
+msgid "ITEM_RULER_BLADE_NAME"
+msgstr "Ruler Blade"
+
+#. surface=status line; used_in=fills {weapon} of "{piece} picked up {weapon}"; purpose=the stand-in weapon a new pickup starts as
+msgid "ITEM_TOY_WEAPON_NAME"
+msgstr "Toy Weapon"

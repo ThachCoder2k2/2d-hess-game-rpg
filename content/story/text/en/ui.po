@@ -1,0 +1,281 @@
+# The Unbound Pawn: the words of the screens, the HUD and the status line. English is the source language (D-25).
+#
+# To change a line, edit the text after "msgstr" and save. Do not change the "msgid": it is the key the game and
+# the scenes look the words up by. {name} is filled in by the game: keep it exactly as it is, in any order.
+# The comment lines that start with "#." say where a line shows up; they are for the person writing the line.
+# Prefixes in this file: UI_ (screens, HUD, menus), MSG_ (the line the game says when something happens),
+# PROMPT_ (control prompts).
+#
+# Cách sửa một dòng: đổi chữ sau "msgstr", đừng đổi "msgid" (đó là mã mà game và các scene dùng để tìm chữ).
+# Lưu tệp rồi chạy game (F5). Giữ nguyên mọi phần trong ngoặc nhọn, ví dụ {room}.
+msgid ""
+msgstr ""
+"Project-Id-Version: The Unbound Pawn\n"
+"Language: en\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#. surface=title screen; purpose=the name of the game, the stand-in for the logo picture
+msgid "UI_GAME_NAME"
+msgstr "THE UNBOUND PAWN"
+
+#. surface=title screen menu button; purpose=start a fresh run
+msgid "UI_TITLE_NEW_GAME"
+msgstr "New Game"
+
+#. surface=title screen menu button; purpose=carry on from the saved run
+msgid "UI_TITLE_CONTINUE"
+msgstr "Continue"
+
+#. surface=title screen menu button; purpose=open the settings
+msgid "UI_TITLE_SETTINGS"
+msgstr "Settings"
+
+#. surface=title screen menu button; purpose=play the credits roll
+msgid "UI_TITLE_CREDITS"
+msgstr "Credits"
+
+#. surface=title screen menu button; purpose=leave the game
+msgid "UI_TITLE_QUIT"
+msgstr "Quit"
+
+#. surface=title screen question; purpose=New Game would replace a saved run, ask first
+msgid "UI_TITLE_CONFIRM_NEW_GAME"
+msgstr "Start a new game? Your saved progress will be replaced."
+
+#. surface=title screen question, the answer that goes ahead
+msgid "UI_TITLE_CONFIRM_NEW_GAME_YES"
+msgstr "Start over"
+
+#. surface=title screen question, the safe answer
+msgid "UI_TITLE_CONFIRM_NEW_GAME_NO"
+msgstr "Keep my save"
+
+#. surface=title screen notice; purpose=the newest save was damaged and the one before it was loaded
+msgid "UI_NOTICE_BACKUP_USED"
+msgstr "Your latest save was damaged. The save before it is loaded instead."
+
+#. surface=title screen notice; purpose=a damaged save with no backup, so only New Game is offered
+msgid "UI_NOTICE_NEW_GAME_AFTER_DAMAGE"
+msgstr "Your save was damaged and cannot be read. Choosing New Game starts over."
+
+#. surface=title screen notice; purpose=a save too old to read, so only New Game is offered
+msgid "UI_NOTICE_OBSOLETE_SAVE"
+msgstr "Your save is from a much older version and cannot be read. Choosing New Game starts over."
+
+#. surface=title screen notice; purpose=a save written by a newer game, which is never overwritten
+msgid "UI_NOTICE_NEWER_GAME"
+msgstr "This save needs a newer game."
+
+#. surface=title screen save card; placeholders={room} the room's name, {time} the time played; purpose=describe the saved run
+msgid "UI_CARD_PLAYED"
+msgstr "{room}  |  {time} played"
+
+#. surface=title screen save card; placeholders={room} {time} {day} the day it was saved, as 2026-10-19; purpose=describe the saved run
+msgid "UI_CARD_PLAYED_ON"
+msgstr "{room}  |  {time} played  |  {day}"
+
+#. surface=title screen save card and pause question; purpose=the room name when the run has not entered any room yet
+msgid "UI_CARD_FIRST_ROOM"
+msgstr "The beginning"
+
+#. surface=title screen save card; placeholders={minutes}; purpose=time played under an hour
+msgid "UI_TIME_MINUTES"
+msgstr "{minutes}m"
+
+#. surface=title screen save card; placeholders={hours} {minutes}; purpose=time played from an hour on
+msgid "UI_TIME_HOURS_MINUTES"
+msgstr "{hours}h {minutes}m"
+
+#. surface=title screen corner; placeholders={version} the build's version number; purpose=say which build this is
+msgid "UI_VERSION"
+msgstr "v{version}"
+
+#. surface=pause menu heading
+msgid "UI_PAUSE_TITLE"
+msgstr "Paused"
+
+#. surface=pause menu button; purpose=close the menu and go back to the room
+msgid "UI_PAUSE_RESUME"
+msgstr "Resume"
+
+#. surface=pause menu button; purpose=close the menu and open the Book of House Rules
+msgid "UI_PAUSE_BOOK"
+msgstr "Book of House Rules"
+
+#. surface=pause menu button; purpose=start this room again (asks first)
+msgid "UI_PAUSE_RESTART"
+msgstr "Restart Room"
+
+#. surface=pause menu button; purpose=go back to the title screen (asks first)
+msgid "UI_PAUSE_QUIT"
+msgstr "Quit to Title"
+
+#. surface=pause menu question; purpose=restarting the room is a death without the defeat, nothing is saved
+msgid "UI_PAUSE_CONFIRM_RESTART"
+msgstr "Restart this room? You start again at its entrance with full Courage, and its pieces and weapons are put back."
+
+#. surface=pause menu question, the answer that goes ahead
+msgid "UI_PAUSE_CONFIRM_RESTART_YES"
+msgstr "Restart room"
+
+#. surface=pause menu question; placeholders={checkpoint} the name of the last checkpoint room; purpose=leaving loses what was not saved
+msgid "UI_PAUSE_CONFIRM_QUIT"
+msgstr ""
+"Quit to the title? Progress since your last save is lost.\n"
+"Last checkpoint: {checkpoint}."
+
+#. surface=pause menu question, the answer that goes ahead
+msgid "UI_PAUSE_CONFIRM_QUIT_YES"
+msgstr "Quit to title"
+
+#. surface=pause menu question, the safe answer of both questions
+msgid "UI_PAUSE_KEEP_PLAYING"
+msgstr "Keep playing"
+
+#. surface=pause menu question; purpose=what the checkpoint line says before the pawn reached any checkpoint
+msgid "UI_PAUSE_NO_CHECKPOINT"
+msgstr "none yet"
+
+#. surface=credits roll, bottom of the screen; purpose=tell the player how to skip the roll
+msgid "UI_CREDITS_SKIP_HINT"
+msgstr "Hold Confirm to skip"
+
+#. surface=HUD top left; purpose=the game's name as a banner
+msgid "UI_HUD_TITLE"
+msgstr "THE UNBOUND PAWN"
+
+#. surface=HUD; placeholders={pips} one filled or empty mark per Courage point; purpose=how much Courage the pawn has
+msgid "UI_HUD_COURAGE"
+msgstr "COURAGE {pips}"
+
+#. surface=HUD skill slot; purpose=the sword has not been found, so the attack key does nothing yet
+msgid "UI_HUD_SKILL_LOCKED"
+msgstr "FIND SWORD"
+
+#. surface=HUD skill slot; purpose=the thrust can be used now
+msgid "UI_HUD_SKILL_READY"
+msgstr "Q THRUST READY"
+
+#. surface=HUD skill slot; placeholders={seconds} the seconds left, as 1.2; purpose=the thrust is cooling down
+msgid "UI_HUD_SKILL_COOLDOWN"
+msgstr "Q THRUST {seconds}"
+
+#. surface=HUD strike line; purpose=no enemy holds the attack token, so any may strike next
+msgid "UI_HUD_TOKEN_FREE"
+msgstr "ENEMY STRIKE READY"
+
+#. surface=HUD strike line; placeholders={piece} the enemy piece's name in capitals; purpose=say which enemy strikes next
+msgid "UI_HUD_TOKEN_OWNER"
+msgstr "STRIKE: {piece}"
+
+#. surface=HUD enemy count; placeholders={remaining} {total}; purpose=how many enemies are left in the room
+msgid "UI_HUD_ENEMIES"
+msgstr "ENEMIES {remaining}/{total}"
+
+#. surface=HUD cell line; placeholders={x} {y} the pawn's cell, {facing} the compass word below; purpose=where the pawn stands
+msgid "UI_HUD_CELL"
+msgstr "CELL {x},{y}  FACE {facing}"
+
+#. surface=HUD cell line; purpose=the pawn faces up the board
+msgid "UI_COMPASS_NORTH"
+msgstr "N"
+
+#. surface=HUD cell line; purpose=the pawn faces down the board
+msgid "UI_COMPASS_SOUTH"
+msgstr "S"
+
+#. surface=HUD cell line; purpose=the pawn faces right
+msgid "UI_COMPASS_EAST"
+msgstr "E"
+
+#. surface=HUD cell line; purpose=the pawn faces left
+msgid "UI_COMPASS_WEST"
+msgstr "W"
+
+#. surface=HUD bottom strip; purpose=the keys of the game, in one line (the Controls panel lists them all)
+msgid "UI_HUD_HELP"
+msgstr "MOVE WASD  TURN SHIFT+DIR  SWORD SPACE  THRUST Q  PAUSE ESC  DEBUG F3"
+
+#. surface=result panel in the middle of the screen; placeholders={title} the big line, {subtitle} the line under it; purpose=how the two lines sit together
+msgid "UI_RESULT_PANEL"
+msgstr ""
+"{title}\n"
+"{subtitle}"
+
+#. surface=result panel title; purpose=the room was won
+msgid "UI_RESULT_CLEARED"
+msgstr "ROOM CLEARED"
+
+#. surface=result panel subtitle; purpose=tell the player how to play the room again after winning it
+msgid "UI_RESULT_CLEARED_SUBTITLE"
+msgstr "OPEN THE PAUSE MENU TO RESTART THE ROOM"
+
+#. surface=result panel title; purpose=the pawn fell
+msgid "UI_RESULT_DEFEATED"
+msgstr "THE PAWN FALLS"
+
+#. surface=result panel subtitle; purpose=the room starts again after a fall
+msgid "UI_RESULT_DEFEATED_SUBTITLE"
+msgstr "THE CHILD RESETS THE BOARD"
+
+#. surface=status line; purpose=what a room says when it has no start line of its own
+msgid "MSG_ROOM_START_DEFAULT"
+msgstr "Break the black line."
+
+#. surface=status line; purpose=the attack key was pressed before the sword was found
+msgid "MSG_NO_WEAPON_YET"
+msgstr "The pawn has no weapon yet. Find the fallen sword."
+
+#. surface=status line; placeholders={attack} the attack's name; purpose=the pawn's swing hit something
+msgid "MSG_ATTACK_CONNECTS"
+msgstr "{attack} connects. Keep pressing the broken line."
+
+#. surface=status line; purpose=the pawn was hit and has one Courage left
+msgid "MSG_ONE_COURAGE_LEFT"
+msgstr "One courage left. Wait for the warning, then cut through."
+
+#. surface=status line; purpose=the pawn was hit and still has Courage to spare
+msgid "MSG_PAWN_IS_HIT"
+msgstr "The pawn is hit. Move out before the next strike."
+
+#. surface=status line; placeholders={piece} the enemy piece, {weapon} the weapon's name; purpose=an enemy took a weapon from the floor
+msgid "MSG_ENEMY_PICKED_UP"
+msgstr "{piece} picked up {weapon}. Its chess attack has been replaced."
+
+#. surface=status line; purpose=a shut door whose room has no line of its own for it
+msgid "MSG_DOOR_IS_LOCKED"
+msgstr "The way on is shut. Break the black line here first."
+
+#. surface=status line; purpose=a shortcut gate was pushed open for good
+msgid "MSG_GATE_UNBARS"
+msgstr "The gate unbars. It will never close again."
+
+#. surface=status line; purpose=the pawn took the sword and the marker has no line of its own
+msgid "MSG_UNLOCK_FALLBACK"
+msgstr "The pawn grips the sword. The rules crack."
+
+#. surface=status line; purpose=a room brought pieces the Book has no page for yet; [B] is the Book key
+msgid "MSG_NEW_PAGES"
+msgstr "New pieces on the board. The book writes their rules. [B]"
+
+#. surface=status line; purpose=developer view switched on with F3
+msgid "MSG_DEBUG_VIEW_ON"
+msgstr "DEBUG VIEW ON: boundaries, paths, and behavior labels."
+
+#. surface=status line; purpose=developer view switched off with F3
+msgid "MSG_DEBUG_VIEW_OFF"
+msgstr "DEBUG VIEW OFF."
+
+#. surface=language list; purpose=English, written in English
+msgid "UI_LANGUAGE_NAME_EN"
+msgstr "English"
+
+#. surface=language list; purpose=Vietnamese, written in Vietnamese
+msgid "UI_LANGUAGE_NAME_VI"
+msgstr "Tiếng Việt"
+
+#. surface=language list; purpose=the generated test language that makes every line longer
+msgid "UI_LANGUAGE_NAME_QPS"
+msgstr "Pseudo-language (test)"

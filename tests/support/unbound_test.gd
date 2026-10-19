@@ -28,6 +28,12 @@ extends SceneTree
 ## own, so everything the base needs happens in `_initialize()` instead, which the
 ## engine calls after `_init()` returns, even when `_init()` died on a script error.
 
+## Every suite runs in the source language, English (D-25), because this machine's own locale resolves to `en_VN`
+## and an owner machine may be set to Vietnamese once the `vi` files have rows. This initialiser runs when the
+## script is loaded, before the first line of any suite's `_init()`; a suite that tests another language
+## switches itself and switches back.
+static var source_language_is_set := _set_source_language()
+
 ## Seconds a suite may run before the watchdog fails it, unless the suite sets
 ## `watchdog_seconds`.
 const DEFAULT_WATCHDOG_SECONDS := 30.0
@@ -56,6 +62,10 @@ var _is_finished := false
 
 ## Bumped by every `arm_watchdog` call so that only the latest timer can fire.
 var _watchdog_generation := 0
+
+
+static func _set_source_language() -> bool:
+	return TextService.set_language(TextService.SOURCE_LANGUAGE)
 
 
 ## Called by the engine once the subclass `_init()` has returned or aborted.

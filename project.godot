@@ -183,6 +183,11 @@ ui_cancel={
 , Object(InputEventJoypadButton,"resource_local_to_scene":false,"resource_name":"","device":-1,"button_index":1,"pressure":0.0,"pressed":false,"script":null)
 ]
 }
+[internationalization]
+
+locale/fallback="en"
+locale/translations=PackedStringArray("res://content/story/text/en/story.po", "res://content/story/text/en/ui.po", "res://content/story/text/en/skills.po", "res://content/story/text/en/rooms.po", "res://content/story/text/vi/story.po", "res://content/story/text/vi/ui.po", "res://content/story/text/vi/skills.po", "res://content/story/text/vi/rooms.po")
+
 [rendering]
 
 textures/canvas_textures/default_texture_filter=0
