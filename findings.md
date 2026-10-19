@@ -283,9 +283,13 @@ June note).
   under an open Book turns control back on while the Book stays visible (fix with the M4 pause work); the
   health carry is a snapshot taken when the trip starts, so a hit during the fade-out is lost; the zone node is
   named after the room (`T2_FallenSwordTile`), not `CurrentZone`. All pinned by `tests/bridge/`.
-- Content defects found by the bridge suites (not fixed in M1a): T2's `Exit_To_T1` at cell (0,5) sits on a
-  solid wall tile, so the hero cannot walk back to T1 (ledger req 110 "backtracking works" is only true through
-  `_travel_to`); T4's `PencilSpearPickup` at (7,6) is on a solid cell, so a pawn cannot walk to the spear.
+- Content defects found by the bridge suites in M1a. FIXED in the M3b review (`base/m3b-fix`): the west return
+  doors of T2, T3, T4, B1 and H1 (and H1's top door to the Toybox) stood on the ring of wall of the shared
+  tilemap, cells (0,5) and (2,0), so the hero could never walk back; the doors now sit one cell inside the
+  ring, like the east doors, each entry one cell further in (`tests/content/test_room_doors_reachable.gd`,
+  `tests/bridge/test_bridge_backtracking.gd`). STILL OPEN: T4's `PencilSpearPickup` at (7,6) is on a solid cell
+  (the wall column), so no pawn can walk to the spear; the tests that "let a pawn take it" stand the pawn on the
+  cell by hand. Only the Ruler Blade in B1 (cell (8,6), floor) can be taken by a pawn in play.
 - Dependency edges the plan's 13.1 starting table does not allow today (report only): `EcsBoot`,
   `EntityComponent` and `PickupSpawnPoint` name `ActorView` / `WeaponPickup`, and `PrototypeBoard` reads
   `EcsWorld` and `EcsComponents`. Decide what to freeze in `tests/architecture/allowed_edges.txt` before M1b

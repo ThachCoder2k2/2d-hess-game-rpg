@@ -109,15 +109,12 @@ func _run() -> void:
 	_expect(is_zero_approx(fade_rect.modulate.a), "the fade layer is fully transparent again")
 	_expect(not Support.room_ending(main) and Support.total_enemies(main) == 0, "the new zone starts with a clean encounter state")
 
-	# --- Backtracking: the way back lands on the matching entry marker ---
-	# FINDING (content, not bridge): T2's Exit_To_T1 marker sits in the west wall
-	# column, which the tilemap paints solid, so the hero cannot walk onto it today.
-	# The bridge entry point is driven directly; the wall is only reported.
+	# --- Backtracking: the hero WALKS back through T2's west door and lands on the matching entry marker ---
+	# (The return door used to stand on the wall column and could not be reached; tests/bridge/
+	# test_bridge_backtracking.gd walks the whole way home. Here the trip is checked against the first leg.)
 	var t2_exit_to_t1 := Support.exit_cell(main, room_after, T1)
-	_expect(ecs_after.grid.exit_by_cell.has(t2_exit_to_t1), "T2's Exit_To_T1 is baked as a door cell")
-	if not ecs_after.grid.is_walkable(t2_exit_to_t1):
-		print("NOTE: T2's Exit_To_T1 at %s is a solid wall cell, so the way back is not walkable yet (content issue, not pinned)" % t2_exit_to_t1)
-	await Support.travel_to(main, T1, &"from_t2")
+	_expect(ecs_after.grid.exit_by_cell.has(t2_exit_to_t1) and ecs_after.grid.is_walkable(t2_exit_to_t1), "T2's Exit_To_T1 is baked as a door cell the hero can stand on")
+	_expect(await Support.walk_through_door(self, main, T1), "the hero walks to T2's west door and through it, no travel call")
 	var room_back: Node = main.get("current_room")
 	_expect(room_back.get("zone_id") == T1 and main.get("current_zone_id") == T1, "backtracking returns to T1")
 	_expect(Support.player_cell(main) == Support.entry_cell(main, room_back, &"from_t2"), "backtracking lands on T1's from_t2 entry")

@@ -309,6 +309,56 @@ static func walk_through_exit(tree: SceneTree, main: Node, target_zone: StringNa
 	return await wait_for_travel(tree, main)
 
 
+## The key a player presses to step in this direction (the InputMap action PlayerInputSystem reads).
+const ACTION_BY_DIRECTION := {
+	Vector2i.UP: &"move_up",
+	Vector2i.DOWN: &"move_down",
+	Vector2i.LEFT: &"move_left",
+	Vector2i.RIGHT: &"move_right",
+}
+
+
+## Walks the hero ONE cell the way a player does: the key goes down, one simulation step sees the fresh
+## press and asks for the step, the key goes up, and the step is pumped until it lands (or until a trip
+## starts, when the cell is a door). True when the hero stands on the next cell or a trip has begun.
+static func tap_direction(tree: SceneTree, main: Node, direction: Vector2i) -> bool:
+	var action: StringName = ACTION_BY_DIRECTION[direction]
+	var goal := player_cell(main) + direction
+	Input.action_press(action)
+	pump(main, SIM_STEP_SECONDS)
+	Input.action_release(action)
+	await tree.process_frame
+	var arrived := func() -> bool:
+		return travel_in_progress(main) or (player_cell(main) == goal and not player_move_state(main).moving)
+	return pump_until(main, arrived, 1.0)
+
+
+## Walks the hero to `goal` by key presses along the shortest path the board allows, one cell per tap,
+## the way a player would cross the room. True when the hero stands on `goal` (or a trip has begun because
+## `goal` is a door). False when there is no path or a step does not land.
+static func walk_to_cell(tree: SceneTree, main: Node, goal: Vector2i) -> bool:
+	var path := ecs_of(main).grid.get_grid_path(player_id_of(main), player_cell(main), goal)
+	if path.is_empty():
+		return false
+	for index in range(1, path.size()):
+		if not await tap_direction(tree, main, path[index] - path[index - 1]):
+			return false
+	return true
+
+
+## Walks the hero from wherever it stands, on foot and by key presses, to the door of the current room that
+## leads to `target_zone`, steps onto it and waits for the whole trip (event, fade, swap, boot) to finish.
+## Nothing is teleported and travel_to is not called: if the door cannot be reached the walk fails. False
+## when the room has no such door, the walk fails or the trip never finishes.
+static func walk_through_door(tree: SceneTree, main: Node, target_zone: StringName) -> bool:
+	var door := exit_cell(main, main.get("current_room"), target_zone)
+	if door == Vector2i(-999, -999) or not await walk_to_cell(tree, main, door):
+		return false
+	if not travel_in_progress(main) and not pump_until(main, func() -> bool: return travel_in_progress(main), 1.0):
+		return false
+	return await wait_for_travel(tree, main)
+
+
 ## Real damage path: HealthSystem consumes world.damage_events (the queue the
 ## enemy AI writes to through Events.emit_damage), so this is exactly how an enemy strike lands.
 static func damage_player(main: Node, amount: int) -> void:

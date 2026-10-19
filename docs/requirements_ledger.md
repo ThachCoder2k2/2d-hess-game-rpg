@@ -135,7 +135,7 @@ Written in M1a from section 1.5 of `docs/game-base-plan.md` (v1.1, branch `game-
 | 107 | m | world | World graph as one resource; every door resolves to a real zone and entry (tested) | §7.1, §7.5 | M5 | test_world_graph | covered |
 | 108 | m | world | Exit data: target_zone, target_entry, requires_flag, locked_message, one_way (only requires_room_clear exists) | §7.1, §7.5 | M5 | test_world_graph | covered |
 | 109 | m | world | Fade-swap transition and spawn at the target entry | §9.1 | exists; M1a | test_bridge_travel | covered |
-| 110 | m | world | Backtracking works unless intentionally blocked | §9.1 | exists; M1a | test_bridge_travel (calls _travel_to directly) | partial: T2's Exit_To_T1 sits on a solid wall tile, so the hero cannot walk back to T1 yet (content fix, see findings.md) |
+| 110 | m | world | Backtracking works unless intentionally blocked | §9.1 | exists; M1a; fixed in the M3b review | test_bridge_backtracking (the hero walks H1 -> B1 -> T4 -> T3 -> T2 -> T1 on foot); test_room_doors_reachable (every door of every room is floor, reachable, and leads to a real entry) | covered |
 | 111 | m | world | Each locked exit explains why it is locked (code has one hard-coded captain message for every lock) | §5.7 | M5 | test_world_graph | covered |
 | 112 | m | world | Locks are visible before they open and tied to skill, story or district completion | §5.7 | M5 | test_world_graph | covered |
 | 113 | m | world | One-way shortcut gates opened from the far side stay open forever | §5.7 | exists | gate fixture test | covered |

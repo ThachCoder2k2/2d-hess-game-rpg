@@ -2,7 +2,7 @@
 room: t3_first_pawn_clash
 scene: res://content/rooms/t3_first_pawn_clash/room.tscn
 ticks: 120 x 0.0167 s, player idle (no input)
-entry_cell: (1, 5)
+entry_cell: (2, 5)
 cast: player=1 enemies=[2] pickups=0
 
 [grid]
@@ -13,7 +13,7 @@ blocked_cells: 50
   (0,0) (1,0) (2,0) (3,0) (4,0) (5,0) (6,0) (7,0) (8,0) (9,0) (10,0) (11,0) (12,0) (13,0) (14,0) (15,0) (0,1) (15,1) (0,2) (7,2) (15,2) (0,3) (7,3) (15,3) (0,4) (15,4) (0,5) (7,5) (15,5) (0,6) (7,6) (15,6) (0,7) (15,7) (0,8) (1,8) (2,8) (3,8) (4,8) (5,8) (6,8) (7,8) (8,8) (9,8) (10,8) (11,8) (12,8) (13,8) (14,8) (15,8)
 exits: 2
   (14,1) {"entry": &"west_entry", "requires_room_clear": true, "zone": &"t4_broken_rule_yard"}
-  (0,5) {"entry": &"from_t3", "requires_room_clear": false, "zone": &"t2_fallen_sword_tile"}
+  (1,5) {"entry": &"from_t3", "requires_room_clear": false, "zone": &"t2_fallen_sword_tile"}
 gates: 0
 player_unlocks: 0
 items: 0
@@ -24,13 +24,13 @@ items: 0
 #......#.......#
 #......#..e....#
 #..............#
-XP.....#.......#
+#XP....#.......#
 #......#.......#
 #..............#
 ################
 
 [entities at boot]
-entity 1 player cell=(1,5)
+entity 1 player cell=(2,5)
   player_combat: active_attack=null attack_on_cooldown=false attack_visual_time=0.0000 impact_left=0.0000 pencil_thrust=AttackProfile@res://content/skills/pencil_thrust/pencil_thrust.tres pending_cells=[] recovery_left=0.0000 skill_cooldown_duration=1.2500 skill_cooldown_left=0.0000 sword_unlocked=true wooden_sword=AttackProfile@res://content/skills/wooden_sword/wooden_sword.tres
   view_ref: node=node(PawnHero) was_attacking=false was_dead=false was_hurt=false was_telegraphing=false
   player_input: buffered_direction=(0, 0) held_repeat_delay=0.2200 hold_time=0.0000 last_held_direction=(0, 0)
@@ -40,7 +40,7 @@ entity 1 player cell=(1,5)
   attack_intent: kind=&"none"
   health: current=3 flash_left=0.0000 hurt_visual_time=0.0000 invulnerability_duration=0.7000 invulnerable_left=0.0000 max_value=3 recoil=(0.0000, 0.0000)
   facing: direction=(0, 1)
-  grid_pos: cell=(1, 5)
+  grid_pos: cell=(2, 5)
 entity 2 enemy:Pawn cell=(10,3)
   weapon_slot: weapon=null
   enemy_ai: action_memory=[] allowed_directions=[(0, -1), (0, 1), (-1, 0), (1, 0)] attack_pattern=AttackPattern@res://content/enemies/_shared/attacks/pawn_diagonal.tres committed_goal=(-999, -999) committed_goal_kind=&"none" committed_target_snapshot=(-999, -999) decision_profile=DecisionConfig@res://content/enemies/_shared/decisions/pawn_skirmisher.tres definition=EnemyDefinition@res://content/enemies/pawn_recruit/enemy.tres goal_commitment_decisions=2 goal_decisions_left=0 last_move_direction=(0, 0) locked_attack_cells=[] move_recovery_time=0.1800 observe_delay=0.4200 path_memory_size=6 recent_cells=[] state=0 state_time_left=0.4200 telegraph_duration=0.0000 unarmed_recovery_time=0.4800 unarmed_telegraph_time=0.5800
@@ -52,15 +52,15 @@ entity 2 enemy:Pawn cell=(10,3)
   grid_pos: cell=(10, 3)
 
 [entities after 120 ticks]
-entity 1 player cell=(1,5) facing=(0,1) moving=false health=3/3
+entity 1 player cell=(2,5) facing=(0,1) moving=false health=3/3
 entity 2 enemy:Pawn cell=(10,3) facing=(0,1) moving=false health=2/2 ai_state=0
 events drained: 0
 
 [nodes] 45
 CurrentZone Node2D script=res://authoring/room_encounter.gd position=(0.00,0.00)
 CurrentZone/Entry_From_T4 Marker2D script=res://authoring/markers/zone_entry_marker.gd position=(496.00,84.00)
-CurrentZone/Entry_West Marker2D script=res://authoring/markers/zone_entry_marker.gd position=(112.00,212.00)
-CurrentZone/Exit_To_T2 Marker2D script=res://authoring/markers/zone_exit_marker.gd position=(80.00,212.00)
+CurrentZone/Entry_West Marker2D script=res://authoring/markers/zone_entry_marker.gd position=(144.00,212.00)
+CurrentZone/Exit_To_T2 Marker2D script=res://authoring/markers/zone_exit_marker.gd position=(112.00,212.00)
 CurrentZone/Exit_To_T4 Marker2D script=res://authoring/markers/zone_exit_marker.gd position=(528.00,84.00)
 CurrentZone/PawnRecruit Node2D script=res://presentation/views/actor_view.gd position=(400.00,148.00) z_index=5
 CurrentZone/PawnRecruit/AnimationPlayer AnimationPlayer
@@ -86,7 +86,7 @@ CurrentZone/RoomArt/SetDressing/WarningScratchA Line2D position=(0.00,0.00)
 CurrentZone/RoomArt/SetDressing/WarningScratchB Line2D position=(0.00,0.00)
 CurrentZone/RoomArt/SetDressing/WhiteShieldScrap Polygon2D position=(222.00,116.00)
 CurrentZone/RoomArt/TileMap TileMapLayer position=(64.00,36.00) used_cells=144 tile_set=res://content/tilesets/kingdom/tileset.tres
-PawnHero Node2D script=res://presentation/views/actor_view.gd position=(112.00,212.00) z_index=7
+PawnHero Node2D script=res://presentation/views/actor_view.gd position=(144.00,212.00) z_index=7
 PawnHero/AnimationPlayer AnimationPlayer
 PawnHero/AnimationTree AnimationTree
 PawnHero/AudioPlayer AudioStreamPlayer

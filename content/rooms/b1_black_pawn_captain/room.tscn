@@ -65,7 +65,7 @@ position = Vector2(464, 212)
 definition = ExtResource("8_armed")
 
 [node name="Entry_West" type="Marker2D" parent="."]
-position = Vector2(112, 212)
+position = Vector2(144, 212)
 script = ExtResource("4_entry")
 entry_id = &"west_entry"
 
@@ -75,7 +75,7 @@ script = ExtResource("4_entry")
 entry_id = &"from_hub"
 
 [node name="Exit_To_T4" type="Marker2D" parent="."]
-position = Vector2(80, 212)
+position = Vector2(112, 212)
 script = ExtResource("5_exit")
 target_zone = &"t4_broken_rule_yard"
 target_entry = &"from_b1"

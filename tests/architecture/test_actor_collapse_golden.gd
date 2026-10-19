@@ -23,7 +23,8 @@ extends UnboundTest
 ## ARE (class, script, visibility, which picture) is still compared, and so is everything else.
 ##
 ## Per-room entity sets and cells: the golden also records a fingerprint of everything each world
-## dump baseline says before its "[nodes]" section. Those heads must not change by a byte.
+## dump baseline says before its "[nodes]" section. Those heads must not change by a byte, except for the
+## rooms ROOM_HEADS_CHANGED_ON_PURPOSE lists (a room edit made after the golden was captured, with its reason).
 
 const ActorDumper := preload("res://tools/actor_dumper.gd")
 const WorldDumper := preload("res://tools/world_dumper.gd")
@@ -92,6 +93,18 @@ const GEOMETRY_NODE_PATHS: Array[String] = [
 	"MotionRoot/SpriteRoot/HealthPips/Pip2",
 ]
 const GEOMETRY_TOKENS: Array[String] = ["position", "scale", "centered"]
+
+## room id -> { "line": the head line the room has now, "why": the reason }, for a room whose head was
+## changed on purpose AFTER the golden was captured. The golden file keeps the M2 fingerprint (it is the
+## record of the old scenes and is never re-recorded); a room listed here may equal either that or this line,
+## so the table is the one place that says which rooms moved since and why. Nothing else may.
+const ROOM_HEADS_CHANGED_ON_PURPOSE := {
+	"t2": {"line": "room t2 head_sha256=313385ecdcbacf6ac1aaeadb1be2ccf452dd4577c20ba78a9683a32f33aa0349 lines=49", "why": "the west return door moved from the wall column (0, 5) to (1, 5) and the west entry from (1, 5) to (2, 5): the door stood on a solid cell and could not be walked to (M3b review, base/m3b-fix)"},
+	"t3": {"line": "room t3 head_sha256=cfe3a5c45ff29fd1c259aec7333f4c4bdde2170cf106ddd73972713784023da3 lines=58", "why": "the same door fix: return door (0, 5) -> (1, 5), west entry (1, 5) -> (2, 5)"},
+	"t4": {"line": "room t4 head_sha256=de287066a9130cb30f975821f033532ba796b37e393c4812db7bf3093a1c835e lines=82", "why": "the same door fix: return door (0, 5) -> (1, 5), west entry (1, 5) -> (2, 5)"},
+	"b1": {"line": "room b1 head_sha256=2d7d9a2eebea28775dcfb461c953dc86168884eabb914eb8b8f5411c9f09f397 lines=82", "why": "the same door fix; the hero now starts one cell further east, so the guard beside the Ruler Blade has not stepped onto it after 120 idle ticks"},
+	"h1": {"line": "room h1 head_sha256=63bc258e97cbf581557049226f59044eb87013d51429294744bb38576c60fffa lines=48", "why": "the same door fix, and the top door to the Toybox moved from the wall row (2, 0) to (2, 1) with its entry from (2, 1) to (2, 2)"},
+}
 
 var dumper := ActorDumper.new()
 
@@ -227,5 +240,9 @@ func _check_room_heads(golden_text: String) -> void:
 	var current_lines := dumper.room_head_lines()
 	for current_line in current_lines:
 		var room_id := current_line.get_slice(" ", 1)
-		_expect(recorded_by_room.get(room_id, "") == current_line,
+		var allowed_now: String = ROOM_HEADS_CHANGED_ON_PURPOSE.get(room_id, {}).get("line", "")
+		var equals_recorded: bool = recorded_by_room.get(room_id, "") == current_line
+		_expect(equals_recorded or (not allowed_now.is_empty() and allowed_now == current_line),
 			"room %s: the grid, the board and every entity (cells and component fields) at boot and after 120 ticks equal the pre-collapse dump" % room_id)
+	for room_id: String in ROOM_HEADS_CHANGED_ON_PURPOSE:
+		_expect(room_id in WorldDumper.BASELINE_ROOM_IDS and not String(ROOM_HEADS_CHANGED_ON_PURPOSE[room_id]["why"]).is_empty(), "the room head change listed for %s names a baseline room and says why" % room_id)

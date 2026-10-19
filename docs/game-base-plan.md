@@ -297,7 +297,7 @@ The ledger below lists `reqs.json` `requirements[0..248]`: `req#`, priority (m m
 | 107 | m | World graph as one resource; every door resolves to a real z... | §7.1, §7.5 | M5 | test_world_graph | covered |
 | 108 | m | Exit data: target_zone, target_entry, requires_flag, locked_... | §7.1, §7.5 | M5 | test_world_graph | covered |
 | 109 | m | Fade-swap transition and spawn at the target entry | §9.1 | exists; M1a | test_bridge_travel | covered |
-| 110 | m | Backtracking works unless intentionally blocked | §9.1 | exists; M1a | test_bridge_travel (calls _travel_to directly) | partial: T2's Exit_To_T1 sits on a solid wall tile, so the hero cannot walk back to T1 yet (content fix, see findings.md) |
+| 110 | m | Backtracking works unless intentionally blocked | §9.1 | exists; M1a; fixed in the M3b review | test_bridge_backtracking (the hero walks H1 -> B1 -> T4 -> T3 -> T2 -> T1 on foot); test_room_doors_reachable (every door of every room is floor, reachable, and leads to a real entry) | covered |
 | 111 | m | Each locked exit explains why it is locked (code has one har... | §5.7 | M5 | test_world_graph | covered |
 | 112 | m | Locks are visible before they open and tied to skill, story... | §5.7 | M5 | test_world_graph | covered |
 | 113 | m | One-way shortcut gates opened from the far side stay open fo... | §5.7 | exists | gate fixture test | covered |
