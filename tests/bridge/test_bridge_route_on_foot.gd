@@ -21,6 +21,7 @@ const T3 := &"t3_first_pawn_clash"
 const T4 := &"t4_broken_rule_yard"
 const B1 := &"b1_black_pawn_captain"
 const H1 := &"h1_chess_rug_hub"
+const TB1 := &"tb1_toybox_gate"
 
 ## zone -> the zone its east door leads to, in the order a player meets them after the sword.
 const NEXT_ROOM_AFTER_THE_FIGHT := {T3: T4, T4: B1, B1: H1}
@@ -60,5 +61,13 @@ func _run() -> void:
 		var next_zone: StringName = NEXT_ROOM_AFTER_THE_FIGHT[zone]
 		_expect(await Support.walk_through_door(self, main, next_zone) and main.get("current_zone_id") == next_zone, "%s -> %s on foot: the door the clear opened" % [zone, next_zone])
 
-	_expect(main.get("current_zone_id") == H1, "the run ends in the hub")
+	_expect(main.get("current_zone_id") == H1, "the run reaches the hub")
+
+	# The hub's top door leads on into Act 2 since M5 step 1 (it led into the 72x40 kingdom fixture before): the first
+	# room the room builder made, and its door back.
+	Support.remove_enemy_ai(main)
+	_expect(await Support.walk_through_door(self, main, TB1) and main.get("current_zone_id") == TB1, "H1 -> TB1 on foot: the hub's Toybox door")
+	_expect(Support.player_cell(main) == Support.entry_cell(main, main.get("current_room"), &"from_h1"), "...and the hero arrives on the entry the door names")
+	Support.remove_enemy_ai(main)
+	_expect(await Support.walk_through_door(self, main, H1) and main.get("current_zone_id") == H1, "TB1 -> H1 on foot: the door back")
 	Support.end_suite(self, save_service)

@@ -17,6 +17,12 @@ room_message = "ROOM_B1_BLACK_PAWN_CAPTAIN_START"
 zone_id = &"b1_black_pawn_captain"
 board_size = Vector2i(16, 9)
 checkpoint_on_entry = true
+act = 1
+district = &"chess_rug"
+layout_archetype = &"arena"
+recipe = 4
+content_status = 1
+time_of_night = 0
 
 [node name="RoomArt" type="Node2D" parent="."]
 z_index = -20

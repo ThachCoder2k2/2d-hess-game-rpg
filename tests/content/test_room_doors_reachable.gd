@@ -43,10 +43,10 @@ var zones_checked := 0
 func _init() -> void:
 	suite_title = "ROOM DOORS REACHABLE TEST"
 	var graph := ContentDb.world()
-	if not _expect(graph != null and not graph.zone_scene_by_id.is_empty(), "the world graph loads and lists zones"):
+	if not _expect(graph != null and not graph.rooms.is_empty(), "the world graph loads and lists zones"):
 		finish()
 		return
-	for zone_id: StringName in graph.zone_scene_by_id:
+	for zone_id: StringName in graph.room_ids():
 		_check_zone(graph, zone_id)
 	_expect(zones_checked >= MINIMUM_ZONES, "%d zones were booted and checked (at least %d, so an empty walk cannot pass)" % [zones_checked, MINIMUM_ZONES])
 	_expect(exits_checked >= MINIMUM_EXITS, "%d doors were checked (at least %d)" % [exits_checked, MINIMUM_EXITS])

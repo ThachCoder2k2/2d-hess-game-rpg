@@ -1,0 +1,34 @@
+; tb1_toybox_gate: Act 2, the first room of the Toybox (docs/game-base-plan.md 7.4: 16x9 fence, Teach).
+; A STUB made at M5 step 1 so the hub's top door has a real room to lead to now that the 72x40 kingdom has left the
+; world graph. The plan's version has a fenced Knight preview and a door on to tb2_l_jump_lanes; both arrive with M5
+; step 2, which edits this layout and rebuilds the scene with --force (the scene is the tool's own, unedited).
+; Read the legend with: tools/build_room.gd -- --legend
+
+[room]
+id = tb1_toybox_gate
+size = 16x9
+act = 2
+district = toybox
+archetype = fence
+recipe = teach
+status = stub
+time_of_night = dusk
+tileset = greybox
+name = Toybox Gate
+start = A fence of toy blocks. Something small waits on the far side.
+
+[grid]
+################
+#..............#
+#.......+......#
+#.......+......#
+#.E.....+...R..#
+#X......+......#
+#.......+......#
+#..............#
+################
+
+[objects]
+E = entry id=from_h1
+X = exit to=h1_chess_rug_hub:from_toybox name=Exit_To_H1
+R = enemy def=pawn_recruit

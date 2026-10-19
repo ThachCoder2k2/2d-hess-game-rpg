@@ -246,17 +246,17 @@ func _check_whole_runs_are_unchanged() -> void:
 	_expect(terrain["first_difference"] == "", "the same arena strewn with walls, gaps, blocks and chalk, so paths bend and shapes are cut short: the new code and the old agree after each of %d ticks (%s)" % [terrain["ticks"], terrain["first_difference"]])
 
 	var paths := TestPaths.new(self)
-	var world_graph := ContentDb.world()
+	var scene_by_zone := paths.shipped_rooms_and_kingdom()
 	var rooms_replayed := 0
-	for zone_id: StringName in world_graph.zone_scene_by_id:
-		var replay := _replay_a_room(world_graph.get_zone_scene(zone_id), paths, 600)
+	for zone_id: StringName in scene_by_zone:
+		var replay := _replay_a_room(scene_by_zone[zone_id], paths, 600)
 		print("REPLAY: room %s %d ticks, %d decisions, %d attack-setup searches" % [zone_id, replay["ticks"], replay["decisions"], replay["searches"]])
 		total_ticks += replay["ticks"]
 		total_decisions += replay["decisions"]
 		total_searches += replay["searches"]
 		rooms_replayed += 1
 		_expect(replay["first_difference"] == "", "room %s: the new code and the old agree after each of %d ticks (%s)" % [zone_id, replay["ticks"], replay["first_difference"]])
-	_expect(rooms_replayed >= 6, "setup: %d rooms were replayed (the six Stage 1 rooms and the kingdom fixture)" % rooms_replayed)
+	_expect(rooms_replayed >= 7 and scene_by_zone.has(&"kingdom"), "setup: %d rooms were replayed (the rooms of the world graph and the kingdom fixture)" % rooms_replayed)
 	_expect(total_decisions >= 400 and total_searches >= 300, "setup: the runs were not trivial: %d ticks, %d enemy decisions, %d attack-setup searches by the old code" % [total_ticks, total_decisions, total_searches])
 
 	# The comparison can fail: an enemy whose search is one cell too narrow is found out in the arena.

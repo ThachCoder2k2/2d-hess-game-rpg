@@ -12,6 +12,12 @@
 room_message = "ROOM_T2_FALLEN_SWORD_TILE_START"
 zone_id = &"t2_fallen_sword_tile"
 board_size = Vector2i(16, 9)
+act = 1
+district = &"chess_rug"
+layout_archetype = &"open"
+recipe = 1
+content_status = 1
+time_of_night = 0
 
 [node name="RoomArt" type="Node2D" parent="."]
 z_index = -20

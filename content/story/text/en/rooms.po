@@ -79,3 +79,11 @@ msgstr "The captain blocks the rug edge. Everything you learned is on the board 
 #. room=b1_black_pawn_captain; surface=status line when the pawn steps on the shut door; purpose=say what holds this door; placeholder
 msgid "ROOM_B1_BLACK_PAWN_CAPTAIN_LOCKED"
 msgstr "The captain still holds the rug edge. Break the black line first."
+
+#. room=tb1_toybox_gate; surface=save card, title card, pause menu; purpose=the room's name on the save card and the checkpoint line; placeholder; written by tools/build_room.gd from tools/layouts/tb1_toybox_gate.txt
+msgid "ROOM_TB1_TOYBOX_GATE_NAME"
+msgstr "Toybox Gate"
+
+#. room=tb1_toybox_gate; surface=status line on arrival; purpose=what the room says as the pawn comes in; placeholder; written by tools/build_room.gd from tools/layouts/tb1_toybox_gate.txt
+msgid "ROOM_TB1_TOYBOX_GATE_START"
+msgstr "A fence of toy blocks. Something small waits on the far side."

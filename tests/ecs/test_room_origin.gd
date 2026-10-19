@@ -97,17 +97,15 @@ func _check_shape_grid() -> void:
 		world.free()
 
 
-## Every room the shipped world graph lists gets the origin it always had. The six Stage 1 rooms are all
-## 16x9; the kingdom fixture the graph still lists is 72x40 and scrolls.
+## Every room the shipped world graph lists gets the origin it always had. The rooms of the graph are all
+## 16x9; the kingdom fixture (no longer in the graph since M5) is 72x40 and scrolls.
 func _check_every_shipped_room_keeps_its_origin() -> void:
-	var world_graph := ContentDb.world()
-	_expect(world_graph != null and world_graph.zone_scene_by_id.size() >= 6, "setup: the world graph lists at least the six Stage 1 rooms")
-	if world_graph == null:
-		return
+	var scene_by_zone := TestPaths.new(self).shipped_rooms_and_kingdom()
+	_expect(scene_by_zone.size() >= 7, "setup: the world graph lists at least the six Stage 1 rooms, and the kingdom fixture is added")
 	var sixteen_by_nine := 0
 	var all_keep_the_origin := true
-	for zone_id: StringName in world_graph.zone_scene_by_id:
-		var room := world_graph.get_zone_scene(zone_id).instantiate()
+	for zone_id: StringName in scene_by_zone:
+		var room := scene_by_zone[zone_id].instantiate()
 		var world := EcsWorld.new()
 		EcsBoot.shape_grid(world, room)
 		if world.grid.grid_origin != Vector2(64, 36):

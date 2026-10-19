@@ -18,12 +18,12 @@ const MINIMUM_IDS_BY_KIND := {
 	&"piece_sizes": 1,
 	&"credits": 1,
 	&"enemies": 7,
-	&"rooms": 6,
+	&"rooms": 7,
 	&"rules": 5,
 	&"skills": 2,
 	&"pickups": 3,
 	&"difficulty": 1,
-	&"tilesets": 2,
+	&"tilesets": 3,
 }
 ## Kinds that are one file with the kind's own name as its only id (content/player/player.tres,
 ## content/feel/piece_sizes.tres): they have no id property to compare with a folder.

@@ -97,7 +97,7 @@ func resolve_room(room_id: String) -> Dictionary:
 		last_error = "cannot load the world graph (%s)" % ContentDb.path_of(&"world", &"world")
 		return {}
 	var matching_zone_ids: Array[String] = []
-	for zone_id: StringName in world_graph.zone_scene_by_id:
+	for zone_id: StringName in world_graph.room_ids():
 		var zone_text := String(zone_id)
 		if zone_text == room_id or zone_text.begins_with(room_id + "_"):
 			matching_zone_ids.append(zone_text)
@@ -117,7 +117,7 @@ func list_zone_ids() -> Array[String]:
 	var zone_ids: Array[String] = []
 	var world_graph := ContentDb.world()
 	if world_graph != null:
-		for zone_id: StringName in world_graph.zone_scene_by_id:
+		for zone_id: StringName in world_graph.room_ids():
 			zone_ids.append(String(zone_id))
 	zone_ids.sort()
 	return zone_ids

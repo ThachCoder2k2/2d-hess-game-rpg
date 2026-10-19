@@ -53,13 +53,15 @@ var gates_checked := 0
 func _init() -> void:
 	suite_title = "ROOM MARKERS ON FLOOR TEST"
 	var graph := ContentDb.world()
-	if not _expect(graph != null and not graph.zone_scene_by_id.is_empty(), "the world graph loads and lists zones"):
+	if not _expect(graph != null and not graph.rooms.is_empty(), "the world graph loads and lists zones"):
 		finish()
 		return
-	var zone_ids: Array = graph.zone_scene_by_id.keys()
+	# The rooms of the graph and the 72x40 kingdom fixture (the only board with gates, which left the graph at M5).
+	var scene_by_zone := TestPaths.new(self).shipped_rooms_and_kingdom()
+	var zone_ids: Array = scene_by_zone.keys()
 	zone_ids.sort()
 	for zone_id: StringName in zone_ids:
-		_check_zone(graph, zone_id)
+		_check_zone(scene_by_zone[zone_id], zone_id)
 	_expect(zones_checked >= MINIMUM_ZONES, "%d zones were booted and checked (at least %d, so an empty walk cannot pass)" % [zones_checked, MINIMUM_ZONES])
 	_expect(entries_checked >= MINIMUM_ENTRIES, "%d entries were checked (at least %d)" % [entries_checked, MINIMUM_ENTRIES])
 	_expect(enemies_checked >= MINIMUM_ENEMIES, "%d enemies were checked (at least %d)" % [enemies_checked, MINIMUM_ENEMIES])
@@ -70,8 +72,8 @@ func _init() -> void:
 	finish()
 
 
-func _check_zone(graph: WorldGraph, zone_id: StringName) -> void:
-	var booted := _boot(graph.get_zone_scene(zone_id))
+func _check_zone(scene: PackedScene, zone_id: StringName) -> void:
+	var booted := _boot(scene)
 	var problems := _problems_in(booted)
 	for problem in problems:
 		printerr("  %s: %s: %s" % [zone_id, problem["node"], problem["text"]])

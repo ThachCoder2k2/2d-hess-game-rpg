@@ -1,0 +1,11 @@
+{
+	"about": "Written by tools/build_room.gd. A row says: this scene was built from that layout and has not been edited since (its sha256 still equals scene_sha256). --force may rebuild only such a scene. Do not edit a hash by hand.",
+	"format": 1,
+	"scenes": {
+		"res://content/rooms/tb1_toybox_gate/room.tscn": {
+			"layout_sha256": "032735e8e71c735c7aec280760fa0d9fea2ce404a0e11d992ff13231364588ef",
+			"room_id": "tb1_toybox_gate",
+			"scene_sha256": "ed2753173aaa1a31458f446317d7a38c007e6f0dc13c1ab9d389cefef47b8f73"
+		}
+	}
+}
