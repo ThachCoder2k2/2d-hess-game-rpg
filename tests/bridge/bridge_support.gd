@@ -116,6 +116,11 @@ static func runs_the_schedule(world: EcsWorld) -> bool:
 	return true
 
 
+## Hands the events the world has queued to the scene's router, as the end of a frame does.
+static func route_events(main: Node) -> void:
+	main.get("router").route(ecs_of(main).drain_events())
+
+
 static func player_id_of(main: Node) -> int:
 	return int(main.get("player_id"))
 

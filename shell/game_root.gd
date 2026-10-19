@@ -41,6 +41,8 @@ var travel_in_progress := false
 var player_health_carry := -1
 ## The only reader of the Input singleton: copies the controls into ecs.input_snapshot once per frame.
 var input_poller := InputPoller.new()
+## Hands the events the world drains each frame to the code that reacts to them.
+var router := EventRouter.new()
 var _last_token_owner := 0
 
 
@@ -65,6 +67,7 @@ func _ready() -> void:
 		if world_graph != null and save.state.checkpoint_zone_id != &"" \
 			and save.state.checkpoint_zone_id != _zone_id_of(current_room):
 			current_room = _swap_zone_node(save.state.checkpoint_zone_id)
+	_register_event_handlers()
 	_boot_zone(entry_id)
 
 
@@ -151,7 +154,7 @@ func _process(delta: float) -> void:
 
 	if not room_ending:
 		ecs.tick(delta)
-	_handle_events(ecs.drain_events())
+	router.route(ecs.drain_events())
 	_update_token_hud()
 	_update_cell_status()
 
@@ -170,46 +173,61 @@ func _setup_hud() -> void:
 	hud.set_status(room_message)
 
 
-func _handle_events(events: Array[Dictionary]) -> void:
-	for event in events:
-		var entity := int(event.get("entity", 0))
-		match event.get("type"):
-			&"telegraph_started":
-				if board != null:
-					board.set_telegraph(entity, event.get("cells", []))
-			&"telegraph_finished":
-				if board != null:
-					board.clear_telegraph(entity)
-			&"attack_resolved":
-				if board != null:
-					board.show_enemy_attack(event.get("cells", []))
-			&"attack_landed":
-				_on_player_attack_landed(event)
-			&"attack_locked":
-				_update_status("The pawn has no weapon yet. Find the fallen sword.")
-			&"intent_changed":
-				if board != null and event.get("intent") is EnemyIntent:
-					board.set_enemy_intent(entity, event.get("intent"))
-			&"damaged":
-				_on_damaged(entity, event)
-			&"skill_cooldown":
-				_update_skill_cooldown(float(event.get("time_left", 0.0)))
-			&"weapon_changed":
-				_on_enemy_weapon_changed(entity, event.get("weapon"))
-			&"pickup_taken":
-				_record_pickup_taken(int(event.get("item", 0)))
-				_play_sfx(&"pickup")
-				_free_pickup_view(int(event.get("item", 0)))
-			&"player_unlock":
-				_on_player_unlock(StringName(event.get("id", &"")), String(event.get("message", "")))
-			&"defeated":
-				_on_defeated(entity)
-			&"zone_exit":
-				_travel_to(StringName(event.get("zone", &"")), StringName(event.get("entry", &"start")))
-			&"zone_exit_locked":
-				_on_zone_exit_locked()
-			&"gate_opened":
-				_on_gate_opened(StringName(event.get("gate", &"")))
+## Every event type the scene reacts to, and what reacts. The router calls these in registration order.
+func _register_event_handlers() -> void:
+	router.on(Events.TELEGRAPH_STARTED, _on_telegraph_started)
+	router.on(Events.TELEGRAPH_FINISHED, _on_telegraph_finished)
+	router.on(Events.ATTACK_RESOLVED, _on_attack_resolved)
+	router.on(Events.ATTACK_LANDED, _on_player_attack_landed)
+	router.on(Events.ATTACK_LOCKED, _on_attack_locked)
+	router.on(Events.INTENT_CHANGED, _on_intent_changed)
+	router.on(Events.DAMAGED, _on_damaged)
+	router.on(Events.SKILL_COOLDOWN, _on_skill_cooldown)
+	router.on(Events.WEAPON_CHANGED, _on_enemy_weapon_changed)
+	router.on(Events.PICKUP_TAKEN, _on_pickup_taken)
+	router.on(Events.PLAYER_UNLOCK, _on_player_unlock)
+	router.on(Events.DEFEATED, _on_defeated)
+	router.on(Events.ZONE_EXIT, _on_zone_exit)
+	router.on(Events.ZONE_EXIT_LOCKED, _on_zone_exit_locked)
+	router.on(Events.GATE_OPENED, _on_gate_opened)
+
+
+func _on_telegraph_started(event: Dictionary) -> void:
+	if board != null:
+		board.set_telegraph(int(event.get("entity", 0)), event.get("cells", []))
+
+
+func _on_telegraph_finished(event: Dictionary) -> void:
+	if board != null:
+		board.clear_telegraph(int(event.get("entity", 0)))
+
+
+func _on_attack_resolved(event: Dictionary) -> void:
+	if board != null:
+		board.show_enemy_attack(event.get("cells", []))
+
+
+func _on_attack_locked(_event: Dictionary) -> void:
+	_update_status("The pawn has no weapon yet. Find the fallen sword.")
+
+
+func _on_intent_changed(event: Dictionary) -> void:
+	if board != null and event.get("intent") is EnemyIntent:
+		board.set_enemy_intent(int(event.get("entity", 0)), event.get("intent"))
+
+
+func _on_skill_cooldown(event: Dictionary) -> void:
+	_update_skill_cooldown(float(event.get("time_left", 0.0)))
+
+
+func _on_pickup_taken(event: Dictionary) -> void:
+	_record_pickup_taken(int(event.get("item", 0)))
+	_play_sfx(&"pickup")
+	_free_pickup_view(int(event.get("item", 0)))
+
+
+func _on_zone_exit(event: Dictionary) -> void:
+	_travel_to(StringName(event.get("zone", &"")), StringName(event.get("entry", &"start")))
 
 
 func _on_player_attack_landed(event: Dictionary) -> void:
@@ -222,8 +240,8 @@ func _on_player_attack_landed(event: Dictionary) -> void:
 			_update_status("%s connects. Keep pressing the broken line." % profile.display_name)
 
 
-func _on_damaged(entity: int, event: Dictionary) -> void:
-	if entity != player_id:
+func _on_damaged(event: Dictionary) -> void:
+	if int(event.get("entity", 0)) != player_id:
 		return
 	var remaining := int(event.get("remaining", 0))
 	_start_screen_shake(0.16, 4.2 + float(event.get("amount", 1)))
@@ -236,7 +254,9 @@ func _on_damaged(entity: int, event: Dictionary) -> void:
 		_update_status("The pawn is hit. Move out before the next strike.")
 
 
-func _on_enemy_weapon_changed(entity: int, weapon) -> void:
+func _on_enemy_weapon_changed(event: Dictionary) -> void:
+	var entity := int(event.get("entity", 0))
+	var weapon = event.get("weapon")
 	if weapon == null:
 		return
 	var piece_name := String(cast.get("piece_name_by_entity", {}).get(entity, "Enemy"))
@@ -251,7 +271,8 @@ func _free_pickup_view(item_id: int) -> void:
 	pickup_views.erase(item_id)
 
 
-func _on_defeated(entity: int) -> void:
+func _on_defeated(event: Dictionary) -> void:
+	var entity := int(event.get("entity", 0))
 	if entity == player_id:
 		_on_player_defeated()
 		return
@@ -421,7 +442,7 @@ func _travel_to(zone_id: StringName, entry_id: StringName) -> void:
 	travel_in_progress = false
 
 
-func _on_zone_exit_locked() -> void:
+func _on_zone_exit_locked(_event: Dictionary) -> void:
 	_update_status("The captain still holds the rug edge. Break the black line first.")
 
 
@@ -437,7 +458,9 @@ func _apply_player_unlocks() -> void:
 	_hide_taken_player_unlocks()
 
 
-func _on_player_unlock(unlock_id: StringName, message: String) -> void:
+func _on_player_unlock(event: Dictionary) -> void:
+	var unlock_id := StringName(event.get("id", &""))
+	var message := String(event.get("message", ""))
 	if unlock_id == &"":
 		return
 	var save := _save_service()
@@ -513,7 +536,8 @@ func _record_pickup_taken(item_id: int) -> void:
 
 ## A shortcut gate unbarred: permanent from this moment, across deaths and
 ## launches. The marker's closed-gate visual disappears.
-func _on_gate_opened(gate_id: StringName) -> void:
+func _on_gate_opened(event: Dictionary) -> void:
+	var gate_id := StringName(event.get("gate", &""))
 	var save := _save_service()
 	if save != null and gate_id != &"":
 		save.state.opened_gate_ids[String(gate_id)] = true

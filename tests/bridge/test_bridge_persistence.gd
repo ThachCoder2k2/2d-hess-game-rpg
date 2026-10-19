@@ -102,7 +102,7 @@ func _check_taken_pickup(main: Node) -> void:
 	var enemy_pos: EcsComponents.GridPos = ecs.get_component(enemy_id, EcsComponents.GRID_POS)
 	enemy_pos.cell = item_cells[0]
 	enemy_ai.call("_collect_local_item", enemy_id)
-	main._handle_events(ecs.drain_events())
+	Support.route_events(main)
 
 	_expect(Support.run_of(save_service).taken_pickup_ids.has(SPEAR_KEY), "pickup: the bridge records the pickup under zone/marker name")
 	_expect(not cast["pickup_view_by_entity"].has(item_id) and spear_view.is_queued_for_deletion(), "pickup: the bridge frees the floor view")
