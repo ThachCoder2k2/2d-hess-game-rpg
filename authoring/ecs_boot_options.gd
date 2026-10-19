@@ -37,13 +37,21 @@ var opened_gate_ids: Array = []
 ## on the floor every time the room starts, unless the marker is persistent and the save recorded it taken.
 var room_already_cleared := false
 
+## The entry marker of the room the hero arrives on (ZoneEntryMarker.entry_id). The room's own entity records
+## it: it is where a death starts the room again and what a checkpoint names. Only read with with_room_rules.
+var entry_id: StringName = &"start"
+
+## True when the hero came in through a door from another zone (a zone trip). A launch and a respawn are
+## not entries, so they set no checkpoint and refill nothing. Only read with with_room_rules.
+var entered_by_door := false
+
 ## The size in pixels of the picture the room is shown in, which the board is centred in. Zero means the
 ## project's own base size (display/window/size in project.godot); a test or a tool that frames a room
 ## differently sets it.
 var view_size := Vector2.ZERO
 
-## True to give the room an entity of its own (RoomObjectiveState, and from M3b step 3 the checkpoint data),
-## which is what ObjectiveSystem and CheckpointSystem judge. The shell sets it for the room it plays. A tool
+## True to give the room an entity of its own (RoomObjectiveState and RoomCheckpoint), which is what
+## ObjectiveSystem and CheckpointSystem judge. The shell sets it for the room it plays. A tool
 ## or a test that only wants to see what spawns (the world dump, the actor stage) leaves it off, so its
 ## world holds exactly the entities the room's scene makes and no more.
 var with_room_rules := false

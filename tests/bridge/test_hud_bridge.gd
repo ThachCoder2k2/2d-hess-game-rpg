@@ -15,6 +15,7 @@ func _init() -> void:
 	suite_title = "HUD BRIDGE TEST"
 	await process_frame
 	_check_a_hit_on_the_hero_flashes_and_redraws_courage()
+	_check_a_heal_on_the_hero_redraws_courage()
 	_check_the_skill_slot_follows_the_cooldown_event()
 	_check_show_room_draws_the_room()
 	_check_the_strike_line_follows_the_token()
@@ -52,6 +53,19 @@ func _check_a_hit_on_the_hero_flashes_and_redraws_courage() -> void:
 	hud.damage_flash.visible = false
 	router.route([{"type": Events.DAMAGED, "entity": PAWN, "amount": 1, "remaining": 1, "direction": Vector2i.UP, "source": HERO, "tags": []}])
 	_expect(not hud.damage_flash.visible and hud.courage_label.text.count("◆") == 1, "a hit on an enemy leaves the HUD alone")
+
+
+func _check_a_heal_on_the_hero_redraws_courage() -> void:
+	var parts := _make_bridge()
+	var hud: GameHud = parts[1]
+	var router: EventRouter = parts[2]
+	router.route([{"type": Events.DAMAGED, "entity": HERO, "amount": 2, "remaining": 1, "direction": Vector2i.LEFT, "source": PAWN, "tags": []}])
+	hud.damage_flash.visible = false
+	router.route([{"type": Events.HEALED, "entity": HERO, "amount": 2, "remaining": 3, "source": 0}])
+	_expect(hud.courage_label.text.count("◆") == 3 and hud.courage_label.text.count("◇") == 0, "a checkpoint refill (a heal on the hero) redraws the Courage pips")
+	_expect(not hud.damage_flash.visible, "without the damage flash")
+	router.route([{"type": Events.HEALED, "entity": PAWN, "amount": 1, "remaining": 1, "source": 0}])
+	_expect(hud.courage_label.text.count("◆") == 3, "a heal on an enemy leaves the HUD alone")
 
 
 func _check_the_skill_slot_follows_the_cooldown_event() -> void:

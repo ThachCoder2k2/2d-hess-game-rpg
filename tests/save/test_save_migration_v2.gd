@@ -62,8 +62,9 @@ func _check_the_migration_step() -> void:
 	config.load(FIXTURE_PATH)
 	_expect(SaveMigration.upgrade_to_current(config, 2, 1750000000), "format 2 upgrades to the current format")
 	_expect(int(config.get_value("meta", "version", 0)) == SaveData.FORMAT_VERSION, "and declares it")
-	_expect(config.get_value("checkpoint", "zone_id", "") == "t4_broken_rule_yard" and config.get_value("checkpoint", "entry_id", "") == "west_entry", "the run's zone and entry became the checkpoint")
-	_expect(config.get_value("meta", "room", "") == "t4_broken_rule_yard" and int(config.get_value("meta", "saved_at_unix", 0)) == 1750000000, "the room and a timestamp (the file's own) are in [meta]")
+	_expect(config.get_value("meta", "room", "") == "t4_broken_rule_yard" and config.get_value("meta", "room_entry", "") == "west_entry", "the run's zone and entry became the room and its entry (CHANGED by D-16: they were the checkpoint)")
+	_expect(not config.has_section("checkpoint"), "and no checkpoint is invented: v2 had none")
+	_expect(int(config.get_value("meta", "saved_at_unix", 0)) == 1750000000, "a timestamp (the file's own) is in [meta]")
 	_expect(config.get_value("player", "unlocked_skill_ids", []) == ["wooden_sword"], "player_unlock_ids became the unlocked skills")
 	_expect(not config.has_section_key("world", "current_zone_id") and not config.has_section_key("world", "last_entry_id") and not config.has_section_key("world", "player_unlock_ids"), "the moved keys are gone from [world]")
 	_expect(config.get_value("world", "taken_pickup_ids", []) == ["t4_broken_rule_yard/PencilSpearPickup"] and config.get_value("world", "opened_gate_ids", []) == ["pass_home_gate"], "taken pickups and opened gates stayed")
@@ -81,7 +82,8 @@ func _check_the_loader_finds_and_migrates_the_v2_file() -> void:
 	_expect(result.outcome == SaveLoadResult.LOADED and result.migrated_from_version == 2 and result.file_version == 2, "the slot loads, migrated from format 2")
 	_expect(result.source_path == root_directory + "/world_state.cfg" and result.notice_key == &"", "from the v2 file, and with nothing to tell the player")
 	var data := result.data
-	_expect(data.checkpoint_zone_id == &"t4_broken_rule_yard" and data.checkpoint_entry_id == &"west_entry", "the zone and entry the run was in")
+	_expect(data.room_id == &"t4_broken_rule_yard" and data.room_entry_id == &"west_entry", "the zone and entry the run was in (CHANGED by D-16: the position is the room and its entry, not a checkpoint)")
+	_expect(not data.has_checkpoint(), "and there is no checkpoint yet: v2 had none, and a checkpoint is a hub or a boss room the pawn came into")
 	_expect(data.taken_pickup_ids == {"t4_broken_rule_yard/PencilSpearPickup": true}, "the taken pickup")
 	_expect(data.opened_gate_ids == {"pass_home_gate": true}, "the opened gate")
 	_expect(data.unlocked_rule_ids == {"pawn_recruit": true, "pawn_armed": true}, "the read Book pages")
@@ -102,18 +104,18 @@ func _check_loading_has_no_side_effect_and_the_first_save_retires_the_v2_file() 
 	var reloaded := SaveSupport.new_service(root_directory)
 	var result: SaveLoadResult = reloaded.load_slot(0)
 	_expect(result.outcome == SaveLoadResult.LOADED and result.migrated_from_version == 0 and result.source_path == reloaded.slot_path(0), "the next launch reads the v3 file, with no migration")
-	_expect(reloaded.state.taken_pickup_ids.has("t4_broken_rule_yard/PencilSpearPickup") and reloaded.state.has_unlock(&"wooden_sword") and reloaded.state.checkpoint_entry_id == &"west_entry", "and every v2 fact is still there")
+	_expect(reloaded.state.taken_pickup_ids.has("t4_broken_rule_yard/PencilSpearPickup") and reloaded.state.has_unlock(&"wooden_sword") and reloaded.state.room_entry_id == &"west_entry", "and every v2 fact is still there")
 
 
 func _check_a_new_game_never_resurrects_the_v2_file() -> void:
 	var root_directory := _root_with_legacy_file("new_game", _fixture_text())
 	var service := SaveSupport.new_service(root_directory)
 	service.new_game(0)
-	service.state.checkpoint_zone_id = &"t1_white_kings_fall"
+	service.note_room(&"t1_white_kings_fall", &"start")
 	service.request_save(&"checkpoint_reached")
 	var reloaded := SaveSupport.new_service(root_directory)
 	reloaded.load_slot(0)
-	_expect(reloaded.state.checkpoint_zone_id == &"t1_white_kings_fall" and reloaded.state.taken_pickup_ids.is_empty() and not reloaded.state.has_unlock(&"wooden_sword"), "a New Game that has saved is the save, not the old v2 progress")
+	_expect(reloaded.state.room_id == &"t1_white_kings_fall" and reloaded.state.taken_pickup_ids.is_empty() and not reloaded.state.has_unlock(&"wooden_sword"), "a New Game that has saved is the save, not the old v2 progress")
 	_expect(FileAccess.file_exists(root_directory + "/world_state.cfg.migrated"), "and the old v2 file is still kept")
 
 
@@ -146,4 +148,4 @@ func _check_a_sparse_v2_file_still_loads() -> void:
 	var result: SaveLoadResult = service.read_slot(0)
 	_expect(result.outcome == SaveLoadResult.LOADED and result.migrated_from_version == 2, "a v2 file with keys missing still loads")
 	_expect(result.data.taken_pickup_ids.has("t4_broken_rule_yard/PencilSpearPickup") and result.data.opened_gate_ids.is_empty(), "what is there is kept, a wrong type is dropped")
-	_expect(result.data.checkpoint_zone_id == &"" and result.data.checkpoint_entry_id == &"start", "a missing zone and entry are the defaults (the scene's own zone, the start entry)")
+	_expect(result.data.room_id == &"" and result.data.room_entry_id == &"start" and not result.data.has_checkpoint(), "a missing zone and entry are the defaults (the scene's own zone, the start entry, no checkpoint)")

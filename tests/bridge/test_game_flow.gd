@@ -118,7 +118,7 @@ func _run() -> void:
 			world_count += 1
 	_expect(world_count == 1, "exactly one EcsWorld is parented to the scene after all those rebuilds")
 	_expect(main.get_node_or_null("MusicPlayer") != null and tree_current_scene_is(main), "the music player and the scene itself were never replaced (no reload)")
-	_expect(Support.run_of(save_service).checkpoint_zone_id == T4, "and the run, which the rebuilds read, names the zone the hero was last sent to")
+	_expect(Support.run_of(save_service).room_id == T4, "and the run, which the rebuilds read, names the zone the hero was last sent to")
 
 	# --- A fall during a trip's fade-out still ends in a rebuild at the checkpoint, as the reload did ---
 	respawned_reasons.clear()

@@ -7,11 +7,11 @@ extends ShellBridge
 ##     objective (boss arenas, later) ends with a result screen; a room outside the world graph ends when
 ##     it is cleared. An ending switches the hero's control off, plays the clear sound and puts the room's
 ##     clear lines on the status line and the result panel.
-##   - the hero's fall (until the checkpoint rules of step 3 announce it as an event, the `defeated` event of
-##     the hero): the room stops ticking (`room_ending`), the defeat jingle plays, the room's defeat lines
-##     go up, and after a short beat of 0.85 s GameFlow is asked to start the room again at the checkpoint.
-##     A death writes no save (R17, D-16): autosave is for success events only, and the run already wrote
-##     down everything it learned when it learned it.
+##   - `respawn_requested`, the simulation's answer to the hero's fall (CheckpointSystem): the room stops
+##     ticking (`room_ending`), the defeat jingle plays, the room's defeat lines go up, and after a short
+##     beat of 0.85 s GameFlow is asked to start the room again on the entry the pawn came in by. A death
+##     writes no save (R17, D-16): autosave is for success events only, and the run already wrote down
+##     everything it learned when it learned it.
 ## While `room_ending` the scene stops ticking the world. The enemy counts the HUD shows are the
 ## HudSnapshot's (ObjectiveSystem keeps them), not this bridge's.
 ## Reads: events. Writes: the hero's control flag (through the scene), the HUD and status line (through
@@ -27,17 +27,12 @@ var room_ending := false
 
 func register(router: EventRouter) -> void:
 	router.on(Events.ROOM_CLEARED, _on_room_cleared)
-	router.on(Events.DEFEATED, _on_defeated)
+	router.on(Events.RESPAWN_REQUESTED, _on_respawn_requested)
 
 
 ## A room just booted: it is live.
 func begin_room() -> void:
 	room_ending = false
-
-
-func _on_defeated(event: Dictionary) -> void:
-	if is_player(int(event.get("entity", 0))):
-		_on_player_defeated()
 
 
 func _on_room_cleared(event: Dictionary) -> void:
@@ -55,7 +50,7 @@ func _on_room_cleared(event: Dictionary) -> void:
 	root.hud_bridge.show_result(clear_message, ZoneStage.room_text(root.current_room, "get_clear_subtitle", "PRESS R TO RESET"))
 
 
-func _on_player_defeated() -> void:
+func _on_respawn_requested(_event: Dictionary) -> void:
 	if room_ending:
 		return
 	room_ending = true

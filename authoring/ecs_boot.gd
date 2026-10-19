@@ -79,7 +79,7 @@ static func boot(world: EcsWorld, options: EcsBootOptions) -> Dictionary:
 			cast["piece_name_by_entity"][enemy_id] = enemy_view.definition.piece_name
 		_spawn_pickups(world, room_root, cast, skipped_pickup_names)
 		if options.with_room_rules:
-			cast["room"] = _spawn_room_entity(world, room_root, cast, options.room_already_cleared)
+			cast["room"] = _spawn_room_entity(world, room_root, cast, options)
 	return cast
 
 
@@ -111,19 +111,27 @@ static func project_view_size() -> Vector2:
 		float(ProjectSettings.get_setting("display/window/size/viewport_height")))
 
 
-## The room's own entity: what the room asks of the pawn (its RoomEncounter objective and zone id) and
-## how many enemies it began with, for ObjectiveSystem to judge. Made last, so every other entity keeps
-## the number it always had. Returns the entity id.
-static func _spawn_room_entity(world: EcsWorld, room_root: Node, cast: Dictionary, already_cleared: bool) -> int:
+## The room's own entity: what the room asks of the pawn (its RoomEncounter objective and zone id) and how
+## many enemies it began with, for ObjectiveSystem to judge; whether coming in is a checkpoint
+## (RoomEncounter.checkpoint_on_entry) and how the pawn arrived, for CheckpointSystem. Made last, so every
+## other entity keeps the number it always had. Returns the entity id.
+static func _spawn_room_entity(world: EcsWorld, room_root: Node, cast: Dictionary, options: EcsBootOptions) -> int:
 	var room_entity := world.create_entity()
+	var zone_value: Variant = room_root.get("zone_id")
+	var zone_id: StringName = zone_value if zone_value is StringName else &""
 	var objective_state := RoomObjectiveState.new()
-	var zone_id: Variant = room_root.get("zone_id")
-	objective_state.zone_id = zone_id if zone_id is StringName else &""
+	objective_state.zone_id = zone_id
 	objective_state.objective = room_root.get("objective") as RoomObjective
 	objective_state.enemies_total = cast["enemies"].size()
 	objective_state.enemies_remaining = cast["enemies"].size()
-	objective_state.cleared = already_cleared
+	objective_state.cleared = options.room_already_cleared
 	world.add_component(room_entity, RoomObjectiveState.KEY, objective_state)
+	var checkpoint := RoomCheckpoint.new()
+	checkpoint.zone_id = zone_id
+	checkpoint.entry_id = options.entry_id
+	checkpoint.checkpoint_on_entry = room_root.get("checkpoint_on_entry") == true
+	checkpoint.entered_by_door = options.entered_by_door
+	world.add_component(room_entity, RoomCheckpoint.KEY, checkpoint)
 	return room_entity
 
 

@@ -10,15 +10,16 @@ extends ShellBridge
 ##   2. the hero's control goes off for the whole trip;
 ##   3. the hero's Courage is remembered as the carry (a snapshot taken NOW: a hit landing during the
 ##      fade-out reaches only the old world's hero);
-##   4. the destination is the run's checkpoint and is saved, BEFORE the fade (interim until D-16's
-##      checkpoint rules: today every zone entry moves it);
+##   4. the destination room and entry are the run's from now on, and the run takes the old world's flags,
+##      BEFORE the fade (in memory: a plain trip is no success event and saves nothing; a hub or a boss room
+##      sets the checkpoint and saves when the pawn lands there, CheckpointSystem and SaveBridge);
 ##   5. fade to black, swap the zone node behind the black, boot the new world (which applies and
 ##      consumes the carry), fade back in;
 ##   6. control returns and the trip is over.
 ##
 ## The carry is never saved: every launch starts the room with full Courage. The PlayerSnapshot of the
 ## zone swap (step 3) replaces the bare integer.
-## Reads: the zone_exit event, the hero's health. Writes: the run's checkpoint (through the SaveBridge),
+## Reads: the zone_exit event, the hero's health. Writes: the run's room and entry (through the SaveBridge),
 ## the hero's control and Courage, the fade layer.
 
 ## Seconds the screen takes to fade to black, and again back.
@@ -44,10 +45,11 @@ func travel_to(zone_id: StringName, entry_id: StringName) -> void:
 	root.set_player_control(false)
 	var health: EcsComponents.Health = root.ecs.get_component(root.player_id, EcsComponents.HEALTH)
 	player_health_carry = health.current if health != null else -1
-	root.save_bridge.record_checkpoint(zone_id, entry_id)
+	root.save_bridge.record_room(zone_id, entry_id)
+	root.save_bridge.remember_world()
 	await _fade_to(1.0)
 	root.swap_zone(zone_id)
-	root.boot_zone(entry_id)
+	root.boot_zone(entry_id, true)
 	await _fade_to(0.0)
 	root.set_player_control(true)
 	travel_in_progress = false

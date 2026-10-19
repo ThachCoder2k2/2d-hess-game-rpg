@@ -5,15 +5,21 @@ extends ShellBridge
 ## directions, and the ONLY place that asks for a save (R17, docs/game-base-plan.md 3.5, 5.2).
 ##
 ##   room -> run   A success event happened, so the fact is written into the run and a save is
-##                 requested for it: a room cleared (room_cleared, D-17), a persistent pickup taken
-##                 (pickup_taken), a gate unbarred (shortcut_opened), a verb unlocked (unlock_gained), a
-##                 Book page written (rule_page_unlocked), a zone entered (checkpoint_reached; interim
-##                 until the checkpoint rules of D-16, step 3). A death, a hit, a floor weapon taken
+##                 requested for it: a room cleared (room_cleared, D-17), a checkpoint reached
+##                 (checkpoint_reached, D-16), a persistent pickup taken (pickup_taken), a gate unbarred
+##                 (shortcut_opened), a verb unlocked (unlock_gained), a Book page written
+##                 (rule_page_unlocked). A death, a hit, a plain trip between rooms, a floor weapon taken
 ##                 by an enemy or a quit is not one.
 ##   run -> room   Every room boot starts from the run: a cleared room's enemies stay gone, a persistent
 ##                 pickup that is taken stays gone, what is opened stays open, the sword stays in the
 ##                 hero's hand, the world's flags are the saved ones. The run is also asked, just before
-##                 a save is written, for the facts only the live world knows (its flags).
+##                 a save is written and when the hero falls, for the facts only the live world knows (its
+##                 flags): a death keeps them, the file only learns them at the next success event.
+##
+## Two places in the run, kept apart on purpose (docs/game-base-plan.md 5.2): the ROOM the pawn is in and the
+## entry it came by (`room_zone_id`, `room_entry_id`: moved at every room boot, in memory; a death and a
+## Continue return to it), and the latest CHECKPOINT (a hub or a boss room the pawn came into through a
+## door: only CheckpointSystem's event moves it).
 ##
 ## The nodes hold none of it. The run lives in the SaveService autoload; this bridge reads and writes
 ## it and shows the result on the markers of the room (a taken unlock, an opened gate).
@@ -28,6 +34,8 @@ func register(router: EventRouter) -> void:
 	router.on(Events.PLAYER_UNLOCK, _on_player_unlock)
 	router.on(Events.GATE_OPENED, _on_gate_opened)
 	router.on(Events.ROOM_CLEARED, _on_room_cleared)
+	router.on(Events.CHECKPOINT_SET, _on_checkpoint_set)
+	router.on(Events.RESPAWN_REQUESTED, _on_respawn_requested)
 
 
 ## Starts the run's session when the scene starts: a game that has just launched has no run yet, so the
@@ -42,26 +50,31 @@ func begin() -> void:
 	save.saving.connect(_on_save_service_saving)
 
 
-## The zone the run says the pawn is in ("" = the scene's authored zone), and where in it.
-func checkpoint_zone_id() -> StringName:
+## The zone the run says the pawn is in ("" = the scene's authored zone), and the entry it came in by.
+func room_zone_id() -> StringName:
 	var save := root.save_service()
-	return save.state.checkpoint_zone_id if save != null else &""
+	return save.state.room_id if save != null else &""
 
 
-func checkpoint_entry_id() -> StringName:
+func room_entry_id() -> StringName:
 	var save := root.save_service()
-	return save.state.checkpoint_entry_id if save != null else &"start"
+	return save.state.room_entry_id if save != null else &"start"
 
 
-## The zone trip began: the destination is the new checkpoint (interim: every zone entry, not only a hub
-## or a boss room) and it is a success event, so the run is saved before the fade.
-func record_checkpoint(zone_id: StringName, entry_id: StringName) -> void:
+## The pawn is going to (or booting on) this room and entry: the run names them from now on. In memory
+## only. A room outside the world graph (no zone id) is not remembered.
+func record_room(zone_id: StringName, entry_id: StringName) -> void:
 	var save := root.save_service()
-	if save == null:
-		return
-	save.state.checkpoint_zone_id = zone_id
-	save.state.checkpoint_entry_id = entry_id
-	save.request_save(&"checkpoint_reached")
+	if save != null and zone_id != &"":
+		save.note_room(zone_id, entry_id)
+
+
+## Copies the facts only the live world knows into the run (its flags), so that a death, which rebuilds the
+## world from the run, loses none of them. In memory only: the file learns them at the next success event.
+func remember_world() -> void:
+	var save := root.save_service()
+	if save != null and root.ecs != null:
+		save.state.player.flags = root.ecs.flags.to_dictionary()
 
 
 ## Pages of the Book written for these pieces (the first meeting with each). True, and a save, when any
@@ -107,15 +120,13 @@ func is_room_cleared(zone_id: StringName) -> bool:
 
 
 ## After the room booted: the run's facts enter the new world before anything can ask for a save. The
-## world's flags are the saved ones, the run knows which zone this is, and the gates the run opened
+## world's flags are the run's, the run knows which room and entry this is, and the gates the run opened
 ## stop showing as closed.
-func restore_run(zone_id: StringName) -> void:
+func restore_run(zone_id: StringName, entry_id: StringName) -> void:
 	var save := root.save_service()
 	if save != null:
 		root.ecs.flags.load_dictionary(save.state.player.flags)
-		if zone_id != &"":
-			save.state.checkpoint_zone_id = zone_id
-			save.current_room_id = zone_id
+	record_room(zone_id, entry_id)
 	hide_opened_gate_visuals()
 
 
@@ -193,12 +204,28 @@ func _on_gate_opened(event: Dictionary) -> void:
 	hide_opened_gate_visuals()
 
 
+## The pawn came into a hub or a boss room through a door: that is the checkpoint now, and it is a success
+## event, so the run is saved. (CheckpointSystem already refilled the Courage.)
+func _on_checkpoint_set(event: Dictionary) -> void:
+	var save := root.save_service()
+	var zone_id := StringName(event.get("zone", &""))
+	if save == null or zone_id == &"":
+		return
+	save.state.checkpoint_zone_id = zone_id
+	save.state.checkpoint_entry_id = StringName(event.get("entry", &"start"))
+	save.request_save(&"checkpoint_reached")
+
+
+## The hero fell: the room is about to start again from the run, so the run takes the world's flags first.
+## No save: a death is not a success event (R17).
+func _on_respawn_requested(_event: Dictionary) -> void:
+	remember_world()
+
+
 ## The save is about to be written: it learns the flags of the world that is running now, because the
 ## world is where they change (the run only holds them between rooms).
 func _on_save_service_saving(_reason: StringName) -> void:
-	var save := root.save_service()
-	if save != null and root.ecs != null:
-		save.state.player.flags = root.ecs.flags.to_dictionary()
+	remember_world()
 
 
 func _opened_gate_ids() -> Array:

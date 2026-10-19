@@ -55,13 +55,12 @@ const SINGLE_SLOT := 0
 
 ## The success events a save may be requested for (R17). Every caller of request_save() names one of them,
 ## as a literal, which is what lets a test read the callers off the source.
-##   room_cleared        the last enemy of a room fell (ObjectiveSystem, M3b)
+##   room_cleared        a room's objective was met (ObjectiveSystem)
 ##   shortcut_opened     a one-way gate was unbarred for good
-##   pickup_taken        a persistent pickup was taken
+##   pickup_taken        a persistent pickup was taken (a floor weapon is room-local and never asks, D-16)
 ##   boss_defeated       a boss fell (M8b)
 ##   rescue_completed    a white piece was freed (M6)
-##   checkpoint_reached  the pawn entered a hub or a boss room (D-16). Until the checkpoint rules land the
-##                       shell reports every zone entry with it.
+##   checkpoint_reached  the pawn came into a hub or a boss room through a door (D-16, CheckpointSystem)
 ##   beat_save_after     a story beat flagged `save_after` ended (M6)
 ##   unlock_gained       a verb or skill was unlocked
 ##   rule_page_unlocked  a page of the Book of House Rules was written (first meeting with a piece)
@@ -85,7 +84,8 @@ var active_slot := SINGLE_SLOT
 var state := SaveData.new()
 ## True once a slot was loaded or a new game began. Nothing is written before.
 var has_session := false
-## The zone the pawn is in now. The shell sets it at every room boot; request_save() writes it to [meta].
+## The zone the pawn is in now. The shell sets it at every room boot through note_room(); request_save()
+## writes it to [meta].
 var current_room_id: StringName = &""
 ## What the last load_slot() found, for the title screen's notice. Null before the first load.
 var last_load: SaveLoadResult = null
@@ -162,6 +162,15 @@ func load_slot(slot := SINGLE_SLOT) -> SaveLoadResult:
 	if result.outcome != SaveLoadResult.LOADED and result.outcome != SaveLoadResult.NEW_GAME_NO_SAVE:
 		push_warning("SaveService: slot %d: %s. %s" % [slot, result.outcome, "; ".join(result.log_lines)])
 	return result
+
+
+## The pawn is in zone `zone_id` and came in through its `entry_id` marker: the run now names this room and
+## entry, which is where a death returns the pawn and where a Continue resumes. In memory only; the next
+## success event writes it to the file. (The latest CHECKPOINT is another fact, `state.checkpoint_zone_id`.)
+func note_room(zone_id: StringName, entry_id: StringName) -> void:
+	current_room_id = zone_id
+	state.room_id = zone_id
+	state.room_entry_id = entry_id
 
 
 ## Makes sure a run exists: when none has begun, Continues the active slot. The in-game scene calls it when

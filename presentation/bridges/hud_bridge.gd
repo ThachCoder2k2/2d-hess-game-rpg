@@ -29,6 +29,7 @@ func attach(hud_node: GameHud) -> void:
 
 func register(router: EventRouter) -> void:
 	router.on(Events.DAMAGED, _on_damaged)
+	router.on(Events.HEALED, _on_healed)
 	router.on(Events.SKILL_COOLDOWN, _on_skill_cooldown)
 
 
@@ -74,6 +75,12 @@ func _on_damaged(event: Dictionary) -> void:
 		return
 	hud.flash_damage()
 	hud.set_courage(int(event.get("remaining", 0)))
+
+
+## A heal on the hero (a checkpoint refill) redraws the Courage pips; there is no flash.
+func _on_healed(event: Dictionary) -> void:
+	if hud != null and is_player(int(event.get("entity", 0))):
+		hud.set_courage(int(event.get("remaining", 0)))
 
 
 func _on_skill_cooldown(event: Dictionary) -> void:

@@ -16,6 +16,7 @@
 room_message = "The captain blocks the rug edge. Everything you learned is on the board now."
 zone_id = &"b1_black_pawn_captain"
 board_size = Vector2i(16, 9)
+checkpoint_on_entry = true
 
 [node name="RoomArt" type="Node2D" parent="."]
 z_index = -20

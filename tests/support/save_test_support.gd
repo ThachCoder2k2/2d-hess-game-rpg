@@ -57,6 +57,7 @@ static func full_data() -> SaveData:
 	var data := SaveData.new()
 	data.play_time_seconds = 1234.5
 	data.room_id = &"t4_broken_rule_yard"
+	data.room_entry_id = &"from_t3"
 	data.saved_at_unix = 1760000000
 	data.checkpoint_zone_id = &"h1_chess_rug_hub"
 	data.checkpoint_entry_id = &"from_b1"

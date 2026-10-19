@@ -30,7 +30,7 @@ func _run() -> void:
 	var room_index_before := room_before.get_index()
 	var ecs_before := Support.ecs_of(main)
 	var hero_view_before: Node2D = main.get("player_view")
-	_expect(main.get("current_zone_id") == T1 and Support.run_of(save_service).checkpoint_zone_id == T1, "boot starts in T1 and records it as the run's zone")
+	_expect(main.get("current_zone_id") == T1 and Support.run_of(save_service).room_id == T1, "boot starts in T1 and records it as the run's room")
 	_expect(Support.player_cell(main) == Support.entry_cell(main, room_before, &"start"), "boot places the hero on T1's start entry")
 	_expect(room_before.name == &"CurrentZone", "the authored zone slot is the node named CurrentZone")
 
@@ -50,14 +50,14 @@ func _run() -> void:
 
 	# --- Ordering at the moment travel starts: persist first, swap only after the fade ---
 	_expect(Support.health_carry(main) == 2, "travel start records the hero's current health as the carry")
-	_expect(Support.run_of(save_service).checkpoint_zone_id == T2 and Support.run_of(save_service).checkpoint_entry_id == &"west_entry", "travel start records the destination zone and entry in the run")
+	_expect(Support.run_of(save_service).room_id == T2 and Support.run_of(save_service).room_entry_id == &"west_entry", "travel start records the destination room and entry in the run (in memory)")
 	var saved_at_start := Support.read_save_file(save_service)
-	_expect(String(saved_at_start.get_value("checkpoint", "zone_id", "")) == String(T2) and String(saved_at_start.get_value("checkpoint", "entry_id", "")) == "west_entry", "travel start saves the destination to disk before the fade")
+	_expect(String(saved_at_start.get_value("meta", "room", "")) != String(T2) and String(saved_at_start.get_value("checkpoint", "zone_id", "")) == "", "CHANGED (D-16, R17): a plain trip between rooms saves nothing: T2 is no checkpoint and no success event")
 	_expect(not Support.player_tag(main).control_enabled, "player control is off for the whole trip")
 	_expect(main.get("current_room") == room_before and main.get("ecs") == ecs_before, "the old zone and world are still live while the fade-out runs")
 	var travel_ignored_zone: StringName = &"t4_broken_rule_yard"
 	Support.travel_to(main, travel_ignored_zone, &"west_entry")
-	_expect(Support.run_of(save_service).checkpoint_zone_id == T2, "a second travel request during a trip is ignored")
+	_expect(Support.run_of(save_service).room_id == T2, "a second travel request during a trip is ignored")
 
 	# Watch the fade layer frame by frame: the swap must happen behind a fully
 	# black screen, between the fade-out and the fade-in.
@@ -122,22 +122,22 @@ func _run() -> void:
 	_expect(room_back.get("zone_id") == T1 and main.get("current_zone_id") == T1, "backtracking returns to T1")
 	_expect(Support.player_cell(main) == Support.entry_cell(main, room_back, &"from_t2"), "backtracking lands on T1's from_t2 entry")
 	_expect(Support.player_health(main).current == 2 and Support.health_carry(main) == -1, "health survives the round trip and the carry is consumed again")
-	_expect(Support.run_of(save_service).checkpoint_zone_id == T1 and Support.run_of(save_service).checkpoint_entry_id == &"from_t2", "the run tracks the return trip")
+	_expect(Support.run_of(save_service).room_id == T1 and Support.run_of(save_service).room_entry_id == &"from_t2", "the run tracks the return trip")
 
 	# --- Guards: requests the bridge must ignore ---
-	var zone_before_guard: StringName = Support.run_of(save_service).checkpoint_zone_id
+	var zone_before_guard: StringName = Support.run_of(save_service).room_id
 	var carry_before_guard: int = Support.health_carry(main)
 	await Support.travel_to(main, &"no_such_zone", &"start")
-	_expect(Support.run_of(save_service).checkpoint_zone_id == zone_before_guard and Support.health_carry(main) == carry_before_guard, "a zone id missing from the world graph is ignored without touching the run")
+	_expect(Support.run_of(save_service).room_id == zone_before_guard and Support.health_carry(main) == carry_before_guard, "a zone id missing from the world graph is ignored without touching the run")
 	_expect(Support.player_tag(main).control_enabled and not Support.travel_in_progress(main), "an ignored request leaves control on and the trip flag clear")
 	Support.set_room_ending(main, true)
 	await Support.travel_to(main, T2, &"west_entry")
-	_expect(Support.run_of(save_service).checkpoint_zone_id == zone_before_guard and main.get("current_zone_id") == T1, "no travel starts while the room is ending (death or result screen)")
+	_expect(Support.run_of(save_service).room_id == zone_before_guard and main.get("current_zone_id") == T1, "no travel starts while the room is ending (death or result screen)")
 	Support.set_room_ending(main, false)
 	var graph_before: Resource = main.get("world_graph")
 	main.set("world_graph", null)
 	await Support.travel_to(main, T2, &"west_entry")
-	_expect(Support.run_of(save_service).checkpoint_zone_id == zone_before_guard and main.get("current_zone_id") == T1, "without a world graph (standalone room) no travel starts")
+	_expect(Support.run_of(save_service).room_id == zone_before_guard and main.get("current_zone_id") == T1, "without a world graph (standalone room) no travel starts")
 	main.set("world_graph", graph_before)
 
 	# --- A locked door: T3's exit needs the room cleared, so the bridge only talks ---
@@ -149,6 +149,6 @@ func _run() -> void:
 	Support.step_player(main, Vector2i.RIGHT)
 	_expect(not Support.travel_in_progress(main) and main.get("current_zone_id") == T3, "a requires_room_clear exit does not travel while an enemy lives")
 	_expect(String(hud.get("objective_label").text).begins_with("The captain still holds the rug edge"), "the bridge answers a locked door with the captain message")
-	_expect(Support.run_of(save_service).checkpoint_zone_id == T3, "a locked door leaves the run on the current zone")
+	_expect(Support.run_of(save_service).room_id == T3, "a locked door leaves the run on the current zone")
 
 	Support.end_suite(self, save_service)

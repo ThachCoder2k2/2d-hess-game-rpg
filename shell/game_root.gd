@@ -70,15 +70,17 @@ func _ready() -> void:
 
 	# The run (the SaveService autoload) says which zone and entry to boot on, not the authored default.
 	save_bridge.begin()
-	var checkpoint_zone := save_bridge.checkpoint_zone_id()
-	if world_graph != null and checkpoint_zone != &"" and checkpoint_zone != ZoneStage.zone_id_of(current_room):
-		swap_zone(checkpoint_zone)
-	boot_zone(save_bridge.checkpoint_entry_id())
+	var resume_zone := save_bridge.room_zone_id()
+	if world_graph != null and resume_zone != &"" and resume_zone != ZoneStage.zone_id_of(current_room):
+		swap_zone(resume_zone)
+	boot_zone(save_bridge.room_entry_id())
 
 
 ## Builds a fresh EcsWorld from the current zone node. Called at scene start, after every zone swap and
 ## after a respawn: the whole simulation is rebuilt, only the hero's view and the run persist.
-func boot_zone(entry_id: StringName) -> void:
+## `entered_by_door` is true for a zone trip: coming through a door can be a checkpoint, a launch and a
+## respawn cannot.
+func boot_zone(entry_id: StringName, entered_by_door := false) -> void:
 	if ecs != null:
 		remove_child(ecs)
 		ecs.queue_free()
@@ -91,13 +93,15 @@ func boot_zone(entry_id: StringName) -> void:
 	var boot_options := EcsBootOptions.for_scene(player_view, current_room)
 	boot_options.fallback_player_cell = hero_start_cell
 	boot_options.with_room_rules = true
+	boot_options.entry_id = entry_id
+	boot_options.entered_by_door = entered_by_door
 	save_bridge.fill_boot_options(boot_options, current_room)
 	cast = EcsBoot.boot(ecs, boot_options)
 	player_id = int(cast.get("player", 0))
 	current_zone_id = ZoneStage.zone_id_of(current_room)
 	for bridge in _bridges():
 		bridge.bind_world(ecs.hud_snapshot, cast)
-	save_bridge.restore_run(current_zone_id)
+	save_bridge.restore_run(current_zone_id, entry_id)
 	book_bridge.meet_pieces()
 	save_bridge.apply_unlocks()
 	outcome_bridge.begin_room()
@@ -123,16 +127,18 @@ func _process(delta: float) -> void:
 	hud_bridge.refresh()
 
 
-## Starts the room again at the run's checkpoint without leaving the scene (GameFlow calls it for a
-## death or the restart key): a fresh zone, a fresh hero view in its boot pose, the Book closed, nothing
-## carried. What the scene keeps is the run, the music and the F3 switch.
+## Starts the room the pawn is in again, on the entry it came by, without leaving the scene (GameFlow calls
+## it for a death or the restart key; D-16: a death resets only this room): a fresh zone, a fresh hero view
+## in its boot pose, the Book closed, nothing carried. What the scene keeps is the run (it takes the world's
+## flags first), the music and the F3 switch.
 func respawn() -> void:
+	save_bridge.remember_world()
 	book_bridge.close()
 	zone_travel_bridge.forget_health_carry()
 	_attach_hero_view(ZoneStage.replace_hero_view(self, player_view, hero_parked_position))
-	var zone_id := save_bridge.checkpoint_zone_id()
+	var zone_id := save_bridge.room_zone_id()
 	current_room = ZoneStage.replace_zone_node(self, current_room, _zone_scene_for(zone_id if zone_id != &"" else current_zone_id))
-	boot_zone(save_bridge.checkpoint_entry_id())
+	boot_zone(save_bridge.room_entry_id())
 
 
 ## Puts the zone `zone_id` of the world graph in the place of the current one; a zone the graph does not

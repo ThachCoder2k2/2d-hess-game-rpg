@@ -10,7 +10,8 @@ extends RefCounted
 ##   2  the WorldState save (user://world_state.cfg): [meta] version, [world] current_zone_id,
 ##      last_entry_id, taken_pickup_ids, opened_gate_ids, unlocked_rule_ids, player_unlock_ids.
 ##      The fixture tests/fixtures/saves/world_state_v2.cfg is a real one, written by the v2 code.
-##   3  SaveData: [meta] gains play time, room and a timestamp, the position moves to [checkpoint], the
+##   3  SaveData: [meta] gains play time, a timestamp and the room with the entry the pawn came in by (the
+##      v2 position moves there; there is no checkpoint until the pawn comes into a hub or a boss room), the
 ##      unlocks move to [player], the new sets and the flags start empty.
 ##
 ## A save older than OLDEST_READABLE_VERSION is not migrated. Version 1 and the unversioned files before
@@ -48,9 +49,8 @@ static func _upgrade_2_to_3(config: ConfigFile, file_modified_unix: int) -> void
 	config.set_value(SaveData.META, SaveFile.VERSION_KEY, 3)
 	config.set_value(SaveData.META, "play_time_seconds", 0.0)
 	config.set_value(SaveData.META, "room", zone_id)
+	config.set_value(SaveData.META, "room_entry", entry_id)
 	config.set_value(SaveData.META, "saved_at_unix", file_modified_unix)
-	config.set_value(SaveData.CHECKPOINT, "zone_id", zone_id)
-	config.set_value(SaveData.CHECKPOINT, "entry_id", entry_id)
 	config.set_value(SaveData.PLAYER, "unlocked_skill_ids", unlocked_skills)
 
 

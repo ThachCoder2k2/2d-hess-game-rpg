@@ -9,8 +9,12 @@ extends RefCounted
 ## The file, section by section (docs/game-base-plan.md 9.3; a key that is absent reads as its default,
 ## so a save written by an older game, or damaged in one key, still loads):
 ##
-##   [meta]        version, play_time_seconds, room, saved_at_unix. What a save-slot card shows.
-##   [checkpoint]  zone_id, entry_id. Where a death returns to and where Continue resumes.
+##   [meta]        version, play_time_seconds, room, room_entry, saved_at_unix. What a save-slot card shows,
+##                 and where the pawn stood: the room and the entry it came in through. A death and a
+##                 Continue put the pawn back there (the least punishing reading of D-16, see the plan 5.2).
+##   [checkpoint]  zone_id, entry_id. The latest checkpoint (D-16: a hub entry or a boss-room entry); empty
+##                 until the pawn has come in through one. It refills Courage and is what the pause menu
+##                 names (M4); nothing returns the pawn to it.
 ##   [world]       the sets below: cleared rooms, defeated bosses, taken pickups, opened gates, read
 ##                 Book pages, rescued pieces, found Rule Pages, found Courage Shards.
 ##   [player]      the PlayerSnapshot: Courage max, Believe, unlocked skills, upgrades, equipped pages,
@@ -44,17 +48,19 @@ const WORLD_SET_NAMES: Array[String] = [
 # --- [meta]
 ## Seconds of play, summed by SaveService.add_play_time().
 var play_time_seconds := 0.0
-## The zone the player was in at the last save: the room the slot card names.
+## The zone the pawn is in (the last save's, or the live run's: the shell moves it at every room boot). The
+## slot card names it, and a death and a Continue return to it.
 var room_id: StringName = &""
+## The entry marker of that room the pawn came in through: where a death and a Continue put it back.
+var room_entry_id: StringName = &"start"
 ## When the slot was last written (Unix seconds); 0 for a save that has never been written.
 var saved_at_unix := 0
 
 # --- [checkpoint]
-## The zone a death returns to and Continue resumes in ("" = the scene's authored default zone).
-## Until the checkpoint rules (D-16: hub entry and every boss-room entry) land in M3b step 3, the shell
-## moves it on every zone travel, which is exactly where WorldState.current_zone_id and last_entry_id moved.
+## The zone of the latest checkpoint: a hub or a boss room the pawn came into through a door (D-16). Empty
+## until the pawn has reached one.
 var checkpoint_zone_id: StringName = &""
-## The entry marker of that zone the pawn appears on.
+## The entry marker of that zone the pawn came in by.
 var checkpoint_entry_id: StringName = &"start"
 
 # --- [world]
@@ -89,6 +95,11 @@ static func pickup_id(zone_id: StringName, marker_name: String) -> String:
 	return "%s/%s" % [zone_id, marker_name]
 
 
+## Whether the pawn has reached a checkpoint yet.
+func has_checkpoint() -> bool:
+	return checkpoint_zone_id != &""
+
+
 ## Whether the pawn has unlocked this skill (or verb) id.
 func has_unlock(unlock_id: StringName) -> bool:
 	return unlock_id in player.unlocked_skill_ids
@@ -113,6 +124,7 @@ func to_config() -> ConfigFile:
 	config.set_value(META, SaveFile.VERSION_KEY, FORMAT_VERSION)
 	config.set_value(META, "play_time_seconds", play_time_seconds)
 	config.set_value(META, "room", String(room_id))
+	config.set_value(META, "room_entry", String(room_entry_id))
 	config.set_value(META, "saved_at_unix", saved_at_unix)
 	config.set_value(CHECKPOINT, "zone_id", String(checkpoint_zone_id))
 	config.set_value(CHECKPOINT, "entry_id", String(checkpoint_entry_id))
@@ -145,6 +157,9 @@ static func from_config(config: ConfigFile) -> SaveData:
 	data.saved_at_unix = int(_number(_value(config, META, "saved_at_unix"), data.saved_at_unix))
 	data.checkpoint_zone_id = StringName(_text(_value(config, CHECKPOINT, "zone_id"), String(data.checkpoint_zone_id)))
 	data.checkpoint_entry_id = StringName(_text(_value(config, CHECKPOINT, "entry_id"), String(data.checkpoint_entry_id)))
+	# A save written before the checkpoint rules kept the position only as the checkpoint, and it was the room's
+	# entry: a file with no `room_entry` resumes there.
+	data.room_entry_id = StringName(_text(_value(config, META, "room_entry"), String(data.checkpoint_entry_id)))
 	for set_name in WORLD_SET_NAMES:
 		data.world_set(set_name).assign(_set_from(_value(config, WORLD, set_name)))
 	var player_dictionary: Dictionary = {}
