@@ -1379,3 +1379,76 @@ player can feel changed: the six room dumps are byte-identical to their baseline
   `tests/perf/test_room_tick_budget.gd`. `game_root` still WRITES `PlayerTag.control_enabled`, `PlayerCombat.sword_unlocked`, the
   health carry and `VIEW_REF` (M3b moves them to commands and the `PlayerSnapshot`); nothing pushes on `world.commands` or
   `view_commands` yet.
+
+## M3a step 3 - the grid: cell kinds, leaps, rays, cached paths, the tick budget - 2026-10-19
+
+Branch `base/m3a-3` (from `base/m3a-2`), six code commits and this record, the strict runner green after each. The first attempt of
+this step was cut off by a network error after four commits; this run re-verified them (strict runner, the six dumps, and a replay
+across two checkouts, below), found nothing wrong, added the paint-tool commit and finished the docs. Nothing the player can feel
+changed: the six room dumps are byte-identical to their baselines and all 235 baseline labels still pass.
+
+- **A cell knows what it is made of.** `CellKinds` (`ecs/core/cell_kinds.gd`) is the plan's 5.11 vocabulary as one table: floor,
+  wall, gap, leapable_block, chalk, corruption, each with three rules (walkable, stops a ray, a leap may cross) and the one reading
+  of a tile (`kind` when filled in, else `solid` is a wall, else floor; a kind nobody declared is an error). `EcsGrid` stores
+  `cell_kind_by_cell` (floor is the absence of an entry), `set_cell_kind` is the only writer of the terrain, `blocked_cells` is
+  derived from it, `layout_version` counts every real change (and a change of `bounds`), and `cell_effect_by_cell` is the empty,
+  documented store the M10 `CellEffectSystem` will own, so that milestone does not edit the hot file. A wall is refused under a
+  piece or a reservation, as `add_block` always did. The kingdom TileSet and the fixture's gained a `kind` custom-data layer (text,
+  next to `solid`, added as text so no uid moved); no shipped tile fills it in, because the art for a gap, a block, chalk and
+  corruption belongs to the milestones that use them. `EcsBoot.apply_solid_tiles` became `apply_tile_kinds`. **Paint tools:**
+  `tools/cell_kind_painter.gd` is the part of a paint tool that knows kinds (a tool states what a cell IS beside the art it picked and
+  the helper refuses a tile that does not read as that kind); `paint_kingdom_tilemap.gd` and, in the last code commit of this step,
+  `paint_zone_tilemaps.gd` paint through it. Rerun, both tools write byte-identical `tile_map_data` (only the node's random
+  `unique_id` and an `ext_resource` id differ, as documented), so no scene was touched. The world dumper prints a `cell_kinds:` line
+  and names the new kinds in the board legend only when a room has a kind besides floor and wall, so no baseline line moved.
+  `test_grid_cell_kinds` (110): in all six rooms and the 72x40 fixture the blocked cells are exactly the cells a `solid` tile was
+  painted on; `blocked_cells` stays derived through 4,000 random changes; a lint fails on any script but `ecs_grid.gd` that writes the
+  terrain. Two mutations turn it red.
+- **A leap lets go of its origin; a ray stops at what stops it.** `begin_leap(entity, from, to)` / `finish_leap(entity)`: a step
+  holds both its cells until it lands, a leap does not. At takeoff the origin is released and the landing cell reserved; in the air
+  the entity stands on no cell (`leap_by_entity` records from and to), so anything aimed at a cell finds nobody, and `HealthSystem`
+  ignores damage to an airborne entity (untargetable in flight). Takeoff is refused for a wall, a gap, a block, an occupied or
+  reserved cell, the outside, the same cell, a piece not standing on `from`, and a piece mid-step or already airborne; a refusal
+  changes nothing. `can_leap_over(cell)` is the table's third rule (never a door). `ray_cells(origin, direction, max_cells,
+  stop_kinds, stop_before_occupied)` covers any non-zero step and stops before the board's edge or the first stopping kind (walls
+  and blocks by default, never gaps); pieces are not terrain. No skill or attack uses either yet (Rule Step M7a, the Knight M8a).
+  `test_leap_occupancy` (67, including 3,000 random operations after each of which the books balance) and
+  `test_ray_stops_at_blockers` (45, including 400 random boards checked cell by cell). Three mutations turn them red.
+- **The pathfinder is built once per layout; the attack search looks near the hero.** `get_grid_path` keeps one `AStarGrid2D` per
+  `layout_version`, marks the pieces and reservations in the way solid for the length of one question and puts it back as it found it
+  (`pathfinder_build_count` lets a test count builds). `EnemyAISystem._find_attack_setup_goal` looks only at the cells within the
+  attack shape's reach of the hero, the reach measured from the shape itself, walked row by row as the board was so a tie keeps the
+  same cell. **Identical decisions, proved four ways:** (1) the old bodies are kept in `tests/support/reference_pathing.gd` and
+  `test_path_cache` (27) holds 5,000 random questions on 40 random boards cell for cell equal to them; (2) `test_attack_setup_search`
+  (23) holds 2,278 random searches equal to the whole-board scan and ticks whole runs side by side on the new code and the old, 6,900
+  ticks (an arena, the same arena strewn with walls, gaps, blocks and chalk, the six Stage 1 rooms and the kingdom), comparing every
+  entity, timer, goal, memory and event after every tick, and an enemy whose search is one cell too narrow is caught by the same
+  comparison; (3) the six dumps and the actor-collapse golden are untouched; (4) **re-verification in this run, across checkouts:** a
+  throwaway script (kept outside the repository) played the same scripted games on a fresh clone of `base/m3a-2` and on this
+  branch, 18,000 ticks in all (three seeded arenas of 2,500 ticks, two of them with walls appearing mid-run so the pathfinder
+  rebuilds, and the seven shipped zone scenes of 1,500 ticks, with a hero put on a random cell every 25 to 30 ticks), hashing the
+  whole state and every event after every tick. The two outputs were identical, line for line.
+- **A room's tick has a budget.** `tests/perf/test_room_tick_budget.gd` ticks an 18x9 room with the hero and eight enemies (every
+  shipped kind), every system of the schedule and a real view for each piece, 120 ticks to warm up and 1,800 timed. The hero keeps
+  changing place so no enemy sleeps (the run shows 259 decisions, 159 steps, 17 telegraphs and 17 strikes every time: no random
+  numbers). It asserts a mean and a median of 2 ms or less, a 99th percentile of 8 ms or less, and that the grid built ONE
+  pathfinder for the whole run, which does not depend on the clock. **Measured here** (Apple M5, Godot 4.6.3 headless): mean
+  0.15 ms, median 0.12 ms, 99th percentile 0.45 ms, slowest 0.5 to 1.0 ms on a quiet machine (three runs, this run); mean 0.49 to
+  0.55 ms, 99th percentile 1.7 to 2.0 ms on the busier machine of the first attempt; mean 0.8 to 1.2 ms and 99th percentile 7 to 10 ms
+  before the two changes. On a board this small nearly all of the gain is the bounded search; the cached pathfinder pays on big
+  boards (400 short questions on the 72x40 kingdom: 3.5 ms instead of 43 ms).
+- **Docs.** `docs/ARCHITECTURE.md` (the cell kinds, leaps and rays, pathing and its cost, the footprint note, the test folders),
+  `docs/coding-standards.md` (a section "The board answers, systems ask", the `tests/perf/` folder, the built-in table), `CLAUDE.md` (a
+  rule for the board; its "arrives in M3a" lines were already rewritten in steps 1 and 2), `AGENTS.md` (status and next milestone),
+  `tools/README.md` (the painter and both paint tools), `docs/OWNER_GUIDE.md` (a row for tagging a tile's `kind` in the TileSet
+  editor; the two rows that said "available after M3a" now say available now, with what is still missing), `task_plan.md` (row 82 is
+  `human_review`), `findings.md`.
+- **Verification.** `python3 tools/run_all_tests.py --strict`: 58 suites (52 at the end of step 2), 0 failed, 0 warnings, GREEN, baseline
+  labels 235 of 235 (11 through `label_renames.txt`); `--self-test` and `move_res.py --self-test` 0 failures; the import pass clean;
+  `stamp_uids.gd -- --check` CLEAN; `git diff --check` clean; every new `.gd` has its `.gd.uid`. The six room dumps equal their
+  baselines byte for byte. A fresh `git clone` of the branch plus `bootstrap_worktree.sh` is green too and its `git status` is clean
+  (see the final report of the run). Tag `m3a-done`.
+- **Not done (M3a is complete; these belong to M3b).** `game_root` still WRITES `PlayerTag.control_enabled`,
+  `PlayerCombat.sword_unlocked`, the health carry and `VIEW_REF`, and nothing pushes on `world.commands` or `view_commands` yet; the
+  shell does not pass a `PlayerSnapshot` to `EcsBoot` yet. Multi-cell footprints are M8b's. No tile of the shipped TileSets says `gap`,
+  `leapable_block`, `chalk` or `corruption`: the art comes with the milestones that use them.

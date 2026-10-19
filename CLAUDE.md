@@ -54,6 +54,15 @@ session. Read `AGENTS.md` for the full workflow, and `docs/ARCHITECTURE.md` +
 	singleton. It fills `world.input_snapshot` once per frame and a system reads that
 	(`test_input_only_in_poller`); test a control rule by injecting an `InputSnapshot`
 	(`tests/ecs/test_input_snapshot.gd`).
+  - The board: what a cell is made of is a kind (`CellKinds` in `ecs/core/cell_kinds.gd`: floor, wall,
+	gap, leapable_block, chalk, corruption, each with three rules: walkable, stops a ray, a leap may cross).
+	`EcsGrid.set_cell_kind()` is the ONLY writer of the terrain (`blocked_cells` is derived from it;
+	`test_grid_cell_kinds` fails on any other writer) and moves `layout_version`. Kinds are authored as the
+	TileSet's `kind` custom data next to `solid`; a new kind is one row in `CellKinds`. A leap
+	(`begin_leap`) and a ray (`ray_cells`) are grid services: a skill asks the grid, it never keeps its own
+	occupancy or line-walking. Never build an `AStarGrid2D` or scan the whole board for a question a system
+	asks every decision (`get_grid_path` caches by `layout_version`; the attack-setup search is bounded to the
+	attack's reach). `tests/perf/test_room_tick_budget.gd` holds a room (18x9, 8 enemies) to a 2 ms tick.
   - Sound (three layers, one owner each): motion sounds → audio tracks inside
 	the actor's clips (keying its `AudioPlayer`, bus `SFX`); mixing →
 	`default_bus_layout.tres` (Master ← SFX/Music/UI); event sounds with no
@@ -118,7 +127,8 @@ session. Read `AGENTS.md` for the full workflow, and `docs/ARCHITECTURE.md` +
 - **A new `class_name` (global class) needs one `--editor --quit` import pass** before
   strict-typed scripts referencing it will parse headlessly. Run import, then tests.
 - TileMap `tile_map_data` is a binary blob — do not hand-edit; use a `tools/` paint
-  script (see `tools/paint_kingdom_tilemap.gd`).
+  script (see `tools/paint_kingdom_tilemap.gd`), which states each cell's kind through
+  `tools/cell_kind_painter.gd`.
 - Headless `--write-movie` capture leaks RIDs at exit — that error is cosmetic.
 - **Stamp UIDs before moving files** (`tools/stamp_uids.gd`; `-- --check` must say CLEAN),
   and **move or rename files only with `tools/move_res.py`** (`git mv` + `.uid`/`.import`

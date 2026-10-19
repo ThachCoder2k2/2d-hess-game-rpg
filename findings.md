@@ -562,3 +562,40 @@ June note).
 - The sandbox of a worktree-isolated agent refuses a command that combines a heredoc with git, and refuses `HOME=` in front of Godot.
   What works: a heredoc that runs alone (a python edit script), the file tools for writing, and a small python wrapper that sets
   `HOME` in the environment of the Godot subprocess.
+
+## Runtime Seam Facts (M3a step 3, 2026-10-19)
+
+- `AStarGrid2D` can be built once and reused: `set_point_solid(cell)` then `set_point_solid(cell, false)` puts it back exactly, so a
+  question that needs the pieces solid marks them, asks, and unmarks only the cells it marked (a cell already solid because it is a
+  wall must stay solid). The path is cell-for-cell the one a pathfinder built for that question gives; `test_path_cache` holds it.
+  `is_point_solid` and `set_point_solid` on a cell outside `region` print an engine error, so a cache is built from `blocked_cells`
+  inside the bounds only.
+- On a board as small as 18x9 the pathfinder rebuild was not the main cost; the attack-setup search that walked and shaped every cell
+  was (rebuilding the pathfinder for every question with the search bounded still measured a 99th percentile of 2.3 ms against 1.7 to
+  2.0 ms with the cache). The cache pays on the 72x40 kingdom (12x on short questions). Measure before attributing a gain.
+- A bound on a search is only safe if the thing bounded is a translation: the attack shape is the same set of offsets wherever the enemy
+  stands (a pattern that clips to the board only drops cells), so no cell farther than the shape's reach from the hero can contain the
+  hero. `AttackPattern.get_attack_cells(null, ...)` and `EnemyWeapon.get_attack_cells` give the unclipped shape. A future shape that
+  depends on the board (a line to the wall) breaks the bound, and `test_attack_setup_search` measures the reach from the data to catch it.
+- To keep a faster version honest, keep the old body in `tests/support/` as a subclass (`ReferenceGrid extends EcsGrid`,
+  `ReferenceEnemyAI extends EnemyAISystem`), tick two worlds side by side and compare the whole state and every event after every tick;
+  then sabotage the new side once (a search one cell too narrow) to see the comparison fail. A cross-checkout replay (a throwaway script
+  played on a fresh clone of the previous branch and on the new one, then diffed) is the same idea with the real old code and needs no
+  copy of it.
+- A leap and a step differ in who holds what: a step holds both cells until it lands; a leap holds only the landing cell, so an airborne
+  entity is in neither `entity_by_cell` nor `cell_by_entity`. Code that walks `cell_by_entity` to find "every entity" misses the leaper;
+  ask `is_airborne()` or `leap_by_entity`. `unregister_entity` also removes an in-flight leap.
+- `blocked_cells` is derived: write the terrain only through `EcsGrid.set_cell_kind()`; `test_grid_cell_kinds` greps for any other writer.
+  A cell effect (chalk over a gap, M10) is a temporary kind change recorded in `cell_effect_by_cell` with the `kind_before` to restore.
+- A TileSet custom-data layer can be added as text (`custom_data_layer_1/name = "kind"`, `custom_data_layer_1/type = 4`, string) without
+  moving a uid; `TileSet.has_custom_data_layer_by_name` lets a reader tolerate a TileSet that lacks it. A tile that leaves `kind` empty
+  means what its `solid` flag says, which is why adding the layer changed no room.
+- Rerunning a paint tool is the check that a refactor of it changed no cell: `tile_map_data` must be identical, and only the node's
+  `unique_id` and an `ext_resource` id differ (restore the file with `git checkout` when that is all).
+- A performance test on a shared machine: assert on the mean AND the median of a long run, give the 99th percentile a bound several times
+  above what it measures, only print the slowest tick (one tick of 88 ms was seen from outside the process), and assert one thing that does
+  not depend on the clock (the pathfinder is built once). The same test measured 0.15 ms mean on a quiet machine and 0.5 ms on a busy one.
+- The worktree-isolated sandbox refuses a command that mixes a heredoc with git, one that sets `HOME=` in front of Godot, and a
+  `git clone` or other git call chained after a `cd` into another directory. What works: plain separate commands, `git clone -q -b <branch>
+  . <dir>` run from the worktree, a wrapper script that exports `HOME` and `exec`s Godot, and `GODOT` / `UNBOUND_GODOT_HOME` /
+  `BOOTSTRAP_HOME` for the project's own tools.

@@ -149,6 +149,27 @@ These are the rules `CLAUDE.md` makes binding, with the reasoning.
 - Presentation must not decide gameplay. Where the current bridge reads or writes components
   directly, that is a listed deviation in `docs/ARCHITECTURE.md`, not a pattern to copy.
 
+### The board answers, systems ask
+
+- What a cell is made of is a kind (`CellKinds`, `ecs/core/cell_kinds.gd`): one table, one row per kind, three rules
+  (walkable, stops a ray, a leap may cross). A skill, hazard or drawing routine asks the table
+  (`CellKinds.is_walkable()`, `stops_rays()`, `is_leapable()`); it never repeats a list of kinds. A new kind is a
+  row there and the tile that says it (the TileSet's `kind` custom data, tagged in the editor).
+- `EcsGrid.set_cell_kind()` is the only writer of the terrain; `blocked_cells` and `layout_version` follow from it,
+  and `test_grid_cell_kinds` fails on any other script that writes them. Anything that caches a fact about the
+  terrain (the pathfinder, a drawing of the kinds) keeps the `layout_version` it was built for and rebuilds when
+  it moves.
+- A leap and a ray are grid services, not skill code. `begin_leap` / `finish_leap` hold the landing cell and let
+  go of the origin (the leaper stands on no cell in the air and takes no damage); `ray_cells` walks a line and
+  stops at what stops it. A skill decides which cells it wants, the grid says what holds them.
+- Cost is a rule, not a hope. A question a system asks every decision must not scan the board or build a
+  pathfinder: `get_grid_path` reuses one `AStarGrid2D` per layout, and the enemy's search for the cell to attack
+  from only looks within the attack shape's reach of the hero. `tests/perf/test_room_tick_budget.gd` ticks an
+  18x9 room with eight enemies and fails above a 2 ms mean tick or if the run builds more than one pathfinder. When you
+  make a faster version of something, keep the old body in `tests/support/` and compare the two on random input
+  (`reference_pathing.gd`, `test_path_cache`, `test_attack_setup_search`): the speed-up is only allowed to change
+  how fast the answer comes.
+
 ### Authoring is spawn data, with zero logic
 
 - A room scene is spawn data: parked `ActorView` nodes (position -> cell, `definition` and
@@ -264,8 +285,8 @@ Never re-implement what a node already does.
 |---|---|---|
 | Delays, cooldowns in presentation | `Timer` node or `get_tree().create_timer()` | hand-decremented floats in `_process` |
 | Property animation over time | `Tween` / `AnimationPlayer` / `AnimationTree` | manual lerp bookkeeping |
-| Pathfinding | `AStarGrid2D` (used in `EcsGrid`) | hand-rolled BFS or Dijkstra |
-| Tile floors and walls | `TileMapLayer` + `TileSet` (`solid` custom data) | per-cell Polygon2D or Sprite nodes |
+| Pathfinding | `AStarGrid2D` (used in `EcsGrid`, built once per `layout_version`, not per question) | hand-rolled BFS or Dijkstra |
+| Tile floors, walls and gaps | `TileMapLayer` + `TileSet` (`kind` and `solid` custom data) | per-cell Polygon2D or Sprite nodes |
 | UI layout | Containers, anchors | manual position math on Controls |
 | Screen-fixed UI | `CanvasLayer` | moving UI to follow the camera |
 | Camera follow, limits, shake | `Camera2D` properties | scripted camera math |
@@ -309,7 +330,8 @@ Collision is cell-based through `EcsGrid`, not physics.
 - A new test names a `res://` file through `TestPaths` (`tests/support/paths.gd`), which asserts
   the file exists. Folder moves then edit one file instead of every suite. Suites live in a
   folder by kind: `tests/architecture/` (guards), `tests/bridge/`, `tests/audio/`,
-  `tests/content/`, `tests/ecs/` (the simulation's seams), `tests/presentation/`; the dump baselines are `tests/baselines/dump_<room>.txt` (change one in the
+  `tests/content/`, `tests/ecs/` (the simulation's seams), `tests/presentation/`, `tests/perf/` (budgets: a measured cost with a generous bound, never a
+  bound tight enough to fail on a busy machine); the dump baselines are `tests/baselines/dump_<room>.txt` (change one in the
   same commit as the change that explains it, and say so in the message).
 - Never rename or delete a `PASS:` label that is in `tests/baseline_labels.txt`; if a label
   must change, record `old label -> new label` in `tests/label_renames.txt`.
@@ -351,5 +373,5 @@ Deliberately not used (do not add them without a real need and the owner's say):
 `docs/game-base-plan.md` §13.3 lists conventions that M1b did not need and later milestones add:
 the file-naming suffixes `*_effect.gd`, `*_handler.gd`, `*_bridge.gd` as those kinds appear, and `.po`
 text keys instead of literal strings. Those are targets, not rules yet; the rules above are the
-ones the code and the guards already hold (the schedule, the declared events and commands landed
-with M3a).
+ones the code and the guards already hold (the schedule, the declared events and commands, the snapshots, the
+cell kinds and the cached pathing landed with M3a).

@@ -96,15 +96,18 @@ file by hand: `tools/move_res.py` does it with the sidecars and every `res://` s
 ## Current Priority
 
 The base is built milestone by milestone from `docs/game-base-plan.md` section 15.
-**M1a (safety net and tooling), M1b (folder migration) and M2 (content registry and actor collapse) are
-done and wait in `human_review`**. M1b moved every script, scene and resource into the new tree with no
+**M1a (safety net and tooling), M1b (folder migration), M2 (content registry and actor collapse) and
+M3a (runtime seams) are done and wait in `human_review`**. M1b moved every script, scene and resource into the new tree with no
 gameplay change (the strict runner stayed green after every move, the six room dumps changed only by path
 strings), applied the `CLAUDE.md` amendments the owner approved at OG0, and added the placeholder tools.
 M2 added `ContentDb` (content by id, two validators), `PlayerDefinition` (`content/player/player.tres`),
 collapsed the four 353-line actor scenes into one `actor_view_base.tscn` plus thin scenes, and built the
 owner's decision of 2026-10-12 that a piece is smaller than its cell (`content/feel/piece_sizes.tres`, the
-generated chess family drawn to it, `tools/render_actor_preview.gd`, `test_pieces_inside_cell`). Next is
-**M3a** (the runtime seams). The owner can browse `content/`, run `tools/list_placeholders.gd` for the art
+generated chess family drawn to it, `tools/render_actor_preview.gd`, `test_pieces_inside_cell`). M3a landed
+every shared field and seam once, with no gameplay change (the tick order as data in `ecs/schedule/`, the
+declared events and the commands channel, the input, HUD and player snapshots, each room's own origin and the
+camera framing it, the grid's cell kinds, leaps, rays and cached pathing, and a per-room tick budget test). Next
+is **M3b** (the split of `game_root.gd` and the save service). The owner can browse `content/`, run `tools/list_placeholders.gd` for the art
 and audio TODO, open `assets/_generated/previews/pieces_in_cells.png`, and read `docs/OWNER_GUIDE.md`
 (section 6 is the in-cell rule, in Vietnamese).
 Current status of every area, and what is waiting on the owner, lives in
@@ -475,7 +478,7 @@ registry and the generated art; see `tools/README.md`).
 ## Next Recommended Work
 
 Follow `docs/where-we-are.md` section 5 for the order of work and `docs/game-base-plan.md`
-section 15 for the milestone you are on. M1a, M1b and M2 are done; the next milestone is M3a (the
-runtime seams). Three dependency edges and six room references are still
+section 15 for the milestone you are on. M1a, M1b, M2 and M3a are done; the next milestone is M3b (the
+split of `game_root.gd`, the save service). Three dependency edges and six room references are still
 undecided (listed in `tests/architecture/test_dependency_edges.gd` and `test_content_references.gd`);
 the owner decides them before `tests/architecture/allowed_edges.txt` is frozen.

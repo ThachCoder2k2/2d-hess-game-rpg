@@ -2,8 +2,9 @@
 
 The Unbound Pawn — a 2D top-down grid-combat RPG in Godot 4.6.3. This document
 describes the code **as it is built today** (checked against the tree on 2026-10-19, after
-step 1 of milestone M3a, the runtime seams: the schedule, the declared events, the commands
-channel and the world's shared fields; the milestone's other steps are still to come). The simulation is a full ECS; the
+milestone M3a, the runtime seams: the schedule, the declared events, the commands channel, the
+world's shared fields, the input and HUD snapshots, the player carry, the per-room origin, and the
+grid's cell kinds, leaps, rays and cached paths). The simulation is a full ECS; the
 node-composition architecture that older docs described (`GridWorld`, `FreeEnemy`,
 `PawnHero`, `EnemyActor`, `EncounterDirector`, per-actor component nodes) was deleted in
 the ECS conversion (`docs/ecs-conversion-plan.md`, owner decision 2026-07-19). The folders
@@ -85,7 +86,7 @@ schema/                  THE SHAPE OF CONTENT: one Resource class per file
   feel/                  DifficultyProfile, PieceSizeTable, PieceSize
 
 ecs/                     THE SIMULATION: rules only; no art, prose or tuning numbers
-  core/                  EcsWorld, EcsGrid, EcsSystem, WorldFlags, InputSnapshot, HudSnapshot, PlayerSnapshot
+  core/                  EcsWorld, EcsGrid, CellKinds, EcsSystem, WorldFlags, InputSnapshot, HudSnapshot, PlayerSnapshot
   components/            ecs_components.gd (frozen); tuning.gd (Tuning), and every new component in its own file
   systems/<folder>/      command/CommandSystem  input/PlayerInputSystem  decide/EnemyAISystem
                          move/MovementSystem  act/CombatSystem  resolve/HealthSystem  view/ViewSyncSystem
@@ -248,6 +249,9 @@ behaviour and never a field to the hot file. Each is documented where it is decl
 | `view_commands` | cosmetic instructions for the views (`Commands.play_state`) | `push_view_command()`; consumed by `ViewSyncSystem` |
 | `heal_events` | heal requests `{target, source, amount}` | `Events.emit_heal()`; consumed by `HealthSystem` |
 
+The grid's own fields landed in the same milestone and are described under "The grid": `cell_kind_by_cell`,
+`layout_version`, `cell_effect_by_cell` and `leap_by_entity`.
+
 `flags` is a fresh object for every world, and the shell rebuilds the world for every room, so what must
 outlive a room (flags, the player's carry) is carried by the shell and the save in M3b.
 
@@ -276,14 +280,81 @@ keeps the fixed anchor `EcsGrid.FALLBACK_ORIGIN` on that axis, because the camer
 art, `GridLinesOverlay` and markers of a room that is not 16x9 are authored for that origin.
 Its dictionaries are all documented in the file:
 
-- `blocked_cells`, `entity_by_cell`, `cell_by_entity`, `move_reservations`, `item_by_cell`.
+- `entity_by_cell`, `cell_by_entity`, `move_reservations`, `item_by_cell`, and the terrain below.
 - Baked door and gate data: `exit_by_cell` (zone exits), `gate_by_cell` (one-way shortcut
   gates), `player_unlock_by_cell` (player verb unlocks).
 - The movement protocol is **reserve -> commit**: `begin_move` claims the destination before
   the slide, `finish_move` lands it. While sliding, the origin stays occupied and the
   destination reserved, so nobody can race into either.
-- Pathing: `get_grid_path` builds an `AStarGrid2D` per call (no diagonals; other movers and
-  reservations are solid). Gameplay is cell-based; there is no physics collision.
+- Gameplay is cell-based; there is no physics collision.
+- Multi-cell footprints (the 2x2 and 3x3 bosses) are M8b's, not M3a's. `entity_by_cell` can already name one entity
+  from several cells; the single-cell entry points (`register_entity`, `begin_move`, `begin_leap`) are what M8b
+  extends, and nothing else here assumes an entity is one cell wide.
+
+### What a cell is made of (cell kinds)
+
+`cell_kind_by_cell` maps a cell to a kind for every cell that is not plain floor (a cell it does not list is
+floor). The vocabulary is `CellKinds` (`ecs/core/cell_kinds.gd`), one row per kind with three rules:
+
+| Kind | Walkable | Stops a ray | A leap may cross |
+|---|---|---|---|
+| `floor` | yes | no | yes |
+| `wall` (also a closed gate) | no | yes | no |
+| `gap` | no | no | yes |
+| `leapable_block` | no | yes (cover) | yes |
+| `chalk` | yes | no | yes |
+| `corruption` | yes | no | yes |
+
+`blocked_cells` is **derived**: every cell whose kind cannot be walked on. `set_cell_kind(cell, kind)` is the
+only writer of the terrain (`add_block` and `open_gate` call it; `tests/ecs/test_grid_cell_kinds.gd` fails if any
+other script writes `blocked_cells` or `cell_kind_by_cell`); it refuses a cell off the board, a kind that does
+not exist, and a non-walkable kind under a piece or a reservation. `layout_version` counts every real change of
+the terrain and of `bounds`; anything that caches a fact about the terrain keeps the version it was built for.
+`cell_effect_by_cell` is the (empty) store of the `CellEffectSystem` of M10, landed here so that milestone does
+not edit this file's fields.
+
+The kinds are **authored** in the TileSet: the `kind` custom-data layer (text) sits next to `solid`
+(`content/tilesets/kingdom/tileset.tres` and the fixture's). A tile that fills `kind` in with a known kind
+gives its cell that kind; a tile that leaves it empty is a wall when `solid` is true and floor otherwise, which
+is why every existing tile means what it always meant. `EcsBoot.apply_tile_kinds` reads the room's
+`RoomArt/TileMap` once at boot. No shipped tile fills `kind` in yet: the art for a gap, a block, chalk and
+corruption belongs to the milestones that use them (a tile is tagged in the TileSet editor, Custom Data ->
+kind). `tools/cell_kind_painter.gd` is the part of a paint tool that knows kinds (a tool states what a cell IS
+beside the art it picked and the helper refuses a tile that does not read as that kind);
+both paint tools (`tools/paint_kingdom_tilemap.gd`, `tools/paint_zone_tilemaps.gd`) paint through it, so a new
+kind is painted by stating it, never by hand-editing `tile_map_data`. The world dump names the kinds in a room's
+grid and board once a room has one besides floor and wall.
+
+### Leaps and rays
+
+- `begin_leap(entity, from, to)` / `finish_leap(entity)`: a step holds both its cells until it lands; a leap does
+  not. At takeoff the origin is released and the landing cell is reserved; in the air the entity stands on no
+  cell (`leap_by_entity` records from and to), so nothing aimed at a cell finds it, and `HealthSystem` ignores
+  damage to an airborne entity. `can_begin_leap` is the refusal rule; `can_leap_over(cell)` says whether a leap
+  may pass over a cell (the kind's third rule, and never a door). No skill uses them yet: Rule Step (M7a) and the
+  Knight (M8a) are the first. `test_leap_occupancy`.
+- `ray_cells(origin, direction, max_cells, stop_kinds, stop_before_occupied)`: the cells a straight line covers
+  (any non-zero step, so diagonals too), nearest first, ending before the board's edge or the first stopping kind
+  (walls and blocks by default, never gaps). Pieces are not terrain, so a line covers the cell of whoever stands in
+  it unless `stop_before_occupied` ends it before them, for a charge. Rook charges, Bishop lanes and Queen lines
+  are made of it. `test_ray_stops_at_blockers`.
+
+### Pathing and its cost
+
+`get_grid_path` (and `get_path_distance`, `get_next_path_cell`) keeps one `AStarGrid2D` per `layout_version`
+and marks the pieces and reservations in the way solid for the length of one question only (no diagonals; a
+goal that is held is still a goal). It used to build a pathfinder per question. `test_path_cache` counts builds
+and holds the answers equal, cell for cell, to the old code kept in `tests/support/reference_pathing.gd`.
+The enemy's search for the cell to attack from (`EnemyAISystem._find_attack_setup_goal`) looks only at the cells
+within the attack shape's reach of the hero, measured from the shape itself; `test_attack_setup_search` holds
+that it picks the same cell as the old whole-board scan, and replays whole rooms side by side with the old code.
+`tests/perf/test_room_tick_budget.gd` ticks an 18x9 room with eight enemies and real views for 1800 ticks (a hero
+that keeps changing place, so the enemies never sleep) and asserts a mean and a median tick of 2 ms or less, a 99th
+percentile of 8 ms or less, and one pathfinder built for the whole run. Measured on the development machine
+(Apple M5, Godot 4.6.3 headless): mean 0.15 ms and 99th percentile 0.45 ms on a quiet machine, up to 0.5 ms and
+2 ms on a busy one; before the two changes the mean was 0.8 to 1.2 ms and the 99th percentile 7 to 10 ms. The
+bounds are generous on purpose, so a noisy machine does not fail the suite, while a change that makes the tick
+several times slower still does.
 
 ## Authoring: scenes as spawn data
 
@@ -293,12 +364,12 @@ Its dictionaries are all documented in the file:
 | Actor scenes | `presentation/views/actors/` | **One actor view**: `actor_view_base.tscn` holds the nodes, every clip and the one animation graph; `player.tscn`, `black_pawn.tscn`, `knight_enemy.tscn` and `bishop_enemy.tscn` inherit it and say only what is theirs (13 to 20 lines each; `test_one_actor_view` holds that). A new enemy needs no scene: instance the base and set `definition`. |
 | `PieceSizeTable` | `schema/feel/piece_size_table.gd` (+ `piece_size.gd`), `content/feel/piece_sizes.tres` | the owner's rule that a piece is smaller than its cell, as data: per kind a body box, a base line (px below the cell centre) and a footprint in cells; `validate()` holds the margin and the chess heights; `body_top_left()` is the one placement formula. |
 | `EntityComponent` nodes | `authoring/entity_components/` | Inspector-draggable children of an `ActorView`; `EcsBoot` calls `apply(world, entity_id)` at spawn. Six exist: `CombatComponent`, `HealthComponent`, `InputComponent`, `MovementComponent` (overrides of the player's `PlayerDefinition`; the player scene carries none, so `content/player/player.tres` is the only source) and `AIComponent`/`WeaponComponent` (per-instance enemy overrides). A node on an instance beats the definition, field by field. Zero logic. |
-| `EcsBoot` | `authoring/ecs_boot.gd` | static `boot(world, options)`, where `options` is an `EcsBootOptions` (`authoring/ecs_boot_options.gd`: `player_view`, `room_root`, `fallback_player_cell`, `skipped_pickup_names`, `opened_gate_ids`, `player_snapshot`, `restore_player_facing`; a new need is a new field, never a new argument; `EcsBootOptions.for_scene(hero, room)` is the common case): sizes the grid from `RoomEncounter.board_size`, bakes solid tiles, `ZoneExitMarker`, `PlayerUnlockMarker` and `GateMarker`; spawns the player from the view's `PlayerDefinition` (class defaults when it names none) and applies its `EntityComponent` nodes, then every `ActorView` child of the room that has a `definition`, then pickups. Returns the cast dictionary (`player`, `enemies`, `view_by_entity`, `piece_name_by_entity`, pickup maps). |
+| `EcsBoot` | `authoring/ecs_boot.gd` | static `boot(world, options)`, where `options` is an `EcsBootOptions` (`authoring/ecs_boot_options.gd`: `player_view`, `room_root`, `fallback_player_cell`, `skipped_pickup_names`, `opened_gate_ids`, `player_snapshot`, `restore_player_facing`; a new need is a new field, never a new argument; `EcsBootOptions.for_scene(hero, room)` is the common case): sizes the grid from `RoomEncounter.board_size`, bakes the tile kinds (`apply_tile_kinds`), `ZoneExitMarker`, `PlayerUnlockMarker` and `GateMarker`; spawns the player from the view's `PlayerDefinition` (class defaults when it names none) and applies its `EntityComponent` nodes, then every `ActorView` child of the room that has a `definition`, then pickups. Returns the cast dictionary (`player`, `enemies`, `view_by_entity`, `piece_name_by_entity`, pickup maps). |
 | `EcsActorFactory` | `authoring/ecs_actor_factory.gd` | `spawn_player` (bare hero, kept), `spawn_player_from_definition` (what `EcsBoot` calls), `spawn_enemy`, `spawn_pickup`: assemble an entity's components from the `.tres` data and apply the difficulty multipliers. |
 | `ContentDb` | `shell/content/content_db.gd` (+ `content_kind.gd`) | the content registry, a static class (no autoload, so it works inside a suite's `_init()`). Ids are folder names under `content/<kind>/`, listed lazily once per kind. `ids(kind)`, `fetch(kind, id)`, `all(kind)`, `player()`, `world()`, `piece_sizes()`, `validate()`, `validate_cross_refs()`. Ten kinds registered (one line each in `_ensure_kinds()`). Only the shell may name it; tests and tools call the two validators, nothing calls them at game start. |
 | `RoomEncounter` | `authoring/room_encounter.gd` | a room scene root: `board_size`, `zone_id`, prose, and a `RoomObjective`. It carries data only. |
 | Markers | `authoring/markers/` | `GridMarker` base (drag to snap, writes `grid_cell`). `ZoneEntryMarker`/`ZoneExitMarker` (doors), `GateMarker`, `PlayerUnlockMarker`, `PickupSpawnPoint`. `BlockerMarker` is a legacy marker `EcsBoot` no longer bakes; walls are painted tiles. |
-| Walls | `RoomArt/TileMap` | any tile whose custom data `solid = true` becomes a blocked cell. Paint = collision. |
+| Terrain | `RoomArt/TileMap` | a tile's custom data says what its cell is: `kind` (floor, wall, gap, leapable_block, chalk, corruption) when filled in, else `solid = true` is a wall and anything else floor. A cell that cannot be walked on is a blocked cell. Paint = collision. |
 
 Enemies are real scene children: instance an actor scene from `presentation/views/actors/`
 (`black_pawn.tscn`, `knight_enemy.tscn`, `bishop_enemy.tscn`, or `actor_view_base.tscn` itself) in a
@@ -526,11 +597,11 @@ ad-hoc edits:
 
 1. `ecs/core/ecs_world.gd`, `ecs/components/ecs_components.gd`, `ecs/core/ecs_system.gd` — the whole ECS in ~400 lines,
    then `ecs/schedule/schedule.gd` (the order), `ecs/events/events.gd` and `ecs/events/commands.gd` (the two channels).
-2. `ecs/core/ecs_grid.gd` — the board and the reserve -> commit protocol.
+2. `ecs/core/ecs_grid.gd` (with `ecs/core/cell_kinds.gd`) — the board, the reserve -> commit protocol, the cell kinds, leaps, rays and the cached pathfinder.
 3. `ecs/systems/input/player_input_system.gd` -> `ecs/systems/move/movement_system.gd` — one full step.
 4. `ecs/systems/act/combat_system.gd` -> `ecs/systems/resolve/health_system.gd` — one full attack.
 5. Data schemas: `schema/entity/*`, `schema/attacks/*`, `schema/world/*`, `schema/feel/*`.
-6. `ecs/systems/decide/enemy_ai_system.gd` — the big one (337 lines).
+6. `ecs/systems/decide/enemy_ai_system.gd` — the big one (381 lines).
 7. `authoring/ecs_boot.gd`, `ecs_actor_factory.gd`, `presentation/views/actor_view.gd`, `authoring/entity_components/*`.
 8. `ecs/systems/view/view_sync_system.gd`, then `shell/game_root.gd` last.
 
@@ -548,11 +619,12 @@ kind:
 | Folder | What it holds |
 |---|---|
 | `tests/architecture/` | the guards: `test_dependency_edges`, `test_content_references`, `test_content_has_no_gd`, `test_sidecars_tracked`, `test_no_path_only_ext_resource`, `test_no_old_res_paths`, `test_fixtures_present`, `test_tools_keep_uids`, `test_all_scripts_load`, `test_dump_baselines`, `test_schedule_complete`, `test_events_declared`, `test_input_only_in_poller` |
-| `tests/ecs/` | the runtime seams of M3a: `test_schedule_order`, `test_world_fields`, `test_frozen_world`, `test_commands_channel`, `test_view_commands`, `test_emit_damage`, `test_heal_queue`, `test_boot_options`, `test_input_snapshot`, `test_hud_snapshot`, `test_player_snapshot_roundtrip`, `test_room_origin` |
+| `tests/ecs/` | the runtime seams of M3a: `test_schedule_order`, `test_world_fields`, `test_frozen_world`, `test_commands_channel`, `test_view_commands`, `test_emit_damage`, `test_heal_queue`, `test_boot_options`, `test_input_snapshot`, `test_hud_snapshot`, `test_player_snapshot_roundtrip`, `test_room_origin`, `test_grid_cell_kinds`, `test_leap_occupancy`, `test_ray_stops_at_blockers`, `test_path_cache`, `test_attack_setup_search` |
 | `tests/bridge/` | `game_root.gd` characterization: travel, death and respawn, persistence, health carry, the Book |
 | `tests/presentation/` | the board overlay drawing from the snapshot, and the camera framing the room (`test_board_draws_from_snapshot`, `test_camera_frames`) |
+| `tests/perf/` | `test_room_tick_budget`: an 18x9 room with eight enemies ticks in 2 ms or less on average, and builds one pathfinder |
 | `tests/audio/`, `tests/content/` | the bus layout; the requirements ledger and the placeholder manifest |
-| `tests/support/` | `UnboundTest`, `TestPaths` (the only place a new test names a `res://` path), the harness's own test |
+| `tests/support/` | `UnboundTest`, `TestPaths` (the only place a new test names a `res://` path), `reference_pathing.gd` (the pathing and the attack search as they were before M3a, the yardstick the new code is compared with), the harness's own test |
 | `tests/fixtures/`, `tests/baselines/` | the kingdom, `first_encounter` and the harness fixtures; the six deterministic room dumps |
 
 The canonical runner is `python3 tools/run_all_tests.py --strict`: it runs the editor import
@@ -570,14 +642,14 @@ HOME=/tmp/unbound-pawn-godot ../Godot.app/Contents/MacOS/Godot --headless --path
 
 ## What is built and what is next
 
-The tree above is the part of `docs/game-base-plan.md` §13 that M1b, M2 and the first step of M3a built: the folders, the
+The tree above is the part of `docs/game-base-plan.md` §13 that M1b, M2 and M3a built: the folders, the
 moves, the guards that keep code and content where they belong, the placeholder tools, the content
-registry, the hero as data, the one actor view and the in-cell size table (M2), and, from M3a step 1, the schedule files,
+registry, the hero as data, the one actor view and the in-cell size table (M2), and, from M3a, the schedule files,
 `events.gd` with `Events.emit_damage`, the commands channel with `CommandSystem`, the frozen world and the
-world's other shared fields, and the `EcsBoot` options object. The ECS contract is kept as it was. Still to come, in plan
-order: the rest of the runtime seams of M3a — the `InputPoller` and `PlayerInputSystem` reading the `InputSnapshot`, the
-grid's cell kinds, leaps, rays and cached paths, the `HudSnapshot` and its system, the `PlayerSnapshot` — then the split of
-`game_root.gd` and the save service (M3b),
+world's other shared fields, the `EcsBoot` options object, the `InputPoller` and `PlayerInputSystem` reading the
+`InputSnapshot`, the `HudSnapshot` and its system, the `PlayerSnapshot`, the per-room origin and camera framing,
+and the grid's cell kinds, leaps, rays, cached paths and bounded attack search. The ECS contract is kept as it was.
+Still to come, in plan order: the split of `game_root.gd` and the save service (M3b),
 then the shell, input, text, story, skills, bosses and the other five districts. The
 owner-facing "how do I change X" table, with real paths for what exists today, is
 `docs/OWNER_GUIDE.md`.

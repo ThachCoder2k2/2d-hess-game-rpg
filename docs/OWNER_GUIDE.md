@@ -173,6 +173,7 @@ are later work, and nothing in the tree blocks them.*
 | Đổi vũ khí nhặt được trên sàn | `content/pickups/<id>/<id>.tres` |
 | Đổi đồ thị thế giới (phòng nào nối phòng nào) | `content/world/world.tres` |
 | Đổi bộ tile của sàn/tường | `content/tilesets/<bộ>/tileset.tres` và `tilemap.tscn` (đừng sửa tay `tile_map_data`, dùng `tools/paint_*.gd`); atlas ở `assets/tiles/<bộ>/atlas.svg` là đồ cũ; bạn vẽ từng tile riêng (`assets/tiles/<khu>/<tile_id>.png`), công cụ sẽ tự ghép atlas |
+| Đánh dấu một tile là hố, khối nhảy qua được, phấn hay sàn bị hỏng (Mark a tile as a gap, a leapable block, chalk or corrupted floor) | **1 file**, trong Godot: mở `content/tilesets/<bộ>/tileset.tres`, ở TileSet editor chọn tile, trong Inspector mục **Custom Data** điền ô **kind**: `gap` (hố: không đi vào được, đường đạn và cú nhảy bay qua), `leapable_block` (khối: không đi qua được, chắn đường đạn, nhảy qua được), `chalk` (phấn: đi được), `corruption` (sàn hỏng: đi được); `wall` và `floor` cũng dùng được. Để trống thì tile là tường khi `solid` bật, còn không là sàn, nên mọi tile cũ vẫn như cũ. Hiện chưa tile nào điền `kind`: hình cho hố, khối, phấn và sàn hỏng thuộc về các milestone dùng chúng (M10, M13). Muốn tô chúng vào bản đồ thì công cụ `tools/paint_*.gd` nêu loại ô qua `tools/cell_kind_painter.gd`; đừng sửa tay `tile_map_data` |
 | Đổi âm thanh sự kiện / âm thanh chuyển động | ghi đè `assets/sfx/<tên>.wav` (cùng tên là mọi chỗ dùng tự nâng cấp), hoặc `presentation/audio/sfx_manager.tscn` (mục `streams` trong Inspector) / track âm thanh trong clip của actor |
 | Đổi phím | `project.godot`, mục `[input]` (hoặc Project Settings → Input Map) |
 | Đổi chữ (thoại, thông báo) | còn nằm rải rác: `RoomEncounter` trong `content/rooms/<id>/room.tscn`, `RoomObjective` `.tres` (`tests/fixtures/first_encounter/objective.tres` là ví dụ), `shell/game_root.gd`, `presentation/ui/hud/hud.gd`. Hệ thống `.po` đến ở M4 |
@@ -188,12 +189,12 @@ milestone xong, nó phải kiểm đường dẫn thật của các hàng thuộ
 hàng đó. M1b đã kiểm và ghi "available now" bốn hàng: chỉnh một enemy, đổi bố cục phòng, đổi sprite, đổi
 art nền phòng. **M2 kiểm thêm và ghi "available now"** các hàng: thêm biến thể enemy (kèm số file đã đếm bằng
 cách làm thật một lần), đổi cảm giác con tốt, đổi sprite (theo hộp kích thước), đổi kích thước quân trong ô
-(hàng mới), đổi animation hay âm thanh chuyển động.
+(hàng mới), đổi animation hay âm thanh chuyển động. **M3a kiểm thêm** hai hàng cuối cùng còn ghi "available after M3a": thêm enemy có hành vi mới và thêm cơ chế sàn mới. Đường dẫn thật đều đã có: `ecs/systems/<phase>/`, một dòng trong `ecs/schedule/<phase>.gd`, `ecs/events/events.gd` và `ecs/components/<tên>.gd`; hai hàng ấy giờ ghi "available now", kèm phần còn thiếu (kiểu tấn công mới, ô tạm thời).
 
 | Bạn muốn... (You want to...) | Sửa file này (Edit this) | Số file (Files) | Cần code? (Code?) | Trạng thái (Status) |
 |---|---|---|---|---|
 | Thêm một biến thể enemy (đổi skin, máu, tốc độ hoặc vũ khí) (Add a variant enemy (re-skin, new health, speed or weapon)) | `content/enemies/<id>/enemy.tres` (reusing `_shared` sub-resources), a `visual.tres` that names its `piece_type` and `body.png`; in a room, instance `actor_view_base.tscn` and set `definition` (no scene of your own); the `ENEMY_<ID>_NAME` row in `story/text/<locale>/story.po`. | 4 | no | **available now** for everything but the name row (dòng tên trong `.po`: M4). Counted by doing it (M2): 1 file when it reuses `_shared`, 3 with a picture of its own, plus the room edit that places it; `/new-enemy` walks through it |
-| Thêm enemy có hành vi mới (Add an enemy with new behaviour) | `enemy.tres` + one `EntityComponent` or `AttackBase` script + one system file + one line in `ecs/schedule/<phase>.gd`; plus `events.gd` if it emits a new event and `ViewSyncSystem` if its visuals are new. | 4 new, up to 3 existing edited | yes | available after M3a (kiểu tấn công mới: M8a) |
+| Thêm enemy có hành vi mới (Add an enemy with new behaviour) | `enemy.tres` + one `EntityComponent` or `AttackBase` script + one system file + one line in `ecs/schedule/<phase>.gd`; plus `events.gd` if it emits a new event and `ViewSyncSystem` if its visuals are new. | 4 new, up to 3 existing edited | yes | **available now** (lịch `ecs/schedule/`, `events.gd` và `EntityComponent` đã có; kiểu tấn công mới với `AttackBase`: M8a) |
 | Chỉnh (retune) một enemy hoặc boss (Retune an enemy or boss) | its `.tres` | 1 | no | **available now** for an enemy (`content/enemies/<id>/enemy.tres` and the `.tres` it points at, 1 file), M8b (boss) |
 | Thêm một skill vào slot có sẵn, dùng các loại effect có sẵn (Add a skill in an existing slot from existing effect kinds) | `content/skills/<id>/skill.tres`, `icon.png`, one `milestones/<id>.tres`, three rows in `skills.po` (name, description, hint), a `sound_bank.tres` row if the sound is new. HUD slot, input and cooldown bar come from the file and `slots.tres`. | 4-5 | no | available after M7c |
 | Thêm một skill cần một phím mới (Add a skill that needs a free button) | the above + one `InputMap` action in `project.godot` + one `slots.tres` row | 6-7 | no | available after M7a |
@@ -231,11 +232,11 @@ cách làm thật một lần), đổi cảm giác con tốt, đổi sprite (the
 | Đổi luật kinh tế (Believe, shard, stagger, ngưỡng assist) (Change economy rules (Believe, shards, stagger, assist thresholds)) | `content/progression/rules.tres` | 1 | no | available after M7c |
 | Đổi phím mặc định (Change input defaults) | the `[input]` section of `project.godot` | 1 | no | available after M4 |
 | Đổi chữ ở màn title hoặc credits (Change title text or credits) | `credits.tres` + `.po` rows | 2 | no | available after M4 |
-| Thêm cơ chế sàn mới (gai, công tắc) (Add a new floor mechanic (spikes, switch)) | marker + component + system + one schedule line (+ an event) | 4-5 | yes | available after M3a |
+| Thêm cơ chế sàn mới (gai, công tắc) (Add a new floor mechanic (spikes, switch)) | marker + component + system + one schedule line (+ an event) | 4-5 | yes | **available now** (ô nguy hiểm tạm thời như phấn hay sàn hỏng: M10) |
 
 *EN: The first table lists today's real locations (all of these paths exist). The second is the target
 Owner Change Table from plan §13.5; each row says which milestone makes it true, and the rows marked
-"available now" were checked against the tree at the end of M1b and M2 (M2 counted the files of the
+"available now" were checked against the tree at the end of M1b, M2 and M3a (M2 counted the files of the
 enemy rows by adding a test enemy for real, then deleting it).*
 
 ## 6. Quân cờ nhỏ hơn ô (A piece is smaller than its cell)
