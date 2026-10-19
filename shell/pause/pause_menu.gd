@@ -1,8 +1,8 @@
 class_name PauseMenu
 extends Control
 
-## The pause menu (docs/game-base-plan.md 9.2 "Pause"): Resume, Book, Controls, Restart Room (confirm), Quit to
-## Title (confirm, naming the last checkpoint). Settings and Assist options join it with the settings screen. It lives in AppRoot's menu layer, which keeps processing while the tree is
+## The pause menu (docs/game-base-plan.md 9.2 "Pause"): Resume, Book, Settings, Controls, Restart Room (confirm), Quit to
+## Title (confirm, naming the last checkpoint). It lives in AppRoot's menu layer, which keeps processing while the tree is
 ## paused (PROCESS_MODE_ALWAYS), and it decides nothing: it shows what AppRoot hands it and says what the player chose
 ## through signals. AppRoot turns them into GameFlow requests; the menu never touches the flow or the room.
 ##
@@ -17,6 +17,8 @@ extends Control
 signal resume_requested
 ## The Book entry was chosen: the menu closes and the Book opens over the room.
 signal book_requested
+## The Settings entry was chosen: the settings screen opens over the menu, which stays where it is.
+signal settings_requested
 ## The Controls entry was chosen: the Controls panel opens over the menu, which stays where it is.
 signal controls_requested
 ## Restart Room was chosen and confirmed.
@@ -26,6 +28,7 @@ signal quit_confirmed
 
 @export var resume_button: Button
 @export var book_button: Button
+@export var settings_button: Button
 @export var controls_button: Button
 @export var restart_button: Button
 @export var quit_button: Button
@@ -42,6 +45,7 @@ func _ready() -> void:
 	visible = false
 	resume_button.pressed.connect(func() -> void: resume_requested.emit())
 	book_button.pressed.connect(func() -> void: book_requested.emit())
+	settings_button.pressed.connect(func() -> void: settings_requested.emit())
 	controls_button.pressed.connect(func() -> void: controls_requested.emit())
 	restart_button.pressed.connect(_ask.bind(&"restart"))
 	quit_button.pressed.connect(_ask.bind(&"quit"))

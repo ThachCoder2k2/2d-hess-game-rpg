@@ -76,6 +76,12 @@ func configure(summary: TitleSummary, settings_available: bool) -> void:
 		_show_summary()
 
 
+## A panel is laid over the title (the settings screen): its buttons go quiet so a key or the mouse reaches only the panel,
+## and come back when it is closed.
+func set_covered(covered: bool) -> void:
+	menu.process_mode = Node.PROCESS_MODE_DISABLED if covered else Node.PROCESS_MODE_INHERIT
+
+
 ## Whether the New Game question is on screen.
 func is_confirming() -> bool:
 	return confirm_panel.is_asking()

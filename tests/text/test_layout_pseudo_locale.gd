@@ -14,8 +14,8 @@ extends UnboundTest
 ##     asks lies on top of the menu behind it by design, so its texts are a layer of their own).
 ## A control in a container may grow with its container; what then matters is that it stays on the screen.
 ## Each screen is tried in the states that put the longest words on it: every line the status bar can say, the
-## longest piece name, the longest notice, every question. The settings screen is measured when its scene exists
-## (res://shell/settings/settings_screen.tscn); until then the suite says so and measures the others.
+## longest piece name, the longest notice, every question. The settings screen is measured on each of its four pages,
+## and the Controls panel on each of its three.
 ## The measuring is first run on a sample that does overflow, so it is shown to be able to fail.
 
 const SaveSupport := preload("res://tests/support/save_test_support.gd")
@@ -201,10 +201,12 @@ func _the_controls_panel() -> void:
 
 
 func _the_settings_screen() -> void:
-	if not ResourceLoader.exists(SETTINGS_SCENE_PATH):
-		print("INFO: the settings screen (%s) does not exist yet; it is measured here as soon as it does" % SETTINGS_SCENE_PATH)
-		return
-	await _check_state("the settings screen", SETTINGS_SCENE_PATH, func(_screen: Node) -> void: pass)
+	_expect(ResourceLoader.exists(SETTINGS_SCENE_PATH), "setup: the settings screen exists (%s)" % SETTINGS_SCENE_PATH)
+	for group: int in SettingDefinition.Group.values():
+		await _check_state("the settings screen, page %s" % SettingDefinition.Group.keys()[group], SETTINGS_SCENE_PATH, func(screen: Node) -> void:
+			var settings_screen := screen as SettingsScreen
+			settings_screen.configure(GameSettings.new())
+			settings_screen.open(group))
 
 
 # --------------------------------------------------------------------------- the measuring

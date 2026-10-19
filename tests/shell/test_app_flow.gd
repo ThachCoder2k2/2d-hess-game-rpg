@@ -38,7 +38,7 @@ func _run() -> void:
 		return
 	_expect(app.transition.is_clear(), "the screen has faded in")
 	_expect(not title.continue_button.visible and title.new_game_button.has_focus(), "with no save there is no Continue, and New Game has focus")
-	_expect(title.settings_button.disabled and not title.credits_button.disabled and not title.quit_button.disabled, "Settings is disabled until a settings screen is wired in; Credits and Quit work")
+	_expect(not title.settings_button.disabled and not title.credits_button.disabled and not title.quit_button.disabled, "Settings, Credits and Quit are all on offer (the settings screen is wired in)")
 	_expect(title.version_label.text == "v" + String(ProjectSettings.get_setting("application/config/version", "")) and title.version_label.text.length() > 1, "the title shows the build's version (%s)" % title.version_label.text)
 	var music := app.get_node("MusicPlayer") as AudioStreamPlayer
 	_expect(music.playing and music.process_mode == Node.PROCESS_MODE_ALWAYS, "the music plays on the title and keeps playing while the tree is paused")

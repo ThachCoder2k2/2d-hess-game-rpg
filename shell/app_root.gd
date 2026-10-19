@@ -16,8 +16,8 @@ extends Node
 ## double request can never build two screens or leave the fade half done. A pause is not a screen change: the tree
 ## is paused at once and the pause menu is laid in the menu layer, which keeps running (PROCESS_MODE_ALWAYS).
 ##
-## The Controls panel is laid over the pause menu from here (the menu's buttons go quiet under it, Esc closes only the
-## panel). AppRoot also owns the two things every prompt needs: the glyph finder and the tracker of the last input device.
+## The settings screen and the Controls panel are laid over the title or the pause menu from here (the buttons of what is
+## under them go quiet, Esc closes only the one on top; the settings screen reaches the Controls panel too). AppRoot also owns the two things every prompt needs: the glyph finder and the tracker of the last input device.
 ##
 ## The pause menu's answers become GameFlow requests here: Resume, Book (resume, then open the Book), Restart Room
 ## (`request_respawn(REASON_RESTART_MENU)`, the only way to restart a room, D-18) and Quit to Title. The game also
@@ -44,20 +44,17 @@ const SETTINGS_SAVE_DELAY_SECONDS := 0.5
 signal settled
 ## Quit was chosen on the title. The app ends unless `quits_the_tree` is off (a test).
 signal quit_requested
-## Settings was chosen on the title (the settings screen is wired in by a later step; with no scene assigned the
-## button is shown disabled and this is never emitted).
-signal settings_requested
 
 @export var title_scene: PackedScene
 @export var game_scene: PackedScene
 @export var credits_scene: PackedScene
-## The settings screen. Empty until it exists: the title then shows Settings disabled.
-@export var settings_scene: PackedScene
 ## The node the current screen is a child of.
 @export var screen_host: Node
 @export var transition: TransitionLayer
 @export var autosave_indicator: AutosaveIndicator
 @export var pause_menu: PauseMenu
+## The settings screen, laid over the title or the pause menu (reachable from both, 9.2).
+@export var settings_screen: SettingsScreen
 ## The Controls panel, laid over the pause menu (and over the settings screen). Read from the InputMap when it opens.
 @export var controls_panel: ControlsPanel
 ## Which device the player used last, so prompts show the keyboard's glyphs or the pad's.
@@ -77,6 +74,8 @@ var settings_applier: SettingsApplier = null
 ## Finds the glyph pictures of the prompts and the Controls panel (the owner's Kenney files, or the words that stand in).
 var input_glyphs := InputGlyphs.new()
 
+## Which screen opened the Controls panel: &"pause" or &"settings" (the one that is covered meanwhile).
+var _controls_opener: StringName = &""
 ## A settings write is waiting for the delay to pass.
 var _settings_save_pending := false
 var _queued_steps: Array[Callable] = []
@@ -103,7 +102,11 @@ func _ready() -> void:
 	pause_menu.book_requested.connect(_on_pause_book_requested)
 	pause_menu.restart_confirmed.connect(func() -> void: game_flow.request_respawn(GameFlow.REASON_RESTART_MENU))
 	pause_menu.quit_confirmed.connect(game_flow.quit_to_title)
-	pause_menu.controls_requested.connect(_on_controls_requested)
+	pause_menu.settings_requested.connect(_open_settings.bind(SettingDefinition.Group.SOUND))
+	pause_menu.controls_requested.connect(_open_controls.bind(&"pause"))
+	settings_screen.configure(settings)
+	settings_screen.closed.connect(_on_settings_closed)
+	settings_screen.controls_requested.connect(_open_controls.bind(&"settings"))
 	controls_panel.configure(input_glyphs, last_input_device)
 	controls_panel.closed.connect(_on_controls_closed)
 	if save_service != null:
@@ -151,6 +154,7 @@ func _on_state_changed(previous: GameFlow.State, current: GameFlow.State) -> voi
 		pause_menu.open(PauseSummary.from_run(save_service))
 	elif previous == GameFlow.State.PAUSED:
 		controls_panel.close()
+		settings_screen.close()
 		pause_menu.close()
 	match current:
 		GameFlow.State.TITLE:
@@ -181,10 +185,10 @@ func _show_title() -> void:
 	await transition.fade_out()
 	_free_screen()
 	var title := title_scene.instantiate() as TitleScreen
-	title.configure(TitleSummary.from_save(save_service, _version(), game_flow.slot), settings_scene != null)
+	title.configure(TitleSummary.from_save(save_service, _version(), game_flow.slot), settings_screen != null)
 	title.new_game_chosen.connect(game_flow.start_new_game)
 	title.continue_chosen.connect(_on_continue_chosen)
-	title.settings_chosen.connect(settings_requested.emit)
+	title.settings_chosen.connect(_open_settings.bind(SettingDefinition.Group.SOUND))
 	title.credits_chosen.connect(game_flow.show_credits)
 	title.quit_chosen.connect(_on_quit_chosen)
 	_put_screen(title)
@@ -229,7 +233,7 @@ func _free_screen() -> void:
 func _on_continue_chosen() -> void:
 	if not game_flow.continue_game() and screen is TitleScreen:
 		# The save went away or turned unreadable since the title was drawn: show what is really there.
-		(screen as TitleScreen).configure(TitleSummary.from_save(save_service, _version(), game_flow.slot), settings_scene != null)
+		(screen as TitleScreen).configure(TitleSummary.from_save(save_service, _version(), game_flow.slot), settings_screen != null)
 
 
 func _on_quit_chosen() -> void:
@@ -261,14 +265,43 @@ func flush_settings() -> void:
 		settings_store.save_settings(settings)
 
 
-## The pause menu's Controls entry: the panel opens over the menu, whose buttons go quiet meanwhile.
-func _on_controls_requested() -> void:
-	pause_menu.set_covered(true)
+## Opens the settings screen on `group`'s page over whatever is up (the title, or the pause menu): its buttons go quiet.
+func _open_settings(group: SettingDefinition.Group) -> void:
+	_cover_what_is_under_the_panels(true)
+	settings_screen.open(group)
+
+
+## The settings screen was closed: what is under it works again, and the settings are written now.
+func _on_settings_closed() -> void:
+	_cover_what_is_under_the_panels(false)
+	flush_settings()
+
+
+## Opens the Controls panel over `opener` (&"pause" or &"settings"), whose buttons go quiet meanwhile.
+func _open_controls(opener: StringName) -> void:
+	_controls_opener = opener
+	if opener == &"settings":
+		settings_screen.set_covered(true)
+	else:
+		_cover_what_is_under_the_panels(true)
 	controls_panel.open()
 
 
 func _on_controls_closed() -> void:
-	pause_menu.set_covered(false)
+	if _controls_opener == &"settings":
+		settings_screen.set_covered(false)
+	else:
+		_cover_what_is_under_the_panels(false)
+
+
+## The title's buttons (or the pause menu's) are quiet while a panel is over them. A pause menu that is not open has
+## nothing to cover.
+func _cover_what_is_under_the_panels(covered: bool) -> void:
+	var title := screen as TitleScreen
+	if title != null:
+		title.set_covered(covered)
+	if pause_menu.is_open():
+		pause_menu.set_covered(covered)
 
 
 func _on_autosaved(_slot: int, _reason: StringName) -> void:
