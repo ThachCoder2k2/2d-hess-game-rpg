@@ -23,6 +23,10 @@ const KINGDOM := &"kingdom"
 const SPEAR_KEY := "t4_broken_rule_yard/PencilSpearPickup"
 
 var save_service: Node
+## Every reason the run was saved for, in order (the service's autosaved signal).
+var saved_reasons: Array[StringName] = []
+## How many player_unlock events the scene's router has handed out.
+var unlock_events_seen := 0
 ## The world graph's own T4 scene, kept while a test swaps in a copy whose spear is a persistent pickup.
 var original_t4_scene: PackedScene
 ## The world graph that was edited, held so that it is not unloaded (and reloaded unedited) when a scene is freed.
@@ -36,7 +40,9 @@ func _init() -> void:
 
 func _run() -> void:
 	save_service = Support.install_isolated_save_service(self, SUITE_NAME)
+	save_service.autosaved.connect(func(_slot: int, reason: StringName) -> void: saved_reasons.append(reason))
 	var main := await Support.boot_main(self)
+	(main.get("router") as EventRouter).on(Events.PLAYER_UNLOCK, func(_event: Dictionary) -> void: unlock_events_seen += 1)
 
 	await _check_player_unlock(main)
 	await _check_taken_pickup(main)
@@ -65,6 +71,16 @@ func _check_player_unlock(main: Node) -> void:
 	_expect(not marker.visible, "unlock: the marker is hidden once taken")
 	_expect(String((main.get("hud") as GameHud).objective_label.text).begins_with("The child whispers"), "unlock: the HUD shows the marker's message")
 	_expect(_saved_list("player", "unlocked_skill_ids").has("wooden_sword"), "unlock: the unlock is written to the save file immediately")
+	_expect(saved_reasons.count(&"unlock_gained") == 1 and unlock_events_seen == 1, "unlock: the first step onto the cell raised one event and saved once, for unlock_gained (%s)" % [saved_reasons])
+
+	# The cell stays a trigger after it was taken (the marker is hidden, not removed): stepping off and on
+	# again raises the event again, and that is no success event, so nothing is saved a second time.
+	var saves_before_the_second_step := saved_reasons.size()
+	Support.step_player(main, Vector2i.LEFT)
+	Support.step_player(main, Vector2i.RIGHT)
+	_expect(Support.player_cell(main) == unlock_cell and unlock_events_seen == 2, "unlock: stepping back onto the taken cell raises the event again (%d events)" % unlock_events_seen)
+	_expect(saved_reasons.size() == saves_before_the_second_step, "unlock: and saves nothing, the unlock was already the run's (%s)" % [saved_reasons])
+	_expect(Support.player_combat(main).sword_unlocked and Support.run_of(save_service).player.unlocked_skill_ids.count(&"wooden_sword") == 1, "unlock: the sword is still in the hand and is listed once in the run")
 
 	# Persists across a re-boot of the zone (the same path every travel and death uses).
 	await Support.travel_to(main, T2, &"west_entry")

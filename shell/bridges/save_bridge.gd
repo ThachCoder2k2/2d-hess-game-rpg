@@ -181,14 +181,15 @@ func _on_room_cleared(event: Dictionary) -> void:
 	save.request_save(&"room_cleared")
 
 
-## A verb unlocked: permanent from this moment, and the live hero has it at once.
+## A verb unlocked: permanent from this moment, and the live hero has it at once. Only a NEW unlock is a
+## success event: the cell stays a trigger after it was taken (its marker is hidden, not removed), so stepping
+## onto it again raises the event again, and that must change nothing and save nothing.
 func _on_player_unlock(event: Dictionary) -> void:
 	var unlock_id := StringName(event.get("id", &""))
 	if unlock_id == &"":
 		return
 	var save := root.save_service()
-	if save != null:
-		save.state.add_unlock(unlock_id)
+	if save != null and save.state.add_unlock(unlock_id):
 		save.request_save(&"unlock_gained")
 	apply_unlocks()
 
