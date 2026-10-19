@@ -279,3 +279,99 @@ msgstr "Tiếng Việt"
 #. surface=language list; purpose=the generated test language that makes every line longer
 msgid "UI_LANGUAGE_NAME_QPS"
 msgstr "Pseudo-language (test)"
+
+#. surface=a control prompt with no picture; placeholders={name} the key or button; purpose=the brackets that make the name read as a key, e.g. [Space]
+msgid "PROMPT_GLYPH_FALLBACK"
+msgstr "[{name}]"
+
+#. surface=Controls panel and prompts; purpose=the cell of a control the device has no binding for
+msgid "PROMPT_NOT_BOUND"
+msgstr "-"
+
+#. surface=a control prompt; purpose=the name of the space bar
+msgid "PROMPT_KEY_SPACE"
+msgstr "Space"
+
+#. surface=a control prompt; purpose=the name of the Enter key
+msgid "PROMPT_KEY_ENTER"
+msgstr "Enter"
+
+#. surface=a control prompt; purpose=the name of the Tab key
+msgid "PROMPT_KEY_TAB"
+msgstr "Tab"
+
+#. surface=a control prompt; purpose=the name of the Shift key
+msgid "PROMPT_KEY_SHIFT"
+msgstr "Shift"
+
+#. surface=a control prompt; purpose=the name of the Control key
+msgid "PROMPT_KEY_CTRL"
+msgstr "Ctrl"
+
+#. surface=a control prompt; purpose=the name of the Alt key
+msgid "PROMPT_KEY_ALT"
+msgstr "Alt"
+
+#. surface=a control prompt; purpose=the name of the Escape key
+msgid "PROMPT_KEY_ESC"
+msgstr "Esc"
+
+#. surface=a control prompt; purpose=the name of the up arrow key
+msgid "PROMPT_KEY_UP"
+msgstr "Up"
+
+#. surface=a control prompt; purpose=the name of the down arrow key
+msgid "PROMPT_KEY_DOWN"
+msgstr "Down"
+
+#. surface=a control prompt; purpose=the name of the left arrow key
+msgid "PROMPT_KEY_LEFT"
+msgstr "Left"
+
+#. surface=a control prompt; purpose=the name of the right arrow key
+msgid "PROMPT_KEY_RIGHT"
+msgstr "Right"
+
+#. surface=a control prompt; purpose=the name of the gamepad's Start button
+msgid "PROMPT_PAD_START"
+msgstr "Start"
+
+#. surface=a control prompt; purpose=the name of the gamepad's Back (View, Select) button
+msgid "PROMPT_PAD_BACK"
+msgstr "Back"
+
+#. surface=a control prompt; purpose=the gamepad's direction pad pressed up
+msgid "PROMPT_PAD_DPAD_UP"
+msgstr "D-pad Up"
+
+#. surface=a control prompt; purpose=the gamepad's direction pad pressed down
+msgid "PROMPT_PAD_DPAD_DOWN"
+msgstr "D-pad Down"
+
+#. surface=a control prompt; purpose=the gamepad's direction pad pressed left
+msgid "PROMPT_PAD_DPAD_LEFT"
+msgstr "D-pad Left"
+
+#. surface=a control prompt; purpose=the gamepad's direction pad pressed right
+msgid "PROMPT_PAD_DPAD_RIGHT"
+msgstr "D-pad Right"
+
+#. surface=a control prompt; purpose=the gamepad's left stick pushed left
+msgid "PROMPT_PAD_LEFT_STICK_LEFT"
+msgstr "Left Stick Left"
+
+#. surface=a control prompt; purpose=the gamepad's left stick pushed right
+msgid "PROMPT_PAD_LEFT_STICK_RIGHT"
+msgstr "Left Stick Right"
+
+#. surface=a control prompt; purpose=the gamepad's left stick pushed up
+msgid "PROMPT_PAD_LEFT_STICK_UP"
+msgstr "Left Stick Up"
+
+#. surface=a control prompt; purpose=the gamepad's left stick pushed down
+msgid "PROMPT_PAD_LEFT_STICK_DOWN"
+msgstr "Left Stick Down"
+
+#. surface=a control prompt; purpose=the gamepad's right stick
+msgid "PROMPT_PAD_RIGHT_STICK"
+msgstr "Right Stick"
