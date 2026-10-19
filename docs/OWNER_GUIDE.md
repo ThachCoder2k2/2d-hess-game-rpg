@@ -573,7 +573,7 @@ tile nào đặt tên gì). **Chưa có file thì game hiện chữ**: `[Space]`
 cho nó import; chép đè là đổi hình. Khi thêm file, ghi bộ này vào `THIRD_PARTY_NOTICES.md` (mục "Input glyphs (owner-supplied)" ở đó nói cách làm).
 
 **Thử độ dài chữ.** Có một "ngôn ngữ giả" `qps` làm mọi dòng dài hơn 40% và thêm dấu: bài test `test_layout_pseudo_locale` dùng nó để kiểm
-không dòng nào tràn khỏi ô của nó ở HUD, title, menu pause, màn Settings và bảng Controls. Ngôn ngữ giả này cũng có trong danh sách của màn Settings khi chạy bài test, không có trong bản chơi thường. Bản dịch tiếng Việt thường dài hơn tiếng Anh, nên nếu bạn
+không dòng nào tràn khỏi ô của nó ở HUD, title, menu pause, màn Settings và bảng Controls. Ngôn ngữ giả này cũng nằm trong danh sách ngôn ngữ của màn Settings (tên "Pseudo-language (test)"): chọn nó là thấy ngay chữ dài hơn và có dấu. Bản dịch tiếng Việt thường dài hơn tiếng Anh, nên nếu bạn
 thấy một câu dịch bị cắt, hộp chứa nó cần rộng hơn.
 
 **Font chữ: đặt file ở đâu.** Bạn tự cung cấp font (quy tắc của dự án: không ai tải font về hộ). Đặt file vào thư mục `assets/fonts/` **đúng tên này**

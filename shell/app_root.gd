@@ -88,6 +88,9 @@ func _ready() -> void:
 	# The owner's fonts, where the files exist (schema/ui/ui_theme.gd names them; none is the engine's default font).
 	UiFonts.apply(ThemeDB.get_project_theme() as UiTheme)
 	save_service = get_node_or_null("/root/SaveService") as SaveServiceScript
+	# The generated test language is one of the languages of the Settings screen (accented, 40 percent longer: the owner
+	# and QA can see how long words fit), so it exists before the stored settings are read.
+	TextService.install_pseudo_language()
 	settings_store = SettingsStore.new(save_service)
 	settings = settings_store.load_settings()
 	settings_applier = SettingsApplier.new(get_window(), ThemeDB.get_project_theme())

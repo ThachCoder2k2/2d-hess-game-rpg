@@ -1841,7 +1841,8 @@ apply: nothing is downloaded, the font and the Kenney glyphs are "owner-supplied
 - **Decisions taken, and why.** Fullscreen's default is what `project.godot` ships (mode 3, fullscreen), read from the project setting so the
   value lives in one place. Assists are per profile, not per save (plan 5.8 says per save): one place, reachable from the title. The Voice bus
   has no slider (nothing plays on it until M6). The rescue hold's toggle waits for the rescue (M6). The language list is the languages that have
-  words loaded, so `qps` appears only when a test installs it. F11 sets the window and then writes what the window really does into the
+  words loaded: English, Vietnamese (empty, falls back to English) and the generated `qps`, which AppRoot installs at start so the owner can
+  pick "Pseudo-language (test)" and see long words in place. F11 sets the window and then writes what the window really does into the
   setting, so key and screen agree. UI high contrast changes the project theme's panel, tab, button and text entries and remembers what it
   replaced, so the owner's own theme entries come back when it is turned off.
 - **What a headless run cannot show**, and so what the tests do instead: a window's mode (the root window reads windowed whatever it is set to:
