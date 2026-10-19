@@ -7,7 +7,7 @@ extends UnboundTest
 ## (the runner gives every process its own HOME, but a suite run by hand does not).
 ##
 ## Two rules over every .gd file under tests/:
-##   1. A suite that boots the game (calls Support.boot_main(), or names game_root.tscn, instantiates a scene
+##   1. A suite that boots the game (calls Support.boot_main() or ShellSupport.boot_app(), or names game_root.tscn, instantiates a scene
 ##      and adds a node to the tree) also isolates the save: it names the isolated-service helper, the save
 ##      support, or calls configure(). Reading the scene as text (the audio bus scan) boots nothing.
 ##   2. No suite names the player's real save files: user://saves, user://profile.cfg or user://world_state.cfg
@@ -16,8 +16,9 @@ extends UnboundTest
 
 const ProjectFiles := preload("res://tests/architecture/project_files.gd")
 
-## Text that means the suite boots the game: the bridge helper, or all three of these together.
-const BOOT_HELPER := "boot_main("
+## Text that means the suite boots the game: a boot helper (the bridge suites' boot_main, the shell suites' boot_app,
+## which boots AppRoot and with it a New Game or a Continue), or all three of the markers below together.
+const BOOT_HELPERS: Array[String] = ["boot_main(", "boot_app("]
 const BOOT_SCENE_MARKERS: Array[String] = ["game_root.tscn", ".instantiate()", "add_child("]
 ## Text that means the suite isolates the save before it does.
 const ISOLATION_MARKERS: Array[String] = ["install_isolated_save_service", "SaveSupport.", ".configure("]
@@ -25,6 +26,7 @@ const ISOLATION_MARKERS: Array[String] = ["install_isolated_save_service", "Save
 const REAL_SAVE_PATHS: Array[String] = ["user://saves", "user://profile.cfg", "user://world_state.cfg"]
 const EXEMPT_PATHS: Array[String] = [
 	"res://tests/bridge/bridge_support.gd",
+	"res://tests/shell/shell_support.gd",
 	"res://tests/support/save_test_support.gd",
 	"res://tests/support/paths.gd",
 	"res://tests/architecture/test_suites_isolate_the_save.gd",
@@ -61,13 +63,14 @@ func _init() -> void:
 	# The guard must be able to fail.
 	var careless_suite := "var main := (load(\"res://shell/game_root.tscn\") as PackedScene).instantiate()\nroot.add_child(main)"
 	_expect(_boots_the_game(careless_suite) and not _mentions_any(careless_suite, ISOLATION_MARKERS), "a suite that boots the game and never isolates the save is caught")
+	_expect(_boots_the_game("var app := await ShellSupport.boot_app(self)") and not _mentions_any("var app := await ShellSupport.boot_app(self)", ISOLATION_MARKERS), "a suite that boots AppRoot and never isolates the save is caught too")
 	_expect(not _boots_the_game("var scene_text := FileAccess.get_file_as_string(paths.main_scene())"), "while a suite that only reads the scene as text boots nothing")
 	_expect(_mentions_any("var careful := SaveSupport.new_service(root_directory)", ISOLATION_MARKERS), "and one that uses the save support is not")
 	finish()
 
 
 func _boots_the_game(text: String) -> bool:
-	return text.contains(BOOT_HELPER) or (_mentions_all(text, BOOT_SCENE_MARKERS))
+	return _mentions_any(text, BOOT_HELPERS) or (_mentions_all(text, BOOT_SCENE_MARKERS))
 
 
 func _mentions_all(text: String, markers: Array[String]) -> bool:

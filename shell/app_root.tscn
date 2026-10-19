@@ -1,0 +1,48 @@
+[gd_scene load_steps=9 format=3 uid="uid://b5nlhff7eg0"]
+
+[ext_resource type="Script" uid="uid://ow7tsp4t06n1" path="res://shell/app_root.gd" id="1"]
+[ext_resource type="PackedScene" uid="uid://b3gbvey14c4sf" path="res://shell/title/title_screen.tscn" id="2"]
+[ext_resource type="PackedScene" uid="uid://2sfvi7iwk4f2" path="res://shell/game_root.tscn" id="3"]
+[ext_resource type="PackedScene" uid="uid://dg1hoijirfki8" path="res://shell/credits/credits_screen.tscn" id="4"]
+[ext_resource type="AudioStream" uid="uid://dk0dutjkvtq4y" path="res://assets/music/unbound_march.wav" id="5"]
+[ext_resource type="PackedScene" uid="uid://ccxfosjgdbody" path="res://presentation/ui/autosave_indicator/autosave_indicator.tscn" id="6"]
+[ext_resource type="Script" uid="uid://kl4cwkn5o6qu" path="res://shell/transition_layer.gd" id="7"]
+
+[node name="AppRoot" type="Node" node_paths=PackedStringArray("screen_host", "transition", "autosave_indicator")]
+script = ExtResource("1")
+title_scene = ExtResource("2")
+game_scene = ExtResource("3")
+credits_scene = ExtResource("4")
+screen_host = NodePath("ScreenHost")
+transition = NodePath("TransitionLayer")
+autosave_indicator = NodePath("OverlayLayer/AutosaveIndicator")
+
+[node name="ScreenHost" type="Node" parent="."]
+
+[node name="MusicPlayer" type="AudioStreamPlayer" parent="."]
+process_mode = 3
+stream = ExtResource("5")
+volume_db = -8.0
+autoplay = true
+bus = &"Music"
+
+[node name="OverlayLayer" type="CanvasLayer" parent="."]
+process_mode = 3
+layer = 50
+
+[node name="AutosaveIndicator" parent="OverlayLayer" instance=ExtResource("6")]
+
+[node name="TransitionLayer" type="CanvasLayer" parent="." node_paths=PackedStringArray("cover_rect")]
+process_mode = 3
+layer = 100
+script = ExtResource("7")
+cover_rect = NodePath("Cover")
+
+[node name="Cover" type="ColorRect" parent="TransitionLayer"]
+modulate = Color(1, 1, 1, 1)
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.02, 0.02, 0.03, 1)

@@ -1,0 +1,299 @@
+[gd_scene load_steps=4 format=3 uid="uid://b3gbvey14c4sf"]
+
+[ext_resource type="Script" uid="uid://pdu2268najx3" path="res://shell/title/title_screen.gd" id="1"]
+[ext_resource type="PackedScene" uid="uid://b4ov7nqob0pme" path="res://presentation/ui/menu/confirm_panel.tscn" id="2"]
+[ext_resource type="Texture2D" uid="uid://h38rg0optq8b" path="res://content/player/body.png" id="3"]
+
+[node name="TitleScreen" type="Control" node_paths=PackedStringArray("new_game_button", "continue_button", "settings_button", "credits_button", "quit_button", "menu", "card_label", "notice_label", "version_label", "confirm_panel", "emptied_square")]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1")
+new_game_button = NodePath("Menu/NewGameButton")
+continue_button = NodePath("Menu/ContinueButton")
+settings_button = NodePath("Menu/SettingsButton")
+credits_button = NodePath("Menu/CreditsButton")
+quit_button = NodePath("Menu/QuitButton")
+menu = NodePath("Menu")
+card_label = NodePath("CardLabel")
+notice_label = NodePath("NoticeLabel")
+version_label = NodePath("VersionLabel")
+confirm_panel = NodePath("ConfirmPanel")
+emptied_square = NodePath("Board/SquareEmptiedAfterTheEnding")
+
+[node name="Backdrop" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0.055, 0.047, 0.052, 1)
+
+[node name="Rug" type="ColorRect" parent="."]
+layout_mode = 0
+offset_left = 56.0
+offset_top = 104.0
+offset_right = 200.0
+offset_bottom = 248.0
+mouse_filter = 2
+color = Color(0.239216, 0.172549, 0.188235, 1)
+
+[node name="Board" type="Control" parent="."]
+layout_mode = 3
+anchors_preset = 0
+offset_left = 64.0
+offset_top = 112.0
+offset_right = 192.0
+offset_bottom = 240.0
+mouse_filter = 2
+
+[node name="Square_0_0" type="ColorRect" parent="Board"]
+layout_mode = 0
+offset_left = 0.0
+offset_top = 0.0
+offset_right = 32.0
+offset_bottom = 32.0
+mouse_filter = 2
+color = Color(0.827451, 0.768627, 0.65098, 1)
+
+[node name="Square_1_0" type="ColorRect" parent="Board"]
+layout_mode = 0
+offset_left = 32.0
+offset_top = 0.0
+offset_right = 64.0
+offset_bottom = 32.0
+mouse_filter = 2
+color = Color(0.45098, 0.329412, 0.313726, 1)
+
+[node name="Square_2_0" type="ColorRect" parent="Board"]
+layout_mode = 0
+offset_left = 64.0
+offset_top = 0.0
+offset_right = 96.0
+offset_bottom = 32.0
+mouse_filter = 2
+color = Color(0.827451, 0.768627, 0.65098, 1)
+
+[node name="SquareEmptiedAfterTheEnding" type="ColorRect" parent="Board"]
+layout_mode = 0
+offset_left = 96.0
+offset_top = 0.0
+offset_right = 128.0
+offset_bottom = 32.0
+mouse_filter = 2
+color = Color(0.45098, 0.329412, 0.313726, 1)
+
+[node name="Square_0_1" type="ColorRect" parent="Board"]
+layout_mode = 0
+offset_left = 0.0
+offset_top = 32.0
+offset_right = 32.0
+offset_bottom = 64.0
+mouse_filter = 2
+color = Color(0.45098, 0.329412, 0.313726, 1)
+
+[node name="Square_1_1" type="ColorRect" parent="Board"]
+layout_mode = 0
+offset_left = 32.0
+offset_top = 32.0
+offset_right = 64.0
+offset_bottom = 64.0
+mouse_filter = 2
+color = Color(0.827451, 0.768627, 0.65098, 1)
+
+[node name="Square_2_1" type="ColorRect" parent="Board"]
+layout_mode = 0
+offset_left = 64.0
+offset_top = 32.0
+offset_right = 96.0
+offset_bottom = 64.0
+mouse_filter = 2
+color = Color(0.45098, 0.329412, 0.313726, 1)
+
+[node name="Square_3_1" type="ColorRect" parent="Board"]
+layout_mode = 0
+offset_left = 96.0
+offset_top = 32.0
+offset_right = 128.0
+offset_bottom = 64.0
+mouse_filter = 2
+color = Color(0.827451, 0.768627, 0.65098, 1)
+
+[node name="Square_0_2" type="ColorRect" parent="Board"]
+layout_mode = 0
+offset_left = 0.0
+offset_top = 64.0
+offset_right = 32.0
+offset_bottom = 96.0
+mouse_filter = 2
+color = Color(0.827451, 0.768627, 0.65098, 1)
+
+[node name="Square_1_2" type="ColorRect" parent="Board"]
+layout_mode = 0
+offset_left = 32.0
+offset_top = 64.0
+offset_right = 64.0
+offset_bottom = 96.0
+mouse_filter = 2
+color = Color(0.45098, 0.329412, 0.313726, 1)
+
+[node name="Square_2_2" type="ColorRect" parent="Board"]
+layout_mode = 0
+offset_left = 64.0
+offset_top = 64.0
+offset_right = 96.0
+offset_bottom = 96.0
+mouse_filter = 2
+color = Color(0.827451, 0.768627, 0.65098, 1)
+
+[node name="Square_3_2" type="ColorRect" parent="Board"]
+layout_mode = 0
+offset_left = 96.0
+offset_top = 64.0
+offset_right = 128.0
+offset_bottom = 96.0
+mouse_filter = 2
+color = Color(0.45098, 0.329412, 0.313726, 1)
+
+[node name="Square_0_3" type="ColorRect" parent="Board"]
+layout_mode = 0
+offset_left = 0.0
+offset_top = 96.0
+offset_right = 32.0
+offset_bottom = 128.0
+mouse_filter = 2
+color = Color(0.45098, 0.329412, 0.313726, 1)
+
+[node name="Square_1_3" type="ColorRect" parent="Board"]
+layout_mode = 0
+offset_left = 32.0
+offset_top = 96.0
+offset_right = 64.0
+offset_bottom = 128.0
+mouse_filter = 2
+color = Color(0.827451, 0.768627, 0.65098, 1)
+
+[node name="Square_2_3" type="ColorRect" parent="Board"]
+layout_mode = 0
+offset_left = 64.0
+offset_top = 96.0
+offset_right = 96.0
+offset_bottom = 128.0
+mouse_filter = 2
+color = Color(0.45098, 0.329412, 0.313726, 1)
+
+[node name="Square_3_3" type="ColorRect" parent="Board"]
+layout_mode = 0
+offset_left = 96.0
+offset_top = 96.0
+offset_right = 128.0
+offset_bottom = 128.0
+mouse_filter = 2
+color = Color(0.827451, 0.768627, 0.65098, 1)
+
+[node name="Pawn" type="TextureRect" parent="Board"]
+layout_mode = 0
+offset_left = 32.0
+offset_top = 64.0
+offset_right = 64.0
+offset_bottom = 96.0
+mouse_filter = 2
+texture = ExtResource("3")
+stretch_mode = 2
+
+[node name="TitleLabel" type="Label" parent="."]
+layout_mode = 0
+offset_left = 240.0
+offset_top = 64.0
+offset_right = 616.0
+offset_bottom = 104.0
+theme_override_colors/font_color = Color(0.945098, 0.909804, 0.823529, 1)
+theme_override_font_sizes/font_size = 28
+text = "THE UNBOUND PAWN"
+
+[node name="Menu" type="VBoxContainer" parent="."]
+layout_mode = 0
+offset_left = 240.0
+offset_top = 124.0
+offset_right = 420.0
+offset_bottom = 264.0
+theme_override_constants/separation = 4
+
+[node name="NewGameButton" type="Button" parent="Menu"]
+custom_minimum_size = Vector2(180, 24)
+layout_mode = 2
+theme_override_font_sizes/font_size = 12
+text = "New Game"
+alignment = 0
+
+[node name="ContinueButton" type="Button" parent="Menu"]
+custom_minimum_size = Vector2(180, 24)
+layout_mode = 2
+theme_override_font_sizes/font_size = 12
+text = "Continue"
+alignment = 0
+
+[node name="SettingsButton" type="Button" parent="Menu"]
+custom_minimum_size = Vector2(180, 24)
+layout_mode = 2
+theme_override_font_sizes/font_size = 12
+text = "Settings"
+alignment = 0
+
+[node name="CreditsButton" type="Button" parent="Menu"]
+custom_minimum_size = Vector2(180, 24)
+layout_mode = 2
+theme_override_font_sizes/font_size = 12
+text = "Credits"
+alignment = 0
+
+[node name="QuitButton" type="Button" parent="Menu"]
+custom_minimum_size = Vector2(180, 24)
+layout_mode = 2
+theme_override_font_sizes/font_size = 12
+text = "Quit"
+alignment = 0
+
+[node name="CardLabel" type="Label" parent="."]
+layout_mode = 0
+offset_left = 240.0
+offset_top = 272.0
+offset_right = 616.0
+offset_bottom = 288.0
+theme_override_colors/font_color = Color(0.67451, 0.65098, 0.6, 1)
+theme_override_font_sizes/font_size = 10
+
+[node name="NoticeLabel" type="Label" parent="."]
+layout_mode = 0
+offset_left = 240.0
+offset_top = 292.0
+offset_right = 616.0
+offset_bottom = 324.0
+theme_override_colors/font_color = Color(0.87, 0.72, 0.4, 1)
+theme_override_font_sizes/font_size = 10
+autowrap_mode = 3
+
+[node name="VersionLabel" type="Label" parent="."]
+layout_mode = 1
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -120.0
+offset_top = -20.0
+offset_right = -8.0
+offset_bottom = -4.0
+grow_horizontal = 0
+grow_vertical = 0
+theme_override_colors/font_color = Color(0.5, 0.48, 0.45, 1)
+theme_override_font_sizes/font_size = 9
+horizontal_alignment = 2
+
+[node name="ConfirmPanel" parent="." instance=ExtResource("2")]
+layout_mode = 1

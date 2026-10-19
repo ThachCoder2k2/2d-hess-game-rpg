@@ -102,8 +102,20 @@ func world_dumper_script() -> String:
 
 # --- Scenes ---
 
+## The project's main scene: AppRoot, which owns the flow, the music and the screens (M4).
 func main_scene() -> String:
+	return _existing_resource("res://shell/app_root.tscn")
+
+
+## The in-game scene (GameRoot): the room, the hero, the HUD. AppRoot adds it on New Game and Continue; a bridge
+## suite boots it alone.
+func game_scene() -> String:
 	return _existing_resource("res://shell/game_root.tscn")
+
+
+## The title screen.
+func title_scene() -> String:
+	return _existing_resource("res://shell/title/title_screen.tscn")
 
 
 ## The credits roll.

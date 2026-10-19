@@ -90,7 +90,7 @@ static func write_the_run(save_service: Node) -> Error:
 ## switches its automatic _process off (see the design notes above).
 static func boot_main(suite: UnboundTest) -> Node:
 	var paths := TestPaths.new(suite)
-	var main := paths.load_scene(paths.main_scene()).instantiate()
+	var main := paths.load_scene(paths.game_scene()).instantiate()
 	var tree: SceneTree = suite
 	tree.root.add_child(main)
 	tree.current_scene = main

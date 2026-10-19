@@ -184,19 +184,23 @@ func _init() -> void:
 	_expect(registry.has(&"pickup") and registry.has(&"room_clear") and registry.has(&"defeat_jingle") and registry.has(&"gate_open"), "SfxManager registry carries the four event sounds")
 	_expect(StringName(sfx_manager.get("bus")) == &"SFX", "SfxManager routes to the SFX bus")
 
-	# Music: an editor-owned looping AudioStreamPlayer in the main scene, no code.
-	var main_scene := (load("res://shell/game_root.tscn") as PackedScene).instantiate()
+	# Music: an editor-owned looping AudioStreamPlayer in the main scene, no code. The main scene is AppRoot since
+	# M4 (the player moved out of the game scene so a death, a room change and a trip to the title never restart it).
+	var main_scene := (load("res://shell/app_root.tscn") as PackedScene).instantiate()
 	var music_player := main_scene.get_node_or_null("MusicPlayer") as AudioStreamPlayer
 	_expect(music_player != null and music_player.autoplay, "main scene carries an autoplaying MusicPlayer")
 	_expect(music_player != null and music_player.bus == &"Music", "MusicPlayer routes to the Music bus")
 	var music_stream: AudioStreamWAV = music_player.stream as AudioStreamWAV if music_player != null else null
 	_expect(music_stream != null and music_stream.loop_mode == AudioStreamWAV.LOOP_FORWARD, "music track loops from its embedded WAV loop points")
 
-	# Demo posture: debug overlay is an Inspector checkbox that ships off,
-	# and the game window ships fullscreen (F11 toggles at runtime).
-	_expect(not bool(main_scene.get("debug_enabled")), "debug overlay ships off (Inspector checkbox on Main)")
-	_expect(int(ProjectSettings.get_setting("display/window/size/mode", 0)) == 3, "game window ships fullscreen")
 	main_scene.free()
+
+	# Demo posture: debug overlay is an Inspector checkbox that ships off (on the in-game scene),
+	# and the game window ships fullscreen (F11 toggles at runtime).
+	var game_scene := (load("res://shell/game_root.tscn") as PackedScene).instantiate()
+	_expect(not bool(game_scene.get("debug_enabled")), "debug overlay ships off (Inspector checkbox on Main)")
+	_expect(int(ProjectSettings.get_setting("display/window/size/mode", 0)) == 3, "game window ships fullscreen")
+	game_scene.free()
 
 	# --- The world graph: every zone loads, every door resolves ---
 	var world_graph := load("res://content/world/world.tres") as WorldGraph
