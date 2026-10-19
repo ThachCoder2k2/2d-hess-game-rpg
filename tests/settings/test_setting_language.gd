@@ -31,7 +31,7 @@ func _run() -> void:
 	var language_options := language_list.control_of(GameSettings.LANGUAGE) as OptionButton
 	for index in language_options.item_count:
 		language_names.append(language_options.get_item_text(index))
-	_expect(language_names == ["English", "Pseudo-language (test)", "Tiếng Việt"], "the Settings screen lists English first, then the others by their code, each by its own name (%s)" % [language_names])
+	_expect(language_names == ["English", "Pseudo-language (test)"], "the Settings screen lists English first, then the others by their code, each by its own name, and only languages that have words: Vietnamese waits for its first row (%s)" % [language_names])
 	language_list.close()
 	var english_new_game := title.new_game_button.atr(title.new_game_button.text)
 	var english_version := title.version_label.text

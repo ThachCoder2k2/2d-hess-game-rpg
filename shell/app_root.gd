@@ -88,9 +88,11 @@ func _ready() -> void:
 	# The owner's fonts, where the files exist (schema/ui/ui_theme.gd names them; none is the engine's default font).
 	UiFonts.apply(ThemeDB.get_project_theme() as UiTheme)
 	save_service = get_node_or_null("/root/SaveService") as SaveServiceScript
-	# The generated test language is one of the languages of the Settings screen (accented, 40 percent longer: the owner
-	# and QA can see how long words fit), so it exists before the stored settings are read.
-	TextService.install_pseudo_language()
+	# The generated test language is one of the languages of the Settings screen in a debug build (accented, 40 percent
+	# longer: the owner and QA can see how long words fit), so it exists before the stored settings are read. A released
+	# game does not have it, and a stored choice of it falls back to English with the reason logged.
+	if OS.is_debug_build():
+		TextService.install_pseudo_language()
 	settings_store = SettingsStore.new(save_service)
 	settings = settings_store.load_settings()
 	settings_applier = SettingsApplier.new(get_window(), ThemeDB.get_project_theme())
@@ -269,10 +271,10 @@ func flush_settings() -> void:
 	if _settings_save_pending:
 		_settings_save_pending = false
 		settings_store.save_settings(settings)
-
-
 		if settings_screen != null:
 			settings_screen.set_save_failed(settings_store.last_save_error != OK)
+
+
 ## Opens the settings screen on `group`'s page over whatever is up (the title, or the pause menu): its buttons go quiet.
 func _open_settings(group: SettingDefinition.Group) -> void:
 	_cover_what_is_under_the_panels(true)

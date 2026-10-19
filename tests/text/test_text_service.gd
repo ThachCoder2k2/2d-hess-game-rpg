@@ -17,6 +17,7 @@ func _init() -> void:
 	_a_missing_key_renders_as_itself()
 	_an_empty_language_falls_back_key_by_key()
 	_a_language_that_was_not_written_is_refused()
+	_only_languages_with_words_are_offered()
 	_the_machines_own_locale_does_not_matter()
 	_language_names_are_written_in_their_own_language()
 	await _live_text_follows_the_language()
@@ -58,6 +59,18 @@ func _a_language_that_was_not_written_is_refused() -> void:
 	_expect(not TextService.set_language(&"fr") and TextService.language() == &"en", "a language with no words loaded is refused and nothing changes")
 	var languages := TextService.languages()
 	_expect(languages[0] == &"en" and &"vi" in languages and &"fr" not in languages, "the list has the source language first, then the others (%s)" % [languages])
+
+
+func _only_languages_with_words_are_offered() -> void:
+	var source_files := TextService.source_translations()
+	var every_source_file_has_rows := not source_files.is_empty()
+	for file in source_files:
+		every_source_file_has_rows = every_source_file_has_rows and file.get_message_count() > 0
+	_expect(every_source_file_has_rows, "setup: a loaded .po file knows how many rows it holds, and the English ones hold rows (%d files)" % source_files.size())
+	_expect(TextService.has_own_words(&"en") and not TextService.has_own_words(&"vi"), "English has words of its own and the empty Vietnamese files do not")
+	_expect(TextService.offered_languages() == [&"en"] and &"vi" in TextService.languages(), "so the player is offered English only, while Vietnamese stays a language the game can switch to")
+	TextService.install_pseudo_language()
+	_expect(TextService.has_own_words(TextService.PSEUDO_LANGUAGE) and TextService.offered_languages() == [&"en", TextService.PSEUDO_LANGUAGE], "the generated language is built from rows, so it is offered once it is installed (a debug build does)")
 
 
 func _the_machines_own_locale_does_not_matter() -> void:

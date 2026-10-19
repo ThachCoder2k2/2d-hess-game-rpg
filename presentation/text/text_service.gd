@@ -72,6 +72,32 @@ static func languages() -> Array[StringName]:
 	return codes
 
 
+## Whether `code` has words of its own: the source language always does, a language of .po files does once one of them
+## holds a row, and a language added in code (the generated pseudo-language) does by construction. An empty file (the
+## Vietnamese one, until the owner fills it) only shows English under another name.
+static func has_own_words(code: StringName) -> bool:
+	if code == SOURCE_LANGUAGE:
+		return true
+	var files := translations_of(code)
+	if files.is_empty():
+		return code in languages()
+	for file in files:
+		if file.get_message_count() > 0:
+			return true
+	return false
+
+
+## The languages a player is offered in the Settings screen: the languages of `languages()` that have words of their own
+## (has_own_words), in the same order. The generated pseudo-language is there only in a build that installed it (AppRoot
+## installs it in a debug build, for the owner and QA), so a released game offers real languages only.
+static func offered_languages() -> Array[StringName]:
+	var offered: Array[StringName] = []
+	for code in languages():
+		if has_own_words(code):
+			offered.append(code)
+	return offered
+
+
 ## Switches the game to `code`. Every node in the tree is told (NOTIFICATION_TRANSLATION_CHANGED), so what a scene
 ## authored with keys redraws at once and every LiveText re-resolves its texts. Returns false, changing nothing,
 ## for a language that has no words loaded.

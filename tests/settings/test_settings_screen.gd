@@ -37,6 +37,7 @@ func _run() -> void:
 # --------------------------------------------------------------------------- 1 and 2 and 3: the screen alone
 
 func _built_from_the_table() -> void:
+	TextService.install_pseudo_language()  # a debug build offers it, so the list has a language besides English to pick
 	var settings := GameSettings.new()
 	var screen := (load(SCREEN_SCENE) as PackedScene).instantiate() as SettingsScreen
 	root.add_child(screen)
@@ -64,7 +65,7 @@ func _built_from_the_table() -> void:
 	_expect((screen.control_of(GameSettings.VOLUME_MASTER) as HSlider).value == 1.0 and (screen.control_of(GameSettings.REDUCE_FLASH) as CheckButton).button_pressed == false, "the controls show the settings' values")
 	_expect(screen.percent_label_of(GameSettings.VOLUME_MASTER).text == "100%", "a slider says its percent (%s)" % screen.percent_label_of(GameSettings.VOLUME_MASTER).text)
 	var language_options := screen.control_of(GameSettings.LANGUAGE) as OptionButton
-	_expect(language_options.item_count == TextService.languages().size() and language_options.get_item_text(language_options.selected) == "English", "the language list holds the game's languages and shows English (%s)" % language_options.get_item_text(language_options.selected))
+	_expect(language_options.item_count == TextService.offered_languages().size() and language_options.get_item_text(language_options.selected) == "English", "the language list holds the languages the game offers and shows English (%s)" % language_options.get_item_text(language_options.selected))
 
 	# The player moves a control: the settings take it.
 	(screen.control_of(GameSettings.SHAKE_SCALE) as HSlider).value = 0.4
@@ -79,7 +80,7 @@ func _built_from_the_table() -> void:
 	_expect(courage.get_item_text(0) == "Standard" and courage.get_item_text(2) == "+2 Courage", "and its options are words (%s, %s)" % [courage.get_item_text(0), courage.get_item_text(2)])
 	language_options.select(language_options.item_count - 1)
 	language_options.item_selected.emit(language_options.item_count - 1)
-	_expect(settings.value(GameSettings.LANGUAGE) == String(TextService.languages()[language_options.item_count - 1]), "the language drop-down writes the language the player picked")
+	_expect(settings.value(GameSettings.LANGUAGE) == String(TextService.PSEUDO_LANGUAGE), "the language drop-down writes the language the player picked (the last one offered, the generated test language)")
 	settings.set_value(GameSettings.LANGUAGE, "en")
 
 	# A change made elsewhere reaches the controls.
@@ -183,7 +184,6 @@ func _reachable_from_the_pause_menu() -> void:
 	_expect(app.pause_menu.menu.process_mode == Node.PROCESS_MODE_INHERIT and app.pause_menu.settings_button.has_focus(), "its buttons are live and Settings has its focus back")
 	await ShellSupport.tap_key(self, KEY_ESCAPE)
 	_expect(app.game_flow.state == GameFlow.State.PLAYING, "and the next Esc resumes the game")
-	Support.end_suite(self, save_service)
 	# The next section boots its own app on its own isolated save: this one goes away first.
 	Support.release_all_actions()
 	Support.remove_isolated_save(save_service)
@@ -213,3 +213,4 @@ func _a_refused_write_is_said_on_the_screen() -> void:
 	app.flush_settings()
 	_expect(app.settings_store.last_save_error == OK and not screen.not_saved_label.visible, "once a write succeeds the line goes away")
 	app.settings.set_value(GameSettings.VOLUME_UI, 1.0)
+	Support.end_suite(self, save_service)

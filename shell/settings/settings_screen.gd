@@ -303,7 +303,7 @@ func _row_of(definition: SettingDefinition) -> Control:
 		SettingDefinition.Kind.LANGUAGE:
 			row.add_child(_indented(_name_label(definition)))
 			var languages := _option_button()
-			for code in TextService.languages():
+			for code in _languages_to_list():
 				languages.add_item(TextService.language_name(code))
 				languages.set_item_metadata(languages.item_count - 1, String(code))
 			languages.item_selected.connect(func(index: int) -> void: _write(definition.key, String(languages.get_item_metadata(index))))
@@ -329,6 +329,18 @@ func _indented(label: Label) -> Control:
 	cell.add_theme_constant_override(&"margin_left", int(get_theme_stylebox(&"normal", &"CheckButton").get_margin(SIDE_LEFT)))
 	cell.add_child(label)
 	return cell
+
+
+## The languages of the drop-down: the ones a player is offered (TextService.offered_languages), and the language the
+## settings hold now if it is not one of them (an empty Vietnamese file picked by an earlier version, say), so the list
+## never shows a language that is not the one in use.
+func _languages_to_list() -> Array[StringName]:
+	var codes := TextService.offered_languages()
+	if settings != null:
+		var current := StringName(String(settings.value(GameSettings.LANGUAGE)))
+		if current not in codes and current in TextService.languages():
+			codes.append(current)
+	return codes
 
 
 func _name_label(definition: SettingDefinition) -> Label:
