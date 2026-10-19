@@ -137,9 +137,11 @@ may name which). The top-level folders are layers:
   baker (`EcsBoot`, `EcsActorFactory`).
 - `presentation/`: how the world is shown: `views/` (`ActorView`, pickups, the actor scenes), `ui/` (HUD,
   the Book), `board/`, `camera/`, `audio/`, `bridges/` (the event router and the bridges that draw, say or play).
-- `shell/`: the game around the game: `game_root.tscn/.gd` (the in-game scene), `game_flow.gd` (a death or R
-  starts the room again), `bridges/` (the bridges that write the save, rebuild the world or flip a component),
-  `content/` (`ContentDb`, the content registry) and `save/` (`SaveService`, the save).
+- `shell/`: the game around the game: `app_root.tscn/.gd` (the main scene: the flow, the music, the fade, the
+  autosave tick), `title/` and `credits/` (the two screens around the game), `game_root.tscn/.gd` (the in-game
+  scene), `game_flow.gd` (the state machine: title, playing, paused, ending, credits; a death or R starts the room
+  again), `bridges/` (the bridges that write the save, rebuild the world or flip a component), `content/`
+  (`ContentDb`, the content registry) and `save/` (`SaveService`, the save).
 - `assets/`: shared raw art and audio (tile atlases, interface pictures, sound effects, music, the
   hand-drawn bedroom pieces). `tools/`: generators, the test runner and the migration scripts (never
   shipped). `tests/`: headless tests, fixtures and baselines.

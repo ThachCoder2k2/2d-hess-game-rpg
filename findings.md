@@ -773,3 +773,31 @@ was the commit attribution line, which matches the harness and is no defect).
   path"), never a floor weapon; the plan's M7a entry now says so.
 - **Left: the hero cannot take the spear** ("take the pencil spear" is not possible in this build; Q works from the sword on). The Pencil
   grant that locks Q is M7 (D-11); the M3b review rounds do not build that lock.
+
+## App Root and Flow Facts (M4 step 1, 2026-10-19)
+
+- A coroutine that awaits a `Tween.finished` hangs forever if the tween is killed, and a screen change that waits on it blocks the whole queue.
+  `TransitionLayer` therefore awaits its own `fade_ended` signal and releases the waiter of a fade it replaces (a generation counter); it emits
+  that release AFTER the new fade is set up, because the released caller continues synchronously inside `emit` and may start a fade of its own.
+- `Node.create_tween()` starts on the next frame and its first step carries all the time that passed before it was made, so a test that times a
+  fade gets less than the duration; assert "not instant, not forever", never the exact time.
+- A `GameFlow` (a `RefCounted`) that keeps the `GameRoot` it rebuilds must test `is_instance_valid(_root)`, not `_root != null`: Quit to Title
+  frees the room while a death beat or a fade is still awaited. Any timer or coroutine of a bridge that outlives the scene has the same
+  hazard (`RoomOutcomeBridge`'s 0.85 s beat did).
+- Setting `process_mode = PROCESS_MODE_DISABLED` on a container stops its mouse and key events and its focus, which is how the title silences
+  its menu behind the New Game question and after a choice. `ConfirmPanel` also points every `focus_neighbor` at itself, because arrow keys
+  otherwise find the nearest focusable control in the direction, behind the backdrop.
+- `Signal` can be passed as an argument and `Callable`s of a `bool`-returning method connect to signals that carry nothing; `Signal.emit` is itself
+  a `Callable` (`title.settings_chosen.connect(settings_requested.emit)`).
+- Exported node references in a hand-written `.tscn` need `node_paths=PackedStringArray("a", "b")` on the node's header and `NodePath("...")` values;
+  a new `.tscn`/`.tres` written without a header uid is stamped by `tools/stamp_uids.gd`, and its script references only after an import pass has
+  made the `.gd.uid` sidecars (run the stamper twice: before and after the pass).
+- A suite that extends `SceneTree` IS the tree: `get_tree()` does not exist in it, use `paused`, `current_scene`, `root` and `create_timer(...)`
+  directly. Cannot-infer-type errors (`var x := node_typed_as_Node.method()`) are parse errors in this project: type the variable.
+- The credits' Licenses block is a function of `THIRD_PARTY_NOTICES.md` (an entry is credited iff it is a `###` heading with a `- **License:**`
+  bullet outside a "(not shipped)" section), so the notices are the one place a new third-party item is recorded; the font and the glyph pack
+  of M4 become credits by being listed there and running `tools/build_credits_licenses.gd`.
+- The Control-based screens are children of a plain `Node` host; their full-rect anchors resolve against the viewport, and no `Camera2D` exists
+  while one of them is up (the game scene, which owns the camera, is freed first). A screen drawn in the default canvas would move with a camera.
+- `SaveService.start_new_run` writes before any success event, which makes `has_save` true for a run with no progress: the title then offers
+  Continue for a clean run, which resumes at the authored first room (the same place as New Game). That is intended.

@@ -66,6 +66,13 @@ session. Read `AGENTS.md` for the full workflow, and `docs/ARCHITECTURE.md` +
 	`checkpoint_set`, `respawn_requested`; the bridges only answer. Which room is a checkpoint is data on
 	the room (`RoomEncounter.checkpoint_on_entry`) and which pickup is a reward is data on the marker
 	(`PickupSpawnPoint.persistent`): no script names a room or a pickup by id (`test_checkpoint_rules`).
+  - Screens and flow: the main scene is `shell/app_root.tscn` (`AppRoot`). The run is a state machine,
+	`GameFlow` (`shell/game_flow.gd`: title, playing, paused, ending, credits), and AppRoot shows the screen of
+	its state under one host (the title, the game, the credits). A new screen is a scene under
+	`shell/<screen>/` reached by a `GameFlow` request, never by `change_scene` (`test_app_root_is_main_scene`);
+	the music, the fade and the autosave tick live in AppRoot. `shell/game_root.gd` names no AppRoot, so the
+	in-game scene still runs alone. New Game and Continue go through `GameFlow` (`SaveService.start_new_run`,
+	`load_slot`), never through the scene.
   - Controls: `shell/input/input_poller.gd` is the only code that calls the `Input`
 	singleton. It fills `world.input_snapshot` once per frame and a system reads that
 	(`test_input_only_in_poller`); test a control rule by injecting an `InputSnapshot`

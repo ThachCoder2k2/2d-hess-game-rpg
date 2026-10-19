@@ -2,7 +2,7 @@
 
 The Unbound Pawn — a 2D top-down grid-combat RPG in Godot 4.6.3. This document
 describes the code **as it is built today** (checked against the tree on 2026-10-19, after
-milestone M3a and M3b; M3a built the runtime seams: the schedule, the declared events, the commands channel, the
+milestone M3a, M3b and step 1 of M4; M3a built the runtime seams: the schedule, the declared events, the commands channel, the
 world's shared fields, the input and HUD snapshots, the player carry, the per-room origin, and the
 grid's cell kinds, leaps, rays and cached paths). The simulation is a full ECS; the
 node-composition architecture that older docs described (`GridWorld`, `FreeEnemy`,
@@ -17,6 +17,9 @@ section "Persistence") and split `shell/game_root.gd` into an `EventRouter`, one
 responsibility and a `GameFlow` that starts a room again without reloading the scene (step 2, section
 "Presentation and the bridges"), and step 3 moved the rules of a room's end into the simulation
 (`ObjectiveSystem`, `CheckpointSystem`: sections "System order" and "Rooms, checkpoints and deaths").
+M4 step 1 made `AppRoot` the main scene: the whole run is now a `GameFlow` state machine (boot, title, playing,
+paused, ending, credits), the title, the credits and the autosave tick exist, and the music and the fade live in
+`AppRoot` and survive every screen (section "The app around the game").
 
 Pair this file with `docs/coding-standards.md` (conventions), `AGENTS.md` (workflow),
 `CLAUDE.md` (binding rules), `docs/OWNER_GUIDE.md` (how the owner changes things) and
@@ -64,7 +67,7 @@ The top-level folders are layers. Each has one job, and the table after the tree
 layer may name which.
 
 ```text
-project.godot            main scene shell/game_root.tscn; autoloads SfxManager, SaveService
+project.godot            main scene shell/app_root.tscn (AppRoot); autoloads SfxManager, SaveService; config/version
 default_bus_layout.tres  audio buses (Master <- SFX / Music / UI / Voice)
 
 content/                 THE OWNER'S FOLDER: data, art, audio, words. Zero .gd files (test-enforced).
@@ -79,6 +82,8 @@ content/                 THE OWNER'S FOLDER: data, art, audio, words. Zero .gd f
   player/                player.tres (PlayerDefinition), visual.tres (its VisualDefinition), body.png, icon.png
   feel/                  piece_sizes.tres: how big each kind of piece is drawn inside its cell
   rooms/<id>/            room.tscn (a RoomEncounter) and, for T1 and T2, background.png
+  story/                 credits.tres (CreditsDefinition: the owner, the engine) and credits_licenses.tres (generated
+                         from THIRD_PARTY_NOTICES.md by tools/build_credits_licenses.gd)
   rules/<id>/page.tres   Book of House Rules pages; rule_book.tres lists them
   skills/<id>/           the Wooden Sword and Pencil Thrust AttackProfile .tres and the sword icon
   tilesets/<kit>/        tileset.tres + tilemap.tscn (kingdom, playground); tile_map_data is binary
@@ -89,6 +94,7 @@ schema/                  THE SHAPE OF CONTENT: one Resource class per file
   attacks/               AttackPattern, AttackProfile, EnemyWeapon
   world/                 WorldGraph, RoomObjective, RuleBook, RuleEntry
   feel/                  DifficultyProfile, PieceSizeTable, PieceSize
+  story/                 CreditsDefinition, CreditsSection
 
 ecs/                     THE SIMULATION: rules only; no art, prose or tuning numbers
   core/                  EcsWorld, EcsGrid, CellKinds, EcsSystem, WorldFlags, InputSnapshot, HudSnapshot, PlayerSnapshot
@@ -113,6 +119,8 @@ presentation/            HOW THE WORLD IS SHOWN: reads events, never decides
                          (the one actor view) and the thin scenes that inherit it (player, black_pawn,
                          knight_enemy, bishop_enemy)
   ui/hud/  ui/codex/     GameHud scene, the Book of House Rules screen
+  ui/menu/               ConfirmPanel: the shared yes-or-no question (New Game over a used slot; the pause menu's confirms)
+  ui/autosave_indicator/ AutosaveIndicator: the tick that shows for a second after every autosave
   board/                 PrototypeBoard (telegraphs, F3 debug) and GridLinesOverlay
   camera/                CameraRig
   audio/                 SfxManager (autoload scene)
@@ -120,8 +128,12 @@ presentation/            HOW THE WORLD IS SHOWN: reads events, never decides
                          BoardBridge, CameraBridge, AudioBridge, MessageBridge. They name no world, save or component.
 
 shell/                   THE GAME AROUND THE GAME
-  game_root.gd/.tscn     the in-game scene (176 lines, test-capped at 200): builds the world, ticks it, routes events
-  game_flow.gd           GameFlow: a death or the R key starts the room again, with no scene reload
+  app_root.gd/.tscn      AppRoot, the main scene: owns the GameFlow, the music, the autosave tick and the fade, and swaps the screen
+  transition_layer.gd    TransitionLayer: the persistent fade to black and back (a CanvasLayer that runs while paused)
+  title/                 TitleScreen (the menu, New Game's confirm, the rug board) and TitleSummary (what the slot says: Continue, card, notice)
+  credits/               CreditsScreen: lays out content/story/credits.tres and scrolls it; holding Confirm skips
+  game_root.gd/.tscn     the in-game scene (test-capped at 200 lines): builds the world, ticks it, routes events; runs alone too
+  game_flow.gd           GameFlow: the state machine of the run (boot, title, playing, paused, respawning, ending, credits)
   zone_stage.gd          ZoneStage: scene-tree plumbing (the world node, the entry cell, zone and hero-view swaps)
   shell_keys.gd          ShellKeys: R, F3, F11 and B, read from the frame's InputSnapshot
   bridges/               the bridges that must reach the world, the save or a component: ShellBridge (their base),
@@ -143,8 +155,8 @@ docs/                    this file, coding-standards.md, OWNER_GUIDE.md, plans, 
 ```
 
 Not built yet (the plan's later milestones): `schema/skills`,
-`schema/progression`, `schema/story`, `schema/audio`,
-`shell/title|pause|settings|credits`, `presentation/story|vfx`, `content/story|audio|ui|bosses|props|progression` and the rest of `content/feel`,
+`schema/progression`, `schema/audio`, the rest of `schema/story`,
+`shell/pause|settings`, `presentation/story|vfx`, `content/story|audio|ui|bosses|props|progression` and the rest of `content/feel`,
 `authoring/markers/` beyond today's.
 
 ### Which layer may name which
@@ -171,10 +183,48 @@ decides them (`docs/migration-notes.md`). A fourth, `PrototypeBoard` reading `Ec
 the one `ecs/core` class the presentation row of the table names (`CLASS_ALLOWANCES` in the edge test),
 and the edges are gone.
 
+## The app around the game
+
+```text
+shell/app_root.tscn  ->  AppRoot (shell/app_root.gd), the main scene, never replaced
+  MusicPlayer        the march; autoplay, bus Music, PROCESS_MODE_ALWAYS (a death, a room change or the title never restart it)
+  ScreenHost         the ONE current screen is its child: TitleScreen, GameRoot or CreditsScreen
+  OverlayLayer       AutosaveIndicator (the tick), and later the pause menu; keeps running while the tree is paused
+  TransitionLayer    the fade to black and back; the topmost layer; swallows the mouse while it is visible
+```
+
+`GameFlow` (`shell/game_flow.gd`, a plain object AppRoot owns) is the state machine of plan 9.1 and decides which
+request is legal when; AppRoot shows. A request is a method (`start_new_game`, `continue_game`, `request_pause`,
+`quit_to_title`, `reach_ending`, `show_credits`, ...), a refused one changes nothing, and `state_changed` is what
+AppRoot listens to:
+
+```text
+BOOT -> TITLE -> (New Game | Continue) -> PLAYING <-> PAUSED
+PLAYING -> RESPAWNING -> PLAYING          a death, or Restart Room: the room is rebuilt behind the fade
+PLAYING -> ENDING -> CREDITS -> TITLE     the completed mark is written when the ending is reached
+TITLE -> CREDITS -> TITLE                 replay from the title
+PLAYING | PAUSED | ENDING -> TITLE        Quit to Title (writes nothing; progress since the last save is lost)
+```
+
+A screen change is fade to black, free the old screen (taken out of the tree at once), build the new one, fade back;
+changes run one after another in the order asked (`AppRoot._queue_step`), so a quick double request cannot build two
+screens. A pause is not a screen change: AppRoot sets `get_tree().paused` when the state is PAUSED (the pause menu
+itself is a later M4 step), and GameFlow refuses a pause during a zone trip, a waiting rebuild and the defeat beat.
+New Game calls `SaveService.start_new_run()`: a clean run begins and the slot's file becomes that clean run at once,
+the old save stays as the `.bak`, the profile (the `completed` mark) is untouched. Continue first asks
+`read_slot()` whether the slot holds readable progress (a damaged file with no backup, one too old to migrate and one
+from a newer game do not), then `load_slot()`: the game scene boots in the room and on the entry of the LAST SAVE.
+`TitleSummary.from_save()` is what the title shows about the slot (Continue offered, the card, the one-line notice
+when the loader fell back to the `.bak` or gave up, the `completed` mark). The in-game scene is built by AppRoot with
+the app's flow handed to it before it enters the tree (`game.game_flow = ...`); run alone (a test, F6 in the editor)
+it makes its own flow, already PLAYING, and `SaveService.ensure_session()` continues the saved run. The scene
+names no AppRoot (`test_app_root_is_main_scene`). The zone trip keeps its own fade in the game scene
+(`ZoneTravelBridge`): a trip between two rooms is the game's, a change of screen is the app's.
+
 ## Runtime flow
 
 ```text
-shell/game_root.tscn  ->  Main (shell/game_root.gd, class GameRoot)
+shell/game_root.tscn  ->  GameRoot (shell/game_root.gd, class GameRoot)
   _ready()      attaches the bridges to the scene's nodes and registers each with the EventRouter, in the
                 order _bridges() lists; SaveBridge.begin() continues the saved run when none has begun; the
                 run's room and entry say which zone and entry to boot on (the zone node is swapped if the
@@ -195,8 +245,8 @@ shell/game_root.tscn  ->  Main (shell/game_root.gd, class GameRoot)
 
 A death and `R` do not reload the scene. When the hero falls, `CheckpointSystem` says `respawn_requested`;
 `RoomOutcomeBridge` plays the defeat beat (0.85 s) and `ShellKeys` handles `R`, and both call
-`GameFlow.request_respawn()`, which raises its own `respawn_requested` signal, waits out a zone trip under way,
-and at the end of the frame has `GameRoot.respawn()` rebuild the room: a fresh instance of the zone the run says
+`GameFlow.request_respawn()`, which raises its own `respawn_requested` signal, waits out a zone trip under way
+and (under AppRoot) the fade to black, and at the end of the frame has `GameRoot.respawn()` rebuild the room: a fresh instance of the zone the run says
 the pawn is in, a fresh hero view in its boot pose (a fallen hero's view rests in its defeat clip), the Book
 closed, nothing carried, then `boot_zone()` on the entry the pawn came in by (D-16: a death resets only the room
 it happened in). The `SaveService` (an autoload) holds the run in memory and remembers the room and entry, so the
@@ -608,10 +658,10 @@ tree (13.2) lists a `save` handler under `presentation/bridges/`; 13.1 forbids p
   and routes the events. It holds no rule (`test_game_root_is_thin`: at most 200 lines, no event handler, no save
   request, no scene reload). `shell/zone_stage.gd` holds the scene-tree plumbing, `shell/shell_keys.gd` the
   game's own keys (R, F3, F11, B).
-- `shell/game_flow.gd` — `GameFlow`, the smallest form of the flow of plan 9.1: a death and the R key
-  `request_respawn()`, it raises `respawn_requested` and, once per frame and after a trip under way,
-  `GameRoot.respawn()` starts the room again. Nothing reloads the scene (`test_no_scene_reload`); M4
-  grows it into `AppRoot`'s state machine.
+- `shell/game_flow.gd` — `GameFlow`, the state machine of plan 9.1 (see "The app around the game"). A death and
+  the R key `request_respawn()`, it raises `respawn_requested` and, once per frame, after a trip under way and
+  after AppRoot's fade, `GameRoot.respawn()` starts the room again. Nothing reloads the scene
+  (`test_no_scene_reload`) and nothing calls `change_scene` (`test_app_root_is_main_scene`).
 - `PrototypeBoard` (`presentation/board/`) — the combat overlay: telegraph cells, hit flashes,
   F3 debug paths. The one place `_draw()` is allowed for gameplay overlays. It reads the board
   geometry from the grid (duck-typed) and everything else from `world.hud_snapshot`.
@@ -682,8 +732,8 @@ owner of everything written about a playthrough (`docs/game-base-plan.md` 9.3, D
   format is migrated by `SaveMigration` (v2 to v3 today; the v2 file is kept as `world_state.cfg.migrated`
   after the first v3 save); a format too old to migrate is reported obsolete and left on disk; a save from a
   newer game is never read as damaged and never overwritten (`new_game` renames it to `.newer_game`).
-  Nothing loads by itself: `ensure_session()` continues the active slot when the in-game scene starts and no
-  run has begun, until `GameFlow` (M4) loads on Continue.
+  Nothing loads by itself: `GameFlow` loads on Continue (`load_slot`) and begins on New Game (`start_new_run`);
+  a game scene started alone calls `ensure_session()`, which continues the active slot when no run has begun.
 - **Who may save**: one file, `shell/bridges/save_bridge.gd`, calls `request_save(reason)` with one of
   `AUTOSAVE_REASONS`, the success events of R17 (room cleared, shortcut opened, persistent pickup, boss defeated, rescue, checkpoint reached, a beat
   flagged `save_after`, an unlock, a Book page). A death, a hit, a quit, a plain trip between rooms and a floor
@@ -691,7 +741,11 @@ owner of everything written about a playthrough (`docs/game-base-plan.md` 9.3, D
   `tests/save/test_request_save_callers.gd` lists the callers; `tests/architecture/test_save_written_only_by_save_service.gd`
   holds that nothing else writes a save file.
 - **The profile** (`<root>/profile.cfg`, same writer): what outlives a slot, today the `completed` mark, which
-  a New Game keeps.
+  a New Game keeps (`GameFlow.reach_ending()` writes it).
+- **New Game** (`start_new_run`) is the player's command and not a success event (R17): it begins a clean run and
+  writes it over the slot's file at once, so a relaunch cannot bring the old run back; the file it replaces is kept
+  as the `.bak` (a damaged one as `.corrupt`, a newer game's as `.newer_game`) and no `autosaved` tick shows. The
+  `autosaved` signal is what AppRoot's tick listens to.
 
 Courage is carried across a zone travel (the `PlayerSnapshot` of `ZoneTravelBridge.carried_player_snapshot`) but
 is never saved: every launch starts the room at full Courage, and a checkpoint refills it.
@@ -776,6 +830,7 @@ kind:
 | `tests/architecture/` | the guards: `test_dependency_edges`, `test_content_references`, `test_content_has_no_gd`, `test_sidecars_tracked`, `test_no_path_only_ext_resource`, `test_no_old_res_paths`, `test_fixtures_present`, `test_tools_keep_uids`, `test_all_scripts_load`, `test_dump_baselines`, `test_world_dumper_entry_cell`, `test_schedule_complete`, `test_events_declared`, `test_input_only_in_poller`, `test_save_written_only_by_save_service`, `test_suites_isolate_the_save`, `test_game_root_is_thin`, `test_no_scene_reload` |
 | `tests/ecs/` | the runtime seams of M3a and the two systems of M3b: `test_objective_system`, `test_checkpoint_system`, `test_schedule_order`, `test_world_fields`, `test_frozen_world`, `test_commands_channel`, `test_view_commands`, `test_emit_damage`, `test_heal_queue`, `test_boot_options`, `test_input_snapshot`, `test_hud_snapshot`, `test_player_snapshot_roundtrip`, `test_room_origin`, `test_grid_cell_kinds`, `test_leap_occupancy`, `test_ray_stops_at_blockers`, `test_path_cache`, `test_attack_setup_search` |
 | `tests/bridge/` | the in-game scene and its bridges: the characterization suites (travel, death and respawn, persistence, health carry, the Book, the world flags), `test_game_flow`, `test_event_router`, one suite per bridge (`test_board_bridge`, `test_camera_bridge`, `test_audio_bridge`, `test_message_bridge`, `test_hud_bridge`, `test_bridge_despawn`, `test_bridge_room_outcome`), `test_shell_keys`, and the rules of M3b step 3 through the real scene: `test_checkpoint_rules`, `test_cleared_rooms`, `test_player_carry_zone_swaps`; `test_bridge_backtracking` walks the pawn home from H1 to T1 on foot, by key presses, through every west door, and `test_bridge_route_on_foot` walks it forward from a clean T1 to the hub (the sword in T2, every piece of T3, T4 and B1 brought down with the sword, each east door the clear opened); `test_owner_guide_steps` does the "things to try" of `docs/OWNER_GUIDE.md` section 7 in the rooms as they are, in the guide's order from a clean save (a fall, `R`, a cleared room, a checkpoint, a floor weapon, a relaunch); a suite that follows a player brings a pawn down with the sword by the real input path (`Support.kill_with_sword`: walk beside it, face it, press attack), never with a damage request, which needs no cell and let a pawn on a wall go unnoticed; `test_kill_with_sword` proves that helper can say no; `bridge_support.gd` is their shared fixture (it also walks: `tap_direction`, `walk_to_cell`, `walk_through_door`, and fights: `kill_with_sword`) |
+| `tests/shell/` | the app around the game (M4 step 1): `test_app_flow` (boot, title, New Game into T1, pause, a rebuild behind the fade, Quit to Title, Continue, the credits, the ending), `test_game_flow_states` (the state machine's table), `test_new_game_resets_slot`, `test_continue_loads_checkpoint`, `test_title_summary`, `test_title_screen`, `test_credits_screen`, `test_credits_licenses_current`, `test_transition_layer`, `test_autosave_indicator`, `test_confirm_panel`, `test_app_root_is_main_scene`; `shell_support.gd` boots AppRoot for them |
 | `tests/save/` | the save: `test_save_roundtrip`, `test_save_migration_v2` (with the real v2 file in `tests/fixtures/saves/`), `test_corrupt_save_falls_back`, `test_request_save_callers` (R17), `test_profile_survives_new_game` |
 | `tests/presentation/` | the board overlay drawing from the snapshot, and the camera framing the room (`test_board_draws_from_snapshot`, `test_camera_frames`) |
 | `tests/perf/` | `test_room_tick_budget`: an 18x9 room with eight enemies ticks in 2 ms or less on average, and builds one pathfinder |
@@ -807,7 +862,10 @@ world's other shared fields, the `EcsBoot` options object, the `InputPoller` and
 and the grid's cell kinds, leaps, rays, cached paths and bounded attack search, and from M3b the save service
 (step 1), the split of `game_root.gd` into the `EventRouter`, the bridges and `GameFlow` (step 2), and
 `ObjectiveSystem`, `CheckpointSystem`, the `PlayerSnapshot` in the zone swap and the checkpoint, death and
-cleared-room rules of D-16 and D-17 (step 3). The ECS contract is kept as it was.
-Still to come, in plan order: the shell, input, text, story, skills, bosses and the other five districts. The
+cleared-room rules of D-16 and D-17 (step 3), and, from M4 step 1, `AppRoot` as the main scene with the `GameFlow`
+state machine, the persistent fade, the title, the credits (data in `content/story/credits.tres`, licences generated
+from `THIRD_PARTY_NOTICES.md`), the autosave tick and the corrupt-save notice. The ECS contract is kept as it was.
+Still to come, in plan order: the rest of the shell (pause, settings, first-run card), input, text, story, skills,
+bosses and the other five districts. The
 owner-facing "how do I change X" table, with real paths for what exists today, is
 `docs/OWNER_GUIDE.md`.

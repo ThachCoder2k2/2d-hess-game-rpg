@@ -1,9 +1,10 @@
 # Hướng dẫn cho chủ dự án (Owner Guide)
 
-> **Trạng thái (Status): CẬP NHẬT Ở M3b (2026-10-19).** Tạo ở M1a, M1b điền đường dẫn thật vào mục 5,
+> **Trạng thái (Status): CẬP NHẬT Ở M4 bước 1 (2026-10-19).** Tạo ở M1a, M1b điền đường dẫn thật vào mục 5,
 > M2 thêm mục 6 (quân cờ nhỏ hơn ô) và cập nhật các hàng về con tốt, enemy, sprite, M3b thêm mục 7
-> (lưu game, checkpoint, chết và hồi sinh). Các milestone M4-M14 của `docs/game-base-plan.md` sẽ điền tiếp
-> phần còn lại của bảng đích; M14 viết bản đầy đủ.
+> (lưu game, checkpoint, chết và hồi sinh). M4 bước 1 thêm màn title (New Game, Continue), credits và dấu tick
+> lưu game, và đổi cảnh chính thành `shell/app_root.tscn` (mục 1, 5, 7). Các milestone M4-M14 của
+> `docs/game-base-plan.md` sẽ điền tiếp phần còn lại của bảng đích; M14 viết bản đầy đủ.
 >
 > **Ngôn ngữ:** tiếng Việt đứng trước, thuật ngữ tiếng Anh giữ nguyên. Nếu hai bản khác nhau thì
 > **bản tiếng Anh là bản chuẩn** (plan D19). Phần tiếng Việt do agent viết, chưa có người bản ngữ
@@ -17,16 +18,21 @@
 
 ## 1. Chơi bản build hiện tại (How to play the current build)
 
-1. Cần Godot 4.6. Mở `project.godot` trong Godot rồi bấm **F5** (cảnh chính là `shell/game_root.tscn`).
+1. Cần Godot 4.6. Mở `project.godot` trong Godot rồi bấm **F5** (cảnh chính là `shell/app_root.tscn`: nó mở màn
+   title; cảnh phòng chơi `shell/game_root.tscn` vẫn chạy riêng được bằng **F6** khi bạn đang mở nó).
    Hoặc, trong terminal tại thư mục dự án (Godot nằm ở thư mục cha của dự án):
    `../Godot.app/Contents/MacOS/Godot --path .`
 2. **Clone mới:** chạy một lệnh `tools/bootstrap_worktree.sh` (khoảng 50 giây). Nó import lần đầu, chạy
    bốn generator sinh art tạm vào `assets/_generated/` (thư mục này không nằm trong git) và import lần
    hai. Game không còn phụ thuộc vào thư mục đó: các hình tạm game dùng là file được track trong
    `content/`.
-3. Game vào thẳng phòng T1 và đi theo tuyến Stage 1: T1 → T2 → T3 → T4 → B1 → H1 (greybox, chưa
-   chỉnh art). Muốn chơi lại từ đầu: xoá file save `saves/slot_0.cfg` (và `saves/slot_0.cfg.bak`) trong thư mục user data của
-   game (trong Godot: menu **Project → Open User Data Folder**; trên macOS là
+3. Màn **title** hiện ra: **New Game** (bắt đầu sạch ở phòng T1; nếu đã có save thì hỏi xác nhận rồi ghi lần chơi mới
+   đè lên, save cũ còn lại làm `.bak`), **Continue** (chỉ hiện khi có save đọc được; mở phòng và ô vào của lần lưu cuối,
+   kèm một dòng "thẻ save": tên phòng, thời gian chơi, ngày lưu), Settings (xám, chưa có), **Credits** và Quit.
+   Góc dưới bên phải là số phiên bản. Sau khi xem hết kết thúc, một ô của bàn cờ trên title để trống. Vào game là đi
+   theo tuyến Stage 1: T1 → T2 → T3 → T4 → B1 → H1 (greybox, chưa chỉnh art). Muốn chơi lại từ đầu: chọn **New Game**
+   (hoặc xoá file save `saves/slot_0.cfg` và `saves/slot_0.cfg.bak` trong thư mục user data của
+   game; trong Godot: menu **Project → Open User Data Folder**; trên macOS là
    `~/Library/Application Support/Godot/app_userdata/The Unbound Pawn/`). Chi tiết ở mục 7.
 4. Phím:
 
@@ -40,12 +46,20 @@
 | `B` | mở Book of House Rules |
 | `F3` / `F11` | bật tắt debug view / toàn màn hình |
 
-5. Chưa có: menu title, pause, settings, tay cầm. Các mục đó nằm trong lộ trình (milestone M4).
+5. Đã có (M4 bước 1): màn title, credits (đọc `content/story/credits.tres`), dấu tick nhỏ ở góc trên bên phải mỗi khi game
+   tự lưu, thông báo một dòng khi save bị hỏng hoặc của bản game mới hơn. Chưa có: menu pause, settings, tay cầm
+   (các bước sau của M4). `R` vẫn đang chơi lại phòng; M4 sẽ chuyển nó thành phím gọi đứa trẻ và đưa việc chơi lại phòng
+   vào menu pause.
 
-*EN: Open `project.godot` in Godot 4.6 and press F5 (main scene `shell/game_root.tscn`), or run the
-binary with `--path .`. On a fresh clone run `tools/bootstrap_worktree.sh` first. Delete
-`saves/slot_0.cfg` (and `slot_0.cfg.bak`) in the user data folder to restart the run. No title, pause, settings or gamepad yet
-(milestone M4).*
+*EN: Open `project.godot` in Godot 4.6 and press F5 (main scene `shell/app_root.tscn`, which opens the title;
+the room scene `shell/game_root.tscn` still runs alone with F6), or run the binary with `--path .`. On a fresh
+clone run `tools/bootstrap_worktree.sh` first. The title offers New Game (asks first when a save exists, then
+writes the clean run over the slot; the old save stays as the `.bak`), Continue (only when a readable save exists:
+the room and entry of the last save, with a card that names the room, the time played and the day), Settings (greyed
+until it exists), Credits and Quit, with the version in the corner. To restart the run choose New Game, or delete
+`saves/slot_0.cfg` (and `slot_0.cfg.bak`) in the user data folder. M4 step 1 added the title, the credits, the
+autosave tick and the notice for a damaged or newer save; the pause menu, settings and gamepad come in the next steps
+of M4.*
 
 ## 2. Trạng thái nằm ở đâu (Where status lives)
 
@@ -182,6 +196,8 @@ are later work, and nothing in the tree blocks them.*
 | Đổi âm thanh sự kiện / âm thanh chuyển động | ghi đè `assets/sfx/<tên>.wav` (cùng tên là mọi chỗ dùng tự nâng cấp), hoặc `presentation/audio/sfx_manager.tscn` (mục `streams` trong Inspector) / track âm thanh trong clip của actor |
 | Đổi phím | `project.godot`, mục `[input]` (hoặc Project Settings → Input Map) |
 | Đổi chữ (thoại, thông báo) | còn nằm rải rác: `RoomEncounter` trong `content/rooms/<id>/room.tscn`, `RoomObjective` `.tres` (`tests/fixtures/first_encounter/objective.tres` là ví dụ), `presentation/bridges/message_bridge.gd` (các câu trên dòng trạng thái), `shell/shell_keys.gd`, `presentation/ui/hud/hud.gd`. Hệ thống `.po` đến ở M4 |
+| Đổi tên bạn, thêm dòng hay thêm khối vào credits (và tốc độ cuộn) | **1 file**: `content/story/credits.tres` (Inspector: `sections` là các khối, mỗi khối có `heading` và `lines`; dòng trống là khoảng cách; `scroll_pixels_per_second` là tốc độ). Hiện dòng ghi tác giả là "The owner": thay bằng tên bạn. Khối **Licenses** ở cuối **sinh tự động** từ `THIRD_PARTY_NOTICES.md`: sửa file đó rồi chạy `godot --headless --path . -s tools/build_credits_licenses.gd` (đừng sửa tay `credits_licenses.tres`; bài test `test_credits_licenses_current` đỏ khi hai nơi lệch nhau). Giữ phím Confirm để bỏ qua credits |
+| Đổi số phiên bản hiện ở góc màn title | **1 dòng**: `config/version` trong `project.godot` (Project Settings → Application → Config → Version) |
 | Xem còn file art/âm thanh tạm nào | `tools/list_placeholders.gd` (mục 4) |
 
 **Bảng đích** (từ `docs/game-base-plan.md` §13.5). Các thư mục `content/enemies`, `rooms`, `rules`,
@@ -237,7 +253,7 @@ cách làm thật một lần), đổi cảm giác con tốt, đổi sprite (the
 | Đổi cảm giác của con tốt (thời gian mỗi bước, courage, invulnerability) (Change how the pawn feels (step time, courage, invulnerability)) | `content/player/player.tres` (`PlayerDefinition`: Courage, invulnerability, step time, hold-repeat delay, skill cooldown, sword unlocked or not; the player scene holds none of these any more, and a node on a room's instance still beats the file) | 1 | no | **available now** (M2; `tests/content/test_player_definition.gd` proves every field reaches the hero) |
 | Đổi luật kinh tế (Believe, shard, stagger, ngưỡng assist) (Change economy rules (Believe, shards, stagger, assist thresholds)) | `content/progression/rules.tres` | 1 | no | available after M7c |
 | Đổi phím mặc định (Change input defaults) | the `[input]` section of `project.godot` | 1 | no | available after M4 |
-| Đổi chữ ở màn title hoặc credits (Change title text or credits) | `credits.tres` + `.po` rows | 2 | no | available after M4 |
+| Đổi chữ ở màn title hoặc credits (Change title text or credits) | `credits.tres` + `.po` rows | 2 | no | credits: **available now** (`content/story/credits.tres`, 1 file; the Licenses block is generated from `THIRD_PARTY_NOTICES.md`); title words: available after M4 (the `.po` step; today they are in `shell/title/title_screen.tscn`) |
 | Thêm cơ chế sàn mới (gai, công tắc) (Add a new floor mechanic (spikes, switch)) | marker + component + system + one schedule line (+ an event) | 4-5 | yes | **available now** (ô nguy hiểm tạm thời như phấn hay sàn hỏng: M10) |
 
 *EN: The first table lists today's real locations (all of these paths exist). The second is the target
@@ -375,7 +391,7 @@ trong ba con tốt đang thức đánh trúng đúng một lần là chuyện ca
 bước không còn làm được thì test đỏ.
 Các cửa đi được **hai chiều**: cửa đi tiếp nằm ở góc đông-bắc của
 phòng, cửa quay lại nằm ở phía tây, sát tường, ngay cạnh ô vào (một bước sang trái từ ô vào là về phòng trước). Mở game
-(F5), rồi:
+(F5), ở màn title chọn **New Game** (hoặc **Continue** để tiếp tục từ save), rồi:
 
 0. *Chuẩn bị (một lần).* Từ T1 đi tới cửa góc đông-bắc để sang T2. Trong T2, đi sang phải tới thanh kiếm đang phát sáng và
    bước lên nó: bạn có kiếm gỗ (Space hoặc K) và game lưu. Đi tiếp cửa đông-bắc của T2 sang T3: trong T3 chỉ có một con tốt
@@ -407,8 +423,8 @@ phòng, cửa quay lại nằm ở phía tây, sát tường, ngay cạnh ô và
 
 **Muốn làm lại một bước.** Phòng đã dọn thì trống mãi (D-17), nên các bước 1-3 chỉ làm được **một lần trên một file save**:
 bước 1 cần con tốt của T3 còn sống, bước 2 hạ nó, bước 3 hạ ba con của T4. Muốn làm lại từ bước 0 (hoặc từ bước 1, 2, 3):
-thoát game rồi **xoá `slot_0.cfg` và `slot_0.cfg.bak`** (xem "File save nằm ở đâu" ở dưới), mở lại: game bắt đầu ở T1, chưa có
-kiếm. Chừng nào chưa dọn T4 thì phần "địch về đủ 3 con" của bước 2 làm lại thoải mái (ra cửa tây rồi vào lại). Bước 4 và 5
+ở màn title chọn **New Game** (hoặc thoát game rồi **xoá `slot_0.cfg` và `slot_0.cfg.bak`**, xem "File save nằm ở đâu" ở dưới): game
+bắt đầu ở T1, chưa có kiếm. Chừng nào chưa dọn T4 thì phần "địch về đủ 3 con" của bước 2 làm lại thoải mái (ra cửa tây rồi vào lại). Bước 4 và 5
 làm lại tùy ý, không cần xoá save (bấm `R` trong B1 đưa thước về sàn; bước 5 là thoát rồi mở lại).
 
 **Game lưu khi nào.** Chỉ khi một việc tốt vừa xảy ra, không bao giờ khi chết, khi bị đánh hay khi chỉ đi sang phòng
@@ -425,10 +441,14 @@ rồi thoát luôn, lần sau game mở ở phòng của lần lưu trước đ�
 **File save nằm ở đâu.** Trong thư mục user data của dự án, thư mục con `saves/`: `slot_0.cfg` và `slot_0.cfg.bak`
 (bản lưu liền trước). Trên macOS: `~/Library/Application Support/Godot/app_userdata/The Unbound Pawn/saves/`.
 Trong Godot: menu **Project → Open User Data Folder**. File `profile.cfg` nằm cạnh `saves/` (dấu "đã xem kết thúc") và
-sống sót qua New Game. **Muốn bắt đầu sạch:** thoát game rồi xoá `slot_0.cfg` và `slot_0.cfg.bak` (nếu có thêm
-`world_state.cfg` từ bản cũ thì xoá luôn). Game không bao giờ tự xoá save của bạn: file hỏng thì nó thử bản `.bak`, file
-của bản game mới hơn thì nó không đọc và không ghi đè. Chưa có màn hình title với "Continue / New Game" (M4), nên hiện
-tại game luôn tiếp tục lần chơi đã lưu.
+sống sót qua New Game. **Muốn bắt đầu sạch:** ở màn title chọn **New Game** (có save thì nó hỏi lại; sau khi bạn đồng ý, lần chơi mới được ghi đè
+lên `slot_0.cfg` ngay, còn save cũ nằm lại ở `slot_0.cfg.bak` cho tới lần lưu tự động kế tiếp), hoặc thoát game rồi xoá
+`slot_0.cfg` và `slot_0.cfg.bak` (nếu có thêm `world_state.cfg` từ bản cũ thì xoá luôn). Game không bao giờ tự xoá save của
+bạn: file hỏng thì nó thử bản `.bak` và báo một dòng trên màn title (nút Continue vẫn có), file hỏng mà không có bản dự
+phòng thì title báo và chỉ còn New Game (file hỏng được giữ lại với đuôi `.corrupt`), file của bản game mới hơn thì nó không
+đọc, không ghi đè (New Game đổi tên nó thành `.newer_game`). **Continue** mở lại phòng và ô vào của lần lưu cuối (xem bảng
+ở đầu mục này). **Thoát về title** (menu pause, bước sau của M4) không lưu gì: tiến trình sau lần lưu cuối sẽ mất, và Continue
+đọc lại file.
 
 **Một chỗ agent đã tự chọn, bạn có thể đảo lại.** Kế hoạch viết cả "về checkpoint gần nhất" lẫn "chỉ phòng đang chơi
 bắt đầu lại". Nếu hiểu đúng từng chữ, chết ở T3 sẽ đưa bạn về đầu Stage 1, quá nặng so với "chết nhẹ nhàng". Agent chọn
@@ -438,7 +458,7 @@ save và sẽ được màn pause nhắc tên (M4). **Mở game lại** đưa b�
 vào checkpoint thì đó cũng là checkpoint, nhưng game không có chỗ nào tự đưa bạn về checkpoint. Nếu bạn muốn chết (hoặc
 Continue) đưa về hẳn checkpoint: nói với agent, việc sửa nhỏ (`docs/game-base-plan.md` mục 5.2 ghi đúng chỗ phải sửa).
 
-**Chưa có:** màn title và pause (M4), bàn tay của đứa trẻ đặt con tốt lại (M8c), Believe (M10), boss nhiều pha với "pha
+**Chưa có:** màn pause (M4), bàn tay của đứa trẻ đặt con tốt lại (M8c), Believe (M10), boss nhiều pha với "pha
 đã qua điểm lưu" (M8b; hiện phòng boss bắt đầu lại từ đầu).
 
 *EN: Section 7 is what M3b added for you. One sentence: a death restarts only the room you fell in, and you stand
@@ -459,7 +479,7 @@ that every pawn, pickup, unlock and gate is on ground the pawn can use. The game
 room cleared, a hub or boss door, the sword, a first meeting with a piece, an opened gate, a persistent pickup), never
 on a death or a plain trip. The save file is `saves/slot_0.cfg` (+ `.bak`) in the project's user data folder (macOS:
 `~/Library/Application Support/Godot/app_userdata/The Unbound Pawn/`; Godot: Project -> Open User Data Folder);
-delete both to start clean. The plan says both "back to the latest checkpoint" and "only the current room resets"; the
+choose New Game on the title (it asks, then writes the clean run over the slot and keeps the old save as the `.bak`) or delete both to start clean. The plan says both "back to the latest checkpoint" and "only the current room resets"; the
 least punishing reading was built, recorded in `docs/game-base-plan.md` 5.2, and flipping it is a small change if you
 disagree. To make a room a checkpoint, tick Checkpoint On Entry on its root node; to make a floor pickup a reward that
 never comes back, tick Persistent on its PickupSpawnPoint.*

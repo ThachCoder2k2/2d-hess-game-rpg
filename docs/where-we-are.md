@@ -15,6 +15,12 @@ Trang này trả lời hai câu: **làm việc theo quy trình nào**, và **m�
 > `docs/ARCHITECTURE.md`; cảnh chính nay là `shell/game_root.tscn` (trước đây `main.tscn`); bảng cũ → mới
 > nằm trong `docs/migration-notes.md`. Tiến độ xây bản base: `docs/game-base-plan.md` và `task_plan.md`.
 >
+> **Ghi chú M4 bước 1 (2026-10-19):** cảnh chính nay là `shell/app_root.tscn` (không còn `shell/game_root.tscn`): game mở
+> bằng **màn title** (New Game, Continue khi có save đọc được, Credits, Quit; Settings tạm xám), có credits đọc
+> `content/story/credits.tres`, dấu tick nhỏ mỗi khi game tự lưu, số phiên bản, và một dòng báo khi save bị hỏng hoặc của
+> bản game mới hơn. Chọn New Game thì lần chơi mới được ghi đè lên save ngay (có hỏi trước). Menu pause, settings, tay
+> cầm, phím gọi đứa trẻ và hệ chữ `.po` là các bước 2 đến 4 của M4. Xem `docs/OWNER_GUIDE.md` mục 1 và 7.
+>
 > **Ghi chú cuối M2 (2026-10-13):** M2 cũng không đổi luật chơi. Đổi ở phần hiển thị và dữ liệu: **quân cờ giờ nhỏ
 > hơn ô** theo quyết định của bạn ngày 2026-10-12 (bảng kích thước `content/feel/piece_sizes.tres`; thay phase 66, quân
 > cao 1,5 ô), chỉ còn **một** cảnh actor (`presentation/views/actors/actor_view_base.tscn`) thay cho bốn bản chép,

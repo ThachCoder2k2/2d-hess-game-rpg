@@ -1742,3 +1742,49 @@ commit each, tag `m3b-done` moved to the last commit. 91 suites (no suite added;
   weapons work and the guide says so; the fix is M7's (the Pencil is a hero-only `GrantMarker`, now written into the plan's M7a entry
   and findings.md), not a tweak to T4. (b) The hero cannot take the spear: the grant that locks Q is M7 (D-11). (c) The commit
   attribution line says Sonnet 5.5, as the harness asks; not a defect.
+
+## M4 step 1 - the app root, the flow, the title and the credits - 2026-10-19
+
+Branch `base/m4-1` (from `game-base`, which holds M3b), the strict runner green. The first of M4's four steps: `AppRoot` as the main scene,
+`GameFlow` as the state machine of the whole run, the title, the credits, the autosave tick and the corrupt-save notice. The owner's rules
+for M4 (assets are the owner's and nothing is downloaded; the font and the Kenney glyphs are slots that fill later; R becomes "call child")
+belong to steps 2 to 4; nothing here touches the input map, the font or the text pipeline.
+
+- **`AppRoot`** (`shell/app_root.gd/.tscn`, `project.godot` main scene): the `MusicPlayer` (moved out of `game_root.tscn`; the three music
+  assertions of `tests/run_tests.gd` load `app_root.tscn` and keep their labels), `ScreenHost` (the one current screen), `OverlayLayer` (the
+  autosave tick; the pause menu later) and `TransitionLayer`, all `PROCESS_MODE_ALWAYS`. A screen change is fade to black, take the old
+  screen out of the tree at once and free it, build the new one, fade back; changes run one after another from a queue, so a double request
+  builds one screen. `GameRoot` is handed the app's flow before it enters the tree and names no AppRoot, so every bridge suite still boots it
+  alone. The root node of `game_root.tscn` is renamed `GameRoot` (it was `Main`; nothing addressed it by name). The zone trip keeps the game
+  scene's own `FadeLayer`: moving it would have changed what every bridge suite pins.
+- **`GameFlow`**: the states and the transition table of plan 9.1 (+ `RESPAWNING`), requests as methods, a refused request changes nothing and
+  says nothing. New Game and Continue go through `SaveService`; a pause is refused during a zone trip, while a rebuild waits and during the
+  defeat beat; `reach_ending` writes `completed` to the profile; `quit_to_title` writes nothing. `before_respawn` and `after_respawn` let
+  AppRoot put the rebuild of a room behind the fade (the signals the bridges use are unchanged). `RoomOutcomeBridge` guards its 0.85 s timer
+  against a scene that was freed meanwhile (a Quit to Title during the defeat beat used to be impossible, so nobody needed it).
+- **New Game and Continue.** `SaveService.start_new_run(slot)` = `new_game` + write the clean run over the slot's file now (the plan says
+  "resets the slot" and "asks to confirm"; a New Game that left the old file in place would bring the old run back on a relaunch). The old
+  file is the `.bak`, a damaged one `.corrupt`, a newer game's `.newer_game`; the profile is untouched; it is not a success event, so no tick.
+  Continue asks `read_slot()` for readable progress first (a damaged file with no backup, a save too old to migrate and a newer game's save
+  are not progress), then `load_slot()`: the room and entry of the LAST SAVE (the as-built point), the checkpoint recorded beside it.
+- **Title and notice** (`shell/title/`): `TitleSummary.from_save()` works out Continue, the card (room, time played, day saved), the notice
+  and the `completed` mark from `read_slot()` (no side effects). A damaged newest file with an intact `.bak` offers Continue and says so (on
+  the title and on the room's status line); the three cases that are not progress offer New Game only, with the sentence. The title is plain
+  nodes and the hero's own `body.png` at its own size; Settings is disabled until `AppRoot.settings_scene` is wired.
+- **Credits** (`shell/credits/`, `content/story/credits.tres`): a `CreditsDefinition` of `CreditsSection`s (`schema/story/`), read through
+  `ContentDb.credits()` (a new one-of-a-kind kind). The Licenses block is generated from `THIRD_PARTY_NOTICES.md` (`tools/build_credits_licenses.gd`,
+  rules in `tools/credits_licenses.gd`); `test_credits_licenses_current` fails while they disagree, so a step that adds the font or the Kenney
+  pack to the notices must run the tool. Holding Confirm skips; the hold is read from events (`test_input_only_in_poller` stays true).
+- **New suites (12; 91 to 103)**: `tests/shell/` `test_app_flow`, `test_game_flow_states`, `test_new_game_resets_slot`,
+  `test_continue_loads_checkpoint`, `test_title_summary`, `test_title_screen`, `test_credits_screen`, `test_credits_licenses_current`,
+  `test_transition_layer`, `test_autosave_indicator`, `test_confirm_panel`, `test_app_root_is_main_scene`. Changed: `test_game_flow` (the music
+  player is not the game scene's), `test_validate_all` (the `credits` kind), `test_suites_isolate_the_save` (`boot_app`), `TestPaths`
+  (`main_scene()` is AppRoot, `game_scene()` the room, `title_scene()`, `credits_scene()`).
+- **Docs.** ARCHITECTURE ("The app around the game", the tree, persistence, tests), CLAUDE.md (one rule), AGENTS.md, README.md, OWNER_GUIDE
+  (the title, New Game and Continue, the credits row, the version row), tools/README, THIRD_PARTY_NOTICES (how the credits read it), the plan's M4 entry.
+- **Verification.** `python3 tools/run_all_tests.py --strict`: 103 suites, 0 failed, 0 warnings, GREEN, baseline labels 235 of 235 (14 through
+  `label_renames.txt`, unchanged); both `--self-test`s 0 failures; import clean; `stamp_uids.gd -- --check` CLEAN; `git diff --check` clean.
+- **Not done (steps 2 to 4), and why.** The pause key, menu, focus-loss pause and Controls panel (the input map comes first); settings (the
+  button is disabled); the first-run card (Tier B); `Ending.post_game_zone` on a completed Continue (M13); the title's real art and the hero's
+  pawn drawn as the plan's rug scene (owner assets, `docs/assets` `title_*`); words as `UI_` keys (the text pipeline, step 3). R still restarts the
+  room (D-18 moves it with the input map).
