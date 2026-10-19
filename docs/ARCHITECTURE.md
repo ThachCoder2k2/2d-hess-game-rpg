@@ -283,6 +283,10 @@ Its dictionaries are all documented in the file:
 - `entity_by_cell`, `cell_by_entity`, `move_reservations`, `item_by_cell`, and the terrain below.
 - Baked door and gate data: `exit_by_cell` (zone exits), `gate_by_cell` (one-way shortcut
   gates), `player_unlock_by_cell` (player verb unlocks).
+- Every other kind of room marker has no field of its own: `marker_by_cell[kind][cell]` holds its data
+  (`add_marker`, `marker_at`, `marker_cells`, `remove_marker`), so a new marker adds a baker and not a field
+  to the grid (`tests/ecs/test_grid_markers.gd`). Nothing bakes into it yet; the traversal gap (M5) and the
+  triggers (M6) are the first.
 - The movement protocol is **reserve -> commit**: `begin_move` claims the destination before
   the slide, `finish_move` lands it. While sliding, the origin stays occupied and the
   destination reserved, so nobody can race into either.
