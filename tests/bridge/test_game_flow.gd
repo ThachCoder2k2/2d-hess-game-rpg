@@ -14,6 +14,7 @@ const SUITE_NAME := "game_flow"
 const T1 := &"t1_white_kings_fall"
 const T2 := &"t2_fallen_sword_tile"
 const T3 := &"t3_first_pawn_clash"
+const T4 := &"t4_broken_rule_yard"
 
 var respawned_reasons: Array[StringName] = []
 var requested_reasons: Array[StringName] = []
@@ -78,14 +79,16 @@ func _run() -> void:
 	_expect(world_that_fell != world_after_restart and not Support.room_ending(main), "the rebuilt room is live")
 
 	# --- A despawn timer of the old world must not touch the new one ---
-	await Support.travel_to(main, T3, &"west_entry")
+	# T4 holds three pawns, so the one that falls does not clear the room (a cleared room stays cleared, D-17,
+	# and would not be rebuilt with its pawns: T3, with one pawn, used to stand here).
+	await Support.travel_to(main, T4, &"west_entry")
 	Support.remove_enemy_ai(main)
 	var old_enemy_id: int = main.get("cast")["enemies"][0]
 	Events.emit_damage(Support.ecs_of(main), old_enemy_id, 99, Vector2i.ZERO, Support.player_id_of(main))
 	Support.pump(main, Support.SIM_STEP_SECONDS)
-	_expect(Support.ecs_of(main).get_component(old_enemy_id, EcsComponents.HEALTH).current == 0, "setup: T3's pawn fell a moment before the restart")
+	_expect(Support.ecs_of(main).get_component(old_enemy_id, EcsComponents.HEALTH).current == 0, "setup: one of T4's pawns fell a moment before the restart")
 	flow.request_respawn(GameFlow.REASON_RESTART_KEY)
-	_expect(await Support.wait_for_respawn(self, main), "setup: the restart rebuilt T3")
+	_expect(await Support.wait_for_respawn(self, main), "setup: the restart rebuilt T4")
 	var new_enemy_id: int = main.get("cast")["enemies"][0]
 	var new_enemy_view := main.get("cast")["view_by_entity"][new_enemy_id] as Node2D
 	await create_timer(DespawnBridge.DEFEAT_CLIP_SECONDS + 0.3).timeout
@@ -115,7 +118,7 @@ func _run() -> void:
 			world_count += 1
 	_expect(world_count == 1, "exactly one EcsWorld is parented to the scene after all those rebuilds")
 	_expect(main.get_node_or_null("MusicPlayer") != null and tree_current_scene_is(main), "the music player and the scene itself were never replaced (no reload)")
-	_expect(Support.run_of(save_service).checkpoint_zone_id == T3, "and the run, which the rebuilds read, names the zone the hero was last sent to")
+	_expect(Support.run_of(save_service).checkpoint_zone_id == T4, "and the run, which the rebuilds read, names the zone the hero was last sent to")
 
 	# --- A fall during a trip's fade-out still ends in a rebuild at the checkpoint, as the reload did ---
 	respawned_reasons.clear()

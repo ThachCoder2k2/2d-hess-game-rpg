@@ -5,14 +5,15 @@ extends ShellBridge
 ## directions, and the ONLY place that asks for a save (R17, docs/game-base-plan.md 3.5, 5.2).
 ##
 ##   room -> run   A success event happened, so the fact is written into the run and a save is
-##                 requested for it: a floor weapon taken (pickup_taken), a gate unbarred
-##                 (shortcut_opened), a verb unlocked (unlock_gained), a Book page written
-##                 (rule_page_unlocked), a zone entered (checkpoint_reached; interim until the
-##                 checkpoint rules of D-16, step 3). A death, a hit or a quit is not one.
-##   run -> room   Every room boot starts from the run: what is taken stays gone, what is opened
-##                 stays open, the sword stays in the hero's hand, the world's flags are the saved
-##                 ones. The run is also asked, just before a save is written, for the facts only
-##                 the live world knows (its flags).
+##                 requested for it: a room cleared (room_cleared, D-17), a persistent pickup taken
+##                 (pickup_taken), a gate unbarred (shortcut_opened), a verb unlocked (unlock_gained), a
+##                 Book page written (rule_page_unlocked), a zone entered (checkpoint_reached; interim
+##                 until the checkpoint rules of D-16, step 3). A death, a hit, a floor weapon taken
+##                 by an enemy or a quit is not one.
+##   run -> room   Every room boot starts from the run: a cleared room's enemies stay gone, a persistent
+##                 pickup that is taken stays gone, what is opened stays open, the sword stays in the
+##                 hero's hand, the world's flags are the saved ones. The run is also asked, just before
+##                 a save is written, for the facts only the live world knows (its flags).
 ##
 ## The nodes hold none of it. The run lives in the SaveService autoload; this bridge reads and writes
 ## it and shows the result on the markers of the room (a taken unlock, an opened gate).
@@ -26,6 +27,7 @@ func register(router: EventRouter) -> void:
 	router.on(Events.PICKUP_TAKEN, _on_pickup_taken)
 	router.on(Events.PLAYER_UNLOCK, _on_player_unlock)
 	router.on(Events.GATE_OPENED, _on_gate_opened)
+	router.on(Events.ROOM_CLEARED, _on_room_cleared)
 
 
 ## Starts the run's session when the scene starts: a game that has just launched has no run yet, so the
@@ -89,11 +91,19 @@ func rule_page_ids() -> Array:
 	return ids
 
 
-## Before the room boots: what the run already knows that EcsBoot must not spawn again. Taken pickups
-## never respawn; opened gates boot as floor.
+## Before the room boots: what the run already knows that EcsBoot must not spawn again. A cleared room's
+## enemies stay gone (D-17), persistent pickups that were taken never respawn, opened gates boot as floor.
 func fill_boot_options(options: EcsBootOptions, zone_root: Node) -> void:
-	options.skipped_pickup_names = _taken_pickup_names(ZoneStage.zone_id_of(zone_root))
+	var zone_id := ZoneStage.zone_id_of(zone_root)
+	options.skipped_pickup_names = _taken_pickup_names(zone_id)
 	options.opened_gate_ids = _opened_gate_ids()
+	options.room_already_cleared = is_room_cleared(zone_id)
+
+
+## Whether the run recorded the zone as cleared (D-17). A room outside the world graph (no zone id) never is.
+func is_room_cleared(zone_id: StringName) -> bool:
+	var save := root.save_service()
+	return save != null and zone_id != &"" and save.state.cleared_room_ids.has(String(zone_id))
 
 
 ## After the room booted: the run's facts enter the new world before anything can ask for a save. The
@@ -134,15 +144,30 @@ func hide_opened_gate_visuals() -> void:
 			gate_marker.visible = gate_marker.gate_id not in opened
 
 
+## A floor weapon is room-local (D-16): the room puts it back on the floor every time it starts, so
+## taking it is no fact for the run and no success event. Only a persistent pickup is remembered and saved.
 func _on_pickup_taken(event: Dictionary) -> void:
 	var save := root.save_service()
 	if save == null or root.current_zone_id == &"":
 		return
 	var item_id := int(event.get("item", 0))
+	if not cast.get("persistent_pickup_by_entity", {}).has(item_id):
+		return
 	var marker_name := String(cast.get("pickup_name_by_entity", {}).get(item_id, ""))
 	if not marker_name.is_empty():
 		save.state.taken_pickup_ids[SaveData.pickup_id(root.current_zone_id, marker_name)] = true
 		save.request_save(&"pickup_taken")
+
+
+## The room's objective was met: the room stays cleared for the rest of the run (D-17), and it is a
+## success event, so the run is saved. A room outside the world graph has no zone id and is not remembered.
+func _on_room_cleared(event: Dictionary) -> void:
+	var save := root.save_service()
+	var zone_id := StringName(event.get("zone", &""))
+	if save == null or zone_id == &"":
+		return
+	save.state.cleared_room_ids[String(zone_id)] = true
+	save.request_save(&"room_cleared")
 
 
 ## A verb unlocked: permanent from this moment, and the live hero has it at once.

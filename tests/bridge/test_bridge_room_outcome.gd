@@ -33,11 +33,13 @@ func _run() -> void:
 	_kill_enemy(main, 0)
 	_expect(hud.encounter_label.text == "ENEMIES 0/1", "a defeat takes one off the HUD count")
 	_expect(not Support.room_ending(main) and not hud.result_panel.visible and Support.player_tag(main).control_enabled, "in world mode clearing a zone with no objective is quiet: no result panel, control stays on")
+	_expect(Support.run_of(save_service).cleared_room_ids.has(String(T3)), "but the run remembers the room as cleared (D-17); test_cleared_rooms holds what that means")
 
 	# --- Outside the world graph a room ends when every enemy is down, with the stock lines ---
 	# A won room can only be left by starting it again, so each phase boots the scene anew; the run
 	# still names T3, so the new scene boots in T3 with its one pawn alive.
-	main = await _boot_again(main, save_service)
+	# The run remembers T3 as cleared now (D-17), so a relaunch would boot it empty: forget that for this phase.
+	main = await _boot_again(main, save_service, true)
 	hud = main.get("hud") as GameHud
 	_expect(main.get("current_zone_id") == T3 and Support.total_enemies(main) == 1, "setup: a relaunch boots T3 with its pawn alive")
 	Support.remove_enemy_ai(main)
@@ -48,7 +50,7 @@ func _run() -> void:
 	_expect(not Support.player_tag(main).control_enabled, "and the hero's control is off")
 
 	# --- An objective that counts defeats ends the room when it is met ---
-	main = await _boot_again(main, save_service)
+	main = await _boot_again(main, save_service, true)
 	hud = main.get("hud") as GameHud
 	await Support.travel_to(main, T4, &"west_entry")
 	Support.remove_enemy_ai(main)
@@ -81,10 +83,13 @@ func _run() -> void:
 	Support.end_suite(self, save_service)
 
 
-## Frees the scene and boots a new one from the run in memory, as a relaunch would.
-func _boot_again(old_main: Node, save_service: Node) -> Node:
+## Frees the scene and boots a new one from the run in memory, as a relaunch would. `forget_cleared_rooms`
+## empties the run's cleared rooms first, so the rooms come back with their enemies (D-17 keeps them away).
+func _boot_again(old_main: Node, save_service: Node, forget_cleared_rooms := false) -> Node:
 	Support.release_all_actions()
 	old_main.free()
+	if forget_cleared_rooms:
+		Support.run_of(save_service).cleared_room_ids.clear()
 	Support.write_the_run(save_service)
 	Support.forget_the_run(save_service)
 	return await Support.boot_main(self)

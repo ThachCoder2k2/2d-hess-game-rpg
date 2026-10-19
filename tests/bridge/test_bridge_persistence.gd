@@ -80,6 +80,11 @@ func _check_player_unlock(main: Node) -> void:
 
 
 ## --- Taken pickup: the T4 pencil spear ----------------------------------------
+## D-16: a floor weapon is room-local, so an enemy taking it is no fact for the run and the room puts it
+## back on the floor whenever it starts again. Only a PERSISTENT pickup (PickupSpawnPoint.persistent) is
+## remembered, saved and never comes back. The T4 spear is a floor weapon; to drive the persistent half, the
+## test marks the live room's marker persistent before the next boot, which is what the owner would do in the
+## Inspector on a reward.
 
 
 func _check_taken_pickup(main: Node) -> void:
@@ -90,6 +95,7 @@ func _check_taken_pickup(main: Node) -> void:
 	_expect(main.get("current_zone_id") == T4 and item_cells.size() == 1, "pickup: T4 boots with its one spear on the floor")
 	var item_id := ecs.grid.item_at(item_cells[0])
 	_expect(String(cast["pickup_name_by_entity"].get(item_id, "")) == "PencilSpearPickup" and cast["pickup_view_by_entity"].has(item_id), "pickup: the item has a stable marker name and a view")
+	_expect(cast["persistent_pickup_by_entity"].is_empty(), "pickup: the spear is a floor weapon of its room, not a persistent reward")
 	_expect(not Support.run_of(save_service).taken_pickup_ids.has(SPEAR_KEY), "pickup: nothing is recorded as taken yet")
 	var rule_ids: Dictionary = Support.run_of(save_service).unlocked_rule_ids
 	_expect(rule_ids.size() >= 3 and rule_ids.has("pawn_recruit"), "pickup: meeting T4's pieces writes their Book pages")
@@ -99,35 +105,57 @@ func _check_taken_pickup(main: Node) -> void:
 	var enemy_id: int = cast["enemies"][0]
 	var enemy_ai := Support.remove_enemy_ai(main) as EnemyAISystem
 	_expect(enemy_ai != null, "pickup: setup found the enemy AI system")
-	var enemy_pos: EcsComponents.GridPos = ecs.get_component(enemy_id, EcsComponents.GRID_POS)
-	enemy_pos.cell = item_cells[0]
-	enemy_ai.call("_collect_local_item", enemy_id)
-	Support.route_events(main)
-
-	_expect(Support.run_of(save_service).taken_pickup_ids.has(SPEAR_KEY), "pickup: the bridge records the pickup under zone/marker name")
-	_expect(not cast["pickup_view_by_entity"].has(item_id) and spear_view.is_queued_for_deletion(), "pickup: the bridge frees the floor view")
+	_expect(_pawn_takes_the_spear(main, enemy_ai, enemy_id, item_cells[0]), "pickup: the pawn picked the spear up")
+	_expect(not Support.run_of(save_service).taken_pickup_ids.has(SPEAR_KEY), "CHANGED (D-16): a floor weapon taken by an enemy is not written into the run")
+	_expect(not cast["pickup_view_by_entity"].has(item_id) and spear_view.is_queued_for_deletion(), "pickup: the bridge still frees the floor view")
 	_expect(String((main.get("hud") as GameHud).objective_label.text).contains("picked up"), "pickup: the HUD announces the weapon change")
-	_expect(_saved_list("world", "taken_pickup_ids").has(SPEAR_KEY), "pickup: the taken pickup is written to the save file immediately")
-	_expect(_saved_list("world", "unlocked_rule_ids").has("pawn_recruit"), "pickup: the Book pages from meeting T4's pieces are saved too")
+	_expect(not _saved_list("world", "taken_pickup_ids").has(SPEAR_KEY), "CHANGED (D-16, R17): and nothing is saved for it, it is not a success event")
 
-	# Never respawns: re-boot, bare boot_zone, save/load.
+	# Room-local: back on the floor when the room starts again (re-entering, a bare boot_zone, a relaunch).
 	await Support.travel_to(main, T4, &"west_entry")
-	_expect(Support.ecs_of(main).grid.get_item_cells().is_empty() and main.get("cast")["pickup_name_by_entity"].is_empty(), "pickup: the spear does not respawn after re-entering T4")
-	_expect(main.get("cast")["pickup_view_by_entity"].is_empty(), "pickup: no floor view is rebuilt for the taken spear")
+	_expect(Support.ecs_of(main).grid.get_item_cells().size() == 1 and main.get("cast")["pickup_name_by_entity"].size() == 1, "CHANGED (D-16): the spear is back on the floor after re-entering T4")
+	_expect(main.get("cast")["pickup_view_by_entity"].size() == 1, "pickup: and its floor view is rebuilt")
 	Support.reboot_zone(main, &"west_entry")
-	_expect(Support.ecs_of(main).grid.get_item_cells().is_empty(), "pickup: the spear does not respawn after a bare boot_zone")
+	_expect(Support.ecs_of(main).grid.get_item_cells().size() == 1, "CHANGED (D-16): and after a bare boot_zone")
 	Support.write_the_run(save_service)
 	Support.forget_the_run(save_service)
 	save_service.call("load_slot")
-	_expect(Support.run_of(save_service).taken_pickup_ids.has(SPEAR_KEY) and Support.run_of(save_service).unlocked_rule_ids.has("pawn_recruit"), "pickup: load_state restores the taken pickup and the Book pages")
+	_expect(not Support.run_of(save_service).taken_pickup_ids.has(SPEAR_KEY) and Support.run_of(save_service).unlocked_rule_ids.has("pawn_recruit"), "pickup: a save/load round trip keeps the Book pages and no taken floor weapon")
+
+	# A persistent pickup is remembered, saved, and never comes back.
+	var spear_marker := (main.get("current_room") as Node).get_node("PencilSpearPickup") as PickupSpawnPoint
+	spear_marker.persistent = true
+	Support.reboot_zone(main, &"west_entry")
+	ecs = Support.ecs_of(main)
+	cast = main.get("cast")
+	item_cells = ecs.grid.get_item_cells()
+	item_id = ecs.grid.item_at(item_cells[0])
+	_expect(cast["persistent_pickup_by_entity"].has(item_id), "persistent: a marker with persistent set is booted as a persistent pickup")
+	enemy_id = cast["enemies"][0]
+	enemy_ai = Support.remove_enemy_ai(main) as EnemyAISystem
+	_expect(_pawn_takes_the_spear(main, enemy_ai, enemy_id, item_cells[0]), "persistent: the pawn picked the spear up")
+	_expect(Support.run_of(save_service).taken_pickup_ids.has(SPEAR_KEY), "persistent: the bridge records the pickup under zone/marker name")
+	_expect(_saved_list("world", "taken_pickup_ids").has(SPEAR_KEY), "persistent: the taken pickup is written to the save file immediately")
+	_expect(_saved_list("world", "unlocked_rule_ids").has("pawn_recruit"), "persistent: the Book pages from meeting T4's pieces are saved too")
+
+	# Never respawns: re-boot, bare boot_zone, save/load.
 	await Support.travel_to(main, T4, &"west_entry")
-	_expect(Support.ecs_of(main).grid.get_item_cells().is_empty(), "pickup: the spear stays gone after the save/load round trip")
+	_expect(Support.ecs_of(main).grid.get_item_cells().is_empty() and main.get("cast")["pickup_name_by_entity"].is_empty(), "persistent: the spear does not respawn after re-entering T4")
+	_expect(main.get("cast")["pickup_view_by_entity"].is_empty(), "persistent: no floor view is rebuilt for the taken spear")
+	Support.reboot_zone(main, &"west_entry")
+	_expect(Support.ecs_of(main).grid.get_item_cells().is_empty(), "persistent: the spear does not respawn after a bare boot_zone")
+	Support.write_the_run(save_service)
+	Support.forget_the_run(save_service)
+	save_service.call("load_slot")
+	_expect(Support.run_of(save_service).taken_pickup_ids.has(SPEAR_KEY) and Support.run_of(save_service).unlocked_rule_ids.has("pawn_recruit"), "persistent: load_state restores the taken pickup and the Book pages")
+	await Support.travel_to(main, T4, &"west_entry")
+	_expect(Support.ecs_of(main).grid.get_item_cells().is_empty(), "persistent: the spear stays gone after the save/load round trip")
 
 	# Zone-scoped: the same marker name taken elsewhere does not hide this spear.
 	Support.run_of(save_service).taken_pickup_ids.erase(SPEAR_KEY)
 	Support.run_of(save_service).taken_pickup_ids["some_other_zone/PencilSpearPickup"] = true
 	await Support.travel_to(main, T4, &"west_entry")
-	_expect(Support.ecs_of(main).grid.get_item_cells().size() == 1, "pickup: ids are zone-scoped (another zone's spear name does not hide this one)")
+	_expect(Support.ecs_of(main).grid.get_item_cells().size() == 1, "persistent: ids are zone-scoped (another zone's spear name does not hide this one)")
 	Support.run_of(save_service).taken_pickup_ids.erase("some_other_zone/PencilSpearPickup")
 	Support.run_of(save_service).taken_pickup_ids[SPEAR_KEY] = true
 	Support.write_the_run(save_service)
@@ -135,6 +163,17 @@ func _check_taken_pickup(main: Node) -> void:
 	# The Book pages are visible in the Book after a boot.
 	var book := main.get_node("RuleBookUI") as RuleBookUI
 	_expect(book.unlocked_piece_ids.has(&"pawn_recruit"), "pickup: a boot feeds the unlocked pages to the Book")
+
+
+## Stands the enemy on the pickup's cell and lets its AI take it (EnemyAISystem._collect_local_item, the one
+## place pickups are taken), then hands the events to the router. True when the floor item is gone.
+func _pawn_takes_the_spear(main: Node, enemy_ai: EnemyAISystem, enemy_id: int, item_cell: Vector2i) -> bool:
+	var ecs := Support.ecs_of(main)
+	var enemy_pos: EcsComponents.GridPos = ecs.get_component(enemy_id, EcsComponents.GRID_POS)
+	enemy_pos.cell = item_cell
+	enemy_ai.call("_collect_local_item", enemy_id)
+	Support.route_events(main)
+	return ecs.grid.item_at(item_cell) == 0
 
 
 ## --- Opened gate: the kingdom's shortcuts -------------------------------------

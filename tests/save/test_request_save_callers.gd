@@ -15,14 +15,16 @@ const SaveServiceScript := preload("res://shell/save/save_service.gd")
 
 ## source file -> the reasons it may pass, exactly. Each is the success event the code sits on. Since M3b
 ## step 2 one bridge is the only asker (shell/bridges/save_bridge.gd, "the save requests"):
-##   pickup_taken        a persistent pickup was taken (the pickup_taken event)
+##   room_cleared        a room's objective was met (the room_cleared event, D-17)
+##   pickup_taken        a PERSISTENT pickup was taken (the pickup_taken event; a floor weapon is room-local
+##                       and never asks, D-16)
 ##   shortcut_opened     a one-way gate was unbarred (the gate_opened event)
 ##   unlock_gained       a verb was unlocked (the player_unlock event)
 ##   rule_page_unlocked  a piece was met for the first time and its Book page written
 ##   checkpoint_reached  a zone trip began. INTERIM: until the checkpoint rules of D-16 land
 ##                       (M3b step 3) every zone entry stands in for "hub entry or boss-room entry".
 const EXPECTED_CALLERS := {
-	"res://shell/bridges/save_bridge.gd": [&"checkpoint_reached", &"pickup_taken", &"rule_page_unlocked", &"shortcut_opened", &"unlock_gained"],
+	"res://shell/bridges/save_bridge.gd": [&"checkpoint_reached", &"pickup_taken", &"room_cleared", &"rule_page_unlocked", &"shortcut_opened", &"unlock_gained"],
 }
 
 ## The success events docs/game-base-plan.md 5.2 lists for autosave, each with the reason that carries it.

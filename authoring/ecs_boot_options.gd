@@ -31,6 +31,12 @@ var skipped_pickup_names: Array = []
 ## Gate ids the save already recorded as opened: they boot as floor.
 var opened_gate_ids: Array = []
 
+## True when the save already recorded this room as cleared (D-17: a cleared room stays cleared): the
+## enemies parked in its scene are not spawned and their views are removed, and the room's own entity (see
+## with_room_rules) starts out cleared. Pickups are not affected: a floor weapon is room-local and is back
+## on the floor every time the room starts, unless the marker is persistent and the save recorded it taken.
+var room_already_cleared := false
+
 ## The size in pixels of the picture the room is shown in, which the board is centred in. Zero means the
 ## project's own base size (display/window/size in project.godot); a test or a tool that frames a room
 ## differently sets it.

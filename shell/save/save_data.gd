@@ -58,12 +58,13 @@ var checkpoint_zone_id: StringName = &""
 var checkpoint_entry_id: StringName = &"start"
 
 # --- [world]
-## zone id -> true. Rooms whose enemies are all defeated; they stay cleared (D-17). Written by the room
-## objective (M3b), nothing writes it yet.
+## zone id -> true. Rooms whose objective was met; they stay cleared (D-17): their enemies are not spawned
+## again. Written by SaveBridge when ObjectiveSystem says `room_cleared`.
 var cleared_room_ids: Dictionary = {}
 ## boss id -> true. Bosses never come back (M8b).
 var defeated_boss_ids: Dictionary = {}
-## "zone_id/PickupMarkerName" -> true. Persistent pickups that were taken and never respawn.
+## "zone_id/PickupMarkerName" -> true. Persistent pickups (PickupSpawnPoint.persistent) that were taken and
+## never respawn. A floor weapon is room-local (D-16) and is never written here.
 var taken_pickup_ids: Dictionary = {}
 ## gate id -> true. Shortcut gates that were unbarred for good.
 var opened_gate_ids: Dictionary = {}
