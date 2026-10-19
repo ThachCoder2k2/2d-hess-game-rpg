@@ -98,6 +98,7 @@ const ADOPTED_PLACEHOLDERS: Array[Dictionary] = [
 	{"path": "res://content/pickups/ruler_blade/icon.png", "kind": "icon", "id": "ruler_blade", "origin": "tracked sprite adopted at M1b (was ruler_blade.png)"},
 	{"path": "res://content/pickups/toy_weapon/pickup.png", "kind": "pickup", "id": "toy_weapon", "origin": "tracked sprite adopted at M1b (was toy_weapon_pickup.png)"},
 	{"path": "res://assets/tiles/kingdom/atlas.svg", "kind": "tileset", "id": "kingdom", "origin": "tracked tile atlas adopted at M1b (was kingdom_tiles.svg); the owner's single-tile PNGs will replace it"},
+	{"path": "res://content/tilesets/greybox/atlas.svg", "kind": "tileset", "id": "greybox", "origin": "the greybox tile kit of M5 (one flat tile per kind of cell, drawn for tools/build_room.gd); the owner's single-tile PNGs will replace it"},
 	{"path": "res://assets/ui/actor_view/facing_arrow.png", "kind": "ui", "id": "facing_arrow", "origin": "tracked sprite adopted at M1b"},
 	{"path": "res://assets/ui/actor_view/health_pip_full.png", "kind": "ui", "id": "health_pip_full", "origin": "tracked sprite adopted at M1b"},
 	{"path": "res://assets/ui/actor_view/health_pip_empty.png", "kind": "ui", "id": "health_pip_empty", "origin": "tracked sprite adopted at M1b"},

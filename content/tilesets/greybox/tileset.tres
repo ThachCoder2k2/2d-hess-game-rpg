@@ -1,0 +1,30 @@
+[gd_resource type="TileSet" format=3 uid="uid://cxndagyvahsde"]
+
+[ext_resource type="Texture2D" uid="uid://y7b5uf1lg8lo" path="res://content/tilesets/greybox/atlas.svg" id="1_atlas"]
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_greybox"]
+texture = ExtResource("1_atlas")
+texture_region_size = Vector2i(32, 32)
+0:0/0 = 0
+0:0/0/custom_data_1 = "floor"
+1:0/0 = 0
+1:0/0/custom_data_1 = "floor"
+2:0/0 = 0
+2:0/0/custom_data_0 = true
+2:0/0/custom_data_1 = "wall"
+3:0/0 = 0
+3:0/0/custom_data_1 = "gap"
+4:0/0 = 0
+4:0/0/custom_data_1 = "leapable_block"
+5:0/0 = 0
+5:0/0/custom_data_1 = "chalk"
+6:0/0 = 0
+6:0/0/custom_data_1 = "corruption"
+
+[resource]
+tile_size = Vector2i(32, 32)
+custom_data_layer_0/name = "solid"
+custom_data_layer_0/type = 1
+custom_data_layer_1/name = "kind"
+custom_data_layer_1/type = 4
+sources/0 = SubResource("TileSetAtlasSource_greybox")
