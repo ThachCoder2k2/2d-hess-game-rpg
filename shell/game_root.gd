@@ -95,6 +95,7 @@ func boot_zone(entry_id: StringName, entered_by_door := false) -> void:
 	boot_options.with_room_rules = true
 	boot_options.entry_id = entry_id
 	boot_options.entered_by_door = entered_by_door
+	boot_options.player_snapshot = zone_travel_bridge.take_carried_snapshot()
 	save_bridge.fill_boot_options(boot_options, current_room)
 	cast = EcsBoot.boot(ecs, boot_options)
 	player_id = int(cast.get("player", 0))
@@ -105,9 +106,8 @@ func boot_zone(entry_id: StringName, entered_by_door := false) -> void:
 	book_bridge.meet_pieces()
 	save_bridge.apply_unlocks()
 	outcome_bridge.begin_room()
-	zone_travel_bridge.apply_health_carry()
 	# The HUD and the board draw from the snapshot, so it must hold the booted room (with the carried
-	# health and the unlocks written above) before the first tick builds it again.
+	# pawn and the unlocks written above) before the first tick builds it again.
 	HudSnapshotSystem.build(ecs)
 	board_bridge.show_room(ecs.grid, debug_enabled)
 	camera_bridge.show_room(ecs.grid)
@@ -134,7 +134,7 @@ func _process(delta: float) -> void:
 func respawn() -> void:
 	save_bridge.remember_world()
 	book_bridge.close()
-	zone_travel_bridge.forget_health_carry()
+	zone_travel_bridge.forget_carry()
 	_attach_hero_view(ZoneStage.replace_hero_view(self, player_view, hero_parked_position))
 	var zone_id := save_bridge.room_zone_id()
 	current_room = ZoneStage.replace_zone_node(self, current_room, _zone_scene_for(zone_id if zone_id != &"" else current_zone_id))

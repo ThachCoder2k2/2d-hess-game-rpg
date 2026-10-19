@@ -107,14 +107,18 @@ static func travel_in_progress(main: Node) -> bool:
 	return main.get("zone_travel_bridge").travel_in_progress
 
 
-## The health carry that waits for the next boot (-1 = none).
+## The Courage the carry waits with for the next boot (-1 = nothing is carried).
 static func health_carry(main: Node) -> int:
-	return main.get("zone_travel_bridge").player_health_carry
+	var snapshot: PlayerSnapshot = main.get("zone_travel_bridge").carried_player_snapshot
+	return snapshot.courage_current if snapshot != null else -1
 
 
-## Plants a health carry as a trip would have left it, for the next boot to apply.
+## Plants a carry as a trip would have left it (the hero as it is now, with `value` Courage), for the next
+## boot to apply.
 static func plant_health_carry(main: Node, value: int) -> void:
-	main.get("zone_travel_bridge").player_health_carry = value
+	var snapshot := PlayerSnapshot.capture(ecs_of(main), player_id_of(main))
+	snapshot.courage_current = value
+	main.get("zone_travel_bridge").carried_player_snapshot = snapshot
 
 
 static func room_ending(main: Node) -> bool:

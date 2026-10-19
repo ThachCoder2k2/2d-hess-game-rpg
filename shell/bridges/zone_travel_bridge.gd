@@ -8,18 +8,21 @@ extends ShellBridge
 ##   1. a trip does not start while another is under way, while the room is ending (a death or a result
 ##      screen), without a world graph (a standalone room) or toward a zone the graph does not have;
 ##   2. the hero's control goes off for the whole trip;
-##   3. the hero's Courage is remembered as the carry (a snapshot taken NOW: a hit landing during the
-##      fade-out reaches only the old world's hero);
+##   3. the pawn is captured as a PlayerSnapshot (docs/game-base-plan.md 14.2) NOW: a hit landing during the
+##      fade-out reaches only the old world's hero, so the carry is the pawn as the trip began;
 ##   4. the destination room and entry are the run's from now on, and the run takes the old world's flags,
 ##      BEFORE the fade (in memory: a plain trip is no success event and saves nothing; a hub or a boss room
 ##      sets the checkpoint and saves when the pawn lands there, CheckpointSystem and SaveBridge);
-##   5. fade to black, swap the zone node behind the black, boot the new world (which applies and
-##      consumes the carry), fade back in;
+##   5. fade to black, swap the zone node behind the black, boot the new world (EcsBoot applies the snapshot
+##      right after the hero is built, and the bridge forgets it), fade back in;
 ##   6. control returns and the trip is over.
 ##
-## The carry is never saved: every launch starts the room with full Courage. The PlayerSnapshot of the
-## zone swap (step 3) replaces the bare integer.
-## Reads: the zone_exit event, the hero's health. Writes: the run's room and entry (through the SaveBridge),
+## The snapshot holds what plan 14.2 calls persistent and carries it across a swap: Courage (current and max),
+## the unlocked sword, the world's flags. Everything the plan calls per-room is not in it and so resets with
+## the world: skill cooldown, invulnerability and other status, the swing, telegraphs, hit progress, the floor
+## weapon held, cell effects. The facing is per-room too: the entry marker's room sets it. The carry is never
+## saved: every launch starts the room with full Courage (health never saves; a checkpoint refills it).
+## Reads: the zone_exit event, the hero's components (through PlayerSnapshot.capture). Writes: the run's room and entry (through the SaveBridge),
 ## the hero's control and Courage, the fade layer.
 
 ## Seconds the screen takes to fade to black, and again back.
@@ -27,9 +30,9 @@ const FADE_SECONDS := 0.22
 
 ## True from the moment a trip starts until its last step.
 var travel_in_progress := false
-## Courage carried across a zone trip: the hero's health when the trip started, applied to the next
-## world's hero by apply_health_carry() and consumed there. -1 = no carry (a fresh boot, or a death).
-var player_health_carry := -1
+## The pawn as it left the room it is leaving, for the next world's hero: captured when a trip starts, handed
+## to EcsBoot by take_carried_snapshot() and gone after it. Null = nothing is carried (a launch, a respawn).
+var carried_player_snapshot: PlayerSnapshot = null
 
 
 func register(router: EventRouter) -> void:
@@ -43,8 +46,7 @@ func travel_to(zone_id: StringName, entry_id: StringName) -> void:
 		return
 	travel_in_progress = true
 	root.set_player_control(false)
-	var health: EcsComponents.Health = root.ecs.get_component(root.player_id, EcsComponents.HEALTH)
-	player_health_carry = health.current if health != null else -1
+	carried_player_snapshot = PlayerSnapshot.capture(root.ecs, root.player_id)
 	root.save_bridge.record_room(zone_id, entry_id)
 	root.save_bridge.remember_world()
 	await _fade_to(1.0)
@@ -55,19 +57,21 @@ func travel_to(zone_id: StringName, entry_id: StringName) -> void:
 	travel_in_progress = false
 
 
-## Boot step: gives the freshly spawned hero the Courage the trip carried, then consumes the carry. A carry
-## above the hero's maximum is clamped, and a carry of 0 or less is not applied.
-func apply_health_carry() -> void:
-	if player_health_carry > 0:
-		var health: EcsComponents.Health = root.ecs.get_component(root.player_id, EcsComponents.HEALTH)
-		if health != null:
-			health.current = mini(player_health_carry, health.max_value)
-	player_health_carry = -1
+## Boot step: the snapshot for the hero of the world about to be built, which the scene hands to EcsBoot
+## through EcsBootOptions.player_snapshot; the bridge forgets it. Null when nothing is carried, and also when
+## the pawn left with no Courage: a fallen hero is not carried into a room (the room it fell in starts again
+## and the pawn begins it whole).
+func take_carried_snapshot() -> PlayerSnapshot:
+	var snapshot := carried_player_snapshot
+	carried_player_snapshot = null
+	if snapshot != null and snapshot.courage_current <= 0:
+		return null
+	return snapshot
 
 
 ## Forgets a pending carry (the hero fell: the next room starts with full Courage).
-func forget_health_carry() -> void:
-	player_health_carry = -1
+func forget_carry() -> void:
+	carried_player_snapshot = null
 
 
 func _on_zone_exit(event: Dictionary) -> void:

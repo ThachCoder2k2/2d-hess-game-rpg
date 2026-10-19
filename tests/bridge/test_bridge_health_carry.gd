@@ -1,11 +1,11 @@
 extends UnboundTest
 
-## Bridge characterization (M1a, ported in M3b): the health carry across zone changes.
-## ZoneTravelBridge.travel_to (it was main._travel_to) writes the hero's current health into its
-## player_health_carry, and GameRoot.boot_zone (it was main._boot_zone) applies it to the freshly
-## spawned player and then consumes
-## it. This suite pins that contract, including its sharp edges, because the
-## game_root.gd split (M3b step 2) moved exactly this write/apply/consume ordering.
+## Bridge characterization (M1a, ported in M3b): the Courage carried across zone changes.
+## ZoneTravelBridge.travel_to (it was main._travel_to) captures the hero when the trip starts (a PlayerSnapshot
+## since M3b step 3; it was the integer player_health_carry), and GameRoot.boot_zone (it was main._boot_zone)
+## has EcsBoot apply it to the freshly spawned player and then the bridge forgets it. This suite pins that
+## contract, including its sharp edges, because the game_root.gd split (M3b step 2) moved exactly this
+## write/apply/consume ordering. test_player_carry_zone_swaps holds the rest of what the snapshot carries.
 
 const Support := preload("res://tests/bridge/bridge_support.gd")
 const SUITE_NAME := "health_carry"

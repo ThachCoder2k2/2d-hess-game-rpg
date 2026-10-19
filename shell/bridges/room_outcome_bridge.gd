@@ -54,7 +54,7 @@ func _on_respawn_requested(_event: Dictionary) -> void:
 	if room_ending:
 		return
 	room_ending = true
-	root.zone_travel_bridge.forget_health_carry()
+	root.zone_travel_bridge.forget_carry()
 	root.audio_bridge.play(AudioBridge.DEFEAT_JINGLE_SOUND)
 	var defeat_message := ZoneStage.room_text(root.current_room, "get_defeat_message", "THE PAWN FALLS")
 	root.message_bridge.say(defeat_message)
