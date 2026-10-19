@@ -56,6 +56,8 @@ var message_bridge := MessageBridge.new()
 var hud_bridge := HudBridge.new()
 ## What happens to a view when its entity leaves the room (a taken floor weapon, a defeated enemy).
 var despawn_bridge := DespawnBridge.new()
+## What the room writes into the run and the run gives back to each room; the only asker of saves.
+var save_bridge := SaveBridge.new()
 
 
 func _ready() -> void:
@@ -71,22 +73,17 @@ func _ready() -> void:
 	message_bridge.attach(hud)
 	hud_bridge.attach(hud)
 	despawn_bridge.attach(self)
+	save_bridge.attach(self)
 
 	# Death and R both reload this scene; the SaveService (autoload) holds the run, so the
 	# reload boots in the zone the run is in, not the default. A game that has just launched
 	# has no run yet: ensure_session() continues the saved one.
-	var entry_id: StringName = &"start"
-	var save := _save_service()
-	if save != null:
-		save.ensure_session()
-		# A save asks the shell for the facts only the live world knows (its flags) before it writes.
-		save.saving.connect(_on_save_service_saving)
-		entry_id = save.state.checkpoint_entry_id
-		if world_graph != null and save.state.checkpoint_zone_id != &"" \
-			and save.state.checkpoint_zone_id != _zone_id_of(current_room):
-			current_room = _swap_zone_node(save.state.checkpoint_zone_id)
+	save_bridge.begin()
+	var checkpoint_zone := save_bridge.checkpoint_zone_id()
+	if world_graph != null and checkpoint_zone != &"" and checkpoint_zone != zone_id_of(current_room):
+		current_room = _swap_zone_node(checkpoint_zone)
 	_register_event_handlers()
-	_boot_zone(entry_id)
+	_boot_zone(save_bridge.checkpoint_entry_id())
 
 
 ## Builds a fresh EcsWorld from the current zone node. Called at scene start
@@ -105,27 +102,19 @@ func _boot_zone(entry_id: StringName) -> void:
 
 	var boot_options := EcsBootOptions.for_scene(player_view, current_room)
 	boot_options.fallback_player_cell = hero_start_cell
-	boot_options.skipped_pickup_names = _taken_pickup_names()
-	boot_options.opened_gate_ids = _opened_gate_ids()
+	save_bridge.fill_boot_options(boot_options, current_room)
 	cast = EcsBoot.boot(ecs, boot_options)
+	player_id = int(cast.get("player", 0))
 	board_bridge.bind_world(ecs.hud_snapshot, cast)
 	camera_bridge.bind_world(ecs.hud_snapshot, cast)
 	message_bridge.bind_world(ecs.hud_snapshot, cast)
 	hud_bridge.bind_world(ecs.hud_snapshot, cast)
 	despawn_bridge.bind_world(ecs.hud_snapshot, cast)
-	current_zone_id = _zone_id_of(current_room)
-	# The run's facts enter the new world before anything can ask for a save: the world's flags are
-	# the saved ones, and the save knows which zone this is.
-	var save := _save_service()
-	if save != null:
-		ecs.flags.load_dictionary(save.state.player.flags)
-		if current_zone_id != &"":
-			save.state.checkpoint_zone_id = current_zone_id
-			save.current_room_id = current_zone_id
-	_hide_opened_gate_visuals()
+	save_bridge.bind_world(ecs.hud_snapshot, cast)
+	current_zone_id = zone_id_of(current_room)
+	save_bridge.restore_run(current_zone_id)
 	_unlock_met_rules()
-	player_id = int(cast.get("player", 0))
-	_apply_player_unlocks()
+	save_bridge.apply_unlocks()
 	total_enemies = cast.get("enemies", []).size()
 	remaining_enemies = total_enemies
 	defeated_enemies = 0
@@ -156,7 +145,7 @@ func _make_world() -> EcsWorld:
 
 
 func _process(delta: float) -> void:
-	var save := _save_service()
+	var save := save_service()
 	if save != null:
 		save.add_play_time(delta)
 	input_poller.poll(delta, ecs.input_snapshot)
@@ -183,17 +172,11 @@ func _register_event_handlers() -> void:
 	camera_bridge.register(router)
 	audio_bridge.register(router)
 	hud_bridge.register(router)
-	router.on(Events.PICKUP_TAKEN, _on_pickup_taken)
-	router.on(Events.PLAYER_UNLOCK, _on_player_unlock)
+	save_bridge.register(router)
 	router.on(Events.DEFEATED, _on_defeated)
 	router.on(Events.ZONE_EXIT, _on_zone_exit)
-	router.on(Events.GATE_OPENED, _on_gate_opened)
 	despawn_bridge.register(router)
 	message_bridge.register(router)
-
-
-func _on_pickup_taken(event: Dictionary) -> void:
-	_record_pickup_taken(int(event.get("item", 0)))
 
 
 func _on_zone_exit(event: Dictionary) -> void:
@@ -282,50 +265,13 @@ func _travel_to(zone_id: StringName, entry_id: StringName) -> void:
 	_set_player_control(false)
 	var health: EcsComponents.Health = ecs.get_component(player_id, EcsComponents.HEALTH)
 	player_health_carry = health.current if health != null else -1
-	var save := _save_service()
-	if save != null:
-		save.state.checkpoint_zone_id = zone_id
-		save.state.checkpoint_entry_id = entry_id
-		save.request_save(&"checkpoint_reached")
+	save_bridge.record_checkpoint(zone_id, entry_id)
 	await _fade_to(1.0)
 	current_room = _swap_zone_node(zone_id)
 	_boot_zone(entry_id)
 	await _fade_to(0.0)
 	_set_player_control(true)
 	travel_in_progress = false
-
-
-func _apply_player_unlocks() -> void:
-	var combat: EcsComponents.PlayerCombat = ecs.get_component(player_id, EcsComponents.PLAYER_COMBAT)
-	if combat == null:
-		return
-	var save := _save_service()
-	if world_graph != null and save != null:
-		combat.sword_unlocked = save.state.has_unlock(PlayerSnapshot.SWORD_UNLOCK_ID)
-		# The shell just wrote a component the snapshot copies; publish it now rather than a tick late.
-		HudSnapshotSystem.build(ecs)
-	_hide_taken_player_unlocks()
-
-
-func _on_player_unlock(event: Dictionary) -> void:
-	var unlock_id := StringName(event.get("id", &""))
-	if unlock_id == &"":
-		return
-	var save := _save_service()
-	if save != null:
-		save.state.add_unlock(unlock_id)
-		save.request_save(&"unlock_gained")
-	_apply_player_unlocks()
-
-
-func _hide_taken_player_unlocks() -> void:
-	var save := _save_service()
-	if save == null or current_room == null:
-		return
-	for child in current_room.get_children():
-		var marker := child as PlayerUnlockMarker
-		if marker != null and save.state.has_unlock(marker.unlock_id):
-			marker.visible = false
 
 
 ## Replaces the current zone node with the target zone's scene, keeping the
@@ -370,63 +316,7 @@ func _fade_to(target_alpha: float) -> void:
 	await tween.finished
 
 
-func _record_pickup_taken(item_id: int) -> void:
-	var save := _save_service()
-	if save == null or current_zone_id == &"":
-		return
-	var marker_name := String(cast.get("pickup_name_by_entity", {}).get(item_id, ""))
-	if not marker_name.is_empty():
-		save.state.taken_pickup_ids[SaveData.pickup_id(current_zone_id, marker_name)] = true
-		save.request_save(&"pickup_taken")
-
-
-## A shortcut gate unbarred: permanent from this moment, across deaths and
-## launches. The marker's closed-gate visual disappears.
-func _on_gate_opened(event: Dictionary) -> void:
-	var gate_id := StringName(event.get("gate", &""))
-	var save := _save_service()
-	if save != null and gate_id != &"":
-		save.state.opened_gate_ids[String(gate_id)] = true
-		save.request_save(&"shortcut_opened")
-	_hide_opened_gate_visuals()
-
-
-func _opened_gate_ids() -> Array:
-	var save := _save_service()
-	if save == null:
-		return []
-	var ids: Array = []
-	for key in save.state.opened_gate_ids:
-		ids.append(StringName(key))
-	return ids
-
-
-func _hide_opened_gate_visuals() -> void:
-	if current_room == null:
-		return
-	var opened := _opened_gate_ids()
-	for child in current_room.get_children():
-		var gate_marker := child as GateMarker
-		if gate_marker != null:
-			gate_marker.visible = gate_marker.gate_id not in opened
-
-
-## Pickup marker names already taken in this zone (the save) — EcsBoot
-## skips them so grabbed weapons never respawn.
-func _taken_pickup_names() -> Array:
-	var save := _save_service()
-	var zone_id := _zone_id_of(current_room)
-	if save == null or zone_id == &"":
-		return []
-	var names: Array = []
-	var prefix := String(zone_id) + "/"
-	for key: String in save.state.taken_pickup_ids:
-		if key.begins_with(prefix):
-			names.append(key.substr(prefix.length()))
-	return names
-
-
-func _zone_id_of(zone_root: Node) -> StringName:
+static func zone_id_of(zone_root: Node) -> StringName:
 	if zone_root == null:
 		return &""
 	var value: Variant = zone_root.get("zone_id")
@@ -434,16 +324,8 @@ func _zone_id_of(zone_root: Node) -> StringName:
 
 
 ## The SaveService autoload, null-safe so headless tests without autoloads run.
-func _save_service() -> SaveServiceScript:
+func save_service() -> SaveServiceScript:
 	return get_node_or_null("/root/SaveService") as SaveServiceScript
-
-
-## The save is about to be written: it learns the flags of the world that is running now, because the
-## world is where they change (the save only holds them between rooms).
-func _on_save_service_saving(_reason: StringName) -> void:
-	var save := _save_service()
-	if save != null and ecs != null:
-		save.state.player.flags = ecs.flags.to_dictionary()
 
 
 ## --- The Book of House Rules -------------------------------------------
@@ -452,23 +334,17 @@ func _on_save_service_saving(_reason: StringName) -> void:
 ## Meeting a piece = sharing a zone with it. Every definition present in the
 ## freshly booted zone writes its page into the book, once, forever.
 func _unlock_met_rules() -> void:
-	var save := _save_service()
-	if save != null and current_room != null:
-		var newly_met := false
+	if current_room != null:
+		var met_piece_ids: Array[String] = []
 		for child in current_room.get_children():
 			var view := child as ActorView
-			if view == null or view.definition == null:
-				continue
-			var piece_id := String(view.definition.id)
-			if not save.state.unlocked_rule_ids.has(piece_id):
-				save.state.unlocked_rule_ids[piece_id] = true
-				newly_met = true
-		if newly_met:
-			save.request_save(&"rule_page_unlocked")
+			if view != null and view.definition != null:
+				met_piece_ids.append(String(view.definition.id))
+		if save_bridge.record_rule_pages(met_piece_ids):
 			message_bridge.say("New pieces on the board. The book writes their rules. [B]")
 	var book := _rule_book_ui()
 	if book != null:
-		book.refresh(_unlocked_rule_ids())
+		book.refresh(save_bridge.rule_page_ids())
 
 
 func _toggle_rule_book() -> void:
@@ -477,19 +353,9 @@ func _toggle_rule_book() -> void:
 		return
 	book.visible = not book.visible
 	if book.visible:
-		book.refresh(_unlocked_rule_ids())
+		book.refresh(save_bridge.rule_page_ids())
 	_set_player_control(not book.visible)
 
 
 func _rule_book_ui() -> RuleBookUI:
 	return get_node_or_null(^"RuleBookUI") as RuleBookUI
-
-
-func _unlocked_rule_ids() -> Array:
-	var save := _save_service()
-	if save == null:
-		return []
-	var ids: Array = []
-	for key in save.state.unlocked_rule_ids:
-		ids.append(StringName(key))
-	return ids
