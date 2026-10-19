@@ -1,3 +1,4 @@
+class_name GameRoot
 extends Node2D
 
 ## Boots the ECS world from the editor-authored scene and bridges its events to
@@ -53,6 +54,8 @@ var audio_bridge := AudioBridge.new()
 var message_bridge := MessageBridge.new()
 ## The HUD kept true to the room: Courage, the skill slot, the enemy count, the strike and cell lines.
 var hud_bridge := HudBridge.new()
+## What happens to a view when its entity leaves the room (a taken floor weapon, a defeated enemy).
+var despawn_bridge := DespawnBridge.new()
 
 
 func _ready() -> void:
@@ -67,6 +70,7 @@ func _ready() -> void:
 	audio_bridge.attach(self)
 	message_bridge.attach(hud)
 	hud_bridge.attach(hud)
+	despawn_bridge.attach(self)
 
 	# Death and R both reload this scene; the SaveService (autoload) holds the run, so the
 	# reload boots in the zone the run is in, not the default. A game that has just launched
@@ -108,6 +112,7 @@ func _boot_zone(entry_id: StringName) -> void:
 	camera_bridge.bind_world(ecs.hud_snapshot, cast)
 	message_bridge.bind_world(ecs.hud_snapshot, cast)
 	hud_bridge.bind_world(ecs.hud_snapshot, cast)
+	despawn_bridge.bind_world(ecs.hud_snapshot, cast)
 	current_zone_id = _zone_id_of(current_room)
 	# The run's facts enter the new world before anything can ask for a save: the world's flags are
 	# the saved ones, and the save knows which zone this is.
@@ -183,24 +188,16 @@ func _register_event_handlers() -> void:
 	router.on(Events.DEFEATED, _on_defeated)
 	router.on(Events.ZONE_EXIT, _on_zone_exit)
 	router.on(Events.GATE_OPENED, _on_gate_opened)
+	despawn_bridge.register(router)
 	message_bridge.register(router)
 
 
 func _on_pickup_taken(event: Dictionary) -> void:
 	_record_pickup_taken(int(event.get("item", 0)))
-	_free_pickup_view(int(event.get("item", 0)))
 
 
 func _on_zone_exit(event: Dictionary) -> void:
 	_travel_to(StringName(event.get("zone", &"")), StringName(event.get("entry", &"start")))
-
-
-func _free_pickup_view(item_id: int) -> void:
-	var pickup_views: Dictionary = cast.get("pickup_view_by_entity", {})
-	var view := pickup_views.get(item_id) as Node2D
-	if view != null and is_instance_valid(view):
-		view.queue_free()
-	pickup_views.erase(item_id)
 
 
 func _on_defeated(event: Dictionary) -> void:
@@ -211,23 +208,7 @@ func _on_defeated(event: Dictionary) -> void:
 	remaining_enemies = maxi(0, remaining_enemies - 1)
 	defeated_enemies += 1
 	hud_bridge.show_encounter_count(remaining_enemies, total_enemies)
-	_play_defeat_animation(entity)
 	_check_completion()
-
-
-## Death visuals are editor-owned now: ViewSyncSystem travels the view's
-## AnimationTree to the defeat clip (squash + crumple sound). The bridge only
-## schedules the despawn after the clip has had its moment.
-func _play_defeat_animation(entity: int) -> void:
-	var view := cast.get("view_by_entity", {}).get(entity) as Node2D
-	if view == null or not is_instance_valid(view):
-		return
-	var tween := create_tween()
-	tween.tween_interval(0.6)
-	tween.tween_callback(func() -> void:
-		ecs.remove_component(entity, EcsComponents.VIEW_REF)
-		if is_instance_valid(view):
-			view.queue_free())
 
 
 func _check_completion() -> void:
