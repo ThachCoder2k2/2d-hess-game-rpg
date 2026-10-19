@@ -9,6 +9,7 @@ extends RefCounted
 ## after every boot, because every room is a new world:
 ##   snapshot  the world's HudSnapshot, the read-only picture a bridge may read (it is rebuilt in place,
 ##             so a bridge keeps the reference for the whole room). A bridge never reads a component.
+##             Until the first boot it is an empty one, so a bridge never has to ask whether it has one.
 ##   cast      the dictionary EcsBoot.boot() returned: the views and names of what it spawned.
 ## A bridge that must change the simulation does it with a typed request on world.commands; it never
 ## sets a component (the bridges that still write one are listed in docs/ARCHITECTURE.md).
@@ -16,7 +17,7 @@ extends RefCounted
 ## The registration order of the bridges is the order they react in when one event has several
 ## (game_root.gd lists it in one place).
 
-var snapshot: HudSnapshot
+var snapshot := HudSnapshot.new()
 var cast: Dictionary = {}
 
 
@@ -33,7 +34,7 @@ func bind_world(world_snapshot: HudSnapshot, world_cast: Dictionary) -> void:
 
 ## The entity id of the hero in the room that is running, 0 when there is none.
 func player_entity() -> int:
-	return snapshot.player_entity if snapshot != null else 0
+	return snapshot.player_entity
 
 
 func is_player(entity: int) -> bool:

@@ -51,7 +51,8 @@ var camera_bridge := CameraBridge.new()
 var audio_bridge := AudioBridge.new()
 ## The words on the status line that events cause (and the line the scene and other bridges write through).
 var message_bridge := MessageBridge.new()
-var _last_token_owner := 0
+## The HUD kept true to the room: Courage, the skill slot, the enemy count, the strike and cell lines.
+var hud_bridge := HudBridge.new()
 
 
 func _ready() -> void:
@@ -65,6 +66,7 @@ func _ready() -> void:
 	camera_bridge.attach(camera_rig)
 	audio_bridge.attach(self)
 	message_bridge.attach(hud)
+	hud_bridge.attach(hud)
 
 	# Death and R both reload this scene; the SaveService (autoload) holds the run, so the
 	# reload boots in the zone the run is in, not the default. A game that has just launched
@@ -105,6 +107,7 @@ func _boot_zone(entry_id: StringName) -> void:
 	board_bridge.bind_world(ecs.hud_snapshot, cast)
 	camera_bridge.bind_world(ecs.hud_snapshot, cast)
 	message_bridge.bind_world(ecs.hud_snapshot, cast)
+	hud_bridge.bind_world(ecs.hud_snapshot, cast)
 	current_zone_id = _zone_id_of(current_room)
 	# The run's facts enter the new world before anything can ask for a save: the world's flags are
 	# the saved ones, and the save knows which zone this is.
@@ -122,7 +125,6 @@ func _boot_zone(entry_id: StringName) -> void:
 	remaining_enemies = total_enemies
 	defeated_enemies = 0
 	room_ending = false
-	_last_token_owner = -1
 
 	if player_health_carry > 0:
 		var health: EcsComponents.Health = ecs.get_component(player_id, EcsComponents.HEALTH)
@@ -135,7 +137,8 @@ func _boot_zone(entry_id: StringName) -> void:
 	HudSnapshotSystem.build(ecs)
 	board_bridge.show_room(ecs.grid, debug_enabled)
 	camera_bridge.show_room(ecs.grid)
-	_setup_hud()
+	hud_bridge.show_room(remaining_enemies, total_enemies)
+	message_bridge.say(_room_text("get_start_message", "Break the black line."))
 
 
 func _make_world() -> EcsWorld:
@@ -166,22 +169,7 @@ func _process(delta: float) -> void:
 	if not room_ending:
 		ecs.tick(delta)
 	router.route(ecs.drain_events())
-	_update_token_hud()
-	_update_cell_status()
-
-
-func _setup_hud() -> void:
-	if hud == null:
-		return
-	var snapshot := ecs.hud_snapshot
-	hud.setup(snapshot.player_courage_current if snapshot.player_entity != 0 else 3)
-	hud.set_encounter_count(remaining_enemies, total_enemies)
-	_update_skill_cooldown(0.0)
-	_update_token_hud()
-	var room_message := "Break the black line."
-	if current_room != null and current_room.has_method("get_start_message"):
-		room_message = String(current_room.call("get_start_message"))
-	message_bridge.say(room_message)
+	hud_bridge.refresh()
 
 
 ## Every event type the scene reacts to, and what reacts. The router calls these in registration order.
@@ -189,18 +177,13 @@ func _register_event_handlers() -> void:
 	board_bridge.register(router)
 	camera_bridge.register(router)
 	audio_bridge.register(router)
-	router.on(Events.DAMAGED, _on_damaged)
-	router.on(Events.SKILL_COOLDOWN, _on_skill_cooldown)
+	hud_bridge.register(router)
 	router.on(Events.PICKUP_TAKEN, _on_pickup_taken)
 	router.on(Events.PLAYER_UNLOCK, _on_player_unlock)
 	router.on(Events.DEFEATED, _on_defeated)
 	router.on(Events.ZONE_EXIT, _on_zone_exit)
 	router.on(Events.GATE_OPENED, _on_gate_opened)
 	message_bridge.register(router)
-
-
-func _on_skill_cooldown(event: Dictionary) -> void:
-	_update_skill_cooldown(float(event.get("time_left", 0.0)))
 
 
 func _on_pickup_taken(event: Dictionary) -> void:
@@ -210,15 +193,6 @@ func _on_pickup_taken(event: Dictionary) -> void:
 
 func _on_zone_exit(event: Dictionary) -> void:
 	_travel_to(StringName(event.get("zone", &"")), StringName(event.get("entry", &"start")))
-
-
-func _on_damaged(event: Dictionary) -> void:
-	if int(event.get("entity", 0)) != player_id:
-		return
-	var remaining := int(event.get("remaining", 0))
-	if hud != null:
-		hud.flash_damage()
-		hud.set_courage(remaining)
 
 
 func _free_pickup_view(item_id: int) -> void:
@@ -236,8 +210,7 @@ func _on_defeated(event: Dictionary) -> void:
 		return
 	remaining_enemies = maxi(0, remaining_enemies - 1)
 	defeated_enemies += 1
-	if hud != null:
-		hud.set_encounter_count(remaining_enemies, total_enemies)
+	hud_bridge.show_encounter_count(remaining_enemies, total_enemies)
 	_play_defeat_animation(entity)
 	_check_completion()
 
@@ -275,7 +248,7 @@ func _check_completion() -> void:
 	audio_bridge.play(AudioBridge.ROOM_CLEAR_SOUND)
 	var clear_message := _room_text("get_clear_message", "ROOM CLEARED")
 	message_bridge.say(clear_message)
-	_show_result(clear_message, _room_text("get_clear_subtitle", "PRESS R TO RESET"))
+	hud_bridge.show_result(clear_message, _room_text("get_clear_subtitle", "PRESS R TO RESET"))
 
 
 func _on_player_defeated() -> void:
@@ -288,44 +261,13 @@ func _on_player_defeated() -> void:
 	audio_bridge.play(AudioBridge.DEFEAT_JINGLE_SOUND)
 	var defeat_message := _room_text("get_defeat_message", "THE PAWN FALLS")
 	message_bridge.say(defeat_message)
-	_show_result(defeat_message, _room_text("get_defeat_subtitle", "THE CHILD RESETS THE BOARD"))
+	hud_bridge.show_result(defeat_message, _room_text("get_defeat_subtitle", "THE CHILD RESETS THE BOARD"))
 	var tree := get_tree()
 	if tree == null:
 		return
 	await tree.create_timer(0.85).timeout
 	if is_inside_tree():
 		tree.reload_current_scene()
-
-
-func _update_token_hud() -> void:
-	var token_owner := ecs.hud_snapshot.attack_token_owner
-	if hud == null or token_owner == _last_token_owner:
-		return
-	_last_token_owner = token_owner
-	if total_enemies <= 0:
-		hud.set_token_owner("", false)
-	elif _last_token_owner == 0:
-		hud.set_token_owner("")
-	else:
-		hud.set_token_owner(String(cast.get("piece_name_by_entity", {}).get(_last_token_owner, "Enemy")))
-
-
-func _update_cell_status() -> void:
-	if hud == null:
-		return
-	var snapshot := ecs.hud_snapshot
-	if snapshot.player_entity != 0:
-		hud.set_cell_status(snapshot.player_cell, _facing_name(snapshot.player_facing))
-
-
-## Shows the skill slot for `time_left` seconds of cooldown. The slot is redrawn when a
-## skill_cooldown event arrives (and at boot), as it always was, from the snapshot's length and
-## sword flag. M4's widgets draw the snapshot every frame instead.
-func _update_skill_cooldown(time_left: float) -> void:
-	if hud == null:
-		return
-	var snapshot := ecs.hud_snapshot
-	hud.set_skill_cooldown(time_left, snapshot.skill_cooldown_duration, snapshot.sword_unlocked)
 
 
 func _set_player_control(value: bool) -> void:
@@ -344,11 +286,6 @@ func _room_text(getter: StringName, fallback: String) -> String:
 	if current_room != null and current_room.has_method(getter):
 		return String(current_room.call(getter))
 	return fallback
-
-
-func _show_result(title: String, subtitle: String) -> void:
-	if hud != null:
-		hud.show_result(title, subtitle)
 
 
 ## --- Zone travel (the world map) -----------------------------------------
@@ -575,13 +512,3 @@ func _unlocked_rule_ids() -> Array:
 	for key in save.state.unlocked_rule_ids:
 		ids.append(StringName(key))
 	return ids
-
-
-func _facing_name(direction: Vector2i) -> String:
-	if direction == Vector2i.UP:
-		return "N"
-	if direction == Vector2i.DOWN:
-		return "S"
-	if direction == Vector2i.LEFT:
-		return "W"
-	return "E"
