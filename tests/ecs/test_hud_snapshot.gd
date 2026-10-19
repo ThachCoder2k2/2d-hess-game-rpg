@@ -17,6 +17,7 @@ func _init() -> void:
 	_check_the_skill_slot()
 	_check_enemy_briefs_and_telegraph_progress()
 	_check_the_token_owner()
+	_check_the_room_enemy_counts()
 	_check_it_is_rebuilt_in_place_counted_and_not_while_frozen()
 	_check_it_only_reads()
 	_check_presentation_names_no_component()
@@ -157,6 +158,22 @@ func _check_the_token_owner() -> void:
 	world.attack_token_owner = pawn
 	HudSnapshotSystem.build(world)
 	_expect(world.hud_snapshot.attack_token_owner == pawn, "the snapshot names the enemy that holds the token")
+	world.queue_free()
+
+
+func _check_the_room_enemy_counts() -> void:
+	var world := _make_world()
+	HudSnapshotSystem.build(world)
+	_expect(world.hud_snapshot.room_enemies_total == 0 and world.hud_snapshot.room_enemies_remaining == 0, "a world with no room entity shows no enemy count")
+	var state := RoomObjectiveState.new()
+	state.enemies_total = 4
+	state.enemies_remaining = 3
+	world.add_component(world.create_entity(), RoomObjectiveState.KEY, state)
+	HudSnapshotSystem.build(world)
+	_expect(world.hud_snapshot.room_enemies_total == 4 and world.hud_snapshot.room_enemies_remaining == 3, "a room's count is copied from its state: three of the four it began with still stand")
+	state.enemies_remaining = 0
+	HudSnapshotSystem.build(world)
+	_expect(world.hud_snapshot.room_enemies_total == 4 and world.hud_snapshot.room_enemies_remaining == 0, "and follows it")
 	world.queue_free()
 
 

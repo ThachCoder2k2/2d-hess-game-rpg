@@ -1,8 +1,8 @@
 extends SchedulePhase
 
 ## Stage 8: the world reacts to what the tick just resolved: held interactions and rescues
-## (InteractionSystem), cell triggers (TriggerSystem, M6), room objectives (ObjectiveSystem, M3b).
-## Empty until the first of them lands.
+## (InteractionSystem), cell triggers (TriggerSystem, M6), room objectives (ObjectiveSystem, M3b). Only
+## ObjectiveSystem exists so far.
 
 
 func phase_name() -> StringName:
@@ -11,4 +11,5 @@ func phase_name() -> StringName:
 
 func systems() -> Array[GDScript]:
 	return [
+		ObjectiveSystem,
 	]

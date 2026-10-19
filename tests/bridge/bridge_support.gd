@@ -125,8 +125,19 @@ static func set_room_ending(main: Node, value: bool) -> void:
 	main.get("outcome_bridge").room_ending = value
 
 
+## How many enemies the room began with, as the HUD's snapshot says (ObjectiveSystem keeps the count).
 static func total_enemies(main: Node) -> int:
-	return main.get("outcome_bridge").enemies_total
+	return ecs_of(main).hud_snapshot.room_enemies_total
+
+
+## Gives the room that is running `objective` for its win condition, as if its scene had authored it:
+## the objective is read from the room node when the world boots (EcsBoot), so a test that sets one on a
+## room already booted puts it on the room node AND on the live world's room state.
+static func set_room_objective(main: Node, objective: RoomObjective) -> void:
+	main.get("current_room").set("objective", objective)
+	for room_entity in ecs_of(main).query([RoomObjectiveState.KEY]):
+		var state: RoomObjectiveState = ecs_of(main).get_component(room_entity, RoomObjectiveState.KEY)
+		state.objective = objective
 
 
 ## Starts a zone trip the way the zone_exit event does and waits for it to finish. Called without

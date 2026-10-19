@@ -36,6 +36,12 @@ var opened_gate_ids: Array = []
 ## differently sets it.
 var view_size := Vector2.ZERO
 
+## True to give the room an entity of its own (RoomObjectiveState, and from M3b step 3 the checkpoint data),
+## which is what ObjectiveSystem and CheckpointSystem judge. The shell sets it for the room it plays. A tool
+## or a test that only wants to see what spawns (the world dump, the actor stage) leaves it off, so its
+## world holds exactly the entities the room's scene makes and no more.
+var with_room_rules := false
+
 ## What the pawn carries into this room (PlayerSnapshot, docs/game-base-plan.md 14.2): the shell
 ## captures it from the old world at the room exit and passes it here. boot() applies it to the hero
 ## right after the hero is built, so the carried courage, the sword and the flags win over the

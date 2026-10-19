@@ -59,7 +59,7 @@ func _run() -> void:
 	objective.required_defeats = 2
 	objective.clear_message = "TWO DOWN"
 	objective.clear_subtitle = "THE YARD GOES QUIET"
-	main.get("current_room").set("objective", objective)
+	Support.set_room_objective(main, objective)
 	_kill_enemy(main, 0)
 	_expect(not Support.room_ending(main) and not hud.result_panel.visible, "one defeat of the two the objective asks for does not end the room")
 	_kill_enemy(main, 1)
@@ -72,11 +72,11 @@ func _run() -> void:
 	intent.direction = Vector2i.RIGHT
 	Support.pump(main, 0.45)
 	_expect(Support.player_cell(main) == cell_at_win, "the world stops ticking once the room has ended")
-	# The world no longer ticks, so a late defeat can only arrive as an event: it must not end the room twice.
-	Support.ecs_of(main).emit_event({"type": Events.DEFEATED, "entity": main.get("cast")["enemies"][enemy_count - 1], "source": 0, "tags": []})
+	# The world no longer ticks, so a late verdict can only arrive as an event: it must not end the room twice.
+	Support.ecs_of(main).emit_event({"type": Events.ROOM_CLEARED, "zone": T4, "defeated": enemy_count, "total": enemy_count, "has_objective": true})
 	hud.set_status("sentinel")
 	Support.route_events(main)
-	_expect(Support.room_ending(main) and hud.objective_label.text == "sentinel", "a defeat that arrives after the win does not end the room a second time")
+	_expect(Support.room_ending(main) and hud.objective_label.text == "sentinel", "a clear that arrives after the win does not end the room a second time")
 
 	Support.end_suite(self, save_service)
 

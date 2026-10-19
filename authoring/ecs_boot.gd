@@ -11,7 +11,8 @@ extends RefCounted
 ## Boots everything `options` (EcsBootOptions) names and returns the cast:
 ## { "player": id, "enemies": [ids], "view_by_entity": {id: Node2D},
 ##   "piece_name_by_entity": {id: String}, "pickup_view_by_entity": {id: Node2D},
-##   "pickup_name_by_entity": {id: String} }
+##   "pickup_name_by_entity": {id: String}, "room": id }
+## `room` is the room's own entity (0 unless the options asked for room rules).
 ## What the save already knows (taken pickups, opened gates) arrives in the options: the bridge
 ## reads the save and EcsBoot never does.
 static func boot(world: EcsWorld, options: EcsBootOptions) -> Dictionary:
@@ -28,6 +29,7 @@ static func boot(world: EcsWorld, options: EcsBootOptions) -> Dictionary:
 		"piece_name_by_entity": {},
 		"pickup_view_by_entity": {},
 		"pickup_name_by_entity": {},
+		"room": 0,
 	}
 	if room_root != null:
 		shape_grid(world, room_root, options.view_size)
@@ -68,6 +70,8 @@ static func boot(world: EcsWorld, options: EcsBootOptions) -> Dictionary:
 			cast["view_by_entity"][enemy_id] = enemy_view
 			cast["piece_name_by_entity"][enemy_id] = enemy_view.definition.piece_name
 		_spawn_pickups(world, room_root, cast, skipped_pickup_names)
+		if options.with_room_rules:
+			cast["room"] = _spawn_room_entity(world, room_root, cast)
 	return cast
 
 
@@ -97,6 +101,21 @@ static func project_view_size() -> Vector2:
 	return Vector2(
 		float(ProjectSettings.get_setting("display/window/size/viewport_width")),
 		float(ProjectSettings.get_setting("display/window/size/viewport_height")))
+
+
+## The room's own entity: what the room asks of the pawn (its RoomEncounter objective and zone id) and
+## how many enemies it began with, for ObjectiveSystem to judge. Made last, so every other entity keeps
+## the number it always had. Returns the entity id.
+static func _spawn_room_entity(world: EcsWorld, room_root: Node, cast: Dictionary) -> int:
+	var room_entity := world.create_entity()
+	var objective_state := RoomObjectiveState.new()
+	var zone_id: Variant = room_root.get("zone_id")
+	objective_state.zone_id = zone_id if zone_id is StringName else &""
+	objective_state.objective = room_root.get("objective") as RoomObjective
+	objective_state.enemies_total = cast["enemies"].size()
+	objective_state.enemies_remaining = cast["enemies"].size()
+	world.add_component(room_entity, RoomObjectiveState.KEY, objective_state)
+	return room_entity
 
 
 ## Shortcut gates: every GateMarker child blocks its cell unless the save

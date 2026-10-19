@@ -76,14 +76,18 @@ func _check_show_room_draws_the_room() -> void:
 	var hud: GameHud = parts[1]
 	var snapshot: HudSnapshot = parts[3]
 	hud.show_result("OLD RESULT", "STILL UP")
-	bridge.show_room(3, 4)
+	snapshot.room_enemies_remaining = 3
+	snapshot.room_enemies_total = 4
+	bridge.show_room()
 	_expect(hud.courage_label.text.count("◆") == 2, "a room shows the Courage the snapshot says the hero has")
 	_expect(hud.encounter_label.text == "ENEMIES 3/4", "and its enemy count")
 	_expect(not hud.result_panel.visible and not hud.result_label.visible, "and no result panel left over from the last room")
 	_expect(hud.skill_label.text == "FIND SWORD", "and the skill slot at rest")
 	_expect(hud.token_label.text == "ENEMY STRIKE READY", "and the strike line for a room with enemies and a free token")
 	snapshot.player_entity = 0
-	bridge.show_room(0, 0)
+	snapshot.room_enemies_remaining = 0
+	snapshot.room_enemies_total = 0
+	bridge.show_room()
 	_expect(hud.courage_label.text.count("◆") == 3, "a room whose snapshot has no hero shows full Courage")
 	_expect(hud.token_label.text == "", "and a room with no enemies shows no strike line")
 
@@ -93,7 +97,9 @@ func _check_the_strike_line_follows_the_token() -> void:
 	var bridge: HudBridge = parts[0]
 	var hud: GameHud = parts[1]
 	var snapshot: HudSnapshot = parts[3]
-	bridge.show_room(2, 2)
+	snapshot.room_enemies_remaining = 2
+	snapshot.room_enemies_total = 2
+	bridge.show_room()
 	snapshot.attack_token_owner = PAWN
 	bridge.refresh()
 	_expect(hud.token_label.text == "STRIKE: BLACK PAWN", "the strike line names the piece that holds the token")
@@ -130,8 +136,16 @@ func _check_counts_and_the_result_panel() -> void:
 	var parts := _make_bridge()
 	var bridge: HudBridge = parts[0]
 	var hud: GameHud = parts[1]
-	bridge.show_encounter_count(1, 4)
-	_expect(hud.encounter_label.text == "ENEMIES 1/4", "the room outcome updates the enemy count through the bridge")
+	var snapshot: HudSnapshot = parts[3]
+	snapshot.room_enemies_remaining = 4
+	snapshot.room_enemies_total = 4
+	bridge.show_room()
+	snapshot.room_enemies_remaining = 1
+	bridge.refresh()
+	_expect(hud.encounter_label.text == "ENEMIES 1/4", "the enemy count follows the snapshot each frame (ObjectiveSystem keeps it true)")
+	hud.encounter_label.text = "touched"
+	bridge.refresh()
+	_expect(hud.encounter_label.text == "touched", "and is redrawn only when the count changes")
 	bridge.show_result("ROOM CLEARED", "PRESS R TO RESET")
 	_expect(hud.result_panel.visible and hud.result_label.text == "ROOM CLEARED\nPRESS R TO RESET", "and puts the result panel up")
 
@@ -144,8 +158,7 @@ func _check_a_scene_without_a_hud() -> void:
 		{"type": Events.DAMAGED, "entity": 0, "amount": 1, "remaining": 1, "direction": Vector2i.ZERO, "source": 0, "tags": []},
 		{"type": Events.SKILL_COOLDOWN, "entity": 0, "time_left": 0.0},
 	])
-	bridge.show_room(1, 1)
+	bridge.show_room()
 	bridge.refresh()
-	bridge.show_encounter_count(0, 1)
 	bridge.show_result("a", "b")
 	_expect(true, "a scene with no HUD runs the same events and frames without a word")

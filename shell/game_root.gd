@@ -90,6 +90,7 @@ func boot_zone(entry_id: StringName) -> void:
 		player_view.position = ecs.grid.cell_to_world(entry_cell)
 	var boot_options := EcsBootOptions.for_scene(player_view, current_room)
 	boot_options.fallback_player_cell = hero_start_cell
+	boot_options.with_room_rules = true
 	save_bridge.fill_boot_options(boot_options, current_room)
 	cast = EcsBoot.boot(ecs, boot_options)
 	player_id = int(cast.get("player", 0))
@@ -99,14 +100,14 @@ func boot_zone(entry_id: StringName) -> void:
 	save_bridge.restore_run(current_zone_id)
 	book_bridge.meet_pieces()
 	save_bridge.apply_unlocks()
-	outcome_bridge.begin_room(cast.get("enemies", []).size())
+	outcome_bridge.begin_room()
 	zone_travel_bridge.apply_health_carry()
 	# The HUD and the board draw from the snapshot, so it must hold the booted room (with the carried
 	# health and the unlocks written above) before the first tick builds it again.
 	HudSnapshotSystem.build(ecs)
 	board_bridge.show_room(ecs.grid, debug_enabled)
 	camera_bridge.show_room(ecs.grid)
-	hud_bridge.show_room(outcome_bridge.enemies_remaining, outcome_bridge.enemies_total)
+	hud_bridge.show_room()
 	message_bridge.say(ZoneStage.room_text(current_room, "get_start_message", "Break the black line."))
 
 

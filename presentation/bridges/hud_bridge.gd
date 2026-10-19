@@ -3,11 +3,11 @@ extends EventBridge
 
 ## The HUD's responsibility: keeping GameHud (courage, skill slot, enemy count, whose strike is next,
 ## the cell the hero stands on, the result panel) true to the room. Two kinds of change:
-##   - events: a hit on the hero flashes the screen and redraws the Courage pips; the skill's cooldown
-##     changing redraws the slot;
-##   - the snapshot, every frame: whose strike is next and the hero's cell and facing are read from
-##     the HudSnapshot (refresh()), never from a component. M4's widgets draw the snapshot themselves
-##     and this half goes away.
+##   - events: a hit on the hero flashes the screen and redraws the Courage pips, and so does a heal (a
+##     checkpoint refill); the skill's cooldown changing redraws the slot;
+##   - the snapshot, every frame: the enemy count, whose strike is next and the hero's cell and facing are
+##     read from the HudSnapshot (refresh()), never from a component. M4's widgets draw the snapshot
+##     themselves and this half goes away.
 ## The status line (the words) is the MessageBridge's, not this one's.
 ## Reads: events and the HudSnapshot. Writes: the HUD. Decides: nothing.
 
@@ -15,8 +15,9 @@ extends EventBridge
 const COURAGE_WITHOUT_HERO := 3
 
 var hud: GameHud
-## How many enemies the room started with; a room with none shows no strike line.
-var enemy_total := 0
+## The enemy count the line was last drawn for, as (still standing, began with), so it is redrawn only
+## when it changes. (-1, -1) means "never drawn for this room".
+var last_enemy_count := Vector2i(-1, -1)
 ## The attack-token owner the strike line was last drawn for, so it is redrawn only when it changes.
 ## -1 means "never drawn for this room".
 var last_token_owner := 0
@@ -33,27 +34,23 @@ func register(router: EventRouter) -> void:
 
 ## Draws the room that just booted: Courage, the enemy count, the skill slot at rest and the strike
 ## line. The caller says the room's opening line through the MessageBridge afterwards.
-func show_room(enemies_remaining: int, enemies_total: int) -> void:
-	enemy_total = enemies_total
+func show_room() -> void:
+	last_enemy_count = Vector2i(-1, -1)
 	last_token_owner = -1
 	if hud == null:
 		return
 	hud.setup(snapshot.player_courage_current if snapshot.player_entity != 0 else COURAGE_WITHOUT_HERO)
-	hud.set_encounter_count(enemies_remaining, enemies_total)
+	_refresh_enemy_count()
 	_show_skill_cooldown(0.0)
 	_refresh_token_owner()
 
 
-## Once per frame, after the events: the strike line and the cell line follow the snapshot.
+## Once per frame, after the events: the enemy count, the strike line and the cell line follow the snapshot.
 func refresh() -> void:
+	_refresh_enemy_count()
 	_refresh_token_owner()
 	if hud != null and snapshot.player_entity != 0:
 		hud.set_cell_status(snapshot.player_cell, facing_name(snapshot.player_facing))
-
-
-func show_encounter_count(enemies_remaining: int, enemies_total: int) -> void:
-	if hud != null:
-		hud.set_encounter_count(enemies_remaining, enemies_total)
 
 
 func show_result(title: String, subtitle: String) -> void:
@@ -91,12 +88,21 @@ func _show_skill_cooldown(time_left: float) -> void:
 		hud.set_skill_cooldown(time_left, snapshot.skill_cooldown_duration, snapshot.sword_unlocked)
 
 
+func _refresh_enemy_count() -> void:
+	var enemy_count := Vector2i(snapshot.room_enemies_remaining, snapshot.room_enemies_total)
+	if hud == null or enemy_count == last_enemy_count:
+		return
+	last_enemy_count = enemy_count
+	hud.set_encounter_count(enemy_count.x, enemy_count.y)
+
+
+## A room with no enemies shows no strike line.
 func _refresh_token_owner() -> void:
 	var token_owner := snapshot.attack_token_owner
 	if hud == null or token_owner == last_token_owner:
 		return
 	last_token_owner = token_owner
-	if enemy_total <= 0:
+	if snapshot.room_enemies_total <= 0:
 		hud.set_token_owner("", false)
 	elif last_token_owner == 0:
 		hud.set_token_owner("")

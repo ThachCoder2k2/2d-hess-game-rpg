@@ -338,7 +338,16 @@ const ENDING_REACHED := &"ending_reached"
 
 const FLOW_EVENTS: Dictionary = {
 	CHECKPOINT_SET: {"status": STATUS_FUTURE, "about": "M3b: the player reached a checkpoint.", "payload": {}},
-	ROOM_CLEARED: {"status": STATUS_FUTURE, "about": "M3b: ObjectiveSystem judged the room's objective complete.", "payload": {}},
+	ROOM_CLEARED: {
+		"status": STATUS_EMITTED,
+		"about": "ObjectiveSystem judged the room's objective met (every enemy down by default, or the count the room names). Said once per room.",
+		"payload": {
+			"zone": "StringName: the room's zone id, &\"\" for a room outside the world graph",
+			"defeated": "int: how many enemies had fallen when it was judged",
+			"total": "int: how many enemies the room began with",
+			"has_objective": "bool: the room carries its own RoomObjective (a quiet clear in the world has none)",
+		},
+	},
 	RESPAWN_REQUESTED: {"status": STATUS_FUTURE, "about": "M3b: the player fell; GameFlow rebuilds the zone at the checkpoint.", "payload": {}},
 	RESCUE_COMPLETED: {"status": STATUS_FUTURE, "about": "M11: a held interaction freed a captive piece.", "payload": {}},
 	DIRECTION_LOCKED: {"status": STATUS_FUTURE, "about": "M13: Act 6 locked one of the pawn's directions.", "payload": {}},
