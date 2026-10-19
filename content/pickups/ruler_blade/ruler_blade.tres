@@ -6,7 +6,7 @@
 [resource]
 script = ExtResource("1")
 id = &"ruler_blade"
-display_name = "Ruler Blade"
+display_name = "ITEM_RULER_BLADE_NAME"
 tags = Array[StringName]([&"melee"])
 shape = 1
 telegraph_time = 0.56

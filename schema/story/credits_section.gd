@@ -3,11 +3,13 @@ extends Resource
 
 ## One block of the credits roll: a heading and the lines under it (docs/game-base-plan.md 8.8, 9.2). The
 ## credits scene shows the heading large and the lines below it, in the order they are written; an empty line
-## is a gap. Plain text for now: the text pipeline (M4) moves the words to `CREDIT_` keys.
+## is a gap. The heading and the credit lines are TEXT KEYS (`CREDIT_` rows of story.po, docs/game-base-plan.md 8.9);
+## the lines of a fine-print block are legal text, shown exactly as written in every language.
 
-## The block's heading ("Made with", "Licenses").
+## Text key: the block's heading ("Made with", "Licenses").
 @export var heading := ""
-## The lines under the heading, one per entry. An empty string is a gap between two groups.
+## The lines under the heading, one per entry: text keys, or the legal text itself when `fine_print`. An empty string
+## is a gap between two groups.
 @export var lines := PackedStringArray()
 ## Draw the lines small, as fine print (the licence texts), instead of as credit lines.
 @export var fine_print := false

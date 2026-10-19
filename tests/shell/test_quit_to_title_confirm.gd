@@ -37,7 +37,7 @@ func _run() -> void:
 	var question := menu.confirm_panel.message_label.text
 	_expect(question.contains("Black Pawn Captain"), "the question names the last checkpoint, the boss room B1 (%s)" % question.replace("\n", " / "))
 	_expect(question.contains("Progress since your last save is lost"), "and says what is lost")
-	_expect(menu.confirm_panel.confirm_button.text == PauseSummary.QUIT_YES and menu.confirm_panel.cancel_button.has_focus(), "with the safe answer focused")
+	_expect(menu.confirm_panel.confirm_button.text == TextService.t(PauseSummary.QUIT_YES_KEY) and menu.confirm_panel.cancel_button.has_focus(), "with the safe answer focused")
 
 	# --- No: everything stays ---
 	menu.confirm_panel.cancel_button.pressed.emit()
@@ -66,7 +66,7 @@ func _run() -> void:
 		flow.request_pause()
 		menu.quit_button.pressed.emit()
 		var fresh_question := menu.confirm_panel.message_label.text
-		_expect(fresh_question.contains(PauseSummary.NO_CHECKPOINT_NAME), "before any checkpoint the question says so (%s)" % fresh_question.replace("\n", " / "))
+		_expect(fresh_question.contains(TextService.t(PauseSummary.NO_CHECKPOINT_NAME_KEY)), "before any checkpoint the question says so (%s)" % fresh_question.replace("\n", " / "))
 		menu.confirm_panel.cancel_button.pressed.emit()
 		flow.quit_to_title()
 		await app.until_settled()

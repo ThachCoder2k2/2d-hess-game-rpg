@@ -167,7 +167,7 @@ func _check_the_cell_line_follows_the_hero() -> void:
 	snapshot.player_facing = Vector2i.LEFT
 	bridge.refresh()
 	_expect(hud.status_label.text == "CELL 10,02  FACE W", "and follows the snapshot each frame")
-	_expect(HudBridge.facing_name(Vector2i.DOWN) == "S" and HudBridge.facing_name(Vector2i.RIGHT) == "E" and HudBridge.facing_name(Vector2i.ZERO) == "E", "south and east are the other letters, and anything else reads east")
+	_expect(TextService.t(HudBridge.facing_key(Vector2i.DOWN)) == "S" and TextService.t(HudBridge.facing_key(Vector2i.RIGHT)) == "E" and TextService.t(HudBridge.facing_key(Vector2i.ZERO)) == "E", "south and east are the other letters, and anything else reads east")
 	snapshot.player_entity = 0
 	hud.status_label.text = "kept"
 	bridge.refresh()
@@ -188,8 +188,8 @@ func _check_counts_and_the_result_panel() -> void:
 	hud.encounter_label.text = "touched"
 	bridge.refresh()
 	_expect(hud.encounter_label.text == "touched", "and is redrawn only when the count changes")
-	bridge.show_result("ROOM CLEARED", RoomObjective.STOCK_CLEAR_SUBTITLE)
-	_expect(hud.result_panel.visible and hud.result_label.text == "ROOM CLEARED\n" + RoomObjective.STOCK_CLEAR_SUBTITLE, "and puts the result panel up")
+	bridge.show_result(RoomObjective.STOCK_CLEAR_KEY, RoomObjective.STOCK_CLEAR_SUBTITLE_KEY)
+	_expect(hud.result_panel.visible and hud.result_label.text == "ROOM CLEARED\n" + TextService.t(RoomObjective.STOCK_CLEAR_SUBTITLE_KEY), "and puts the result panel up")
 
 
 func _check_a_scene_without_a_hud() -> void:

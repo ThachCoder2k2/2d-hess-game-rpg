@@ -11,8 +11,8 @@
 [resource]
 script = ExtResource("1")
 id = &"black_pawn_captain"
-display_name = "Black Pawn Captain"
-piece_name = "Pawn Captain"
+display_name = "ENEMY_BLACK_PAWN_CAPTAIN_NAME"
+piece_name = "ENEMY_BLACK_PAWN_CAPTAIN_PIECE"
 role = &"captain"
 max_health = 4
 movement = ExtResource("2")

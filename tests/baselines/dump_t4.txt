@@ -12,7 +12,7 @@ grid_origin: (64.00,36.00)
 blocked_cells: 50
   (0,0) (1,0) (2,0) (3,0) (4,0) (5,0) (6,0) (7,0) (8,0) (9,0) (10,0) (11,0) (12,0) (13,0) (14,0) (15,0) (0,1) (15,1) (0,2) (7,2) (15,2) (0,3) (7,3) (15,3) (0,4) (15,4) (0,5) (7,5) (15,5) (0,6) (7,6) (15,6) (0,7) (15,7) (0,8) (1,8) (2,8) (3,8) (4,8) (5,8) (6,8) (7,8) (8,8) (9,8) (10,8) (11,8) (12,8) (13,8) (14,8) (15,8)
 exits: 2
-  (14,1) {"entry": &"west_entry", "locked_message": "The black pawns still hold the yard. Break the black line first.", "requires_room_clear": true, "zone": &"b1_black_pawn_captain"}
+  (14,1) {"entry": &"west_entry", "locked_message": "ROOM_T4_BROKEN_RULE_YARD_LOCKED", "requires_room_clear": true, "zone": &"b1_black_pawn_captain"}
   (1,5) {"entry": &"from_t4", "locked_message": "", "requires_room_clear": false, "zone": &"t3_first_pawn_clash"}
 gates: 0
 player_unlocks: 0
@@ -42,7 +42,7 @@ entity 1 player cell=(2,5)
   health: current=3 flash_left=0.0000 hurt_visual_time=0.0000 invulnerability_duration=0.7000 invulnerable_left=0.0000 max_value=3 recoil=(0.0000, 0.0000)
   facing: direction=(0, 1)
   grid_pos: cell=(2, 5)
-entity 2 enemy:Pawn cell=(9,2)
+entity 2 enemy:ENEMY_PAWN_RECRUIT_PIECE cell=(9,2)
   weapon_slot: weapon=null
   enemy_ai: action_memory=[] allowed_directions=[(0, -1), (0, 1), (-1, 0), (1, 0)] attack_pattern=AttackPattern@res://content/enemies/_shared/attacks/pawn_diagonal.tres committed_goal=(-999, -999) committed_goal_kind=&"none" committed_target_snapshot=(-999, -999) decision_profile=DecisionConfig@res://content/enemies/_shared/decisions/pawn_skirmisher.tres definition=EnemyDefinition@res://content/enemies/pawn_recruit/enemy.tres goal_commitment_decisions=2 goal_decisions_left=0 last_move_direction=(0, 0) locked_attack_cells=[] move_recovery_time=0.1800 observe_delay=0.4200 path_memory_size=6 recent_cells=[] state=0 state_time_left=0.4200 telegraph_duration=0.0000 unarmed_recovery_time=0.4800 unarmed_telegraph_time=0.5800
   view_ref: node=node(CurrentZone/PawnRecruit) was_attacking=false was_dead=false was_hurt=false was_telegraphing=false
@@ -51,8 +51,8 @@ entity 2 enemy:Pawn cell=(9,2)
   health: current=2 flash_left=0.0000 hurt_visual_time=0.0000 invulnerability_duration=0.7000 invulnerable_left=0.0000 max_value=2 recoil=(0.0000, 0.0000)
   facing: direction=(0, 1)
   grid_pos: cell=(9, 2)
-entity 3 enemy:Pawn cell=(12,4)
-  weapon_slot: weapon=EnemyWeapon{color=#8ec8e8ff damage=1 display_name="Pencil Spear" id=&"pencil_spear" range_cells=2 recovery_time=0.6800 shape=0 tags=[&"melee", &"reach"] telegraph_time=0.6200 texture=CompressedTexture2D@res://content/pickups/pencil_spear/icon.png}
+entity 3 enemy:ENEMY_PAWN_ARMED_PIECE cell=(12,4)
+  weapon_slot: weapon=EnemyWeapon{color=#8ec8e8ff damage=1 display_name="ITEM_PENCIL_SPEAR_NAME" id=&"pencil_spear" range_cells=2 recovery_time=0.6800 shape=0 tags=[&"melee", &"reach"] telegraph_time=0.6200 texture=CompressedTexture2D@res://content/pickups/pencil_spear/icon.png}
   enemy_ai: action_memory=[] allowed_directions=[(0, -1), (0, 1), (-1, 0), (1, 0)] attack_pattern=AttackPattern@res://content/enemies/_shared/attacks/pawn_diagonal.tres committed_goal=(-999, -999) committed_goal_kind=&"none" committed_target_snapshot=(-999, -999) decision_profile=DecisionConfig@res://content/enemies/_shared/decisions/pawn_skirmisher.tres definition=EnemyDefinition@res://content/enemies/pawn_armed/enemy.tres goal_commitment_decisions=2 goal_decisions_left=0 last_move_direction=(0, 0) locked_attack_cells=[] move_recovery_time=0.1800 observe_delay=0.4200 path_memory_size=6 recent_cells=[] state=0 state_time_left=0.4200 telegraph_duration=0.0000 unarmed_recovery_time=0.4800 unarmed_telegraph_time=0.5800
   view_ref: node=node(CurrentZone/ArmedPawn) was_attacking=false was_dead=false was_hurt=false was_telegraphing=false
   move_state: duration=0.1800 from_cell=(0, 0) moving=false progress=0.0000 to_cell=(0, 0)
@@ -60,7 +60,7 @@ entity 3 enemy:Pawn cell=(12,4)
   health: current=2 flash_left=0.0000 hurt_visual_time=0.0000 invulnerability_duration=0.7000 invulnerable_left=0.0000 max_value=2 recoil=(0.0000, 0.0000)
   facing: direction=(0, 1)
   grid_pos: cell=(12, 4)
-entity 4 enemy:Backstep Pawn cell=(10,6)
+entity 4 enemy:ENEMY_BACKSTEP_PAWN_PIECE cell=(10,6)
   weapon_slot: weapon=null
   enemy_ai: action_memory=[] allowed_directions=[(0, -1), (0, 1), (-1, 0), (1, 0)] attack_pattern=AttackPattern@res://content/enemies/_shared/attacks/pawn_diagonal.tres committed_goal=(-999, -999) committed_goal_kind=&"none" committed_target_snapshot=(-999, -999) decision_profile=DecisionConfig@res://content/enemies/_shared/decisions/pawn_skirmisher.tres definition=EnemyDefinition@res://content/enemies/backstep_pawn/enemy.tres goal_commitment_decisions=1 goal_decisions_left=0 last_move_direction=(0, 0) locked_attack_cells=[] move_recovery_time=0.1400 observe_delay=0.4200 path_memory_size=6 recent_cells=[] state=0 state_time_left=0.4200 telegraph_duration=0.0000 unarmed_recovery_time=0.4800 unarmed_telegraph_time=0.5800
   view_ref: node=node(CurrentZone/BackstepPawn) was_attacking=false was_dead=false was_hurt=false was_telegraphing=false
@@ -69,16 +69,16 @@ entity 4 enemy:Backstep Pawn cell=(10,6)
   health: current=2 flash_left=0.0000 hurt_visual_time=0.0000 invulnerability_duration=0.7000 invulnerable_left=0.0000 max_value=2 recoil=(0.0000, 0.0000)
   facing: direction=(0, 1)
   grid_pos: cell=(10, 6)
-entity 5 pickup:Pencil Spear cell=(13,2)
-  pickup_item: weapon=EnemyWeapon{color=#8ec8e8ff damage=1 display_name="Pencil Spear" id=&"pencil_spear" range_cells=2 recovery_time=0.6800 shape=0 tags=[&"melee", &"reach"] telegraph_time=0.6200 texture=CompressedTexture2D@res://content/pickups/pencil_spear/icon.png}
+entity 5 pickup:ITEM_PENCIL_SPEAR_NAME cell=(13,2)
+  pickup_item: weapon=EnemyWeapon{color=#8ec8e8ff damage=1 display_name="ITEM_PENCIL_SPEAR_NAME" id=&"pencil_spear" range_cells=2 recovery_time=0.6800 shape=0 tags=[&"melee", &"reach"] telegraph_time=0.6200 texture=CompressedTexture2D@res://content/pickups/pencil_spear/icon.png}
   grid_pos: cell=(13, 2)
 
 [entities after 120 ticks]
 entity 1 player cell=(2,5) facing=(0,1) moving=false health=3/3
-entity 2 enemy:Pawn cell=(9,2) facing=(0,1) moving=false health=2/2 ai_state=0
-entity 3 enemy:Pawn cell=(12,4) facing=(0,1) moving=false health=2/2 ai_state=0
-entity 4 enemy:Backstep Pawn cell=(10,6) facing=(0,1) moving=false health=2/2 ai_state=0
-entity 5 pickup:Pencil Spear cell=(13,2)
+entity 2 enemy:ENEMY_PAWN_RECRUIT_PIECE cell=(9,2) facing=(0,1) moving=false health=2/2 ai_state=0
+entity 3 enemy:ENEMY_PAWN_ARMED_PIECE cell=(12,4) facing=(0,1) moving=false health=2/2 ai_state=0
+entity 4 enemy:ENEMY_BACKSTEP_PAWN_PIECE cell=(10,6) facing=(0,1) moving=false health=2/2 ai_state=0
+entity 5 pickup:ITEM_PENCIL_SPEAR_NAME cell=(13,2)
 events drained: 0
 
 [nodes] 82

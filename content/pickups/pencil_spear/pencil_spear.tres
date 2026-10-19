@@ -6,7 +6,7 @@
 [resource]
 script = ExtResource("1")
 id = &"pencil_spear"
-display_name = "Pencil Spear"
+display_name = "ITEM_PENCIL_SPEAR_NAME"
 tags = Array[StringName]([&"melee", &"reach"])
 range_cells = 2
 telegraph_time = 0.62

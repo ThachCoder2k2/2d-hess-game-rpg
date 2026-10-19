@@ -89,13 +89,13 @@ func _run() -> void:
 	var title_with_notice := ShellSupport.title_of(app)
 	if title_with_notice != null:
 		title_with_notice.configure(TitleSummary.from_save(save_service, "", 0), false)
-		_expect(title_with_notice.continue_button.visible and title_with_notice.notice_label.visible and title_with_notice.notice_label.text == TitleSummary.NOTICE_TEXT_BY_KEY[SaveLoadResult.NOTICE_BACKUP_USED], "the title still offers Continue and shows the one-line notice")
+		_expect(title_with_notice.continue_button.visible and title_with_notice.notice_label.visible and title_with_notice.notice_label.text == TextService.t(TitleSummary.NOTICE_TEXT_KEY_BY_KEY[SaveLoadResult.NOTICE_BACKUP_USED]), "the title still offers Continue and shows the one-line notice")
 		_expect(title_with_notice.card_label.text.contains("Broken Rule Yard") and not title_with_notice.card_label.text.contains("Black Pawn Captain"), "the card describes the save that will load (the .bak, T4)")
 		title_with_notice.continue_button.pressed.emit()
 		await app.until_settled()
 		var game_from_backup := ShellSupport.game_of(app)
 		_expect(game_from_backup != null and game_from_backup.current_zone_id == ShellSupport.T4, "Continue loaded the previous save, not the damaged newer one")
-		_expect(game_from_backup != null and game_from_backup.hud.objective_label.text == TitleSummary.NOTICE_TEXT_BY_KEY[SaveLoadResult.NOTICE_BACKUP_USED], "and the status line of the room says so")
+		_expect(game_from_backup != null and game_from_backup.hud.objective_label.text == TextService.t(TitleSummary.NOTICE_TEXT_KEY_BY_KEY[SaveLoadResult.NOTICE_BACKUP_USED]), "and the status line of the room says so")
 		_expect(app.game_flow.load_notice_key == SaveLoadResult.NOTICE_BACKUP_USED, "the flow remembers the notice")
 
 	Support.end_suite(self, save_service)

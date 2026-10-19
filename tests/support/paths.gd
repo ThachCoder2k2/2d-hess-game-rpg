@@ -123,6 +123,16 @@ func credits_scene() -> String:
 	return _existing_resource("res://shell/credits/credits_screen.tscn")
 
 
+## The pause menu (AppRoot lays it in its menu layer).
+func pause_menu_scene() -> String:
+	return _existing_resource("res://shell/pause/pause_menu.tscn")
+
+
+## The Book of House Rules screen (the game scene instances it).
+func rule_book_scene() -> String:
+	return _existing_resource("res://presentation/ui/codex/rule_book.tscn")
+
+
 ## The 72x40 kingdom: a test fixture, not game content (plan D-02).
 func kingdom_scene() -> String:
 	return _existing_resource("res://tests/fixtures/the_kingdom.tscn")

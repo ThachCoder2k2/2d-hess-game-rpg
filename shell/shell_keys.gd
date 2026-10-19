@@ -15,9 +15,9 @@ extends RefCounted
 ## frame the press happened in, so a scene polled several times in one frame (the bridge suites pump that way) would
 ## open and close the Book on one press; the keys here work out their own edge from the polls.
 
-## What the status line says when the debug layer is switched.
-const DEBUG_VIEW_ON_MESSAGE := "DEBUG VIEW ON: boundaries, paths, and behavior labels."
-const DEBUG_VIEW_OFF_MESSAGE := "DEBUG VIEW OFF."
+## The text keys of what the status line says when the debug layer is switched.
+const DEBUG_VIEW_ON_KEY := "MSG_DEBUG_VIEW_ON"
+const DEBUG_VIEW_OFF_KEY := "MSG_DEBUG_VIEW_OFF"
 
 var _root: GameRoot
 ## action -> whether the key was down at the previous handle().
@@ -37,7 +37,7 @@ func handle(controls: InputSnapshot) -> void:
 	if _is_fresh(controls, &"debug_view_toggle"):
 		_root.debug_enabled = not _root.debug_enabled
 		_root.board_bridge.set_debug_view(_root.debug_enabled)
-		_root.message_bridge.say(DEBUG_VIEW_ON_MESSAGE if _root.debug_enabled else DEBUG_VIEW_OFF_MESSAGE)
+		_root.message_bridge.say(DEBUG_VIEW_ON_KEY if _root.debug_enabled else DEBUG_VIEW_OFF_KEY)
 	if _is_fresh(controls, &"fullscreen_toggle"):
 		var window := _root.get_window()
 		window.mode = Window.MODE_WINDOWED if window.mode == Window.MODE_FULLSCREEN else Window.MODE_FULLSCREEN

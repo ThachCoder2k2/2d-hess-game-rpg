@@ -84,9 +84,9 @@ func _ask(question: StringName) -> void:
 	_question = question
 	menu.process_mode = Node.PROCESS_MODE_DISABLED
 	if question == &"restart":
-		confirm_panel.ask(PauseSummary.RESTART_QUESTION, PauseSummary.RESTART_YES, PauseSummary.RESTART_NO)
+		confirm_panel.ask(PauseSummary.RESTART_QUESTION_KEY, PauseSummary.RESTART_YES_KEY, PauseSummary.RESTART_NO_KEY)
 	else:
-		confirm_panel.ask(_summary.quit_question(), PauseSummary.QUIT_YES, PauseSummary.QUIT_NO)
+		confirm_panel.ask(PauseSummary.QUIT_QUESTION_KEY, PauseSummary.QUIT_YES_KEY, PauseSummary.QUIT_NO_KEY, _summary.quit_question_params())
 
 
 func _on_confirmed() -> void:

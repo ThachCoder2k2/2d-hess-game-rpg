@@ -10,8 +10,8 @@
 [resource]
 script = ExtResource("1")
 id = &"knight_tracker"
-display_name = "Tracker Knight"
-piece_name = "Knight"
+display_name = "ENEMY_KNIGHT_TRACKER_NAME"
+piece_name = "ENEMY_KNIGHT_TRACKER_PIECE"
 role = &"flanker"
 movement = ExtResource("2")
 decision = ExtResource("3")

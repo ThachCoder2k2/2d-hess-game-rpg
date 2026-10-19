@@ -12,7 +12,9 @@ extends Control
 ## The picture is a stand-in drawn from nodes of the scene and the hero's body picture at its own size, so
 ## the owner restyles it in the editor or replaces the pieces it is made of; nothing here is scaled.
 ##
-## The words are English literals until the text pipeline (M4) moves them to `UI_` keys.
+## The words are keys (docs/game-base-plan.md 8.9). The buttons and the logo hold theirs in the scene and the engine
+## translates them; the card, the notice and the version come from the TitleSummary in the language of the moment and
+## are written again when the language changes.
 
 ## The player chose New Game (and confirmed it, when a save would be replaced).
 signal new_game_chosen
@@ -25,10 +27,10 @@ signal credits_chosen
 ## The player chose Quit.
 signal quit_chosen
 
-## What the New Game confirm says and offers.
-const CONFIRM_MESSAGE := "Start a new game? Your saved progress will be replaced."
-const CONFIRM_YES := "Start over"
-const CONFIRM_NO := "Keep my save"
+## The text keys of what the New Game confirm says and offers.
+const CONFIRM_MESSAGE_KEY := "UI_TITLE_CONFIRM_NEW_GAME"
+const CONFIRM_YES_KEY := "UI_TITLE_CONFIRM_NEW_GAME_YES"
+const CONFIRM_NO_KEY := "UI_TITLE_CONFIRM_NEW_GAME_NO"
 
 @export var new_game_button: Button
 @export var continue_button: Button
@@ -58,6 +60,9 @@ func _ready() -> void:
 	quit_button.pressed.connect(func() -> void: _choose(quit_chosen))
 	confirm_panel.confirmed.connect(func() -> void: _choose(new_game_chosen))
 	confirm_panel.cancelled.connect(_on_confirm_cancelled)
+	var live_text := LiveText.new()
+	add_child(live_text)
+	live_text.on_language_change(_on_language_changed)
 	_show_summary()
 	_focus_first_button()
 
@@ -74,6 +79,11 @@ func configure(summary: TitleSummary, settings_available: bool) -> void:
 ## Whether the New Game question is on screen.
 func is_confirming() -> bool:
 	return confirm_panel.is_asking()
+
+
+func _on_language_changed() -> void:
+	_summary.refresh_texts()
+	_show_summary()
 
 
 func _show_summary() -> void:
@@ -96,7 +106,7 @@ func _on_new_game_pressed() -> void:
 		_choose(new_game_chosen)
 		return
 	menu.process_mode = Node.PROCESS_MODE_DISABLED
-	confirm_panel.ask(CONFIRM_MESSAGE, CONFIRM_YES, CONFIRM_NO)
+	confirm_panel.ask(CONFIRM_MESSAGE_KEY, CONFIRM_YES_KEY, CONFIRM_NO_KEY)
 
 
 func _on_confirm_cancelled() -> void:

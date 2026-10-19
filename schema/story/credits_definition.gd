@@ -6,11 +6,11 @@ extends Resource
 ## scene (shell/credits/credits_screen.tscn) only lays it out and scrolls it. The licence block is generated
 ## from THIRD_PARTY_NOTICES.md (tools/build_credits_licenses.gd), so the notices and the credits cannot drift apart.
 
-## The title shown at the top of the roll.
-@export var game_title := "The Unbound Pawn"
+## Text key: the title shown at the top of the roll.
+@export var game_title := "CREDIT_GAME_TITLE"
 ## The blocks, top to bottom. Typically: who made the game, what it is made with, the licences.
 @export var sections: Array[CreditsSection] = []
-## The line shown last, after the final block.
+## Text key: the line shown last, after the final block.
 @export var closing_line := ""
 ## How fast the roll moves, in pixels of the 640 x 360 screen per second.
 @export_range(8.0, 120.0, 1.0, "suffix:px/s") var scroll_pixels_per_second := 24.0

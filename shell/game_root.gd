@@ -114,7 +114,7 @@ func boot_zone(entry_id: StringName, entered_by_door := false) -> void:
 	board_bridge.show_room(ecs.grid, debug_enabled)
 	camera_bridge.show_room(ecs.grid)
 	hud_bridge.show_room()
-	message_bridge.say(ZoneStage.room_text(current_room, "get_start_message", "Break the black line."))
+	message_bridge.say(ZoneStage.room_text(current_room, "get_start_message", RoomObjective.STOCK_START_KEY))
 
 
 func _process(delta: float) -> void:

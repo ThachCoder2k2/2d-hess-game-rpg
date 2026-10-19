@@ -161,9 +161,9 @@ func _show_game() -> void:
 	var game := game_scene.instantiate() as GameRoot
 	game.game_flow = game_flow
 	_put_screen(game)
-	var notice := String(TitleSummary.NOTICE_TEXT_BY_KEY.get(game_flow.load_notice_key, ""))
-	if not notice.is_empty():
-		game.message_bridge.say(notice)
+	var notice_text_key := String(TitleSummary.NOTICE_TEXT_KEY_BY_KEY.get(game_flow.load_notice_key, ""))
+	if not notice_text_key.is_empty():
+		game.message_bridge.say(notice_text_key)
 	await transition.fade_in()
 
 

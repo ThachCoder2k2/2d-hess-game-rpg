@@ -5,6 +5,6 @@
 
 [resource]
 script = ExtResource("1")
-display_name = "Wooden Sword"
+display_name = "SKILL_WOODEN_SWORD_NAME"
 color = Color(1, 0.94902, 0.658824, 1)
 texture = ExtResource("2")

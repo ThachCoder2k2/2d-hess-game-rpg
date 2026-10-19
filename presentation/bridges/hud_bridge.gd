@@ -57,23 +57,24 @@ func refresh() -> void:
 	_refresh_token_owner()
 	_refresh_sword_line()
 	if hud != null and snapshot.player_entity != 0:
-		hud.set_cell_status(snapshot.player_cell, facing_name(snapshot.player_facing))
+		hud.set_cell_status(snapshot.player_cell, TextKey.of(facing_key(snapshot.player_facing)))
 
 
-func show_result(title: String, subtitle: String) -> void:
+## Shows the result panel: `title_key` and `subtitle_key` are text keys (the room's clear or defeat lines).
+func show_result(title_key: String, subtitle_key: String) -> void:
 	if hud != null:
-		hud.show_result(title, subtitle)
+		hud.show_result(title_key, subtitle_key)
 
 
-## The compass letter for a cell direction ("E" for anything that is not up, down or left).
-static func facing_name(direction: Vector2i) -> String:
+## The text key of the compass word for a cell direction (east for anything that is not up, down or left).
+static func facing_key(direction: Vector2i) -> String:
 	if direction == Vector2i.UP:
-		return "N"
+		return "UI_COMPASS_NORTH"
 	if direction == Vector2i.DOWN:
-		return "S"
+		return "UI_COMPASS_SOUTH"
 	if direction == Vector2i.LEFT:
-		return "W"
-	return "E"
+		return "UI_COMPASS_WEST"
+	return "UI_COMPASS_EAST"
 
 
 func _on_damaged(event: Dictionary) -> void:
@@ -124,8 +125,8 @@ func _refresh_token_owner() -> void:
 		return
 	last_token_owner = token_owner
 	if snapshot.room_enemies_total <= 0:
-		hud.set_token_owner("", false)
+		hud.set_token_owner(null, false)
 	elif last_token_owner == 0:
-		hud.set_token_owner("")
+		hud.set_token_owner(null)
 	else:
 		hud.set_token_owner(piece_name_of(last_token_owner))

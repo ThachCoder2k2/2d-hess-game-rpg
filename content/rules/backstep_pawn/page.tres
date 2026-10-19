@@ -5,7 +5,7 @@
 [resource]
 script = ExtResource("1")
 piece_id = &"backstep_pawn"
-title = "The backstep pawn"
-original_rule = "A pawn marches forward and may never retreat."
-amendment = "This pawn may move backward. Strike from behind and it will not be there."
-flavor = "The child wrote it in the margin, and the board obeyed."
+title = "PAGE_BACKSTEP_PAWN_TITLE"
+original_rule = "PAGE_BACKSTEP_PAWN_RULE"
+amendment = "PAGE_BACKSTEP_PAWN_AMENDMENT"
+flavor = "PAGE_BACKSTEP_PAWN_FLAVOR"

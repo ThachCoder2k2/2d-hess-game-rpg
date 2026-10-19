@@ -60,7 +60,7 @@ func _run() -> void:
 	_expect(menu.is_open() and menu.question_on_screen() == &"", "setup: the pause menu is up, with no question")
 	menu.restart_button.pressed.emit()
 	_expect(menu.question_on_screen() == &"restart" and menu.confirm_panel.is_asking(), "Restart Room asks first")
-	_expect(menu.confirm_panel.message_label.text == PauseSummary.RESTART_QUESTION and menu.confirm_panel.confirm_button.text == PauseSummary.RESTART_YES, "with its question and its two answers")
+	_expect(menu.confirm_panel.message_label.text == TextService.t(PauseSummary.RESTART_QUESTION_KEY) and menu.confirm_panel.confirm_button.text == TextService.t(PauseSummary.RESTART_YES_KEY), "with its question and its two answers")
 	_expect(menu.confirm_panel.cancel_button.has_focus(), "and focus on the safe answer")
 	_expect(flow.state == GameFlow.State.PAUSED and respawns.is_empty(), "nothing happens while the question is up")
 	await ShellSupport.tap_key(self, KEY_ESCAPE, 1)

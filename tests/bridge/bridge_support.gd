@@ -243,7 +243,7 @@ static func exit_cell(main: Node, zone_root: Node, target_zone: StringName) -> V
 	return Vector2i(-999, -999)
 
 
-## The line the room's exit marker to `target_zone` says while the door is shut ("" when it has none or there is no such door).
+## The text key of the line the room's exit marker to `target_zone` says while the door is shut ("" when it has none or there is no such door).
 static func exit_locked_message(zone_root: Node, target_zone: StringName) -> String:
 	for child in zone_root.get_children():
 		var exit_marker := child as ZoneExitMarker

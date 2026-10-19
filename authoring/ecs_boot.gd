@@ -10,7 +10,7 @@ extends RefCounted
 
 ## Boots everything `options` (EcsBootOptions) names and returns the cast:
 ## { "player": id, "enemies": [ids], "view_by_entity": {id: Node2D},
-##   "piece_name_by_entity": {id: String}, "pickup_view_by_entity": {id: Node2D},
+##   "piece_name_by_entity": {id: String (the piece's text key)}, "pickup_view_by_entity": {id: Node2D},
 ##   "pickup_name_by_entity": {id: String}, "persistent_pickup_by_entity": {id: true}, "room": id }
 ## `persistent_pickup_by_entity` holds the pickups whose marker is persistent (the save remembers them
 ## taken); every other pickup is a room-local floor weapon. `room` is the room's own entity (0 unless the

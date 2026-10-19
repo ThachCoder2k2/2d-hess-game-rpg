@@ -48,7 +48,7 @@ func _run() -> void:
 	main.set("world_graph", null)
 	_expect(await _kill_enemy(main, 0), "setup: the hero's sword brings the last pawn down")
 	_expect(Support.room_ending(main), "a standalone room ends when its last enemy falls")
-	_expect(hud.result_label.text == "ROOM CLEARED\n" + RoomObjective.STOCK_CLEAR_SUBTITLE and hud.objective_label.text == "ROOM CLEARED", "with the stock clear lines when the room names none")
+	_expect(hud.result_label.text == "ROOM CLEARED\n" + TextService.t(RoomObjective.STOCK_CLEAR_SUBTITLE_KEY) and hud.objective_label.text == "ROOM CLEARED", "with the stock clear lines when the room names none")
 	_expect(not Support.player_tag(main).control_enabled, "and the hero's control is off")
 
 	# --- An objective that counts defeats ends the room when it is met ---

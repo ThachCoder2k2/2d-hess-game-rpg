@@ -8,8 +8,9 @@ extends Control
 ## owns the screen (AppRoot, through GameFlow) goes back to the title. It shows data and decides nothing.
 ##
 ## The Confirm hold is read from the events the screen receives (the engine's ui_accept, keyboard or pad), not
-## from the Input singleton: only the InputPoller reads that. Until the text pipeline (M4) moves the words to
-## `CREDIT_` keys, the data holds the English text.
+## from the Input singleton: only the InputPoller reads that. The data holds text KEYS (`CREDIT_` rows of story.po,
+## docs/game-base-plan.md 8.9) and every line of the roll follows a language change; the lines of a fine-print block
+## are legal text (the licences) and are shown exactly as written, in every language.
 
 ## The roll ended or the player skipped it.
 signal finished
@@ -41,6 +42,8 @@ const EMPTY_LINE_HEIGHT := 8
 ## The roll to show. Null reads content/story/credits.tres when the screen starts.
 var definition: CreditsDefinition = null
 
+## Keeps the roll's lines in the player's language.
+var _live_text: LiveText = null
 var _is_finished := false
 var _confirm_is_held := false
 var _confirm_held_seconds := 0.0
@@ -51,6 +54,8 @@ func _ready() -> void:
 	if definition == null:
 		definition = ContentDb.credits()
 	_scroll_speed = definition.scroll_pixels_per_second if definition != null else 24.0
+	_live_text = LiveText.new()
+	add_child(_live_text)
 	_build_roll()
 	var screen_size := get_viewport_rect().size
 	roll.position = Vector2((screen_size.x - column_width) / 2.0, screen_size.y)
@@ -111,7 +116,7 @@ func _build_roll() -> void:
 			if line.is_empty():
 				_add_gap(EMPTY_LINE_HEIGHT)
 			elif section.fine_print:
-				_add_label(line, FINE_PRINT_FONT_SIZE, FINE_PRINT_COLOR)
+				_add_label(line, FINE_PRINT_FONT_SIZE, FINE_PRINT_COLOR, true)
 			else:
 				_add_label(line, LINE_FONT_SIZE, LINE_COLOR)
 	if not definition.closing_line.is_empty():
@@ -119,9 +124,13 @@ func _build_roll() -> void:
 		_add_label(definition.closing_line, HEADING_FONT_SIZE, HEADING_COLOR)
 
 
-func _add_label(text: String, font_size: int, color: Color) -> void:
+## One line of the roll. `key_or_text` is a text key, or the text itself when `verbatim` (legal text).
+func _add_label(key_or_text: String, font_size: int, color: Color, verbatim := false) -> void:
 	var label := Label.new()
-	label.text = text
+	if verbatim:
+		label.text = key_or_text
+	else:
+		_live_text.set_text(label, key_or_text)
 	label.custom_minimum_size = Vector2(column_width, 0)
 	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART

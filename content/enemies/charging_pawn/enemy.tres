@@ -10,8 +10,8 @@
 [resource]
 script = ExtResource("1")
 id = &"charging_pawn"
-display_name = "Charging Pawn"
-piece_name = "Charging Pawn"
+display_name = "ENEMY_CHARGING_PAWN_NAME"
+piece_name = "ENEMY_CHARGING_PAWN_PIECE"
 movement = ExtResource("2")
 decision = ExtResource("3")
 unarmed_attack = ExtResource("4")

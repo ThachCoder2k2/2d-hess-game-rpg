@@ -1,6 +1,12 @@
 class_name GameHud
 extends CanvasLayer
 
+## The in-game HUD. It draws what the bridges hand it and decides nothing. Every word on it is a key resolved by
+## TextService: the labels a scene authored (the banner, the help line) hold their key in `text` and the engine
+## translates them; the ones set from here (Courage, the skill slot, the strike line, the counts, the cell, the
+## status line, the result panel) are bound to their key on a LiveText, so a language switch redraws them with
+## their numbers and names intact.
+
 @onready var courage_label: Label = $CourageLabel
 @onready var skill_label: Label = $SkillLabel
 @onready var skill_fill: ColorRect = $SkillFill
@@ -17,13 +23,16 @@ const DAMAGE_FLASH_DURATION := 0.22
 
 ## The running fade tween for the damage flash; killed and restarted on each hit.
 var _damage_flash_tween: Tween
+## Keeps the labels set from code in the player's language. Made on first use, so a HUD that is not in the tree yet
+## can still be driven.
+var _live_text: LiveText = null
 
 
 func setup(initial_courage: int) -> void:
 	set_courage(initial_courage)
 	set_skill_cooldown(0.0, 1.0, false)
 	set_encounter_count(0, 0)
-	set_token_owner("", false)
+	set_token_owner(null, false)
 	set_status("")
 	if damage_flash != null:
 		damage_flash.visible = false
@@ -36,7 +45,7 @@ func setup(initial_courage: int) -> void:
 func set_courage(value: int) -> void:
 	if courage_label == null:
 		return
-	courage_label.text = "COURAGE " + "◆".repeat(value) + "◇".repeat(3 - value)
+	_live().set_text(courage_label, "UI_HUD_COURAGE", {"pips": "◆".repeat(value) + "◇".repeat(3 - value)})
 	var color := Color("#d84a3a") if value <= 1 else Color("#ff9a75")
 	courage_label.add_theme_color_override("font_color", color)
 
@@ -44,9 +53,11 @@ func set_courage(value: int) -> void:
 func set_skill_cooldown(time_left: float, cooldown_duration: float, unlocked := true) -> void:
 	if skill_label != null:
 		if not unlocked:
-			skill_label.text = "FIND SWORD"
+			_live().set_text(skill_label, "UI_HUD_SKILL_LOCKED")
+		elif time_left <= 0.0:
+			_live().set_text(skill_label, "UI_HUD_SKILL_READY")
 		else:
-			skill_label.text = "Q THRUST READY" if time_left <= 0.0 else "Q THRUST %.1f" % time_left
+			_live().set_text(skill_label, "UI_HUD_SKILL_COOLDOWN", {"seconds": "%.1f" % time_left})
 	if skill_fill == null:
 		return
 	var ratio := 1.0
@@ -58,31 +69,40 @@ func set_skill_cooldown(time_left: float, cooldown_duration: float, unlocked := 
 	skill_fill.color = Color("#5d5360", 0.45) if not unlocked else Color("#8ec8e8", 0.9) if time_left <= 0.0 else Color("#e8b83f", 0.82)
 
 
-## Empty name = the token is free (any enemy may strike next).
-func set_token_owner(owner_piece_name := "", active := true) -> void:
+## `owner_piece` is the name of the piece that holds the attack token; null = the token is free (any enemy may
+## strike next). `active` false hides the line (a room with no enemies).
+func set_token_owner(owner_piece: TextKey = null, active := true) -> void:
 	if token_label == null:
 		return
 	if not active:
+		_live().release(token_label)
 		token_label.text = ""
-	elif owner_piece_name.is_empty():
-		token_label.text = "ENEMY STRIKE READY"
+	elif owner_piece == null:
+		_live().set_text(token_label, "UI_HUD_TOKEN_FREE")
 	else:
-		token_label.text = "STRIKE: " + owner_piece_name.to_upper()
+		_live().set_text(token_label, "UI_HUD_TOKEN_OWNER", {"piece": owner_piece.uppercased()})
 
 
 func set_encounter_count(remaining: int, total: int) -> void:
 	if encounter_label != null:
-		encounter_label.text = "ENEMIES %d/%d" % [remaining, total]
+		_live().set_text(encounter_label, "UI_HUD_ENEMIES", {"remaining": remaining, "total": total})
 
 
-func set_cell_status(cell: Vector2i, facing_name: String) -> void:
+## `facing` is the compass word the hero faces (a TextKey of the UI_COMPASS_ rows).
+func set_cell_status(cell: Vector2i, facing: TextKey) -> void:
 	if status_label != null:
-		status_label.text = "CELL %02d,%02d  FACE %s" % [cell.x, cell.y, facing_name]
+		_live().set_text(status_label, "UI_HUD_CELL", {"x": "%02d" % cell.x, "y": "%02d" % cell.y, "facing": facing})
 
 
-func set_status(text: String) -> void:
-	if objective_label != null:
-		objective_label.text = text
+## Puts the words of `key` on the status line ("" empties it). `params` fill its {name}s.
+func set_status(key: String, params: Dictionary = {}) -> void:
+	if objective_label == null:
+		return
+	if key.is_empty():
+		_live().release(objective_label)
+		objective_label.text = ""
+	else:
+		_live().set_text(objective_label, key, params)
 
 
 ## One red screen flash that fades out on its own. Callers fire-and-forget;
@@ -99,10 +119,18 @@ func flash_damage() -> void:
 	_damage_flash_tween.tween_callback(func() -> void: damage_flash.visible = false)
 
 
-func show_result(title: String, subtitle: String) -> void:
+## Shows the result panel with two keys: the title and the line under it.
+func show_result(title_key: String, subtitle_key: String) -> void:
 	if result_panel != null:
 		result_panel.visible = true
 	if result_label == null:
 		return
-	result_label.text = title + "\n" + subtitle
+	_live().set_text(result_label, "UI_RESULT_PANEL", {"title": TextKey.of(title_key), "subtitle": TextKey.of(subtitle_key)})
 	result_label.visible = true
+
+
+func _live() -> LiveText:
+	if _live_text == null:
+		_live_text = LiveText.new()
+		add_child(_live_text)
+	return _live_text

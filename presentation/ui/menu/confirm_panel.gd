@@ -26,6 +26,8 @@ signal cancelled
 
 ## The control that had focus when the question was asked, to give it back afterwards.
 var _focus_before_ask: Control = null
+## Keeps the question and both answers in the player's language. Made on first use.
+var _live_text: LiveText = null
 
 
 func _ready() -> void:
@@ -34,11 +36,13 @@ func _ready() -> void:
 	cancel_button.pressed.connect(_answer.bind(false))
 
 
-## Shows the question with these three texts and puts focus on the default button.
-func ask(message: String, confirm_text: String, cancel_text: String) -> void:
-	message_label.text = message
-	confirm_button.text = confirm_text
-	cancel_button.text = cancel_text
+## Shows the question and puts focus on the default button. The three arguments are text keys (their words come
+## from TextService and follow a language change while the question is up); `message_params` fill the {name}s of
+## the question.
+func ask(message_key: String, confirm_key: String, cancel_key: String, message_params: Dictionary = {}) -> void:
+	_live().set_text(message_label, message_key, message_params)
+	_live().set_text(confirm_button, confirm_key)
+	_live().set_text(cancel_button, cancel_key)
 	_focus_before_ask = get_viewport().gui_get_focus_owner() if is_inside_tree() else null
 	visible = true
 	(cancel_button if cancel_is_default else confirm_button).grab_focus()
@@ -73,3 +77,10 @@ func _answer(yes: bool) -> void:
 		confirmed.emit()
 	else:
 		cancelled.emit()
+
+
+func _live() -> LiveText:
+	if _live_text == null:
+		_live_text = LiveText.new()
+		add_child(_live_text)
+	return _live_text

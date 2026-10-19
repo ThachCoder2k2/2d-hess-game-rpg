@@ -13,8 +13,9 @@ extends Resource
 ## with no overrides plays identically to the old scene. The authored values live in
 ## content/player/player.tres; this file only gives the Inspector its starting point.
 
-## Label shown in status text (for example when the hero picks something up).
-@export var piece_name := "Pawn Hero"
+## Text key (CHAR_PAWN_HERO_PIECE in story.po): the label shown in status text (for example when the hero picks
+## something up).
+@export var piece_name := "CHAR_PAWN_HERO_PIECE"
 ## How the hero looks and how fast its clips play (content/player/visual.tres). The player
 ## view reads it exactly as an enemy view reads EnemyDefinition.visual. Null shows the
 ## view's built-in stand-in body at the base's tempo.

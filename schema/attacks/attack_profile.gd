@@ -1,7 +1,8 @@
 class_name AttackProfile
 extends Resource
 
-@export var display_name := "Attack"
+## Text key (SKILL_<ID>_NAME in skills.po): what the status line calls the attack.
+@export var display_name := "SKILL_UNNAMED_NAME"
 @export_range(1, 8) var range_cells := 1
 @export_range(1, 10) var damage := 1
 @export_range(0.01, 2.0) var impact_delay := 0.07

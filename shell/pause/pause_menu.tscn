@@ -54,7 +54,7 @@ theme_override_constants/separation = 8
 [node name="TitleLabel" type="Label" parent="Center/Panel/Margin/Rows"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 16
-text = "Paused"
+text = "UI_PAUSE_TITLE"
 horizontal_alignment = 1
 
 [node name="Menu" type="VBoxContainer" parent="Center/Panel/Margin/Rows"]
@@ -65,28 +65,28 @@ theme_override_constants/separation = 4
 custom_minimum_size = Vector2(190, 24)
 layout_mode = 2
 theme_override_font_sizes/font_size = 12
-text = "Resume"
+text = "UI_PAUSE_RESUME"
 alignment = 0
 
 [node name="BookButton" type="Button" parent="Center/Panel/Margin/Rows/Menu"]
 custom_minimum_size = Vector2(190, 24)
 layout_mode = 2
 theme_override_font_sizes/font_size = 12
-text = "Book of House Rules"
+text = "UI_PAUSE_BOOK"
 alignment = 0
 
 [node name="RestartButton" type="Button" parent="Center/Panel/Margin/Rows/Menu"]
 custom_minimum_size = Vector2(190, 24)
 layout_mode = 2
 theme_override_font_sizes/font_size = 12
-text = "Restart Room"
+text = "UI_PAUSE_RESTART"
 alignment = 0
 
 [node name="QuitButton" type="Button" parent="Center/Panel/Margin/Rows/Menu"]
 custom_minimum_size = Vector2(190, 24)
 layout_mode = 2
 theme_override_font_sizes/font_size = 12
-text = "Quit to Title"
+text = "UI_PAUSE_QUIT"
 alignment = 0
 
 [node name="ConfirmPanel" parent="." instance=ExtResource("2")]

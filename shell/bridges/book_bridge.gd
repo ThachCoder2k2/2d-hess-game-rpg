@@ -15,8 +15,8 @@ extends ShellBridge
 ## Reads: the booted zone's pieces, the run's pages. Writes: the run (through the SaveBridge), the
 ## Book node's visibility, the hero's control flag, and the freeze on the world's commands.
 
-## What the status line says when a room brought a piece the Book has no page for yet.
-const NEW_PAGES_MESSAGE := "New pieces on the board. The book writes their rules. [B]"
+## The text key of what the status line says when a room brought a piece the Book has no page for yet.
+const NEW_PAGES_KEY := "MSG_NEW_PAGES"
 ## Where the Book screen sits in the in-game scene.
 const BOOK_NODE_PATH := ^"RuleBookUI"
 ## The `reason` of the freeze the open Book asks for.
@@ -33,7 +33,7 @@ func meet_pieces() -> void:
 			if view != null and view.definition != null:
 				met_piece_ids.append(String(view.definition.id))
 		if root.save_bridge.record_rule_pages(met_piece_ids):
-			root.message_bridge.say(NEW_PAGES_MESSAGE)
+			root.message_bridge.say(NEW_PAGES_KEY)
 	var book := _book()
 	if book != null:
 		book.refresh(root.save_bridge.rule_page_ids())

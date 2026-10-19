@@ -209,12 +209,14 @@ stretch_mode = 2
 [node name="TitleLabel" type="Label" parent="."]
 layout_mode = 0
 offset_left = 240.0
-offset_top = 64.0
+offset_top = 20.0
 offset_right = 616.0
 offset_bottom = 104.0
 theme_override_colors/font_color = Color(0.945098, 0.909804, 0.823529, 1)
 theme_override_font_sizes/font_size = 28
-text = "THE UNBOUND PAWN"
+text = "UI_GAME_NAME"
+vertical_alignment = 3
+autowrap_mode = 3
 
 [node name="Menu" type="VBoxContainer" parent="."]
 layout_mode = 0
@@ -228,35 +230,35 @@ theme_override_constants/separation = 4
 custom_minimum_size = Vector2(180, 24)
 layout_mode = 2
 theme_override_font_sizes/font_size = 12
-text = "New Game"
+text = "UI_TITLE_NEW_GAME"
 alignment = 0
 
 [node name="ContinueButton" type="Button" parent="Menu"]
 custom_minimum_size = Vector2(180, 24)
 layout_mode = 2
 theme_override_font_sizes/font_size = 12
-text = "Continue"
+text = "UI_TITLE_CONTINUE"
 alignment = 0
 
 [node name="SettingsButton" type="Button" parent="Menu"]
 custom_minimum_size = Vector2(180, 24)
 layout_mode = 2
 theme_override_font_sizes/font_size = 12
-text = "Settings"
+text = "UI_TITLE_SETTINGS"
 alignment = 0
 
 [node name="CreditsButton" type="Button" parent="Menu"]
 custom_minimum_size = Vector2(180, 24)
 layout_mode = 2
 theme_override_font_sizes/font_size = 12
-text = "Credits"
+text = "UI_TITLE_CREDITS"
 alignment = 0
 
 [node name="QuitButton" type="Button" parent="Menu"]
 custom_minimum_size = Vector2(180, 24)
 layout_mode = 2
 theme_override_font_sizes/font_size = 12
-text = "Quit"
+text = "UI_TITLE_QUIT"
 alignment = 0
 
 [node name="CardLabel" type="Label" parent="."]

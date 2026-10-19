@@ -90,7 +90,7 @@ func _the_written_block_is_current() -> void:
 	_expect(block != null, "content/story/credits_licenses.tres loads as a CreditsSection")
 	if block == null:
 		return
-	_expect(block.heading == Licenses.SECTION_HEADING and block.fine_print, "it is the Licenses block, drawn as fine print")
+	_expect(block.heading == Licenses.SECTION_HEADING_KEY and block.fine_print, "it is the Licenses block, drawn as fine print")
 	_expect(block.lines == expected_lines, "its lines are exactly what THIRD_PARTY_NOTICES.md says now (stale? run tools/build_credits_licenses.gd)")
 	var written_text := FileAccess.get_file_as_string(Licenses.OUTPUT_PATH)
 	var script_uid_text := FileAccess.get_file_as_string(Licenses.SECTION_SCRIPT_PATH + ".uid").strip_edges()
@@ -107,8 +107,9 @@ func _every_credited_entry_is_in_the_roll() -> void:
 	var all_lines: Array[String] = []
 	var headings: Array[String] = []
 	for section in credits.sections:
-		headings.append(section.heading)
-		all_lines.append_array(Array(section.lines))
+		headings.append(TextService.t(section.heading))
+		for line in section.lines:
+			all_lines.append(line if section.fine_print else TextService.t(line))
 	_expect("Design, story and art" in headings and "Made with" in headings and "Licenses" in headings, "the roll has the owner's block, the engine's block and the licences (%s)" % ", ".join(PackedStringArray(headings)))
 	_expect("The owner" in all_lines, "the owner is credited")
 	_expect("Godot Engine 4.6" in all_lines, "the engine is credited")
@@ -116,4 +117,4 @@ func _every_credited_entry_is_in_the_roll() -> void:
 	for entry in Licenses.entries_from(FileAccess.get_file_as_string(Licenses.NOTICES_PATH)):
 		every_entry_credited = every_entry_credited and ("%s - %s" % [entry["name"], entry["license"]]) in all_lines
 	_expect(every_entry_credited, "every credited entry of THIRD_PARTY_NOTICES.md is in the roll")
-	_expect(credits.sections[credits.sections.size() - 1].heading == "Licenses", "and the licences come last")
+	_expect(TextService.t(credits.sections[credits.sections.size() - 1].heading) == "Licenses", "and the licences come last")

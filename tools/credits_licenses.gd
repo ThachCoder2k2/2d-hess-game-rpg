@@ -15,7 +15,9 @@ extends RefCounted
 const NOTICES_PATH := "res://THIRD_PARTY_NOTICES.md"
 const OUTPUT_PATH := "res://content/story/credits_licenses.tres"
 const SECTION_SCRIPT_PATH := "res://schema/story/credits_section.gd"
-const SECTION_HEADING := "Licenses"
+## The block's heading is a text key (the row CREDIT_LICENSES_HEADING of story.po); the licence texts below it are
+## legal text, drawn as fine print and shown as written in every language.
+const SECTION_HEADING_KEY := "CREDIT_LICENSES_HEADING"
 
 const ENTRY_PREFIX := "### "
 const SECTION_PREFIX := "## "
@@ -97,7 +99,7 @@ static func resource_text(lines: PackedStringArray, resource_uid_text: String, s
 		"",
 		"[resource]",
 		"script = ExtResource(\"1\")",
-		"heading = %s" % _quote(SECTION_HEADING),
+		"heading = %s" % _quote(SECTION_HEADING_KEY),
 		"lines = PackedStringArray(%s)" % ", ".join(quoted_lines),
 		"fine_print = true",
 		"",

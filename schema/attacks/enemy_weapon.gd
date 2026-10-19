@@ -4,7 +4,8 @@ extends Resource
 enum Shape { LINE, FAN }
 
 @export var id: StringName = &"toy_weapon"
-@export var display_name := "Toy Weapon"
+## Text key (ITEM_<ID>_NAME in skills.po): what the status line calls the weapon.
+@export var display_name := "ITEM_TOY_WEAPON_NAME"
 @export var tags: Array[StringName] = []
 @export var shape := Shape.LINE
 @export_range(1, 4) var range_cells := 1

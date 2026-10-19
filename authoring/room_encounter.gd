@@ -4,8 +4,10 @@ extends Node2D
 ## Editor-authored room data + view container. The simulation boots through
 ## EcsBoot (docs/ecs-conversion-plan.md): parked ActorView children become
 ## entities, painted solid tiles become blocks, pickup markers become item
-## entities. This script only carries the room's prose and objective.
+## entities. This script only carries the room's prose and objective. The prose is TEXT KEYS (docs/game-base-plan.md
+## 8.9): the words are rows of content/story/text/<language>/rooms.po, resolved by TextService where they are shown.
 
+## Text key (ROOM_<ID>_START in rooms.po): the line the status bar says when the pawn comes in.
 @export var room_message := ""
 @export var objective: Resource
 ## World-map identity (empty = standalone room outside the world graph).
@@ -18,6 +20,7 @@ extends Node2D
 @export var board_size := Vector2i(16, 9)
 
 
+## The text key of the line to say on arrival: the objective's, else the room's own.
 func get_start_message() -> String:
 	if objective != null and not String(objective.get("start_message")).is_empty():
 		return String(objective.get("start_message"))
@@ -25,23 +28,23 @@ func get_start_message() -> String:
 
 
 func get_clear_message() -> String:
-	return _objective_text("clear_message", "ROOM CLEARED")
+	return _objective_text("clear_message", RoomObjective.STOCK_CLEAR_KEY)
 
 
 func get_clear_subtitle() -> String:
-	return _objective_text("clear_subtitle", RoomObjective.STOCK_CLEAR_SUBTITLE)
+	return _objective_text("clear_subtitle", RoomObjective.STOCK_CLEAR_SUBTITLE_KEY)
 
 
 func get_defeat_message() -> String:
-	return _objective_text("defeat_message", "THE PAWN FALLS")
+	return _objective_text("defeat_message", RoomObjective.STOCK_DEFEAT_KEY)
 
 
 func get_defeat_subtitle() -> String:
-	return _objective_text("defeat_subtitle", "THE CHILD RESETS THE BOARD")
+	return _objective_text("defeat_subtitle", RoomObjective.STOCK_DEFEAT_SUBTITLE_KEY)
 
 
-func _objective_text(property: StringName, fallback: String) -> String:
+func _objective_text(property: StringName, fallback_key: String) -> String:
 	if objective == null:
-		return fallback
+		return fallback_key
 	var value := String(objective.get(property))
-	return value if not value.is_empty() else fallback
+	return value if not value.is_empty() else fallback_key

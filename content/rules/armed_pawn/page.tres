@@ -5,7 +5,7 @@
 [resource]
 script = ExtResource("1")
 piece_id = &"pawn_armed"
-title = "The armed pawn"
-original_rule = "A pawn strikes only with its diagonal capture."
-amendment = "A pawn holding a weapon strikes as the weapon."
-flavor = "Someone left the toy sword within reach."
+title = "PAGE_ARMED_PAWN_TITLE"
+original_rule = "PAGE_ARMED_PAWN_RULE"
+amendment = "PAGE_ARMED_PAWN_AMENDMENT"
+flavor = "PAGE_ARMED_PAWN_FLAVOR"

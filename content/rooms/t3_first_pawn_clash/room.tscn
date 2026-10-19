@@ -8,7 +8,7 @@
 [ext_resource type="PackedScene" uid="uid://dy23jflk5mhj" path="res://presentation/views/actors/black_pawn.tscn" id="6_pawn"]
 
 [node name="T3_FirstPawnClash" instance=ExtResource("1_room")]
-room_message = "A pawn turns back. Face it. Wait for the warning. Strike."
+room_message = "ROOM_T3_FIRST_PAWN_CLASH_START"
 zone_id = &"t3_first_pawn_clash"
 board_size = Vector2i(16, 9)
 
@@ -72,4 +72,4 @@ script = ExtResource("5_exit")
 target_zone = &"t4_broken_rule_yard"
 target_entry = &"west_entry"
 requires_room_clear = true
-locked_message = "The black pawn still bars the way. Break the black line first."
+locked_message = "ROOM_T3_FIRST_PAWN_CLASH_LOCKED"

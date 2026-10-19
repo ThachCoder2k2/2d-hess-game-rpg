@@ -146,7 +146,7 @@ func _run() -> void:
 	Support.step_player(main, Vector2i.RIGHT)
 	_expect(not Support.travel_in_progress(main) and main.get("current_zone_id") == T3, "a requires_room_clear exit does not travel while an enemy lives")
 	var t3_door_line := Support.exit_locked_message(room_t3, &"t4_broken_rule_yard")
-	_expect(not t3_door_line.is_empty() and String(hud.get("objective_label").text) == t3_door_line, "the bridge answers a locked door with the line of that door (T3 has no captain, and its door does not blame one)")
+	_expect(not t3_door_line.is_empty() and String(hud.get("objective_label").text) == TextService.t(t3_door_line), "the bridge answers a locked door with the line of that door (T3 has no captain, and its door does not blame one)")
 	_expect(not String(hud.get("objective_label").text).to_lower().contains("captain"), "T3's locked door says nothing about a captain")
 	_expect(Support.run_of(save_service).room_id == T3, "a locked door leaves the run on the current zone")
 

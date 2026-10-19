@@ -6,19 +6,19 @@
 
 [sub_resource type="Resource" id="Resource_owner"]
 script = ExtResource("2")
-heading = "Design, story and art"
-lines = PackedStringArray("The owner")
+heading = "CREDIT_OWNER_HEADING"
+lines = PackedStringArray("CREDIT_OWNER_LINE")
 fine_print = false
 
 [sub_resource type="Resource" id="Resource_engine"]
 script = ExtResource("2")
-heading = "Made with"
-lines = PackedStringArray("Godot Engine 4.6")
+heading = "CREDIT_ENGINE_HEADING"
+lines = PackedStringArray("CREDIT_ENGINE_LINE")
 fine_print = false
 
 [resource]
 script = ExtResource("1")
-game_title = "The Unbound Pawn"
+game_title = "CREDIT_GAME_TITLE"
 sections = Array[ExtResource("2")]([SubResource("Resource_owner"), SubResource("Resource_engine"), ExtResource("3")])
-closing_line = "Thank you for playing."
+closing_line = "CREDIT_CLOSING_LINE"
 scroll_pixels_per_second = 24.0

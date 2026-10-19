@@ -13,7 +13,7 @@
 [ext_resource type="Resource" uid="uid://d0qxvb8xdjbov" path="res://content/pickups/pencil_spear/pencil_spear.tres" id="11_spear"]
 
 [node name="T4_BrokenRuleYard" instance=ExtResource("1_room")]
-room_message = "They broke the rules first. Armed pawns reach farther than chess allows."
+room_message = "ROOM_T4_BROKEN_RULE_YARD_START"
 zone_id = &"t4_broken_rule_yard"
 board_size = Vector2i(16, 9)
 
@@ -85,4 +85,4 @@ script = ExtResource("5_exit")
 target_zone = &"b1_black_pawn_captain"
 target_entry = &"west_entry"
 requires_room_clear = true
-locked_message = "The black pawns still hold the yard. Break the black line first."
+locked_message = "ROOM_T4_BROKEN_RULE_YARD_LOCKED"

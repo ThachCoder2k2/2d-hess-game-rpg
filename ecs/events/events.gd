@@ -86,7 +86,7 @@ const MOVEMENT_EVENTS: Dictionary = {
 			"zone": "StringName: id of the zone the door leads to",
 			"entry": "StringName: id of the entry marker it would arrive on",
 			"cell": "Vector2i: the door cell",
-			"message": "String: the line the HUD shows for it (ZoneExitMarker.locked_message); empty when the door carries none",
+			"message": "String: the text key of the line the HUD shows for it (ZoneExitMarker.locked_message); empty when the door carries none",
 		},
 	},
 	PLAYER_UNLOCK: {
@@ -95,7 +95,7 @@ const MOVEMENT_EVENTS: Dictionary = {
 		"payload": {
 			"entity": "int: the player entity",
 			"id": "StringName: the unlock's id (PlayerUnlockMarker.unlock_id)",
-			"message": "String: the line the HUD shows for it",
+			"message": "String: the text key of the line the HUD shows for it (PlayerUnlockMarker.message)",
 		},
 	},
 }

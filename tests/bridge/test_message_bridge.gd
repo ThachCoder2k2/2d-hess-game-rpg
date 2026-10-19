@@ -45,10 +45,10 @@ func _check_the_events_that_speak() -> void:
 	router.route([{"type": Events.GATE_OPENED, "entity": HERO, "gate": &"g", "cell": Vector2i.ZERO}])
 	_expect(hud.objective_label.text == "The gate unbars. It will never close again.", "a gate opening says it is for good")
 	router.route([{"type": Events.ZONE_EXIT_LOCKED, "entity": HERO, "zone": &"t4", "entry": &"start", "cell": Vector2i.ZERO, "message": "The black pawn still bars the way. Break the black line first."}])
-	_expect(hud.objective_label.text == "The black pawn still bars the way. Break the black line first.", "a locked door says what holds it, in the words of its own marker")
+	_expect(hud.objective_label.text == "The black pawn still bars the way. Break the black line first.", "a locked door says what holds it, in the words of its own marker (a plain sentence stands in for the marker's text key)")
 	router.route([{"type": Events.ZONE_EXIT_LOCKED, "entity": HERO, "zone": &"t4", "entry": &"start", "cell": Vector2i.ZERO, "message": ""}])
-	_expect(hud.objective_label.text == MessageBridge.DOOR_IS_LOCKED, "a locked door whose marker has no line falls back to the generic one")
-	_expect(not MessageBridge.DOOR_IS_LOCKED.to_lower().contains("captain"), "and the generic line blames no piece: the door may be in any room")
+	_expect(hud.objective_label.text == TextService.t(MessageBridge.DOOR_IS_LOCKED_KEY), "a locked door whose marker has no line falls back to the generic one")
+	_expect(not hud.objective_label.text.to_lower().contains("captain"), "and the generic line blames no piece: the door may be in any room")
 
 
 func _check_the_hero_hurt_speaks_by_courage_left() -> void:

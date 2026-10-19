@@ -17,6 +17,9 @@ extends RefCounted
 ## The registration order of the bridges is the order they react in when one event has several
 ## (game_root.gd lists it in one place).
 
+## What a piece the cast has no name for is called.
+const UNKNOWN_PIECE_KEY := "ENEMY_UNKNOWN_PIECE"
+
 var snapshot := HudSnapshot.new()
 var cast: Dictionary = {}
 
@@ -41,6 +44,7 @@ func is_player(entity: int) -> bool:
 	return entity == player_entity()
 
 
-## The name the room's cast gives a piece ("Enemy" for an entity it does not know).
-func piece_name_of(entity: int) -> String:
-	return String(cast.get("piece_name_by_entity", {}).get(entity, "Enemy"))
+## The name the room's cast gives a piece, as a TextKey so a language switch renames it (the key of an entity the
+## cast does not know is ENEMY_UNKNOWN_PIECE). The cast holds the piece's key (EnemyDefinition.piece_name).
+func piece_name_of(entity: int) -> TextKey:
+	return TextKey.of(String(cast.get("piece_name_by_entity", {}).get(entity, UNKNOWN_PIECE_KEY)))

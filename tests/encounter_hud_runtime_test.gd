@@ -18,6 +18,7 @@ func _expect(condition: bool, label: String) -> void:
 
 
 func _init() -> void:
+	TextService.set_language(TextService.SOURCE_LANGUAGE)  # this suite reads the English words
 	call_deferred("_run")
 
 

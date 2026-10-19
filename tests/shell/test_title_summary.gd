@@ -69,7 +69,7 @@ func _a_damaged_newest_file_falls_back_to_the_backup_with_a_notice() -> void:
 	SaveSupport.plant(service.slot_path(0), "garbage\n")
 	var summary := TitleSummary.from_save(SaveSupport.new_service(service.root_directory()), "1.0.0")
 	_expect(summary.can_continue and summary.notice_key == SaveLoadResult.NOTICE_BACKUP_USED, "a damaged newest file with an intact .bak: Continue, and the backup notice")
-	_expect(summary.notice_text == TitleSummary.NOTICE_TEXT_BY_KEY[SaveLoadResult.NOTICE_BACKUP_USED] and not summary.notice_text.is_empty(), "with its sentence")
+	_expect(summary.notice_text == TextService.t(TitleSummary.NOTICE_TEXT_KEY_BY_KEY[SaveLoadResult.NOTICE_BACKUP_USED]) and not summary.notice_text.is_empty(), "with its sentence")
 	_expect(summary.card_text.begins_with("Fallen Sword Tile"), "and the card describes the save that will load (the previous one: %s)" % summary.card_text)
 
 
@@ -95,8 +95,8 @@ func _nothing_readable_offers_no_continue() -> void:
 
 	var every_key_has_a_sentence := true
 	for notice_key: StringName in [SaveLoadResult.NOTICE_BACKUP_USED, SaveLoadResult.NOTICE_NEW_GAME_AFTER_DAMAGE, SaveLoadResult.NOTICE_OBSOLETE_SAVE, SaveLoadResult.NOTICE_NEWER_GAME]:
-		every_key_has_a_sentence = every_key_has_a_sentence and not String(TitleSummary.NOTICE_TEXT_BY_KEY.get(notice_key, "")).is_empty()
-	_expect(every_key_has_a_sentence, "every notice key the loader can raise has a sentence")
+		every_key_has_a_sentence = every_key_has_a_sentence and TextService.has_key(String(TitleSummary.NOTICE_TEXT_KEY_BY_KEY.get(notice_key, "")))
+	_expect(every_key_has_a_sentence, "every notice key the loader can raise has a sentence (a row of ui.po)")
 
 
 func _the_words_of_the_card() -> void:
@@ -104,14 +104,14 @@ func _the_words_of_the_card() -> void:
 	_expect(TitleSummary.room_title(&"h1_chess_rug_hub") == "Chess Rug Hub" and TitleSummary.room_title(&"b1_black_pawn_captain") == "Black Pawn Captain", "for the hub and a boss room too")
 	_expect(TitleSummary.room_title(&"tb3_toy_chest") == "Toy Chest", "a two-letter act prefix is dropped as well")
 	_expect(TitleSummary.room_title(&"kingdom") == "Kingdom", "an id with no prefix keeps all its words")
-	_expect(TitleSummary.room_title(&"") == TitleSummary.FIRST_ROOM_NAME, "a run that has not entered a room is the beginning")
+	_expect(TitleSummary.room_title(&"") == TextService.t(TitleSummary.FIRST_ROOM_NAME_KEY), "a run that has not entered a room is the beginning")
 	_expect(TitleSummary.play_time_text(0.0) == "0m" and TitleSummary.play_time_text(59.0) == "0m" and TitleSummary.play_time_text(125.0) == "2m" and TitleSummary.play_time_text(3599.0) == "59m", "play time under an hour is minutes")
 	_expect(TitleSummary.play_time_text(3600.0) == "1h 00m" and TitleSummary.play_time_text(3725.0) == "1h 02m" and TitleSummary.play_time_text(36000.0) == "10h 00m", "from an hour on it is hours and minutes")
 	var day := TitleSummary.day_text(1760000000)
 	_expect(day.length() == 10 and day.begins_with("2025-10-"), "a Unix time is a calendar day (%s)" % day)
 	var undated := SaveData.new()
 	undated.room_id = &"t1_white_kings_fall"
-	_expect(TitleSummary.card_for(undated) == "White Kings Fall  |  0m played", "a run that was never written has no date on its card")
+	_expect(TitleSummary.card_for(undated) == "White King's Fall  |  0m played", "a run that was never written has no date on its card")
 
 
 func _the_completed_mark() -> void:

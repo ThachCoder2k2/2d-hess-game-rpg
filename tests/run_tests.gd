@@ -63,6 +63,7 @@ func _view(scene_path: String) -> ActorView:
 
 
 func _init() -> void:
+	TextService.set_language(TextService.SOURCE_LANGUAGE)  # this suite reads the English words
 	# --- EcsGrid: the cell rules every system relies on ---
 	var grid := EcsGrid.new()
 	_expect(grid.register_entity(1, Vector2i(1, 1)), "entity registers on an empty cell")
@@ -137,7 +138,7 @@ func _init() -> void:
 
 	var armed_definition := load("res://content/enemies/pawn_armed/enemy.tres") as EnemyDefinition
 	_expect(armed_definition.validate().is_empty(), "armed Pawn definition has no missing configuration")
-	_expect(armed_definition.default_weapon != null and armed_definition.default_weapon.display_name == "Pencil Spear", "armed Pawn default weapon is Inspector-configured")
+	_expect(armed_definition.default_weapon != null and TextService.t(armed_definition.default_weapon.display_name) == "Pencil Spear", "armed Pawn default weapon is Inspector-configured")
 
 	var knight_definition := load("res://content/enemies/knight_tracker/enemy.tres") as EnemyDefinition
 	_expect(knight_definition.movement.allowed_directions.size() == 8, "knight movement config exposes eight L-shaped offsets")
@@ -300,7 +301,7 @@ func _init() -> void:
 			definition_ids.append(definition.id)
 	_expect(definition_ids.size() >= 7, "content/enemies holds at least seven enemy definitions (a missing folder cannot pass the book check below vacuously)")
 	for entry in rule_book.entries:
-		_expect(entry.piece_id in definition_ids, "book page '%s' names a real piece" % entry.title)
+		_expect(entry.piece_id in definition_ids, "book page '%s' names a real piece" % TextService.t(entry.title))
 	var book_ui := (load("res://presentation/ui/codex/rule_book.tscn") as PackedScene).instantiate() as RuleBookUI
 	root.add_child(book_ui)
 	book_ui.refresh([&"pawn_recruit"])

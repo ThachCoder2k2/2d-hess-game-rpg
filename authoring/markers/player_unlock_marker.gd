@@ -6,7 +6,9 @@ extends GridMarker
 ## and MovementSystem emits player_unlock when the hero steps onto it.
 
 @export var unlock_id: StringName = &"wooden_sword"
-@export_multiline var message := "The pawn grips the sword. The rules crack."
+## Text key (ROOM_<ID>_UNLOCK_<VERB> in rooms.po): the line the status bar says when the hero steps on this cell.
+## Empty uses MessageBridge's own generic line (MSG_UNLOCK_FALLBACK).
+@export var message := ""
 
 
 func _draw() -> void:

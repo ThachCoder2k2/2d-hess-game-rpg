@@ -33,13 +33,12 @@ theme_override_constants/separation = 4
 
 [node name="BookTitle" type="Label" parent="Panel/Margin/Layout/LeftColumn"]
 theme_override_font_sizes/font_size = 10
-text = "THE BOOK OF HOUSE RULES"
+text = "BOOK_TITLE"
 
 [node name="CountLabel" type="Label" parent="Panel/Margin/Layout/LeftColumn"]
 unique_name_in_owner = true
 modulate = Color(1, 1, 1, 0.6)
 theme_override_font_sizes/font_size = 8
-text = "0 of 0 amendments known"
 
 [node name="EntryList" type="ItemList" parent="Panel/Margin/Layout/LeftColumn"]
 unique_name_in_owner = true
@@ -54,12 +53,12 @@ theme_override_constants/separation = 4
 [node name="TitleLabel" type="Label" parent="Panel/Margin/Layout/DetailColumn"]
 unique_name_in_owner = true
 theme_override_font_sizes/font_size = 13
-text = "Unread ink"
+text = "BOOK_UNREAD_INK"
 
 [node name="OriginalHeader" type="Label" parent="Panel/Margin/Layout/DetailColumn"]
 modulate = Color(1, 1, 1, 0.55)
 theme_override_font_sizes/font_size = 8
-text = "ORIGINAL RULE"
+text = "BOOK_ORIGINAL_RULE_HEADING"
 
 [node name="OriginalLabel" type="Label" parent="Panel/Margin/Layout/DetailColumn"]
 unique_name_in_owner = true
@@ -69,7 +68,7 @@ theme_override_font_sizes/font_size = 9
 [node name="AmendmentHeader" type="Label" parent="Panel/Margin/Layout/DetailColumn"]
 modulate = Color(1, 0.85, 0.5, 0.8)
 theme_override_font_sizes/font_size = 8
-text = "AMENDMENT"
+text = "BOOK_AMENDMENT_HEADING"
 
 [node name="AmendmentLabel" type="Label" parent="Panel/Margin/Layout/DetailColumn"]
 unique_name_in_owner = true
