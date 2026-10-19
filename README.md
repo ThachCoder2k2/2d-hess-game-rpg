@@ -104,7 +104,9 @@ others. The suites live in `tests/` (the older ones at the top, plus `architectu
 - `Shift + direction`: turn without moving.
 - `Space` or `K`: Wooden Sword.
 - `Q`: Pencil Thrust.
-- `R`: reset the room.
+- `R`: call the child (the key exists; the child helps from M10, so it does nothing visible yet).
+- `Esc` (pad: `Start`): the pause menu: Resume, Book, Settings, Controls (the keys, read from the InputMap), Assist options,
+  Restart Room (asks first), Quit to Title (asks first). Settings is also on the title.
 - `B`: open the Book of House Rules.
 - `F3`: toggle the debug view. `F11`: fullscreen.
 

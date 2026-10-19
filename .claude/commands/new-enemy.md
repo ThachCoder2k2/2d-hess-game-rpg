@@ -44,7 +44,10 @@ Steps:
    variant reuses) belongs in `content/enemies/_shared/{movement,attacks,decisions,visuals}/`
    instead, and the enemy's `enemy.tres` points at it; the Bishop and Knight keep their own pieces
    beside `enemy.tres`, named for the `EnemyDefinition` export they fill:
-   - `enemy.tres` (`EnemyDefinition`) — `id`, `display_name`, `piece_name`, `role`, `max_health`
+   - `enemy.tres` (`EnemyDefinition`) — `id`, `display_name` and `piece_name` (TEXT KEYS, never words:
+     `ENEMY_<ID>_NAME` and `ENEMY_<ID>_PIECE`, with their two rows in `content/story/text/en/story.po`; the
+     rows carry a `#.` translator comment and `test_text_keys` / `test_po_domains_merge` fail without them),
+     `role`, `max_health`
      (default 2, between 1 and 100), and refs to the four below plus the shared
      `content/difficulty/standard.tres`. Optional: `default_weapon`, `allowed_weapon_tags`.
      `validate()` must return no warnings. The smallest useful enemy is this file alone, pointing at
@@ -171,7 +174,7 @@ afterwards. The enemy was `test_pawn`, 5 health, reusing the shared pawn pieces:
 
 | What I did | What happened |
 |---|---|
-| Copied `pawn_recruit/enemy.tres` to `test_pawn/enemy.tres`; removed the header uid; set `id = &"test_pawn"`, `display_name`, `max_health = 5` | one file; `max_health` is a line to add (the default 2 is not written in the source file) |
+| Copied `pawn_recruit/enemy.tres` to `test_pawn/enemy.tres`; removed the header uid; set `id = &"test_pawn"`, `display_name` and `piece_name` (keys), `max_health = 5` | one file; `max_health` is a line to add (the default 2 is not written in the source file) |
 | `tools/stamp_uids.gd` | "headers without uid: 1 stamped" |
 | `tests/content/test_validate_all.gd` | `content/enemies holds at least 7 entries (found 8)`, four `enemies/test_pawn ...` lines PASS, `TEST VALIDATE ALL: PASS` |
 | Instanced `actor_view_base.tscn` in a scratch room scene, set `definition` to the file, dumped it | `entity 3 enemy:Pawn cell=(7,3) health=5/5`; the same room with the real pawn showed `health=2/2` |
@@ -187,8 +190,9 @@ afterwards. The enemy was `test_pawn`, 5 health, reusing the shared pawn pieces:
 Counted for the owner (`docs/OWNER_GUIDE.md` section 5): a re-skin that reuses `_shared` is **1 file**
 (`enemy.tres`) plus the room edit that places it; with a picture of its own it is **3 files** (`enemy.tres`,
 `visual.tres`, `body.png`; the editor adds `body.png.import`), plus the room edit, and one
-`_placeholders.json` row if the owner should see it on the to-draw list. The name row in a `.po` file arrives
-with M4.
+`_placeholders.json` row if the owner should see it on the to-draw list. Add the two name rows
+(`ENEMY_<ID>_NAME`, `ENEMY_<ID>_PIECE`) to `content/story/text/en/story.po`: that is one more file, so a re-skin is
+**2 files** and a bespoke one **4**.
 
 Note the placeholder art: reusing an existing sprite is fine for a first pass; flag that a
 bespoke sprite is a later art-pass item for the human to approve (`tools/list_placeholders.gd`

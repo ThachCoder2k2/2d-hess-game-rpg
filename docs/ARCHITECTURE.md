@@ -83,7 +83,9 @@ content/                 THE OWNER'S FOLDER: data, art, audio, words. Zero .gd f
   feel/                  piece_sizes.tres: how big each kind of piece is drawn inside its cell
   rooms/<id>/            room.tscn (a RoomEncounter) and, for T1 and T2, background.png
   story/                 credits.tres (CreditsDefinition: the owner, the engine) and credits_licenses.tres (generated
-                         from THIRD_PARTY_NOTICES.md by tools/build_credits_licenses.gd)
+                         from THIRD_PARTY_NOTICES.md by tools/build_credits_licenses.gd); every word of the game lives in
+                         story/text/<language>/{story,ui,skills,rooms}.po (en is complete, vi is empty)
+  ui/theme/theme.tres    UiTheme: the project theme; it names the four font files the owner supplies (assets/fonts/)
   rules/<id>/page.tres   Book of House Rules pages; rule_book.tres lists them
   skills/<id>/           the Wooden Sword and Pencil Thrust AttackProfile .tres and the sword icon
   tilesets/<kit>/        tileset.tres + tilemap.tscn (kingdom, playground); tile_map_data is binary
@@ -95,6 +97,8 @@ schema/                  THE SHAPE OF CONTENT: one Resource class per file
   world/                 WorldGraph, RoomObjective, RuleBook, RuleEntry
   feel/                  DifficultyProfile, PieceSizeTable, PieceSize
   story/                 CreditsDefinition, CreditsSection
+  ui/                    UiTheme (a Theme that names the owner's font files)
+  settings/              GameSettings (the player's choices, ONE object) and SettingDefinition (one row of its table)
 
 ecs/                     THE SIMULATION: rules only; no art, prose or tuning numbers
   core/                  EcsWorld, EcsGrid, CellKinds, EcsSystem, WorldFlags, InputSnapshot, HudSnapshot, PlayerSnapshot
@@ -121,6 +125,12 @@ presentation/            HOW THE WORLD IS SHOWN: reads events, never decides
   ui/hud/  ui/codex/     GameHud scene, the Book of House Rules screen
   ui/menu/               ConfirmPanel: the shared yes-or-no question (New Game over a used slot; the pause menu's confirms)
   ui/autosave_indicator/ AutosaveIndicator: the tick that shows for a second after every autosave
+  ui/theme/              UiFonts: puts the owner's font files on the project theme when the game starts; UiContrast: the
+                         High-contrast menus look (opaque panels, outlines, white text), put on and taken off that theme
+  ui/input_glyphs/       InputGlyphs (the lookup: an InputMap action + a device -> the owner's 16x16 picture or the words that
+                         stand in), InputGlyph, LastInputDevice (which device was used last), GlyphStrip, ActionPrompt
+  ui/controls/           ControlsPanel (built from the InputMap each time it opens) and ControlsCatalog (names, pages, "coming later")
+  text/                  TextService (the ONE caller of the engine's translation), TextKey, LiveText, PseudoLocale
   board/                 PrototypeBoard (telegraphs, F3 debug) and GridLinesOverlay
   camera/                CameraRig
   audio/                 SfxManager (autoload scene)
@@ -135,9 +145,13 @@ shell/                   THE GAME AROUND THE GAME
   game_root.gd/.tscn     the in-game scene (test-capped at 200 lines): builds the world, ticks it, routes events; runs alone too
   game_flow.gd           GameFlow: the state machine of the run (boot, title, playing, paused, respawning, ending, credits)
   zone_stage.gd          ZoneStage: scene-tree plumbing (the world node, the entry cell, zone and hero-view swaps)
-  shell_keys.gd          ShellKeys: R, F3, F11 and B, read from the frame's InputSnapshot
+  shell_keys.gd          ShellKeys: pause (Esc, Start), F3, F11 and B, read from the frame's InputSnapshot
+  pause/                 PauseMenu (Resume, Book, Settings, Controls, Assist options, Restart Room, Quit to Title; the two last ask
+                         first) and PauseSummary (what its questions say)
+  settings/              SettingsScreen (four pages built from the table), SettingsStore (the profile file), SettingsApplier
+                         (volumes, fullscreen, language, high-contrast menus)
   bridges/               the bridges that must reach the world, the save or a component: ShellBridge (their base),
-                         SaveBridge, ZoneTravelBridge, BookBridge, RoomOutcomeBridge, DespawnBridge
+                         SaveBridge, ZoneTravelBridge, BookBridge, RoomOutcomeBridge, DespawnBridge, SettingsBridge
   content/               ContentDb (the content registry, a static class) and ContentKind
   input/input_poller.gd  InputPoller: the one reader of the Input singleton; fills world.input_snapshot once per frame
   save/                  SaveService (the autoload: the run in memory, the slots on disk, the profile) and its
@@ -149,7 +163,8 @@ assets/                  shared raw art and audio not owned by one content item
   concept-art/           references, never shipped   _generated/   generator output (gitignored)
 
 tools/                   generators, the runner, the migration scripts (never shipped; tools/README.md)
-tests/                   run_tests.gd + six runtime tests + architecture/ audio/ bridge/ content/ ecs/ presentation/ support/
+tests/                   run_tests.gd + six runtime tests + architecture/ audio/ bridge/ content/ ecs/ input/ presentation/ settings/
+                         shell/ support/ text/
                          fixtures/ (the 72x40 kingdom, first_encounter, the harness fixtures) baselines/
 docs/                    this file, coding-standards.md, OWNER_GUIDE.md, plans, design/, archive/
 ```
@@ -189,7 +204,10 @@ and the edges are gone.
 shell/app_root.tscn  ->  AppRoot (shell/app_root.gd), the main scene, never replaced
   MusicPlayer        the march; autoplay, bus Music, PROCESS_MODE_ALWAYS (a death, a room change or the title never restart it)
   ScreenHost         the ONE current screen is its child: TitleScreen, GameRoot or CreditsScreen
-  OverlayLayer       AutosaveIndicator (the tick), and later the pause menu; keeps running while the tree is paused
+  OverlayLayer       AutosaveIndicator (the tick); keeps running while the tree is paused
+  MenuLayer          the PauseMenu (hidden until the flow is PAUSED), the SettingsScreen and the ControlsPanel (each hidden
+                     until asked for; later siblings sit on top and take the key first); keeps running while the tree is paused
+  LastInputDevice    which device the player used last, for the prompts' glyph set
   TransitionLayer    the fade to black and back; the topmost layer; swallows the mouse while it is visible
 ```
 
@@ -208,8 +226,8 @@ PLAYING | PAUSED | ENDING -> TITLE        Quit to Title (writes nothing; progres
 
 A screen change is fade to black, free the old screen (taken out of the tree at once), build the new one, fade back;
 changes run one after another in the order asked (`AppRoot._queue_step`), so a quick double request cannot build two
-screens. A pause is not a screen change: AppRoot sets `get_tree().paused` when the state is PAUSED (the pause menu
-itself is a later M4 step), and GameFlow refuses a pause during a zone trip, a waiting rebuild and the defeat beat.
+screens. A pause is not a screen change: AppRoot sets `get_tree().paused` when the state is PAUSED and opens the pause menu
+(Restart Room is the menu's command, D-18), and GameFlow refuses a pause during a zone trip, a waiting rebuild and the defeat beat.
 New Game calls `SaveService.start_new_run()`: a clean run begins and the slot's file becomes that clean run at once,
 the old save stays as the `.bak`, the profile (the `completed` mark) is untouched. Continue first asks
 `read_slot()` whether the slot holds readable progress (a damaged file with no backup, one too old to migrate and one
@@ -243,9 +261,9 @@ shell/game_root.tscn  ->  GameRoot (shell/game_root.gd, class GameRoot)
                 ecs.tick(delta)  ->  router.route(ecs.drain_events())  ->  HudBridge.refresh()
 ```
 
-A death and `R` do not reload the scene. When the hero falls, `CheckpointSystem` says `respawn_requested`;
-`RoomOutcomeBridge` plays the defeat beat (0.85 s) and `ShellKeys` handles `R`, and both call
-`GameFlow.request_respawn()`, which raises its own `respawn_requested` signal, waits out a zone trip under way
+A death and the pause menu's Restart Room do not reload the scene. When the hero falls, `CheckpointSystem` says
+`respawn_requested`; `RoomOutcomeBridge` plays the defeat beat (0.85 s) and AppRoot answers the pause menu's confirmed
+Restart Room, and both call `GameFlow.request_respawn()`, which raises its own `respawn_requested` signal, waits out a zone trip under way
 and (under AppRoot) the fade to black, and at the end of the frame has `GameRoot.respawn()` rebuild the room: a fresh instance of the zone the run says
 the pawn is in, a fresh hero view in its boot pose (a fallen hero's view rests in its defeat clip), the Book
 closed, nothing carried, then `boot_zone()` on the entry the pawn came in by (D-16: a death resets only the room
@@ -639,16 +657,17 @@ in two folders:
 | `BoardBridge` | `presentation/bridges/` | telegraph cells, strike flashes, F3 intent paths on `PrototypeBoard` | `telegraph_*`, `attack_resolved`, `attack_landed`, `intent_changed`, `defeated` |
 | `CameraBridge` | `presentation/bridges/` | the two screen shakes (named constants), framing each room | `attack_landed`, `damaged` |
 | `HudBridge` | `presentation/bridges/` | Courage pips and the damage flash, the skill slot, the result panel, and the enemy count, the strike line, the cell line and the skill slot's sword line (the slot stops saying "find sword" the frame the snapshot says the sword is found) it redraws from the snapshot every frame | `damaged`, `healed`, `skill_cooldown` |
-| `MessageBridge` | `presentation/bridges/` | every sentence an event puts on the status line (constants until M4's text keys) and `say()` for the others | `attack_locked`, `attack_landed`, `damaged`, `weapon_changed`, `player_unlock`, `gate_opened`, `zone_exit_locked` |
+| `MessageBridge` | `presentation/bridges/` | every sentence an event puts on the status line (as text keys, `MSG_...` rows of ui.po) and `say(key, params)` for the others | `attack_locked`, `attack_landed`, `damaged`, `weapon_changed`, `player_unlock`, `gate_opened`, `zone_exit_locked` |
 | `AudioBridge` | `presentation/bridges/` | the event sounds through the `SfxManager` registry; the only caller of it | `pickup_taken`, `player_unlock`, `gate_opened` (+ `play()` for the room outcome) |
 | `SaveBridge` | `shell/bridges/` | what the room writes into the run and the run gives back to each room (cleared rooms, the checkpoint, the room and entry the pawn is in, persistent pickups, gates, unlocks, flags); the ONLY asker of saves (R17) | `pickup_taken`, `player_unlock`, `gate_opened`, `room_cleared`, `checkpoint_set`, `respawn_requested` |
 | `DespawnBridge` | `shell/bridges/` | a taken floor weapon's view; a defeated enemy's view after its 0.6 s defeat clip | `pickup_taken`, `defeated` |
 | `RoomOutcomeBridge` | `shell/bridges/` | what a room's end looks like: the result screen of a won room (quiet in the world unless the room has an objective), the hero's fall, the 0.85 s defeat beat and the request to start the room again; it judges nothing | `room_cleared`, `respawn_requested` |
 | `ZoneTravelBridge` | `shell/bridges/` | the trip between zones (guards, fade, swap, boot, fade) and the `PlayerSnapshot` it carries | `zone_exit` |
 | `BookBridge` | `shell/bridges/` | a met piece writes its page; the B key opens the Book | none (called by the scene and `ShellKeys`) |
+| `SettingsBridge` | `shell/bridges/` | makes the settings of the room true: the camera bridge's shake scale, the HUD's and the board's Reduce flashing, the board's High-contrast danger, the poller's hold-or-toggle, and the four assists plus Reduce flashing as `tuning_set` commands (sent again after every boot) | none (it listens to `GameSettings.changed`) |
 
 The six in `presentation/bridges/` name no world, no save and no component, so 13.1 lets them live in
-presentation. The five in `shell/bridges/` (base class `ShellBridge`, which holds the `GameRoot`) write the
+presentation. The six in `shell/bridges/` (base class `ShellBridge`, which holds the `GameRoot`) write the
 run, rebuild the world or flip a component, so they sit in the layer allowed to name everything. The plan's
 tree (13.2) lists a `save` handler under `presentation/bridges/`; 13.1 forbids presentation to name the
 `SaveService`, so it is in the shell. Each bridge has a test that drives it through a real router
@@ -657,16 +676,17 @@ tree (13.2) lists a `save` handler under `presentation/bridges/`; 13.1 forbids p
 - `shell/game_root.gd` — the in-game scene (see Runtime flow): finds its nodes, boots the world, ticks it
   and routes the events. It holds no rule (`test_game_root_is_thin`: at most 200 lines, no event handler, no save
   request, no scene reload). `shell/zone_stage.gd` holds the scene-tree plumbing, `shell/shell_keys.gd` the
-  game's own keys (R, F3, F11, B).
+  game's own keys (pause, F3, F11, B).
 - `shell/game_flow.gd` — `GameFlow`, the state machine of plan 9.1 (see "The app around the game"). A death and
-  the R key `request_respawn()`, it raises `respawn_requested` and, once per frame, after a trip under way and
+  the pause menu's Restart Room `request_respawn()`, it raises `respawn_requested` and, once per frame, after a trip under way and
   after AppRoot's fade, `GameRoot.respawn()` starts the room again. Nothing reloads the scene
   (`test_no_scene_reload`) and nothing calls `change_scene` (`test_app_root_is_main_scene`).
 - `PrototypeBoard` (`presentation/board/`) — the combat overlay: telegraph cells, hit flashes,
   F3 debug paths. The one place `_draw()` is allowed for gameplay overlays. It reads the board
   geometry from the grid (duck-typed) and everything else from `world.hud_snapshot`.
 - `GameHud` (`presentation/ui/hud/`, a `CanvasLayer`) — courage, skill cooldown, enemy count,
-  status, damage flash, result panel. It owns all its own formatting.
+  status, damage flash, result panel. It owns all its own formatting; every word it shows is a text key
+  resolved by `TextService` and kept in the player's language by a `LiveText` (see "Text").
 - `CameraRig` (`presentation/camera/`) — a `Camera2D` that is a child of the player view (so it
   follows by tree parenting), clamps to the room and shakes via the built-in offset. A room that fits the
   picture is held still with the board centred and every cell on screen (the limits are one view wide
@@ -695,6 +715,89 @@ tree (13.2) lists a `save` handler under `presentation/bridges/`; 13.1 forbids p
   within 14 px of the cell centre. Clips cap their hops and shakes at the 2 px margin. Row-based
   depth (z by row) is kept; nothing needs it any more. Measured by `test_pieces_inside_cell`,
   drawn for the owner by `tools/render_actor_preview.gd`.
+
+## Text: keys, rows and the language
+
+Every word the player reads is a ROW of a gettext file and is named by a KEY (docs/game-base-plan.md 8.9, D-24, D-25).
+Scenes, `.tres` files and scripts hold keys (`UI_PAUSE_RESUME`, `ROOM_T3_FIRST_PAWN_CLASH_LOCKED`,
+`PAGE_FIRST_LAW_TITLE`); nothing but `TextService` asks the engine to translate (`test_tr_only_in_text_service`).
+
+```text
+content/story/text/<language>/{story,ui,skills,rooms}.po    four files per language, one table for the engine
+  en/   complete; every row has words and a `#.` translator comment (test_po_domains_merge)
+  vi/   empty on purpose; a key with no row falls back to en (project.godot internationalization/locale/fallback)
+project.godot [internationalization] locale/translations     lists all eight files: several translations of ONE locale
+presentation/text/
+  text_service.gd   TextService.t(key, params): the row, with {name} filled; a key with no row renders as itself;
+                    set_language(), languages(), language_name(); PREFIXES_BY_DOMAIN says which file a key's prefix belongs in
+  text_key.gd       TextKey: a key (and its params) waiting to go INTO another line ("{piece} picked up {weapon}"), so a
+                    language switch renames the piece inside the sentence too
+  live_text.gd      LiveText: a child node of a screen; remembers which key and params each control shows and resolves them
+                    again on NOTIFICATION_TRANSLATION_CHANGED; on_language_change() for screens built from data
+  pseudo_locale.gd  PseudoLocale: the generated `qps` language, +40 percent and accented, {name} and %d untouched
+```
+
+- **Scenes** hold the key in a Label's or Button's `text`; the engine translates it and redraws it itself when the
+  language changes (built-in auto translate), so a scene needs no code for its words. **Scripts** call
+  `TextService.t(key, params)` and, when the text must follow a language change, put it on a `LiveText`
+  (`set_text(control, key, params)`). A `TextKey` in a param is resolved with the line that holds it.
+- **Resources** hold keys: `RoomEncounter.room_message`, `ZoneExitMarker.locked_message`, `PlayerUnlockMarker.message`, the
+  `RoomObjective` lines, `RuleEntry`, `display_name`/`piece_name` of enemies, weapons and attacks, the credits. The schema classes
+  never resolve them (schema may name nothing); the bridges and screens do.
+- **Prefix -> file:** `UI_`, `MSG_`, `PROMPT_` -> ui.po; `ROOM_` -> rooms.po; `SKILL_`, `ITEM_` -> skills.po; `DLG_`, `AMB_`,
+  `BOOK_`, `PAGE_`, `CHAR_`, `ENEMY_`, `BOSS_`, `CREDIT_`, `END_`, `CLUE_` -> story.po. Per-lane prefixes keep two lanes out of
+  the same file.
+- **Dumps and goldens print keys**, never sentences (`tools/world_dumper.gd`): a rewritten `.po` line must not change a baseline.
+- **Guards:** `test_text_keys` (no prose left in a script, scene or resource; every key named exists; its allow-list is exact
+  and gives a reason per entry), `test_po_domains_merge`, `test_tr_only_in_text_service`, `test_language_switch_redraws_live`,
+  `test_layout_pseudo_locale` (HUD, title, pause menu, the four pages of the settings screen and the three of the Controls panel
+  at 640 x 360 with every line 40 percent longer), `test_pseudo_locale`, `test_text_service`.
+- **Tests run in English**: `UnboundTest` sets it before any suite starts, because the machine's own locale may be anything.
+- **Fonts:** `content/ui/theme/theme.tres` is a `UiTheme` and the PROJECT theme (project.godot `gui/theme/custom`), so it also
+  reaches Controls under a `CanvasLayer` (the HUD), which a Window's theme does not. It names four font files under
+  `assets/fonts/` (the owner supplies them; nothing is downloaded); `UiFonts.apply` (called by AppRoot) sets the ones that exist
+  and leaves the engine's default font where there is no file. `test_font_vietnamese_coverage` checks all 134 precomposed
+  Vietnamese letters of the font in use; `test_font_slots` the slots.
+
+## Settings, controls and glyphs
+
+What the player chooses (docs/game-base-plan.md 9.2, 5.8, 10) is ONE object, `GameSettings` (`schema/settings/`), a table of
+`SettingDefinition`s: the volume of each bus (Master, Music, SFX, UI), fullscreen, language, High-contrast menus, screen-shake
+scale, Reduce flashing, High-contrast danger, hold-or-toggle for turn mode, Guard and Focus, and the four assists (Warning time, Enemy
+pace, Extra Courage, Input forgiveness: neutral names, all at the standard game, never switched on for the player, D-22). The table
+holds each setting's key, kind (slider, switch, choice, language), page, name key, default and range, so the screen, the profile and
+the checks read one place; a new setting is one row, one name in `ui.po` and the line that makes it do something. Assists and
+settings live in the profile (`profile.cfg`, `setting_<key>`), not in a slot: a New Game keeps them (the plan's 5.8 says assists are
+per save; they are per profile here, which keeps them in one place and reachable from the title).
+
+```text
+AppRoot owns        settings: GameSettings   settings_store: SettingsStore   settings_applier: SettingsApplier
+  at start          SettingsStore.load_settings()  (a value missing or unusable takes its default, logged with the reason; a
+                    first run is one line)  ->  SettingsApplier.apply_all()
+  on every change   GameSettings.changed  ->  apply_all()  and a write to the profile half a second after the last change
+                    (flush_settings(): also when the settings screen closes, on Quit and on window close)
+SettingsApplier     buses (volume in dB, muted at 0), the window's fullscreen, TextService.set_language, UiContrast.apply(theme)
+SettingsBridge      (in the game scene, handed the same GameSettings) CameraBridge.shake_scale, GameHud and PrototypeBoard
+                    reduce_flash, PrototypeBoard.high_contrast_danger, InputPoller.set_toggle_mode, and world.tuning through
+                    `tuning_set` commands (after every boot too: a room is a new world)
+SettingsScreen      four pages built from the table; edits GameSettings and nothing else; reachable from the title and the
+                    pause menu (which also has Controls and Assist options, the last opening the Assists page)
+```
+
+Reduce flashing reaches the pieces through a `Tuning` knob (`reduce_flash`) that `ViewSyncSystem` reads: no hurt tint and no
+seven-per-second invulnerability blink (the hero stays a steady, fainter colour). The camera shake, the HUD flash and the board's
+strike flash and pulse are switched at their own node. A telegraph is never removed. The assists reach `world.tuning` and no system
+reads them yet: the milestone that does is named on each field of `ecs/components/tuning.gd`.
+
+**Controls and glyphs.** `ControlsPanel` (`presentation/ui/controls/`) is built from the live InputMap every time it opens: a
+page per kind of control (`ControlsCatalog`), a row per action, a keyboard column and a gamepad column; an action the catalog has
+no row for is listed under its own name and `test_controls_panel_from_inputmap` fails until it gets one; an action that does
+nothing yet says "(coming later)" (the child's R, D-18). The pictures come from `InputGlyphs`: for an action and a device it finds
+the owner's 16x16 file at the path the asset list gives (`assets/ui/glyphs/keyboard|gamepad/<name>.png`, the Kenney pack, which the
+owner copies in; nothing is downloaded) and always the words that stand in (`[Space]`, `[A]`, `[Left Stick Up]`); every path it can
+name is held to the asset list and every control the InputMap binds is held to a slot in it (`test_input_glyphs`).
+`LastInputDevice` follows the hand (a key press, a pad button, a stick pushed past drift) and an `ActionPrompt` shows the matching
+glyph set, in the language in use. Only the InputPoller reads the `Input` singleton; the device tracker listens to events.
 
 ## Persistence
 
@@ -784,10 +887,8 @@ ad-hoc edits:
   `PlayerSnapshot`). The skill slot is redrawn on `skill_cooldown`
   events, as it always was, so after the sword is found it says "find sword" until the first
   skill is used; the M4 widgets draw the snapshot every frame and end that.
-- Three shell keys (`F3`, `F11`, `B`) are raw keys, not `InputMap` actions. `InputPoller` publishes them in
-  the snapshot as `debug_view_toggle`, `fullscreen_toggle` and `rule_book_toggle` so nobody else calls
-  `Input`; M4 adds the actions under the same names and deletes the table (`R` is already the
-  `restart_room` action).
+- (Removed in M4 step 2: the shell keys `F3`, `F11` and `B` are `InputMap` actions now, `debug_view_toggle`,
+  `fullscreen_toggle` and `rule_book_toggle`, and `restart_room` is gone: restarting is the pause menu's command.)
 - `ViewSyncSystem` blinks the invulnerability tint from the wall clock.
 - Nothing returns the pawn to the checkpoint. D-16 says both "return to the latest checkpoint" and "a death
   resets only the current uncleared room"; the least punishing reading is built (a death puts the pawn back on
@@ -832,6 +933,9 @@ kind:
 | `tests/bridge/` | the in-game scene and its bridges: the characterization suites (travel, death and respawn, persistence, health carry, the Book, the world flags), `test_game_flow`, `test_event_router`, one suite per bridge (`test_board_bridge`, `test_camera_bridge`, `test_audio_bridge`, `test_message_bridge`, `test_hud_bridge`, `test_bridge_despawn`, `test_bridge_room_outcome`), `test_shell_keys`, and the rules of M3b step 3 through the real scene: `test_checkpoint_rules`, `test_cleared_rooms`, `test_player_carry_zone_swaps`; `test_bridge_backtracking` walks the pawn home from H1 to T1 on foot, by key presses, through every west door, and `test_bridge_route_on_foot` walks it forward from a clean T1 to the hub (the sword in T2, every piece of T3, T4 and B1 brought down with the sword, each east door the clear opened); `test_owner_guide_steps` does the "things to try" of `docs/OWNER_GUIDE.md` section 7 in the rooms as they are, in the guide's order from a clean save (a fall, `R`, a cleared room, a checkpoint, a floor weapon, a relaunch); a suite that follows a player brings a pawn down with the sword by the real input path (`Support.kill_with_sword`: walk beside it, face it, press attack), never with a damage request, which needs no cell and let a pawn on a wall go unnoticed; `test_kill_with_sword` proves that helper can say no; `bridge_support.gd` is their shared fixture (it also walks: `tap_direction`, `walk_to_cell`, `walk_through_door`, and fights: `kill_with_sword`) |
 | `tests/shell/` | the app around the game (M4 step 1): `test_app_flow` (boot, title, New Game into T1, pause, a rebuild behind the fade, Quit to Title, Continue, the credits, the ending), `test_game_flow_states` (the state machine's table), `test_new_game_resets_slot`, `test_continue_loads_checkpoint`, `test_title_summary`, `test_title_screen`, `test_credits_screen`, `test_credits_licenses_current`, `test_transition_layer`, `test_autosave_indicator`, `test_confirm_panel`, `test_app_root_is_main_scene`; `shell_support.gd` boots AppRoot for them |
 | `tests/save/` | the save: `test_save_roundtrip`, `test_save_migration_v2` (with the real v2 file in `tests/fixtures/saves/`), `test_corrupt_save_falls_back`, `test_request_save_callers` (R17), `test_profile_survives_new_game` |
+| `tests/input/` | the controls (M4 steps 2 and 3): `test_input_actions_have_pad_events`, `test_input_poller_rules` (dominant axis, hold-or-toggle), `test_input_glyphs` (every path is the asset list's, every bound control has a slot, the words stand in, the device is followed), `test_controls_panel_from_inputmap` |
+| `tests/settings/` | the settings (M4 step 3): `test_settings_roundtrip` (the table, the profile, garbage and missing keys with a logged reason), one `test_setting_*` suite per setting that looks at the real target (volumes, fullscreen, language, shake scale, reduce flash, high-contrast danger, high-contrast menus, assists, hold-or-toggle), `test_every_setting_has_a_target` (fails a setting no suite moves), `test_settings_screen` (built from the table, reachable from the title and the pause menu), `test_pause_assist_options`; `settings_support.gd` boots the app for them |
+| `tests/text/` | the words (M4 step 3): `test_text_service`, `test_pseudo_locale`, `test_po_domains_merge`, `test_text_keys`, `test_language_switch_redraws_live`, `test_layout_pseudo_locale`, `test_font_slots`, `test_font_vietnamese_coverage` |
 | `tests/presentation/` | the board overlay drawing from the snapshot, and the camera framing the room (`test_board_draws_from_snapshot`, `test_camera_frames`) |
 | `tests/perf/` | `test_room_tick_budget`: an 18x9 room with eight enemies ticks in 2 ms or less on average, and builds one pathfinder |
 | `tests/audio/`, `tests/content/` | the bus layout; the requirements ledger and the placeholder manifest; `test_room_doors_reachable` (every room of the world graph booted for real: every entry on floor, every door floor, reachable from every entry and leading to an entry that exists); `test_room_markers_on_floor` (the same boot: every parked enemy stands on floor and is in the grid, every pickup and unlock marker is on floor and can be walked to from every entry, every gate is on floor and can be pushed) |
@@ -862,10 +966,10 @@ world's other shared fields, the `EcsBoot` options object, the `InputPoller` and
 and the grid's cell kinds, leaps, rays, cached paths and bounded attack search, and from M3b the save service
 (step 1), the split of `game_root.gd` into the `EventRouter`, the bridges and `GameFlow` (step 2), and
 `ObjectiveSystem`, `CheckpointSystem`, the `PlayerSnapshot` in the zone swap and the checkpoint, death and
-cleared-room rules of D-16 and D-17 (step 3), and, from M4 step 1, `AppRoot` as the main scene with the `GameFlow`
+cleared-room rules of D-16 and D-17 (step 3), and, from M4 step 3, the settings screen, the Controls panel and the glyph lookup (built on the gamepad events and the pause menu of step 2), the text pipeline (the `.po` files, `TextService`, the pseudo-language, every literal a key) and the font slot, and, from M4 step 1, `AppRoot` as the main scene with the `GameFlow`
 state machine, the persistent fade, the title, the credits (data in `content/story/credits.tres`, licences generated
 from `THIRD_PARTY_NOTICES.md`), the autosave tick and the corrupt-save notice. The ECS contract is kept as it was.
-Still to come, in plan order: the rest of the shell (pause, settings, first-run card), input, text, story, skills,
+Still to come, in plan order: the rest of the shell (the production HUD, camera snap, first-run card), story, skills,
 bosses and the other five districts. The
 owner-facing "how do I change X" table, with real paths for what exists today, is
 `docs/OWNER_GUIDE.md`.

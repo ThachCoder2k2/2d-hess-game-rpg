@@ -385,10 +385,38 @@ Deliberately not used (do not add them without a real need and the owner's say):
   `git add -A` over uncommitted editor or UID changes.
 - Commit every new `.gd` together with its `.gd.uid` sidecar.
 
+## Text (M4 step 3)
+
+- A word the player reads is a row of `content/story/text/en/{ui,rooms,skills,story}.po`, named by a KEY: UPPER_SNAKE, its
+  prefix says the file (`TextService.PREFIXES_BY_DOMAIN`), every row carries a `#.` comment saying where it shows and what
+  it is for. Scenes, `.tres` files and scripts hold keys; a literal sentence in any of them fails `test_text_keys`.
+- Only `TextService` asks the engine to translate (`test_tr_only_in_text_service`): no `tr()`, `atr()` or
+  `TranslationServer.translate()` anywhere else. A Label a scene authors holds its key in `text` and the engine does the rest;
+  a script calls `TextService.t(key, params)`, and puts text that has to follow a language switch on a `LiveText`.
+  A name inside another line is a `TextKey` param, so it changes with the sentence.
+- A `{placeholder}` is lower_snake and is filled by `params`; the pseudo-language keeps it and lengthens everything else by
+  40 percent. A screen is checked for that at 640 x 360 (`test_layout_pseudo_locale`): a new HUD, menu or settings widget
+  that cannot take longer words is fixed in its layout, not exempted.
+- `schema/` and `ecs/` carry keys and never resolve them. A dump or a golden prints keys, never sentences.
+- Allowed non-game strings in code (developer sentences, tables of documentation, editor labels) are listed with their
+  reason in `ALLOWED_LITERALS` of `tests/text/test_text_keys.gd`; the list is exact, so an entry that matches nothing fails.
+
+## Settings and controls (M4 step 3)
+
+- What the player chooses is a row of the `GameSettings` table (`schema/settings/`): key, kind, page, name key, default, range. A setting
+  is DONE when something real moves because of it: the app-level ones in `SettingsApplier`, the room-level ones in `SettingsBridge`, and a
+  `tests/settings/test_setting_*.gd` suite sets it and looks at the target (`test_every_setting_has_a_target` fails without one).
+- A setting never sets a component. It reaches the simulation as a `tuning_set` command on `world.tuning` (a field of `Tuning`, with the
+  milestone that reads it named on it); a view reads the knob, a bridge sets a node. A new value is validated by its definition and a
+  stored value that fails falls back to its default with a logged reason.
+- Controls are never hard-coded text: a prompt or the Controls panel asks `InputGlyphs` for the glyph of an InputMap action for a
+  device, and shows the owner's picture when its file is there and the words (`[Space]`) when it is not. Only the InputPoller reads
+  the `Input` singleton; `LastInputDevice` listens to events.
+
 ## What the plan adds next
 
 `docs/game-base-plan.md` §13.3 lists conventions that M1b did not need and later milestones add:
-the file-naming suffixes `*_effect.gd`, `*_handler.gd`, `*_bridge.gd` as those kinds appear, and `.po`
-text keys instead of literal strings. Those are targets, not rules yet; the rules above are the
+the file-naming suffixes `*_effect.gd`, `*_handler.gd`, `*_bridge.gd` as those kinds appear. The `.po`
+text keys are a rule since M4 step 3 (below). The rest are targets, not rules yet; the rules above are the
 ones the code and the guards already hold (the schedule, the declared events and commands, the snapshots, the
 cell kinds and the cached pathing landed with M3a).

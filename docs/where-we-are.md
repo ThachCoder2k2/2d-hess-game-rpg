@@ -18,8 +18,13 @@ Trang này trả lời hai câu: **làm việc theo quy trình nào**, và **m�
 > **Ghi chú M4 bước 1 (2026-10-19):** cảnh chính nay là `shell/app_root.tscn` (không còn `shell/game_root.tscn`): game mở
 > bằng **màn title** (New Game, Continue khi có save đọc được, Credits, Quit; Settings tạm xám), có credits đọc
 > `content/story/credits.tres`, dấu tick nhỏ mỗi khi game tự lưu, số phiên bản, và một dòng báo khi save bị hỏng hoặc của
-> bản game mới hơn. Chọn New Game thì lần chơi mới được ghi đè lên save ngay (có hỏi trước). Menu pause, settings, tay
-> cầm, phím gọi đứa trẻ và hệ chữ `.po` là các bước 2 đến 4 của M4. Xem `docs/OWNER_GUIDE.md` mục 1 và 7.
+> bản game mới hơn. Chọn New Game thì lần chơi mới được ghi đè lên save ngay (có hỏi trước). Xem `docs/OWNER_GUIDE.md` mục 1 và 7.
+>
+> **Ghi chú M4 bước 2 và 3 (2026-10-19):** có menu pause (`Esc`/`Start`; Restart Room hỏi xác nhận; `R` là phím gọi đứa trẻ, chưa
+> làm gì thấy được) và, ở bước 3, **mọi chữ trong game nằm trong file `.po`** (`content/story/text/en/`; sửa một dòng rồi chạy
+> lại là thấy), **chỗ đặt font** (`assets/fonts/`) và **chỗ đặt glyph phím** (`assets/ui/glyphs/`) của bạn, **màn Settings** (title và menu pause: âm lượng,
+> rung màn hình, nháy, tương phản, toàn màn hình, ngôn ngữ, assists, bật/tắt thay vì giữ phím) và **bảng Controls** đọc từ InputMap. HUD mới là bước 4. Xem
+> `docs/OWNER_GUIDE.md` mục 8.
 >
 > **Ghi chú cuối M2 (2026-10-13):** M2 cũng không đổi luật chơi. Đổi ở phần hiển thị và dữ liệu: **quân cờ giờ nhỏ
 > hơn ô** theo quyết định của bạn ngày 2026-10-12 (bảng kích thước `content/feel/piece_sizes.tres`; thay phase 66, quân

@@ -1,9 +1,11 @@
 # Hướng dẫn cho chủ dự án (Owner Guide)
 
-> **Trạng thái (Status): CẬP NHẬT Ở M4 bước 1 (2026-10-19).** Tạo ở M1a, M1b điền đường dẫn thật vào mục 5,
+> **Trạng thái (Status): CẬP NHẬT Ở M4 bước 3 (2026-10-19).** Tạo ở M1a, M1b điền đường dẫn thật vào mục 5,
 > M2 thêm mục 6 (quân cờ nhỏ hơn ô) và cập nhật các hàng về con tốt, enemy, sprite, M3b thêm mục 7
 > (lưu game, checkpoint, chết và hồi sinh). M4 bước 1 thêm màn title (New Game, Continue), credits và dấu tick
-> lưu game, và đổi cảnh chính thành `shell/app_root.tscn` (mục 1, 5, 7). Các milestone M4-M14 của
+> lưu game, và đổi cảnh chính thành `shell/app_root.tscn` (mục 1, 5, 7). M4 bước 2 thêm menu pause (`Esc`), đổi `R`
+> thành phím gọi đứa trẻ và đưa việc chơi lại phòng vào menu pause. **M4 bước 3 thêm mục 8: mọi chữ trong game nằm
+> trong file `.po` (sửa một dòng rồi thấy ngay), chỗ đặt font và glyph phím của bạn, màn Settings và bảng Controls.** Các milestone M4-M14 của
 > `docs/game-base-plan.md` sẽ điền tiếp phần còn lại của bảng đích; M14 viết bản đầy đủ.
 >
 > **Ngôn ngữ:** tiếng Việt đứng trước, thuật ngữ tiếng Anh giữ nguyên. Nếu hai bản khác nhau thì
@@ -14,7 +16,10 @@
 > lists what you can change today at its real path, with file counts; the target table below it says
 > which milestone makes each remaining row true. Section 6 is the new rule that a piece is smaller than
 > its cell, where its size table lives, and the picture that shows it. M3b added section 7: where the save
-> file lives, how to start clean, what a death keeps and resets, and what to try.*
+> file lives, how to start clean, what a death keeps and resets, and what to try. M4 step 2 moved restarting a
+> room to the pause menu (R is Call child, D-18). M4 step 3 added section 8: every word of the game is a row of a
+> `.po` file (how to edit one and see it), where the owner's font files and key-glyph files go, what each setting of the
+> Settings screen does, and the Controls panel.*
 
 ## 1. Chơi bản build hiện tại (How to play the current build)
 
@@ -28,7 +33,7 @@
    `content/`.
 3. Màn **title** hiện ra: **New Game** (bắt đầu sạch ở phòng T1; nếu đã có save thì hỏi xác nhận rồi ghi lần chơi mới
    đè lên, save cũ còn lại làm `.bak`), **Continue** (chỉ hiện khi có save đọc được; mở phòng và ô vào của lần lưu cuối,
-   kèm một dòng "thẻ save": tên phòng, thời gian chơi, ngày lưu), Settings (xám, chưa có), **Credits** và Quit.
+   kèm một dòng "thẻ save": tên phòng, thời gian chơi, ngày lưu), **Settings** (mục 8), **Credits** và Quit.
    Góc dưới bên phải là số phiên bản. Sau khi xem hết kết thúc, một ô của bàn cờ trên title để trống. Vào game là đi
    theo tuyến Stage 1: T1 → T2 → T3 → T4 → B1 → H1 (greybox, chưa chỉnh art). Muốn chơi lại từ đầu: chọn **New Game**
    (hoặc xoá file save `saves/slot_0.cfg` và `saves/slot_0.cfg.bak` trong thư mục user data của
@@ -42,24 +47,31 @@
 | `Shift` + hướng | xoay tại chỗ, không đi |
 | `Space` hoặc `K` | Wooden Sword (có sau khi nhặt kiếm ở T2) |
 | `Q` | Pencil Thrust |
-| `R` | chơi lại phòng (như khi chết, mục 7) |
+| `R` | **gọi đứa trẻ** (call child, D-18). Phím đã có nhưng **chưa làm gì thấy được**: đứa trẻ giúp từ M10 |
+| `Esc` (tay cầm: `Start`) | **menu pause**: Resume, Book of House Rules, **Settings**, **Controls** (bảng phím, đọc từ InputMap), **Assist options** (các tuỳ chọn làm game dễ hơn, luôn có từ lần chơi đầu), **Restart Room** (chơi lại phòng như khi chết; hỏi xác nhận; đây là cách duy nhất), Quit to Title (hỏi xác nhận và nêu tên checkpoint gần nhất). Game cũng tự pause khi cửa sổ mất focus |
 | `B` | mở Book of House Rules |
 | `F3` / `F11` | bật tắt debug view / toàn màn hình |
 
-5. Đã có (M4 bước 1): màn title, credits (đọc `content/story/credits.tres`), dấu tick nhỏ ở góc trên bên phải mỗi khi game
-   tự lưu, thông báo một dòng khi save bị hỏng hoặc của bản game mới hơn. Chưa có: menu pause, settings, tay cầm
-   (các bước sau của M4). `R` vẫn đang chơi lại phòng; M4 sẽ chuyển nó thành phím gọi đứa trẻ và đưa việc chơi lại phòng
-   vào menu pause.
+5. Đã có (M4 bước 1-3): màn title, credits (đọc `content/story/credits.tres`), dấu tick nhỏ ở góc trên bên phải mỗi khi game
+   tự lưu, thông báo một dòng khi save bị hỏng hoặc của bản game mới hơn, menu pause (`Esc`/`Start`; mọi phím có thêm nút tay
+   cầm), **màn Settings** (từ title và từ menu pause), **bảng Controls** (từ menu pause và từ Settings), **mọi chữ nằm trong
+   file `.po`**, **chỗ đặt font** và **chỗ đặt glyph phím/tay cầm của bạn** (mục 8). Chưa có: HUD mới (bước sau của M4).
+   `R` là phím gọi đứa trẻ (chưa làm gì thấy được; bảng Controls ghi "(coming later)" bên cạnh).
 
 *EN: Open `project.godot` in Godot 4.6 and press F5 (main scene `shell/app_root.tscn`, which opens the title;
 the room scene `shell/game_root.tscn` still runs alone with F6), or run the binary with `--path .`. On a fresh
 clone run `tools/bootstrap_worktree.sh` first. The title offers New Game (asks first when a save exists, then
 writes the clean run over the slot; the old save stays as the `.bak`), Continue (only when a readable save exists:
-the room and entry of the last save, with a card that names the room, the time played and the day), Settings (greyed
-until it exists), Credits and Quit, with the version in the corner. To restart the run choose New Game, or delete
+the room and entry of the last save, with a card that names the room, the time played and the day), Settings, Credits
+and Quit, with the version in the corner. To restart the run choose New Game, or delete
 `saves/slot_0.cfg` (and `slot_0.cfg.bak`) in the user data folder. M4 step 1 added the title, the credits, the
-autosave tick and the notice for a damaged or newer save; the pause menu, settings and gamepad come in the next steps
-of M4.*
+autosave tick and the notice for a damaged or newer save. M4 step 2 added the pause menu (Esc or Start: Resume, Book,
+Restart Room with a confirm, Quit to Title with a confirm that names the last checkpoint; the game also pauses when the
+window loses focus), gamepad events on every action, and R as Call child (it does nothing visible until M10; restarting
+a room is the menu's job). M4 step 3 added the Settings screen (from the title and from the pause menu; the pause menu also has Controls and
+Assist options), the Controls panel (read from the InputMap), the key and gamepad glyphs (the owner's files, with words in
+their place), and section 8: all text is in `.po` files and the font files go in `assets/fonts/`. The new HUD comes in the
+last step of M4.*
 
 ## 2. Trạng thái nằm ở đâu (Where status lives)
 
@@ -187,16 +199,18 @@ are later work, and nothing in the tree blocks them.*
 | Biến một vật nhặt trên sàn thành phần thưởng giữ mãi (được nhặt một lần cho cả lần chơi, không bao giờ quay lại; chưa phòng nào dùng, dành cho mảnh Courage và trang Rule ở các milestone sau) | **1 file**: trong `content/rooms/<id>/room.tscn`, chọn node `PickupSpawnPoint` của nó và bật **Persistent**. Để tắt, đó là vũ khí rơi trên sàn của phòng: phòng bắt đầu lại là nó về chỗ cũ (mục 7) |
 | Đổi hình bàn đồ vẽ tay | `assets/map_pieces/` (hình bạn vẽ tay, được track; thay thế bản sinh tự động) |
 | Đổi hình nền của phòng T1 hoặc T2 | **Tạm thời:** ghi đè `content/rooms/t1_white_kings_fall/background.png` hoặc `content/rooms/t2_fallen_sword_tile/background.png`. Hai tấm nền vẽ sẵn này là đồ cũ: theo quyết định của bạn (vẽ từng thứ một, `docs/owner-decisions.md`), phòng sẽ được ghép từ từng tile và từng đồ vật riêng, nên đừng vẽ lại cả tấm — hãy vẽ theo danh sách trong `docs/assets/`. |
-| Đổi một trang của Book of House Rules | `content/rules/<id>/page.tres` (chữ nằm trong file này tới khi có hệ `.po` ở M4); danh sách trang: `content/rules/rule_book.tres` |
+| Đổi một trang của Book of House Rules | **chữ của trang:** `content/story/text/en/story.po` (các dòng `PAGE_<ID>_TITLE`, `_RULE`, `_AMENDMENT`, `_FLAVOR`; mục 8). **Quân nào mở trang:** `content/rules/<id>/page.tres` (ô `piece_id`; các ô chữ trong đó chỉ chứa mã `PAGE_...`); danh sách trang: `content/rules/rule_book.tres` |
 | Đổi độ khó (nhân máu và sát thương toàn cục) | `content/difficulty/standard.tres` |
 | Đổi vũ khí nhặt được trên sàn | `content/pickups/<id>/<id>.tres` |
 | Đổi đồ thị thế giới (phòng nào nối phòng nào) | `content/world/world.tres` |
 | Đổi bộ tile của sàn/tường | `content/tilesets/<bộ>/tileset.tres` và `tilemap.tscn` (đừng sửa tay `tile_map_data`, dùng `tools/paint_*.gd`); atlas ở `assets/tiles/<bộ>/atlas.svg` là đồ cũ; bạn vẽ từng tile riêng (`assets/tiles/<khu>/<tile_id>.png`), công cụ sẽ tự ghép atlas |
 | Đánh dấu một tile là hố, khối nhảy qua được, phấn hay sàn bị hỏng (Mark a tile as a gap, a leapable block, chalk or corrupted floor) | **1 file**, trong Godot: mở `content/tilesets/<bộ>/tileset.tres`, ở TileSet editor chọn tile, trong Inspector mục **Custom Data** điền ô **kind**: `gap` (hố: không đi vào được, đường đạn và cú nhảy bay qua), `leapable_block` (khối: không đi qua được, chắn đường đạn, nhảy qua được), `chalk` (phấn: đi được), `corruption` (sàn hỏng: đi được); `wall` và `floor` cũng dùng được. Để trống thì tile là tường khi `solid` bật, còn không là sàn, nên mọi tile cũ vẫn như cũ. Hiện chưa tile nào điền `kind`: hình cho hố, khối, phấn và sàn hỏng thuộc về các milestone dùng chúng (M10, M13). Muốn tô chúng vào bản đồ thì công cụ `tools/paint_*.gd` nêu loại ô qua `tools/cell_kind_painter.gd`; đừng sửa tay `tile_map_data` |
 | Đổi âm thanh sự kiện / âm thanh chuyển động | ghi đè `assets/sfx/<tên>.wav` (cùng tên là mọi chỗ dùng tự nâng cấp), hoặc `presentation/audio/sfx_manager.tscn` (mục `streams` trong Inspector) / track âm thanh trong clip của actor |
-| Đổi phím | `project.godot`, mục `[input]` (hoặc Project Settings → Input Map) |
-| Đổi chữ (thoại, thông báo) | còn nằm rải rác: `RoomEncounter` trong `content/rooms/<id>/room.tscn`, `RoomObjective` `.tres` (`tests/fixtures/first_encounter/objective.tres` là ví dụ), `presentation/bridges/message_bridge.gd` (các câu trên dòng trạng thái), `shell/shell_keys.gd`, `presentation/ui/hud/hud.gd`. Hệ thống `.po` đến ở M4 |
-| Đổi tên bạn, thêm dòng hay thêm khối vào credits (và tốc độ cuộn) | **1 file**: `content/story/credits.tres` (Inspector: `sections` là các khối, mỗi khối có `heading` và `lines`; dòng trống là khoảng cách; `scroll_pixels_per_second` là tốc độ). Hiện dòng ghi tác giả là "The owner": thay bằng tên bạn. Khối **Licenses** ở cuối **sinh tự động** từ `THIRD_PARTY_NOTICES.md`: sửa file đó rồi chạy `godot --headless --path . -s tools/build_credits_licenses.gd` (đừng sửa tay `credits_licenses.tres`; bài test `test_credits_licenses_current` đỏ khi hai nơi lệch nhau). Giữ phím Confirm để bỏ qua credits |
+| Đổi phím | `project.godot`, mục `[input]` (hoặc Project Settings → Input Map). Bảng **Controls** (menu pause) tự đọc InputMap nên tự cập nhật; một action mới cần một dòng tên `UI_ACTION_<TÊN>` trong `ui.po` và một hàng trong `presentation/ui/controls/controls_catalog.gd` (bài test `test_controls_panel_from_inputmap` nhắc nếu quên) |
+| Đặt hình phím và nút tay cầm (glyph) | **1 file mỗi phím**, trong `assets/ui/glyphs/keyboard/` và `assets/ui/glyphs/gamepad/` (tên như danh sách asset, nhóm `glyphs_kenney`: `key_w.png`, `key_space.png`, `btn_a.png`, `dpad_up.png`...). Bạn tải bộ CC0 "Input Prompts Pixel" của Kenney rồi chép từng tile vào đúng tên; chưa có file nào thì game hiện chữ thay thế như `[Space]`, `[A]`. Chi tiết ở mục 8 |
+| Đổi giá trị mặc định của một cài đặt, hay thêm một cài đặt | `schema/settings/game_settings.gd` (một hàng `SettingDefinition`: khoá, loại, trang, mặc định, khoảng giá trị) + một dòng tên trong `ui.po` + dòng làm cho nó có tác dụng (`shell/settings/settings_applier.gd` cho cả app, `shell/bridges/settings_bridge.gd` cho phòng). `test_every_setting_has_a_target` đỏ nếu không có bài test nào chứng minh nó chạm tới mục tiêu |
+| Đổi chữ (thoại, thông báo, tên, menu, HUD) | **1 dòng** trong một file `content/story/text/en/*.po` (sửa phần sau `msgstr`, lưu, chạy lại game): `ui.po` (title, pause, HUD, các câu trên dòng trạng thái `MSG_...`), `rooms.po` (tên phòng, câu khi vào phòng, câu cửa khoá), `skills.po` (tên kỹ năng và vũ khí), `story.po` (Book, tên quân, credits). Ô chữ trong scene hay `.tres` chỉ chứa **mã** (ví dụ `ROOM_T3_FIRST_PAWN_CLASH_LOCKED`): đừng gõ chữ vào đó. Làm từng bước ở mục 8 |
+| Đổi tên bạn, thêm dòng hay thêm khối vào credits (và tốc độ cuộn) | **1 file**: `content/story/credits.tres` (Inspector: `sections` là các khối, mỗi khối có `heading` và `lines`; dòng trống là khoảng cách; `scroll_pixels_per_second` là tốc độ). Chữ của các khối là dòng `CREDIT_...` trong `content/story/text/en/story.po` (dòng ghi tác giả là `CREDIT_OWNER_LINE`, hiện là "The owner": thay bằng tên bạn); `credits.tres` chỉ giữ mã của chúng. Khối **Licenses** ở cuối **sinh tự động** từ `THIRD_PARTY_NOTICES.md`: sửa file đó rồi chạy `godot --headless --path . -s tools/build_credits_licenses.gd` (đừng sửa tay `credits_licenses.tres`; bài test `test_credits_licenses_current` đỏ khi hai nơi lệch nhau). Giữ phím Confirm để bỏ qua credits |
 | Đổi số phiên bản hiện ở góc màn title | **1 dòng**: `config/version` trong `project.godot` (Project Settings → Application → Config → Version) |
 | Xem còn file art/âm thanh tạm nào | `tools/list_placeholders.gd` (mục 4) |
 
@@ -225,15 +239,15 @@ cách làm thật một lần), đổi cảm giác con tốt, đổi sprite (the
 | Thêm hoặc sửa một trang Book mà loại modifier đã có handler (Add or edit a Book page whose modifier kind already has a handler) | `content/rules/<id>/page.tres` + rows in `story.po` | 2 | no | available after M7c |
 | Thêm một trang Book cần loại modifier mới (Add a Book page that needs a new modifier kind) | modifier schema + handler + schedule line + `page.tres` | 4-5 | yes | available after M7c |
 | Thêm một Annotation (`SkillUpgrade`) (Add an Annotation (a `SkillUpgrade`)) | the upgrade row on `skill.tres` + `.po` rows | 2 | no | available after M7c |
-| Viết lại một câu truyện, chữ UI hoặc một cái tên (Rewrite a line of story, UI text or a name) | one `msgstr` in `story/text/<locale>/*.po` (soft lints only warn in the editor) | 1 | no | available after M4 |
-| Thêm một ngôn ngữ (Add a language) | `story/text/<locale>/{story,ui,skills,rooms}.po` + register them in `project.godot` | 5 | no | available after M4 |
+| Viết lại một câu truyện, chữ UI hoặc một cái tên (Rewrite a line of story, UI text or a name) | one `msgstr` in `content/story/text/<locale>/*.po` (soft lints only warn in the editor) | 1 | no | **available now** |
+| Thêm một ngôn ngữ (Add a language) | `content/story/text/<locale>/{story,ui,skills,rooms}.po` + register them in `project.godot` (`internationalization/locale/translations`); `vi` exists and is empty (it falls back to English line by line) | 5 | no | **available now** (section 8): the files, and the language list on the Screen tab of Settings |
 | Đổi tên một nhân vật (Rename a character) | the `CHAR_<ID>_NAME` row | 1 | no | available after M6 |
 | Thêm một đoạn hội thoại, câu ambient hoặc prompt (Add a conversation, ambient line or prompt) | a beat `.tres` (or a line in `script/<act>.txt` + `tools/build_beats.gd`) + its `.po` rows | 2-3 | no | available after M6 |
 | Dựng một cutscene (Stage a cutscene) | beat `.tres` files + `.po` rows + a `TriggerMarker` in the room + `sound_bank` rows + `characters/<id>.tres` if there is a new speaker (+ a `cutscene.tscn` for a Tier-2 cutscene) | 5-7 | no | available after M6 |
 | Thêm một phòng (room) (Add a room) | `room.tscn`, `background.png`, one exit marker in the neighbouring room, a `world.tres` entry (map slot), `.po` rows (name, start message, what happened here, locked message) | 5-6 | no | available after M5 |
 | Đổi enemy hoặc bố cục của một phòng (Change a room's enemies or layout) | that `room.tscn`. Một cửa (`ZoneExitMarker`) phải nằm trên **ô sàn** sát tường, không nằm trong vòng tường: ô tường không đứng lên được nên cửa trong tường không bao giờ dùng được; marker vào (`ZoneEntryMarker`) đặt cách cửa một ô về phía trong. Bài `test_room_doors_reachable` báo lỗi nếu sai (*EN: a door goes on a floor cell next to the wall, never in the ring of wall; its entry marker one cell further in*) | 1 | no | **available now** (`content/rooms/<id>/room.tscn`) |
 | Đổi một khoá (lock) hoặc thêm lối tắt (shortcut) (Change a lock or add a shortcut) | the exit or gate marker in `room.tscn` + the `locked_message` row | 2 | no | available after M5 |
-| Đổi câu nói khi bước vào cửa đang khoá chờ dọn phòng (Change the line a shut door says) | `room.tscn`: the exit marker's **Locked Message** in the Inspector (empty = a generic line that blames no piece). `test_room_doors_reachable` fails a shut door with no line. | 1 | no | **available now** (`content/rooms/<id>/room.tscn`); the `.po` row after M4 |
+| Đổi câu nói khi bước vào cửa đang khoá chờ dọn phòng (Change the line a shut door says) | the words: the row `ROOM_<ID>_LOCKED` of `content/story/text/en/rooms.po` (section 8). Which row a door says: the exit marker's **Locked Message** in `room.tscn` holds that KEY (empty = the generic line `MSG_DOOR_IS_LOCKED`, which blames no piece). `test_room_doors_reachable` fails a shut door with no line, `test_text_keys` fails a key with no row. | 1 | no | **available now** |
 | Thêm một prop chỉ xuất hiện khi đủ điều kiện (Add a prop that appears after a condition) | a `StateVariantMarker` on the prop in `room.tscn` | 1 | no | available after M6 |
 | Đổi cách hub tiến hoá hoặc các biến thể ending (Change the hub evolution or ending variants) | `StateVariantMarker` props in H1's `room.tscn`, `ending.tres` | 1-2 | no | available after M6 (hub), M13 (ending) |
 | Thêm pickup, shard hoặc keepsake (Add a pickup, shard or keepsake) | `pickup.tres`, `pickup.png`, a spawn in `room.tscn`, a `.po` row (+ a milestone row if it grants) | 4-5 | no | available after M7c |
@@ -243,7 +257,7 @@ cách làm thật một lần), đổi cảm giác con tốt, đổi sprite (the
 | Đổi sprite (Swap a sprite) | overwrite `body.png`, drawn at scale 1 on the 32x32 canvas of `docs/assets` with the drawn pixels inside the box of its kind in `content/feel/piece_sizes.tres` (the canvas lands exactly on the cell; `VisualDefinition.anchor_offset` nudges it); the placeholder flag clears by hash | 1-2 | no | **available now** for `content/player/body.png` (white pawn) and the enemies' (`pawn_recruit` is every black pawn, `knight_tracker`, `bishop_zoner`); `ContentDb.validate_cross_refs()` fails a picture whose drawn pixels leave the box; `assets/_generated/previews/pieces_in_cells.png` and `pieces_placed_in_rooms.png` (`tools/render_actor_preview.gd`) show the hero and the enemies in their cells, and section 6 reads them |
 | Đổi kích thước quân trong ô (Change how big a kind of piece is inside its cell) | `content/feel/piece_sizes.tres`: one row per kind with the largest picture (`body_box`), the base line (`base_offset_y`, px below the cell's centre) and a footprint in cells. `validate()` keeps every box 2 px from the cell's edges and the heights as in a real chess set (pawn < knight, bishop, rook < queen < king) | 1 | no | **available now**; the placeholder pieces come from `tools/generate_chess_sprites.gd`, which reads the same file and refuses a piece that does not fit |
 | Đổi art của một phòng (Swap a room's art) | overwrite its single tile and prop PNGs (one file per thing, see `docs/assets/`); a tool assembles the room. The painted `background.png` of T1/T2 is a legacy placeholder, not something to redraw | 1 per thing | no | tiles and props: after the assembly tool lands; T1/T2 backgrounds: overwrite now if wanted |
-| Đổi portrait, skin UI hoặc font (Swap a portrait, UI skin or font) | overwrite the file in `content/story/characters/`, `content/ui/theme/`, `assets/fonts/` | 1 | no | available after M4 (skin UI, font), M6 (portrait) |
+| Đổi portrait, skin UI hoặc font (Swap a portrait, UI skin or font) | overwrite the file in `content/story/characters/`, `content/ui/theme/`, `assets/fonts/` | 1 | no | font: **available now** (`assets/fonts/ui_body_pixel.ttf` and the three other names of section 8); key and gamepad glyphs: **available now** (`assets/ui/glyphs/`, section 8); skin UI: the High-contrast menus setting is the only skin today; portrait: after M6 |
 | Thêm nhạc hoặc đổi bài nhạc đang phát (Add music or change which track plays) | drop the file in `assets/music/` + a row in `music_cues.tres` | 2 | no | available after M6 |
 | Thêm hoặc đổi âm thanh sự kiện (pickup, jingle, UI) (Add or swap an event sound (pickup, jingle, UI)) | drop the file + a row in `sound_bank.tres` | 2 | no | available after M6 |
 | Đổi âm thanh chuyển động hoặc sửa một animation clip (Swap a motion sound or edit an animation clip) | an **editor task** in `presentation/views/actors/actor_view_base.tscn` (changes every actor that inherits it) or in a bespoke inherited view; how fast a clip plays for one kind of piece is `clip_speed_scales` in its `visual.tres`, no scene edit. Keep hops and shakes within the 2 px margin: `test_pieces_inside_cell` samples every clip | 1 scene | no | **available now** |
@@ -253,7 +267,7 @@ cách làm thật một lần), đổi cảm giác con tốt, đổi sprite (the
 | Đổi cảm giác của con tốt (thời gian mỗi bước, courage, invulnerability) (Change how the pawn feels (step time, courage, invulnerability)) | `content/player/player.tres` (`PlayerDefinition`: Courage, invulnerability, step time, hold-repeat delay, skill cooldown, sword unlocked or not; the player scene holds none of these any more, and a node on a room's instance still beats the file) | 1 | no | **available now** (M2; `tests/content/test_player_definition.gd` proves every field reaches the hero) |
 | Đổi luật kinh tế (Believe, shard, stagger, ngưỡng assist) (Change economy rules (Believe, shards, stagger, assist thresholds)) | `content/progression/rules.tres` | 1 | no | available after M7c |
 | Đổi phím mặc định (Change input defaults) | the `[input]` section of `project.godot` | 1 | no | available after M4 |
-| Đổi chữ ở màn title hoặc credits (Change title text or credits) | `credits.tres` + `.po` rows | 2 | no | credits: **available now** (`content/story/credits.tres`, 1 file; the Licenses block is generated from `THIRD_PARTY_NOTICES.md`); title words: available after M4 (the `.po` step; today they are in `shell/title/title_screen.tscn`) |
+| Đổi chữ ở màn title hoặc credits (Change title text or credits) | `credits.tres` + `.po` rows | 2 | no | credits: **available now** (the rows `CREDIT_...` of `content/story/text/en/story.po`; `content/story/credits.tres` holds their keys, 1 file; the Licenses block is generated from `THIRD_PARTY_NOTICES.md`); title words: **available now** (the rows `UI_TITLE_...` of `content/story/text/en/ui.po`) |
 | Thêm cơ chế sàn mới (gai, công tắc) (Add a new floor mechanic (spikes, switch)) | marker + component + system + one schedule line (+ an event) | 4-5 | yes | **available now** (ô nguy hiểm tạm thời như phấn hay sàn hỏng: M10) |
 
 *EN: The first table lists today's real locations (all of these paths exist). The second is the target
@@ -378,8 +392,8 @@ D-17; "Giữ sạch" là câu trả lời của bạn trong `docs/owner-decision
 
 | Việc | Đưa bạn tới đâu | Việc đi kèm |
 |---|---|---|
-| Chết, hoặc bấm `R` | **ô vào của phòng bạn vừa ngã**, không bao giờ xa hơn. Chết trong phòng boss B1 thì đứng lại ở ô vào B1 | Courage đầy; phòng bắt đầu lại nguyên (địch đầy máu, vũ khí rơi về sàn); chết không lưu game |
-| Checkpoint: bước qua cửa vào hub hoặc vào một phòng boss | không đưa bạn đi đâu: đó là nơi **Courage được hồi đầy** (Believe cũng thế, từ M10) | game ghi lại "checkpoint gần nhất" (hub hoặc phòng boss, kèm ô vào) rồi lưu; màn pause sẽ gọi tên nó (M4). Chết **không** đưa bạn về đó |
+| Chết, hoặc chọn **Restart Room** trong menu pause (`Esc`) | **ô vào của phòng bạn vừa ngã**, không bao giờ xa hơn. Chết trong phòng boss B1 thì đứng lại ở ô vào B1 | Courage đầy; phòng bắt đầu lại nguyên (địch đầy máu, vũ khí rơi về sàn); chết không lưu game |
+| Checkpoint: bước qua cửa vào hub hoặc vào một phòng boss | không đưa bạn đi đâu: đó là nơi **Courage được hồi đầy** (Believe cũng thế, từ M10) | game ghi lại "checkpoint gần nhất" (hub hoặc phòng boss, kèm ô vào) rồi lưu; menu pause gọi tên nó khi bạn chọn Quit to Title. Chết **không** đưa bạn về đó |
 | Mở game lại (Continue) | phòng và ô vào của **lần lưu cuối**, không phải phòng cuối cùng bạn đứng | game chỉ lưu khi có việc tốt vừa xảy ra, nên ngay sau khi bước vào checkpoint thì lần lưu cuối chính là checkpoint và bạn tiếp tục ở đó; sau khi dọn xong một phòng khác thì bạn tiếp tục ở phòng đó |
 
 **Chơi thử (Owner can try).** Mọi bước dưới đây làm được trong các phòng hiện có, **theo đúng thứ tự, từ một file save
@@ -398,10 +412,10 @@ phòng, cửa quay lại nằm ở phía tây, sát tường, ngay cạnh ô và
    đen. Phòng T1 và T2 không có địch, nên chưa thể ngã ở đó.
 1. *Chết và hồi sinh (T3).* Đứng yên ở ô vào của T3 thì không sao: con tốt đen không tự đi tìm bạn. Hãy đi tới sát nó
    (không đánh) rồi đứng yên cho nó đánh hết 3 Courage, chừng 4-6 giây. Sau khoảng một giây bạn đứng lại **ở ô vào của
-   T3**, Courage đầy (các chấm trên HUD cũng đầy), con tốt đen đầy máu, kiếm gỗ vẫn trong tay. Phím `R` làm y như chết mà
-   không cần ngã. (Ngã trong phòng boss B1 cho cùng kết quả: bạn đứng lại ở ô vào của B1, boss và hai lính đầy máu, vòng đầu của boss.)
+   T3**, Courage đầy (các chấm trên HUD cũng đầy), con tốt đen đầy máu, kiếm gỗ vẫn trong tay. Menu pause (`Esc`) → **Restart Room** → xác nhận
+   làm y như chết mà không cần ngã (`R` không còn làm việc này: nó là phím gọi đứa trẻ, D-18). (Ngã trong phòng boss B1 cho cùng kết quả: bạn đứng lại ở ô vào của B1, boss và hai lính đầy máu, vòng đầu của boss.)
 2. *Phòng đã dọn thì giữ sạch, phòng chưa dọn thì làm lại.* Hạ con tốt đen của T3 bằng kiếm: cửa đông của T3 mở. Sang T4,
-   rồi đi **cửa tây của T4** (một bước sang trái từ ô vào) để về T3: T3 vẫn trống. Bấm `R` trong T3: vẫn trống. Ngược lại
+   rồi đi **cửa tây của T4** (một bước sang trái từ ô vào) để về T3: T3 vẫn trống. Restart Room từ menu pause trong T3: vẫn trống. Ngược lại
    T4 chưa dọn: vào T4, hạ một trong ba con, rồi về T3 bằng cửa tây và sang T4 lần nữa: địch về đủ 3 con và đủ máu.
 3. *Checkpoint hồi Courage, cửa thường thì không.* Bạn đang ở T4 với cả ba con tốt còn sống (cuối bước 2). Để một con của
    T4 đánh trúng bạn **đúng một lần**: HUD mất một chấm (đừng để hết 3 Courage). Đi **cửa tây của T4** sang T3 (trống) rồi
@@ -410,7 +424,7 @@ phòng, cửa quay lại nằm ở phía tây, sát tường, ngay cạnh ô và
    checkpoint (hub H1 cũng vậy, nhưng cửa sang H1 chỉ mở khi hạ boss).
 4. *Vũ khí rơi trên sàn thì về chỗ (B1).* Trong B1 có thanh thước (Ruler Blade) nằm trên sàn. Đứng yên ở ô vào, **chừng một giây**
    là đủ (nhanh hơn bạn nghĩ): một lính gác chưa cầm gì đi tới nhặt nó, thanh thước biến khỏi sàn và dòng trạng thái ghi
-   `... picked up Ruler Blade`. Nếu bạn nhìn chỗ khác thì có thể đã bỏ lỡ, không sao: bấm `R` (hoặc để bị hạ) là phòng bắt
+   `... picked up Ruler Blade`. Nếu bạn nhìn chỗ khác thì có thể đã bỏ lỡ, không sao: chọn Restart Room trong menu pause (hoặc để bị hạ) là phòng bắt
    đầu lại, thước lại nằm trên sàn và tay lính trống như cũ, rồi xem lại từ đầu. Đó
    là luật "vũ khí trên sàn thuộc về phòng" (D-16). Cây giáo bút chì ở T4 là một vũ khí rơi như vậy: nó nằm ở cuối phòng,
    ngay sau con tốt cầm giáo, cạnh cửa đông, và con tốt chưa cầm gì của T4 sẽ đi về phía nó khi bạn lại gần. Nhưng ở bước
@@ -425,7 +439,7 @@ phòng, cửa quay lại nằm ở phía tây, sát tường, ngay cạnh ô và
 bước 1 cần con tốt của T3 còn sống, bước 2 hạ nó, bước 3 hạ ba con của T4. Muốn làm lại từ bước 0 (hoặc từ bước 1, 2, 3):
 ở màn title chọn **New Game** (hoặc thoát game rồi **xoá `slot_0.cfg` và `slot_0.cfg.bak`**, xem "File save nằm ở đâu" ở dưới): game
 bắt đầu ở T1, chưa có kiếm. Chừng nào chưa dọn T4 thì phần "địch về đủ 3 con" của bước 2 làm lại thoải mái (ra cửa tây rồi vào lại). Bước 4 và 5
-làm lại tùy ý, không cần xoá save (bấm `R` trong B1 đưa thước về sàn; bước 5 là thoát rồi mở lại).
+làm lại tùy ý, không cần xoá save (Restart Room trong B1 đưa thước về sàn; bước 5 là thoát rồi mở lại).
 
 **Game lưu khi nào.** Chỉ khi một việc tốt vừa xảy ra, không bao giờ khi chết, khi bị đánh hay khi chỉ đi sang phòng
 khác: dọn xong một phòng, bước vào hub hoặc phòng boss (checkpoint), nhặt kiếm, lần đầu gặp một loại quân (ghi thêm một
@@ -447,26 +461,26 @@ lên `slot_0.cfg` ngay, còn save cũ nằm lại ở `slot_0.cfg.bak` cho tới
 bạn: file hỏng thì nó thử bản `.bak` và báo một dòng trên màn title (nút Continue vẫn có), file hỏng mà không có bản dự
 phòng thì title báo và chỉ còn New Game (file hỏng được giữ lại với đuôi `.corrupt`), file của bản game mới hơn thì nó không
 đọc, không ghi đè (New Game đổi tên nó thành `.newer_game`). **Continue** mở lại phòng và ô vào của lần lưu cuối (xem bảng
-ở đầu mục này). **Thoát về title** (menu pause, bước sau của M4) không lưu gì: tiến trình sau lần lưu cuối sẽ mất, và Continue
+ở đầu mục này). **Thoát về title** (menu pause → Quit to Title, hỏi xác nhận và nêu tên checkpoint) không lưu gì: tiến trình sau lần lưu cuối sẽ mất, và Continue
 đọc lại file.
 
 **Một chỗ agent đã tự chọn, bạn có thể đảo lại.** Kế hoạch viết cả "về checkpoint gần nhất" lẫn "chỉ phòng đang chơi
 bắt đầu lại". Nếu hiểu đúng từng chữ, chết ở T3 sẽ đưa bạn về đầu Stage 1, quá nặng so với "chết nhẹ nhàng". Agent chọn
 cách nhẹ nhất, và bản build làm đúng như vậy: **chết đưa bạn về ô vào của phòng vừa ngã** (không bao giờ xa hơn). Còn
 **checkpoint** (ô vào của hub và của phòng boss) là nơi Courage được hồi đầy (và sau này Believe), được ghi lại trong file
-save và sẽ được màn pause nhắc tên (M4). **Mở game lại** đưa bạn tới phòng và ô vào của lần lưu cuối, nên ngay sau khi
+save và được menu pause nhắc tên. **Mở game lại** đưa bạn tới phòng và ô vào của lần lưu cuối, nên ngay sau khi
 vào checkpoint thì đó cũng là checkpoint, nhưng game không có chỗ nào tự đưa bạn về checkpoint. Nếu bạn muốn chết (hoặc
 Continue) đưa về hẳn checkpoint: nói với agent, việc sửa nhỏ (`docs/game-base-plan.md` mục 5.2 ghi đúng chỗ phải sửa).
 
-**Chưa có:** màn pause (M4), bàn tay của đứa trẻ đặt con tốt lại (M8c), Believe (M10), boss nhiều pha với "pha
+**Chưa có:** bàn tay của đứa trẻ đặt con tốt lại (M8c), Believe (M10), boss nhiều pha với "pha
 đã qua điểm lưu" (M8b; hiện phòng boss bắt đầu lại từ đầu).
 
 *EN: Section 7 is what M3b added for you. One sentence: a death restarts only the room you fell in, and you stand
 again on the ENTRY you came into it by (full Courage, enemies back at full health, floor weapons back on the floor, a
 boss room starts over); cleared rooms stay cleared (your answer "Giữ sạch"); everything you earned stays. Three
-places that are easy to confuse: a death (or `R`) sends you to the entry of the room you fell in, never farther back;
+places that are easy to confuse: a death (or Restart Room from the pause menu) sends you to the entry of the room you fell in, never farther back;
 the CHECKPOINT (the entry of a hub or a boss room, reached through a door) is where Courage refills, it is recorded in
-the save and the pause menu will name it (M4), but nothing sends you to it; a Continue opens the room and entry of the
+the save and the pause menu's Quit to Title question name it, but nothing sends you to it; a Continue opens the room and entry of the
 LAST SAVE, which right after a checkpoint is the checkpoint, and after clearing another room is that room. The
 "Chơi thử" steps are the ones the rooms allow today, in order, from a clean save (T1 and T2 have no enemy, Stage 1 has no
 gate, and the floor-weapon step is done in B1 with the Ruler Blade because step 3 has already cleared T4);
@@ -484,7 +498,128 @@ least punishing reading was built, recorded in `docs/game-base-plan.md` 5.2, and
 disagree. To make a room a checkpoint, tick Checkpoint On Entry on its root node; to make a floor pickup a reward that
 never comes back, tick Persistent on its PickupSpawnPoint.*
 
-## 8. Từ điển nhỏ (Glossary)
+## 8. Chữ trong game (.po) và font (The words of the game, and the fonts)
+
+**Một câu tóm tắt.** Mọi chữ người chơi đọc nằm trong bốn file `.po` ở `content/story/text/en/` (tiếng Anh, bản gốc).
+Scene, `.tres` và code chỉ giữ **mã** của dòng (ví dụ `UI_PAUSE_RESUME`), không giữ chữ. Muốn đổi một câu: sửa dòng đó
+trong file `.po`, lưu, chạy game. Không cần import, không cần sửa code.
+
+**Bốn file, mỗi file một mảng** (cùng tên trong `en/` và `vi/`):
+
+| File | Chứa | Mã bắt đầu bằng |
+|---|---|---|
+| `ui.po` | màn title, menu pause, HUD, kết quả phòng, các câu trên dòng trạng thái ("The pawn is hit..."), tên ngôn ngữ | `UI_`, `MSG_`, `PROMPT_` |
+| `rooms.po` | tên phòng (hiện trên thẻ save và khi hỏi thoát), câu khi bước vào phòng, câu của cửa đang khoá, câu khi nhặt kiếm | `ROOM_` |
+| `skills.po` | tên kỹ năng (Wooden Sword, Pencil Thrust) và vũ khí (Pencil Spear, Ruler Blade) | `SKILL_`, `ITEM_` |
+| `story.po` | Book of House Rules (nhãn và các trang), tên các quân, credits; sau này là thoại và truyện | `BOOK_`, `PAGE_`, `ENEMY_`, `CHAR_`, `CREDIT_`, `DLG_`... |
+
+**Sửa một dòng và thấy nó trong game (từng bước):**
+
+1. Mở file `.po` bằng trình soạn thảo văn bản bất kỳ (VS Code, hoặc TextEdit ở chế độ văn bản thuần). Mỗi dòng trông thế này:
+
+   ```text
+   #. surface=pause menu button; purpose=close the menu and go back to the room
+   msgid "UI_PAUSE_RESUME"
+   msgstr "Resume"
+   ```
+
+   Dòng `#.` là ghi chú nói dòng này hiện ở đâu và để làm gì (cho người viết). `msgid` là **mã**: đừng sửa, vì scene và
+   code tìm chữ theo mã này. `msgstr` là **chữ hiện trong game**: sửa phần trong dấu ngoặc kép.
+2. Tìm dòng cần sửa: gõ chữ tiếng Anh bạn thấy trong game ("Resume") hoặc mã (`UI_PAUSE_RESUME`) vào ô tìm kiếm của trình soạn thảo.
+3. Sửa, ví dụ `msgstr "Back to the game"`. Giữ nguyên mọi phần trong ngoặc nhọn như `{room}`, `{attack}`: game tự điền chỗ đó.
+   Xuống dòng trong một câu viết `\n`; dấu ngoặc kép trong câu viết `\"`.
+4. Lưu file, rồi chạy game (F5). Godot đọc lại các file `.po` mỗi lần chạy. Mở đúng chỗ có dòng đó (ví dụ bấm `Esc` trong
+   game để thấy menu pause) và xem.
+5. Đừng xoá dòng `msgstr` hay để nó rỗng: một dòng rỗng làm game hiện **mã** thay vì chữ (bài test `test_po_domains_merge` đỏ).
+
+**Thêm một câu mới.** Thêm một khối ba dòng (`#.`, `msgid`, `msgstr`) vào cuối đúng file (theo bảng trên), với mã viết hoa có gạch
+dưới và bắt đầu bằng đúng tiền tố của file. Rồi điền mã đó vào ô chữ trong Inspector (ví dụ **Room Message** hay **Locked Message** của
+một phòng, **Title** của một trang Book). Bài test `test_text_keys` đỏ nếu bạn gõ chữ thẳng vào scene, `.tres` hay code, hoặc điền một mã chưa có dòng.
+
+**Tiếng Việt.** Thư mục `content/story/text/vi/` có đủ bốn file nhưng **trống có chủ đích**: dòng nào chưa dịch thì game dùng tiếng Anh
+(quyết định D-25: chữ gốc là tiếng Anh, tiếng Việt sau). Để dịch một dòng: chép khối `#.` + `msgid` từ file `en/` sang file cùng tên trong `vi/`, viết tiếng Việt sau `msgstr`.
+Để xem tiếng Việt: trong game mở **Settings → tab Screen → Language** và chọn `Tiếng Việt` (không cần sửa project). Khi đổi ngôn ngữ, mọi chữ
+đang hiện cập nhật ngay, và lựa chọn được nhớ cho lần mở sau. Ngôn ngữ mặc định là English (D-25).
+
+**Màn Settings (Esc → Settings, hoặc Settings ở màn title).** Bốn trang, mỗi dòng đổi là có tác dụng ngay, và được lưu vào file `profile.cfg`
+trong thư mục user data (chung với dấu "đã xem kết thúc"; **New Game không xoá chúng**, vì chúng là của bạn chứ không phải của lần chơi). Nút
+**Restore defaults** đưa tất cả về mặc định, nút **Controls** mở bảng phím.
+
+| Trang | Dòng | Làm gì |
+|---|---|---|
+| Sound | Master, Music, Sound effects, Menu sounds | âm lượng của từng bus (0 = tắt tiếng, 100% = mức đã mix) |
+| Screen | Fullscreen | toàn màn hình hay cửa sổ (`F11` làm cùng việc đó) |
+| Screen | Language | ngôn ngữ chữ trong game, đổi ngay không cần mở lại |
+| Screen | High-contrast menus | menu và hộp thoại có nền đặc, viền sáng, chữ trắng |
+| Comfort | Screen shake | cường độ rung màn hình, từ 0 (không rung) đến 100% |
+| Comfort | Reduce flashing | bỏ nháy đỏ trên màn hình khi trúng đòn, bỏ nháy khi đánh, bỏ chớp của con tốt khi đang bất khả xâm phạm (cảnh báo telegraph vẫn còn) |
+| Comfort | High-contrast danger marks | ô sắp bị đánh vẽ bằng viền dày và sọc, không phụ thuộc màu hay nhịp nháy |
+| Comfort | Turn / Guard / Focus: press to switch on and off | thay vì giữ phím, bấm một lần để bật và một lần nữa để tắt |
+| Assists | Warning time, Enemy pace, Extra Courage, Input forgiveness | các tuỳ chọn làm game dễ hơn (D-22): tên trung tính, **không bao giờ tự bật**, đổi lúc nào cũng được; mặc định là game chuẩn |
+
+Menu pause có thêm mục **Assist options** mở thẳng trang Assists, luôn có từ lần chơi đầu tiên (không phải thứ game chỉ đưa ra sau khi bạn chết nhiều lần).
+Hôm nay các tuỳ chọn Assists đã chạm tới thế giới game (`world.tuning`) nhưng chưa hệ thống nào đọc chúng: kẻ địch chưa đổi nhịp và Courage chưa
+tăng (đó là việc của M7b, M8a và M8c, ghi trong `ecs/components/tuning.gd`). Âm lượng, rung, nháy, tương phản, ngôn ngữ, toàn màn hình và bật/tắt
+giữ phím thì đã có tác dụng thật. "Giữ hay bật tắt" cho thao tác giải cứu sẽ có cùng với việc giải cứu (M6).
+
+**Bảng Controls (Esc → Controls, hoặc nút Controls trong Settings).** Ba trang (Moving, Acting, Game), mỗi hàng một phím của game, hai cột Keyboard và
+Gamepad. Bảng **đọc thẳng từ InputMap** mỗi lần mở: đổi một phím trong `project.godot` là bảng đổi theo, không phải sửa gì khác. Phím nào chưa làm gì thấy được
+(ví dụ `R` gọi đứa trẻ) có chữ **(coming later)** bên cạnh; hai ô kỹ năng 3 và 4 (khai báo nhưng chưa dùng) bị ẩn.
+
+**Hình phím và nút tay cầm (glyph).** Game chọn bộ hình theo thiết bị bạn vừa dùng (bàn phím hay tay cầm) và đổi ngay khi bạn chuyển. Hình là của bạn, không ai tải về hộ:
+bạn tải bộ **Input Prompts Pixel** (Kenney, giấy phép CC0) về một thư mục ngoài dự án, chép từng tile 16x16 (bản sáng, không đổi màu hay phóng to) vào
+`assets/ui/glyphs/keyboard/` hoặc `assets/ui/glyphs/gamepad/` với đúng tên file trong danh sách asset (nhóm `glyphs_kenney` ở `docs/assets/spec/ui_story.json` ghi sẵn
+tile nào đặt tên gì). **Chưa có file thì game hiện chữ**: `[Space]`, `[W]`, `[A]`, `[LB]`, `[Left Stick Up]`, đọc được ngay. Chép file vào rồi mở dự án trong Godot một lần
+cho nó import; chép đè là đổi hình. Khi thêm file, ghi bộ này vào `THIRD_PARTY_NOTICES.md` (mục "Input glyphs (owner-supplied)" ở đó nói cách làm).
+
+**Thử độ dài chữ.** Có một "ngôn ngữ giả" `qps` làm mọi dòng dài hơn 40% và thêm dấu: bài test `test_layout_pseudo_locale` dùng nó để kiểm
+không dòng nào tràn khỏi ô của nó ở HUD, title, menu pause, màn Settings và bảng Controls. Ngôn ngữ giả này cũng có trong danh sách của màn Settings khi chạy bài test, không có trong bản chơi thường. Bản dịch tiếng Việt thường dài hơn tiếng Anh, nên nếu bạn
+thấy một câu dịch bị cắt, hộp chứa nó cần rộng hơn.
+
+**Font chữ: đặt file ở đâu.** Bạn tự cung cấp font (quy tắc của dự án: không ai tải font về hộ). Đặt file vào thư mục `assets/fonts/` **đúng tên này**
+(tên lấy từ danh sách asset, nhóm `fonts_ui`; ghi đè file cùng tên là đổi font):
+
+| File | Dùng cho |
+|---|---|
+| `assets/fonts/ui_body_pixel.ttf` | font chính: menu, thoại, Book, chữ trên HUD (danh sách asset gợi ý VT323, giấy phép OFL) |
+| `assets/fonts/ui_small_pixel.ttf` | số trên HUD, số đếm hồi chiêu (gợi ý Tiny5) |
+| `assets/fonts/ui_title_pixel.ttf` | tiêu đề (không bắt buộc) |
+| `assets/fonts/child_hand.ttf` | chữ viết tay của đứa trẻ, từ M6 (không bắt buộc) |
+
+Chưa có file nào thì game dùng font mặc định của engine (đã kiểm: nó có đủ 134 chữ cái tiếng Việt có dấu). Sau khi đặt file:
+
+1. Mở dự án trong Godot một lần để nó import font. Chọn file trong FileSystem, mở tab **Import**, với font pixel đặt *Antialiasing* = Disabled, *Hinting* = Disabled (hoặc Normal), *Subpixel Positioning* = Disabled,
+   và dùng cỡ chữ là bội số nguyên của lưới font (VT323 vẽ trên lưới 16 px, nên dùng 16 hoặc 32); bấm **Reimport**.
+2. Chạy game: font mới được dùng ngay. Không phải sửa gì khác (theme `content/ui/theme/theme.tres` đã ghi sẵn bốn đường dẫn trên).
+3. **Kiểm tiếng Việt:** chạy `python3 tools/run_all_tests.py --only test_font_vietnamese_coverage`. Bài test đỏ nếu font bạn đặt thiếu dù chỉ một trong 134
+   chữ cái tiếng Việt có dấu (kể cả các chữ chồng dấu như ệ, ẫ, ờ, ữ, ặ). Bước duy nhất không máy nào kiểm được là mắt bạn: nhìn xem
+   chiều cao dòng và khoảng trống cho dấu chồng ở cỡ chữ thật có đẹp không.
+4. Thêm giấy phép của font vào `THIRD_PARTY_NOTICES.md` (một mục `###` mới có dòng `- **License:**` và nguyên văn giấy phép trong khối `text`; mục "UI fonts (owner-supplied)" ở
+   đó nói rõ), rồi chạy `godot --headless --path . -s tools/build_credits_licenses.gd` để credits hiện nó.
+
+*EN: Section 8 also holds the Settings screen. It opens from the title and from the pause menu (which also has Controls and Assist
+options) and has four pages: volumes per bus; fullscreen, language and high-contrast menus; screen-shake scale, reduce flashing, high-contrast danger
+and hold-or-toggle for Turn, Guard and Focus; the four assists (neutral names, never switched on for you, D-22). Changes
+act at once and are kept in `profile.cfg`, which a New Game keeps. Today the assists reach `world.tuning` and no system reads them
+yet (M7b, M8a, M8c). The Controls panel is built from the InputMap each time it opens, says "(coming later)" beside a key that
+does nothing yet (R, the child) and shows the glyph set of the device used last. The glyph pictures are yours: copy the light
+16x16 tiles of Kenney's CC0 pack 'Input Prompts Pixel' to `assets/ui/glyphs/keyboard/` and `gamepad/` under the file names of the
+asset list (group `glyphs_kenney`); with no file a prompt reads [Space] or [A].*
+
+*EN: Section 8. Every word the player reads is a row of one of four `.po` files in `content/story/text/en/` (English is the
+source language, D-25); scenes, `.tres` files and scripts hold only the row's KEY. To change a line: open the file in a text
+editor, edit the text after `msgstr` (never the `msgid`, keep the `{placeholders}`), save and run the game: Godot reads the `.po`
+files at every launch. A new line is a three-line block added to the file of its prefix (UI_/MSG_ in ui.po, ROOM_ in rooms.po,
+SKILL_/ITEM_ in skills.po, the rest in story.po), then its key goes in the Inspector field; `test_text_keys` fails on a literal
+sentence or an unknown key. `vi/` has the four files, empty on purpose: a line with no Vietnamese falls back to English (to preview
+Vietnamese pick it in Settings, Screen, Language). The generated `qps` language
+makes every line 40 percent longer for `test_layout_pseudo_locale`. Fonts are the owner's: put up to four files at the exact paths
+`assets/fonts/ui_body_pixel.ttf`, `ui_small_pixel.ttf`, `ui_title_pixel.ttf`, `child_hand.ttf`; with none the engine's default font is
+used (it covers all 134 Vietnamese letters); a file you add is used with no other change, must cover Vietnamese
+(`test_font_vietnamese_coverage` fails otherwise), needs its licence added to `THIRD_PARTY_NOTICES.md`, and the pixel-font import
+options (antialiasing and hinting disabled, an integer size) are set in the editor's Import dock.*
+
+## 9. Từ điển nhỏ (Glossary)
 
 | Thuật ngữ | Nghĩa trong dự án này |
 |---|---|
@@ -506,3 +641,6 @@ never comes back, tick Persistent on its PickupSpawnPoint.*
 | phòng đã dọn (cleared room) | phòng mà mục tiêu đã xong (mặc định: hết địch); nó giữ sạch cho tới hết lần chơi (D-17) |
 | persistent pickup | vật nhặt là phần thưởng giữ mãi (**Persistent** bật trên `PickupSpawnPoint`); mọi vật nhặt khác là vũ khí rơi của phòng và về chỗ cũ khi phòng bắt đầu lại |
 | base line / `body_box` | vạch đáy của quân (14 px dưới tâm ô) và hộp lớn nhất của hình, trong `content/feel/piece_sizes.tres` (mục 6) |
+| key (mã chữ) | tên viết hoa có gạch dưới của một dòng chữ, ví dụ `UI_PAUSE_RESUME`. Scene, `.tres` và code giữ mã; chữ thật nằm trong file `.po` (mục 8) |
+| `.po`, `msgid`, `msgstr` | file chữ kiểu gettext: `msgid` là mã (đừng sửa), `msgstr` là chữ hiện trong game (sửa ở đây). Dòng `#.` phía trên là ghi chú cho người viết |
+| `qps` | "ngôn ngữ giả" do game tự sinh: mọi dòng dài hơn 40% và có dấu, để thử xem chữ dài có tràn khỏi ô không (mục 8) |

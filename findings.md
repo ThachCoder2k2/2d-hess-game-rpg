@@ -801,3 +801,49 @@ was the commit attribution line, which matches the harness and is no defect).
   while one of them is up (the game scene, which owns the camera, is freed first). A screen drawn in the default canvas would move with a camera.
 - `SaveService.start_new_run` writes before any success event, which makes `has_save` true for a run with no progress: the title then offers
   Continue for a clean run, which resumes at the authored first room (the same place as New Game). That is intended.
+
+
+## Settings, Controls and Glyph Facts (M4 step 3, 2026-10-19)
+
+- A headless run has no window: `get_window().mode` always reads windowed and a set mode does nothing. A `Window.new()` that is not in the tree
+  keeps the mode it is given, which is how the applier's fullscreen is tested.
+- A real renderer runs in this sandbox: `godot --path . -s script.gd` (no `--headless`) can instance a scene in a `SubViewport` and
+  `get_texture().get_image().save_png()` it, the only way to look at a Control layout. `get_viewport().gui_get_focus_owner()` and `grab_focus()`
+  work in headless runs, so focus hand-offs are testable.
+- `ProjectSettings` says the game ships fullscreen (`display/window/size/mode=3`), so the Fullscreen setting's default is `true`.
+- A bool is not an `int` in GDScript (`true is int` is false), so `CommandSystem._on_tuning_set` needed its own bool branch for `reduce_flash`.
+- `Theme.set_stylebox` on the project theme re-resolves every live Control at once (`get_theme_stylebox` on a panel returns the new box the
+  next line), and `Theme.get_stylebox` of a name the theme itself does not hold must be guarded with `has_stylebox`: the engine's default
+  panel is see-through (alpha under 1), which is what High-contrast menus replaces.
+- `Resource.emit_changed()` is the `changed` signal of `GameSettings`; a lambda connected to a Resource's signal is dropped with the Resource, but a
+  RefCounted bridge's method connected to a longer-lived Resource is disconnected by the engine when the bridge is freed.
+- `InputEventAction` with `pressed = true` answers `is_action_pressed(&"ui_cancel")`, which is how a suite drives a node's `_unhandled_input`
+  without the real keys; the real path (`tap_key(KEY_ESCAPE)`) reaches the topmost sibling of the menu layer first (later siblings take input first).
+- In a `TabContainer` the tab bar is the one focusable thing when the pages hold only labels (the Controls panel): left and right turn pages.
+- A `ConfigFile` keeps the type of a stored float, bool, int and String, so `GameSettings.from_values` can reject a wrong type instead of guessing.
+
+
+## Text Pipeline Facts (M4 step 3, 2026-10-19)
+
+- Godot loads `.po` files named in `internationalization/locale/translations` with no import pass and no sidecar, several per locale; a key in
+  none of them renders as the key; `locale/fallback="en"` makes `vi` (and `en_VN`, this machine's locale) read the `en` row per key. Verified
+  on 4.6.3 in a scratch project and pinned by `test_po_domains_merge` / `test_text_service`. An empty `msgstr` is a row that renders as its key.
+- Godot's built-in pseudolocalization accents the name inside `{pawn}` (`{ṕáŵή}`), so `String.format` fills nothing; it preserves `%d`. A custom
+  `Translation` added with `TranslationServer.add_translation` under the locale `qps` is selectable with `set_locale` and falls back to `en` for
+  keys it lacks. That is what `PseudoLocale` builds.
+- A Label whose `text` is a key keeps the KEY in `.text`; the translated words are only visible through `Node.atr(text)` (tests use it) or rendering.
+  `NOTIFICATION_TRANSLATION_CHANGED` reaches every node in the tree on `TranslationServer.set_locale`; the Label redraws itself.
+- A `Window`'s theme does not reach Controls whose parent is a `CanvasLayer` (the HUD); the project theme (`gui/theme/custom`) does. A `Theme` can
+  be a script subclass (`UiTheme extends Theme`) and `ThemeDB.get_project_theme()` returns that instance, so it can name files and be changed at
+  run time. `Theme.has_font(name, type)` answered true for a type variation that had no font of its own once the Theme had a default font; ask
+  `get_font_list(type)` for what a type really holds.
+- `ThemeDB.fallback_font` is a `FontFile` whose `.data` holds its bytes (Open Sans SemiBold, 64 KB) and which covers all 134 precomposed
+  Vietnamese letters; `FontFile.new()` has no glyph at all. Writing those bytes to `user://` and calling `FontFile.load_dynamic_font` is how a
+  test plays "the owner dropped a font". `ResourceLoader.exists(path)` is false for a font that is there but not imported; `UiFonts` then reads
+  the raw file.
+- A static variable with an initialiser (`static var x := f()`) in `UnboundTest` runs when the script loads, before any subclass `_init()`: the
+  place to set the language for every suite. `_initialize()` is too late because the suites assert inside `_init()`.
+- GDScript lambdas inside a `Dictionary` literal with trailing commas do not parse well; name the states as methods and pass them as Callables.
+- Control `size` can never be smaller than its minimum size, so a label with too much text GROWS (towards the right) instead of being clipped;
+  an overflow test compares the grown rectangle with the English one and the drawn text extent with the panel behind it. A wrapped Label reports
+  `get_line_count()`; a line box is `get_line_height()` (39 px for a size-28 Label, so two wrapped lines of the title logo need 78 px).

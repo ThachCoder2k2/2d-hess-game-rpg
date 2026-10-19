@@ -1788,3 +1788,110 @@ belong to steps 2 to 4; nothing here touches the input map, the font or the text
   button is disabled); the first-run card (Tier B); `Ending.post_game_zone` on a completed Continue (M13); the title's real art and the hero's
   pawn drawn as the plan's rug scene (owner assets, `docs/assets` `title_*`); words as `UI_` keys (the text pipeline, step 3). R still restarts the
   room (D-18 moves it with the input map).
+
+
+## M4 step 2 - the input map and the pause menu (written down by step 3) - 2026-10-19
+
+Branch `base/m4-2`. The step finished green (109 suites) in its worktree without being committed or logged, so step 3 carried its files over in
+one commit ("Step 2's work lands on the branch") and records here what that code and its tests show; nothing below is new work.
+
+- **Input.** Every played action has a keyboard and a gamepad event (`test_input_actions_have_pad_events`); `skill_1` became `skill_slot_1`,
+  `restart_room` is gone and **R is `call_child`** (D-18; it does nothing visible until M10); Esc/Start, `B`/L3, F3 and F11 are `InputMap`
+  actions read from the snapshot. The `InputPoller` keeps the left stick's dominant axis and can publish an action as a hold-or-toggle switch
+  (`test_input_poller_rules`).
+- **The pause menu** (`shell/pause/`): Resume, Book of House Rules, Restart Room (a `ConfirmPanel` asks; the only way to restart a room,
+  `test_pause_restart_is_menu_only`), Quit to Title (asks, names the last checkpoint, writes nothing: `test_quit_to_title_confirm`). The tree is
+  paused with the flow (`test_pause_freezes_tick`), the game pauses when the window loses focus (`test_focus_loss_pauses`), and the Book freezes the
+  world with a `freeze_requested` command. Settings, Assist options and the Controls panel were left undone by this step and built in step 3
+  (the next entry); the glyph lookup too.
+
+## M4 step 3 - settings, controls and glyphs, then the text pipeline and the font slot - 2026-10-19
+
+Branch `base/m4-3` (from `base/m4-2`), the strict runner green (133 suites). An earlier attempt was cut off by a network error after the text
+pipeline and the font slot; this attempt kept those commits, applied the small fixes it had left uncommitted (`TextService` stops naming
+content/'s folder; the restart comments) and its docs, and built the four things step 2 never built, one commit each: the glyph lookup, the
+Controls panel, the settings (model and profile, then every target, then the screen) and the Assist options entry. The owner's rules for M4
+apply: nothing is downloaded, the font and the Kenney glyphs are "owner-supplied" slots, all in-game text is English source with an empty `vi`.
+
+### Settings, controls and glyphs
+
+- **The glyph lookup** (`presentation/ui/input_glyphs/`). `InputGlyphs.glyphs_of_action(action, device)`: one `InputGlyph` per event, the
+  owner's 16x16 file at `assets/ui/glyphs/keyboard|gamepad/<name>.png` (names from the asset list, group `glyphs_kenney`) or, when there is no
+  file, the words (`[Space]`, `[A]`, `[Left Stick Up]`, `[LT]`: key and button names are text keys `PROMPT_KEY_*`, `PROMPT_PAD_*`). Imported
+  files load as resources; a file dropped in before an import is read raw. `test_input_glyphs` holds every path to the asset list (it reads
+  `docs/assets/spec/ui_story.json`) and every control the InputMap binds to a slot. `LastInputDevice` is a Node in AppRoot that listens to
+  `_input` (a key press, a pad button, a stick or trigger past 0.5; drift, releases and the mouse say nothing); `GlyphStrip` and
+  `ActionPrompt` draw it.
+- **The Controls panel** (`presentation/ui/controls/`): three tabs, a keyboard and a gamepad column, rebuilt from the InputMap each time it
+  opens; `ControlsCatalog` holds the names, the pages and the actions that say "(coming later)" (call_child, skill 2, guard, focus, help_next,
+  free_step, interact, dialogue_advance: nothing reads them yet) and hides skill slots 3 and 4. An InputMap action the catalog does not know is
+  listed under its own name and the test fails. It opens from the pause menu and from Settings, covers what is under it (`set_covered`), Esc
+  closes only it and gives the focus back.
+- **The settings** (`schema/settings/`, `shell/settings/`): 17 `SettingDefinition`s; `GameSettings` (a Resource; `changed`, `value_changed`);
+  `SettingsStore` keeps them as `setting_<key>` in the profile (`SaveService.set_profile_values`, one write), a first run logs one line and a bad
+  value logs its reason and takes its default. `SettingsApplier` (AppRoot) does volumes, fullscreen, language and `UiContrast`; `SettingsBridge`
+  (game scene) does shake scale, reduce flash, high-contrast danger, hold-or-toggle and the assists as `tuning_set` commands (again after every
+  boot). New targets: `CameraBridge.shake_scale`, `GameHud.reduce_flash`, `PrototypeBoard.reduce_flash` and `.high_contrast_danger`,
+  `Tuning.reduce_flash` (read by `ViewSyncSystem`: no hurt tint, no invulnerability blink, a steady 0.6 alpha instead), `CommandSystem` accepts a
+  bool field. `SettingsScreen` has four pages built from the table; AppRoot lays it over the title or the pause menu, writes the settings when it
+  closes (and half a second after the last change, and on Quit and window close) and opens the Controls panel over it. The pause menu gained
+  Settings, Controls and Assist options. 15 suites: `test_settings_roundtrip`, `test_setting_{volumes,fullscreen,language,shake_scale,
+  reduce_flash,high_contrast_danger,ui_high_contrast,assists,hold_or_toggle}`, `test_every_setting_has_a_target`, `test_settings_screen`,
+  `test_pause_assist_options`, `test_input_glyphs`, `test_controls_panel_from_inputmap`.
+- **Decisions taken, and why.** Fullscreen's default is what `project.godot` ships (mode 3, fullscreen), read from the project setting so the
+  value lives in one place. Assists are per profile, not per save (plan 5.8 says per save): one place, reachable from the title. The Voice bus
+  has no slider (nothing plays on it until M6). The rescue hold's toggle waits for the rescue (M6). The language list is the languages that have
+  words loaded, so `qps` appears only when a test installs it. F11 sets the window and then writes what the window really does into the
+  setting, so key and screen agree. UI high contrast changes the project theme's panel, tab, button and text entries and remembers what it
+  replaced, so the owner's own theme entries come back when it is turned off.
+- **What a headless run cannot show**, and so what the tests do instead: a window's mode (the root window reads windowed whatever it is set to:
+  the fullscreen suite hands the applier a `Window` that is not in the tree), and how a danger cell looks (the suite holds that the setting
+  reaches the board, that `_draw` runs for both looks and the numbers that make one bolder; the pictures were looked at with a throwaway script
+  that renders a scene in a `SubViewport` with a real renderer: `godot --path . -s <script>` without `--headless` works in this sandbox).
+
+### The text pipeline and the font slot
+
+- **The files.** `content/story/text/<language>/{story,ui,skills,rooms}.po`; `en` has 138 rows, each with a `#.` translator comment; `vi` is four
+  header-only files. `project.godot` lists all eight (several translations per locale) with `locale/fallback="en"`. `.po` files need no import
+  and no sidecar. Prefix -> file: `UI_`/`MSG_`/`PROMPT_` ui, `ROOM_` rooms, `SKILL_`/`ITEM_` skills, `DLG_ AMB_ BOOK_ PAGE_ CHAR_ ENEMY_ BOSS_ CREDIT_
+  END_ CLUE_` story (`MSG_` and `ITEM_` are additions to the plan's list). `test_po_domains_merge` also lints the files as text (a tiny reader in
+  `tests/support/po_file_reader.gd`): header language, UPPER_SNAKE keys, key in the file of its prefix, no duplicate in or across files, words and a
+  comment on every English row, `{lower_snake}` placeholders, Vietnamese rows only for English keys with the same placeholders.
+- **`TextService`** (static, `presentation/text/`): `t`, `has_key`, `language`, `languages`, `set_language`, `language_name`,
+  `install_pseudo_language`, `domain_of`. It calls `TranslationServer.translate`; nothing else may (`test_tr_only_in_text_service`).
+  `TextKey` (a key plus params that resolves late) and `LiveText` (a child node that rebinds text on NOTIFICATION_TRANSLATION_CHANGED) are what
+  make a language switch redraw live. `UnboundTest` sets English in a static initialiser, so every suite runs in `en` (the old `SceneTree` suites
+  that read words do it in their `_init`).
+- **The conversion.** Changed scripts: `GameHud` (keys, `LiveText`; `set_token_owner(TextKey)`, `set_cell_status(cell, TextKey)`,
+  `set_status(key, params)`, `show_result(title_key, subtitle_key)`), `HudBridge` (`facing_key`), `MessageBridge` (`*_KEY` constants,
+  `say(key, params)`), `EventBridge.piece_name_of` (a `TextKey`), `ShellKeys`, `BookBridge`, `RoomOutcomeBridge`, `RuleBookUI`,
+  `ConfirmPanel.ask(message_key, confirm_key, cancel_key, params)`, `PauseSummary`, `PauseMenu`, `TitleSummary` (`refresh_texts()`; a room's name
+  is `ROOM_<ID>_NAME`, falling back to the id as words for a room a save names and the game no longer has), `TitleScreen`, `CreditsScreen`,
+  `RoomEncounter`, `RoomObjective` (stock keys, one copy), the markers' docs. Changed data: five rooms, five Book pages, seven enemies, the hero,
+  two skills, three pickups, the credits and the licences heading (the builder tool writes the key). Scenes: HUD, title, pause menu, Book, credits.
+- **Visible changes.** The HUD help line says `PAUSE ESC` (it said `RESET R`, wrong since D-18); T1 is "White King's Fall" (the derived name
+  dropped the apostrophe); the HUD, the title logo and the result panel were re-laid so +40 percent text fits (below). Everything else reads as before.
+- **Layout.** `test_layout_pseudo_locale` first failed on: the HUD banner (205 px at 13 pt in a 150 px box), the hub's start line (538 px in a
+  490 px box, and colliding with the skill and count labels), the result panel (300 px wide for a 546 px line; in English the stock subtitle was
+  already wider than the panel), the title logo (440 px in a 376 px column) and the longest notice (three lines in a two-line box). Fixes: the
+  top strip's columns (banner 12..232, Courage 232..328, skill bar and label 334..532, count 540..622), the objective line takes the full second
+  row, the cell line moved to the bottom strip's right end, the token line up 4 px, the result panel 20..620, the title logo wraps upwards. The
+  HUD's columns moved right in English too, and the cell line now sits at the right end of the bottom strip; the title and the menus read as before. Overlaps that already existed in English are not flagged (the pair is skipped when it met in
+  English); the test measures where the text is drawn (alignment, line height) and the panel it sat on, not only control rectangles.
+- **Dumps print keys.** `tools/world_dumper.gd` prints the piece and weapon keys and the keys of door and unlock lines. Four `tests/baselines/dump_*`
+  were regenerated; `test_actor_collapse_golden` lists the three piece labels (REPLACED_LINES) and four room heads (ROOM_HEADS_CHANGED_ON_PURPOSE) that
+  moved, with the reason.
+- **The font slot.** `schema/ui/ui_theme.gd` (`UiTheme extends Theme`), `content/ui/theme/theme.tres`, `presentation/ui/theme/ui_fonts.gd`,
+  `assets/fonts/README.md`, `AppRoot._ready` calls `UiFonts.apply(ThemeDB.get_project_theme())`. `test_font_slots` (paths equal the asset list's,
+  absent -> engine font, present -> used and cleared again, AppRoot applies), `test_font_vietnamese_coverage` (134 letters; the engine default font
+  has them all). `THIRD_PARTY_NOTICES.md`: "UI fonts (owner-supplied)", no License bullet, so the credits do not list a font that is not there.
+- **New suites of the text pipeline (9; 109 to 118):** `tests/text/` `test_text_service`, `test_pseudo_locale`, `test_po_domains_merge`, `test_text_keys`,
+  `test_language_switch_redraws_live`, `test_layout_pseudo_locale`, `test_font_slots`, `test_font_vietnamese_coverage`; `tests/architecture/`
+  `test_tr_only_in_text_service`. Changed: the suites that compared sentences (they compare `TextService.t(key)` now: the labels did not change),
+  `test_credits_licenses_current`, `test_actor_collapse_golden`, `TestPaths` (`pause_menu_scene`, `rule_book_scene`).
+- **Docs.** OWNER_GUIDE (section 8 in Vietnamese: edit a `.po` line and see it, the font names, what to check; the keys and section 7 no longer say R
+  restarts), ARCHITECTURE ("Text"), CLAUDE.md ("Words"), coding-standards ("Text"), README (controls), where-we-are, `/new-enemy`, the plan's M4 entry
+  (steps 2 and 3), THIRD_PARTY_NOTICES (the glyph slot), task_plan.
+- **Not done, and why.** The production HUD (its help line should become hints made from the InputMap, `ActionPrompt` is ready for it) and the
+  camera snap: step 4. The first-run card (Tier B). `vi` rows, the font files and the glyph files: the owner's (D-25, the asset rules). Dialogue,
+  ambient and story rows: M6. The assists reach `world.tuning` and no system reads them yet (M7b, M8a, M8c).
