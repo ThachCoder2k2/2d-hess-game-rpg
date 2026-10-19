@@ -1688,7 +1688,7 @@ An independent verifier found a dead end that was older than M3b and that the fi
 seeing what it cost: in T4 the Backstep Pawn and the Pencil Spear were both parked on (7,6), a wall cell. The pawn was never in the grid
 (`entity_at((7,6))` was 0), could not be hit, never moved and struck a hero beside the wall, so T4 could never be cleared, its east door
 never opened and no real player could reach B1 or the hub. Fixed on branch `base/m3b-fix2` (from `base/m3b-fix`), one commit each, the
-strict runner green after each (88 suites before, 90 now; 235 of 235 baseline labels, 14 through `label_renames.txt`, unchanged; both
+strict runner green after each (88 suites before, 91 now; 235 of 235 baseline labels, 14 through `label_renames.txt`, unchanged; both
 `--self-test`s 0 failures; stamp-uids CLEAN; `git diff --check` clean). Tag `m3b-done` moved to the last commit.
 
 1. **`test_room_markers_on_floor` first.** It boots every room of the world graph for real and checks entries, parked enemies (on floor AND
@@ -1708,6 +1708,11 @@ strict runner green after each (88 suites before, 90 now; 235 of 235 baseline la
    idle-room facts. The B1 dump explanation in `test_actor_collapse_golden` was backwards and is corrected: with the hero on (2,5) the
    guard beside the Ruler Blade takes the blade inside the 120 ticks (blade gone, 9 events, was 3); before the move it had only stepped
    onto the blade's cell, and it takes the blade either way.
+
+5. **The whole route.** `tests/bridge/test_bridge_route_on_foot.gd` (added after the four steps, when the route was walked by hand to be
+   sure nothing else stood in the way): a clean save, T1 to the hub on foot, the sword taken in T2, every piece of T3, T4 and B1 brought
+   down with the sword, each east door walked through once the clear has opened it. Against the old T4 it fails exactly as the verifier
+   described (2 of 3 pieces fall, T4 is not cleared, the door never opens, the hub is never reached). B1 and H1 had no second defect.
 
 - **Not done, and why.** The spear cannot be taken by the hero yet (the Pencil grant that unlocks Q is M7, D-11); a weaponless T4 pawn
   can still carry it off before the hero arrives, which is how floor weapons have always worked and stays so until the grant replaces
