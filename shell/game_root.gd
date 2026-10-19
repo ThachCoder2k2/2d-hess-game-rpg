@@ -45,6 +45,8 @@ var input_poller := InputPoller.new()
 var router := EventRouter.new()
 ## What the combat events draw on the board overlay (telegraphs, strike flashes, the F3 layer).
 var board_bridge := BoardBridge.new()
+## When the screen shakes, and framing each room that boots.
+var camera_bridge := CameraBridge.new()
 var _last_token_owner := 0
 
 
@@ -56,6 +58,7 @@ func _ready() -> void:
 	hud = get_node_or_null(hud_path) as GameHud
 	if player_view != null:
 		camera_rig = player_view.get_node_or_null("Camera2D") as CameraRig
+	camera_bridge.attach(camera_rig)
 
 	# Death and R both reload this scene; the SaveService (autoload) holds the run, so the
 	# reload boots in the zone the run is in, not the default. A game that has just launched
@@ -94,6 +97,7 @@ func _boot_zone(entry_id: StringName) -> void:
 	boot_options.opened_gate_ids = _opened_gate_ids()
 	cast = EcsBoot.boot(ecs, boot_options)
 	board_bridge.bind_world(ecs.hud_snapshot, cast)
+	camera_bridge.bind_world(ecs.hud_snapshot, cast)
 	current_zone_id = _zone_id_of(current_room)
 	# The run's facts enter the new world before anything can ask for a save: the world's flags are
 	# the saved ones, and the save knows which zone this is.
@@ -123,8 +127,7 @@ func _boot_zone(entry_id: StringName) -> void:
 	# health and the unlocks written above) before the first tick builds it again.
 	HudSnapshotSystem.build(ecs)
 	board_bridge.show_room(ecs.grid, debug_enabled)
-	if camera_rig != null:
-		camera_rig.setup(ecs.grid)
+	camera_bridge.show_room(ecs.grid)
 	_setup_hud()
 
 
@@ -177,6 +180,7 @@ func _setup_hud() -> void:
 ## Every event type the scene reacts to, and what reacts. The router calls these in registration order.
 func _register_event_handlers() -> void:
 	board_bridge.register(router)
+	camera_bridge.register(router)
 	router.on(Events.ATTACK_LANDED, _on_player_attack_landed)
 	router.on(Events.ATTACK_LOCKED, _on_attack_locked)
 	router.on(Events.DAMAGED, _on_damaged)
@@ -211,7 +215,6 @@ func _on_zone_exit(event: Dictionary) -> void:
 func _on_player_attack_landed(event: Dictionary) -> void:
 	var profile := event.get("profile") as AttackProfile
 	if int(event.get("hit_count", 0)) > 0:
-		_start_screen_shake(0.10, 2.6)
 		if profile != null:
 			_update_status("%s connects. Keep pressing the broken line." % profile.display_name)
 
@@ -220,7 +223,6 @@ func _on_damaged(event: Dictionary) -> void:
 	if int(event.get("entity", 0)) != player_id:
 		return
 	var remaining := int(event.get("remaining", 0))
-	_start_screen_shake(0.16, 4.2 + float(event.get("amount", 1)))
 	if hud != null:
 		hud.flash_damage()
 		hud.set_courage(remaining)
@@ -372,11 +374,6 @@ func _update_status(text: String) -> void:
 func _show_result(title: String, subtitle: String) -> void:
 	if hud != null:
 		hud.show_result(title, subtitle)
-
-
-func _start_screen_shake(duration: float, strength: float) -> void:
-	if camera_rig != null:
-		camera_rig.start_shake(duration, strength)
 
 
 ## Event sounds route through the SfxManager autoload (layer 3 of the sound
