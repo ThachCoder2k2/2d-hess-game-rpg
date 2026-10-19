@@ -5,6 +5,10 @@ extends GridMarker
 @export var active := true
 @export var pickup_scene: PackedScene
 @export var weapon: EnemyWeapon
+## A persistent pickup is a reward taken once for the whole run: the save remembers it taken and it never
+## comes back (a Courage Shard, a Rule Page). Every other pickup is a floor weapon of its room (D-16): it
+## is back on the floor each time the room starts again, after a death, a restart or a return visit.
+@export var persistent := false
 @export var show_editor_preview := true:
 	set(value):
 		show_editor_preview = value

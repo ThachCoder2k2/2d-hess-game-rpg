@@ -65,8 +65,9 @@ var move_reservations: Dictionary = {}
 ## finish_leap): where it took off and the landing cell it has reserved. An airborne entity stands on NO
 ## cell (it is in neither entity_by_cell nor cell_by_entity) and holds one reservation, its landing cell.
 var leap_by_entity: Dictionary = {}
-## cell -> {"zone": StringName, "entry": StringName}. Door cells baked from
-## ZoneExitMarkers; the player landing here triggers a zone travel.
+## cell -> {"zone": StringName, "entry": StringName, "requires_room_clear": bool, "locked_message": String}.
+## Door cells baked from ZoneExitMarkers; the player landing here triggers a zone travel, or, on a door
+## that needs the room cleared first, the zone_exit_locked event carrying the door's own locked_message.
 var exit_by_cell: Dictionary = {}
 ## cell -> {"id": StringName, "message": String}. Player-only unlock cells
 ## baked from PlayerUnlockMarker nodes; the player landing here gains a flag.
@@ -75,6 +76,12 @@ var player_unlock_by_cell: Dictionary = {}
 ## (also present in blocked_cells); the player moving in opens_from's
 ## direction onto the cell opens the gate permanently.
 var gate_by_cell: Dictionary = {}
+## marker kind (StringName) -> { cell (Vector2i) -> data (Dictionary) }. The one store for every kind of room
+## marker that has no dictionary of its own above (a traversal gap, a trigger, a rescue spot, a clue prop:
+## M5 and M6 add them), so a new kind of marker adds a baker and no field to the grid
+## (docs/game-base-plan.md 14.1). The kind is the marker's own id and the data is what its baker copied from
+## the marker's exports. Written by add_marker() and remove_marker(); read with marker_at() and marker_cells().
+var marker_by_cell: Dictionary = {}
 
 ## What layout_version reads. Moved only by this class, when the terrain changes.
 var _layout_version := 0
@@ -102,10 +109,52 @@ static func centred_origin(board_cells: Vector2i, board_cell_size: int, view_siz
 
 
 ## Unbars a gate: the cell becomes ordinary floor. Persistence is the
-## caller's job (MovementSystem emits, the bridge writes WorldState).
+## caller's job (MovementSystem emits, the bridge asks the save service).
 func open_gate(cell: Vector2i) -> void:
 	gate_by_cell.erase(cell)
 	set_cell_kind(cell, CellKinds.FLOOR)
+
+
+## Puts a marker of `kind` on `cell` with the data its baker copied from it. False and nothing changed when the
+## cell is off the board or already holds a marker of that kind (a cell holds at most one marker per kind).
+func add_marker(kind: StringName, cell: Vector2i, data: Dictionary = {}) -> bool:
+	if not is_inside(cell) or has_marker(kind, cell):
+		return false
+	if not marker_by_cell.has(kind):
+		marker_by_cell[kind] = {}
+	marker_by_cell[kind][cell] = data
+	return true
+
+
+## Takes the marker of `kind` off `cell`. True when there was one.
+func remove_marker(kind: StringName, cell: Vector2i) -> bool:
+	if not has_marker(kind, cell):
+		return false
+	marker_by_cell[kind].erase(cell)
+	if marker_by_cell[kind].is_empty():
+		marker_by_cell.erase(kind)
+	return true
+
+
+func has_marker(kind: StringName, cell: Vector2i) -> bool:
+	return marker_by_cell.has(kind) and marker_by_cell[kind].has(cell)
+
+
+## The data of the marker of `kind` on `cell`, or an empty dictionary when there is none.
+func marker_at(kind: StringName, cell: Vector2i) -> Dictionary:
+	if not has_marker(kind, cell):
+		return {}
+	return marker_by_cell[kind][cell]
+
+
+## Every cell holding a marker of `kind`, row by row and left to right.
+func marker_cells(kind: StringName) -> Array[Vector2i]:
+	var cells: Array[Vector2i] = []
+	if marker_by_cell.has(kind):
+		for cell: Vector2i in marker_by_cell[kind]:
+			cells.append(cell)
+	cells.sort_custom(func(a: Vector2i, b: Vector2i) -> bool: return a.y < b.y or (a.y == b.y and a.x < b.x))
+	return cells
 
 
 func cell_to_world(cell: Vector2i) -> Vector2:

@@ -3,7 +3,7 @@ extends Resource
 
 ## The Book of House Rules as data: an ordered list of RuleEntry pages.
 ## Adding a rule bend to the game = author one entry .tres and append it
-## here. The UI renders it; WorldState remembers which pages are read.
+## here. The UI renders it; The save remembers which pages are read.
 
 @export var entries: Array[RuleEntry] = []
 

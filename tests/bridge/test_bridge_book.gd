@@ -1,8 +1,8 @@
 extends UnboundTest
 
-## Bridge characterization (M1a): the Book of House Rules and player control.
-## main._toggle_rule_book flips the Book's visibility and sets
-## PlayerTag.control_enabled to the opposite, nothing more. This suite drives it
+## Bridge characterization (M1a, ported in M3b step 2): the Book of House Rules and player control.
+## BookBridge.toggle (shell/bridges/book_bridge.gd; it was main._toggle_rule_book) flips the Book's
+## visibility and sets PlayerTag.control_enabled to the opposite, nothing more. This suite drives it
 ## with a real B key event and real input actions, and pins what the Book does
 ## and does NOT do today:
 ## - it blocks the hero's keys (moves, attacks) while open;
@@ -25,7 +25,7 @@ func _init() -> void:
 
 
 func _run() -> void:
-	var world_state := Support.install_isolated_world_state(self, SUITE_NAME)
+	var save_service := Support.install_isolated_save_service(self, SUITE_NAME)
 	var main := await Support.boot_main(self)
 	var book := main.get_node("RuleBookUI") as RuleBookUI
 	var hud := main.get("hud") as GameHud
@@ -86,18 +86,18 @@ func _run() -> void:
 	intent.direction = Vector2i.RIGHT
 	Support.pump(main, 0.05)
 	_expect(Support.player_move_state(main).moving, "setup: a step is in flight")
-	main._toggle_rule_book()
+	Support.toggle_book(main)
 	_expect(book.visible, "setup: the Book opens mid-step")
 	Support.pump(main, 0.4)
 	_expect(Support.player_cell(main) == home_cell + Vector2i.RIGHT and not Support.player_move_state(main).moving, "CHARACTERIZATION: a step in flight when the Book opens still completes")
-	main._toggle_rule_book()
+	Support.toggle_book(main)
 	_expect(not book.visible and Support.player_tag(main).control_enabled, "the direct toggle closes the Book and returns control too")
 	_reset_hero(main, home_cell)
 
 	# --- The Book cannot be toggled during a zone trip ---
-	main._travel_to(T2, &"west_entry")
-	_expect(bool(main.get("travel_in_progress")), "setup: a zone trip is under way")
-	main._toggle_rule_book()
+	Support.travel_to(main, T2, &"west_entry")
+	_expect(Support.travel_in_progress(main), "setup: a zone trip is under way")
+	Support.toggle_book(main)
 	_expect(not book.visible and not Support.player_tag(main).control_enabled, "toggling during a trip changes nothing (Book stays closed, control stays off)")
 	await Support.wait_for_travel(self, main)
 	_expect(main.get("current_zone_id") == T2 and Support.player_tag(main).control_enabled and not book.visible, "the trip ends with control on and the Book closed")
@@ -112,20 +112,20 @@ func _run() -> void:
 	var door_intent: EcsComponents.MoveIntent = Support.ecs_of(main).get_component(Support.player_id_of(main), EcsComponents.MOVE_INTENT)
 	door_intent.direction = Vector2i.RIGHT
 	Support.pump(main, 0.05)
-	main._toggle_rule_book()
+	Support.toggle_book(main)
 	_expect(book.visible and not Support.player_tag(main).control_enabled, "setup: the Book is open with the hero stepping onto the exit")
-	Support.pump_until(main, func() -> bool: return bool(main.get("travel_in_progress")), 1.0)
-	_expect(bool(main.get("travel_in_progress")), "CHARACTERIZATION: the open Book does not stop a trip already triggered by an in-flight step")
+	Support.pump_until(main, func() -> bool: return Support.travel_in_progress(main), 1.0)
+	_expect(Support.travel_in_progress(main), "CHARACTERIZATION: the open Book does not stop a trip already triggered by an in-flight step")
 	await Support.wait_for_travel(self, main)
 	_expect(book.visible, "CHARACTERIZATION: the Book is still open after the trip")
 	_expect(Support.player_tag(main).control_enabled, "CHARACTERIZATION: control is back on under the still-open Book (the trip's last step re-enables it)")
 	var cell_under_open_book := Support.player_cell(main)
 	await Support.hold_action(self, main, &"move_right", 0.45)
 	_expect(Support.player_cell(main).x > cell_under_open_book.x, "CHARACTERIZATION: the hero can walk while the Book is open after such a trip")
-	main._toggle_rule_book()
+	Support.toggle_book(main)
 	_expect(not book.visible and Support.player_tag(main).control_enabled, "the Book closes normally afterwards")
 
-	Support.end_suite(self, world_state)
+	Support.end_suite(self, save_service)
 
 
 ## Puts the hero back at rest on a known cell with no queued input.

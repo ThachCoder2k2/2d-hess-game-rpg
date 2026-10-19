@@ -5,26 +5,28 @@ extends RefCounted
 ## so it needs no import pass and registers no global. Suites load it with
 ##   const Support := preload("res://tests/bridge/bridge_support.gd")
 ##
-## The suites pin what shell/game_root.gd (the presentation bridge) does TODAY, so
-## the planned split of game_root.gd cannot silently change travel, death, carry,
-## persistence or Book behaviour. Nothing in here may change gameplay.
+## The suites pin what the in-game scene (shell/game_root.gd and its bridges) does, so
+## the split of game_root.gd into an EventRouter and bridges (M3b step 2) could not silently change
+## travel, death, carry, persistence or Book behaviour. Nothing in here may change gameplay.
 ##
 ## Design notes shared by every suite:
 ## - The real shell/game_root.tscn is instantiated and made the tree's current
-##   scene (death reloads it through SceneTree.reload_current_scene()).
+##   scene (a death or the restart key rebuilds its room through GameFlow, which used to
+##   reload the whole scene).
 ## - game_root.gd's own _process is switched off after boot and driven by hand in
 ##   fixed steps (pump), so a run is deterministic and has no real-time races.
 ##   Only the fade tweens and the death timer use real engine time.
-## - The WorldState autoload is replaced by a test double that starts empty and
-##   saves to a throwaway file in the OS temp folder, so no suite writes the
-##   player's real save (user://world_state.cfg) or inherits state from it.
+## - The SaveService autoload is replaced by a fresh instance of the same script,
+##   pointed at a throwaway folder (user://test_saves/<suite>_<process>/) and
+##   starting empty, so no suite writes the player's real save or inherits state
+##   from it (tests/architecture/test_suites_isolate_the_save.gd holds that).
 ##
 ## Every suite extends UnboundTest, which supplies the checks, the 30 s watchdog
 ## (a script error inside a coroutine otherwise leaves Godot waiting forever) and
 ## the verdict line. The main scene's path comes from TestPaths, so the folder
 ## migration edits it in tests/support/paths.gd only.
 
-const IsolatedWorldState := preload("res://tests/bridge/isolated_world_state.gd")
+const SaveSupport := preload("res://tests/support/save_test_support.gd")
 
 ## Delta handed to each manual main._process call. Smaller than a 0.18 s step.
 const SIM_STEP_SECONDS := 0.05
@@ -33,34 +35,55 @@ const REAL_TIME_WAIT_CAP_MSEC := 6000
 
 const MOVE_ACTIONS: Array[StringName] = [&"move_up", &"move_down", &"move_left", &"move_right"]
 
+## kill_with_sword: how many times it may walk, turn or swing before it gives up (a 4 Courage captain falls in
+## four strokes), and how long one swing is waited out (the sword's impact is 0.07 s and its recovery 0.30 s).
+const KILL_WITH_SWORD_ATTEMPTS := 24
+const KILL_WITH_SWORD_SWING_SECONDS := 0.45
 
-## Swaps the WorldState autoload for the throwaway-save test double and returns it.
-## The real autoload node is only renamed and left idle (nothing in the project
-## names the autoload as a script global; game_root.gd finds it by node path).
-static func install_isolated_world_state(tree: SceneTree, suite_name: String) -> Node:
-	var real_autoload := tree.root.get_node_or_null("WorldState")
+
+## Swaps the SaveService autoload for a fresh instance of its script that saves to a throwaway folder,
+## and returns it. The real autoload node is only renamed and left idle (game_root.gd finds the service
+## by node path, so the new node named SaveService is the one it uses).
+static func install_isolated_save_service(tree: SceneTree, suite_name: String) -> Node:
+	var real_autoload := tree.root.get_node_or_null("SaveService")
 	if real_autoload != null:
-		real_autoload.name = "WorldStateBypassedByBridgeTest"
-	var world_state: Node = IsolatedWorldState.new()
-	world_state.name = "WorldState"
-	world_state.set("isolated_save_path", OS.get_temp_dir().path_join("unbound_pawn_bridge_%s_%d.cfg" % [suite_name, OS.get_process_id()]))
-	tree.root.add_child(world_state)
-	return world_state
+		real_autoload.name = "SaveServiceBypassedByBridgeTest"
+	var save_service := SaveSupport.new_service(SaveSupport.make_root("bridge_" + suite_name))
+	save_service.name = "SaveService"
+	tree.root.add_child(save_service)
+	return save_service
 
 
-## Deletes the throwaway save file. Call once at the end of a suite.
-static func remove_isolated_save(world_state: Node) -> void:
-	var path := String(world_state.get("isolated_save_path"))
-	if not path.is_empty() and FileAccess.file_exists(path):
-		DirAccess.remove_absolute(path)
+## Deletes the throwaway save folder (every file the service wrote). Call once at the end of a suite,
+## or to start a test over with no save at all.
+static func remove_isolated_save(save_service: Node) -> void:
+	SaveSupport.remove_root(String(save_service.call("root_directory")))
 
 
 ## The last call of a bridge suite: lets go of any held input action, deletes the
-## throwaway save, then prints the verdict and quits through UnboundTest.finish().
-static func end_suite(suite: UnboundTest, world_state: Node) -> void:
+## throwaway saves, then prints the verdict and quits through UnboundTest.finish().
+static func end_suite(suite: UnboundTest, save_service: Node) -> void:
 	release_all_actions()
-	remove_isolated_save(world_state)
+	remove_isolated_save(save_service)
 	suite.finish()
+
+
+## The run the save service holds in memory right now. Read it through here each time: the service
+## replaces it (new game, load) rather than editing it.
+static func run_of(save_service: Node) -> SaveData:
+	return save_service.get("state")
+
+
+## What a process that was quit and relaunched has: nothing in memory. The next game_root (or
+## load_slot) reads the disk.
+static func forget_the_run(save_service: Node) -> void:
+	save_service.call("configure", save_service.call("root_directory"))
+
+
+## Writes the active slot with the run as it is in memory, as a success event would (the file is the
+## one the next relaunch reads).
+static func write_the_run(save_service: Node) -> Error:
+	return save_service.call("write_slot", save_service.get("active_slot"), save_service.get("state"))
 
 
 ## Instantiates the main scene under the root, makes it the current scene and
@@ -77,6 +100,69 @@ static func boot_main(suite: UnboundTest) -> Node:
 	await tree.process_frame
 	main.set_process(false)
 	return main
+
+
+## --- The scene's own state and entry points -----------------------------------
+## Every suite reaches game_root's state and entry points through these, so when the scene moves
+## one (M3b step 2 moved the trip, the carry, the room outcome and the Book into bridges) the call
+## site changes here and nowhere else.
+
+
+static func travel_in_progress(main: Node) -> bool:
+	return main.get("zone_travel_bridge").travel_in_progress
+
+
+## The Courage the carry waits with for the next boot (-1 = nothing is carried).
+static func health_carry(main: Node) -> int:
+	var snapshot: PlayerSnapshot = main.get("zone_travel_bridge").carried_player_snapshot
+	return snapshot.courage_current if snapshot != null else -1
+
+
+## Plants a carry as a trip would have left it (the hero as it is now, with `value` Courage), for the next
+## boot to apply.
+static func plant_health_carry(main: Node, value: int) -> void:
+	var snapshot := PlayerSnapshot.capture(ecs_of(main), player_id_of(main))
+	snapshot.courage_current = value
+	main.get("zone_travel_bridge").carried_player_snapshot = snapshot
+
+
+static func room_ending(main: Node) -> bool:
+	return main.get("outcome_bridge").room_ending
+
+
+static func set_room_ending(main: Node, value: bool) -> void:
+	main.get("outcome_bridge").room_ending = value
+
+
+## How many enemies the room began with, as the HUD's snapshot says (ObjectiveSystem keeps the count).
+static func total_enemies(main: Node) -> int:
+	return ecs_of(main).hud_snapshot.room_enemies_total
+
+
+## Gives the room that is running `objective` for its win condition, as if its scene had authored it:
+## the objective is read from the room node when the world boots (EcsBoot), so a test that sets one on a
+## room already booted puts it on the room node AND on the live world's room state.
+static func set_room_objective(main: Node, objective: RoomObjective) -> void:
+	main.get("current_room").set("objective", objective)
+	for room_entity in ecs_of(main).query([RoomObjectiveState.KEY]):
+		var state: RoomObjectiveState = ecs_of(main).get_component(room_entity, RoomObjectiveState.KEY)
+		state.objective = objective
+
+
+## Starts a zone trip the way the zone_exit event does and waits for it to finish. Called without
+## `await` it returns at the first suspension, with the trip under way.
+static func travel_to(main: Node, zone_id: StringName, entry_id: StringName) -> void:
+	await main.get("zone_travel_bridge").travel_to(zone_id, entry_id)
+
+
+## Rebuilds the room the hero is in without a trip (a boot with no pending travel).
+static func reboot_zone(main: Node, entry_id: StringName) -> void:
+	main.boot_zone(entry_id)
+
+
+## The B key's handler, called directly.
+static func toggle_book(main: Node) -> void:
+	main.get("book_bridge").toggle()
 
 
 ## --- Reading the live simulation ------------------------------------------
@@ -97,6 +183,11 @@ static func runs_the_schedule(world: EcsWorld) -> bool:
 		if world.systems[index].get_script() != scheduled_scripts[index]:
 			return false
 	return true
+
+
+## Hands the events the world has queued to the scene's router, as the end of a frame does.
+static func route_events(main: Node) -> void:
+	main.get("router").route(ecs_of(main).drain_events())
 
 
 static func player_id_of(main: Node) -> int:
@@ -152,6 +243,15 @@ static func exit_cell(main: Node, zone_root: Node, target_zone: StringName) -> V
 	return Vector2i(-999, -999)
 
 
+## The line the room's exit marker to `target_zone` says while the door is shut ("" when it has none or there is no such door).
+static func exit_locked_message(zone_root: Node, target_zone: StringName) -> String:
+	for child in zone_root.get_children():
+		var exit_marker := child as ZoneExitMarker
+		if exit_marker != null and exit_marker.target_zone == target_zone:
+			return exit_marker.locked_message
+	return ""
+
+
 ## --- Driving the simulation ------------------------------------------------
 
 
@@ -177,9 +277,9 @@ static func pump_until(main: Node, condition: Callable, max_seconds: float) -> b
 ## false if it is still travelling after the real-time cap.
 static func wait_for_travel(tree: SceneTree, main: Node) -> bool:
 	var started := Time.get_ticks_msec()
-	while bool(main.get("travel_in_progress")) and Time.get_ticks_msec() - started < REAL_TIME_WAIT_CAP_MSEC:
+	while travel_in_progress(main) and Time.get_ticks_msec() - started < REAL_TIME_WAIT_CAP_MSEC:
 		await tree.process_frame
-	return not bool(main.get("travel_in_progress"))
+	return not travel_in_progress(main)
 
 
 ## Puts the hero on `cell` at rest (grid, GridPos, MoveState and the puppet view).
@@ -218,13 +318,146 @@ static func walk_through_exit(tree: SceneTree, main: Node, target_zone: StringNa
 		return false
 	var intent: EcsComponents.MoveIntent = ecs_of(main).get_component(player_id_of(main), EcsComponents.MOVE_INTENT)
 	intent.direction = direction
-	if not pump_until(main, func() -> bool: return bool(main.get("travel_in_progress")), 1.0):
+	if not pump_until(main, func() -> bool: return travel_in_progress(main), 1.0):
 		return false
 	return await wait_for_travel(tree, main)
 
 
+## The key a player presses to step in this direction (the InputMap action PlayerInputSystem reads).
+const ACTION_BY_DIRECTION := {
+	Vector2i.UP: &"move_up",
+	Vector2i.DOWN: &"move_down",
+	Vector2i.LEFT: &"move_left",
+	Vector2i.RIGHT: &"move_right",
+}
+
+
+## Walks the hero ONE cell the way a player does: the key goes down, one simulation step sees the fresh
+## press and asks for the step, the key goes up, and the step is pumped until it lands (or until a trip
+## starts, when the cell is a door). True when the hero stands on the next cell or a trip has begun.
+static func tap_direction(tree: SceneTree, main: Node, direction: Vector2i) -> bool:
+	var action: StringName = ACTION_BY_DIRECTION[direction]
+	var goal := player_cell(main) + direction
+	Input.action_press(action)
+	pump(main, SIM_STEP_SECONDS)
+	Input.action_release(action)
+	await tree.process_frame
+	var arrived := func() -> bool:
+		return travel_in_progress(main) or (player_cell(main) == goal and not player_move_state(main).moving)
+	return pump_until(main, arrived, 1.0)
+
+
+## Walks the hero to `goal` by key presses along the shortest path the board allows, one cell per tap,
+## the way a player would cross the room. True when the hero stands on `goal` (or a trip has begun because
+## `goal` is a door). False when there is no path or a step does not land.
+static func walk_to_cell(tree: SceneTree, main: Node, goal: Vector2i) -> bool:
+	var path := ecs_of(main).grid.get_grid_path(player_id_of(main), player_cell(main), goal)
+	if path.is_empty():
+		return false
+	for index in range(1, path.size()):
+		if not await tap_direction(tree, main, path[index] - path[index - 1]):
+			return false
+	return true
+
+
+## Walks the hero from wherever it stands, on foot and by key presses, to the door of the current room that
+## leads to `target_zone`, steps onto it and waits for the whole trip (event, fade, swap, boot) to finish.
+## Nothing is teleported and travel_to is not called: if the door cannot be reached the walk fails. False
+## when the room has no such door, the walk fails or the trip never finishes.
+static func walk_through_door(tree: SceneTree, main: Node, target_zone: StringName) -> bool:
+	var door := exit_cell(main, main.get("current_room"), target_zone)
+	if door == Vector2i(-999, -999) or not await walk_to_cell(tree, main, door):
+		return false
+	if not travel_in_progress(main) and not pump_until(main, func() -> bool: return travel_in_progress(main), 1.0):
+		return false
+	return await wait_for_travel(tree, main)
+
+
+## --- Fighting the way a player does ------------------------------------------------------------
+## A suite that says "the hero brings the pawn down" must do what a player does: walk, face, press the attack
+## key. A damage request needs no cell, so it brings down a pawn the sword can never reach (T4's Backstep Pawn
+## stood on a wall cell and was never in the grid; every suite that killed it with a request still passed).
+
+
+## Puts the wooden sword in the hero's hand without walking to T2: the run holds the unlock (so a later boot,
+## a trip or a relaunch arms the hero too) and the live hero has it now. For a suite whose subject is not the
+## sword's pickup but that needs the hero to fight; the pickup itself is walked in test_owner_guide_steps and
+## pinned in test_bridge_persistence.
+static func give_the_sword(main: Node, save_service: Node) -> void:
+	run_of(save_service).add_unlock(&"wooden_sword")
+	player_combat(main).sword_unlocked = true
+
+
+## The cell beside `enemy_cell` the hero can reach with the shortest walk, standing on which pushing toward the
+## enemy faces it: a floor cell, not a door, nobody on it (the hero's own cell counts, and wins). EcsGrid.NO_CELL
+## when there is none (the enemy is walled in).
+static func cell_to_strike_from(main: Node, enemy_cell: Vector2i) -> Vector2i:
+	var grid := ecs_of(main).grid
+	var hero_cell := player_cell(main)
+	var best_cell := EcsGrid.NO_CELL
+	var best_steps := 1000000
+	for direction: Vector2i in ACTION_BY_DIRECTION:
+		var candidate := enemy_cell - direction
+		if candidate == hero_cell:
+			return candidate
+		var occupant := grid.entity_at(candidate)
+		if not grid.is_walkable(candidate) or grid.exit_by_cell.has(candidate) or (occupant != 0 and occupant != player_id_of(main)):
+			continue
+		var walk := grid.get_grid_path(player_id_of(main), hero_cell, candidate)
+		if not walk.is_empty() and walk.size() < best_steps:
+			best_steps = walk.size()
+			best_cell = candidate
+	return best_cell
+
+
+## Turns the hero toward `direction` the way a player does on a piece that is in the way: the key is pushed, the
+## step is blocked and only the facing changes. True when the hero faces that way afterwards.
+static func push_toward(tree: SceneTree, main: Node, direction: Vector2i) -> bool:
+	var action: StringName = ACTION_BY_DIRECTION[direction]
+	Input.action_press(action)
+	pump(main, SIM_STEP_SECONDS)
+	Input.action_release(action)
+	await tree.process_frame
+	var facing: EcsComponents.Facing = ecs_of(main).get_component(player_id_of(main), EcsComponents.FACING)
+	return facing.direction == direction
+
+
+## Brings one enemy down with the sword, by the real input path: the hero walks key by key to a cell beside it,
+## turns toward it, and presses the attack key stroke after stroke (waiting out each swing) until it falls.
+## Everything the sword needs is therefore tested: the enemy is in the grid, it has a floor cell beside it that
+## the hero can walk to, and the hero can face it and hit it. Remove the enemy AI first (remove_enemy_ai) when
+## nothing may strike the hero on the way; if the enemy moves, the walk starts again toward where it is. False
+## when the hero has no sword yet, the enemy is not on the board, there is no cell to strike from or no walk to
+## it, or the enemy is still standing after the strokes.
+static func kill_with_sword(tree: SceneTree, main: Node, enemy_id: int) -> bool:
+	var ecs := ecs_of(main)
+	var health: EcsComponents.Health = ecs.get_component(enemy_id, EcsComponents.HEALTH)
+	if health == null or not player_combat(main).sword_unlocked:
+		return false
+	for _attempt in range(KILL_WITH_SWORD_ATTEMPTS):
+		if health.current <= 0:
+			return true
+		if not ecs.grid.cell_by_entity.has(enemy_id):
+			return false
+		var enemy_cell: Vector2i = ecs.grid.cell_by_entity[enemy_id]
+		var toward := enemy_cell - player_cell(main)
+		if not ACTION_BY_DIRECTION.has(toward) or player_move_state(main).moving:
+			var strike_cell := cell_to_strike_from(main, enemy_cell)
+			if strike_cell == EcsGrid.NO_CELL or not await walk_to_cell(tree, main, strike_cell):
+				return false
+			continue
+		var facing: EcsComponents.Facing = ecs.get_component(player_id_of(main), EcsComponents.FACING)
+		if facing.direction != toward and not await push_toward(tree, main, toward):
+			return false
+		await hold_action(tree, main, &"attack", SIM_STEP_SECONDS)
+		pump(main, KILL_WITH_SWORD_SWING_SECONDS)
+	return health.current <= 0
+
+
 ## Real damage path: HealthSystem consumes world.damage_events (the queue the
-## enemy AI writes to through Events.emit_damage), so this is exactly how an enemy strike lands.
+## enemy AI writes to through Events.emit_damage), so this is exactly how an enemy strike lands. It is the
+## stand-in for "take a wound" (or "fall"), the one place a suite may skip the enemy's own timing; the hero
+## hurting an enemy is never done this way where a suite follows a player: that is kill_with_sword.
 static func damage_player(main: Node, amount: int) -> void:
 	Events.emit_damage(ecs_of(main), player_id_of(main), amount, Vector2i.LEFT, 0)
 	pump(main, SIM_STEP_SECONDS)
@@ -281,23 +514,21 @@ static func send_key(keycode: Key, pressed: bool) -> void:
 	Input.flush_buffered_events()
 
 
-## Waits (real engine frames) until the scene tree has swapped to a freshly
-## instantiated main scene, which is what a death or the restart key does
-## through SceneTree.reload_current_scene(). Returns the new main with its
-## automatic _process switched off, or null if no reload happened in time.
-static func wait_for_reload(tree: SceneTree, old_main: Node) -> Node:
-	var old_main_id := old_main.get_instance_id()
+## Waits (real engine frames) until the scene has rebuilt its room from the run's checkpoint, which is
+## what a death or the restart key does through GameFlow: the room's world is a new EcsWorld (the scene
+## itself stays; it used to be reloaded). Returns false when nothing was rebuilt in time. When it returns
+## true the old world is gone and one more frame has run, so the new room is live.
+static func wait_for_respawn(tree: SceneTree, main: Node) -> bool:
+	var old_world_id := ecs_of(main).get_instance_id()
 	var started := Time.get_ticks_msec()
 	while Time.get_ticks_msec() - started < REAL_TIME_WAIT_CAP_MSEC:
-		if tree.current_scene != null and tree.current_scene.get_instance_id() != old_main_id:
+		if ecs_of(main).get_instance_id() != old_world_id:
 			break
 		await tree.process_frame
-	if tree.current_scene == null or tree.current_scene.get_instance_id() == old_main_id:
-		return null
+	if ecs_of(main).get_instance_id() == old_world_id:
+		return false
 	await tree.process_frame
-	var reloaded := tree.current_scene
-	reloaded.set_process(false)
-	return reloaded
+	return true
 
 
 ## Releases every input action a suite may have pressed. Call before quitting.
@@ -308,8 +539,9 @@ static func release_all_actions() -> void:
 		Input.action_release(action)
 
 
-## Reads a ConfigFile save written by WorldState straight from disk.
-static func read_save_file(world_state: Node) -> ConfigFile:
+## Reads the active slot's save file straight from disk, as a plain ConfigFile (its integrity footer is a
+## comment). Empty when there is no file.
+static func read_save_file(save_service: Node) -> ConfigFile:
 	var file := ConfigFile.new()
-	file.load(String(world_state.get("isolated_save_path")))
+	file.load(String(save_service.call("slot_path", save_service.get("active_slot"))))
 	return file

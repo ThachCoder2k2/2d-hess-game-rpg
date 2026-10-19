@@ -86,6 +86,7 @@ const MOVEMENT_EVENTS: Dictionary = {
 			"zone": "StringName: id of the zone the door leads to",
 			"entry": "StringName: id of the entry marker it would arrive on",
 			"cell": "Vector2i: the door cell",
+			"message": "String: the line the HUD shows for it (ZoneExitMarker.locked_message); empty when the door carries none",
 		},
 	},
 	PLAYER_UNLOCK: {
@@ -337,9 +338,34 @@ const DIRECTION_RESTORED := &"direction_restored"
 const ENDING_REACHED := &"ending_reached"
 
 const FLOW_EVENTS: Dictionary = {
-	CHECKPOINT_SET: {"status": STATUS_FUTURE, "about": "M3b: the player reached a checkpoint.", "payload": {}},
-	ROOM_CLEARED: {"status": STATUS_FUTURE, "about": "M3b: ObjectiveSystem judged the room's objective complete.", "payload": {}},
-	RESPAWN_REQUESTED: {"status": STATUS_FUTURE, "about": "M3b: the player fell; GameFlow rebuilds the zone at the checkpoint.", "payload": {}},
+	CHECKPOINT_SET: {
+		"status": STATUS_EMITTED,
+		"about": "The pawn came in through the door of a hub or a boss room: a checkpoint (D-16), Courage refilled. Said once on arrival; a launch and a respawn are not arrivals.",
+		"payload": {
+			"zone": "StringName: the room's zone id",
+			"entry": "StringName: the entry marker the pawn arrived on",
+			"refills": "Array[StringName]: the resources the checkpoint restores to full (&\"courage\" today; &\"believe\" once M10 adds it)",
+		},
+	},
+	ROOM_CLEARED: {
+		"status": STATUS_EMITTED,
+		"about": "ObjectiveSystem judged the room's objective met (every enemy down by default, or the count the room names). Said once per room.",
+		"payload": {
+			"zone": "StringName: the room's zone id, &\"\" for a room outside the world graph",
+			"defeated": "int: how many enemies had fallen when it was judged",
+			"total": "int: how many enemies the room began with",
+			"has_objective": "bool: the room carries its own RoomObjective (a quiet clear in the world has none)",
+		},
+	},
+	RESPAWN_REQUESTED: {
+		"status": STATUS_EMITTED,
+		"about": "The pawn fell: the simulation asks for the room to start again (D-16: a death resets only the room it happened in). The shell shows the defeat, then GameFlow rebuilds the room on that entry. Said once per room.",
+		"payload": {
+			"entity": "int: the hero who fell",
+			"zone": "StringName: the room's zone id",
+			"entry": "StringName: the entry marker of this room the pawn came in through, where it starts again",
+		},
+	},
 	RESCUE_COMPLETED: {"status": STATUS_FUTURE, "about": "M11: a held interaction freed a captive piece.", "payload": {}},
 	DIRECTION_LOCKED: {"status": STATUS_FUTURE, "about": "M13: Act 6 locked one of the pawn's directions.", "payload": {}},
 	DIRECTION_RESTORED: {"status": STATUS_FUTURE, "about": "M13: a locked direction came back.", "payload": {}},

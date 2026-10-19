@@ -11,10 +11,10 @@ extends RefCounted
 ## There is no class_name on purpose: callers preload() this script, which keeps
 ## it usable on a fresh checkout before the editor import pass has run.
 ##
-## The boot path mirrors shell/game_root.gd (_make_world + _boot_zone): the same systems in
+## The boot path mirrors shell/game_root.gd (_make_world + boot_zone): the same systems in
 ## the same order (both ask Schedule.populate), the player view placed on the "start" entry marker,
 ## then EcsBoot.boot with no taken pickups and no opened gates (a fresh save).
-## It deliberately skips WorldState, the HUD, the board overlay and audio: they
+## It deliberately skips the SaveService, the HUD, the board overlay and audio: they
 ## depend on the player's save file or on real time, and this dump must not.
 ## The player gives no input, so the ticks show what the room does by itself.
 ##
@@ -85,10 +85,10 @@ func baseline_path(room_id: String) -> String:
 	return BASELINE_DIRECTORY.path_join("dump_%s.txt" % room_id)
 
 
-## Resolves "t1", "t1_white_kings_fall" or a res:// scene path to
+## Resolves "t1", "t1_white_kings_fall" or a res:// (or, for a scene a test builds, user://) scene path to
 ## { "zone_id": String, "scene_path": String }. Empty dictionary + last_error when unknown.
 func resolve_room(room_id: String) -> Dictionary:
-	if room_id.begins_with("res://"):
+	if room_id.begins_with("res://") or room_id.begins_with("user://"):
 		return {"zone_id": room_id.get_file().get_basename(), "scene_path": room_id}
 	var world_graph := ContentDb.world()
 	if world_graph == null:
@@ -152,6 +152,9 @@ func dump_room(tree: SceneTree, room_id: String, tick_count := DEFAULT_TICK_COUN
 	_dump_root.add_child(world)
 	Schedule.populate(world)
 
+	# The room's own grid origin first, as shell/game_root.gd does: the entry marker's position is turned
+	# into a cell with it, and a board that is not 16x9 has another origin than the grid's default.
+	EcsBoot.shape_grid(world, room)
 	var entry_cell := _find_entry_cell(world, room)
 	if entry_cell != NO_ENTRY_CELL:
 		player_view.position = world.grid.cell_to_world(entry_cell)

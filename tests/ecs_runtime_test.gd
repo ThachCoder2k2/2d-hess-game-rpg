@@ -94,7 +94,7 @@ func _init() -> void:
 	var exit_intent: EcsComponents.MoveIntent = exit_world.add_component(exit_player, EcsComponents.MOVE_INTENT, EcsComponents.MoveIntent.new())
 	var exit_move: EcsComponents.MoveState = exit_world.add_component(exit_player, EcsComponents.MOVE_STATE, EcsComponents.MoveState.new())
 	exit_world.grid.register_entity(exit_player, exit_pos.cell)
-	exit_world.grid.exit_by_cell[Vector2i(2, 1)] = {"zone": &"boss_clear", "entry": &"start", "requires_room_clear": true}
+	exit_world.grid.exit_by_cell[Vector2i(2, 1)] = {"zone": &"boss_clear", "entry": &"start", "requires_room_clear": true, "locked_message": "The guard holds the door."}
 	var guard := exit_world.create_entity()
 	var guard_pos: EcsComponents.GridPos = exit_world.add_component(guard, EcsComponents.GRID_POS, EcsComponents.GridPos.new())
 	guard_pos.cell = Vector2i(4, 4)
@@ -109,12 +109,15 @@ func _init() -> void:
 	var locked_events := exit_world.drain_events()
 	var saw_locked_exit := false
 	var saw_unlocked_exit_too_early := false
+	var locked_exit_message := ""
 	for event in locked_events:
 		if event.get("type") == &"zone_exit_locked":
 			saw_locked_exit = true
+			locked_exit_message = String(event.get("message", ""))
 		if event.get("type") == &"zone_exit":
 			saw_unlocked_exit_too_early = true
 	_expect(saw_locked_exit and not saw_unlocked_exit_too_early, "room-clear exit stays locked while enemies live")
+	_expect(locked_exit_message == "The guard holds the door.", "and the locked-door event carries the door's own line")
 	guard_health.current = 0
 	var guard_ai: EcsComponents.EnemyAI = exit_world.get_component(guard, EcsComponents.ENEMY_AI)
 	guard_ai.state = EcsComponents.EnemyAI.STATE_DEFEATED

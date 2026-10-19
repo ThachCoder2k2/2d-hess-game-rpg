@@ -23,7 +23,8 @@ extends UnboundTest
 ## ARE (class, script, visibility, which picture) is still compared, and so is everything else.
 ##
 ## Per-room entity sets and cells: the golden also records a fingerprint of everything each world
-## dump baseline says before its "[nodes]" section. Those heads must not change by a byte.
+## dump baseline says before its "[nodes]" section. Those heads must not change by a byte, except for the
+## rooms ROOM_HEADS_CHANGED_ON_PURPOSE lists (a room edit made after the golden was captured, with its reason).
 
 const ActorDumper := preload("res://tools/actor_dumper.gd")
 const WorldDumper := preload("res://tools/world_dumper.gd")
@@ -92,6 +93,19 @@ const GEOMETRY_NODE_PATHS: Array[String] = [
 	"MotionRoot/SpriteRoot/HealthPips/Pip2",
 ]
 const GEOMETRY_TOKENS: Array[String] = ["position", "scale", "centered"]
+
+## room id -> { "line": the head line the room has now, "why": the reason }, for a room whose head was
+## changed on purpose AFTER the golden was captured. The golden file keeps the M2 fingerprint (it is the
+## record of the old scenes and is never re-recorded); a room listed here may equal either that or this line,
+## so the table is the one place that says which rooms moved since and why. Nothing else may.
+const ROOM_HEADS_CHANGED_ON_PURPOSE := {
+	"t1": {"line": "room t1 head_sha256=b36a8c61289b9e04c24b0b8046e20e7381f2f3f9528957ff5daefd25793ad955 lines=47", "why": "every door line of the grid now carries the door's locked_message (empty on a door that is never shut): the shut doors say why in their own words (M3b review, base/m3b-fix3). Nothing else in the head moved"},
+	"t2": {"line": "room t2 head_sha256=e45ae6789baa9ddfc31b7355d244274a56d38b3bf71dadd1edfc073f626c9d2e lines=49", "why": "the west return door moved from the wall column (0, 5) to (1, 5) and the west entry from (1, 5) to (2, 5): the door stood on a solid cell and could not be walked to (M3b review, base/m3b-fix); and the locked_message key on every door line (base/m3b-fix3, as in t1)"},
+	"t3": {"line": "room t3 head_sha256=e76a095ae235ae23dc6c86991ea84a5f1882d96ebfefc4d3e9e590d5a654baa6 lines=58", "why": "the same door fix: return door (0, 5) -> (1, 5), west entry (1, 5) -> (2, 5); and the locked_message key on every door line, with the east door's own line (base/m3b-fix3)"},
+	"t4": {"line": "room t4 head_sha256=15c33b4e90d79b5a3d75179a1ffb5e3590ea90be1521b41a1869672914c6eb11 lines=83", "why": "the same door fix: return door (0, 5) -> (1, 5), west entry (1, 5) -> (2, 5); and the pieces that stood on the wall cell (7, 6) (base/m3b-fix2): the Backstep Pawn moved to (10, 6) and the Pencil Spear to (13, 2). The pawn used to be outside the grid and took the spear by standing on it, so the spear was gone after the 120 ticks; now nobody is within reach of the idle hero, the spear is still on the floor and its entity is listed (82 -> 83 lines); and the locked_message key on every door line, with the east door's own line (base/m3b-fix3)"},
+	"b1": {"line": "room b1 head_sha256=4886eb2edc7ddf3a8b90fc3e083578e39787c083dc54de1c9b4b450d025e2fe1 lines=82", "why": "the same door fix; the hero now starts one cell further east, at (2, 5), and the guard beside the Ruler Blade takes the blade inside the 120 idle ticks: it steps onto the blade's cell (8, 6), picks it up and is back on (8, 5), so the blade is gone from the list after the ticks and 9 events are drained instead of 3. Before the move it had only reached (8, 6) and not yet taken the blade. The guard takes the blade either way: that is the rule of the owner guide's step 4, which test_owner_guide_steps waits for (about a second in); and the locked_message key on every door line, with the hub door's own line (base/m3b-fix3)"},
+	"h1": {"line": "room h1 head_sha256=67d0cd35a1af051f8ee761312cd5ea8cc90082dce873d2917920a060b1113021 lines=48", "why": "the same door fix, and the top door to the Toybox moved from the wall row (2, 0) to (2, 1) with its entry from (2, 1) to (2, 2); and the locked_message key on every door line (base/m3b-fix3)"},
+}
 
 var dumper := ActorDumper.new()
 
@@ -227,5 +241,9 @@ func _check_room_heads(golden_text: String) -> void:
 	var current_lines := dumper.room_head_lines()
 	for current_line in current_lines:
 		var room_id := current_line.get_slice(" ", 1)
-		_expect(recorded_by_room.get(room_id, "") == current_line,
+		var allowed_now: String = ROOM_HEADS_CHANGED_ON_PURPOSE.get(room_id, {}).get("line", "")
+		var equals_recorded: bool = recorded_by_room.get(room_id, "") == current_line
+		_expect(equals_recorded or (not allowed_now.is_empty() and allowed_now == current_line),
 			"room %s: the grid, the board and every entity (cells and component fields) at boot and after 120 ticks equal the pre-collapse dump" % room_id)
+	for room_id: String in ROOM_HEADS_CHANGED_ON_PURPOSE:
+		_expect(room_id in WorldDumper.BASELINE_ROOM_IDS and not String(ROOM_HEADS_CHANGED_ON_PURPOSE[room_id]["why"]).is_empty(), "the room head change listed for %s names a baseline room and says why" % room_id)

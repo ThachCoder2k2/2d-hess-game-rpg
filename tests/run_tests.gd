@@ -5,6 +5,8 @@ extends SceneTree
 ## editor-authored .tres content every entity spawns from. Simulation behavior
 ## lives in ecs_runtime / ecs_combat / ecs_enemy tests.
 
+const SaveSupport := preload("res://tests/support/save_test_support.gd")
+
 var failures := 0
 
 
@@ -233,34 +235,46 @@ func _init() -> void:
 	_expect(not t2_unlock.is_empty() and t2_unlock.get("id") == &"wooden_sword", "T2 sword unlock sits on the obvious reachable sword cell")
 	_expect(t2_world.grid.is_walkable(Vector2i(6, 5)), "T2 sword unlock cell is walkable")
 
-	# --- WorldState survives a save/load round trip ---
-	var world_state_script := load("res://shell/save/world_state.gd")
-	var saved_state: Node = world_state_script.new()
-	saved_state.current_zone_id = &"bookshelf_pass"
-	saved_state.last_entry_id = &"from_yard"
-	saved_state.taken_pickup_ids["toybox_yard/PencilSpearPickup"] = true
-	saved_state.opened_gate_ids["pass_home_gate"] = true
-	saved_state.save_state("user://test_world_state.cfg")
-	var loaded_state: Node = world_state_script.new()
-	loaded_state.load_state("user://test_world_state.cfg")
-	_expect(loaded_state.current_zone_id == &"bookshelf_pass" and loaded_state.last_entry_id == &"from_yard" \
-		and loaded_state.taken_pickup_ids.has("toybox_yard/PencilSpearPickup") \
-		and loaded_state.opened_gate_ids.has("pass_home_gate"), "WorldState survives a save/load round trip")
-	loaded_state.player_unlock_ids["wooden_sword"] = true
-	loaded_state.save_state("user://test_world_state_unlock.cfg")
-	var unlock_state: Node = world_state_script.new()
-	unlock_state.load_state("user://test_world_state_unlock.cfg")
-	_expect(unlock_state.player_unlock_ids.has("wooden_sword"), "WorldState remembers player weapon unlocks")
+	# --- The save survives a write/read round trip (SaveService v3; the WorldState checks of M1a) ---
+	var save_root := "user://test_saves/run_tests_%d" % OS.get_process_id()
+	var save_service_script := load("res://shell/save/save_service.gd")
+	var saved_service: Node = save_service_script.new()
+	saved_service.configure(save_root)
+	saved_service.new_game(0)
+	saved_service.state.checkpoint_zone_id = &"bookshelf_pass"
+	saved_service.state.checkpoint_entry_id = &"from_yard"
+	saved_service.state.taken_pickup_ids["toybox_yard/PencilSpearPickup"] = true
+	saved_service.state.opened_gate_ids["pass_home_gate"] = true
+	saved_service.request_save(&"checkpoint_reached")
+	var loaded_service: Node = save_service_script.new()
+	loaded_service.configure(save_root)
+	loaded_service.load_slot(0)
+	_expect(loaded_service.state.checkpoint_zone_id == &"bookshelf_pass" and loaded_service.state.checkpoint_entry_id == &"from_yard" \
+		and loaded_service.state.taken_pickup_ids.has("toybox_yard/PencilSpearPickup") \
+		and loaded_service.state.opened_gate_ids.has("pass_home_gate"), "the save survives a write/read round trip")
+	loaded_service.state.add_unlock(&"wooden_sword")
+	loaded_service.request_save(&"unlock_gained")
+	var unlock_service: Node = save_service_script.new()
+	unlock_service.configure(save_root)
+	unlock_service.load_slot(0)
+	_expect(unlock_service.state.has_unlock(&"wooden_sword"), "the save remembers player weapon unlocks")
+	# What WorldState wrote before it had a version: no [meta] at all. It used to be wiped silently; it is
+	# not read, a clean run starts, and the old file stays where it is (docs/game-base-plan.md 9.2).
+	var old_save_root := save_root + "_old"
+	DirAccess.make_dir_recursive_absolute(old_save_root)
 	var old_file := ConfigFile.new()
 	old_file.set_value("world", "current_zone_id", "kingdom")
-	old_file.save("user://test_world_state_old.cfg")
-	var old_state: Node = world_state_script.new()
-	old_state.load_state("user://test_world_state_old.cfg")
-	_expect(old_state.current_zone_id == &"" and old_state.last_entry_id == &"start", "WorldState resets obsolete save versions")
-	saved_state.free()
-	loaded_state.free()
-	unlock_state.free()
-	old_state.free()
+	old_file.save(old_save_root.path_join("world_state.cfg"))
+	var old_service: Node = save_service_script.new()
+	old_service.configure(old_save_root)
+	old_service.load_slot(0)
+	_expect(old_service.state.checkpoint_zone_id == &"" and old_service.state.checkpoint_entry_id == &"start" \
+		and old_service.last_load.outcome == &"new_game_obsolete_save" and FileAccess.file_exists(old_save_root.path_join("world_state.cfg")), \
+		"an obsolete save version is not read and not wiped: a clean new game starts")
+	for service_to_free: Node in [saved_service, loaded_service, unlock_service, old_service]:
+		service_to_free.free()
+	for folder_to_remove in [save_root, old_save_root]:
+		SaveSupport.remove_root(folder_to_remove)
 
 	# --- Pawn variants stay pure data ---
 	var backstep := load("res://content/enemies/backstep_pawn/enemy.tres") as EnemyDefinition

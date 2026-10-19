@@ -51,7 +51,7 @@ default_color = Color(0.72, 0.28, 0.22, 0.78)
 position = Vector2(400, 148)
 
 [node name="Entry_West" type="Marker2D" parent="."]
-position = Vector2(112, 212)
+position = Vector2(144, 212)
 script = ExtResource("4_entry")
 entry_id = &"west_entry"
 
@@ -61,7 +61,7 @@ script = ExtResource("4_entry")
 entry_id = &"from_t4"
 
 [node name="Exit_To_T2" type="Marker2D" parent="."]
-position = Vector2(80, 212)
+position = Vector2(112, 212)
 script = ExtResource("5_exit")
 target_zone = &"t2_fallen_sword_tile"
 target_entry = &"from_t3"
@@ -72,3 +72,4 @@ script = ExtResource("5_exit")
 target_zone = &"t4_broken_rule_yard"
 target_entry = &"west_entry"
 requires_room_clear = true
+locked_message = "The black pawn still bars the way. Break the black line first."

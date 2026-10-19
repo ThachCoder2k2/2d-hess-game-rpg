@@ -42,6 +42,12 @@ var skill_cooldown_duration := 1.0
 ## Entity id of the enemy that holds the room's one attack token (EcsWorld.attack_token_owner); 0 when it is free.
 var attack_token_owner := 0
 
+## How many enemies the room began with and how many still stand (RoomObjectiveState, kept true by
+## ObjectiveSystem); both 0 in a world that has no room entity, and in a room whose enemies are not
+## spawned because the run cleared it earlier. The HUD's "ENEMIES n/m" line reads them.
+var room_enemies_total := 0
+var room_enemies_remaining := 0
+
 ## --- The enemies (the board overlay's telegraph progress and F3 intent paths) ---
 
 ## What the board needs to know about one enemy.

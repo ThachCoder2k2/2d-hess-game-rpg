@@ -99,6 +99,7 @@ the class by name, then edit its fields.
 | `ZoneExitMarker.target_zone` | A zone id from `content/world/world.tres`. |
 | `ZoneExitMarker.target_entry` | The `entry_id` of a `ZoneEntryMarker` in the target room. A wrong id falls back to that room's first entry. |
 | `ZoneExitMarker.requires_room_clear` | The door only works after every enemy in the room has fallen. For boss exits, not ordinary backtracking. |
+| `ZoneExitMarker.locked_message` | The line the status bar says when the hero steps on the door while it is shut. Say what holds THIS room's door (a room without a captain must not blame one). Empty falls back to a generic line; `test_room_doors_reachable` fails a `requires_room_clear` door that leaves it empty. |
 | `ZoneEntryMarker.entry_id` | The name a door elsewhere uses. Death also respawns the hero on the last entry used. |
 
 Stepping onto a door cell fades out, swaps the room and rebuilds the world. The door cell must be
@@ -117,9 +118,9 @@ file to swap the art, and `tools/seed_placeholders.gd` records a generated stand
 
 ## 5. Running and reviewing a room
 
-1. Save the room scene and press F5. The game boots the zone remembered in `user://world_state.cfg`,
-   or T1 on a first run. Walk to your room through the exits, or restart from T1 by deleting that
-   file (editor menu Project > Open User Data Folder). Pressing R reloads the current zone.
+1. Save the room scene and press F5. The game boots the zone remembered in `user://saves/slot_0.cfg`
+   (its checkpoint), or T1 on a first run. Walk to your room through the exits, or restart from T1 by deleting that
+   file and `slot_0.cfg.bak` (editor menu Project > Open User Data Folder). Pressing R reloads the current zone.
 2. If the first ten seconds feel messy, move fewer things at once and retest.
 3. Run `/verify`. The room dump test (`tests/architecture/test_dump_baselines.gd`) compares every
    baseline room against `tests/baselines/dump_<room>.txt`. Changing a room on purpose turns it red

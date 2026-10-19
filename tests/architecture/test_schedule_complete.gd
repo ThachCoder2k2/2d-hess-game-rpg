@@ -5,9 +5,9 @@ extends UnboundTest
 ## the schedule lists nothing else. It replaces the old `systems.size() == 6` pin
 ## (encounter_hud_runtime_test.gd): a count says "six"; this says which six and where.
 ##
-## It also holds the other half of "the order is data": shell/game_root.gd and
-## tools/world_dumper.gd build their worlds with Schedule.populate() and keep no list of their
-## own to forget.
+## It also holds the other half of "the order is data": shell/zone_stage.gd (which builds the in-game
+## scene's world for shell/game_root.gd) and tools/world_dumper.gd build their worlds with
+## Schedule.populate() and keep no list of their own to forget.
 
 const ProjectFiles := preload("res://tests/architecture/project_files.gd")
 
@@ -73,10 +73,13 @@ func _init() -> void:
 	stage_script_paths.sort()
 	_expect(stage_files == stage_script_paths, "every stage file in ecs/schedule/ is in Schedule.PHASE_SCRIPTS and the reverse (%d files)" % stage_files.size())
 
-	for owner_script_path in [paths.main_script(), paths.world_dumper_script()]:
+	# The scene builds its world through ZoneStage.make_world (M3b step 2 moved the world node out of game_root.gd).
+	for owner_script_path in [paths.zone_stage_script(), paths.world_dumper_script()]:
 		var owner_text := paths.read_text(owner_script_path)
 		_expect(owner_text.contains("Schedule.populate("), "%s builds its world with Schedule.populate()" % owner_script_path.get_file())
 		_expect(not owner_text.contains("add_system("), "%s keeps no list of systems of its own" % owner_script_path.get_file())
+	var scene_text := paths.read_text(paths.main_script())
+	_expect(scene_text.contains("ZoneStage.make_world(") and not scene_text.contains("add_system("), "%s builds its world through ZoneStage.make_world and keeps no list of systems of its own" % paths.main_script().get_file())
 
 	finish()
 

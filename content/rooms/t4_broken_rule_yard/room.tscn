@@ -49,7 +49,7 @@ polygon = PackedVector2Array(-38, -8, 42, -14, 50, 16, -30, 22)
 
 [node name="PencilSpearPickup" parent="." instance=ExtResource("9_pickup")]
 pickup_scene = ExtResource("10_pickup_scene")
-grid_cell = Vector2i(7, 6)
+grid_cell = Vector2i(13, 2)
 weapon = ExtResource("11_spear")
 
 [node name="PawnRecruit" parent="." instance=ExtResource("6_pawn")]
@@ -60,11 +60,11 @@ position = Vector2(464, 180)
 definition = ExtResource("7_armed")
 
 [node name="BackstepPawn" parent="." instance=ExtResource("6_pawn")]
-position = Vector2(304, 244)
+position = Vector2(400, 244)
 definition = ExtResource("8_backstep")
 
 [node name="Entry_West" type="Marker2D" parent="."]
-position = Vector2(112, 212)
+position = Vector2(144, 212)
 script = ExtResource("4_entry")
 entry_id = &"west_entry"
 
@@ -74,7 +74,7 @@ script = ExtResource("4_entry")
 entry_id = &"from_b1"
 
 [node name="Exit_To_T3" type="Marker2D" parent="."]
-position = Vector2(80, 212)
+position = Vector2(112, 212)
 script = ExtResource("5_exit")
 target_zone = &"t3_first_pawn_clash"
 target_entry = &"from_t4"
@@ -85,3 +85,4 @@ script = ExtResource("5_exit")
 target_zone = &"b1_black_pawn_captain"
 target_entry = &"west_entry"
 requires_room_clear = true
+locked_message = "The black pawns still hold the yard. Break the black line first."

@@ -11,9 +11,12 @@ extends RefCounted
 ## Boots everything `options` (EcsBootOptions) names and returns the cast:
 ## { "player": id, "enemies": [ids], "view_by_entity": {id: Node2D},
 ##   "piece_name_by_entity": {id: String}, "pickup_view_by_entity": {id: Node2D},
-##   "pickup_name_by_entity": {id: String} }
+##   "pickup_name_by_entity": {id: String}, "persistent_pickup_by_entity": {id: true}, "room": id }
+## `persistent_pickup_by_entity` holds the pickups whose marker is persistent (the save remembers them
+## taken); every other pickup is a room-local floor weapon. `room` is the room's own entity (0 unless the
+## options asked for room rules).
 ## What the save already knows (taken pickups, opened gates) arrives in the options: the bridge
-## reads WorldState and EcsBoot never does.
+## reads the save and EcsBoot never does.
 static func boot(world: EcsWorld, options: EcsBootOptions) -> Dictionary:
 	var player_view := options.player_view as ActorView
 	assert(options.player_view == null or player_view != null, "EcsBootOptions.player_view must be an ActorView")
@@ -28,6 +31,8 @@ static func boot(world: EcsWorld, options: EcsBootOptions) -> Dictionary:
 		"piece_name_by_entity": {},
 		"pickup_view_by_entity": {},
 		"pickup_name_by_entity": {},
+		"persistent_pickup_by_entity": {},
+		"room": 0,
 	}
 	if room_root != null:
 		shape_grid(world, room_root, options.view_size)
@@ -60,6 +65,11 @@ static func boot(world: EcsWorld, options: EcsBootOptions) -> Dictionary:
 			var enemy_view := child as ActorView
 			if enemy_view == null or enemy_view.definition == null:
 				continue
+			if options.room_already_cleared:
+				# The run cleared this room before (D-17): its enemies stay gone, so the parked puppet goes too.
+				room_root.remove_child(enemy_view)
+				enemy_view.queue_free()
+				continue
 			var cell := world.grid.world_to_cell(enemy_view.position)
 			var enemy_id := EcsActorFactory.spawn_enemy(world, enemy_view.definition, cell)
 			_bind_view(world, enemy_id, enemy_view)
@@ -68,6 +78,8 @@ static func boot(world: EcsWorld, options: EcsBootOptions) -> Dictionary:
 			cast["view_by_entity"][enemy_id] = enemy_view
 			cast["piece_name_by_entity"][enemy_id] = enemy_view.definition.piece_name
 		_spawn_pickups(world, room_root, cast, skipped_pickup_names)
+		if options.with_room_rules:
+			cast["room"] = _spawn_room_entity(world, room_root, cast, options)
 	return cast
 
 
@@ -99,7 +111,31 @@ static func project_view_size() -> Vector2:
 		float(ProjectSettings.get_setting("display/window/size/viewport_height")))
 
 
-## Shortcut gates: every GateMarker child blocks its cell unless WorldState
+## The room's own entity: what the room asks of the pawn (its RoomEncounter objective and zone id) and how
+## many enemies it began with, for ObjectiveSystem to judge; whether coming in is a checkpoint
+## (RoomEncounter.checkpoint_on_entry) and how the pawn arrived, for CheckpointSystem. Made last, so every
+## other entity keeps the number it always had. Returns the entity id.
+static func _spawn_room_entity(world: EcsWorld, room_root: Node, cast: Dictionary, options: EcsBootOptions) -> int:
+	var room_entity := world.create_entity()
+	var zone_value: Variant = room_root.get("zone_id")
+	var zone_id: StringName = zone_value if zone_value is StringName else &""
+	var objective_state := RoomObjectiveState.new()
+	objective_state.zone_id = zone_id
+	objective_state.objective = room_root.get("objective") as RoomObjective
+	objective_state.enemies_total = cast["enemies"].size()
+	objective_state.enemies_remaining = cast["enemies"].size()
+	objective_state.cleared = options.room_already_cleared
+	world.add_component(room_entity, RoomObjectiveState.KEY, objective_state)
+	var checkpoint := RoomCheckpoint.new()
+	checkpoint.zone_id = zone_id
+	checkpoint.entry_id = options.entry_id
+	checkpoint.checkpoint_on_entry = room_root.get("checkpoint_on_entry") == true
+	checkpoint.entered_by_door = options.entered_by_door
+	world.add_component(room_entity, RoomCheckpoint.KEY, checkpoint)
+	return room_entity
+
+
+## Shortcut gates: every GateMarker child blocks its cell unless the save
 ## already opened it (the bridge passes those ids in) — then it is floor.
 static func _bake_gates(world: EcsWorld, room_root: Node, opened_gate_ids: Array) -> void:
 	for child in room_root.get_children():
@@ -126,6 +162,7 @@ static func _bake_zone_exits(world: EcsWorld, room_root: Node) -> void:
 			"zone": exit_marker.target_zone,
 			"entry": exit_marker.target_entry,
 			"requires_room_clear": exit_marker.requires_room_clear,
+			"locked_message": exit_marker.locked_message,
 		}
 
 
@@ -169,6 +206,8 @@ static func _spawn_pickups(world: EcsWorld, room_root: Node, cast: Dictionary, s
 		var cell: Vector2i = child.get("grid_cell")
 		var item_id := EcsActorFactory.spawn_pickup(world, weapon, cell)
 		cast["pickup_name_by_entity"][item_id] = String(child.name)
+		if child.get("persistent") == true:
+			cast["persistent_pickup_by_entity"][item_id] = true
 		var pickup_view := _make_pickup_view(child, weapon)
 		if pickup_view != null:
 			room_root.add_child(pickup_view)

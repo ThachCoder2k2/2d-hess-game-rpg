@@ -81,6 +81,7 @@ func _check_zone_exit(entity_id: int, cell: Vector2i) -> void:
 			"zone": exit.get("zone", &""),
 			"entry": exit.get("entry", &"start"),
 			"cell": cell,
+			"message": exit.get("locked_message", ""),
 		})
 		return
 	world.emit_event({

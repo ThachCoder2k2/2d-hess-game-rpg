@@ -47,3 +47,12 @@ main boots the world with all six systems -> main boots the world with every sys
 # 13.1), so it now holds the world's HudSnapshot, which HudSnapshotSystem fills. The same wiring is
 # asserted: the overlay is bound to the booted world's grid and to the world's one source of facts.
 board overlay reads the ECS world -> board overlay draws from the ECS grid and the world's hud snapshot
+
+# M3b step 1: the WorldState autoload is replaced by the SaveService (docs/game-base-plan.md 14.1), so
+# the three checks that drove WorldState drive the save instead. The same facts are asserted: a zone,
+# an entry, a taken pickup and an opened gate survive a write and a read, and so does the sword unlock.
+# The third changes its CLAIM on purpose: WorldState wiped a save of another version silently, and plan
+# 9.2 forbids that ("Nothing is wiped silently"), so an obsolete save is now not read AND not wiped.
+WorldState survives a save/load round trip -> the save survives a write/read round trip
+WorldState remembers player weapon unlocks -> the save remembers player weapon unlocks
+WorldState resets obsolete save versions -> an obsolete save version is not read and not wiped: a clean new game starts

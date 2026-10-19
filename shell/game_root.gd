@@ -1,10 +1,13 @@
+class_name GameRoot
 extends Node2D
 
-## Boots the ECS world from the editor-authored scene and bridges its events to
-## the presentation (docs/ecs-conversion-plan.md): parked views become entities
-## (EcsBoot), systems run the whole game, and this script only translates the
-## event queue into HUD text, board overlay calls, camera shake, and view
-## despawns. No gameplay decision lives here.
+## The in-game scene (docs/game-base-plan.md 13.2): boots the ECS world from the editor-authored room
+## (EcsBoot; the systems come from ecs/schedule/), ticks it once per frame and routes what it says to one
+## bridge per responsibility (presentation/bridges: drawn, said, played; shell/bridges: saved, carried,
+## ended). No game rule lives here: tests/architecture/test_game_root_is_thin.gd keeps it that way.
+
+## The save service autoload has no class_name (an autoload's name is a global), so its script is the type.
+const SaveServiceScript := preload("res://shell/save/save_service.gd")
 
 @export var hero_path: NodePath = ^"PawnHero"
 @export var room_path: NodePath = ^"FirstEncounter"
@@ -22,591 +25,159 @@ var ecs: EcsWorld
 var cast: Dictionary = {}
 var player_id := 0
 var current_room: Node
+var current_zone_id: StringName = &""
 var board: PrototypeBoard
 var hud: GameHud
 var camera_rig: CameraRig
-var remaining_enemies := 0
-var total_enemies := 0
-var defeated_enemies := 0
-var room_ending := false
 var player_view: ActorView
-var current_zone_id: StringName = &""
-var travel_in_progress := false
+## Where the authored scene parks the hero's view; a respawn parks its fresh view here.
+var hero_parked_position := Vector2.ZERO
 ## The only reader of the Input singleton: copies the controls into ecs.input_snapshot once per frame.
 var input_poller := InputPoller.new()
-var _last_token_owner := 0
+var router := EventRouter.new()
+## Starts the room again after a death or the restart key, without reloading the scene.
+var game_flow := GameFlow.new()
+var shell_keys := ShellKeys.new()
+# One bridge per responsibility; the header of each file says what it owns.
+var board_bridge := BoardBridge.new()
+var camera_bridge := CameraBridge.new()
+var hud_bridge := HudBridge.new()
+var message_bridge := MessageBridge.new()
+var audio_bridge := AudioBridge.new()
+var save_bridge := SaveBridge.new()
+var despawn_bridge := DespawnBridge.new()
+var outcome_bridge := RoomOutcomeBridge.new()
+var zone_travel_bridge := ZoneTravelBridge.new()
+var book_bridge := BookBridge.new()
 
 
 func _ready() -> void:
 	current_room = get_node_or_null(room_path)
-	player_view = get_node_or_null(hero_path) as ActorView
 	board = get_node_or_null(board_path) as PrototypeBoard
 	hud = get_node_or_null(hud_path) as GameHud
-	if player_view != null:
-		camera_rig = player_view.get_node_or_null("Camera2D") as CameraRig
+	_attach_hero_view(get_node_or_null(hero_path) as ActorView)
+	hero_parked_position = player_view.position if player_view != null else Vector2.ZERO
+	board_bridge.attach(board)
+	hud_bridge.attach(hud)
+	message_bridge.attach(hud)
+	audio_bridge.attach(self)
+	game_flow.attach(self)
+	shell_keys.attach(self)
+	for bridge: ShellBridge in [save_bridge, despawn_bridge, outcome_bridge, zone_travel_bridge, book_bridge]:
+		bridge.attach(self)
+	for bridge in _bridges():
+		bridge.register(router)
 
-	# Death and R both reload this scene; WorldState (autoload) remembers
-	# which zone the run is in, so the reload boots there, not the default.
-	var entry_id: StringName = &"start"
-	var world_state := _world_state()
-	if world_state != null:
-		entry_id = world_state.last_entry_id
-		if world_graph != null and world_state.current_zone_id != &"" \
-			and world_state.current_zone_id != _zone_id_of(current_room):
-			current_room = _swap_zone_node(world_state.current_zone_id)
-	_boot_zone(entry_id)
+	# The run (the SaveService autoload) says which zone and entry to boot on, not the authored default.
+	save_bridge.begin()
+	var resume_zone := save_bridge.room_zone_id()
+	if world_graph != null and resume_zone != &"" and resume_zone != ZoneStage.zone_id_of(current_room):
+		swap_zone(resume_zone)
+	boot_zone(save_bridge.room_entry_id())
 
 
-## Builds a fresh EcsWorld from the current zone node. Called at scene start
-## and again after every zone swap — the whole simulation is rebuilt, only
-## the player view node and WorldState persist.
-func _boot_zone(entry_id: StringName) -> void:
+## Builds a fresh EcsWorld from the current zone node. Called at scene start, after every zone swap and
+## after a respawn: the whole simulation is rebuilt, only the hero's view and the run persist.
+## `entered_by_door` is true for a zone trip: coming through a door can be a checkpoint, a launch and a
+## respawn cannot.
+func boot_zone(entry_id: StringName, entered_by_door := false) -> void:
 	if ecs != null:
 		remove_child(ecs)
 		ecs.queue_free()
-	ecs = _make_world()
+	ecs = ZoneStage.make_world(self)
 	# The room's own grid origin first: the entry cell below is read off the marker's position with it.
 	EcsBoot.shape_grid(ecs, current_room)
-	var entry_cell := _find_entry_cell(current_room, entry_id)
-	if player_view != null and entry_cell != Vector2i(-1, -1):
+	var entry_cell := ZoneStage.find_entry_cell(ecs.grid, current_room, entry_id)
+	if player_view != null and entry_cell != ZoneStage.NO_ENTRY_CELL:
 		player_view.position = ecs.grid.cell_to_world(entry_cell)
-
 	var boot_options := EcsBootOptions.for_scene(player_view, current_room)
 	boot_options.fallback_player_cell = hero_start_cell
-	boot_options.skipped_pickup_names = _taken_pickup_names()
-	boot_options.opened_gate_ids = _opened_gate_ids()
+	boot_options.with_room_rules = true
+	boot_options.entry_id = entry_id
+	boot_options.entered_by_door = entered_by_door
+	boot_options.player_snapshot = zone_travel_bridge.take_carried_snapshot()
+	save_bridge.fill_boot_options(boot_options, current_room)
 	cast = EcsBoot.boot(ecs, boot_options)
-	_hide_opened_gate_visuals()
-	_unlock_met_rules()
 	player_id = int(cast.get("player", 0))
-	_apply_player_unlocks()
-	total_enemies = cast.get("enemies", []).size()
-	remaining_enemies = total_enemies
-	defeated_enemies = 0
-	room_ending = false
-	_last_token_owner = -1
-	current_zone_id = _zone_id_of(current_room)
-
-	var world_state := _world_state()
-	if world_state != null:
-		if current_zone_id != &"":
-			world_state.current_zone_id = current_zone_id
-		if world_state.player_health_carry > 0:
-			var health: EcsComponents.Health = ecs.get_component(player_id, EcsComponents.HEALTH)
-			if health != null:
-				health.current = mini(world_state.player_health_carry, health.max_value)
-		world_state.player_health_carry = -1
-
+	current_zone_id = ZoneStage.zone_id_of(current_room)
+	for bridge in _bridges():
+		bridge.bind_world(ecs.hud_snapshot, cast)
+	save_bridge.restore_run(current_zone_id, entry_id)
+	book_bridge.meet_pieces()
+	save_bridge.apply_unlocks()
+	outcome_bridge.begin_room()
 	# The HUD and the board draw from the snapshot, so it must hold the booted room (with the carried
-	# health and the unlocks written above) before the first tick builds it again.
+	# pawn and the unlocks written above) before the first tick builds it again.
 	HudSnapshotSystem.build(ecs)
-	if board != null:
-		board.z_index = -5
-		board.setup(ecs.grid, ecs.hud_snapshot)
-		board.set_debug_enabled(debug_enabled)
-	if camera_rig != null:
-		camera_rig.setup(ecs.grid)
-	_setup_hud()
-
-
-func _make_world() -> EcsWorld:
-	var world := EcsWorld.new()
-	world.name = "EcsWorld"
-	world.manual_tick = true
-	add_child(world)
-	Schedule.populate(world)
-	return world
+	board_bridge.show_room(ecs.grid, debug_enabled)
+	camera_bridge.show_room(ecs.grid)
+	hud_bridge.show_room()
+	message_bridge.say(ZoneStage.room_text(current_room, "get_start_message", "Break the black line."))
 
 
 func _process(delta: float) -> void:
+	var save := save_service()
+	if save != null:
+		save.add_play_time(delta)
 	input_poller.poll(delta, ecs.input_snapshot)
-	var controls := ecs.input_snapshot
-	if controls.is_just_pressed(&"restart_room"):
-		get_tree().reload_current_scene()
-	if controls.is_just_pressed(&"debug_view_toggle"):
-		_set_debug_enabled(not debug_enabled)
-	if controls.is_just_pressed(&"fullscreen_toggle"):
-		var window := get_window()
-		window.mode = Window.MODE_WINDOWED if window.mode == Window.MODE_FULLSCREEN else Window.MODE_FULLSCREEN
-	if controls.is_just_pressed(&"rule_book_toggle"):
-		_toggle_rule_book()
-
-	if not room_ending:
+	shell_keys.handle(ecs.input_snapshot)
+	if not outcome_bridge.room_ending:
 		ecs.tick(delta)
-	_handle_events(ecs.drain_events())
-	_update_token_hud()
-	_update_cell_status()
+	router.route(ecs.drain_events())
+	hud_bridge.refresh()
 
 
-func _setup_hud() -> void:
-	if hud == null:
-		return
-	var snapshot := ecs.hud_snapshot
-	hud.setup(snapshot.player_courage_current if snapshot.player_entity != 0 else 3)
-	hud.set_encounter_count(remaining_enemies, total_enemies)
-	_update_skill_cooldown(0.0)
-	_update_token_hud()
-	var room_message := "Break the black line."
-	if current_room != null and current_room.has_method("get_start_message"):
-		room_message = String(current_room.call("get_start_message"))
-	hud.set_status(room_message)
+## Starts the room the pawn is in again, on the entry it came by, without leaving the scene (GameFlow calls
+## it for a death or the restart key; D-16: a death resets only this room): a fresh zone, a fresh hero view
+## in its boot pose, the Book closed, nothing carried. What the scene keeps is the run (it takes the world's
+## flags first), the music and the F3 switch.
+func respawn() -> void:
+	save_bridge.remember_world()
+	book_bridge.close()
+	zone_travel_bridge.forget_carry()
+	_attach_hero_view(ZoneStage.replace_hero_view(self, player_view, hero_parked_position))
+	var zone_id := save_bridge.room_zone_id()
+	current_room = ZoneStage.replace_zone_node(self, current_room, _zone_scene_for(zone_id if zone_id != &"" else current_zone_id))
+	boot_zone(save_bridge.room_entry_id())
 
 
-func _handle_events(events: Array[Dictionary]) -> void:
-	for event in events:
-		var entity := int(event.get("entity", 0))
-		match event.get("type"):
-			&"telegraph_started":
-				if board != null:
-					board.set_telegraph(entity, event.get("cells", []))
-			&"telegraph_finished":
-				if board != null:
-					board.clear_telegraph(entity)
-			&"attack_resolved":
-				if board != null:
-					board.show_enemy_attack(event.get("cells", []))
-			&"attack_landed":
-				_on_player_attack_landed(event)
-			&"attack_locked":
-				_update_status("The pawn has no weapon yet. Find the fallen sword.")
-			&"intent_changed":
-				if board != null and event.get("intent") is EnemyIntent:
-					board.set_enemy_intent(entity, event.get("intent"))
-			&"damaged":
-				_on_damaged(entity, event)
-			&"skill_cooldown":
-				_update_skill_cooldown(float(event.get("time_left", 0.0)))
-			&"weapon_changed":
-				_on_enemy_weapon_changed(entity, event.get("weapon"))
-			&"pickup_taken":
-				_record_pickup_taken(int(event.get("item", 0)))
-				_play_sfx(&"pickup")
-				_free_pickup_view(int(event.get("item", 0)))
-			&"player_unlock":
-				_on_player_unlock(StringName(event.get("id", &"")), String(event.get("message", "")))
-			&"defeated":
-				_on_defeated(entity)
-			&"zone_exit":
-				_travel_to(StringName(event.get("zone", &"")), StringName(event.get("entry", &"start")))
-			&"zone_exit_locked":
-				_on_zone_exit_locked()
-			&"gate_opened":
-				_on_gate_opened(StringName(event.get("gate", &"")))
+## Puts the zone `zone_id` of the world graph in the place of the current one; a zone the graph does not
+## have leaves the current one in place.
+func swap_zone(zone_id: StringName) -> void:
+	var zone_scene := world_graph.get_zone_scene(zone_id) if world_graph != null else null
+	current_room = ZoneStage.replace_zone_node(self, current_room, zone_scene)
 
 
-func _on_player_attack_landed(event: Dictionary) -> void:
-	var profile := event.get("profile") as AttackProfile
-	if board != null and profile != null:
-		board.show_player_attack(event.get("cells", []), int(event.get("hit_count", 0)), profile)
-	if int(event.get("hit_count", 0)) > 0:
-		_start_screen_shake(0.10, 2.6)
-		if profile != null:
-			_update_status("%s connects. Keep pressing the broken line." % profile.display_name)
-
-
-func _on_damaged(entity: int, event: Dictionary) -> void:
-	if entity != player_id:
-		return
-	var remaining := int(event.get("remaining", 0))
-	_start_screen_shake(0.16, 4.2 + float(event.get("amount", 1)))
-	if hud != null:
-		hud.flash_damage()
-		hud.set_courage(remaining)
-	if remaining == 1:
-		_update_status("One courage left. Wait for the warning, then cut through.")
-	elif remaining > 1:
-		_update_status("The pawn is hit. Move out before the next strike.")
-
-
-func _on_enemy_weapon_changed(entity: int, weapon) -> void:
-	if weapon == null:
-		return
-	var piece_name := String(cast.get("piece_name_by_entity", {}).get(entity, "Enemy"))
-	_update_status("%s picked up %s. Its chess attack has been replaced." % [piece_name, weapon.display_name])
-
-
-func _free_pickup_view(item_id: int) -> void:
-	var pickup_views: Dictionary = cast.get("pickup_view_by_entity", {})
-	var view := pickup_views.get(item_id) as Node2D
-	if view != null and is_instance_valid(view):
-		view.queue_free()
-	pickup_views.erase(item_id)
-
-
-func _on_defeated(entity: int) -> void:
-	if entity == player_id:
-		_on_player_defeated()
-		return
-	if board != null:
-		board.clear_telegraph(entity)
-		board.clear_enemy_debug(entity)
-	remaining_enemies = maxi(0, remaining_enemies - 1)
-	defeated_enemies += 1
-	if hud != null:
-		hud.set_encounter_count(remaining_enemies, total_enemies)
-	_play_defeat_animation(entity)
-	_check_completion()
-
-
-## Death visuals are editor-owned now: ViewSyncSystem travels the view's
-## AnimationTree to the defeat clip (squash + crumple sound). The bridge only
-## schedules the despawn after the clip has had its moment.
-func _play_defeat_animation(entity: int) -> void:
-	var view := cast.get("view_by_entity", {}).get(entity) as Node2D
-	if view == null or not is_instance_valid(view):
-		return
-	var tween := create_tween()
-	tween.tween_interval(0.6)
-	tween.tween_callback(func() -> void:
-		ecs.remove_component(entity, EcsComponents.VIEW_REF)
-		if is_instance_valid(view):
-			view.queue_free())
-
-
-func _check_completion() -> void:
-	if room_ending:
-		return
-	# World mode: clearing a zone is quiet — only an explicit objective (boss
-	# arenas, later) can end the run with a result screen.
-	if world_graph != null and (current_room == null or current_room.get("objective") == null):
-		return
-	var complete := total_enemies > 0 and remaining_enemies <= 0
-	var objective: Resource = current_room.get("objective") if current_room != null else null
-	if objective != null and objective.has_method("is_complete"):
-		complete = bool(objective.call("is_complete", defeated_enemies, total_enemies, remaining_enemies))
-	if not complete:
-		return
-	room_ending = true
-	_set_player_control(false)
-	_play_sfx(&"room_clear")
-	var clear_message := _room_text("get_clear_message", "ROOM CLEARED")
-	_update_status(clear_message)
-	_show_result(clear_message, _room_text("get_clear_subtitle", "PRESS R TO RESET"))
-
-
-func _on_player_defeated() -> void:
-	if room_ending:
-		return
-	room_ending = true
-	var world_state := _world_state()
-	if world_state != null:
-		world_state.player_health_carry = -1
-		world_state.save_state()
-	_play_sfx(&"defeat_jingle")
-	var defeat_message := _room_text("get_defeat_message", "THE PAWN FALLS")
-	_update_status(defeat_message)
-	_show_result(defeat_message, _room_text("get_defeat_subtitle", "THE CHILD RESETS THE BOARD"))
-	var tree := get_tree()
-	if tree == null:
-		return
-	await tree.create_timer(0.85).timeout
-	if is_inside_tree():
-		tree.reload_current_scene()
-
-
-func _update_token_hud() -> void:
-	var token_owner := ecs.hud_snapshot.attack_token_owner
-	if hud == null or token_owner == _last_token_owner:
-		return
-	_last_token_owner = token_owner
-	if total_enemies <= 0:
-		hud.set_token_owner("", false)
-	elif _last_token_owner == 0:
-		hud.set_token_owner("")
-	else:
-		hud.set_token_owner(String(cast.get("piece_name_by_entity", {}).get(_last_token_owner, "Enemy")))
-
-
-func _update_cell_status() -> void:
-	if hud == null:
-		return
-	var snapshot := ecs.hud_snapshot
-	if snapshot.player_entity != 0:
-		hud.set_cell_status(snapshot.player_cell, _facing_name(snapshot.player_facing))
-
-
-## Shows the skill slot for `time_left` seconds of cooldown. The slot is redrawn when a
-## skill_cooldown event arrives (and at boot), as it always was, from the snapshot's length and
-## sword flag. M4's widgets draw the snapshot every frame instead.
-func _update_skill_cooldown(time_left: float) -> void:
-	if hud == null:
-		return
-	var snapshot := ecs.hud_snapshot
-	hud.set_skill_cooldown(time_left, snapshot.skill_cooldown_duration, snapshot.sword_unlocked)
-
-
-func _set_player_control(value: bool) -> void:
+## The hero's keys: on while the room is live, off during a trip, a Book and the end of a room.
+func set_player_control(value: bool) -> void:
 	var tag: EcsComponents.PlayerTag = ecs.get_component(player_id, EcsComponents.PLAYER_TAG)
 	if tag != null:
 		tag.control_enabled = value
 
 
-func _set_debug_enabled(value: bool) -> void:
-	debug_enabled = value
-	if board != null:
-		board.set_debug_enabled(value)
-	_update_status("DEBUG VIEW ON: boundaries, paths, and behavior labels." if value else "DEBUG VIEW OFF.")
+## The SaveService autoload, null-safe so headless tests without autoloads run.
+func save_service() -> SaveServiceScript:
+	return get_node_or_null("/root/SaveService") as SaveServiceScript
 
 
-func _room_text(getter: StringName, fallback: String) -> String:
-	if current_room != null and current_room.has_method(getter):
-		return String(current_room.call(getter))
-	return fallback
+## The bridges in the order they react when one event has several: a pickup is saved before its sound
+## plays and its view goes, a defeat clears the board before the room counts it, the status line speaks last.
+func _bridges() -> Array[EventBridge]:
+	return [board_bridge, camera_bridge, hud_bridge, save_bridge, audio_bridge, despawn_bridge, outcome_bridge,
+		message_bridge, zone_travel_bridge, book_bridge]
 
 
-func _update_status(text: String) -> void:
-	if hud != null:
-		hud.set_status(text)
+## The hero's view and the camera rig that is its child: the camera bridge follows a replaced view.
+func _attach_hero_view(view: ActorView) -> void:
+	player_view = view
+	camera_rig = view.get_node_or_null("Camera2D") as CameraRig if view != null else null
+	camera_bridge.attach(camera_rig)
 
 
-func _show_result(title: String, subtitle: String) -> void:
-	if hud != null:
-		hud.show_result(title, subtitle)
-
-
-func _start_screen_shake(duration: float, strength: float) -> void:
-	if camera_rig != null:
-		camera_rig.start_shake(duration, strength)
-
-
-## Event sounds route through the SfxManager autoload (layer 3 of the sound
-## structure). Looked up by path so headless tests without autoloads stay
-## silent instead of crashing.
-func _play_sfx(sound_name: StringName) -> void:
-	var sfx := get_node_or_null("/root/SfxManager")
-	if sfx != null:
-		sfx.call("play", sound_name)
-
-
-## --- Zone travel (the world map) -----------------------------------------
-
-
-## The player stepped on a door cell: fade out, swap the zone scene, rebuild
-## the simulation, fade back in. WorldState carries health and remembers the
-## destination so death/R reloads land in the right zone.
-func _travel_to(zone_id: StringName, entry_id: StringName) -> void:
-	if travel_in_progress or room_ending or world_graph == null or not world_graph.has_zone(zone_id):
-		return
-	travel_in_progress = true
-	_set_player_control(false)
-	var world_state := _world_state()
-	if world_state != null:
-		var health: EcsComponents.Health = ecs.get_component(player_id, EcsComponents.HEALTH)
-		world_state.player_health_carry = health.current if health != null else -1
-		world_state.current_zone_id = zone_id
-		world_state.last_entry_id = entry_id
-		world_state.save_state()
-	await _fade_to(1.0)
-	current_room = _swap_zone_node(zone_id)
-	_boot_zone(entry_id)
-	await _fade_to(0.0)
-	_set_player_control(true)
-	travel_in_progress = false
-
-
-func _on_zone_exit_locked() -> void:
-	_update_status("The captain still holds the rug edge. Break the black line first.")
-
-
-func _apply_player_unlocks() -> void:
-	var combat: EcsComponents.PlayerCombat = ecs.get_component(player_id, EcsComponents.PLAYER_COMBAT)
-	if combat == null:
-		return
-	var world_state := _world_state()
-	if world_graph != null and world_state != null:
-		combat.sword_unlocked = world_state.player_unlock_ids.has("wooden_sword")
-		# The shell just wrote a component the snapshot copies; publish it now rather than a tick late.
-		HudSnapshotSystem.build(ecs)
-	_hide_taken_player_unlocks()
-
-
-func _on_player_unlock(unlock_id: StringName, message: String) -> void:
-	if unlock_id == &"":
-		return
-	var world_state := _world_state()
-	if world_state != null:
-		world_state.player_unlock_ids[String(unlock_id)] = true
-		world_state.save_state()
-	_apply_player_unlocks()
-	_play_sfx(&"pickup")
-	_update_status(message if not message.is_empty() else "The pawn grips the sword. The rules crack.")
-
-
-func _hide_taken_player_unlocks() -> void:
-	var world_state := _world_state()
-	if world_state == null or current_room == null:
-		return
-	for child in current_room.get_children():
-		var marker := child as PlayerUnlockMarker
-		if marker != null and world_state.player_unlock_ids.has(String(marker.unlock_id)):
-			marker.visible = false
-
-
-## Replaces the current zone node with the target zone's scene, keeping the
-## tree position so draw order (board below, HUD above) stays intact.
-func _swap_zone_node(zone_id: StringName) -> Node:
+## The scene of zone `zone_id`: the world graph's, or for a room outside the graph (a standalone scene)
+## the scene the current room was made from, so a respawn can always build a fresh one.
+func _zone_scene_for(zone_id: StringName) -> PackedScene:
 	var zone_scene := world_graph.get_zone_scene(zone_id) if world_graph != null else null
-	if zone_scene == null:
-		return current_room
-	var slot_index := current_room.get_index() if current_room != null else get_child_count()
-	if current_room != null:
-		remove_child(current_room)
-		current_room.queue_free()
-	var zone := zone_scene.instantiate()
-	add_child(zone)
-	move_child(zone, slot_index)
-	return zone
-
-
-func _find_entry_cell(zone_root: Node, entry_id: StringName) -> Vector2i:
-	if zone_root == null:
-		return Vector2i(-1, -1)
-	var fallback := Vector2i(-1, -1)
-	for child in zone_root.get_children():
-		var entry := child as ZoneEntryMarker
-		if entry == null:
-			continue
-		var cell := ecs.grid.world_to_cell(entry.position)
-		if entry.entry_id == entry_id:
-			return cell
-		if fallback == Vector2i(-1, -1):
-			fallback = cell
-	return fallback
-
-
-## The editor-owned FadeLayer rect; the bridge only tweens its alpha.
-func _fade_to(target_alpha: float) -> void:
-	var fade_rect := get_node_or_null(fade_rect_path) as ColorRect
-	if fade_rect == null:
-		return
-	var tween := create_tween()
-	tween.tween_property(fade_rect, "modulate:a", target_alpha, 0.22)
-	await tween.finished
-
-
-func _record_pickup_taken(item_id: int) -> void:
-	var world_state := _world_state()
-	if world_state == null or current_zone_id == &"":
-		return
-	var marker_name := String(cast.get("pickup_name_by_entity", {}).get(item_id, ""))
-	if not marker_name.is_empty():
-		world_state.taken_pickup_ids[world_state.pickup_id(current_zone_id, marker_name)] = true
-		world_state.save_state()
-
-
-## A shortcut gate unbarred: permanent from this moment, across deaths and
-## launches. The marker's closed-gate visual disappears.
-func _on_gate_opened(gate_id: StringName) -> void:
-	var world_state := _world_state()
-	if world_state != null and gate_id != &"":
-		world_state.opened_gate_ids[String(gate_id)] = true
-		world_state.save_state()
-	_hide_opened_gate_visuals()
-	_play_sfx(&"gate_open")
-	_update_status("The gate unbars. It will never close again.")
-
-
-func _opened_gate_ids() -> Array:
-	var world_state := _world_state()
-	if world_state == null:
-		return []
-	var ids: Array = []
-	for key in world_state.opened_gate_ids:
-		ids.append(StringName(key))
-	return ids
-
-
-func _hide_opened_gate_visuals() -> void:
-	if current_room == null:
-		return
-	var opened := _opened_gate_ids()
-	for child in current_room.get_children():
-		var gate_marker := child as GateMarker
-		if gate_marker != null:
-			gate_marker.visible = gate_marker.gate_id not in opened
-
-
-## Pickup marker names already taken in this zone (WorldState) — EcsBoot
-## skips them so grabbed weapons never respawn.
-func _taken_pickup_names() -> Array:
-	var world_state := _world_state()
-	var zone_id := _zone_id_of(current_room)
-	if world_state == null or zone_id == &"":
-		return []
-	var names: Array = []
-	var prefix := String(zone_id) + "/"
-	for key: String in world_state.taken_pickup_ids:
-		if key.begins_with(prefix):
-			names.append(key.substr(prefix.length()))
-	return names
-
-
-func _zone_id_of(zone_root: Node) -> StringName:
-	if zone_root == null:
-		return &""
-	var value: Variant = zone_root.get("zone_id")
-	return value if value is StringName else &""
-
-
-## WorldState autoload, null-safe so headless tests without autoloads run.
-func _world_state() -> Node:
-	return get_node_or_null("/root/WorldState")
-
-
-## --- The Book of House Rules -------------------------------------------
-
-
-## Meeting a piece = sharing a zone with it. Every definition present in the
-## freshly booted zone writes its page into the book, once, forever.
-func _unlock_met_rules() -> void:
-	var world_state := _world_state()
-	if world_state != null and current_room != null:
-		var newly_met := false
-		for child in current_room.get_children():
-			var view := child as ActorView
-			if view == null or view.definition == null:
-				continue
-			var piece_id := String(view.definition.id)
-			if not world_state.unlocked_rule_ids.has(piece_id):
-				world_state.unlocked_rule_ids[piece_id] = true
-				newly_met = true
-		if newly_met:
-			world_state.save_state()
-			_update_status("New pieces on the board. The book writes their rules. [B]")
-	var book := _rule_book_ui()
-	if book != null:
-		book.refresh(_unlocked_rule_ids())
-
-
-func _toggle_rule_book() -> void:
-	var book := _rule_book_ui()
-	if book == null or travel_in_progress:
-		return
-	book.visible = not book.visible
-	if book.visible:
-		book.refresh(_unlocked_rule_ids())
-	_set_player_control(not book.visible)
-
-
-func _rule_book_ui() -> RuleBookUI:
-	return get_node_or_null(^"RuleBookUI") as RuleBookUI
-
-
-func _unlocked_rule_ids() -> Array:
-	var world_state := _world_state()
-	if world_state == null:
-		return []
-	var ids: Array = []
-	for key in world_state.unlocked_rule_ids:
-		ids.append(StringName(key))
-	return ids
-
-
-func _facing_name(direction: Vector2i) -> String:
-	if direction == Vector2i.UP:
-		return "N"
-	if direction == Vector2i.DOWN:
-		return "S"
-	if direction == Vector2i.LEFT:
-		return "W"
-	return "E"
+	if zone_scene == null and current_room != null and not current_room.scene_file_path.is_empty():
+		zone_scene = load(current_room.scene_file_path) as PackedScene
+	return zone_scene

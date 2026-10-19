@@ -22,8 +22,8 @@ session. Read `AGENTS.md` for the full workflow, and `docs/ARCHITECTURE.md` +
   - New decision/behavior → a system in `ecs/systems/<phase>/` (with `const PHASE`
 	naming its stage) plus one line in `ecs/schedule/<phase>.gd`;
 	`test_schedule_complete` fails if a system file is unlisted. The tick order is data
-	there and nowhere else: `shell/game_root.gd` and `tools/world_dumper.gd` both call
-	`Schedule.populate`, so never add a system to either. ONLY `ViewSyncSystem` may
+	there and nowhere else: `shell/zone_stage.gd` (the in-game scene's world) and
+	`tools/world_dumper.gd` both call `Schedule.populate`, so never add a system to either. ONLY `ViewSyncSystem` may
 	touch nodes. Systems talk via components and the event/damage queues, never by
 	calling each other or presentation. A new event is a const and a row in
 	`ecs/events/events.gd` (payload keys documented; `test_events_declared`); damage and
@@ -50,6 +50,22 @@ session. Read `AGENTS.md` for the full workflow, and `docs/ARCHITECTURE.md` +
 	`HudSnapshotSystem`, exist since M3a; no script under `presentation/` names
 	`EcsComponents` or `EcsWorld`, and `tests/architecture/test_dependency_edges.gd`
 	fails if one does.)
+  - A reaction to an event → a bridge, one responsibility each, registered with the `EventRouter`
+	(`presentation/bridges/event_router.gd`). One that only draws, says or plays (HUD, board, camera,
+	sound, the status line) goes in `presentation/bridges/` and extends `EventBridge`; one that writes the
+	save, rebuilds the world or flips a component (the save, the zone trip, the Book, the end of a room, a
+	despawn) goes in `shell/bridges/` and extends `ShellBridge`. It registers its types in `register()`
+	with `router.on(Events.X, handler)` and the scene lists the order in `GameRoot._bridges()`.
+	`shell/game_root.gd` reacts to no event and holds no rule: at most 200 lines
+	(`test_game_root_is_thin`). Nothing reloads the scene (`test_no_scene_reload`): a death or the restart
+	key is `GameFlow.request_respawn()`, which rebuilds the room inside the scene. Only the `SaveBridge`
+	asks for a save (`test_request_save_callers`).
+  - How a room goes (cleared, the pawn fell, a door that is a checkpoint) is judged by a system, not a
+	bridge: `ObjectiveSystem` and `CheckpointSystem` read the room's own entity (`RoomObjectiveState`,
+	`RoomCheckpoint`, made by `EcsBoot` for the room the shell plays) and say `room_cleared`,
+	`checkpoint_set`, `respawn_requested`; the bridges only answer. Which room is a checkpoint is data on
+	the room (`RoomEncounter.checkpoint_on_entry`) and which pickup is a reward is data on the marker
+	(`PickupSpawnPoint.persistent`): no script names a room or a pickup by id (`test_checkpoint_rules`).
   - Controls: `shell/input/input_poller.gd` is the only code that calls the `Input`
 	singleton. It fills `world.input_snapshot` once per frame and a system reads that
 	(`test_input_only_in_poller`); test a control rule by injecting an `InputSnapshot`
@@ -67,8 +83,8 @@ session. Read `AGENTS.md` for the full workflow, and `docs/ARCHITECTURE.md` +
 	the actor's clips (keying its `AudioPlayer`, bus `SFX`); mixing →
 	`default_bus_layout.tres` (Master ← SFX/Music/UI); event sounds with no
 	clip (pickups, room clear, jingles, UI) → the `SfxManager` autoload's
-	Inspector stream registry, played ONLY by the `shell/game_root.gd` bridge from
-	drained events. Systems never play audio. The registry will be keyed from
+	Inspector stream registry, played ONLY by the `AudioBridge`
+	(`presentation/bridges/audio_bridge.gd`) from drained events. Systems never play audio. The registry will be keyed from
 	`content/audio/sound_bank.tres` (not built yet; today the keys are
 	Inspector exports on `presentation/audio/sfx_manager.tscn`). Recipe: `/new-sound`.
 - **Content is looked up by id.** `ContentDb` (`shell/content/`, a static class, no autoload) lists
@@ -76,6 +92,17 @@ session. Read `AGENTS.md` for the full workflow, and `docs/ARCHITECTURE.md` +
   `authoring/` or `presentation/`: a scene names a resource by uid, the shell asks `ContentDb`. A new
   kind is one line in `ContentDb._ensure_kinds()`, a `validate()` on its class and a minimum in
   `tests/content/test_validate_all.gd`. The hero's tuning is `content/player/player.tres`.
+- **One owner for the save.** What the game remembers (the room the pawn is in and the entry it came by, the
+  latest checkpoint, cleared rooms, taken persistent pickups, opened gates, unlocks, flags) lives in
+  `SaveService.state` (`shell/save/`, the autoload that replaced `WorldState`); only the
+  service writes a save file, and the shell asks it with `request_save(reason)` where `reason` is a literal
+  success event from `SaveService.AUTOSAVE_REASONS` (never a death, a hit or a quit, R17). A new
+  persistent fact is a field of `SaveData` (and a step in `SaveMigration` when it changes the format), not a
+  new file. A death resets only the room it happened in and keeps everything in the run (D-16); a cleared
+  room stays cleared (D-17); a floor weapon is room-local and a plain trip between rooms saves nothing.
+  A test that boots the game gives the service a throwaway folder first
+  (`tests/support/save_test_support.gd`). Enforced by `test_save_written_only_by_save_service`,
+  `test_request_save_callers` and `test_suites_isolate_the_save`.
 - **A piece is smaller than its cell** (owner, 2026-10-12). Never exactly cell-sized, never
   taller than the cell, heights as in a real chess set (pawn lowest, king tallest). The numbers are
   data: `content/feel/piece_sizes.tres` (a box and a base line per kind of piece, 2 px margin to

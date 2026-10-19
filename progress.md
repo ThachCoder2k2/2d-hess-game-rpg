@@ -1452,3 +1452,293 @@ changed: the six room dumps are byte-identical to their baselines and all 235 ba
   `PlayerCombat.sword_unlocked`, the health carry and `VIEW_REF`, and nothing pushes on `world.commands` or `view_commands` yet; the
   shell does not pass a `PlayerSnapshot` to `EcsBoot` yet. Multi-cell footprints are M8b's. No tile of the shipped TileSets says `gap`,
   `leapable_block`, `chalk` or `corruption`: the art comes with the milestones that use them.
+
+
+## M3b step 1 - save v3, world flags, the M3a leftovers - 2026-10-19
+
+Branch `base/m3b-1` (from `game-base`), the strict runner green after each commit. M3b is "L" and is built in three steps; this
+is the first: the save and the flags, plus three small things M3a left. `shell/game_root.gd` is NOT split yet (step 2) and the
+checkpoint and death rules are not built yet (step 3), so what the player feels is the same, except the two changes below.
+
+- **M3a leftovers, one commit each.** (1) `tools/world_dumper.gd` shaped the grid AFTER it found the entry cell, so the
+  `entry_cell:` header of any board that is not 16x9 was off by one (an 18x9 arena starts at x 32, not 64); it shapes first now, as
+  `game_root` does, and `resolve_room` also accepts a `user://` scene. No baseline moved (all six rooms are 16x9, which is why
+  nothing showed it); `test_world_dumper_entry_cell` builds an 18x9 room in code and fails against the old order. (2) The generic
+  `EcsGrid.marker_by_cell[kind][cell]` of plan 14.1 was the one hot-spot field M3a did not land: it is there now
+  (`add_marker`, `remove_marker`, `has_marker`, `marker_at`, `marker_cells`; a cell holds one marker per kind), unused until M5's
+  traversal gap and M6's triggers; `test_grid_markers`. (3) `docs/ARCHITECTURE.md`: `game_root.gd` is 612 lines, not 605, and the
+  multi-cell note now lists every single-cell assumption M8b has to change (`cell_by_entity`, `register_entity`/`begin_move`/
+  `begin_leap`, `unregister_entity`, `finish_move`, `get_reserved_cell`, `leap_by_entity`, `leap_landing_cell`, the pathfinder's
+  one-cell solid marks).
+- **The save (`shell/save/`).** `SaveService` (the autoload; it replaced `WorldState`, which is gone with its test double and every
+  caller migrated in the same commit), `SaveData` (the slot in memory and as a `ConfigFile`), `SaveFile` (the bytes), `SaveMigration`
+  (the version chain), `SaveLoadResult` (what a load found). One slot behind a slot id (`SINGLE_SLOT`, `slot_path(n)`);
+  `configure(root)` for tests; `<root>/saves/slot_0.cfg`. v3 sections: `[meta]` (version, play time, room, timestamp),
+  `[checkpoint]`, `[world]` (cleared rooms, defeated bosses, taken pickups, opened gates, read Book pages, rescues, Rule Pages,
+  shards), `[player]` (the `PlayerSnapshot` WITHOUT current Courage: health never saves, the pawn resumes at full Courage) and
+  `[flags]` (the `WorldFlags`, one key per flag, names with dots and spaces survive). Atomic write: temp file, read back, the old
+  file becomes `.bak`, rename; an existing damaged file becomes `.corrupt` instead so it cannot push a good `.bak` out. **Where it
+  differs from the plan text:** the file carries an integrity footer, a ConfigFile comment holding the sha256 of the text above.
+  Reason: `ConfigFile.load()` and `parse()` print an engine `ERROR` line on text they cannot parse and say nothing about why, and the
+  strict runner fails a suite on an engine ERROR, so "corrupt falls back" could not be tested (or logged) without recognising the
+  damage first. A footer-less slot file is damaged to the reader; the file stays a plain ConfigFile for any editor.
+- **The loader never wipes.** `read_slot(n)`: the file, else its `.bak`, else (first slot) the v2 `world_state.cfg`, else a clean
+  new game; each step is logged, `SaveLoadResult.notice_key` names the notice the title will show (M4 owns the words). A save from a
+  NEWER game is recognised even when it fails this build's footer, is never read as damaged and never overwritten (`write_slot`
+  returns `ERR_LOCKED`; `new_game` renames it to `.newer_game`). A format older than v2 (it booted into the retired kingdom; that is
+  why v2 existed) is reported obsolete and left on disk; the first save of the new run keeps it as the `.bak`.
+- **Migration v2 to v3.** `tests/fixtures/saves/world_state_v2.cfg` is a REAL v2 file, written by the old `WorldState.save_state()`
+  before it was deleted. Every fact moves: zone and entry become the checkpoint (and `meta.room`), `player_unlock_ids` become
+  `[player] unlocked_skill_ids`, taken pickups, gates and Book pages stay. The v2 file is read where `WorldState` left it
+  (`<root>/world_state.cfg`), loading has no side effect, and after the first v3 save it is renamed `world_state.cfg.migrated`, byte
+  for byte, so a New Game can never resurrect it. Smoke-tested through the real autoload and the real main scene in a throwaway
+  HOME: the v2 file became a v3 slot and the `.migrated` copy with no error line.
+- **R17 is enforced, not only stated.** The shell asks with `request_save(reason)`; the reasons are the success events of plan 5.2
+  (`room_cleared`, `shortcut_opened`, `pickup_taken`, `boss_defeated`, `rescue_completed`, `checkpoint_reached`, `beat_save_after`)
+  plus two persistent unlocks (`unlock_gained`, `rule_page_unlocked`). Anything else is refused with a warning and writes nothing, as
+  is a request before any run has begun (an empty run can never overwrite a real save). `test_request_save_callers` reads the callers
+  off the source: `game_root.gd` is the only one and each call passes a literal from the list. **`checkpoint_reached` is interim:**
+  until step 3 the shell reports every zone travel with it, because the checkpoint still moves on every travel, where
+  `last_entry_id` moved. Nothing yet stops a `pickup_taken` save while an enemy that picked a weapon up is mid-fight (the
+  `pickup_taken` event is raised by enemies too, as before); D-16 makes floor weapons room-local, which is step 3's to settle.
+- **Two behaviour changes, both D-16 / R17.** A death no longer writes the save (`test_bridge_death_respawn` pinned "death saves
+  WorldState before the reload"; it now pins that nothing is written and that the reload boots from the run in memory). And a save
+  of another version is no longer wiped silently (see the loader). Everything else the bridge suites pin is unchanged; they only
+  changed where they read the state. The health carry, which lived on `WorldState` and was never saved, is now a member of
+  `game_root` (`player_health_carry`); step 3 replaces it with the `PlayerSnapshot`.
+- **World flags are real.** The shell loads the run's flags into every booted world and copies the live world's flags into the run
+  through the service's `saving` signal just before it writes, so a flag set in one room (through `world.commands`) survives the
+  room swap, the file (`[flags]`, with its type) and a relaunch (`test_bridge_flags`). Play time is counted once a frame.
+- **The profile.** `<root>/profile.cfg`, the same writer: `is_completed()`, `mark_completed()`, `set_profile_value()`; a New Game
+  keeps it (`test_profile_survives_new_game`). Nothing calls `mark_completed` yet (the Ending, M13). Settings stay M4's.
+- **Tests that never touch the real save.** `tests/support/save_test_support.gd` makes a `SaveService` on `user://test_saves/<suite>_<pid>_<t>/`;
+  `tests/architecture/test_suites_isolate_the_save.gd` fails a suite that boots the game without isolating the service, or that names
+  `user://saves`, `user://profile.cfg` or `user://world_state.cfg`; `test_save_written_only_by_save_service` fails on any other caller
+  of `write_slot`/`save_state`, any mention of `SaveFile` or `WorldState` outside `shell/save/`, a save file's name spelled elsewhere,
+  or any file write inside the save folder outside `save_file.gd`.
+- **New suites.** `test_save_roundtrip` (59 checks), `test_save_migration_v2` (42), `test_corrupt_save_falls_back` (65: six kinds of
+  damage, a missing file, both files damaged, the next save keeps the good `.bak`, a newer game and a newer pawn section are never
+  overwritten, an obsolete format is kept), `test_request_save_callers` (42), `test_profile_survives_new_game` (11),
+  `test_bridge_flags` (12), `test_grid_markers` (13), `test_world_dumper_entry_cell` (4), and the two architecture guards (14 and 7).
+- **Labels.** Three baseline labels renamed in `tests/label_renames.txt` (the WorldState trio of `tests/run_tests.gd`: two follow the
+  autoload, the third changes its claim from "resets" to "not read and not wiped"). Bridge labels are not in the baseline; the ones that
+  changed say CHANGED and name the decision.
+- **Docs.** `docs/ARCHITECTURE.md` (a rewritten Persistence section, the tree, the runtime flow, the event table, the test folders, the
+  known deviations), `CLAUDE.md` (one rule: one owner for the save), `AGENTS.md`, `README.md`, `docs/coding-standards.md`,
+  `docs/OWNER_GUIDE.md` and `docs/design/room-authoring-guide.md` (the file to delete to restart is `saves/slot_0.cfg` now),
+  `docs/migration-notes.md`, `docs/game-base-plan.md` (what step 1 built and where it differs from 9.3), `task_plan.md` (row 83).
+- **Verification.** `python3 tools/run_all_tests.py --strict`: 68 suites, 0 failed, 0 warnings, GREEN, baseline labels 235 of 235 (14
+  through `label_renames.txt`); both `--self-test`s 0 failures; the import pass clean; `stamp_uids.gd -- --check` CLEAN; `git diff
+  --check` clean; every new `.gd` has its `.gd.uid`. The six room dumps equal their baselines.
+- **Not done (steps 2 and 3).** The `game_root` split and `EventRouter`/bridges; `ObjectiveSystem` (nothing writes
+  `cleared_room_ids` yet); `CheckpointSystem` and the death rules (D-16: hub and boss-room checkpoints, a death resets only the
+  current uncleared room, D-17 cleared rooms stay cleared); `GameFlow` and `respawn_requested` (both `reload_current_scene()` calls
+  are still there); the `PlayerSnapshot` in the zone swap and in the save (the file holds the rows, nothing captures a live hero into
+  it yet); room-local floor weapons still persist as taken pickups. M4 owns the load-on-Continue flow, the notices' words and the
+  autosave indicator (the `autosaved` signal is ready).
+
+## M3b step 2 - game_root becomes an event router and bridges, GameFlow ends the scene reload - 2026-10-19
+
+Branch `base/m3b-2` (from `base/m3b-1`), the strict runner green after every commit. The second of M3b's three steps: the
+`game_root.gd` split and a minimal `GameFlow`. Behaviour is the same except what the missing scene reload implies (listed below);
+the checkpoint and death rules (D-16, D-17), `ObjectiveSystem` and `CheckpointSystem` are step 3.
+
+- **The split, one responsibility per commit, the old path kept until the ported suites passed.** Order: `EventRouter` (the scene's
+  own reactions registered with it first, so every later commit moved one responsibility with the order unchanged); `BoardBridge`;
+  `CameraBridge`; `AudioBridge`; `MessageBridge`; `HudBridge`; a prep commit that routes every poke the bridge suites made at
+  `game_root` internals (about eighty) through `Support` helpers, so a moved responsibility changes one call site; `DespawnBridge`;
+  `SaveBridge`; `BookBridge`; `RoomOutcomeBridge`; `ZoneTravelBridge`; `GameFlow`; the slimming (`ZoneStage`, `ShellKeys`, the size
+  lint). `shell/game_root.gd` went from 637 to 176 lines. Before each commit the bridge suites ran against the new structure with the
+  assertions untouched.
+- **Where the bridges live.** `presentation/bridges/`: `EventRouter`, `EventBridge` (base), `HudBridge`, `BoardBridge`, `CameraBridge`,
+  `AudioBridge`, `MessageBridge`. `shell/bridges/`: `ShellBridge` (base), `SaveBridge`, `ZoneTravelBridge`, `BookBridge`,
+  `RoomOutcomeBridge`, `DespawnBridge`. The plan's 13.2 tree lists a `save` handler under `presentation/bridges/`, but 13.1 forbids
+  presentation to name the `SaveService`, `EcsComponents` or `EcsWorld` (`test_dependency_edges` enforces it), so what writes the run,
+  rebuilds the world or flips a component is in the shell. The registration order (a pickup is saved before its sound plays and its view
+  goes) is written once in `GameRoot._bridges()`.
+- **`GameFlow`.** `request_respawn(reason)` raises `respawn_requested`, waits out a zone trip under way, and at the end of the frame
+  has `GameRoot.respawn()` rebuild the room: the zone from the checkpoint as a fresh instance, a fresh hero view (a fallen hero's view
+  rests in its defeat clip), the Book closed, no carry; then `respawned`. Both `reload_current_scene()` calls are gone
+  (`test_no_scene_reload`). `Events.RESPAWN_REQUESTED` stays reserved: here the bridge decides the hero fell.
+- **Behaviour that follows from not reloading (intended).** The music is not restarted by a death or R; the F3 switch survives them; R
+  pressed during a zone trip waits for the trip (the checkpoint is the trip's destination, where the reload landed); the board overlay
+  forgets the last world's marks when it is bound to a new room (entity numbers start over; it also clears a phantom telegraph a trip
+  could leave); a death beat whose room the restart key already rebuilt does nothing. `DespawnBridge`'s 0.6 s timer holds instance ids,
+  not nodes: a lambda that captured a freed world or zone is an engine error, and stripping a `VIEW_REF` from a world built meanwhile
+  would freeze somebody else's puppet. Three checks of `test_bridge_death_respawn` pinned the reload itself (the old `Main` freed, "the
+  scene has not reloaded yet", the authored `CurrentZone` node) and say what replaced them; they are not baseline labels.
+- **New suites (12; 68 to 80).** `test_event_router`, `test_board_bridge`, `test_camera_bridge`, `test_audio_bridge`, `test_message_bridge`,
+  `test_hud_bridge` (the reactions had no test before), `test_bridge_despawn`, `test_bridge_room_outcome` (the win half no suite
+  drove: counts, the quiet world-mode clear, a count objective, a standalone room), `test_game_flow` (one rebuild per request, the wait
+  for a trip, the death beat after a restart, the old world's despawn timer, the Book and the board), `test_shell_keys` (F3),
+  `test_game_root_is_thin` (at most 200 lines, no event reaction, no save request, no reload), `test_no_scene_reload`; and
+  `test_request_save_callers` now names `shell/bridges/save_bridge.gd` as the only asker.
+- **Docs.** ARCHITECTURE.md (the tree, the runtime flow, the event table's "handled by", a bridge table, known deviations, the test
+  folders), CLAUDE.md (one rule: a reaction to an event is a bridge, `game_root` stays thin, nothing reloads the scene), AGENTS.md,
+  README.md, coding-standards.md, OWNER_GUIDE.md (where the sentences live), the sound recipe (`/new-sound`) and the plan's M3b entry.
+- **Verification.** `python3 tools/run_all_tests.py --strict`: 80 suites, 0 failed, 0 warnings, GREEN, baseline labels 235 of 235 (14
+  through `label_renames.txt`, unchanged); both `--self-test`s 0 failures; the import pass clean; `stamp_uids.gd -- --check` CLEAN;
+  `git diff --check` clean.
+- **Not done (step 3).** `ObjectiveSystem` (nothing writes `cleared_room_ids`), `CheckpointSystem` and the D-16/D-17 rules (hub and
+  boss-room checkpoints only, a death resets only the current uncleared room, cleared rooms stay cleared, floor weapons room-local),
+  the `PlayerSnapshot` in the zone swap (the carry is still a bare integer on `ZoneTravelBridge`), the Courage and Believe refills.
+  The shell still writes `PlayerTag.control_enabled`, `PlayerCombat.sword_unlocked`, the hero's Courage and `VIEW_REF`
+  (listed in ARCHITECTURE.md); `world.commands` has no handler for them yet.
+
+## M3b step 3 - objectives, checkpoints, the death rules and the carry - 2026-10-19
+
+Branch `base/m3b-3` (from `base/m3b-2`), the strict runner green after every commit. The third and last step of M3b: the rules of a
+room's end move into the simulation (`ObjectiveSystem`, `CheckpointSystem`), D-16 and D-17 are built, and the zone swap carries a
+`PlayerSnapshot`. M3b is `human_review`; the next milestone is M4.
+
+- **Commits (oldest first).** `ObjectiveSystem` judges the room; a cleared room stays cleared and a floor weapon stays on its room's
+  floor (D-17, D-16); checkpoints at hub and boss-room doors and a death resets only the room it happened in (D-16); only a persistent
+  marker honours a taken-pickup record; the zone swap carries a `PlayerSnapshot`; docs and records.
+- **`ObjectiveSystem`** (`ecs/systems/react/`, state `RoomObjectiveState`): counts the enemies each tick, evaluates the room's
+  `RoomObjective` (default: all down), says `room_cleared` once; marks the room failed when the hero's Courage is 0 (a failed room is
+  never cleared: a simultaneous last kill and fall is a fall). The room is an entity of its own, made last by `EcsBoot` only when the
+  shell sets `EcsBootOptions.with_room_rules`, because the six room dumps and the actor golden fingerprint every entity and the golden
+  may not be re-recorded. The HUD's enemy count became the `HudSnapshot`'s (`room_enemies_total`, `room_enemies_remaining`); the
+  bridge's own tally is gone.
+- **`CheckpointSystem`** (`ecs/systems/progress/`, state `RoomCheckpoint`): the first tick after the pawn came through a door into a
+  room whose scene says `checkpoint_on_entry` sets the checkpoint, queues a Courage refill on the heal queue (source 0) and says
+  `checkpoint_set` (zone, entry, what it refilled). `_refill_believe` is the named seam for M10 and refills nothing. The room's
+  failed mark becomes `respawn_requested` (zone, entry), once. A launch, a respawn and a plain trip are not checkpoints.
+- **The gap in D-16, and what was built.** The plan says "back to the latest checkpoint" (req#60) and "a death resets only the
+  current uncleared room"; with checkpoints only at the hub and boss doors, the first reading sends a death in T3 back to the start of
+  Stage 1. The least punishing reading is built and recorded in the plan's 5.2: a death (and a Continue) puts the pawn back on the
+  entry of the room it is in; the checkpoint refills and is what the pause menu will name. The run keeps the two apart:
+  `[meta] room_entry` (new key; absent reads as the checkpoint entry) beside `[meta] room`, and `[checkpoint]` is the latest hub or
+  boss door only (a v2 save migrates its position to the room pair, with no checkpoint).
+- **D-17 and the room-local half of D-16.** `SaveBridge` writes `cleared_room_ids` on `room_cleared` and saves it; every later boot
+  of that zone spawns none of its enemies (the parked puppets are removed) and the exits that need the room cleared are open. A floor
+  weapon taken by an enemy is no longer written into the run or saved; `PickupSpawnPoint.persistent` marks a reward, and only a
+  persistent marker honours a taken record, so a stale record from an older save hides nothing.
+- **The carry.** `ZoneTravelBridge` captures a `PlayerSnapshot` when a trip starts; `GameRoot.boot_zone` hands it to `EcsBoot`
+  (`player_snapshot`); the bridge forgets it. Courage (current and max), the sword and the flags arrive; the per-room rows (skill
+  cooldown and swing, invulnerability) reset and the facing is the entry's. A snapshot of a hero with no Courage is not carried. The
+  run takes the world's flags when a trip begins and when the hero falls (a death keeps them); the file learns them at the next
+  success event.
+- **Behaviour changes, all required by D-16/D-17.** Cleared rooms stay empty; floor weapons come back with their room; a plain trip
+  no longer saves (`checkpoint_reached` was written at every trip); a hub or boss door refills Courage; a death goes to the room's
+  entry by rule (before it was the last trip's destination, the same cell). Nothing else moved: movement, combat, AI, timings and room
+  contents are untouched, the six room dumps and the actor golden are byte-identical, and all 235 baseline labels pass (14 through
+  `label_renames.txt`, which did not change: the labels of the two baseline tests that planted an integer carry kept their text).
+- **Tests changed, each with its reason in the commit message.** `test_bridge_persistence` (the spear "never respawns" holds for a
+  persistent pickup only; a copy of the T4 scene with a persistent spear is swapped into the world graph for the re-entry half),
+  `test_bridge_room_outcome` and `test_game_flow` (a cleared room no longer gives a pawn back: they forget the clear, or use T4, whose
+  three pawns are not all killed), `test_bridge_travel`, `test_bridge_death_respawn` (the run's position is the room pair),
+  `test_bridge_flags` (a plain trip does not write the file), `test_save_migration_v2`, `test_save_roundtrip`,
+  `test_request_save_callers` (room_cleared is a reason), `test_hud_bridge`, `test_hud_snapshot`, and `encounter_hud_runtime_test`.
+  New: `test_objective_system`, `test_checkpoint_system`, `test_checkpoint_rules`, `test_cleared_rooms`,
+  `test_player_carry_zone_swaps`.
+- **Docs.** ARCHITECTURE.md (the tree, the runtime flow, the system and event tables, the bridge table, Persistence with the
+  save-file location, a new section "Rooms, checkpoints and deaths", the deviation list, the tests), coding-standards.md (room state
+  on the room entity, rules are systems and bridges only answer), CLAUDE.md (two rules), AGENTS.md, OWNER_GUIDE.md (section 7 in
+  Vietnamese: the one-sentence rule, five things to try, what a death keeps and resets, where the save lives, how to start clean, the
+  choice the owner may flip; two rows and three glossary entries), tools/README.md (the dump boots without room rules), the plan's 5.2,
+  9.3 and M3b entries.
+- **Not done, and why.** `Tuning.extra_courage` is not read at the refill (nothing sets it before M4's settings); a boss's phases,
+  `defeated_boss_ids` and the "highest checkpointed phase" are M8b (a boss room starts over whole); the `rescue_completed` and
+  `beat_save_after` saves wait for their events (M6); the `deaths` counter and the reset presentation by relationship flags are M8c;
+  nothing returns a pawn to the checkpoint (see the gap above); the shell still writes `PlayerTag.control_enabled`,
+  `PlayerCombat.sword_unlocked` and `VIEW_REF` (`world.commands` has no handler for them yet; listed in ARCHITECTURE.md).
+
+## M3b review fixes - 2026-10-19
+
+The adversarial review accepted M3b (`m3b-done`) with five minors; they are fixed on branch `base/m3b-fix`, one commit each, the
+strict runner green after each (85 suites before, 88 now, 235 of 235 baseline labels, 14 through `label_renames.txt`, unchanged).
+
+- **Backtracking (a bug older than M3b).** The west return doors of T2, T3, T4, B1 and H1, and H1's top door to the Toybox, stood on
+  the ring of wall of the shared 16x9 tilemap (cells (0,5) and (2,0)); the east doors had always been one cell inside the ring
+  (cell 14), so the pawn went forward through every room and could never go back, and the old suites reached the previous room by
+  calling the travel function. The cause is the markers (the ring is right for a room), so the fix is room data: each west door moves
+  to (1,5) with its entry one cell further in at (2,5), H1's top door to (2,1) with its entry at (2,2); no tile data is touched. The
+  five room dumps are regenerated for exactly those cells, and `test_actor_collapse_golden` takes the five new head fingerprints through
+  a listed, explained table (`ROOM_HEADS_CHANGED_ON_PURPOSE`; the golden file stays the record of the old scenes). New:
+  `tests/content/test_room_doors_reachable.gd` (every room of the world graph booted for real: entries on floor and not on a door,
+  doors floor and reachable from every entry by a flood fill, target entry present by exact name; it fails on a door put back on the
+  ring, a misspelt entry and a wall across the room) and `tests/bridge/test_bridge_backtracking.gd` (T3 -> T2 across the whole room,
+  then H1 -> B1 -> T4 -> T3 -> T2 -> T1, by tapping arrow keys; `bridge_support.gd` gained `tap_direction`, `walk_to_cell`,
+  `walk_through_door`). `test_bridge_travel` now walks its way back instead of printing a NOTE. Ledger req 110: partial -> covered.
+- **`unlock_gained` saves only a new unlock.** The sword cell stays a trigger after it is taken, so every later step onto it rewrote
+  the save; `SaveBridge._on_player_unlock` now saves only when `add_unlock()` returns true (`test_bridge_persistence`).
+- **`request_save()` no longer blanks the room.** `load_slot()` did not set `current_room_id`, so a save asked for before the next
+  `note_room()` wrote an empty room; `new_game()` left the old run's room in it. `load_slot()` copies the loaded room, `new_game()`
+  clears it, and `request_save()` only overwrites the run's room when it knows one (`test_save_roundtrip`).
+- **The crash window of `SaveFile.write`.** A crash between "the old file becomes the .bak" and "the .tmp becomes the file" leaves no
+  file, the old save as `.bak` and the NEW save, complete, as `.tmp`; the loader fell back to the `.bak` and the progress was lost.
+  `read_slot()` now reads the `.tmp` before the `.bak` when it is readable and not older than it (equal whole-second times count as
+  newer: a `.tmp` is always written after the file that became the `.bak`), `load_slot()` finishes the rename (a damaged file in the way
+  is set aside as `.corrupt`), a newer game's `.tmp` is protected like its file and `.bak`, `has_save()` counts a lone complete `.tmp`
+  (`test_corrupt_save_falls_back`, on the exact layout the first two steps of `write()` leave; it fails on the old loader).
+- **Respawn wording and the "Chơi thử" steps.** The plan (5.2, 9.3, D-16, the M3b "Owner can try" line, ledger req 60), ARCHITECTURE
+  and OWNER_GUIDE section 7 now say what the build does: a fallen pawn is respawned on the entry of the room it fell in; the checkpoint
+  (hub and boss-room entries) is recorded, saved and is where Courage refills; a Continue resumes at the room and entry of the LAST
+  SAVE (the checkpoint's own entry right after a checkpoint). The guide's steps were rewritten after doing them: they asked for a death
+  in T1 (no enemy), a gate in Stage 1 (none), a spear no pawn can reach (T4's, on a wall cell), a way back no pawn could walk, and a
+  "death in a cleared room" (impossible). `tests/bridge/test_owner_guide_steps.gd` walks the new steps by key presses with the real
+  enemy AI (the fall in T3, a guard taking the Ruler Blade in B1), a damage request standing in for a sword stroke and a wound.
+- **Found and not fixed.** T4's `PencilSpearPickup` (7,6) and its Backstep pawn (7,6) are on a wall cell (findings.md). Fixed in the
+  second round below.
+
+## M3b review fixes, second round - 2026-10-19
+
+An independent verifier found a dead end that was older than M3b and that the first round had recorded as "found and not fixed" without
+seeing what it cost: in T4 the Backstep Pawn and the Pencil Spear were both parked on (7,6), a wall cell. The pawn was never in the grid
+(`entity_at((7,6))` was 0), could not be hit, never moved and struck a hero beside the wall, so T4 could never be cleared, its east door
+never opened and no real player could reach B1 or the hub. Fixed on branch `base/m3b-fix2` (from `base/m3b-fix`), one commit each, the
+strict runner green after each (88 suites before, 91 now; 235 of 235 baseline labels, 14 through `label_renames.txt`, unchanged; both
+`--self-test`s 0 failures; stamp-uids CLEAN; `git diff --check` clean). Tag `m3b-done` moved to the last commit.
+
+1. **`test_room_markers_on_floor` first.** It boots every room of the world graph for real and checks entries, parked enemies (on floor AND
+   in the grid, connected to every entry), pickups, unlock markers and gates; run against the unfixed tree it fails on T4 (two problems:
+   the Backstep Pawn and the spear on (7,6)) and nowhere else. The commit carried a temporary table naming those two nodes so the runner
+   stayed green; the next commit deleted it.
+2. **T4's pieces on floor.** Backstep Pawn (7,6) -> (10,6), Pencil Spear (7,6) -> (13,2), no other change; the reasons are in the commit and
+   in findings.md. `dump_t4` regenerated (the other five dumps are byte for byte unchanged) and every changed line explained in the commit;
+   the actor golden's T4 head fingerprint moves with it (82 -> 83 lines: the spear is still on the floor after the 120 ticks now, where the
+   old pawn had "taken" it by standing on its cell).
+3. **The sword, not a request.** `Support.kill_with_sword` (walk, face, press attack by the real input path). `test_owner_guide_steps`,
+   `test_cleared_rooms` and `test_bridge_room_outcome` bring pawns down with it; `test_kill_with_sword` proves it says no; the old T4 now
+   fails the owner-guide suite. Direct damage stays only where the subject is something else, and each file says so. The guide's step 3
+   moved to T4 (the wound taken there, west door and back, the sword clears T4, B1 refills) because step 2 had already cleared T3.
+4. **Docs.** OWNER_GUIDE section 7: every step in order from a clean save, step 3 rewritten, the "once per save, delete the save to
+   repeat steps 1-3" paragraph, the T4 spear no longer called unreachable. findings.md and this file record the bug, the cells and the
+   idle-room facts. The B1 dump explanation in `test_actor_collapse_golden` was backwards and is corrected: with the hero on (2,5) the
+   guard beside the Ruler Blade takes the blade inside the 120 ticks (blade gone, 9 events, was 3); before the move it had only stepped
+   onto the blade's cell, and it takes the blade either way.
+
+5. **The whole route.** `tests/bridge/test_bridge_route_on_foot.gd` (added after the four steps, when the route was walked by hand to be
+   sure nothing else stood in the way): a clean save, T1 to the hub on foot, the sword taken in T2, every piece of T3, T4 and B1 brought
+   down with the sword, each east door walked through once the clear has opened it. Against the old T4 it fails exactly as the verifier
+   described (2 of 3 pieces fall, T4 is not cleared, the door never opens, the hub is never reached). B1 and H1 had no second defect.
+
+- **Not done, and why.** The spear cannot be taken by the hero yet (the Pencil grant that unlocks Q is M7, D-11); a weaponless T4 pawn
+  can still carry it off before the hero arrives, which is how floor weapons have always worked and stays so until the grant replaces
+  the pickup. `GrantMarker` does not exist yet, so the scan covers `PlayerUnlockMarker`; a new kind of marker adds a check there.
+
+## M3b review fixes, third round - 2026-10-19
+
+A second independent verifier played Stage 1 on foot with real key input (T1 to the hub and back to T1, 13 runs, zero-delay and
+human-paced, the real enemy AI, a throwaway save): every piece can be hit and killed, every door opens, the guide's section 7 works
+step by step. It left six non-blocking notes; the three that were defects are fixed on branch `base/m3b-fix3` (from `base/m3b-fix2`), one
+commit each, tag `m3b-done` moved to the last commit. 91 suites (no suite added; six extended), 235 of 235 baseline labels (14 through
+`label_renames.txt`, unchanged), both `--self-test`s 0 failures, import pass clean, stamp-uids CLEAN, `git diff --check` clean.
+
+1. **A shut door says why, in its own words.** `ZoneExitMarker.locked_message` (Inspector, like `PlayerUnlockMarker.message`) is baked
+   into the exit, carried by `zone_exit_locked` (`message`) and said by `MessageBridge`; an empty one falls back to a generic line that
+   blames no piece. T3's door blamed a captain (and T4's), rooms with none; T3, T4 and B1 each carry their own line now (B1's is the old
+   captain line, true there). `test_room_doors_reachable` fails a shut door with no line and proves it can; `test_message_bridge`,
+   `test_bridge_travel` (T3's real door) and `ecs_runtime_test` (the event's payload) pin the rest. The six world dumps changed on the
+   exit lines only (a `locked_message` key), regenerated and reviewed.
+2. **The skill slot follows the sword.** It said "FIND SWORD" until the next room or swing because only a cooldown event redrew it;
+   `HudBridge.refresh()` redraws it the frame the snapshot's sword flag changes. `test_hud_bridge` (flag up, down, mid-cooldown, not
+   redrawn when nothing changed) and `test_bridge_route_on_foot` (the real HUD before and after T2's sword) fail on the old bridge.
+3. **The guide's step 4 says "about a second".** The guard takes the Ruler Blade about 1.0 s after the hero arrives (the suite prints
+   it); the guide said a few seconds. It now says what the owner sees and that `R` shows it again.
+
+- **Left on purpose, and why.** (a) A weaponless T4 pawn carries the Pencil Spear off in most human-paced runs: that is how D-16 floor
+  weapons work and the guide says so; the fix is M7's (the Pencil is a hero-only `GrantMarker`, now written into the plan's M7a entry
+  and findings.md), not a tweak to T4. (b) The hero cannot take the spear: the grant that locks Q is M7 (D-11). (c) The commit
+  attribution line says Sonnet 5.5, as the harness asks; not a defect.

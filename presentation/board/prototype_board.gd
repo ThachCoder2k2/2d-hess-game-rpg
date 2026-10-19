@@ -48,9 +48,15 @@ var enemy_intents: Dictionary = {}
 var effect_time := 0.0
 
 
+## Binds the overlay to a room's grid and snapshot. Every room is a new world whose entity numbers start
+## over, so the marks the last one left (a warning cell, a flash, an intent path) belong to nobody and go.
 func setup(world, snapshot: HudSnapshot = null) -> void:
 	grid_world = world
 	hud_snapshot = snapshot
+	telegraphs.clear()
+	enemy_intents.clear()
+	impact_cells = []
+	impact_time = 0.0
 	queue_redraw()
 
 

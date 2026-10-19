@@ -77,7 +77,7 @@ color = Color(1, 0.94, 0.76, 0.36)
 polygon = PackedVector2Array(0, 0, 54, -6, 70, 22, 12, 30)
 
 [node name="Entry_West" type="Marker2D" parent="."]
-position = Vector2(112, 212)
+position = Vector2(144, 212)
 script = ExtResource("4_entry")
 entry_id = &"west_entry"
 
@@ -87,7 +87,7 @@ script = ExtResource("4_entry")
 entry_id = &"from_t3"
 
 [node name="Exit_To_T1" type="Marker2D" parent="."]
-position = Vector2(80, 212)
+position = Vector2(112, 212)
 script = ExtResource("5_exit")
 target_zone = &"t1_white_kings_fall"
 target_entry = &"from_t2"

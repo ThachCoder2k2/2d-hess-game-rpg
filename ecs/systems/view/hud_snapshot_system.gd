@@ -4,7 +4,8 @@ extends EcsSystem
 ## Publishes the simulation for the HUD and the board overlay: rebuilds world.hud_snapshot from
 ## the components at the end of every tick, so presentation reads a data object and never a
 ## component (docs/game-base-plan.md 13.4 step 17, 14.3, D-38).
-## Reads: PLAYER_TAG, HEALTH, GRID_POS, FACING, PLAYER_COMBAT, ENEMY_AI and the world's attack token.
+## Reads: PLAYER_TAG, HEALTH, GRID_POS, FACING, PLAYER_COMBAT, ENEMY_AI, the room's RoomObjectiveState and the
+## world's attack token.
 ## Writes: world.hud_snapshot only (in place; the snapshot object never changes identity).
 ## Emits: nothing. It decides nothing: every number it copies was decided by another system.
 ##
@@ -26,6 +27,7 @@ static func build(target_world: EcsWorld) -> void:
 	snapshot.revision += 1
 	snapshot.attack_token_owner = target_world.attack_token_owner
 	_fill_hero(target_world, snapshot)
+	_fill_room(target_world, snapshot)
 	_fill_enemies(target_world, snapshot)
 
 
@@ -57,6 +59,16 @@ static func _fill_hero(target_world: EcsWorld, snapshot: HudSnapshot) -> void:
 	snapshot.sword_unlocked = combat != null and combat.sword_unlocked
 	snapshot.skill_cooldown_left = combat.skill_cooldown_left if combat != null else 0.0
 	snapshot.skill_cooldown_duration = combat.skill_cooldown_duration if combat != null else 1.0
+
+
+## The room's enemy counts, from the room's own entity; zeros when the world has no room entity.
+static func _fill_room(target_world: EcsWorld, snapshot: HudSnapshot) -> void:
+	snapshot.room_enemies_total = 0
+	snapshot.room_enemies_remaining = 0
+	for room_entity in target_world.query([RoomObjectiveState.KEY]):
+		var state: RoomObjectiveState = target_world.get_component(room_entity, RoomObjectiveState.KEY)
+		snapshot.room_enemies_total = state.enemies_total
+		snapshot.room_enemies_remaining = state.enemies_remaining
 
 
 ## Keeps one EnemyBrief per enemy: updated in place, created for a new enemy, dropped for one that

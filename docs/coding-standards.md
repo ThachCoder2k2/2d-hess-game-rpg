@@ -97,6 +97,11 @@ These are the rules `CLAUDE.md` makes binding, with the reasoning.
   that method is a system.
 - A component stays small: it holds what a system needs to remember between ticks
   (timers, current state, targets), not what the designer tunes. Tuning lives in `.tres`.
+- State about the ROOM (not about an actor) goes on the room's own entity: `EcsBoot` makes one per played room
+  (only when `EcsBootOptions.with_room_rules` is set) and the systems that judge the room query for its
+  component (`RoomObjectiveState`, `RoomCheckpoint`). Do not add a field to `EcsWorld` for it: the world's
+  fields all landed in M3a. A fact only the shell knows (how the pawn arrived, what the run has cleared) reaches
+  the room entity through `EcsBootOptions`, so `EcsBoot` and the systems never read the save.
 - Add a component field with a sensible default, document it with `##` when the meaning
   is not obvious from the name, and update every spawn path that must set it
   (`EcsActorFactory`, `EntityComponent.apply()`).
@@ -108,8 +113,8 @@ These are the rules `CLAUDE.md` makes binding, with the reasoning.
   with `const PHASE := &"<stage>"`, and is listed with one line in the stage's file in
   `ecs/schedule/` (`command`, `input`, `decide`, `cell_effects`, `move`, `act`, `resolve`,
   `react`, `progress`, `view`). It runs once per frame in the order the schedule gives:
-  `shell/game_root.gd` and `tools/world_dumper.gd` both call `Schedule.populate(world)` and keep
-  no list of their own. A stage is named for when it runs, a folder for what its systems are about,
+  `shell/zone_stage.gd` (the in-game scene's world) and `tools/world_dumper.gd` both call
+  `Schedule.populate(world)` and keep no list of their own. A stage is named for when it runs, a folder for what its systems are about,
   so they differ where the plan's order visits one folder several times. `test_schedule_order` holds
   the whole planned order and `test_schedule_complete` fails on a system file that is not listed once.
   Order is meaningful; do not reorder without reading the dependencies in `docs/ARCHITECTURE.md`.
@@ -134,8 +139,9 @@ These are the rules `CLAUDE.md` makes binding, with the reasoning.
 ### Events go out, data comes through components
 
 - `world.emit_event({"type": Events.NAME, ...})` is the only channel from the simulation to
-  presentation. Presentation (the `shell/game_root.gd` bridge, HUD, board, camera, sound) reads
-  `drain_events()` once per frame. Every event is declared once in `ecs/events/events.gd`: a const,
+  presentation. The in-game scene (`shell/game_root.gd`) reads
+  `drain_events()` once per frame and its `EventRouter` hands each event to the bridges (HUD, board, camera,
+  sound, status line in `presentation/bridges/`; save, zone trip, Book, room outcome, despawn in `shell/bridges/`). Every event is declared once in `ecs/events/events.gd`: a const,
   and a row with its status, what happened and every payload key; `emit_event` asserts in debug
   builds that an event matches its row, and `test_events_declared` reads the code for every emitted
   name. A new event is a const and a row inside your own banner there.
@@ -148,6 +154,17 @@ These are the rules `CLAUDE.md` makes binding, with the reasoning.
   next tick. A bridge never sets a flag, a freeze or a setting itself.
 - Presentation must not decide gameplay. Where the current bridge reads or writes components
   directly, that is a listed deviation in `docs/ARCHITECTURE.md`, not a pattern to copy.
+- A rule about how a room goes (is it cleared, did the pawn fall, is this door a checkpoint, what refills) is a
+  SYSTEM that says so with an event (`room_cleared`, `respawn_requested`, `checkpoint_set`); the bridges only
+  answer: `SaveBridge` writes the fact into the run and saves, `RoomOutcomeBridge` shows the result screen and
+  the defeat beat, `HudBridge` redraws. A bridge that counts, compares or decides has taken a system's job
+  (`test_game_root_is_thin` and the bridge tests keep the scene and the bridges to reactions).
+- The state a bridge keeps in the run (`SaveService.state`) is for what must outlive a room: write it where the
+  success event is handled, never in a system, and ask for a save only there, with a literal reason from
+  `SaveService.AUTOSAVE_REASONS` (`test_request_save_callers`). What a death must not lose is in the run; what
+  a death resets is in the room's scene. Which rooms are checkpoints is data on the room
+  (`RoomEncounter.checkpoint_on_entry`), which pickups are rewards is data on the marker
+  (`PickupSpawnPoint.persistent`): no script names a room or a pickup by id.
 
 ### The board answers, systems ask
 
@@ -357,7 +374,7 @@ Deliberately not used (do not add them without a real need and the owner's say):
 - **No ECS addon or framework.** The small in-repo `EcsWorld` is the runtime; the plan keeps
   it (`docs/game-base-plan.md` D-28).
 - **No global event-bus autoload.** The event queue is on the world; the bridge drains it.
-  Only `SfxManager` and `WorldState` are autoloads.
+  Only `SfxManager` and `SaveService` are autoloads.
 - **No node-based gameplay components.** Gameplay behavior never lives on a node. Nodes are
   authoring data (`EntityComponent`) or presentation.
 

@@ -4,8 +4,8 @@ extends RefCounted
 ## What the pawn takes with it from one room to the next, and into a save (docs/game-base-plan.md
 ## 14.2). The shell rebuilds the whole EcsWorld for every room, so everything that must outlive a
 ## room is captured from the old world at the exit and applied to the new one right after
-## EcsBoot.boot(). Today only the integer player_health_carry survived; this is the whole contract,
-## defined once so that the zone swap (M3b), the checkpoint and the save all carry the same thing.
+## EcsBoot.boot(). Before M3b only an integer survived a room change; this is the whole contract, defined
+## once so that the zone swap (ZoneTravelBridge, M3b), the checkpoint and the save all carry the same thing.
 ##
 ## Pure data with a dictionary form: the save is a versioned dictionary, and a Resource would tie
 ## the save file to script paths. Only the rows the plan marks PERSISTENT are fields. Everything
@@ -29,7 +29,7 @@ extends RefCounted
 ## The format of to_dictionary(). Bump it when a field changes meaning, and read the old one in from_dictionary().
 const FORMAT_VERSION := 1
 
-## The unlock id of the wooden sword, as a PlayerUnlockMarker names it and as WorldState saves it.
+## The unlock id of the wooden sword, as a PlayerUnlockMarker names it and as the save stores it.
 ## Until SkillBook (M7a) is the list of unlocked skills, this one id is what "has the sword" means.
 const SWORD_UNLOCK_ID := &"wooden_sword"
 

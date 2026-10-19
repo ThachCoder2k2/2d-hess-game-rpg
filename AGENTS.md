@@ -31,8 +31,10 @@ Authority order when documents disagree (from `docs/game-base-plan.md`):
 - Build **editor-first**: reusable behavior in scripts; game content in scenes, Resources
   (`.tres`), AnimationPlayers/AnimationTrees, markers and Inspector fields. A new enemy,
   weapon, attack or room is a data edit, never new hardcoded content in a script.
-- `shell/game_root.gd` (the old `main.gd`) is a thin bridge between the ECS and presentation.
-  Do not add room content or gameplay decisions to it.
+- `shell/game_root.gd` (the old `main.gd`) is the in-game scene: it builds the world and ticks it, and the
+  `EventRouter` hands the world's events to one bridge per responsibility (`presentation/bridges/`,
+  `shell/bridges/`). Do not add room content, gameplay decisions or an event reaction to it (a lint keeps it
+  under 200 lines); a new reaction is a new bridge, or a line in the bridge that owns that responsibility.
 - Preserve the current playable slice after every change.
 
 ### The owner's directions of 2026-10-12 (quoted from `docs/game-base-plan.md` section 0)
@@ -79,10 +81,11 @@ layer may name which (`tests/architecture/test_dependency_edges.gd` enforces it)
   `markers/`, `room_encounter`, and the baker (`ecs_boot.gd` with its `EcsBootOptions`,
   `ecs_actor_factory.gd`). No logic.
 - `presentation/` — how the world is shown: `views/` (`ActorView`, pickup views, and
-  `views/actors/`: `actor_view_base.tscn`, the one actor view, plus the thin scenes inheriting it), `ui/hud/`, `ui/codex/`, `board/`, `camera/`, `audio/`. Reads events;
-  never decides.
-- `shell/` — the game around the game: `game_root.tscn/.gd` (the one game scene and its bridge),
-  `content/` (`ContentDb`, the content registry) and `save/world_state.gd`.
+  `views/actors/`: `actor_view_base.tscn`, the one actor view, plus the thin scenes inheriting it), `ui/hud/`, `ui/codex/`, `board/`, `camera/`, `audio/`, and
+  `bridges/` (the `EventRouter` and the bridges that only draw, say or play). Reads events; never decides.
+- `shell/` — the game around the game: `game_root.tscn/.gd` (the in-game scene), `game_flow.gd` (a death or R
+  starts the room again, no scene reload), `bridges/` (the bridges that write the save, rebuild the world or flip a
+  component), `content/` (`ContentDb`, the content registry) and `save/` (`SaveService`, the save).
 - `assets/` shared raw art and audio (`tiles/`, `ui/`, `sfx/`, `music/`, `map_pieces/`; the
   gitignored `_generated/` is generator output only) · `tools/` build scripts and generators ·
   `tests/` headless tests · `docs/` documentation.
@@ -107,7 +110,7 @@ generated chess family drawn to it, `tools/render_actor_preview.gd`, `test_piece
 every shared field and seam once, with no gameplay change (the tick order as data in `ecs/schedule/`, the
 declared events and the commands channel, the input, HUD and player snapshots, each room's own origin and the
 camera framing it, the grid's cell kinds, leaps, rays and cached pathing, and a per-room tick budget test). Next
-is **M3b** (the split of `game_root.gd` and the save service). The owner can browse `content/`, run `tools/list_placeholders.gd` for the art
+was **M3b**, in three steps, all built and waiting for the owner (`human_review`): the `SaveService` that replaced `WorldState` with the v3 save and world flags; `game_root.gd` split into the `EventRouter`, one bridge per responsibility and `GameFlow` (no scene reload); and `ObjectiveSystem`, `CheckpointSystem`, the `PlayerSnapshot` in the zone swap and the checkpoint, death and cleared-room rules (D-16, D-17). The owner can browse `content/`, run `tools/list_placeholders.gd` for the art
 and audio TODO, open `assets/_generated/previews/pieces_in_cells.png`, and read `docs/OWNER_GUIDE.md`
 (section 6 is the in-cell rule, in Vietnamese).
 Current status of every area, and what is waiting on the owner, lives in
@@ -413,8 +416,12 @@ Gate 12: Release polish
   (`piece_name`, `id`), never from class checks.
 - Damage is a request on `world.damage_events`, applied only by `HealthSystem`. Systems talk
   through components and events, never by calling each other.
-- Persistent facts (taken pickups, opened gates, unlocks, current zone) live in the
-  `WorldState` autoload and are fed back into `EcsBoot` at boot.
+- Persistent facts (cleared rooms, taken persistent pickups, opened gates, unlocks, the room the pawn is in and
+  the latest checkpoint, flags) live in the `SaveService` autoload (`SaveService.state`) and are fed back into
+  `EcsBoot` at boot. Only `SaveService` writes a save file, and only through `request_save(reason)` on a success
+  event (R17): a death, a plain trip between rooms and a floor weapon taken by an enemy are not one. Whether a room
+  is cleared or failed, and whether a door is a checkpoint, is judged by `ObjectiveSystem` and `CheckpointSystem`
+  from data on the room scene; a bridge only answers their events.
 
 ## Visual And Feedback Rules
 
@@ -429,7 +436,7 @@ Gate 12: Release polish
   audio nodes attached in `.tscn` files.
 - Sound has three layers with one owner each: motion sounds are audio tracks inside the actor's
   clips; mixing lives in `default_bus_layout.tres`; event sounds with no clip go through the
-  `SfxManager` registry, played only by the `shell/game_root.gd` bridge from drained events.
+  `SfxManager` registry, played only by the `AudioBridge` (`presentation/bridges/audio_bridge.gd`) from drained events.
   Systems never play audio. Recipe: `/new-sound`.
 
 ## Testing And Verification
@@ -478,7 +485,7 @@ registry and the generated art; see `tools/README.md`).
 ## Next Recommended Work
 
 Follow `docs/where-we-are.md` section 5 for the order of work and `docs/game-base-plan.md`
-section 15 for the milestone you are on. M1a, M1b, M2 and M3a are done; the next milestone is M3b (the
-split of `game_root.gd`, the save service). Three dependency edges and six room references are still
+section 15 for the milestone you are on. M1a, M1b, M2 and M3a are done; M3b is built and waits for the owner (`human_review`; the next milestone is M4,
+the shell, input and text). Three dependency edges and six room references are still
 undecided (listed in `tests/architecture/test_dependency_edges.gd` and `test_content_references.gd`);
 the owner decides them before `tests/architecture/allowed_edges.txt` is frozen.

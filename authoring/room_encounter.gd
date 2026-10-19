@@ -10,6 +10,10 @@ extends Node2D
 @export var objective: Resource
 ## World-map identity (empty = standalone room outside the world graph).
 @export var zone_id: StringName = &""
+## True when stepping into this room through a door is a checkpoint (D-16): a hub, and every boss room.
+## The pawn's Courage is refilled and the run remembers the entry it came by (the checkpoint). Death does not
+## move the pawn to the checkpoint; it starts the room it fell in again from its own entry (docs/game-base-plan.md 5.2).
+@export var checkpoint_on_entry := false
 ## Board cells this room spans; EcsBoot sizes the grid from it.
 @export var board_size := Vector2i(16, 9)
 

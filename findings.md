@@ -283,9 +283,14 @@ June note).
   under an open Book turns control back on while the Book stays visible (fix with the M4 pause work); the
   health carry is a snapshot taken when the trip starts, so a hit during the fade-out is lost; the zone node is
   named after the room (`T2_FallenSwordTile`), not `CurrentZone`. All pinned by `tests/bridge/`.
-- Content defects found by the bridge suites (not fixed in M1a): T2's `Exit_To_T1` at cell (0,5) sits on a
-  solid wall tile, so the hero cannot walk back to T1 (ledger req 110 "backtracking works" is only true through
-  `_travel_to`); T4's `PencilSpearPickup` at (7,6) is on a solid cell, so a pawn cannot walk to the spear.
+- Content defects found by the bridge suites in M1a. FIXED in the M3b review (`base/m3b-fix`): the west return
+  doors of T2, T3, T4, B1 and H1 (and H1's top door to the Toybox) stood on the ring of wall of the shared
+  tilemap, cells (0,5) and (2,0), so the hero could never walk back; the doors now sit one cell inside the
+  ring, like the east doors, each entry one cell further in (`tests/content/test_room_doors_reachable.gd`,
+  `tests/bridge/test_bridge_backtracking.gd`). FIXED in the second review round (`base/m3b-fix2`, see "M3b review
+  fixes, second round" below): T4's `PencilSpearPickup` and its Backstep pawn were both parked at (7,6), a solid cell
+  (the wall column); the spear moved to (13,2) and the pawn to (10,6). Until then only the Ruler Blade in B1
+  (cell (8,6), floor) could be taken by a pawn in play.
 - Dependency edges the plan's 13.1 starting table does not allow today (report only): `EcsBoot`,
   `EntityComponent` and `PickupSpawnPoint` name `ActorView` / `WeaponPickup`, and `PrototypeBoard` reads
   `EcsWorld` and `EcsComponents`. Decide what to freeze in `tests/architecture/allowed_edges.txt` before M1b
@@ -599,3 +604,172 @@ June note).
   `git clone` or other git call chained after a `cd` into another directory. What works: plain separate commands, `git clone -q -b <branch>
   . <dir>` run from the worktree, a wrapper script that exports `HOME` and `exec`s Godot, and `GODOT` / `UNBOUND_GODOT_HOME` /
   `BOOTSTRAP_HOME` for the project's own tools.
+
+- `ConfigFile.get_value(section, key)` with no default, or with `null` as the default, prints an engine ERROR line when the key is
+  missing; so do `erase_section_key` on a missing key and `load()`/`parse()` on text that does not parse (with no hint why). The strict
+  runner fails a suite on an engine ERROR, so the save code asks `has_section_key` first, passes real defaults, and recognises a damaged
+  file by its integrity footer BEFORE the parser sees it (`shell/save/save_file.gd`). A `;` comment line at the end keeps the file a
+  plain ConfigFile.
+- A `StringName` array sorts by memory address, not by letters (the dump tool already found this): to compare lists of ids in a test,
+  convert to `String` first.
+- An autoload cannot also be a `class_name` (the name is a global): `SaveService` has none, the shell types it with
+  `const SaveServiceScript := preload(...)` and `get_node_or_null("/root/SaveService") as SaveServiceScript`, and tests make their own
+  instance with `SaveSupport.new_service(root)`. In `_init`-time suites the autoload does not exist yet.
+- `DirAccess.rename_absolute` replaces an existing target on macOS and works for both `user://` and absolute paths, which is what makes
+  "write temp, rename over" the atomic step; `FileAccess.get_modified_time` is the best timestamp a v2 save has.
+- The worktree-isolated sandbox also refuses a heredoc-fed `python3` or `git commit -F -` chained with `git add` in one command when
+  it cannot tell what runs (and `time`, `for` loops around Godot); put repeated Godot commands in small wrapper scripts under /tmp,
+  write multi-line files with the Write tool, and keep each git command on its own line. In zsh a bare `=====` argument is an
+  expansion error, so do not echo it.
+
+## Game Root and Bridge Facts (M3b step 2, 2026-10-19)
+
+- A lambda (a `Tween.tween_callback`, a signal handler) that captures a node or world that is freed before it runs prints an engine
+  ERROR ("Lambda capture at index N was freed"), which the strict runner fails a suite on. Capture `get_instance_id()` and resolve it
+  with `instance_from_id()` inside (it returns null for a freed object). The same lambda also ran against the WRONG world once rooms
+  are rebuilt in place, because entity numbers start over in every world: a timer must name the world it was made for.
+- `class_name GameRoot` and `ShellBridge` (which holds a `GameRoot` and is held by it) reference each other and load fine in 4.6:
+  cyclic `class_name` references are not a problem, a cyclic `preload()` would be. A new `class_name` still needs one import pass.
+- `call_deferred` on a `RefCounted`'s method works and keeps no strong reference; a coroutine started that way (`GameFlow` waiting
+  for a trip with `await get_tree().process_frame`) is fine. A request served "at the end of the frame" is what the scene reload
+  already was, so a `_process` that asks for a respawn never has its world swapped under it.
+- Rebuilding a room inside the scene needs a fresh hero view, not a reset one: a defeated hero's `AnimationTree` rests in a `defeat`
+  state with no exit and its `SpriteRoot` holds the end of the clip, and the base graph's boot pose (the hero wakes up) belongs to a new
+  instance. `ZoneStage.replace_hero_view` instantiates the view's own `scene_file_path` and parks it at the authored position; the
+  camera rig is the view's child, so the camera bridge is handed the new rig.
+- `PrototypeBoard.setup()` used to keep `telegraphs`, `enemy_intents` and the impact flash across rooms. Entity numbers start over per
+  world, so a mark left by the last room could be drawn for an unrelated entity; `setup()` clears them now.
+- A won room can only be left by starting it again (`room_ending` blocks a zone trip), so a suite that wants a second fresh room after a
+  win frees the scene and boots a new one from the run (`test_bridge_room_outcome._boot_again`).
+- The strict runner treats the engine's exit noise ("ObjectDB instances leaked at exit", "resources still in use at exit") as noise but
+  any other `ERROR:` line as a failure. The worktree sandbox refuses a `HOME=` assignment in front of the Godot binary; wrapper scripts
+  under /tmp that `export HOME` and call Godot avoid it.
+
+## Room, Checkpoint and Carry Facts (M3b step 3, 2026-10-19)
+
+- The world dump prints every component of every entity, and `tests/baselines/actor_collapse_golden.txt` fingerprints the heads of the
+  six dumps and refuses to be re-recorded. A bookkeeping entity added to every booted room would move all of them, so the room's own
+  entity is opt-in (`EcsBootOptions.with_room_rules`, set by the shell) and made last, which also keeps every other entity's number.
+- D-16 reads two ways ("return to the latest checkpoint" and "a death resets only the current uncleared room"). With checkpoints at
+  the hub and boss doors only, the first sends a death in T3 to the start of Stage 1 (T1..T4 have none). Built: the room entry; the
+  position and the checkpoint are two facts in the run. A save written before the rule has no `room_entry`; it resumes on its
+  checkpoint entry, which is where the position used to be kept.
+- A checkpoint's refill is a heal request (source 0) queued by a system that runs AFTER `HealthSystem`, so the Courage is restored on
+  the next tick and `healed` is what the HUD hears; `HudBridge` redraws the pips on it. The first tick of a room runs during the
+  fade-in, so the checkpoint is recorded and saved a fraction of a second after the boot, not before the fade.
+- `checkpoint_reached` used to be written at the start of every trip, which also carried the world's flags to the run. With a trip no
+  longer a success event, the flags reach the run by `SaveBridge.remember_world()` (a trip begins, the hero falls, just before a
+  write) and the file learns them at the next success event; a flag set in a room that is then lost to a death survives it.
+- A resource nobody holds is unloaded and read again from disk: a test that edits the shared `WorldGraph` has to keep a reference
+  (`edited_world_graph`), or the next `main.free()` throws the edit away. `PackedScene.pack()` of an instance of an inherited room
+  scene works, so a test can swap in a copy of a room with one export changed.
+- `ObjectiveSystem` counts `defeated` from Courage 0 or the AI's defeated state each tick and never lets the defeated count or the
+  total go backwards, so a corpse cleaned away later does not un-clear a room. When the last enemy and the hero fall in one tick the
+  fall wins (the room is not cleared), which the old event-order rule left to chance.
+- `PlayerSnapshot.apply_to` writes the maximum Courage too, so a fresh run must not pass the run's own `player` snapshot to it
+  (its default 3 would override the `PlayerDefinition`); only a snapshot captured from a live hero is passed, and only by a trip.
+- Order of reactions matters in `GameRoot._bridges()`: `SaveBridge` is before `RoomOutcomeBridge`, so a cleared room is written and
+  saved before its result screen goes up, and the world's flags are taken before the defeat beat starts.
+- The worktree sandbox refuses `HOME=` in front of any command and refuses to run a quoted binary path directly; the runner reads
+  `GODOT` and `UNBOUND_GODOT_HOME` from the environment, and a short Python wrapper that sets `HOME` in a child process runs the
+  UID check (`stamp_uids.gd -- --check`).
+
+## M3b review fixes (base/m3b-fix)
+
+- A door is a FLOOR cell one step inside the 16x9 ring of wall, its entry marker one step further in; the ring itself is solid.
+  A marker on the ring cannot be walked to (the wall is the collision since 0dddfd1), which is how every west return door of
+  Stage 1 was dead for as long as the rooms existed. `tests/content/test_room_doors_reachable.gd` boots every room of the world
+  graph and checks entries, doors, reachability and target entries on the real grid. Moving a marker changes the room dumps and
+  the actor golden's room fingerprints: regenerate `tests/baselines/dump_*.txt` (`tools/dump_world.gd -- --write-baselines`) and add
+  the new head line to `ROOM_HEADS_CHANGED_ON_PURPOSE` in `test_actor_collapse_golden.gd` with the reason (the golden file is never
+  re-recorded).
+- Standing still on a room's entry is safe in T3 (the Recruit does not come looking: 40 simulated seconds, no hit), but a hero who
+  walks up to it is struck down in 4 to 6 s; in B1 the guards take the Ruler Blade within about 1 to 2 s and two of the three
+  pieces already hold a weapon of their own (the captain's and a guard's default weapon).
+- The T4 Backstep pawn is parked at (7,6) as well, a wall cell: it is counted as an enemy of the room but starts on a cell the grid
+  does not list as walkable. Found here and not fixed; an independent verifier then showed it makes T4 impossible to clear, and it is
+  fixed in the second round below.
+- A write that dies between the two renames of `SaveFile.write` leaves the NEW save as `<file>.tmp`; the loader takes it when it is not
+  older than the `.bak` (`SaveFile.read_unfinished_write`) and `load_slot` finishes the rename. File times are whole seconds, so the
+  comparison is "not older"; the one test that needs an older `.tmp` waits 1.1 s.
+- A Continue resumes at `[meta] room` and `room_entry` (the room of the LAST SAVE), not at the `[checkpoint]` record; the two coincide
+  only when the last save was the checkpoint's. Nothing in the build reads `checkpoint_zone_id` to place the pawn.
+
+## M3b review fixes, second round (base/m3b-fix2)
+
+- **T4 could not be cleared, so B1 and the hub could not be reached.** T4 parked its Backstep Pawn and its Pencil Spear on (7,6), a cell of
+  the wall column of the shared tilemap. `EcsBoot` spawns an enemy and calls `EcsGrid.register_entity`, which refuses a wall cell, and
+  nothing looks at the answer: the pawn counted toward the room (`enemies_total` 3) but `entity_at((7,6))` was 0, so the sword could not
+  hit it, it never moved, and the room (cleared when all three fall) was never cleared; the east door (`requires_room_clear`) never
+  opened. In the old T4 world dump the pawn even "took" the spear by standing on it (a pawn on an item cell with no weapon picks it up at
+  its next decision), and a hero beside the wall was struck by a pawn nobody could reach. M3b's own suites hid it: the owner-guide suite
+  killed enemies with a damage request (`Events.emit_damage` with the hero as source), which needs no cell.
+- **Fix: the cells.** Backstep Pawn (10,6): open floor in the lower east yard, four cells to its east and five to its north to back off
+  into, two clear columns from the wall column, 9 cells from the entry so it is outside the 7-cell aggro radius of a hero arriving.
+  Pencil Spear (13,2): the end of the room, just past the Armed Pawn (12,4) on its way to the east door (14,1), one step off both
+  approach cells of that door ((13,1), (14,2)), not on the way-back entry, not in the Armed Pawn's first strike. The flow map and D-11
+  ask for exactly that (an optional reward on the exit path beyond the Armed Pawn; the Backstep Pawn teaching its step in open floor).
+  The hero cannot take the spear in this build (a Pencil grant that unlocks Q is M7, D-11); only weaponless pawns take floor weapons.
+- **A guard against the class.** `tests/content/test_room_markers_on_floor.gd` boots every room of the world graph for real (EcsBoot,
+  closed doors) and checks: entries walkable and not under a pawn; every parked enemy on a walkable cell AND in the grid
+  (`entity_at(cell)` is that entity, which also finds two pawns on one cell) and its cell connected to every entry; every pickup on a
+  walkable cell, listed by the grid (`register_item` silently drops a second item on a cell) and connected; every unlock marker the same;
+  every gate over floor in the painted tiles and with a walkable, connected approach cell. It fails on copies of rooms that are right
+  (a pawn on a wall, two pawns on a cell, a spear on a wall, a spear or a pawn walled in, the sword on the ring, an entry under a pawn, a
+  gate in a wall, a gate nobody can push). Every other room (T1, T2, T3, B1, H1 and the kingdom fixture) was clean.
+- **Markers place themselves two ways, and the scan reads each as `EcsBoot` does.** `PickupSpawnPoint` is read by its `grid_cell`
+  (`position` is only the editor preview, computed for a 16x9 board at the preview origin); `ZoneEntryMarker`, `ZoneExitMarker`,
+  `PlayerUnlockMarker`, `GateMarker` and the parked `ActorView`s are read by `position` through the room's own grid origin.
+- **A damage request is not a sword.** `Support.kill_with_sword` (`tests/bridge/bridge_support.gd`) walks the hero by key presses to the
+  floor cell beside the pawn with the shortest walk, pushes toward it (a step into a piece is blocked and only turns the hero) and
+  presses attack, swing by swing, until it falls. The owner-guide, cleared-rooms and room-outcome suites use it, so a pawn the sword
+  cannot reach fails them (the old T4 fails the owner-guide suite at the third pawn of step 3); `test_kill_with_sword` proves it says no
+  for no sword, a pawn not in the grid and a pawn walled in. Direct damage stays only as a stand-in: `Support.damage_player` for "take a
+  wound" or "fall", and the boss's one point, the old world's despawn timer and the despawn view lifecycle in the suites whose subject is
+  something else (each says so in the file).
+- **The idle-room facts behind the new T4.** A pawn only decides once the hero is within its aggro radius (7 cells, Manhattan, from
+  `DecisionConfig`), so a hero standing on T4's entry sees nothing move for 40 s; walking to the middle gap (7,4) wakes all three, and a
+  weaponless pawn (the Recruit, the Backstep Pawn) goes for the nearest floor weapon before it goes for the hero: the Recruit walks to the
+  spear at (13,2), arrives out of its own leash and stands on it, still empty-handed.
+- **The B1 dump explanation was backwards.** `test_actor_collapse_golden` said that with the hero one cell further east the guard beside
+  the Ruler Blade "has not stepped onto it after 120 idle ticks". The recorded dumps say the opposite: before the door fix the guard had
+  stepped onto the blade's cell (8,6) and not yet taken it (blade still listed, 3 events); after it the guard has taken the blade and
+  walked back to (8,5) (blade gone, 9 events). The guard takes the blade either way; the entry move only changed how far it got in two
+  seconds. The allowance now says so.
+- **The guide's step 3 asked for something impossible.** "Redo it from T3 if needed" (let the T3 pawn wound you, then kill it) cannot be
+  done once step 2 has cleared T3, and the suite got its wound in the empty room by a request. Step 3 now starts in T4, where step 2
+  ended: wound, west door and back (an ordinary door heals nothing), sword clears T4, B1's door refills. Steps 1-3 are once-per-save;
+  deleting `slot_0.cfg` and `slot_0.cfg.bak` is how the owner repeats them (the guide says so).
+
+## M3b review fixes, third round (base/m3b-fix3)
+
+A second independent verifier played Stage 1 on foot with real input (T1 to the hub and back, 13 runs, zero-delay and human-paced) on
+`base/m3b-fix2`: every enemy hittable, every door opens, the guide's section 7 followed literally, no blocker. It left six
+non-blocking notes. Two were wrong in the build and are fixed; one was wrong in the guide and is fixed; two are M7 and stay (one more
+was the commit attribution line, which matches the harness and is no defect).
+
+- **A locked door blamed a captain that was not there.** Every door that waits for a clear answered with one constant ("The captain still
+  holds the rug edge..."), so T3's door (one pawn) and T4's (three pawns) named the boss. The words now travel with the door, the way the
+  sword's line travels with `PlayerUnlockMarker.message`: `ZoneExitMarker.locked_message` is baked into `EcsGrid.exit_by_cell`,
+  `MovementSystem` puts it in `zone_exit_locked` (`message`), `MessageBridge` says it, and an empty one falls back to a generic line that
+  names no piece (`MessageBridge.DOOR_IS_LOCKED`). T3, T4 and B1 each say their own (B1 keeps the captain's line, where it is true).
+  `test_room_doors_reachable` fails a `requires_room_clear` door with no line, and proves it can (a silenced T3 door). This is the
+  editor-first half of ledger rows 108 and 111; the `.po` text key, `requires_flag` and `one_way` stay M4/M5. The six world dumps gained
+  the `locked_message` key on every exit line and nothing else (reviewed line by line); the actor golden's table of room heads moved on
+  purpose (`ROOM_HEADS_CHANGED_ON_PURPOSE`) now lists all six rooms, T1 included, with the reason.
+- **The skill slot said "FIND SWORD" after the sword was taken.** `HudBridge` redrew the slot only on a `skill_cooldown` event and at
+  boot, and taking the sword raises none, so the slot kept the old line until the next room or the first swing (7 s and more in the
+  verifier's walk). `refresh()` now redraws the slot the frame the snapshot's `sword_unlocked` differs from what was last drawn
+  (`last_sword_shown`); that does not depend on the order the bridges handle `player_unlock` in. A unit test in `test_hud_bridge`, and the
+  on-foot route suite reads the real HUD before and after the sword.
+- **The guide said a guard takes the Ruler Blade "after a few seconds".** `test_owner_guide_steps` measures it and prints it: about 1.0 s
+  after the hero arrives on B1's entry (steps of 0.25 s, so 0.75 to 1.0); the verifier saw 0.5 to 1 s. Step 4 now says about a second,
+  what the owner sees (the blade leaves the floor, the status line says `... picked up Ruler Blade`) and that `R` shows it again.
+- **Left: a weaponless T4 pawn carries the Pencil Spear off.** In the verifier's ten human-paced runs a weaponless pawn (usually the
+  Recruit) walked to (13,2) and took the spear while the hero fought near the middle of the room; the pawn that holds it drops nothing
+  when it falls, and a cleared room stays empty (D-17), so the spear is gone for the run (the zero-delay bot killed that pawn first and
+  kept it). That is how D-16 floor weapons work, the guide's step 4 already says weaponless pawns go for it, and the hero cannot take the
+  spear in this build anyway. The durable conclusion is for M7: the T4 Pencil is a hero-only `GrantMarker` (D-11's "guaranteed on the exit
+  path"), never a floor weapon; the plan's M7a entry now says so.
+- **Left: the hero cannot take the spear** ("take the pencil spear" is not possible in this build; Q works from the sword on). The Pencil
+  grant that locks Q is M7 (D-11); the M3b review rounds do not build that lock.
