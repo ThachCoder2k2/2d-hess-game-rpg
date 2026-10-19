@@ -43,6 +43,8 @@ var player_health_carry := -1
 var input_poller := InputPoller.new()
 ## Hands the events the world drains each frame to the code that reacts to them.
 var router := EventRouter.new()
+## What the combat events draw on the board overlay (telegraphs, strike flashes, the F3 layer).
+var board_bridge := BoardBridge.new()
 var _last_token_owner := 0
 
 
@@ -50,6 +52,7 @@ func _ready() -> void:
 	current_room = get_node_or_null(room_path)
 	player_view = get_node_or_null(hero_path) as ActorView
 	board = get_node_or_null(board_path) as PrototypeBoard
+	board_bridge.attach(board)
 	hud = get_node_or_null(hud_path) as GameHud
 	if player_view != null:
 		camera_rig = player_view.get_node_or_null("Camera2D") as CameraRig
@@ -90,6 +93,7 @@ func _boot_zone(entry_id: StringName) -> void:
 	boot_options.skipped_pickup_names = _taken_pickup_names()
 	boot_options.opened_gate_ids = _opened_gate_ids()
 	cast = EcsBoot.boot(ecs, boot_options)
+	board_bridge.bind_world(ecs.hud_snapshot, cast)
 	current_zone_id = _zone_id_of(current_room)
 	# The run's facts enter the new world before anything can ask for a save: the world's flags are
 	# the saved ones, and the save knows which zone this is.
@@ -118,10 +122,7 @@ func _boot_zone(entry_id: StringName) -> void:
 	# The HUD and the board draw from the snapshot, so it must hold the booted room (with the carried
 	# health and the unlocks written above) before the first tick builds it again.
 	HudSnapshotSystem.build(ecs)
-	if board != null:
-		board.z_index = -5
-		board.setup(ecs.grid, ecs.hud_snapshot)
-		board.set_debug_enabled(debug_enabled)
+	board_bridge.show_room(ecs.grid, debug_enabled)
 	if camera_rig != null:
 		camera_rig.setup(ecs.grid)
 	_setup_hud()
@@ -175,12 +176,9 @@ func _setup_hud() -> void:
 
 ## Every event type the scene reacts to, and what reacts. The router calls these in registration order.
 func _register_event_handlers() -> void:
-	router.on(Events.TELEGRAPH_STARTED, _on_telegraph_started)
-	router.on(Events.TELEGRAPH_FINISHED, _on_telegraph_finished)
-	router.on(Events.ATTACK_RESOLVED, _on_attack_resolved)
+	board_bridge.register(router)
 	router.on(Events.ATTACK_LANDED, _on_player_attack_landed)
 	router.on(Events.ATTACK_LOCKED, _on_attack_locked)
-	router.on(Events.INTENT_CHANGED, _on_intent_changed)
 	router.on(Events.DAMAGED, _on_damaged)
 	router.on(Events.SKILL_COOLDOWN, _on_skill_cooldown)
 	router.on(Events.WEAPON_CHANGED, _on_enemy_weapon_changed)
@@ -192,28 +190,8 @@ func _register_event_handlers() -> void:
 	router.on(Events.GATE_OPENED, _on_gate_opened)
 
 
-func _on_telegraph_started(event: Dictionary) -> void:
-	if board != null:
-		board.set_telegraph(int(event.get("entity", 0)), event.get("cells", []))
-
-
-func _on_telegraph_finished(event: Dictionary) -> void:
-	if board != null:
-		board.clear_telegraph(int(event.get("entity", 0)))
-
-
-func _on_attack_resolved(event: Dictionary) -> void:
-	if board != null:
-		board.show_enemy_attack(event.get("cells", []))
-
-
 func _on_attack_locked(_event: Dictionary) -> void:
 	_update_status("The pawn has no weapon yet. Find the fallen sword.")
-
-
-func _on_intent_changed(event: Dictionary) -> void:
-	if board != null and event.get("intent") is EnemyIntent:
-		board.set_enemy_intent(int(event.get("entity", 0)), event.get("intent"))
 
 
 func _on_skill_cooldown(event: Dictionary) -> void:
@@ -232,8 +210,6 @@ func _on_zone_exit(event: Dictionary) -> void:
 
 func _on_player_attack_landed(event: Dictionary) -> void:
 	var profile := event.get("profile") as AttackProfile
-	if board != null and profile != null:
-		board.show_player_attack(event.get("cells", []), int(event.get("hit_count", 0)), profile)
 	if int(event.get("hit_count", 0)) > 0:
 		_start_screen_shake(0.10, 2.6)
 		if profile != null:
@@ -276,9 +252,6 @@ func _on_defeated(event: Dictionary) -> void:
 	if entity == player_id:
 		_on_player_defeated()
 		return
-	if board != null:
-		board.clear_telegraph(entity)
-		board.clear_enemy_debug(entity)
 	remaining_enemies = maxi(0, remaining_enemies - 1)
 	defeated_enemies += 1
 	if hud != null:
@@ -381,8 +354,7 @@ func _set_player_control(value: bool) -> void:
 
 func _set_debug_enabled(value: bool) -> void:
 	debug_enabled = value
-	if board != null:
-		board.set_debug_enabled(value)
+	board_bridge.set_debug_view(value)
 	_update_status("DEBUG VIEW ON: boundaries, paths, and behavior labels." if value else "DEBUG VIEW OFF.")
 
 
