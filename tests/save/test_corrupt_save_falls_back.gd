@@ -162,6 +162,17 @@ func _check_a_newer_game_is_never_overwritten() -> void:
 	_expect(alien_service.load_slot(0).outcome == SaveLoadResult.NEWER_GAME_REQUIRED, "a newer file is recognised before its footer is checked")
 	_expect(not alien_service.request_save(&"checkpoint_reached") and SaveSupport.text_of(alien_root + "/saves/slot_0.cfg") == alien_text, "and is not overwritten either")
 
+	# A file of the current format whose PlayerSnapshot section was written by a newer snapshot format also
+	# needs a newer game: it is not read with rows dropped, and not overwritten.
+	var snapshot_root := _new_root("newer_snapshot")
+	var snapshot_config := SaveData.new().to_config()
+	snapshot_config.set_value("player", "format_version", PlayerSnapshot.FORMAT_VERSION + 1)
+	var snapshot_text := SaveFile.encode(snapshot_config)
+	SaveSupport.plant(snapshot_root + "/saves/slot_0.cfg", snapshot_text)
+	var snapshot_service := SaveSupport.new_service(snapshot_root)
+	_expect(snapshot_service.load_slot(0).outcome == SaveLoadResult.NEWER_GAME_REQUIRED, "a slot whose pawn section is from a newer snapshot format asks for a newer game")
+	_expect(not snapshot_service.request_save(&"checkpoint_reached") and SaveSupport.text_of(snapshot_root + "/saves/slot_0.cfg") == snapshot_text, "and is not overwritten")
+
 	# A newer .bak next to a damaged file: do not fall back to something an older game's save would replace.
 	var backup_root := _new_root("newer_backup")
 	SaveSupport.plant(backup_root + "/saves/slot_0.cfg", "garbage")
