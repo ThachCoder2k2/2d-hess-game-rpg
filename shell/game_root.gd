@@ -29,10 +29,6 @@ var current_room: Node
 var board: PrototypeBoard
 var hud: GameHud
 var camera_rig: CameraRig
-var remaining_enemies := 0
-var total_enemies := 0
-var defeated_enemies := 0
-var room_ending := false
 var player_view: ActorView
 var current_zone_id: StringName = &""
 var travel_in_progress := false
@@ -60,6 +56,8 @@ var despawn_bridge := DespawnBridge.new()
 var save_bridge := SaveBridge.new()
 ## The Book of House Rules: a met piece writes its page, the B key opens the Book.
 var book_bridge := BookBridge.new()
+## How a room ends: the enemy counts, a win, the hero's fall.
+var outcome_bridge := RoomOutcomeBridge.new()
 
 
 func _ready() -> void:
@@ -77,6 +75,7 @@ func _ready() -> void:
 	despawn_bridge.attach(self)
 	save_bridge.attach(self)
 	book_bridge.attach(self)
+	outcome_bridge.attach(self)
 
 	# Death and R both reload this scene; the SaveService (autoload) holds the run, so the
 	# reload boots in the zone the run is in, not the default. A game that has just launched
@@ -114,14 +113,12 @@ func _boot_zone(entry_id: StringName) -> void:
 	hud_bridge.bind_world(ecs.hud_snapshot, cast)
 	despawn_bridge.bind_world(ecs.hud_snapshot, cast)
 	save_bridge.bind_world(ecs.hud_snapshot, cast)
+	outcome_bridge.bind_world(ecs.hud_snapshot, cast)
 	current_zone_id = zone_id_of(current_room)
 	save_bridge.restore_run(current_zone_id)
 	book_bridge.meet_pieces()
 	save_bridge.apply_unlocks()
-	total_enemies = cast.get("enemies", []).size()
-	remaining_enemies = total_enemies
-	defeated_enemies = 0
-	room_ending = false
+	outcome_bridge.begin_room(cast.get("enemies", []).size())
 
 	if player_health_carry > 0:
 		var health: EcsComponents.Health = ecs.get_component(player_id, EcsComponents.HEALTH)
@@ -134,8 +131,8 @@ func _boot_zone(entry_id: StringName) -> void:
 	HudSnapshotSystem.build(ecs)
 	board_bridge.show_room(ecs.grid, debug_enabled)
 	camera_bridge.show_room(ecs.grid)
-	hud_bridge.show_room(remaining_enemies, total_enemies)
-	message_bridge.say(_room_text("get_start_message", "Break the black line."))
+	hud_bridge.show_room(outcome_bridge.enemies_remaining, outcome_bridge.enemies_total)
+	message_bridge.say(room_text("get_start_message", "Break the black line."))
 
 
 func _make_world() -> EcsWorld:
@@ -163,7 +160,7 @@ func _process(delta: float) -> void:
 	if controls.is_just_pressed(&"rule_book_toggle"):
 		book_bridge.toggle()
 
-	if not room_ending:
+	if not outcome_bridge.room_ending:
 		ecs.tick(delta)
 	router.route(ecs.drain_events())
 	hud_bridge.refresh()
@@ -173,68 +170,17 @@ func _process(delta: float) -> void:
 func _register_event_handlers() -> void:
 	board_bridge.register(router)
 	camera_bridge.register(router)
-	audio_bridge.register(router)
 	hud_bridge.register(router)
 	save_bridge.register(router)
-	router.on(Events.DEFEATED, _on_defeated)
-	router.on(Events.ZONE_EXIT, _on_zone_exit)
+	audio_bridge.register(router)
 	despawn_bridge.register(router)
+	outcome_bridge.register(router)
 	message_bridge.register(router)
+	router.on(Events.ZONE_EXIT, _on_zone_exit)
 
 
 func _on_zone_exit(event: Dictionary) -> void:
 	_travel_to(StringName(event.get("zone", &"")), StringName(event.get("entry", &"start")))
-
-
-func _on_defeated(event: Dictionary) -> void:
-	var entity := int(event.get("entity", 0))
-	if entity == player_id:
-		_on_player_defeated()
-		return
-	remaining_enemies = maxi(0, remaining_enemies - 1)
-	defeated_enemies += 1
-	hud_bridge.show_encounter_count(remaining_enemies, total_enemies)
-	_check_completion()
-
-
-func _check_completion() -> void:
-	if room_ending:
-		return
-	# World mode: clearing a zone is quiet — only an explicit objective (boss
-	# arenas, later) can end the run with a result screen.
-	if world_graph != null and (current_room == null or current_room.get("objective") == null):
-		return
-	var complete := total_enemies > 0 and remaining_enemies <= 0
-	var objective: Resource = current_room.get("objective") if current_room != null else null
-	if objective != null and objective.has_method("is_complete"):
-		complete = bool(objective.call("is_complete", defeated_enemies, total_enemies, remaining_enemies))
-	if not complete:
-		return
-	room_ending = true
-	set_player_control(false)
-	audio_bridge.play(AudioBridge.ROOM_CLEAR_SOUND)
-	var clear_message := _room_text("get_clear_message", "ROOM CLEARED")
-	message_bridge.say(clear_message)
-	hud_bridge.show_result(clear_message, _room_text("get_clear_subtitle", "PRESS R TO RESET"))
-
-
-func _on_player_defeated() -> void:
-	if room_ending:
-		return
-	room_ending = true
-	# A death writes no save: autosave is for success events only (R17, D-16), and the run already
-	# wrote down everything it learned when it learned it.
-	player_health_carry = -1
-	audio_bridge.play(AudioBridge.DEFEAT_JINGLE_SOUND)
-	var defeat_message := _room_text("get_defeat_message", "THE PAWN FALLS")
-	message_bridge.say(defeat_message)
-	hud_bridge.show_result(defeat_message, _room_text("get_defeat_subtitle", "THE CHILD RESETS THE BOARD"))
-	var tree := get_tree()
-	if tree == null:
-		return
-	await tree.create_timer(0.85).timeout
-	if is_inside_tree():
-		tree.reload_current_scene()
 
 
 func set_player_control(value: bool) -> void:
@@ -249,7 +195,8 @@ func _set_debug_enabled(value: bool) -> void:
 	message_bridge.say("DEBUG VIEW ON: boundaries, paths, and behavior labels." if value else "DEBUG VIEW OFF.")
 
 
-func _room_text(getter: StringName, fallback: String) -> String:
+## The room's own prose for `getter` (its start, clear or defeat line), or `fallback` when the room has none.
+func room_text(getter: StringName, fallback: String) -> String:
 	if current_room != null and current_room.has_method(getter):
 		return String(current_room.call(getter))
 	return fallback
@@ -262,7 +209,7 @@ func _room_text(getter: StringName, fallback: String) -> String:
 ## the simulation, fade back in. The shell carries health and the save remembers
 ## the destination (as the checkpoint) so death/R reloads land in the right zone.
 func _travel_to(zone_id: StringName, entry_id: StringName) -> void:
-	if travel_in_progress or room_ending or world_graph == null or not world_graph.has_zone(zone_id):
+	if travel_in_progress or outcome_bridge.room_ending or world_graph == null or not world_graph.has_zone(zone_id):
 		return
 	travel_in_progress = true
 	set_player_control(false)

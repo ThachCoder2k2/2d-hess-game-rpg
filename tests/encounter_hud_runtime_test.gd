@@ -50,7 +50,7 @@ func _run() -> void:
 	_expect(player_id != 0, "main spawns the player entity")
 	var player_pos: EcsComponents.GridPos = ecs.get_component(player_id, EcsComponents.GRID_POS)
 	_expect(player_pos != null and player_pos.cell == _parked_cell(ecs, main), "player entity stands on the parked view's cell")
-	_expect(int(main.get("total_enemies")) == 0, "main starts in the quiet T1 opening room")
+	_expect(int(main.get("outcome_bridge").enemies_total) == 0, "main starts in the quiet T1 opening room")
 	var player_health: EcsComponents.Health = ecs.get_component(player_id, EcsComponents.HEALTH)
 	_expect(player_health != null and player_health.current == 2, "a pending health carry applies to the booted player")
 	_expect(int(main.get("player_health_carry")) == -1, "the health carry is consumed by the boot")

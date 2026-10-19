@@ -117,15 +117,15 @@ static func plant_health_carry(main: Node, value: int) -> void:
 
 
 static func room_ending(main: Node) -> bool:
-	return bool(main.get("room_ending"))
+	return main.get("outcome_bridge").room_ending
 
 
 static func set_room_ending(main: Node, value: bool) -> void:
-	main.set("room_ending", value)
+	main.get("outcome_bridge").room_ending = value
 
 
 static func total_enemies(main: Node) -> int:
-	return int(main.get("total_enemies"))
+	return main.get("outcome_bridge").enemies_total
 
 
 ## Starts a zone trip the way the zone_exit event does and waits for it to finish. Called without
