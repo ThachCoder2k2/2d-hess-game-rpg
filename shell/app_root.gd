@@ -104,6 +104,7 @@ func _ready() -> void:
 	pause_menu.quit_confirmed.connect(game_flow.quit_to_title)
 	pause_menu.settings_requested.connect(_open_settings.bind(SettingDefinition.Group.SOUND))
 	pause_menu.controls_requested.connect(_open_controls.bind(&"pause"))
+	pause_menu.assists_requested.connect(_open_settings.bind(SettingDefinition.Group.ASSISTS))
 	settings_screen.configure(settings)
 	settings_screen.closed.connect(_on_settings_closed)
 	settings_screen.controls_requested.connect(_open_controls.bind(&"settings"))

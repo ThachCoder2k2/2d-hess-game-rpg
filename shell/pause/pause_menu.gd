@@ -1,8 +1,8 @@
 class_name PauseMenu
 extends Control
 
-## The pause menu (docs/game-base-plan.md 9.2 "Pause"): Resume, Book, Settings, Controls, Restart Room (confirm), Quit to
-## Title (confirm, naming the last checkpoint). It lives in AppRoot's menu layer, which keeps processing while the tree is
+## The pause menu (docs/game-base-plan.md 9.2 "Pause"): Resume, Book, Settings, Controls, Assist options, Restart Room
+## (confirm), Quit to Title (confirm, naming the last checkpoint). It lives in AppRoot's menu layer, which keeps processing while the tree is
 ## paused (PROCESS_MODE_ALWAYS), and it decides nothing: it shows what AppRoot hands it and says what the player chose
 ## through signals. AppRoot turns them into GameFlow requests; the menu never touches the flow or the room.
 ##
@@ -21,6 +21,9 @@ signal book_requested
 signal settings_requested
 ## The Controls entry was chosen: the Controls panel opens over the menu, which stays where it is.
 signal controls_requested
+## The Assist options entry was chosen (D-22: a persistent entry from the first run): the settings screen opens on its
+## Assists page over the menu.
+signal assists_requested
 ## Restart Room was chosen and confirmed.
 signal restart_confirmed
 ## Quit to Title was chosen and confirmed.
@@ -30,6 +33,7 @@ signal quit_confirmed
 @export var book_button: Button
 @export var settings_button: Button
 @export var controls_button: Button
+@export var assists_button: Button
 @export var restart_button: Button
 @export var quit_button: Button
 ## The container of the buttons; switched off while a question is up.
@@ -47,6 +51,7 @@ func _ready() -> void:
 	book_button.pressed.connect(func() -> void: book_requested.emit())
 	settings_button.pressed.connect(func() -> void: settings_requested.emit())
 	controls_button.pressed.connect(func() -> void: controls_requested.emit())
+	assists_button.pressed.connect(func() -> void: assists_requested.emit())
 	restart_button.pressed.connect(_ask.bind(&"restart"))
 	quit_button.pressed.connect(_ask.bind(&"quit"))
 	confirm_panel.confirmed.connect(_on_confirmed)
