@@ -2,7 +2,7 @@
 
 **STUB (M1a, 2026-10-12).** This lists what in this repository is not original work of the
 project owner, so the credits and any release can acknowledge it correctly. It is incomplete
-by design: milestone M4 adds the pixel font and M14 completes the file
+by design: M4 recorded the font slots below (the font files themselves are the owner's) and M14 completes the file
 (`docs/game-base-plan.md` section 1.1 D20, section 12). The project's own license is in
 `LICENSE`. Nothing here has been legally reviewed.
 
@@ -57,6 +57,25 @@ yet. Please say how each was produced and whether it will ship.
 - `assets/map_pieces/bed.png` and `bed_height.png`. `README.md` treats this folder as hand-drawn
   source art; please confirm these two are your own work.
 
+## Slots for files the owner supplies
+
+### UI fonts (owner-supplied)
+
+- **What:** the pixel fonts of the UI, dialogue, Book and HUD numerals. The game names four slots in
+  `content/ui/theme/theme.tres` (`schema/ui/ui_theme.gd`); the file for each is put at its path by the owner:
+  `assets/fonts/ui_body_pixel.ttf` (main font), `assets/fonts/ui_small_pixel.ttf` (HUD numerals),
+  `assets/fonts/ui_title_pixel.ttf` (headings), `assets/fonts/child_hand.ttf` (the child's lines, M6).
+  The asset list (`docs/assets/spec/ui_story.json`, group `fonts_ui`) recommends open-licence fonts and says
+  what to check.
+- **Status:** **owner-supplied.** No font file is in this repository today: nothing was downloaded, and the game
+  uses the engine's own default font (Godot's, MIT, credited under Godot Engine below) until a file is put
+  at a slot's path.
+- **Action when a font file is added:** add its entry here under its own `###` heading with a
+  `- **License:**` bullet and the licence text in a `text` block (the SIL Open Font License 1.1 for the fonts
+  the asset list suggests), then run `godot --headless --path . -s tools/build_credits_licenses.gd` so the
+  credits show it. `tests/text/test_font_vietnamese_coverage.gd` fails if the file cannot write every
+  Vietnamese letter.
+
 ## Third-party software that ships or is required
 
 ### Godot Engine
@@ -108,5 +127,5 @@ SOFTWARE.
   output (placeholders in `content/_placeholders.json`); the knight's shape is the traced glyph
   above, the others are lathe rows written in the generator.
 - There are no addons (`addons/` does not exist) and no bundled fonts in the repository today.
-  The default Godot font is the engine's. The pixel font for the final UI is chosen in M4 and
-  must be listed here.
+  The default Godot font is the engine's. The pixel fonts for the final UI are the owner's: see
+  "UI fonts (owner-supplied)" above.

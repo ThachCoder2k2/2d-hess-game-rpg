@@ -1,0 +1,10 @@
+[gd_resource type="Theme" script_class="UiTheme" load_steps=2 format=3 uid="uid://cjtmiconkaup4"]
+
+[ext_resource type="Script" uid="uid://bduf32ithiuhj" path="res://schema/ui/ui_theme.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+body_font_path = "res://assets/fonts/ui_body_pixel.ttf"
+small_font_path = "res://assets/fonts/ui_small_pixel.ttf"
+title_font_path = "res://assets/fonts/ui_title_pixel.ttf"
+child_hand_font_path = "res://assets/fonts/child_hand.ttf"

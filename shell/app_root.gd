@@ -63,6 +63,8 @@ var _focus_pause_pending := false
 
 
 func _ready() -> void:
+	# The owner's fonts, where the files exist (schema/ui/ui_theme.gd names them; none is the engine's default font).
+	UiFonts.apply(ThemeDB.get_project_theme() as UiTheme)
 	save_service = get_node_or_null("/root/SaveService") as SaveServiceScript
 	game_flow.save_service = save_service
 	game_flow.state_changed.connect(_on_state_changed)
