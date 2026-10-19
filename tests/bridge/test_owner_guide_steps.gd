@@ -5,19 +5,28 @@ extends UnboundTest
 ## (The first version of those steps asked for things the rooms cannot do: a death in T1, a gate in Stage 1,
 ## a spear no pawn can reach, a way back no pawn could walk.)
 ##
-## One continuous play-through of the real scene, the real bridges and a throwaway save:
+## One continuous play-through of the real scene, the real bridges and a throwaway save, from a clean save:
 ##   - the hero MOVES only by tapping arrow keys along a path (Support.walk_to_cell / walk_through_door):
 ##     through every door, in both directions, and onto the sword in T2;
-##   - what the owner would do with the sword or an enemy's blow is a stand-in where a fight would make the
-##     test depend on timing: a damage request with the hero as its source (a sword stroke) or a one point hit
-##     on the hero. Where the guide says "let the pawn hit you" or "let the guard pick it up" the REAL enemy AI
-##     runs and the test waits for it.
+##   - the hero brings a pawn down only with the SWORD, by the real input path (Support.kill_with_sword: walk
+##     beside it, push toward it to face it, press the attack key until it falls). A pawn the sword cannot reach
+##     (not in the grid, walled in) fails the step, which a damage request never did: T4's Backstep Pawn stood on
+##     a wall cell for the whole of M3b and this suite, killing it with a request, passed;
+##   - where the guide says "let the pawn hit you" (step 1) or "let the guard pick it up" (step 4) the REAL enemy
+##     AI runs and the test waits for it. The ONE stand-in left is the wound of step 3: "take a wound" is a one
+##     point hit on the hero (Support.damage_player), because letting one of T4's three awake pawns land exactly
+##     one blow is a matter of timing, not of the rooms. To keep the other rooms quiet while the hero crosses
+##     them, the enemy AI is removed in steps 2 and 3 (the pieces stand still and are hit by the sword).
 ##
 ##   Step 1  dying and rising again       T3: walk up to the pawn, stand still; R does the same
-##   Step 2  a cleared room stays clear   T3 empty after a trip and after R; T4, left uncleared, comes back whole
-##   Step 3  a checkpoint refills         wounded in T3, still wounded in T4, full again at B1's door
+##   Step 2  a cleared room stays clear   the sword clears T3; T3 empty after a trip and after R; T4, left uncleared, comes back whole
+##   Step 3  a checkpoint refills         wounded in T4, still wounded after a trip to T3 and back, the sword clears T4, full again at B1's door
 ##   Step 4  a floor weapon goes home     B1: a guard takes the Ruler Blade; R: it is on the floor again
 ##   Step 5  quit and open again          the last SAVE's room, not the last room walked into
+##
+## The steps run in the order the guide gives them and each can be done from the state the one before left, on a
+## save that was clean at the start. (The first version of the guide said "do step 3 again from T3", which is
+## impossible once step 2 has cleared T3: a cleared room is empty for good, D-17.)
 
 const Support := preload("res://tests/bridge/bridge_support.gd")
 const SUITE_NAME := "owner_guide_steps"
@@ -80,8 +89,8 @@ func _run() -> void:
 
 	# --- Step 2: a cleared room stays clear, an uncleared one comes back whole ---
 	Support.remove_enemy_ai(main)
-	_kill_enemy(main, 0)
-	_expect(run.cleared_room_ids.has(String(T3)) and saved_reasons.has(&"room_cleared"), "step 2: the hero's sword brings the T3 pawn down: T3 is cleared and the clear is saved")
+	_expect(await Support.kill_with_sword(self, main, main.get("cast")["enemies"][0]), "step 2: the hero walks up to the T3 pawn and brings it down with the sword")
+	_expect(run.cleared_room_ids.has(String(T3)) and saved_reasons.has(&"room_cleared"), "step 2: T3 is cleared and the clear is saved")
 	_expect(await Support.walk_through_door(self, main, T4), "step 2: T3's east door is open now and the hero walks into T4")
 	_expect(Support.total_enemies(main) == 3, "step 2: T4 has three pawns")
 	_expect(await Support.walk_through_door(self, main, T3), "step 2: the hero walks back out of T4 by its west door")
@@ -90,23 +99,25 @@ func _run() -> void:
 	_expect(main.get("current_zone_id") == T3 and Support.total_enemies(main) == 0 and run.cleared_room_ids.has(String(T3)), "step 2: and R in T3 does not bring the pawn back")
 	_expect(await Support.walk_through_door(self, main, T4), "step 2: the hero goes into T4 again")
 	Support.remove_enemy_ai(main)
-	_kill_enemy(main, 0)
-	_expect((main.get("hud") as GameHud).encounter_label.text == "ENEMIES 2/3" and not run.cleared_room_ids.has(String(T4)), "step 2: one of T4's three pawns falls and T4 is not cleared")
+	_expect(await Support.kill_with_sword(self, main, main.get("cast")["enemies"][0]), "step 2: the hero walks up to one of T4's three pawns and brings it down with the sword")
+	_expect((main.get("hud") as GameHud).encounter_label.text == "ENEMIES 2/3" and not run.cleared_room_ids.has(String(T4)), "step 2: T4 is not cleared")
 	_expect(await Support.walk_through_door(self, main, T3) and await Support.walk_through_door(self, main, T4), "step 2: the hero leaves T4 by its west door and comes back")
 	_expect(Support.total_enemies(main) == 3 and _all_enemies_are_whole(main), "step 2: all three pawns are back, at full health")
 
 	# --- Step 3: a checkpoint refills Courage, an ordinary door does not ---
-	_expect(await Support.walk_through_door(self, main, T3), "step 3: the hero goes back to the empty T3")
+	# The hero is in T4 with all three pawns alive (the end of step 2). The wound is the one stand-in of this suite.
+	_expect(Support.total_enemies(main) == 3 and Support.player_health(main).current == max_courage, "step 3: the hero stands in T4 with its three pawns alive and full Courage")
 	Support.damage_player(main, 1)
 	Support.wait_out_invulnerability(main)
-	_expect(Support.player_health(main).current == max_courage - 1 and Support.hud_courage_pips(main) == max_courage - 1, "step 3: wounded in T3: one pip is gone")
-	_expect(await Support.walk_through_door(self, main, T4), "step 3: the hero walks into T4")
+	_expect(Support.player_health(main).current == max_courage - 1 and Support.hud_courage_pips(main) == max_courage - 1, "step 3: wounded in T4 (a stand-in for a blow of one of its pawns): one pip is gone")
+	_expect(await Support.walk_through_door(self, main, T3) and await Support.walk_through_door(self, main, T4), "step 3: the hero leaves T4 by its west door, into the empty T3, and comes back")
 	Support.pump(main, 0.3)
-	_expect(Support.player_health(main).current == max_courage - 1 and not run.has_checkpoint(), "step 3: an ordinary door heals nothing and T4 is no checkpoint")
+	_expect(Support.player_health(main).current == max_courage - 1 and not run.has_checkpoint(), "step 3: an ordinary door heals nothing and neither T3 nor T4 is a checkpoint")
+	_expect(Support.total_enemies(main) == 3, "step 3: T4's three pawns are back")
 	Support.remove_enemy_ai(main)
 	for index in range(3):
-		_kill_enemy(main, index)
-	_expect(run.cleared_room_ids.has(String(T4)), "step 3: the three pawns of T4 fall and T4 is cleared")
+		_expect(await Support.kill_with_sword(self, main, main.get("cast")["enemies"][index]), "step 3: the hero's sword brings down T4's pawn number %d" % [index + 1])
+	_expect(run.cleared_room_ids.has(String(T4)), "step 3: the three pawns of T4 are down and T4 is cleared")
 	saved_reasons.clear()
 	_expect(await Support.walk_through_door(self, main, B1), "step 3: the hero walks across T4 and through its east door into B1")
 	Support.pump(main, 0.3)
@@ -149,13 +160,6 @@ func _run() -> void:
 func _cell_of_the_unlock(main: Node) -> Vector2i:
 	var cells: Array = Support.ecs_of(main).grid.player_unlock_by_cell.keys()
 	return cells[0] if not cells.is_empty() else Vector2i(-999, -999)
-
-
-## Kills the `index`-th enemy of the room the way a sword stroke would: a damage request with the hero as source.
-func _kill_enemy(main: Node, index: int) -> void:
-	var enemy_id: int = main.get("cast")["enemies"][index]
-	Events.emit_damage(Support.ecs_of(main), enemy_id, 99, Vector2i.ZERO, Support.player_id_of(main))
-	Support.pump(main, Support.SIM_STEP_SECONDS)
 
 
 func _all_enemies_are_whole(main: Node) -> bool:

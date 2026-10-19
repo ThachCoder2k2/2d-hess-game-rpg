@@ -29,6 +29,9 @@ func _run() -> void:
 	_expect(enemy_view != null and ecs.get_component(enemy_id, EcsComponents.VIEW_REF) != null, "setup: T3's pawn has a view bound to it")
 
 	# --- The blow lands: the defeat event is handled, the view stays for its clip ---
+	# A damage request on purpose, not the sword: this suite is about what happens to a view when its entity
+	# leaves the room, not about reaching the pawn. The suites that follow a player (test_owner_guide_steps,
+	# test_cleared_rooms, test_bridge_room_outcome) bring pawns down with the sword.
 	Events.emit_damage(ecs, enemy_id, 99, Vector2i.ZERO, Support.player_id_of(main))
 	Support.pump(main, Support.SIM_STEP_SECONDS)
 	_expect(ecs.get_component(enemy_id, EcsComponents.HEALTH).current == 0, "setup: the pawn is down")

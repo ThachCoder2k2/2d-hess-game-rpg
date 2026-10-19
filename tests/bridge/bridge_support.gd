@@ -35,6 +35,11 @@ const REAL_TIME_WAIT_CAP_MSEC := 6000
 
 const MOVE_ACTIONS: Array[StringName] = [&"move_up", &"move_down", &"move_left", &"move_right"]
 
+## kill_with_sword: how many times it may walk, turn or swing before it gives up (a 4 Courage captain falls in
+## four strokes), and how long one swing is waited out (the sword's impact is 0.07 s and its recovery 0.30 s).
+const KILL_WITH_SWORD_ATTEMPTS := 24
+const KILL_WITH_SWORD_SWING_SECONDS := 0.45
+
 
 ## Swaps the SaveService autoload for a fresh instance of its script that saves to a throwaway folder,
 ## and returns it. The real autoload node is only renamed and left idle (game_root.gd finds the service
@@ -359,8 +364,91 @@ static func walk_through_door(tree: SceneTree, main: Node, target_zone: StringNa
 	return await wait_for_travel(tree, main)
 
 
+## --- Fighting the way a player does ------------------------------------------------------------
+## A suite that says "the hero brings the pawn down" must do what a player does: walk, face, press the attack
+## key. A damage request needs no cell, so it brings down a pawn the sword can never reach (T4's Backstep Pawn
+## stood on a wall cell and was never in the grid; every suite that killed it with a request still passed).
+
+
+## Puts the wooden sword in the hero's hand without walking to T2: the run holds the unlock (so a later boot,
+## a trip or a relaunch arms the hero too) and the live hero has it now. For a suite whose subject is not the
+## sword's pickup but that needs the hero to fight; the pickup itself is walked in test_owner_guide_steps and
+## pinned in test_bridge_persistence.
+static func give_the_sword(main: Node, save_service: Node) -> void:
+	run_of(save_service).add_unlock(&"wooden_sword")
+	player_combat(main).sword_unlocked = true
+
+
+## The cell beside `enemy_cell` the hero can reach with the shortest walk, standing on which pushing toward the
+## enemy faces it: a floor cell, not a door, nobody on it (the hero's own cell counts, and wins). EcsGrid.NO_CELL
+## when there is none (the enemy is walled in).
+static func cell_to_strike_from(main: Node, enemy_cell: Vector2i) -> Vector2i:
+	var grid := ecs_of(main).grid
+	var hero_cell := player_cell(main)
+	var best_cell := EcsGrid.NO_CELL
+	var best_steps := 1000000
+	for direction: Vector2i in ACTION_BY_DIRECTION:
+		var candidate := enemy_cell - direction
+		if candidate == hero_cell:
+			return candidate
+		var occupant := grid.entity_at(candidate)
+		if not grid.is_walkable(candidate) or grid.exit_by_cell.has(candidate) or (occupant != 0 and occupant != player_id_of(main)):
+			continue
+		var walk := grid.get_grid_path(player_id_of(main), hero_cell, candidate)
+		if not walk.is_empty() and walk.size() < best_steps:
+			best_steps = walk.size()
+			best_cell = candidate
+	return best_cell
+
+
+## Turns the hero toward `direction` the way a player does on a piece that is in the way: the key is pushed, the
+## step is blocked and only the facing changes. True when the hero faces that way afterwards.
+static func push_toward(tree: SceneTree, main: Node, direction: Vector2i) -> bool:
+	var action: StringName = ACTION_BY_DIRECTION[direction]
+	Input.action_press(action)
+	pump(main, SIM_STEP_SECONDS)
+	Input.action_release(action)
+	await tree.process_frame
+	var facing: EcsComponents.Facing = ecs_of(main).get_component(player_id_of(main), EcsComponents.FACING)
+	return facing.direction == direction
+
+
+## Brings one enemy down with the sword, by the real input path: the hero walks key by key to a cell beside it,
+## turns toward it, and presses the attack key stroke after stroke (waiting out each swing) until it falls.
+## Everything the sword needs is therefore tested: the enemy is in the grid, it has a floor cell beside it that
+## the hero can walk to, and the hero can face it and hit it. Remove the enemy AI first (remove_enemy_ai) when
+## nothing may strike the hero on the way; if the enemy moves, the walk starts again toward where it is. False
+## when the hero has no sword yet, the enemy is not on the board, there is no cell to strike from or no walk to
+## it, or the enemy is still standing after the strokes.
+static func kill_with_sword(tree: SceneTree, main: Node, enemy_id: int) -> bool:
+	var ecs := ecs_of(main)
+	var health: EcsComponents.Health = ecs.get_component(enemy_id, EcsComponents.HEALTH)
+	if health == null or not player_combat(main).sword_unlocked:
+		return false
+	for _attempt in range(KILL_WITH_SWORD_ATTEMPTS):
+		if health.current <= 0:
+			return true
+		if not ecs.grid.cell_by_entity.has(enemy_id):
+			return false
+		var enemy_cell: Vector2i = ecs.grid.cell_by_entity[enemy_id]
+		var toward := enemy_cell - player_cell(main)
+		if not ACTION_BY_DIRECTION.has(toward) or player_move_state(main).moving:
+			var strike_cell := cell_to_strike_from(main, enemy_cell)
+			if strike_cell == EcsGrid.NO_CELL or not await walk_to_cell(tree, main, strike_cell):
+				return false
+			continue
+		var facing: EcsComponents.Facing = ecs.get_component(player_id_of(main), EcsComponents.FACING)
+		if facing.direction != toward and not await push_toward(tree, main, toward):
+			return false
+		await hold_action(tree, main, &"attack", SIM_STEP_SECONDS)
+		pump(main, KILL_WITH_SWORD_SWING_SECONDS)
+	return health.current <= 0
+
+
 ## Real damage path: HealthSystem consumes world.damage_events (the queue the
-## enemy AI writes to through Events.emit_damage), so this is exactly how an enemy strike lands.
+## enemy AI writes to through Events.emit_damage), so this is exactly how an enemy strike lands. It is the
+## stand-in for "take a wound" (or "fall"), the one place a suite may skip the enemy's own timing; the hero
+## hurting an enemy is never done this way where a suite follows a player: that is kill_with_sword.
 static func damage_player(main: Node, amount: int) -> void:
 	Events.emit_damage(ecs_of(main), player_id_of(main), amount, Vector2i.LEFT, 0)
 	pump(main, SIM_STEP_SECONDS)

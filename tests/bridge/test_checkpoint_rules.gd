@@ -77,6 +77,8 @@ func _run() -> void:
 
 	# --- A death resets only this room: back on its entry, full Courage, the boss whole, nothing saved ---
 	var captain_id: int = main.get("cast")["enemies"][0]
+	# One point of damage on the boss as a stand-in for "the hero wounded it": the setup needs a boss that is not at
+	# full health when the hero falls, and nothing else (the subject is what a death resets).
 	Events.emit_damage(Support.ecs_of(main), captain_id, 1, Vector2i.ZERO, Support.player_id_of(main))
 	Support.pump(main, Support.SIM_STEP_SECONDS)
 	var captain_health: EcsComponents.Health = Support.ecs_of(main).get_component(captain_id, EcsComponents.HEALTH)

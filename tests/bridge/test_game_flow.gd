@@ -84,6 +84,9 @@ func _run() -> void:
 	await Support.travel_to(main, T4, &"west_entry")
 	Support.remove_enemy_ai(main)
 	var old_enemy_id: int = main.get("cast")["enemies"][0]
+	# A damage request on purpose, not the sword: the setup needs "a pawn of the old world has just fallen" and
+	# nothing else (the subject is the despawn timer of the old world); the suites that follow a player bring pawns
+	# down with the sword (Support.kill_with_sword).
 	Events.emit_damage(Support.ecs_of(main), old_enemy_id, 99, Vector2i.ZERO, Support.player_id_of(main))
 	Support.pump(main, Support.SIM_STEP_SECONDS)
 	_expect(Support.ecs_of(main).get_component(old_enemy_id, EcsComponents.HEALTH).current == 0, "setup: one of T4's pawns fell a moment before the restart")

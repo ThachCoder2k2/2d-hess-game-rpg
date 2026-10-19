@@ -32,6 +32,7 @@ func _run() -> void:
 	var save_service := Support.install_isolated_save_service(self, SUITE_NAME)
 	save_service.autosaved.connect(func(_slot: int, reason: StringName) -> void: saved_reasons.append(reason))
 	var main := await Support.boot_main(self)
+	Support.give_the_sword(main, save_service)
 	var max_courage := Support.player_health(main).max_value
 
 	# --- Clearing T3 (one pawn) is remembered and saved ---
@@ -39,8 +40,8 @@ func _run() -> void:
 	Support.remove_enemy_ai(main)
 	_expect(Support.total_enemies(main) == 1 and not Support.run_of(save_service).cleared_room_ids.has(String(T3)), "setup: T3 begins with its pawn and the run has not cleared it")
 	saved_reasons.clear()
-	_kill_enemy(main, 0)
-	_expect(Support.run_of(save_service).cleared_room_ids.has(String(T3)), "the last pawn falls and the run records T3 as cleared")
+	_expect(await _kill_enemy(main, 0), "the hero's sword brings the last pawn down")
+	_expect(Support.run_of(save_service).cleared_room_ids.has(String(T3)), "the run records T3 as cleared")
 	_expect(saved_reasons == [&"room_cleared"], "and the clear is the success event that saved: %s" % [saved_reasons])
 	_expect(_saved_cleared_rooms(save_service).has(String(T3)), "the save file holds T3 among the cleared rooms at once")
 	saved_reasons.clear()
@@ -76,8 +77,8 @@ func _run() -> void:
 	Support.remove_enemy_ai(main)
 	var pawn_count := Support.total_enemies(main)
 	_expect(pawn_count == 3 and not Support.run_of(save_service).cleared_room_ids.has(String(T4)), "setup: T4 begins with three pawns and is not cleared")
-	_kill_enemy(main, 0)
-	_expect(not Support.run_of(save_service).cleared_room_ids.has(String(T4)) and (main.get("hud") as GameHud).encounter_label.text == "ENEMIES 2/3", "one of three falls: T4 is not cleared and the HUD counts 2/3")
+	_expect(await _kill_enemy(main, 0), "the hero's sword brings one of the three down")
+	_expect(not Support.run_of(save_service).cleared_room_ids.has(String(T4)) and (main.get("hud") as GameHud).encounter_label.text == "ENEMIES 2/3", "T4 is not cleared and the HUD counts 2/3")
 	await Support.travel_to(main, T3, &"west_entry")
 	await Support.travel_to(main, T4, &"west_entry")
 	_expect(Support.total_enemies(main) == 3 and _all_enemies_are_whole(main), "leaving T4 uncleared and coming back: all three pawns are back at full health")
@@ -117,11 +118,11 @@ func _run() -> void:
 	Support.end_suite(self, save_service)
 
 
-## Kills the `index`-th enemy of the room the way a sword would (a damage request HealthSystem consumes).
-func _kill_enemy(main: Node, index: int) -> void:
-	var enemy_id: int = main.get("cast")["enemies"][index]
-	Events.emit_damage(Support.ecs_of(main), enemy_id, 99, Vector2i.ZERO, Support.player_id_of(main))
-	Support.pump(main, Support.SIM_STEP_SECONDS)
+## Brings the `index`-th enemy of the room down with the hero's sword, by the real input path (walk beside it, face
+## it, press attack), so a room whose pawn the sword cannot reach fails here and not only in play. The enemy AI is
+## removed first by the caller. True when the pawn fell.
+func _kill_enemy(main: Node, index: int) -> bool:
+	return await Support.kill_with_sword(self, main, main.get("cast")["enemies"][index])
 
 
 func _all_enemies_are_whole(main: Node) -> bool:

@@ -6,7 +6,8 @@ extends UnboundTest
 ## that carries an objective ends with the result panel when the objective says so, and a room outside
 ## the world graph (a standalone room) ends when every enemy is down. A win turns the hero's control
 ## off, shows the room's clear lines and stops the world from ticking.
-## The pawns are killed through the real damage path (Events.emit_damage, consumed by HealthSystem).
+## The pawns are brought down by the hero's sword through the real input path (Support.kill_with_sword), the
+## damage HealthSystem consumes, so a pawn the sword cannot reach fails the suite.
 
 const Support := preload("res://tests/bridge/bridge_support.gd")
 const SUITE_NAME := "room_outcome"
@@ -24,13 +25,14 @@ func _init() -> void:
 func _run() -> void:
 	var save_service := Support.install_isolated_save_service(self, SUITE_NAME)
 	var main := await Support.boot_main(self)
+	Support.give_the_sword(main, save_service)
 	var hud := main.get("hud") as GameHud
 
 	# --- World mode: the count follows the defeats and clearing a zone is quiet ---
 	await Support.travel_to(main, T3, &"west_entry")
 	Support.remove_enemy_ai(main)
 	_expect(Support.total_enemies(main) == 1 and hud.encounter_label.text == "ENEMIES 1/1", "setup: T3 begins with one enemy and the HUD counts it")
-	_kill_enemy(main, 0)
+	_expect(await _kill_enemy(main, 0), "setup: the hero's sword brings the pawn down")
 	_expect(hud.encounter_label.text == "ENEMIES 0/1", "a defeat takes one off the HUD count")
 	_expect(not Support.room_ending(main) and not hud.result_panel.visible and Support.player_tag(main).control_enabled, "in world mode clearing a zone with no objective is quiet: no result panel, control stays on")
 	_expect(Support.run_of(save_service).cleared_room_ids.has(String(T3)), "but the run remembers the room as cleared (D-17); test_cleared_rooms holds what that means")
@@ -44,7 +46,7 @@ func _run() -> void:
 	_expect(main.get("current_zone_id") == T3 and Support.total_enemies(main) == 1, "setup: a relaunch boots T3 with its pawn alive")
 	Support.remove_enemy_ai(main)
 	main.set("world_graph", null)
-	_kill_enemy(main, 0)
+	_expect(await _kill_enemy(main, 0), "setup: the hero's sword brings the last pawn down")
 	_expect(Support.room_ending(main), "a standalone room ends when its last enemy falls")
 	_expect(hud.result_label.text == "ROOM CLEARED\nPRESS R TO RESET" and hud.objective_label.text == "ROOM CLEARED", "with the stock clear lines when the room names none")
 	_expect(not Support.player_tag(main).control_enabled, "and the hero's control is off")
@@ -62,9 +64,9 @@ func _run() -> void:
 	objective.clear_message = "TWO DOWN"
 	objective.clear_subtitle = "THE YARD GOES QUIET"
 	Support.set_room_objective(main, objective)
-	_kill_enemy(main, 0)
+	_expect(await _kill_enemy(main, 0), "setup: the hero's sword brings the first pawn down")
 	_expect(not Support.room_ending(main) and not hud.result_panel.visible, "one defeat of the two the objective asks for does not end the room")
-	_kill_enemy(main, 1)
+	_expect(await _kill_enemy(main, 1), "setup: the hero's sword brings the second pawn down")
 	_expect(Support.room_ending(main), "the second defeat meets the objective and ends the room")
 	_expect(hud.result_panel.visible and hud.result_label.text == "TWO DOWN\nTHE YARD GOES QUIET", "the result panel shows the objective's clear lines")
 	_expect(hud.objective_label.text == "TWO DOWN", "and the status line says the clear message")
@@ -95,9 +97,8 @@ func _boot_again(old_main: Node, save_service: Node, forget_cleared_rooms := fal
 	return await Support.boot_main(self)
 
 
-## Kills the `index`-th enemy of the room the way a sword would (a damage request HealthSystem consumes).
-func _kill_enemy(main: Node, index: int) -> void:
+## Brings the `index`-th enemy of the room down with the hero's sword, by the real input path (walk beside it, face
+## it, press attack). The enemy AI is removed first by the caller. True when the pawn fell.
+func _kill_enemy(main: Node, index: int) -> bool:
 	var cast: Dictionary = main.get("cast")
-	var enemy_id: int = cast["enemies"][index]
-	Events.emit_damage(Support.ecs_of(main), enemy_id, 99, Vector2i.ZERO, Support.player_id_of(main))
-	Support.pump(main, Support.SIM_STEP_SECONDS)
+	return await Support.kill_with_sword(self, main, cast["enemies"][index])
