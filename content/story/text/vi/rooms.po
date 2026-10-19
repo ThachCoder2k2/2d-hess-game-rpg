@@ -1,0 +1,16 @@
+# The Unbound Pawn: Vietnamese words of the rooms. EMPTY ON PURPOSE (D-25): the game falls back to the English line
+# for every key that has no msgstr here, so the game is fully playable while this file fills up.
+#
+# To translate a line: copy its "msgid" and "#." comment from the English file (../en/rooms.po), paste them below
+# and write the Vietnamese after "msgstr". Keep {name} exactly as it is. Save and run the game.
+#
+# Cách dịch một dòng: chép "msgid" (và dòng chú thích "#.") từ tệp tiếng Anh (../en/rooms.po) sang đây, rồi viết
+# tiếng Việt sau "msgstr". Giữ nguyên mọi phần trong ngoặc nhọn, ví dụ {room}. Lưu tệp rồi chạy game. Dòng nào chưa dịch
+# thì game tự dùng tiếng Anh.
+msgid ""
+msgstr ""
+"Project-Id-Version: The Unbound Pawn\n"
+"Language: vi\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"

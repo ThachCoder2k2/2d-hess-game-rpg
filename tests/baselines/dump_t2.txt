@@ -16,7 +16,7 @@ exits: 2
   (1,5) {"entry": &"from_t2", "locked_message": "", "requires_room_clear": false, "zone": &"t1_white_kings_fall"}
 gates: 0
 player_unlocks: 1
-  (6,5) {"id": &"wooden_sword", "message": "The child whispers: take it. The pawn grips the sword."}
+  (6,5) {"id": &"wooden_sword", "message": "ROOM_T2_FALLEN_SWORD_TILE_UNLOCK_SWORD"}
 items: 0
 
 [board] P player, e enemy, i item, X exit, G gate, U unlock, # wall, . floor

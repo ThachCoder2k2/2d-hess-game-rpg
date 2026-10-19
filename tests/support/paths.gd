@@ -67,7 +67,7 @@ func main_script() -> String:
 	return _existing_file("res://shell/game_root.gd")
 
 
-## GameFlow (starts the room again after a death or the restart key).
+## GameFlow (starts the room again after a death or the pause menu's Restart Room).
 func game_flow_script() -> String:
 	return _existing_file("res://shell/game_flow.gd")
 
@@ -102,8 +102,35 @@ func world_dumper_script() -> String:
 
 # --- Scenes ---
 
+## The project's main scene: AppRoot, which owns the flow, the music and the screens (M4).
 func main_scene() -> String:
+	return _existing_resource("res://shell/app_root.tscn")
+
+
+## The in-game scene (GameRoot): the room, the hero, the HUD. AppRoot adds it on New Game and Continue; a bridge
+## suite boots it alone.
+func game_scene() -> String:
 	return _existing_resource("res://shell/game_root.tscn")
+
+
+## The title screen.
+func title_scene() -> String:
+	return _existing_resource("res://shell/title/title_screen.tscn")
+
+
+## The credits roll.
+func credits_scene() -> String:
+	return _existing_resource("res://shell/credits/credits_screen.tscn")
+
+
+## The pause menu (AppRoot lays it in its menu layer).
+func pause_menu_scene() -> String:
+	return _existing_resource("res://shell/pause/pause_menu.tscn")
+
+
+## The Book of House Rules screen (the game scene instances it).
+func rule_book_scene() -> String:
+	return _existing_resource("res://presentation/ui/codex/rule_book.tscn")
 
 
 ## The 72x40 kingdom: a test fixture, not game content (plan D-02).

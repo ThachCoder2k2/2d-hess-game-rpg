@@ -31,9 +31,10 @@ const SAVE_ONLY_CODE_PATTERNS: Array[String] = [
 	"(?<![A-Za-z0-9_])SaveMigration(?![A-Za-z0-9_])",
 	"(?<![A-Za-z0-9_])WorldState(?![A-Za-z0-9_])",
 ]
-## String literals that name the save's files; only the save folder may.
+## String literals that name the save's files; only the save folder may. `slot_` counts when it starts a word: the
+## save file is `slot_%d.cfg`, and the InputMap's `skill_slot_1` is not a save file.
 const SAVE_ONLY_STRING_PATTERNS: Array[String] = [
-	"slot_", "profile\\.cfg", "world_state\\.cfg", "\\.bak", "\\.corrupt", "user://saves",
+	"(?<![A-Za-z0-9_])slot_", "profile\\.cfg", "world_state\\.cfg", "\\.bak", "\\.corrupt", "user://saves",
 ]
 ## Raw file primitives that write, move or delete: save_file.gd alone may use them.
 const WRITE_PRIMITIVE_PATTERNS: Array[String] = [

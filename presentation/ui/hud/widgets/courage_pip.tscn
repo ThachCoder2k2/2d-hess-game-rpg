@@ -1,0 +1,40 @@
+[gd_scene format=3 uid="uid://bktisi771a611"]
+
+[ext_resource type="Script" uid="uid://soontgtuqvu5" path="res://presentation/ui/hud/widgets/courage_pip.gd" id="1"]
+
+[sub_resource type="StyleBoxFlat" id="full"]
+bg_color = Color(0.957, 0.918, 0.824, 1)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.286, 0.247, 0.227, 1)
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_right = 4
+corner_radius_bottom_left = 4
+corner_detail = 2
+anti_aliasing = false
+
+[sub_resource type="StyleBoxFlat" id="empty"]
+bg_color = Color(0.141, 0.106, 0.133, 0.55)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.62, 0.58, 0.52, 1)
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_right = 4
+corner_radius_bottom_left = 4
+corner_detail = 2
+anti_aliasing = false
+
+[node name="CouragePip" type="Panel"]
+custom_minimum_size = Vector2(14, 9)
+offset_right = 14.0
+offset_bottom = 9.0
+mouse_filter = 2
+script = ExtResource("1")
+full_style = SubResource("full")
+empty_style = SubResource("empty")

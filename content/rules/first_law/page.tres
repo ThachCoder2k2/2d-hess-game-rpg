@@ -5,7 +5,7 @@
 [resource]
 script = ExtResource("1")
 piece_id = &"pawn_recruit"
-title = "The first law"
-original_rule = "A pawn marches forward one square and captures one square diagonally forward."
-amendment = "None. The first law holds - for now."
-flavor = "The child set up the board the way the book said."
+title = "PAGE_FIRST_LAW_TITLE"
+original_rule = "PAGE_FIRST_LAW_RULE"
+amendment = "PAGE_FIRST_LAW_AMENDMENT"
+flavor = "PAGE_FIRST_LAW_FLAVOR"

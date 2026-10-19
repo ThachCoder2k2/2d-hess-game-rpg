@@ -1,0 +1,14 @@
+[gd_scene format=3 uid="uid://b3n0rxq5vmdt7"]
+
+[ext_resource type="Script" uid="uid://brngevxo5lo46" path="res://presentation/ui/hud/widgets/skill_slots.gd" id="1"]
+[ext_resource type="PackedScene" uid="uid://d0dk5jdgqw1i4" path="res://presentation/ui/hud/widgets/skill_slot.tscn" id="2"]
+
+[node name="SkillSlots" type="Control"]
+layout_mode = 3
+anchors_preset = 0
+offset_right = 120.0
+offset_bottom = 24.0
+mouse_filter = 2
+script = ExtResource("1")
+
+[node name="FirstSlot" parent="." instance=ExtResource("2")]

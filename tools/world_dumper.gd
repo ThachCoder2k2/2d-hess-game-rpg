@@ -23,6 +23,8 @@ extends RefCounted
 ## (sorted sprite and tile-set texture paths). Floats print with 4 decimals.
 ## Nodes under an ActorView print structure only: animations and ViewSyncSystem
 ## drive their transforms, which depend on frame timing.
+## Words print as their TEXT KEYS (a piece is "enemy:ENEMY_PAWN_RECRUIT_PIECE", a door's line is "ROOM_T3_..._LOCKED"),
+## never as the sentence: a baseline checks what the room does, so rewriting a line in a .po file must not change it.
 
 ## The player's puppet view, the same scene shell/game_root.tscn instances as PawnHero.
 const PLAYER_VIEW_SCENE_PATH := "res://presentation/views/actors/player.tscn"

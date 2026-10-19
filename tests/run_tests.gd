@@ -63,6 +63,7 @@ func _view(scene_path: String) -> ActorView:
 
 
 func _init() -> void:
+	TextService.set_language(TextService.SOURCE_LANGUAGE)  # this suite reads the English words
 	# --- EcsGrid: the cell rules every system relies on ---
 	var grid := EcsGrid.new()
 	_expect(grid.register_entity(1, Vector2i(1, 1)), "entity registers on an empty cell")
@@ -137,7 +138,7 @@ func _init() -> void:
 
 	var armed_definition := load("res://content/enemies/pawn_armed/enemy.tres") as EnemyDefinition
 	_expect(armed_definition.validate().is_empty(), "armed Pawn definition has no missing configuration")
-	_expect(armed_definition.default_weapon != null and armed_definition.default_weapon.display_name == "Pencil Spear", "armed Pawn default weapon is Inspector-configured")
+	_expect(armed_definition.default_weapon != null and TextService.t(armed_definition.default_weapon.display_name) == "Pencil Spear", "armed Pawn default weapon is Inspector-configured")
 
 	var knight_definition := load("res://content/enemies/knight_tracker/enemy.tres") as EnemyDefinition
 	_expect(knight_definition.movement.allowed_directions.size() == 8, "knight movement config exposes eight L-shaped offsets")
@@ -184,19 +185,23 @@ func _init() -> void:
 	_expect(registry.has(&"pickup") and registry.has(&"room_clear") and registry.has(&"defeat_jingle") and registry.has(&"gate_open"), "SfxManager registry carries the four event sounds")
 	_expect(StringName(sfx_manager.get("bus")) == &"SFX", "SfxManager routes to the SFX bus")
 
-	# Music: an editor-owned looping AudioStreamPlayer in the main scene, no code.
-	var main_scene := (load("res://shell/game_root.tscn") as PackedScene).instantiate()
+	# Music: an editor-owned looping AudioStreamPlayer in the main scene, no code. The main scene is AppRoot since
+	# M4 (the player moved out of the game scene so a death, a room change and a trip to the title never restart it).
+	var main_scene := (load("res://shell/app_root.tscn") as PackedScene).instantiate()
 	var music_player := main_scene.get_node_or_null("MusicPlayer") as AudioStreamPlayer
 	_expect(music_player != null and music_player.autoplay, "main scene carries an autoplaying MusicPlayer")
 	_expect(music_player != null and music_player.bus == &"Music", "MusicPlayer routes to the Music bus")
 	var music_stream: AudioStreamWAV = music_player.stream as AudioStreamWAV if music_player != null else null
 	_expect(music_stream != null and music_stream.loop_mode == AudioStreamWAV.LOOP_FORWARD, "music track loops from its embedded WAV loop points")
 
-	# Demo posture: debug overlay is an Inspector checkbox that ships off,
-	# and the game window ships fullscreen (F11 toggles at runtime).
-	_expect(not bool(main_scene.get("debug_enabled")), "debug overlay ships off (Inspector checkbox on Main)")
-	_expect(int(ProjectSettings.get_setting("display/window/size/mode", 0)) == 3, "game window ships fullscreen")
 	main_scene.free()
+
+	# Demo posture: debug overlay is an Inspector checkbox that ships off (on the in-game scene),
+	# and the game window ships fullscreen (F11 toggles at runtime).
+	var game_scene := (load("res://shell/game_root.tscn") as PackedScene).instantiate()
+	_expect(not bool(game_scene.get("debug_enabled")), "debug overlay ships off (Inspector checkbox on Main)")
+	_expect(int(ProjectSettings.get_setting("display/window/size/mode", 0)) == 3, "game window ships fullscreen")
+	game_scene.free()
 
 	# --- The world graph: every zone loads, every door resolves ---
 	var world_graph := load("res://content/world/world.tres") as WorldGraph
@@ -296,7 +301,7 @@ func _init() -> void:
 			definition_ids.append(definition.id)
 	_expect(definition_ids.size() >= 7, "content/enemies holds at least seven enemy definitions (a missing folder cannot pass the book check below vacuously)")
 	for entry in rule_book.entries:
-		_expect(entry.piece_id in definition_ids, "book page '%s' names a real piece" % entry.title)
+		_expect(entry.piece_id in definition_ids, "book page '%s' names a real piece" % TextService.t(entry.title))
 	var book_ui := (load("res://presentation/ui/codex/rule_book.tscn") as PackedScene).instantiate() as RuleBookUI
 	root.add_child(book_ui)
 	book_ui.refresh([&"pawn_recruit"])

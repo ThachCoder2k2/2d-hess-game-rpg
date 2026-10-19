@@ -14,7 +14,8 @@ const SaveServiceScript := preload("res://shell/save/save_service.gd")
 @export var board_path: NodePath = ^"PrototypeBoard"
 @export var hud_path: NodePath = ^"HUD"
 @export var hero_start_cell := Vector2i(3, 7)
-## Draw board boundaries, paths, and behavior labels. F3 still toggles at runtime.
+## The debug view: board boundaries, paths and behaviour labels, and the HUD's debug readout. Off in a release export
+## whatever the scene says (ShellKeys.debug_view_at_start); F3 toggles it at runtime.
 @export var debug_enabled := false
 ## The world as data: zone id -> scene. Assigned = world mode (zone travel on
 ## door cells, no clear-all win screen unless a zone carries an objective).
@@ -35,9 +36,18 @@ var hero_parked_position := Vector2.ZERO
 ## The only reader of the Input singleton: copies the controls into ecs.input_snapshot once per frame.
 var input_poller := InputPoller.new()
 var router := EventRouter.new()
-## Starts the room again after a death or the restart key, without reloading the scene.
-var game_flow := GameFlow.new()
+## The flow this scene belongs to: starts the room again after a death or the pause menu's Restart Room, without reloading
+## the scene. AppRoot gives the scene its own flow before adding it; a scene run alone makes one that is
+## already PLAYING.
+var game_flow := GameFlow.new(GameFlow.State.PLAYING)
 var shell_keys := ShellKeys.new()
+## The player's settings. AppRoot hands in the one it owns before the scene is added (so a change on the settings screen
+## reaches this room at once); a scene run alone has its own, at the defaults. SettingsBridge makes them true here.
+var settings := GameSettings.new()
+## Finds the glyph pictures of the HUD's control hints, and says which device the player used last. AppRoot hands in the
+## ones it owns; a scene run alone has a finder of its own and shows the keyboard.
+var input_glyphs := InputGlyphs.new()
+var last_input_device: LastInputDevice = null
 # One bridge per responsibility; the header of each file says what it owns.
 var board_bridge := BoardBridge.new()
 var camera_bridge := CameraBridge.new()
@@ -49,12 +59,16 @@ var despawn_bridge := DespawnBridge.new()
 var outcome_bridge := RoomOutcomeBridge.new()
 var zone_travel_bridge := ZoneTravelBridge.new()
 var book_bridge := BookBridge.new()
+var settings_bridge := SettingsBridge.new()
 
 
 func _ready() -> void:
 	current_room = get_node_or_null(room_path)
 	board = get_node_or_null(board_path) as PrototypeBoard
 	hud = get_node_or_null(hud_path) as GameHud
+	debug_enabled = ShellKeys.debug_view_at_start(debug_enabled, OS.is_debug_build())
+	if hud != null:
+		hud.configure_controls(input_glyphs, last_input_device)
 	_attach_hero_view(get_node_or_null(hero_path) as ActorView)
 	hero_parked_position = player_view.position if player_view != null else Vector2.ZERO
 	board_bridge.attach(board)
@@ -63,7 +77,7 @@ func _ready() -> void:
 	audio_bridge.attach(self)
 	game_flow.attach(self)
 	shell_keys.attach(self)
-	for bridge: ShellBridge in [save_bridge, despawn_bridge, outcome_bridge, zone_travel_bridge, book_bridge]:
+	for bridge: ShellBridge in [save_bridge, despawn_bridge, outcome_bridge, zone_travel_bridge, book_bridge, settings_bridge]:
 		bridge.attach(self)
 	for bridge in _bridges():
 		bridge.register(router)
@@ -112,7 +126,8 @@ func boot_zone(entry_id: StringName, entered_by_door := false) -> void:
 	board_bridge.show_room(ecs.grid, debug_enabled)
 	camera_bridge.show_room(ecs.grid)
 	hud_bridge.show_room()
-	message_bridge.say(ZoneStage.room_text(current_room, "get_start_message", "Break the black line."))
+	hud_bridge.set_debug_view(debug_enabled)
+	message_bridge.say(ZoneStage.room_text(current_room, "get_start_message", RoomObjective.STOCK_START_KEY))
 
 
 func _process(delta: float) -> void:
@@ -128,7 +143,7 @@ func _process(delta: float) -> void:
 
 
 ## Starts the room the pawn is in again, on the entry it came by, without leaving the scene (GameFlow calls
-## it for a death or the restart key; D-16: a death resets only this room): a fresh zone, a fresh hero view
+## it for a death or the pause menu's Restart Room; D-16: a death resets only this room): a fresh zone, a fresh hero view
 ## in its boot pose, the Book closed, nothing carried. What the scene keeps is the run (it takes the world's
 ## flags first), the music and the F3 switch.
 func respawn() -> void:
@@ -164,7 +179,7 @@ func save_service() -> SaveServiceScript:
 ## plays and its view goes, a defeat clears the board before the room counts it, the status line speaks last.
 func _bridges() -> Array[EventBridge]:
 	return [board_bridge, camera_bridge, hud_bridge, save_bridge, audio_bridge, despawn_bridge, outcome_bridge,
-		message_bridge, zone_travel_bridge, book_bridge]
+		message_bridge, zone_travel_bridge, book_bridge, settings_bridge]
 
 
 ## The hero's view and the camera rig that is its child: the camera bridge follows a replaced view.

@@ -5,7 +5,7 @@
 [resource]
 script = ExtResource("1")
 piece_id = &"knight_tracker"
-title = "The knight"
-original_rule = "The knight leaps in an L, and no piece may bar its way."
-amendment = "None yet written."
-flavor = "The stable door is still closed."
+title = "PAGE_KNIGHT_ERRANT_TITLE"
+original_rule = "PAGE_KNIGHT_ERRANT_RULE"
+amendment = "PAGE_KNIGHT_ERRANT_AMENDMENT"
+flavor = "PAGE_KNIGHT_ERRANT_FLAVOR"

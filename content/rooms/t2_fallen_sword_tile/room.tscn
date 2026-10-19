@@ -9,7 +9,7 @@
 [ext_resource type="Texture2D" uid="uid://brfcjvbubf1yc" path="res://content/rooms/t2_fallen_sword_tile/background.png" id="7_room"]
 
 [node name="T2_FallenSwordTile" instance=ExtResource("1_room")]
-room_message = "A weapon waits among the broken squares."
+room_message = "ROOM_T2_FALLEN_SWORD_TILE_START"
 zone_id = &"t2_fallen_sword_tile"
 board_size = Vector2i(16, 9)
 
@@ -53,7 +53,7 @@ default_color = Color(0.86, 0.7, 0.28, 1)
 
 [node name="FallenSwordUnlock" parent="." instance=ExtResource("6_unlock")]
 grid_cell = Vector2i(6, 5)
-message = "The child whispers: take it. The pawn grips the sword."
+message = "ROOM_T2_FALLEN_SWORD_TILE_UNLOCK_SWORD"
 
 [node name="BrokenPawnBase" type="Polygon2D" parent="RoomArt/SetDressing"]
 position = Vector2(220, 108)

@@ -15,6 +15,9 @@ const HIT_TAKEN_SHAKE_SECONDS := 0.16
 const HIT_TAKEN_SHAKE_BASE_STRENGTH := 4.2
 
 var camera_rig: CameraRig
+## How hard the screen shakes as a multiple of the authored strength: 1.0 the game as made, 0.0 no shake at all (the
+## Screen shake setting, docs/game-base-plan.md 9.2, 10: reduce-shake takes the effect out and never the telegraphs).
+var shake_scale := 1.0
 
 
 ## The rig is a child of the hero's view, so a scene that swaps the view hands the new rig over.
@@ -34,8 +37,8 @@ func show_room(grid) -> void:
 
 
 func shake(duration: float, strength: float) -> void:
-	if camera_rig != null:
-		camera_rig.start_shake(duration, strength)
+	if camera_rig != null and shake_scale > 0.0:
+		camera_rig.start_shake(duration, strength * shake_scale)
 
 
 func _on_player_attack_landed(event: Dictionary) -> void:

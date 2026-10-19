@@ -1,0 +1,33 @@
+[gd_scene format=3 uid="uid://b07tvgogx6jpq"]
+
+[ext_resource type="Script" uid="uid://pwo5hw7wxdkl" path="res://presentation/ui/hud/widgets/courage_pips.gd" id="1"]
+[ext_resource type="PackedScene" uid="uid://bktisi771a611" path="res://presentation/ui/hud/widgets/courage_pip.tscn" id="2"]
+
+[node name="CouragePips" type="Control"]
+layout_mode = 3
+anchors_preset = 0
+offset_right = 146.0
+offset_bottom = 24.0
+mouse_filter = 2
+script = ExtResource("1")
+pip_scene = ExtResource("2")
+
+[node name="Caption" type="Label" parent="."]
+layout_mode = 0
+offset_top = 5.0
+offset_right = 62.0
+offset_bottom = 19.0
+mouse_filter = 2
+theme_override_colors/font_color = Color(1, 0.956863, 0.839216, 1)
+theme_override_font_sizes/font_size = 8
+text = "UI_HUD_COURAGE"
+vertical_alignment = 1
+
+[node name="PipRow" type="HBoxContainer" parent="."]
+layout_mode = 0
+offset_left = 64.0
+offset_top = 7.0
+offset_right = 146.0
+offset_bottom = 16.0
+mouse_filter = 2
+theme_override_constants/separation = 3

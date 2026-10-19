@@ -773,3 +773,119 @@ was the commit attribution line, which matches the harness and is no defect).
   path"), never a floor weapon; the plan's M7a entry now says so.
 - **Left: the hero cannot take the spear** ("take the pencil spear" is not possible in this build; Q works from the sword on). The Pencil
   grant that locks Q is M7 (D-11); the M3b review rounds do not build that lock.
+
+## App Root and Flow Facts (M4 step 1, 2026-10-19)
+
+- A coroutine that awaits a `Tween.finished` hangs forever if the tween is killed, and a screen change that waits on it blocks the whole queue.
+  `TransitionLayer` therefore awaits its own `fade_ended` signal and releases the waiter of a fade it replaces (a generation counter); it emits
+  that release AFTER the new fade is set up, because the released caller continues synchronously inside `emit` and may start a fade of its own.
+- `Node.create_tween()` starts on the next frame and its first step carries all the time that passed before it was made, so a test that times a
+  fade gets less than the duration; assert "not instant, not forever", never the exact time.
+- A `GameFlow` (a `RefCounted`) that keeps the `GameRoot` it rebuilds must test `is_instance_valid(_root)`, not `_root != null`: Quit to Title
+  frees the room while a death beat or a fade is still awaited. Any timer or coroutine of a bridge that outlives the scene has the same
+  hazard (`RoomOutcomeBridge`'s 0.85 s beat did).
+- Setting `process_mode = PROCESS_MODE_DISABLED` on a container stops its mouse and key events and its focus, which is how the title silences
+  its menu behind the New Game question and after a choice. `ConfirmPanel` also points every `focus_neighbor` at itself, because arrow keys
+  otherwise find the nearest focusable control in the direction, behind the backdrop.
+- `Signal` can be passed as an argument and `Callable`s of a `bool`-returning method connect to signals that carry nothing; `Signal.emit` is itself
+  a `Callable` (`title.settings_chosen.connect(settings_requested.emit)`).
+- Exported node references in a hand-written `.tscn` need `node_paths=PackedStringArray("a", "b")` on the node's header and `NodePath("...")` values;
+  a new `.tscn`/`.tres` written without a header uid is stamped by `tools/stamp_uids.gd`, and its script references only after an import pass has
+  made the `.gd.uid` sidecars (run the stamper twice: before and after the pass).
+- A suite that extends `SceneTree` IS the tree: `get_tree()` does not exist in it, use `paused`, `current_scene`, `root` and `create_timer(...)`
+  directly. Cannot-infer-type errors (`var x := node_typed_as_Node.method()`) are parse errors in this project: type the variable.
+- The credits' Licenses block is a function of `THIRD_PARTY_NOTICES.md` (an entry is credited iff it is a `###` heading with a `- **License:**`
+  bullet outside a "(not shipped)" section), so the notices are the one place a new third-party item is recorded; the font and the glyph pack
+  of M4 become credits by being listed there and running `tools/build_credits_licenses.gd`.
+- The Control-based screens are children of a plain `Node` host; their full-rect anchors resolve against the viewport, and no `Camera2D` exists
+  while one of them is up (the game scene, which owns the camera, is freed first). A screen drawn in the default canvas would move with a camera.
+- `SaveService.start_new_run` writes before any success event, which makes `has_save` true for a run with no progress: the title then offers
+  Continue for a clean run, which resumes at the authored first room (the same place as New Game). That is intended.
+
+
+## Settings, Controls and Glyph Facts (M4 step 3, 2026-10-19)
+
+- A headless run has no window: `get_window().mode` always reads windowed and a set mode does nothing. A `Window.new()` that is not in the tree
+  keeps the mode it is given, which is how the applier's fullscreen is tested.
+- A real renderer runs in this sandbox: `godot --path . -s script.gd` (no `--headless`) can instance a scene in a `SubViewport` and
+  `get_texture().get_image().save_png()` it, the only way to look at a Control layout. `get_viewport().gui_get_focus_owner()` and `grab_focus()`
+  work in headless runs, so focus hand-offs are testable.
+- `ProjectSettings` says the game ships fullscreen (`display/window/size/mode=3`), so the Fullscreen setting's default is `true`.
+- A bool is not an `int` in GDScript (`true is int` is false), so `CommandSystem._on_tuning_set` needed its own bool branch for `reduce_flash`.
+- `Theme.set_stylebox` on the project theme re-resolves every live Control at once (`get_theme_stylebox` on a panel returns the new box the
+  next line), and `Theme.get_stylebox` of a name the theme itself does not hold must be guarded with `has_stylebox`: the engine's default
+  panel is see-through (alpha under 1), which is what High-contrast menus replaces.
+- `Resource.emit_changed()` is the `changed` signal of `GameSettings`; a lambda connected to a Resource's signal is dropped with the Resource, but a
+  RefCounted bridge's method connected to a longer-lived Resource is disconnected by the engine when the bridge is freed.
+- `InputEventAction` with `pressed = true` answers `is_action_pressed(&"ui_cancel")`, which is how a suite drives a node's `_unhandled_input`
+  without the real keys; the real path (`tap_key(KEY_ESCAPE)`) reaches the topmost sibling of the menu layer first (later siblings take input first).
+- In a `TabContainer` the tab bar is the one focusable thing when the pages hold only labels (the Controls panel): left and right turn pages.
+- A `ConfigFile` keeps the type of a stored float, bool, int and String, so `GameSettings.from_values` can reject a wrong type instead of guessing.
+
+
+## Text Pipeline Facts (M4 step 3, 2026-10-19)
+
+- Godot loads `.po` files named in `internationalization/locale/translations` with no import pass and no sidecar, several per locale; a key in
+  none of them renders as the key; `locale/fallback="en"` makes `vi` (and `en_VN`, this machine's locale) read the `en` row per key. Verified
+  on 4.6.3 in a scratch project and pinned by `test_po_domains_merge` / `test_text_service`. An empty `msgstr` is a row that renders as its key.
+- Godot's built-in pseudolocalization accents the name inside `{pawn}` (`{ṕáŵή}`), so `String.format` fills nothing; it preserves `%d`. A custom
+  `Translation` added with `TranslationServer.add_translation` under the locale `qps` is selectable with `set_locale` and falls back to `en` for
+  keys it lacks. That is what `PseudoLocale` builds.
+- A Label whose `text` is a key keeps the KEY in `.text`; the translated words are only visible through `Node.atr(text)` (tests use it) or rendering.
+  `NOTIFICATION_TRANSLATION_CHANGED` reaches every node in the tree on `TranslationServer.set_locale`; the Label redraws itself.
+- A `Window`'s theme does not reach Controls whose parent is a `CanvasLayer` (the HUD); the project theme (`gui/theme/custom`) does. A `Theme` can
+  be a script subclass (`UiTheme extends Theme`) and `ThemeDB.get_project_theme()` returns that instance, so it can name files and be changed at
+  run time. `Theme.has_font(name, type)` answered true for a type variation that had no font of its own once the Theme had a default font; ask
+  `get_font_list(type)` for what a type really holds.
+- `ThemeDB.fallback_font` is a `FontFile` whose `.data` holds its bytes (Open Sans SemiBold, 64 KB) and which covers all 134 precomposed
+  Vietnamese letters; `FontFile.new()` has no glyph at all. Writing those bytes to `user://` and calling `FontFile.load_dynamic_font` is how a
+  test plays "the owner dropped a font". `ResourceLoader.exists(path)` is false for a font that is there but not imported; `UiFonts` then reads
+  the raw file.
+- A static variable with an initialiser (`static var x := f()`) in `UnboundTest` runs when the script loads, before any subclass `_init()`: the
+  place to set the language for every suite. `_initialize()` is too late because the suites assert inside `_init()`.
+- GDScript lambdas inside a `Dictionary` literal with trailing commas do not parse well; name the states as methods and pass them as Callables.
+- Control `size` can never be smaller than its minimum size, so a label with too much text GROWS (towards the right) instead of being clipped;
+  an overflow test compares the grown rectangle with the English one and the drawn text extent with the panel behind it. A wrapped Label reports
+  `get_line_count()`; a line box is `get_line_height()` (39 px for a size-28 Label, so two wrapped lines of the title logo need 78 px).
+
+## HUD and Camera Facts (M4 step 4, 2026-10-19)
+
+- `Camera2D.offset` is applied after `limit_*` (the docs say the offset "is able to move it past" the limit) and `get_screen_center_position()`
+  includes it. Setting `offset` updates the camera at once only when the value CHANGES (the same value again leaves the old transform), and the
+  setter keeps the smoothed position around its update. The engine's own smoothing advances on every `_update_scroll`, which also runs from
+  `force_update_scroll()`, so anything that updates the camera more than once a frame must switch the engine's smoothing off and ease by itself.
+  A node's internal process (where `Camera2D` updates) runs before that node's own `_process` in the same frame, so a camera moved from
+  `_process` needs `force_update_scroll()` to take effect that frame. Probed on 4.6.3 (scratch script, not kept).
+- A camera is measured by the viewport's own `canvas_transform` (its origin is minus the view's top-left corner times the zoom); a whole-pixel check
+  on that cannot be fooled by what the rig thinks it computed.
+- `rendering/2d/snap/snap_2d_transforms_to_pixel` rounds each canvas item's origin after the stretch scale, so under `canvas_items` at 1280 x 720 it
+  rounds to HALF a game pixel; `window/stretch/scale_mode = "integer"` is the setting that makes every game pixel a whole number of screen pixels
+  (and letterboxes a window that is not a multiple of 640 x 360). Neither is set; both are the owner's call.
+- A scene-unique name (`%Name`) inside an instanced scene is not reachable from the parent scene's script (the scope is the scene's owner): the HUD
+  reaches its widgets by path (`$CouragePips`) and each widget its own children by `$Child`. A Label a scene authored with a key in `text` keeps the
+  KEY in `.text` (read it through `atr(text)`), and a child's own `visible` stays true when its parent is hidden (use `is_visible_in_tree()`).
+- `Array[HudWidget].has(some_node)` logs an engine error when the node's class cannot be a `HudWidget` (typed arrays validate `has()`), and
+  `x is HudWidget` with an `x` statically typed as a class that cannot be one is a parse error: compare through an `Array[Node]` or a plain `Node`.
+- `Control.get_global_rect()` of a Control under a `CanvasLayer` is in canvas coordinates, which is what a 640 x 360 safe-zone test needs; a
+  reserved widget keeps its rectangle while `visible` is false, so one test holds shown and reserved widgets alike.
+- The first pad event of `move_up` is the left stick (project.godot lists the stick before the d-pad), so a hint that takes the first glyph shows
+  "[Left Stick Up]" for Move on a pad until the owner's glyph files exist; the hint limits itself to one glyph on a pad.
+- The tallest board the strips leave room for is 18 x 9 (y 36 to 324 in 640 x 360): the top strip is y 0 to 32 and the bottom y 326 to 360, which is
+  why a bar is at most 28 px and the boss bar frame of the asset list is 96 x 20. Every room of the game is 16 x 9 or 18 x 9 today.
+- Agent environment: a worktree-isolated agent's shell refuses a `for` loop, a computed command name and some long heredocs; a wrapper script in
+  `/tmp` that takes the suite paths as arguments (`bash /tmp/<name>.sh tests/a.gd tests/b.gd`) runs them, and `python3 script.py` with the script written
+  by the file tool edits many docs at once. BSD `sed` needs `-i ''`.
+- A control freed and rebuilt in the frame its own signal fires (a language chosen in an `OptionButton` rebuilds every page) is not visible-in-tree
+  until the next frame: a `TabContainer` shows its pages after the frame's changes. `grab_focus()` on it at once does nothing; a deferred call does
+  work, and a popup that has just closed must be allowed to finish first.
+- A `Control` with `focus_neighbor_*` unset takes the nearest control by position, which skips rows when the controls are of very different widths
+  (a switch beside a drop-down) and leaves a button that sits beside another out of reach of `ui_down`. Set the neighbours explicitly from the
+  tree order; a neighbour that is the control itself keeps the key on it (`Left` and `Right` on a switch).
+- `FileAccess.get_as_text()` and `PackedByteArray.get_string_from_utf8()` on bytes that are not UTF-8 print one engine error for every bad byte, and
+  `--strict` fails a suite on an engine error: check the bytes first (`SaveFile.is_valid_utf8`) and report one sentence.
+- A theme type variation (`OverMenuPanel`, base `PanelContainer`) is looked up before its base type, so a setting that restyles `PanelContainer.panel`
+  (UiContrast) must restyle the variation's entry too. In the `.tres` it is two lines: `Name/base_type = &"PanelContainer"` and
+  `Name/styles/panel = SubResource(...)`.
+- Godot's CheckButton keeps the left margin of its `normal` stylebox (6 px in the default theme) before its text, a Label does not: names in a row of
+  controls start 6 px apart unless the labels are indented by `get_theme_stylebox(&"normal", &"CheckButton").get_margin(SIDE_LEFT)`.
+- `ConfigFile`-based profile and save files are text, so `SaveFile.read` can check them as UTF-8 before the integrity footer.

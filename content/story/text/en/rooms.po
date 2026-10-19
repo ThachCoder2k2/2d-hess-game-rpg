@@ -1,0 +1,81 @@
+# The Unbound Pawn: the words of the rooms. English is the source language (D-25).
+#
+# To change a line, edit the text after "msgstr" and save. Do not change the "msgid": it is the key the room
+# scenes (content/rooms/<id>/room.tscn) look the words up by.
+# Every room has ROOM_<ID>_NAME (what the title card and the pause menu call it) and ROOM_<ID>_START (the line
+# the status bar says when the pawn comes in); a shut door adds ROOM_<ID>_LOCKED (what holds THAT door), and a
+# marker that gives the pawn a verb adds its own line.
+#
+# Cách sửa một dòng: đổi chữ sau "msgstr", đừng đổi "msgid" (đó là mã mà game và các scene dùng để tìm chữ).
+# Lưu tệp rồi chạy game (F5). Giữ nguyên mọi phần trong ngoặc nhọn, ví dụ {room}.
+msgid ""
+msgstr ""
+"Project-Id-Version: The Unbound Pawn\n"
+"Language: en\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#. room=h1_chess_rug_hub; purpose=the hub's name on the save card and the checkpoint line
+msgid "ROOM_H1_CHESS_RUG_HUB_NAME"
+msgstr "Chess Rug Hub"
+
+#. room=h1_chess_rug_hub; surface=status line on arrival; purpose=the way out of the first act is open and the world is bigger than the board; placeholder
+msgid "ROOM_H1_CHESS_RUG_HUB_START"
+msgstr "The edge of the rug opens. Beyond it: toybox tracks, shelves, and the child's hand above the war."
+
+#. room=t1_white_kings_fall; purpose=the first room's name on the save card and the checkpoint line
+msgid "ROOM_T1_WHITE_KINGS_FALL_NAME"
+msgstr "White King's Fall"
+
+#. room=t1_white_kings_fall; surface=status line on arrival; purpose=the first words of the game: the king is down, the pawn must move; placeholder
+msgid "ROOM_T1_WHITE_KINGS_FALL_START"
+msgstr "The king has fallen. Move."
+
+#. room=t2_fallen_sword_tile; purpose=the sword room's name on the save card and the checkpoint line
+msgid "ROOM_T2_FALLEN_SWORD_TILE_NAME"
+msgstr "Fallen Sword Tile"
+
+#. room=t2_fallen_sword_tile; surface=status line on arrival; purpose=hint that a weapon lies in the room; placeholder
+msgid "ROOM_T2_FALLEN_SWORD_TILE_START"
+msgstr "A weapon waits among the broken squares."
+
+#. room=t2_fallen_sword_tile; surface=status line when the pawn steps on the sword; purpose=the pawn gains the wooden sword; placeholder
+msgid "ROOM_T2_FALLEN_SWORD_TILE_UNLOCK_SWORD"
+msgstr "The child whispers: take it. The pawn grips the sword."
+
+#. room=t3_first_pawn_clash; purpose=the first fight's name on the save card and the checkpoint line
+msgid "ROOM_T3_FIRST_PAWN_CLASH_NAME"
+msgstr "First Pawn Clash"
+
+#. room=t3_first_pawn_clash; surface=status line on arrival; purpose=teach the telegraph: face it, wait for the warning, strike; placeholder
+msgid "ROOM_T3_FIRST_PAWN_CLASH_START"
+msgstr "A pawn turns back. Face it. Wait for the warning. Strike."
+
+#. room=t3_first_pawn_clash; surface=status line when the pawn steps on the shut door; purpose=say what holds this door; placeholder
+msgid "ROOM_T3_FIRST_PAWN_CLASH_LOCKED"
+msgstr "The black pawn still bars the way. Break the black line first."
+
+#. room=t4_broken_rule_yard; purpose=the armed pawns' room name on the save card and the checkpoint line
+msgid "ROOM_T4_BROKEN_RULE_YARD_NAME"
+msgstr "Broken Rule Yard"
+
+#. room=t4_broken_rule_yard; surface=status line on arrival; purpose=armed pawns reach farther than chess allows; placeholder
+msgid "ROOM_T4_BROKEN_RULE_YARD_START"
+msgstr "They broke the rules first. Armed pawns reach farther than chess allows."
+
+#. room=t4_broken_rule_yard; surface=status line when the pawn steps on the shut door; purpose=say what holds this door; placeholder
+msgid "ROOM_T4_BROKEN_RULE_YARD_LOCKED"
+msgstr "The black pawns still hold the yard. Break the black line first."
+
+#. room=b1_black_pawn_captain; purpose=the first boss room's name on the save card and the checkpoint line
+msgid "ROOM_B1_BLACK_PAWN_CAPTAIN_NAME"
+msgstr "Black Pawn Captain"
+
+#. room=b1_black_pawn_captain; surface=status line on arrival; purpose=the captain holds the way out; placeholder
+msgid "ROOM_B1_BLACK_PAWN_CAPTAIN_START"
+msgstr "The captain blocks the rug edge. Everything you learned is on the board now."
+
+#. room=b1_black_pawn_captain; surface=status line when the pawn steps on the shut door; purpose=say what holds this door; placeholder
+msgid "ROOM_B1_BLACK_PAWN_CAPTAIN_LOCKED"
+msgstr "The captain still holds the rug edge. Break the black line first."

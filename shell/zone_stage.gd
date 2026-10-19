@@ -46,12 +46,12 @@ static func zone_id_of(zone_root: Node) -> StringName:
 	return value if value is StringName else &""
 
 
-## The room's own prose for `getter` (its start, clear or defeat line: RoomEncounter.get_start_message...),
-## or `fallback` when there is no room or it has no such line.
-static func room_text(zone_root: Node, getter: StringName, fallback: String) -> String:
+## The text key of the room's own line for `getter` (its start, clear or defeat line: RoomEncounter.get_start_message...),
+## or the key `fallback_key` when there is no room or it has no such line.
+static func room_text(zone_root: Node, getter: StringName, fallback_key: String) -> String:
 	if zone_root != null and zone_root.has_method(getter):
 		return String(zone_root.call(getter))
-	return fallback
+	return fallback_key
 
 
 ## Puts a new instance of `zone_scene` in the place of `old_zone` under `host`, keeping the tree position so

@@ -5,11 +5,10 @@
 [ext_resource type="PackedScene" uid="uid://ccqe76typpaaq" path="res://presentation/views/actors/player.tscn" id="5"]
 [ext_resource type="PackedScene" uid="uid://clh36vjegdepp" path="res://content/rooms/t1_white_kings_fall/room.tscn" id="6"]
 [ext_resource type="PackedScene" uid="uid://hk5me2mhmwb8" path="res://presentation/ui/hud/hud.tscn" id="7"]
-[ext_resource type="AudioStream" uid="uid://dk0dutjkvtq4y" path="res://assets/music/unbound_march.wav" id="8"]
 [ext_resource type="Resource" uid="uid://cq5g8vgd1g6fx" path="res://content/world/world.tres" id="9"]
 [ext_resource type="PackedScene" uid="uid://cw2yq7mnvc1md" path="res://presentation/ui/codex/rule_book.tscn" id="10"]
 
-[node name="Main" type="Node2D" unique_id=1651252280]
+[node name="GameRoot" type="Node2D" unique_id=1651252280]
 script = ExtResource("1")
 room_path = NodePath("CurrentZone")
 world_graph = ExtResource("9")
@@ -22,12 +21,6 @@ position = Vector2(144, 212)
 [node name="CurrentZone" parent="." instance=ExtResource("6")]
 
 [node name="HUD" parent="." unique_id=974649949 instance=ExtResource("7")]
-
-[node name="MusicPlayer" type="AudioStreamPlayer" parent="."]
-stream = ExtResource("8")
-volume_db = -8.0
-autoplay = true
-bus = &"Music"
 
 [node name="RuleBookUI" parent="." instance=ExtResource("10")]
 

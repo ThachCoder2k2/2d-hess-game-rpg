@@ -5,7 +5,7 @@
 [resource]
 script = ExtResource("1")
 id = &"toy_weapon"
-display_name = "Toy Weapon"
+display_name = "ITEM_TOY_WEAPON_NAME"
 shape = 0
 range_cells = 1
 damage = 1

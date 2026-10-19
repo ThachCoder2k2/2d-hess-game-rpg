@@ -13,7 +13,7 @@
 [ext_resource type="Resource" uid="uid://po15384k0voh" path="res://content/pickups/ruler_blade/ruler_blade.tres" id="11_ruler"]
 
 [node name="B1_BlackPawnCaptain" instance=ExtResource("1_room")]
-room_message = "The captain blocks the rug edge. Everything you learned is on the board now."
+room_message = "ROOM_B1_BLACK_PAWN_CAPTAIN_START"
 zone_id = &"b1_black_pawn_captain"
 board_size = Vector2i(16, 9)
 checkpoint_on_entry = true
@@ -86,4 +86,4 @@ script = ExtResource("5_exit")
 target_zone = &"h1_chess_rug_hub"
 target_entry = &"from_boss"
 requires_room_clear = true
-locked_message = "The captain still holds the rug edge. Break the black line first."
+locked_message = "ROOM_B1_BLACK_PAWN_CAPTAIN_LOCKED"

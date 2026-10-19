@@ -57,8 +57,8 @@ session. Read `AGENTS.md` for the full workflow, and `docs/ARCHITECTURE.md` +
 	despawn) goes in `shell/bridges/` and extends `ShellBridge`. It registers its types in `register()`
 	with `router.on(Events.X, handler)` and the scene lists the order in `GameRoot._bridges()`.
 	`shell/game_root.gd` reacts to no event and holds no rule: at most 200 lines
-	(`test_game_root_is_thin`). Nothing reloads the scene (`test_no_scene_reload`): a death or the restart
-	key is `GameFlow.request_respawn()`, which rebuilds the room inside the scene. Only the `SaveBridge`
+	(`test_game_root_is_thin`). Nothing reloads the scene (`test_no_scene_reload`): a death or the pause menu's Restart Room
+	is `GameFlow.request_respawn()`, which rebuilds the room inside the scene. Only the `SaveBridge`
 	asks for a save (`test_request_save_callers`).
   - How a room goes (cleared, the pawn fell, a door that is a checkpoint) is judged by a system, not a
 	bridge: `ObjectiveSystem` and `CheckpointSystem` read the room's own entity (`RoomObjectiveState`,
@@ -66,10 +66,27 @@ session. Read `AGENTS.md` for the full workflow, and `docs/ARCHITECTURE.md` +
 	`checkpoint_set`, `respawn_requested`; the bridges only answer. Which room is a checkpoint is data on
 	the room (`RoomEncounter.checkpoint_on_entry`) and which pickup is a reward is data on the marker
 	(`PickupSpawnPoint.persistent`): no script names a room or a pickup by id (`test_checkpoint_rules`).
+  - Screens and flow: the main scene is `shell/app_root.tscn` (`AppRoot`). The run is a state machine,
+	`GameFlow` (`shell/game_flow.gd`: title, playing, paused, ending, credits), and AppRoot shows the screen of
+	its state under one host (the title, the game, the credits). A new screen is a scene under
+	`shell/<screen>/` reached by a `GameFlow` request, never by `change_scene` (`test_app_root_is_main_scene`);
+	the music, the fade and the autosave tick live in AppRoot. `shell/game_root.gd` names no AppRoot, so the
+	in-game scene still runs alone. New Game and Continue go through `GameFlow` (`SaveService.start_new_run`,
+	`load_slot`), never through the scene.
   - Controls: `shell/input/input_poller.gd` is the only code that calls the `Input`
 	singleton. It fills `world.input_snapshot` once per frame and a system reads that
 	(`test_input_only_in_poller`); test a control rule by injecting an `InputSnapshot`
-	(`tests/ecs/test_input_snapshot.gd`).
+	(`tests/ecs/test_input_snapshot.gd`). **R is Call child** (D-18); restarting a room is a command of the pause menu
+	(`GameFlow.request_respawn`), not a bound action (`test_pause_restart_is_menu_only`).
+  - The HUD: a layer (`GameHud`) of widgets, each its own scene and script under `presentation/ui/hud/widgets/`, extending
+	`HudWidget` and drawing only the `HudSnapshot` (`refresh`; new data = a `HudSnapshot` field and a line of
+	`HudSnapshotSystem.build()`, never a component read). Widgets live in the top strip (y 0-32, bars at most 28 px) or the
+	bottom strip (y 326-360) and never on a board row (`test_hud_safe_zone`, run against every room). The pawn's cell and
+	who strikes next are debug fields (`DebugReadout`) behind F3, off at the start and in every release export. A control hint
+	is built from the InputMap (`ControlPrompts`), never typed ("Q THRUST" is gone). A later milestone's widget is a hidden
+	RESERVED slot until it has data. The camera is the exception to "no scripted camera": `CameraRig` starts the view on a
+	whole pixel (`snap_to_whole_pixels`, `test_camera_snap`) and nothing else sets a camera's offset or position; shake goes
+	through `CameraBridge.shake()`, scaled by the Screen shake setting.
   - The board: what a cell is made of is a kind (`CellKinds` in `ecs/core/cell_kinds.gd`: floor, wall,
 	gap, leapable_block, chalk, corruption, each with three rules: walkable, stops a ray, a leap may cross).
 	`EcsGrid.set_cell_kind()` is the ONLY writer of the terrain (`blocked_cells` is derived from it;
@@ -87,6 +104,22 @@ session. Read `AGENTS.md` for the full workflow, and `docs/ARCHITECTURE.md` +
 	(`presentation/bridges/audio_bridge.gd`) from drained events. Systems never play audio. The registry will be keyed from
 	`content/audio/sound_bank.tres` (not built yet; today the keys are
 	Inspector exports on `presentation/audio/sfx_manager.tscn`). Recipe: `/new-sound`.
+  - Words (one owner): a sentence, a name or a label the player reads is a ROW of
+	`content/story/text/en/{ui,rooms,skills,story}.po` (key = UPPER_SNAKE with the file's prefix: `UI_`/`MSG_` ui,
+	`ROOM_` rooms, `SKILL_`/`ITEM_` skills, `PAGE_`/`ENEMY_`/`CREDIT_`/... story; a `#.` comment on every row) and
+	scenes, `.tres` and scripts hold the KEY, never the words (`test_text_keys` fails on a literal and on an unknown
+	key). `TextService` (`presentation/text/`) is the ONLY code that asks the engine to translate
+	(`test_tr_only_in_text_service`). A scene's Label holds the key in `text` (the engine translates and redraws it);
+	a script uses `TextService.t(key, params)` and puts text that must follow a language switch on a `LiveText`. Tests
+	run in English (`UnboundTest`). `schema/` and `ecs/` never resolve text; they carry keys. The fonts are the
+	owner's: the project `UiTheme` names the files under `assets/fonts/`, nothing is downloaded.
+  - Settings (one owner): what the player chooses is a `SettingDefinition` row of `GameSettings`
+	(`schema/settings/`), kept in the profile file by `SettingsStore`; the settings screen only edits that one object.
+	A setting is not done until it DRIVES something: the app-level ones in `shell/settings/settings_applier.gd`, the
+	room-level ones in `shell/bridges/settings_bridge.gd`, and a `tests/settings/test_setting_*.gd` suite looks at the target
+	(`test_every_setting_has_a_target`). A setting reaches the simulation only as a `tuning_set` command on `world.tuning`.
+	Prompts and the Controls panel get their glyph from `InputGlyphs` (the owner's Kenney files under `assets/ui/glyphs/`, or
+	the words `[Space]`, `[A]` when a file is missing), never from typed text; nothing is downloaded.
 - **Content is looked up by id.** `ContentDb` (`shell/content/`, a static class, no autoload) lists
   `content/<kind>/` folders; the folder name is the id. Do not load `content/` by path from `ecs/`,
   `authoring/` or `presentation/`: a scene names a resource by uid, the shell asks `ContentDb`. A new
@@ -134,7 +167,7 @@ session. Read `AGENTS.md` for the full workflow, and `docs/ARCHITECTURE.md` +
   grep for `get("name")` string access — those break silently on rename.
 - **No `_draw()` for actor/pickup bodies.** They are `Sprite2D` + `AnimationPlayer`.
   Overlays (board telegraphs, debug, grid lines) may use `_draw()`.
-- **Folder ownership:** `content/` = the owner's data, art, audio and words (zero `.gd`) ·
+- **Folder ownership:** `content/` = the owner's data, art, audio and words, the words being `.po` rows (zero `.gd`) ·
   `schema/` = Resource classes · `ecs/` = simulation · `authoring/` = things dragged into
   scenes · `presentation/` = views and UI · `shell/` = app, save, flow · `assets/` = shared
   raw art and audio · `tools/` · `tests/`. Inside `content/` a folder name is the id and a

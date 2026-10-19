@@ -11,7 +11,7 @@ extends RefCounted
 ##
 ## Design notes shared by every suite:
 ## - The real shell/game_root.tscn is instantiated and made the tree's current
-##   scene (a death or the restart key rebuilds its room through GameFlow, which used to
+##   scene (a death or the pause menu's Restart Room rebuilds its room through GameFlow, which used to
 ##   reload the whole scene).
 ## - game_root.gd's own _process is switched off after boot and driven by hand in
 ##   fixed steps (pump), so a run is deterministic and has no real-time races.
@@ -90,7 +90,7 @@ static func write_the_run(save_service: Node) -> Error:
 ## switches its automatic _process off (see the design notes above).
 static func boot_main(suite: UnboundTest) -> Node:
 	var paths := TestPaths.new(suite)
-	var main := paths.load_scene(paths.main_scene()).instantiate()
+	var main := paths.load_scene(paths.game_scene()).instantiate()
 	var tree: SceneTree = suite
 	tree.root.add_child(main)
 	tree.current_scene = main
@@ -219,10 +219,10 @@ static func player_view_position(main: Node) -> Vector2:
 	return (main.get("player_view") as Node2D).position
 
 
-## Courage pips currently drawn by the HUD (the filled diamonds in the label).
+## Courage pips currently drawn by the HUD (the filled ones of the Courage widget).
 static func hud_courage_pips(main: Node) -> int:
 	var hud := main.get("hud") as GameHud
-	return String(hud.courage_label.text).count("◆")
+	return hud.courage_pips.filled_count()
 
 
 ## Cell of the ZoneEntryMarker called entry_id inside zone_root, or (-999, -999).
@@ -243,7 +243,7 @@ static func exit_cell(main: Node, zone_root: Node, target_zone: StringName) -> V
 	return Vector2i(-999, -999)
 
 
-## The line the room's exit marker to `target_zone` says while the door is shut ("" when it has none or there is no such door).
+## The text key of the line the room's exit marker to `target_zone` says while the door is shut ("" when it has none or there is no such door).
 static func exit_locked_message(zone_root: Node, target_zone: StringName) -> String:
 	for child in zone_root.get_children():
 		var exit_marker := child as ZoneExitMarker
@@ -515,7 +515,7 @@ static func send_key(keycode: Key, pressed: bool) -> void:
 
 
 ## Waits (real engine frames) until the scene has rebuilt its room from the run's checkpoint, which is
-## what a death or the restart key does through GameFlow: the room's world is a new EcsWorld (the scene
+## what a death or the pause menu's Restart Room does through GameFlow: the room's world is a new EcsWorld (the scene
 ## itself stays; it used to be reloaded). Returns false when nothing was rebuilt in time. When it returns
 ## true the old world is gone and one more frame has run, so the new room is live.
 static func wait_for_respawn(tree: SceneTree, main: Node) -> bool:
@@ -531,11 +531,18 @@ static func wait_for_respawn(tree: SceneTree, main: Node) -> bool:
 	return true
 
 
-## Releases every input action a suite may have pressed. Call before quitting.
+## What the pause menu's confirmed Restart Room does: it asks the flow to start the room again (D-18: restarting is
+## a menu command, there is no key). A game scene run alone has no menu, so a suite makes the same request the menu
+## makes (AppRoot: `request_respawn(GameFlow.REASON_RESTART_MENU)`; tests/shell/test_pause_restart_is_menu_only
+## drives the real menu).
+static func restart_room_from_the_menu(main: Node) -> void:
+	main.get("game_flow").request_respawn(GameFlow.REASON_RESTART_MENU)
+
+
+## Releases every input action a suite may have pressed (every action the project defines, so a new one is covered
+## without editing this). Call before quitting.
 static func release_all_actions() -> void:
-	for action in MOVE_ACTIONS:
-		Input.action_release(action)
-	for action in [&"attack", &"skill_1", &"turn_mode", &"restart_room"]:
+	for action in InputMap.get_actions():
 		Input.action_release(action)
 
 

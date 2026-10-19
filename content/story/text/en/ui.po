@@ -1,0 +1,669 @@
+# The Unbound Pawn: the words of the screens, the HUD and the status line. English is the source language (D-25).
+#
+# To change a line, edit the text after "msgstr" and save. Do not change the "msgid": it is the key the game and
+# the scenes look the words up by. {name} is filled in by the game: keep it exactly as it is, in any order.
+# The comment lines that start with "#." say where a line shows up; they are for the person writing the line.
+# Prefixes in this file: UI_ (screens, HUD, menus), MSG_ (the line the game says when something happens),
+# PROMPT_ (control prompts).
+#
+# Cách sửa một dòng: đổi chữ sau "msgstr", đừng đổi "msgid" (đó là mã mà game và các scene dùng để tìm chữ).
+# Lưu tệp rồi chạy game (F5). Giữ nguyên mọi phần trong ngoặc nhọn, ví dụ {room}.
+msgid ""
+msgstr ""
+"Project-Id-Version: The Unbound Pawn\n"
+"Language: en\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#. surface=title screen; purpose=the name of the game, the stand-in for the logo picture
+msgid "UI_GAME_NAME"
+msgstr "THE UNBOUND PAWN"
+
+#. surface=title screen menu button; purpose=start a fresh run
+msgid "UI_TITLE_NEW_GAME"
+msgstr "New Game"
+
+#. surface=title screen menu button; purpose=carry on from the saved run
+msgid "UI_TITLE_CONTINUE"
+msgstr "Continue"
+
+#. surface=title screen menu button; purpose=open the settings
+msgid "UI_TITLE_SETTINGS"
+msgstr "Settings"
+
+#. surface=title screen menu button; purpose=play the credits roll
+msgid "UI_TITLE_CREDITS"
+msgstr "Credits"
+
+#. surface=title screen menu button; purpose=leave the game
+msgid "UI_TITLE_QUIT"
+msgstr "Quit"
+
+#. surface=title screen question; purpose=New Game would replace a saved run, ask first
+msgid "UI_TITLE_CONFIRM_NEW_GAME"
+msgstr "Start a new game? Your saved progress will be replaced."
+
+#. surface=title screen question, the answer that goes ahead
+msgid "UI_TITLE_CONFIRM_NEW_GAME_YES"
+msgstr "Start over"
+
+#. surface=title screen question, the safe answer
+msgid "UI_TITLE_CONFIRM_NEW_GAME_NO"
+msgstr "Keep my save"
+
+#. surface=title screen notice; purpose=the newest save was damaged and the one before it was loaded
+msgid "UI_NOTICE_BACKUP_USED"
+msgstr "Your latest save was damaged. The save before it is loaded instead."
+
+#. surface=title screen notice; purpose=a damaged save with no backup, so only New Game is offered
+msgid "UI_NOTICE_NEW_GAME_AFTER_DAMAGE"
+msgstr "Your save was damaged and cannot be read. Choosing New Game starts over."
+
+#. surface=title screen notice; purpose=a save too old to read, so only New Game is offered
+msgid "UI_NOTICE_OBSOLETE_SAVE"
+msgstr "Your save is from a much older version and cannot be read. Choosing New Game starts over."
+
+#. surface=title screen notice; purpose=a save written by a newer game, which is never overwritten
+msgid "UI_NOTICE_NEWER_GAME"
+msgstr "This save needs a newer game."
+
+#. surface=title screen save card; placeholders={room} the room's name, {time} the time played; purpose=describe the saved run
+msgid "UI_CARD_PLAYED"
+msgstr "{room}  |  {time} played"
+
+#. surface=title screen save card; placeholders={room} {time} {day} the day it was saved, as 2026-10-19; purpose=describe the saved run
+msgid "UI_CARD_PLAYED_ON"
+msgstr "{room}  |  {time} played  |  {day}"
+
+#. surface=title screen save card and pause question; purpose=the room name when the run has not entered any room yet
+msgid "UI_CARD_FIRST_ROOM"
+msgstr "The beginning"
+
+#. surface=title screen save card; placeholders={minutes}; purpose=time played under an hour
+msgid "UI_TIME_MINUTES"
+msgstr "{minutes}m"
+
+#. surface=title screen save card; placeholders={hours} {minutes}; purpose=time played from an hour on
+msgid "UI_TIME_HOURS_MINUTES"
+msgstr "{hours}h {minutes}m"
+
+#. surface=title screen corner; placeholders={version} the build's version number; purpose=say which build this is
+msgid "UI_VERSION"
+msgstr "v{version}"
+
+#. surface=pause menu heading
+msgid "UI_PAUSE_TITLE"
+msgstr "Paused"
+
+#. surface=pause menu button; purpose=close the menu and go back to the room
+msgid "UI_PAUSE_RESUME"
+msgstr "Resume"
+
+#. surface=pause menu button; purpose=close the menu and open the Book of House Rules
+msgid "UI_PAUSE_BOOK"
+msgstr "Book of House Rules"
+
+#. surface=pause menu button; purpose=start this room again (asks first)
+msgid "UI_PAUSE_RESTART"
+msgstr "Restart Room"
+
+#. surface=pause menu button; purpose=go back to the title screen (asks first)
+msgid "UI_PAUSE_QUIT"
+msgstr "Quit to Title"
+
+#. surface=pause menu question; purpose=restarting the room is a death without the defeat, nothing is saved
+msgid "UI_PAUSE_CONFIRM_RESTART"
+msgstr "Restart this room? You start again at its entrance with full Courage, and its pieces and weapons are put back."
+
+#. surface=pause menu question, the answer that goes ahead
+msgid "UI_PAUSE_CONFIRM_RESTART_YES"
+msgstr "Restart room"
+
+#. surface=pause menu question; placeholders={checkpoint} the name of the last checkpoint room; purpose=leaving loses what was not saved
+msgid "UI_PAUSE_CONFIRM_QUIT"
+msgstr ""
+"Quit to the title? Progress since your last save is lost.\n"
+"Last checkpoint: {checkpoint}."
+
+#. surface=pause menu question, the answer that goes ahead
+msgid "UI_PAUSE_CONFIRM_QUIT_YES"
+msgstr "Quit to title"
+
+#. surface=pause menu question, the safe answer of both questions
+msgid "UI_PAUSE_KEEP_PLAYING"
+msgstr "Keep playing"
+
+#. surface=pause menu question; purpose=what the checkpoint line says before the pawn reached any checkpoint
+msgid "UI_PAUSE_NO_CHECKPOINT"
+msgstr "none yet"
+
+#. surface=credits roll, bottom of the screen; purpose=tell the player how to skip the roll
+msgid "UI_CREDITS_SKIP_HINT"
+msgstr "Hold Confirm to skip"
+
+#. surface=HUD top strip, beside the Courage pips; purpose=name the row of marks that shows how much Courage the pawn has left
+msgid "UI_HUD_COURAGE"
+msgstr "COURAGE"
+
+#. surface=HUD top strip, beside the Rank tally marks; purpose=name the tally the child draws for the pawn's Rank (a story label, never a level)
+msgid "UI_HUD_RANK"
+msgstr "RANK"
+
+#. surface=HUD skill slot; purpose=the sword has not been found, so the attack key does nothing yet
+msgid "UI_HUD_SKILL_LOCKED"
+msgstr "FIND SWORD"
+
+#. surface=HUD skill slot; purpose=the thrust can be used now (the key that fires it is shown by the control hints, from the InputMap)
+msgid "UI_HUD_SKILL_READY"
+msgstr "THRUST READY"
+
+#. surface=HUD skill slot; placeholders={seconds} the seconds left, as 1.2; purpose=the thrust is cooling down
+msgid "UI_HUD_SKILL_COOLDOWN"
+msgstr "THRUST {seconds}"
+
+#. surface=HUD debug readout (F3); purpose=no enemy holds the attack token, so any may strike next
+msgid "UI_HUD_TOKEN_FREE"
+msgstr "ENEMY STRIKE READY"
+
+#. surface=HUD debug readout (F3); placeholders={piece} the enemy piece's name in capitals; purpose=say which enemy strikes next
+msgid "UI_HUD_TOKEN_OWNER"
+msgstr "STRIKE: {piece}"
+
+#. surface=HUD top strip; placeholders={remaining} {total}; purpose=how many enemies are left in the room
+msgid "UI_HUD_ENEMIES"
+msgstr "ENEMIES {remaining}/{total}"
+
+#. surface=HUD debug readout (F3); placeholders={x} {y} the pawn's cell, {facing} the compass word below; purpose=where the pawn stands
+msgid "UI_HUD_CELL"
+msgstr "CELL {x},{y}  FACE {facing}"
+
+#. surface=HUD debug readout (F3); purpose=the pawn faces up the board
+msgid "UI_COMPASS_NORTH"
+msgstr "N"
+
+#. surface=HUD debug readout (F3); purpose=the pawn faces down the board
+msgid "UI_COMPASS_SOUTH"
+msgstr "S"
+
+#. surface=HUD debug readout (F3); purpose=the pawn faces right
+msgid "UI_COMPASS_EAST"
+msgstr "E"
+
+#. surface=HUD debug readout (F3); purpose=the pawn faces left
+msgid "UI_COMPASS_WEST"
+msgstr "W"
+
+#. surface=HUD bottom strip, control hints; purpose=what the move keys do, after the glyphs of the four directions
+msgid "UI_HUD_PROMPT_MOVE"
+msgstr "MOVE"
+
+#. surface=HUD bottom strip, control hints; purpose=what the attack key does, after its glyph
+msgid "UI_HUD_PROMPT_SWORD"
+msgstr "SWORD"
+
+#. surface=HUD bottom strip, control hints; purpose=what the first skill key does, after its glyph
+msgid "UI_HUD_PROMPT_THRUST"
+msgstr "THRUST"
+
+#. surface=HUD bottom strip, control hints; purpose=what the pause key does, after its glyph
+msgid "UI_HUD_PROMPT_PAUSE"
+msgstr "PAUSE"
+
+#. surface=result panel in the middle of the screen; placeholders={title} the big line, {subtitle} the line under it; purpose=how the two lines sit together
+msgid "UI_RESULT_PANEL"
+msgstr ""
+"{title}\n"
+"{subtitle}"
+
+#. surface=result panel title; purpose=the room was won
+msgid "UI_RESULT_CLEARED"
+msgstr "ROOM CLEARED"
+
+#. surface=result panel subtitle; purpose=tell the player how to play the room again after winning it
+msgid "UI_RESULT_CLEARED_SUBTITLE"
+msgstr "OPEN THE PAUSE MENU TO RESTART THE ROOM"
+
+#. surface=result panel title; purpose=the pawn fell
+msgid "UI_RESULT_DEFEATED"
+msgstr "THE PAWN FALLS"
+
+#. surface=result panel subtitle; purpose=the room starts again after a fall
+msgid "UI_RESULT_DEFEATED_SUBTITLE"
+msgstr "THE CHILD RESETS THE BOARD"
+
+#. surface=status line; purpose=what a room says when it has no start line of its own
+msgid "MSG_ROOM_START_DEFAULT"
+msgstr "Break the black line."
+
+#. surface=status line; purpose=the attack key was pressed before the sword was found
+msgid "MSG_NO_WEAPON_YET"
+msgstr "The pawn has no weapon yet. Find the fallen sword."
+
+#. surface=status line; placeholders={attack} the attack's name; purpose=the pawn's swing hit something
+msgid "MSG_ATTACK_CONNECTS"
+msgstr "{attack} connects. Keep pressing the broken line."
+
+#. surface=status line; purpose=the pawn was hit and has one Courage left
+msgid "MSG_ONE_COURAGE_LEFT"
+msgstr "One courage left. Wait for the warning, then cut through."
+
+#. surface=status line; purpose=the pawn was hit and still has Courage to spare
+msgid "MSG_PAWN_IS_HIT"
+msgstr "The pawn is hit. Move out before the next strike."
+
+#. surface=status line; placeholders={piece} the enemy piece, {weapon} the weapon's name; purpose=an enemy took a weapon from the floor
+msgid "MSG_ENEMY_PICKED_UP"
+msgstr "{piece} picked up {weapon}. Its chess attack has been replaced."
+
+#. surface=status line; purpose=a shut door whose room has no line of its own for it
+msgid "MSG_DOOR_IS_LOCKED"
+msgstr "The way on is shut. Break the black line here first."
+
+#. surface=status line; purpose=a shortcut gate was pushed open for good
+msgid "MSG_GATE_UNBARS"
+msgstr "The gate unbars. It will never close again."
+
+#. surface=status line; purpose=the pawn took the sword and the marker has no line of its own
+msgid "MSG_UNLOCK_FALLBACK"
+msgstr "The pawn grips the sword. The rules crack."
+
+#. surface=status line; purpose=a room brought pieces the Book has no page for yet; [B] is the Book key
+msgid "MSG_NEW_PAGES"
+msgstr "New pieces on the board. The book writes their rules. [B]"
+
+#. surface=status line; purpose=developer view switched on with F3
+msgid "MSG_DEBUG_VIEW_ON"
+msgstr "DEBUG VIEW ON: boundaries, paths, and behavior labels."
+
+#. surface=status line; purpose=developer view switched off with F3
+msgid "MSG_DEBUG_VIEW_OFF"
+msgstr "DEBUG VIEW OFF."
+
+#. surface=language list; purpose=English, written in English
+msgid "UI_LANGUAGE_NAME_EN"
+msgstr "English"
+
+#. surface=language list; purpose=Vietnamese, written in Vietnamese
+msgid "UI_LANGUAGE_NAME_VI"
+msgstr "Tiếng Việt"
+
+#. surface=language list; purpose=the generated test language that makes every line longer
+msgid "UI_LANGUAGE_NAME_QPS"
+msgstr "Pseudo-language (test)"
+
+#. surface=a control prompt with no picture; placeholders={name} the key or button; purpose=the brackets that make the name read as a key, e.g. [Space]
+msgid "PROMPT_GLYPH_FALLBACK"
+msgstr "[{name}]"
+
+#. surface=Controls panel and prompts; purpose=the cell of a control the device has no binding for
+msgid "PROMPT_NOT_BOUND"
+msgstr "-"
+
+#. surface=a control prompt; purpose=the name of the space bar
+msgid "PROMPT_KEY_SPACE"
+msgstr "Space"
+
+#. surface=a control prompt; purpose=the name of the Enter key
+msgid "PROMPT_KEY_ENTER"
+msgstr "Enter"
+
+#. surface=a control prompt; purpose=the name of the Tab key
+msgid "PROMPT_KEY_TAB"
+msgstr "Tab"
+
+#. surface=a control prompt; purpose=the name of the Shift key
+msgid "PROMPT_KEY_SHIFT"
+msgstr "Shift"
+
+#. surface=a control prompt; purpose=the name of the Control key
+msgid "PROMPT_KEY_CTRL"
+msgstr "Ctrl"
+
+#. surface=a control prompt; purpose=the name of the Alt key
+msgid "PROMPT_KEY_ALT"
+msgstr "Alt"
+
+#. surface=a control prompt; purpose=the name of the Escape key
+msgid "PROMPT_KEY_ESC"
+msgstr "Esc"
+
+#. surface=a control prompt; purpose=the name of the up arrow key
+msgid "PROMPT_KEY_UP"
+msgstr "Up"
+
+#. surface=a control prompt; purpose=the name of the down arrow key
+msgid "PROMPT_KEY_DOWN"
+msgstr "Down"
+
+#. surface=a control prompt; purpose=the name of the left arrow key
+msgid "PROMPT_KEY_LEFT"
+msgstr "Left"
+
+#. surface=a control prompt; purpose=the name of the right arrow key
+msgid "PROMPT_KEY_RIGHT"
+msgstr "Right"
+
+#. surface=a control prompt; purpose=the name of the gamepad's Start button
+msgid "PROMPT_PAD_START"
+msgstr "Start"
+
+#. surface=a control prompt; purpose=the name of the gamepad's Back (View, Select) button
+msgid "PROMPT_PAD_BACK"
+msgstr "Back"
+
+#. surface=a control prompt; purpose=the gamepad's direction pad pressed up
+msgid "PROMPT_PAD_DPAD_UP"
+msgstr "D-pad Up"
+
+#. surface=a control prompt; purpose=the gamepad's direction pad pressed down
+msgid "PROMPT_PAD_DPAD_DOWN"
+msgstr "D-pad Down"
+
+#. surface=a control prompt; purpose=the gamepad's direction pad pressed left
+msgid "PROMPT_PAD_DPAD_LEFT"
+msgstr "D-pad Left"
+
+#. surface=a control prompt; purpose=the gamepad's direction pad pressed right
+msgid "PROMPT_PAD_DPAD_RIGHT"
+msgstr "D-pad Right"
+
+#. surface=a control prompt; purpose=the gamepad's left stick pushed left
+msgid "PROMPT_PAD_LEFT_STICK_LEFT"
+msgstr "Left Stick Left"
+
+#. surface=a control prompt; purpose=the gamepad's left stick pushed right
+msgid "PROMPT_PAD_LEFT_STICK_RIGHT"
+msgstr "Left Stick Right"
+
+#. surface=a control prompt; purpose=the gamepad's left stick pushed up
+msgid "PROMPT_PAD_LEFT_STICK_UP"
+msgstr "Left Stick Up"
+
+#. surface=a control prompt; purpose=the gamepad's left stick pushed down
+msgid "PROMPT_PAD_LEFT_STICK_DOWN"
+msgstr "Left Stick Down"
+
+#. surface=a control prompt; purpose=the gamepad's right stick
+msgid "PROMPT_PAD_RIGHT_STICK"
+msgstr "Right Stick"
+
+#. surface=pause menu button; purpose=open the Controls panel
+msgid "UI_PAUSE_CONTROLS"
+msgstr "Controls"
+
+#. surface=Controls panel heading
+msgid "UI_CONTROLS_TITLE"
+msgstr "Controls"
+
+#. surface=Controls panel tab; purpose=the controls that move and turn the pawn
+msgid "UI_CONTROLS_TAB_MOVING"
+msgstr "Moving"
+
+#. surface=Controls panel tab; purpose=the controls that strike, use skills and call for help
+msgid "UI_CONTROLS_TAB_ACTING"
+msgstr "Acting"
+
+#. surface=Controls panel tab; purpose=the controls of the game itself: pause, the Book, the debug view, fullscreen
+msgid "UI_CONTROLS_TAB_GAME"
+msgstr "Game"
+
+#. surface=Controls panel column heading
+msgid "UI_CONTROLS_KEYBOARD"
+msgstr "Keyboard"
+
+#. surface=Controls panel column heading
+msgid "UI_CONTROLS_GAMEPAD"
+msgstr "Gamepad"
+
+#. surface=Controls panel button; purpose=close the panel
+msgid "UI_CONTROLS_BACK"
+msgstr "Back"
+
+#. surface=Controls panel footer, after the glyph of the cancel control; purpose=reads as "[Esc] to close"
+msgid "UI_CONTROLS_PROMPT_CLOSE"
+msgstr "to close"
+
+#. surface=Controls panel row; placeholders={name} what the control does; purpose=the control exists but does nothing you can see yet
+msgid "UI_CONTROLS_ACTION_COMING_LATER"
+msgstr "{name} (coming later)"
+
+#. surface=Controls panel row; purpose=what the control does
+msgid "UI_ACTION_MOVE_UP"
+msgstr "Step up"
+
+#. surface=Controls panel row; purpose=what the control does
+msgid "UI_ACTION_MOVE_DOWN"
+msgstr "Step down"
+
+#. surface=Controls panel row; purpose=what the control does
+msgid "UI_ACTION_MOVE_LEFT"
+msgstr "Step left"
+
+#. surface=Controls panel row; purpose=what the control does
+msgid "UI_ACTION_MOVE_RIGHT"
+msgstr "Step right"
+
+#. surface=Controls panel row; purpose=hold it and a direction turns the pawn on the spot
+msgid "UI_ACTION_TURN_MODE"
+msgstr "Turn without stepping"
+
+#. surface=Controls panel row; purpose=the modifier that allows diagonal steps
+msgid "UI_ACTION_FREE_STEP"
+msgstr "Free Step (diagonals)"
+
+#. surface=Controls panel row; purpose=swing the weapon in hand
+msgid "UI_ACTION_ATTACK"
+msgstr "Strike"
+
+#. surface=Controls panel row; purpose=the first skill slot
+msgid "UI_ACTION_SKILL_SLOT_1"
+msgstr "Skill 1: Pencil Thrust"
+
+#. surface=Controls panel row; purpose=the second skill slot
+msgid "UI_ACTION_SKILL_SLOT_2"
+msgstr "Skill 2: Rule Step"
+
+#. surface=Controls panel row (hidden today); purpose=the third skill slot
+msgid "UI_ACTION_SKILL_SLOT_3"
+msgstr "Skill 3"
+
+#. surface=Controls panel row (hidden today); purpose=the fourth skill slot
+msgid "UI_ACTION_SKILL_SLOT_4"
+msgstr "Skill 4"
+
+#. surface=Controls panel row; purpose=raise the guard
+msgid "UI_ACTION_GUARD"
+msgstr "Guard"
+
+#. surface=Controls panel row; purpose=look closely at the threats
+msgid "UI_ACTION_FOCUS"
+msgstr "Focus"
+
+#. surface=Controls panel row; purpose=ask the child for help
+msgid "UI_ACTION_CALL_CHILD"
+msgstr "Call the child"
+
+#. surface=Controls panel row; purpose=choose the next kind of help the child can give
+msgid "UI_ACTION_HELP_NEXT"
+msgstr "Next help"
+
+#. surface=Controls panel row; purpose=use or open what is in front of the pawn
+msgid "UI_ACTION_INTERACT"
+msgstr "Interact"
+
+#. surface=Controls panel row; purpose=open the pause menu
+msgid "UI_ACTION_PAUSE"
+msgstr "Pause"
+
+#. surface=Controls panel row; purpose=open and close the Book
+msgid "UI_ACTION_RULE_BOOK_TOGGLE"
+msgstr "Book of House Rules"
+
+#. surface=Controls panel row; purpose=show the next line of a conversation
+msgid "UI_ACTION_DIALOGUE_ADVANCE"
+msgstr "Continue dialogue"
+
+#. surface=Controls panel row; purpose=the developer's view of the board
+msgid "UI_ACTION_DEBUG_VIEW_TOGGLE"
+msgstr "Debug view"
+
+#. surface=Controls panel row; purpose=switch between fullscreen and a window
+msgid "UI_ACTION_FULLSCREEN_TOGGLE"
+msgstr "Fullscreen"
+
+#. surface=settings screen heading
+msgid "UI_SETTINGS_TITLE"
+msgstr "Settings"
+
+#. surface=settings screen tab; purpose=the volumes
+msgid "UI_SETTINGS_TAB_SOUND"
+msgstr "Sound"
+
+#. surface=settings screen tab; purpose=fullscreen, the language and the high-contrast menus
+msgid "UI_SETTINGS_TAB_SCREEN"
+msgstr "Screen"
+
+#. surface=settings screen tab; purpose=screen shake, flashing, danger marks and hold-or-toggle
+msgid "UI_SETTINGS_TAB_COMFORT"
+msgstr "Comfort"
+
+#. surface=settings screen tab; purpose=the options that make the game gentler
+msgid "UI_SETTINGS_TAB_ASSISTS"
+msgstr "Assists"
+
+#. surface=settings screen button; purpose=close the settings
+msgid "UI_SETTINGS_BACK"
+msgstr "Back"
+
+#. surface=settings screen button; purpose=open the Controls panel
+msgid "UI_SETTINGS_CONTROLS"
+msgstr "Controls"
+
+#. surface=settings screen button; purpose=put every setting back to how the game ships
+msgid "UI_SETTINGS_DEFAULTS"
+msgstr "Restore defaults"
+
+#. surface=settings screen, top of the Assists tab; purpose=say that the choice is the player's
+msgid "UI_SETTINGS_ASSIST_NOTE"
+msgstr "Assists are never switched on for you. Change them whenever you like."
+
+#. surface=settings screen, at the end of a row; purpose=the setting is saved but nothing in the game reads it yet
+msgid "UI_SETTINGS_COMING_LATER"
+msgstr "(coming later)"
+
+#. surface=settings screen, above the buttons; purpose=the settings could not be written to disk, so they last only until the game is closed
+msgid "UI_SETTINGS_NOT_SAVED"
+msgstr "These settings could not be saved. They last until you close the game."
+
+#. surface=settings screen, next to a slider; placeholders={value} the number from 0 to 100; purpose=the slider's value as a percent
+msgid "UI_SETTINGS_PERCENT"
+msgstr "{value}%"
+
+#. surface=settings row; purpose=the loudness of everything
+msgid "UI_SETTINGS_VOLUME_MASTER"
+msgstr "Master volume"
+
+#. surface=settings row; purpose=the loudness of the music
+msgid "UI_SETTINGS_VOLUME_MUSIC"
+msgstr "Music volume"
+
+#. surface=settings row; purpose=the loudness of the sounds of the game
+msgid "UI_SETTINGS_VOLUME_SFX"
+msgstr "Sound effects volume"
+
+#. surface=settings row; purpose=the loudness of the sounds of the menus
+msgid "UI_SETTINGS_VOLUME_UI"
+msgstr "Menu sounds volume"
+
+#. surface=settings row, a switch; purpose=fullscreen or a window
+msgid "UI_SETTINGS_FULLSCREEN"
+msgstr "Fullscreen"
+
+#. surface=settings row; purpose=the language of the words of the game
+msgid "UI_SETTINGS_LANGUAGE"
+msgstr "Language"
+
+#. surface=settings row, a switch; purpose=menus and dialogue on an opaque background with a strong outline
+msgid "UI_SETTINGS_UI_HIGH_CONTRAST"
+msgstr "High-contrast menus"
+
+#. surface=settings row; purpose=how hard the screen shakes, from none to full
+msgid "UI_SETTINGS_SHAKE_SCALE"
+msgstr "Screen shake"
+
+#. surface=settings row, a switch; purpose=take out the flashes and flicker (warnings stay)
+msgid "UI_SETTINGS_REDUCE_FLASH"
+msgstr "Reduce flashing"
+
+#. surface=settings row, a switch; purpose=draw the cells that are about to hurt with a thick outline and stripes
+msgid "UI_SETTINGS_HIGH_CONTRAST_DANGER"
+msgstr "High-contrast danger marks"
+
+#. surface=settings row, a switch; purpose=instead of holding the key, press it once to turn on and again to turn off
+msgid "UI_SETTINGS_TOGGLE_TURN_MODE"
+msgstr "Turn without stepping: press to switch on and off"
+
+#. surface=settings row, a switch; purpose=instead of holding the key, press it once to guard and again to stop
+msgid "UI_SETTINGS_TOGGLE_GUARD"
+msgstr "Guard: press to switch on and off"
+
+#. surface=settings row, a switch; purpose=instead of holding the key, press it once to focus and again to stop
+msgid "UI_SETTINGS_TOGGLE_FOCUS"
+msgstr "Focus: press to switch on and off"
+
+#. surface=settings row in Assists; purpose=how long a danger mark shows before the blow
+msgid "UI_SETTINGS_ASSIST_TELEGRAPH_TIME"
+msgstr "Warning time"
+
+#. surface=settings row in Assists; purpose=how fast pieces act while the pawn stands still
+msgid "UI_SETTINGS_ASSIST_ENEMY_PACE"
+msgstr "Enemy pace"
+
+#. surface=settings row in Assists; purpose=more Courage than the standard game gives
+msgid "UI_SETTINGS_ASSIST_EXTRA_COURAGE"
+msgstr "Extra Courage"
+
+#. surface=settings row in Assists, a switch; purpose=a step pressed a little early is still taken
+msgid "UI_SETTINGS_ASSIST_INPUT_FORGIVENESS"
+msgstr "Input forgiveness"
+
+#. surface=settings option; purpose=the standard value of a percent setting
+msgid "UI_SETTINGS_OPTION_100"
+msgstr "100% (standard)"
+
+#. surface=settings option; purpose=a percent value
+msgid "UI_SETTINGS_OPTION_125"
+msgstr "125%"
+
+#. surface=settings option; purpose=a percent value
+msgid "UI_SETTINGS_OPTION_150"
+msgstr "150%"
+
+#. surface=settings option; purpose=a percent value
+msgid "UI_SETTINGS_OPTION_85"
+msgstr "85%"
+
+#. surface=settings option; purpose=a percent value
+msgid "UI_SETTINGS_OPTION_70"
+msgstr "70%"
+
+#. surface=settings option of Extra Courage; purpose=no extra Courage
+msgid "UI_SETTINGS_OPTION_COURAGE_0"
+msgstr "Standard"
+
+#. surface=settings option of Extra Courage; purpose=one more Courage
+msgid "UI_SETTINGS_OPTION_COURAGE_1"
+msgstr "+1 Courage"
+
+#. surface=settings option of Extra Courage; purpose=two more Courage
+msgid "UI_SETTINGS_OPTION_COURAGE_2"
+msgstr "+2 Courage"
+
+#. surface=pause menu button; purpose=open the settings
+msgid "UI_PAUSE_SETTINGS"
+msgstr "Settings"
+
+#. surface=pause menu button; purpose=open the settings on the Assists tab
+msgid "UI_PAUSE_ASSISTS"
+msgstr "Assist options"

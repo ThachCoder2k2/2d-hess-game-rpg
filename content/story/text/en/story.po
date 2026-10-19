@@ -1,0 +1,222 @@
+# The Unbound Pawn: the words of the story world: the Book of House Rules, the pieces' names, the credits.
+# English is the source language (D-25). Every line here is a placeholder the owner rewrites.
+#
+# To change a line, edit the text after "msgstr" and save. Do not change the "msgid": it is the key the pages
+# (content/rules/<id>/page.tres), the pieces (content/enemies/<id>/enemy.tres) and the credits
+# (content/story/credits.tres) look the words up by. {name} is filled in by the game: keep it as it is.
+# Prefixes in this file: BOOK_ (the Book's own labels), PAGE_ (a Book page), ENEMY_ and CHAR_ (a piece's names),
+# CREDIT_ (the credits roll); dialogue (DLG_), ambient lines (AMB_) and the rest of the story arrive with the story.
+#
+# Cách sửa một dòng: đổi chữ sau "msgstr", đừng đổi "msgid" (đó là mã mà game và các scene dùng để tìm chữ).
+# Lưu tệp rồi chạy game (F5). Giữ nguyên mọi phần trong ngoặc nhọn, ví dụ {room}.
+msgid ""
+msgstr ""
+"Project-Id-Version: The Unbound Pawn\n"
+"Language: en\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#. surface=Book of House Rules, heading of the page list
+msgid "BOOK_TITLE"
+msgstr "THE BOOK OF HOUSE RULES"
+
+#. surface=Book of House Rules, under the heading; placeholders={known} pages read, {total} pages in the Book; purpose=how much of the Book the player has found
+msgid "BOOK_COUNT"
+msgstr "{known} of {total} amendments known"
+
+#. surface=Book of House Rules; purpose=a page the player has not unlocked yet, in the list and as the page's title
+msgid "BOOK_UNREAD_INK"
+msgstr "Unread ink"
+
+#. surface=Book of House Rules, small heading above the chess rule on a page
+msgid "BOOK_ORIGINAL_RULE_HEADING"
+msgstr "ORIGINAL RULE"
+
+#. surface=Book of House Rules, small heading above the change to the rule on a page
+msgid "BOOK_AMENDMENT_HEADING"
+msgstr "AMENDMENT"
+
+#. surface=Book of House Rules; purpose=the body of a page that is still unread
+msgid "BOOK_PAGE_WAITS"
+msgstr "The page waits for its piece."
+
+#. surface=Book of House Rules, the last line of a page; placeholders={flavor} the page's own flavor line; purpose=put the flavor line in quotation marks the way the language writes them
+msgid "BOOK_FLAVOR_QUOTED"
+msgstr "\"{flavor}\""
+
+#. page=first_law; surface=Book page title; piece=pawn_recruit
+msgid "PAGE_FIRST_LAW_TITLE"
+msgstr "The first law"
+
+#. page=first_law; surface=Book page, the chess rule
+msgid "PAGE_FIRST_LAW_RULE"
+msgstr "A pawn marches forward one square and captures one square diagonally forward."
+
+#. page=first_law; surface=Book page, how the board changed the rule
+msgid "PAGE_FIRST_LAW_AMENDMENT"
+msgstr "None. The first law holds - for now."
+
+#. page=first_law; surface=Book page, the last line
+msgid "PAGE_FIRST_LAW_FLAVOR"
+msgstr "The child set up the board the way the book said."
+
+#. page=armed_pawn; surface=Book page title; piece=pawn_armed
+msgid "PAGE_ARMED_PAWN_TITLE"
+msgstr "The armed pawn"
+
+#. page=armed_pawn; surface=Book page, the chess rule
+msgid "PAGE_ARMED_PAWN_RULE"
+msgstr "A pawn strikes only with its diagonal capture."
+
+#. page=armed_pawn; surface=Book page, how the board changed the rule
+msgid "PAGE_ARMED_PAWN_AMENDMENT"
+msgstr "A pawn holding a weapon strikes as the weapon."
+
+#. page=armed_pawn; surface=Book page, the last line
+msgid "PAGE_ARMED_PAWN_FLAVOR"
+msgstr "Someone left the toy sword within reach."
+
+#. page=backstep_pawn; surface=Book page title; piece=backstep_pawn
+msgid "PAGE_BACKSTEP_PAWN_TITLE"
+msgstr "The backstep pawn"
+
+#. page=backstep_pawn; surface=Book page, the chess rule
+msgid "PAGE_BACKSTEP_PAWN_RULE"
+msgstr "A pawn marches forward and may never retreat."
+
+#. page=backstep_pawn; surface=Book page, how the board changed the rule
+msgid "PAGE_BACKSTEP_PAWN_AMENDMENT"
+msgstr "This pawn may move backward. Strike from behind and it will not be there."
+
+#. page=backstep_pawn; surface=Book page, the last line
+msgid "PAGE_BACKSTEP_PAWN_FLAVOR"
+msgstr "The child wrote it in the margin, and the board obeyed."
+
+#. page=charging_pawn; surface=Book page title; piece=charging_pawn
+msgid "PAGE_CHARGING_PAWN_TITLE"
+msgstr "The charging pawn"
+
+#. page=charging_pawn; surface=Book page, the chess rule
+msgid "PAGE_CHARGING_PAWN_RULE"
+msgstr "A pawn may advance two squares only on its first move."
+
+#. page=charging_pawn; surface=Book page, how the board changed the rule
+msgid "PAGE_CHARGING_PAWN_AMENDMENT"
+msgstr "The first-move charge never ends."
+
+#. page=charging_pawn; surface=Book page, the last line
+msgid "PAGE_CHARGING_PAWN_FLAVOR"
+msgstr "Nobody told it the first move was over."
+
+#. page=knight_errant; surface=Book page title; piece=knight_tracker
+msgid "PAGE_KNIGHT_ERRANT_TITLE"
+msgstr "The knight"
+
+#. page=knight_errant; surface=Book page, the chess rule
+msgid "PAGE_KNIGHT_ERRANT_RULE"
+msgstr "The knight leaps in an L, and no piece may bar its way."
+
+#. page=knight_errant; surface=Book page, how the board changed the rule
+msgid "PAGE_KNIGHT_ERRANT_AMENDMENT"
+msgstr "None yet written."
+
+#. page=knight_errant; surface=Book page, the last line
+msgid "PAGE_KNIGHT_ERRANT_FLAVOR"
+msgstr "The stable door is still closed."
+
+#. enemy=pawn_armed; surface=the long name of the piece
+msgid "ENEMY_PAWN_ARMED_NAME"
+msgstr "Pencil Pawn"
+
+#. enemy=pawn_armed; surface=status line and HUD strike line; purpose=the short name of the piece in a sentence ("Pawn picked up ...")
+msgid "ENEMY_PAWN_ARMED_PIECE"
+msgstr "Pawn"
+
+#. enemy=backstep_pawn; surface=the long name of the piece
+msgid "ENEMY_BACKSTEP_PAWN_NAME"
+msgstr "Backstep Pawn"
+
+#. enemy=backstep_pawn; surface=status line and HUD strike line; purpose=the short name of the piece in a sentence
+msgid "ENEMY_BACKSTEP_PAWN_PIECE"
+msgstr "Backstep Pawn"
+
+#. enemy=knight_tracker; surface=the long name of the piece
+msgid "ENEMY_KNIGHT_TRACKER_NAME"
+msgstr "Tracker Knight"
+
+#. enemy=knight_tracker; surface=status line and HUD strike line; purpose=the short name of the piece in a sentence
+msgid "ENEMY_KNIGHT_TRACKER_PIECE"
+msgstr "Knight"
+
+#. enemy=charging_pawn; surface=the long name of the piece
+msgid "ENEMY_CHARGING_PAWN_NAME"
+msgstr "Charging Pawn"
+
+#. enemy=charging_pawn; surface=status line and HUD strike line; purpose=the short name of the piece in a sentence
+msgid "ENEMY_CHARGING_PAWN_PIECE"
+msgstr "Charging Pawn"
+
+#. enemy=pawn_recruit; surface=the long name of the piece
+msgid "ENEMY_PAWN_RECRUIT_NAME"
+msgstr "Black Pawn Recruit"
+
+#. enemy=pawn_recruit; surface=status line and HUD strike line; purpose=the short name of the piece in a sentence
+msgid "ENEMY_PAWN_RECRUIT_PIECE"
+msgstr "Pawn"
+
+#. enemy=bishop_zoner; surface=the long name of the piece
+msgid "ENEMY_BISHOP_ZONER_NAME"
+msgstr "Diagonal Bishop"
+
+#. enemy=bishop_zoner; surface=status line and HUD strike line; purpose=the short name of the piece in a sentence
+msgid "ENEMY_BISHOP_ZONER_PIECE"
+msgstr "Bishop"
+
+#. enemy=black_pawn_captain; surface=the long name of the piece
+msgid "ENEMY_BLACK_PAWN_CAPTAIN_NAME"
+msgstr "Black Pawn Captain"
+
+#. enemy=black_pawn_captain; surface=status line and HUD strike line; purpose=the short name of the piece in a sentence
+msgid "ENEMY_BLACK_PAWN_CAPTAIN_PIECE"
+msgstr "Pawn Captain"
+
+#. surface=status line and HUD strike line; purpose=what a piece the game has no name for is called
+msgid "ENEMY_UNKNOWN_PIECE"
+msgstr "Enemy"
+
+#. surface=the long name of a piece; purpose=what an enemy definition that was given no name is called
+msgid "ENEMY_UNKNOWN_NAME"
+msgstr "Enemy"
+
+#. character=the hero; surface=the name of the player's piece
+msgid "CHAR_PAWN_HERO_PIECE"
+msgstr "Pawn Hero"
+
+#. surface=credits roll, the title at the top
+msgid "CREDIT_GAME_TITLE"
+msgstr "The Unbound Pawn"
+
+#. surface=credits roll, heading of the block about who made the game
+msgid "CREDIT_OWNER_HEADING"
+msgstr "Design, story and art"
+
+#. surface=credits roll, under that heading; purpose=put the owner's name here
+msgid "CREDIT_OWNER_LINE"
+msgstr "The owner"
+
+#. surface=credits roll, heading of the block about what the game is made with
+msgid "CREDIT_ENGINE_HEADING"
+msgstr "Made with"
+
+#. surface=credits roll, under that heading
+msgid "CREDIT_ENGINE_LINE"
+msgstr "Godot Engine 4.6"
+
+#. surface=credits roll, heading of the block of licences; the licence texts below it are legal text and are shown as written
+msgid "CREDIT_LICENSES_HEADING"
+msgstr "Licenses"
+
+#. surface=credits roll, the last line
+msgid "CREDIT_CLOSING_LINE"
+msgstr "Thank you for playing."

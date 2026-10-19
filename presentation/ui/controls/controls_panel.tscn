@@ -1,0 +1,75 @@
+[gd_scene load_steps=2 format=3 uid="uid://bfg6wxk433s3p"]
+
+[ext_resource type="Script" uid="uid://3nm138lbpm13" path="res://presentation/ui/controls/controls_panel.gd" id="1"]
+
+[node name="ControlsPanel" type="Control" node_paths=PackedStringArray("tabs", "back_button", "prompt_holder")]
+process_mode = 3
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1")
+tabs = NodePath("Center/Panel/Margin/Rows/Tabs")
+back_button = NodePath("Center/Panel/Margin/Rows/Footer/BackButton")
+prompt_holder = NodePath("Center/Panel/Margin/Rows/Footer/PromptHolder")
+
+[node name="Dim" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.02, 0.02, 0.03, 0.82)
+
+[node name="Center" type="CenterContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="Panel" type="PanelContainer" parent="Center"]
+theme_type_variation = &"OverMenuPanel"
+layout_mode = 2
+
+[node name="Margin" type="MarginContainer" parent="Center/Panel"]
+layout_mode = 2
+theme_override_constants/margin_left = 12
+theme_override_constants/margin_top = 10
+theme_override_constants/margin_right = 12
+theme_override_constants/margin_bottom = 10
+
+[node name="Rows" type="VBoxContainer" parent="Center/Panel/Margin"]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="TitleLabel" type="Label" parent="Center/Panel/Margin/Rows"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 16
+text = "UI_CONTROLS_TITLE"
+horizontal_alignment = 1
+
+[node name="Tabs" type="TabContainer" parent="Center/Panel/Margin/Rows"]
+custom_minimum_size = Vector2(540, 196)
+layout_mode = 2
+theme_override_font_sizes/font_size = 12
+
+[node name="Footer" type="HBoxContainer" parent="Center/Panel/Margin/Rows"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="BackButton" type="Button" parent="Center/Panel/Margin/Rows/Footer"]
+custom_minimum_size = Vector2(120, 24)
+layout_mode = 2
+theme_override_font_sizes/font_size = 12
+text = "UI_CONTROLS_BACK"
+
+[node name="PromptHolder" type="HBoxContainer" parent="Center/Panel/Margin/Rows/Footer"]
+layout_mode = 2
+size_flags_horizontal = 3
+alignment = 2

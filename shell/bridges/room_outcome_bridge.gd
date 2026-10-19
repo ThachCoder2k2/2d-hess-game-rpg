@@ -45,9 +45,9 @@ func _on_room_cleared(event: Dictionary) -> void:
 	room_ending = true
 	root.set_player_control(false)
 	root.audio_bridge.play(AudioBridge.ROOM_CLEAR_SOUND)
-	var clear_message := ZoneStage.room_text(root.current_room, "get_clear_message", "ROOM CLEARED")
-	root.message_bridge.say(clear_message)
-	root.hud_bridge.show_result(clear_message, ZoneStage.room_text(root.current_room, "get_clear_subtitle", "PRESS R TO RESET"))
+	var clear_message_key := ZoneStage.room_text(root.current_room, "get_clear_message", RoomObjective.STOCK_CLEAR_KEY)
+	root.message_bridge.say(clear_message_key)
+	root.hud_bridge.show_result(clear_message_key, ZoneStage.room_text(root.current_room, "get_clear_subtitle", RoomObjective.STOCK_CLEAR_SUBTITLE_KEY))
 
 
 func _on_respawn_requested(_event: Dictionary) -> void:
@@ -56,15 +56,16 @@ func _on_respawn_requested(_event: Dictionary) -> void:
 	room_ending = true
 	root.zone_travel_bridge.forget_carry()
 	root.audio_bridge.play(AudioBridge.DEFEAT_JINGLE_SOUND)
-	var defeat_message := ZoneStage.room_text(root.current_room, "get_defeat_message", "THE PAWN FALLS")
-	root.message_bridge.say(defeat_message)
-	root.hud_bridge.show_result(defeat_message, ZoneStage.room_text(root.current_room, "get_defeat_subtitle", "THE CHILD RESETS THE BOARD"))
+	var defeat_message_key := ZoneStage.room_text(root.current_room, "get_defeat_message", RoomObjective.STOCK_DEFEAT_KEY)
+	root.message_bridge.say(defeat_message_key)
+	root.hud_bridge.show_result(defeat_message_key, ZoneStage.room_text(root.current_room, "get_defeat_subtitle", RoomObjective.STOCK_DEFEAT_SUBTITLE_KEY))
 	var tree := root.get_tree()
 	if tree == null:
 		return
 	var respawns_at_fall := root.game_flow.respawn_count
 	await tree.create_timer(DEFEAT_BEAT_SECONDS).timeout
-	# If the restart key rebuilt the room during the beat, there is nothing left to start again. A zone trip
+	# If the pause menu's Restart Room rebuilt the room during the beat, there is nothing left to start again. A zone trip
 	# that swapped the world meanwhile is not a rebuild: the hero fell, so the room starts again regardless.
-	if root.is_inside_tree() and root.game_flow.respawn_count == respawns_at_fall:
+	# The player may have left for the title during the beat (Quit to Title frees the scene).
+	if is_instance_valid(root) and root.is_inside_tree() and root.game_flow.respawn_count == respawns_at_fall:
 		root.game_flow.request_respawn(GameFlow.REASON_DEFEATED)

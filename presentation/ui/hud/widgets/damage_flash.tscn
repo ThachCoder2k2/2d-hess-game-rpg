@@ -1,0 +1,11 @@
+[gd_scene format=3 uid="uid://lfah4eh2el1a"]
+
+[ext_resource type="Script" uid="uid://crqfw5svutfb7" path="res://presentation/ui/hud/widgets/damage_flash.gd" id="1"]
+
+[node name="DamageFlash" type="ColorRect"]
+visible = false
+mouse_filter = 2
+offset_right = 640.0
+offset_bottom = 360.0
+color = Color(0.847059, 0.290196, 0.227451, 0)
+script = ExtResource("1")

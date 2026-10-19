@@ -214,13 +214,13 @@ func _check_two_directions_at_once_and_the_attack_keys() -> void:
 	_tick_with(attacker, 0.016, [&"attack"], [&"attack"])
 	_expect(attacker.attack_intent.kind == &"sword", "a fresh attack press is a sword intent")
 	attacker.attack_intent.kind = &"none"
-	_tick_with(attacker, 0.016, [&"skill_1"], [&"skill_1"])
-	_expect(attacker.attack_intent.kind == &"skill", "a fresh skill_1 press is a skill intent")
+	_tick_with(attacker, 0.016, [&"skill_slot_1"], [&"skill_slot_1"])
+	_expect(attacker.attack_intent.kind == &"skill", "a fresh skill_slot_1 press is a skill intent")
 	attacker.attack_intent.kind = &"none"
-	_tick_with(attacker, 0.016, [&"attack", &"skill_1"], [&"attack", &"skill_1"])
-	_expect(attacker.attack_intent.kind == &"sword", "attack and skill_1 on the same tick: the sword wins")
+	_tick_with(attacker, 0.016, [&"attack", &"skill_slot_1"], [&"attack", &"skill_slot_1"])
+	_expect(attacker.attack_intent.kind == &"sword", "attack and skill_slot_1 on the same tick: the sword wins")
 	attacker.attack_intent.kind = &"none"
-	_tick_with(attacker, 0.016, [&"attack", &"skill_1"])
+	_tick_with(attacker, 0.016, [&"attack", &"skill_slot_1"])
 	_expect(attacker.attack_intent.kind == &"none", "a key that is merely held, not freshly pressed, makes no attack")
 	_free(attacker)
 
@@ -269,7 +269,8 @@ func _check_the_poller_copies_the_controls() -> void:
 	var snapshot := InputSnapshot.new()
 	poller.poll(0.016, snapshot)
 	_expect(not snapshot.is_pressed(&"move_up") and not snapshot.is_pressed(&"attack"), "with nothing pressed the poller publishes every action as released")
-	_expect(&"move_up" in poller.action_names and &"restart_room" in poller.action_names and &"turn_mode" in poller.action_names, "the poller covers the project's own InputMap actions (move_*, attack, skill_1, turn_mode, restart_room)")
+	_expect(&"move_up" in poller.action_names and &"call_child" in poller.action_names and &"turn_mode" in poller.action_names and &"pause" in poller.action_names, "the poller covers the project's own InputMap actions (move_*, attack, skill_slot_1, turn_mode, call_child, pause...)")
+	_expect(not &"restart_room" in poller.action_names, "and restart_room is not one of them: restarting the room is a pause menu command (D-18)")
 	_expect(not poller.action_names.any(func(action: StringName) -> bool: return String(action).begins_with("ui_")), "and leaves out the engine's own ui_ actions")
 
 	Input.action_press(&"move_up")
@@ -306,24 +307,28 @@ func _check_the_poller_copies_the_controls() -> void:
 
 
 func _check_the_poller_publishes_the_shell_keys() -> void:
+	# F3, F11 and B are InputMap actions since M4 (docs/game-base-plan.md 9.4): the poller no longer keeps a table of raw keys.
 	var poller := InputPoller.new()
 	var snapshot := InputSnapshot.new()
 	await process_frame
+	await process_frame
 	poller.poll(0.016, snapshot)
-	for shell_action: StringName in InputPoller.RAW_KEY_BY_ACTION:
-		_expect(snapshot.state_by_action.has(shell_action) and not snapshot.is_pressed(shell_action), "%s is published (released) next to the real actions" % shell_action)
+	for shell_action: StringName in [&"debug_view_toggle", &"fullscreen_toggle", &"rule_book_toggle", &"pause"]:
+		_expect(snapshot.state_by_action.has(shell_action) and not snapshot.is_pressed(shell_action), "%s is an InputMap action, published (released) next to the others" % shell_action)
 
 	_send_key(KEY_B, true)
 	poller.poll(0.016, snapshot)
-	_expect(snapshot.is_pressed(&"rule_book_toggle") and snapshot.is_just_pressed(&"rule_book_toggle"), "a raw key is just pressed on the poll that first sees it down")
+	_expect(snapshot.is_pressed(&"rule_book_toggle") and snapshot.is_just_pressed(&"rule_book_toggle"), "the B key is just pressed on the poll that first sees it down")
+	await process_frame
 	poller.poll(0.016, snapshot)
-	_expect(snapshot.is_pressed(&"rule_book_toggle") and not snapshot.is_just_pressed(&"rule_book_toggle"), "and only on that poll: the engine has no edge for a raw key, so the poller works it out")
+	_expect(snapshot.is_pressed(&"rule_book_toggle") and not snapshot.is_just_pressed(&"rule_book_toggle"), "and only that frame's: the engine's edge ends with the frame")
 	_expect(not snapshot.is_pressed(&"debug_view_toggle") and not snapshot.is_pressed(&"fullscreen_toggle"), "the other shell keys are unaffected")
 	_send_key(KEY_B, false)
 	poller.poll(0.016, snapshot)
 	_expect(not snapshot.is_pressed(&"rule_book_toggle") and snapshot.is_just_released(&"rule_book_toggle"), "releasing the key is a just-released edge")
+	await process_frame
 	poller.poll(0.016, snapshot)
-	_expect(not snapshot.is_just_released(&"rule_book_toggle"), "which also lasts one poll")
+	_expect(not snapshot.is_just_released(&"rule_book_toggle"), "which also lasts one frame")
 
 
 func _check_the_poller_outlives_a_world() -> void:

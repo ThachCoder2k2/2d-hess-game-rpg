@@ -16,6 +16,8 @@ const APPLIED_VISUAL_META := &"applied_visual_definition"
 ## The AnimationTree parameter that scales one state's clip speed: every state of the graph is a
 ## small blend tree (Animation -> TimeScale -> output), so the scale is a parameter of the state.
 const CLIP_SPEED_PARAMETER_FORMAT := "parameters/%s/TimeScale/scale"
+## How opaque the hero is while it cannot be hurt, when Reduce flashing is on (it blinks otherwise): steady and fainter.
+const REDUCED_FLASH_INVULNERABLE_ALPHA := 0.6
 
 
 ## The picture keeps being drawn while the simulation is frozen: a cutscene stages the views through
@@ -36,7 +38,9 @@ func tick(_delta: float) -> void:
 		var moving := move != null and move.moving
 		if moving:
 			var eased := 1.0 - (1.0 - move.progress) * (1.0 - move.progress)
-			view.node.position = world.grid.cell_to_world(move.from_cell).lerp(world.grid.cell_to_world(move.to_cell), eased)
+			# The picture is drawn at 1x1 pixels, so a piece between two pixels is blurred (requirement 10): the slide
+			# is worked out in floats and drawn on the nearest whole pixel. The simulation never sees this position.
+			view.node.position = world.grid.cell_to_world(move.from_cell).lerp(world.grid.cell_to_world(move.to_cell), eased).round()
 			view.node.z_index = 2 + move.to_cell.y
 		else:
 			view.node.position = world.grid.cell_to_world(grid_pos.cell)
@@ -104,10 +108,14 @@ func _sync_appearance(entity_id: int, view: EcsComponents.ViewRef, appearance: A
 		var tint := Color.WHITE
 		if telegraphing:
 			tint = appearance.telegraph_modulate
-		elif hurt and combat != null:
+		elif hurt and combat != null and not world.tuning.reduce_flash:
 			tint = appearance.hurt_modulate
-		if health != null and health.invulnerable_left > 0.0 and int(Time.get_ticks_msec() / 70.0) % 2 == 0:
-			tint.a = 0.35
+		if health != null and health.invulnerable_left > 0.0:
+			# The hero blinks while it cannot be hurt; with Reduce flashing it shows a steady, fainter colour instead.
+			if world.tuning.reduce_flash:
+				tint.a = REDUCED_FLASH_INVULNERABLE_ALPHA
+			elif int(Time.get_ticks_msec() / 70.0) % 2 == 0:
+				tint.a = 0.35
 		body_sprite.modulate = tint
 
 	var motion_root := appearance.get_node_or_null("MotionRoot") as Node2D

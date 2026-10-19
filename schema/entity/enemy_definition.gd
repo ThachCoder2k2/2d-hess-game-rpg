@@ -2,10 +2,11 @@ class_name EnemyDefinition
 extends Resource
 
 @export var id: StringName
-@export var display_name := "Enemy"
-## Short label shown in HUD/status text (e.g. "Pawn", "Knight"). Authored per
-## definition instead of guessed from the display name in code.
-@export var piece_name := "Enemy"
+## Text key (ENEMY_<ID>_NAME in story.po): the piece's full name ("Pencil Pawn"). The words live in the .po files.
+@export var display_name := "ENEMY_UNKNOWN_NAME"
+## Text key (ENEMY_<ID>_PIECE in story.po): the short label shown in HUD/status text (e.g. "Pawn", "Knight").
+## Authored per definition instead of guessed from the display name in code.
+@export var piece_name := "ENEMY_UNKNOWN_PIECE"
 @export var role: StringName = &"skirmisher"
 @export_range(1, 100) var max_health := 2
 @export var movement: MovementConfig

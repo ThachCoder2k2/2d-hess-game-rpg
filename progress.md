@@ -1742,3 +1742,247 @@ commit each, tag `m3b-done` moved to the last commit. 91 suites (no suite added;
   weapons work and the guide says so; the fix is M7's (the Pencil is a hero-only `GrantMarker`, now written into the plan's M7a entry
   and findings.md), not a tweak to T4. (b) The hero cannot take the spear: the grant that locks Q is M7 (D-11). (c) The commit
   attribution line says Sonnet 5.5, as the harness asks; not a defect.
+
+## M4 step 1 - the app root, the flow, the title and the credits - 2026-10-19
+
+Branch `base/m4-1` (from `game-base`, which holds M3b), the strict runner green. The first of M4's four steps: `AppRoot` as the main scene,
+`GameFlow` as the state machine of the whole run, the title, the credits, the autosave tick and the corrupt-save notice. The owner's rules
+for M4 (assets are the owner's and nothing is downloaded; the font and the Kenney glyphs are slots that fill later; R becomes "call child")
+belong to steps 2 to 4; nothing here touches the input map, the font or the text pipeline.
+
+- **`AppRoot`** (`shell/app_root.gd/.tscn`, `project.godot` main scene): the `MusicPlayer` (moved out of `game_root.tscn`; the three music
+  assertions of `tests/run_tests.gd` load `app_root.tscn` and keep their labels), `ScreenHost` (the one current screen), `OverlayLayer` (the
+  autosave tick; the pause menu later) and `TransitionLayer`, all `PROCESS_MODE_ALWAYS`. A screen change is fade to black, take the old
+  screen out of the tree at once and free it, build the new one, fade back; changes run one after another from a queue, so a double request
+  builds one screen. `GameRoot` is handed the app's flow before it enters the tree and names no AppRoot, so every bridge suite still boots it
+  alone. The root node of `game_root.tscn` is renamed `GameRoot` (it was `Main`; nothing addressed it by name). The zone trip keeps the game
+  scene's own `FadeLayer`: moving it would have changed what every bridge suite pins.
+- **`GameFlow`**: the states and the transition table of plan 9.1 (+ `RESPAWNING`), requests as methods, a refused request changes nothing and
+  says nothing. New Game and Continue go through `SaveService`; a pause is refused during a zone trip, while a rebuild waits and during the
+  defeat beat; `reach_ending` writes `completed` to the profile; `quit_to_title` writes nothing. `before_respawn` and `after_respawn` let
+  AppRoot put the rebuild of a room behind the fade (the signals the bridges use are unchanged). `RoomOutcomeBridge` guards its 0.85 s timer
+  against a scene that was freed meanwhile (a Quit to Title during the defeat beat used to be impossible, so nobody needed it).
+- **New Game and Continue.** `SaveService.start_new_run(slot)` = `new_game` + write the clean run over the slot's file now (the plan says
+  "resets the slot" and "asks to confirm"; a New Game that left the old file in place would bring the old run back on a relaunch). The old
+  file is the `.bak`, a damaged one `.corrupt`, a newer game's `.newer_game`; the profile is untouched; it is not a success event, so no tick.
+  Continue asks `read_slot()` for readable progress first (a damaged file with no backup, a save too old to migrate and a newer game's save
+  are not progress), then `load_slot()`: the room and entry of the LAST SAVE (the as-built point), the checkpoint recorded beside it.
+- **Title and notice** (`shell/title/`): `TitleSummary.from_save()` works out Continue, the card (room, time played, day saved), the notice
+  and the `completed` mark from `read_slot()` (no side effects). A damaged newest file with an intact `.bak` offers Continue and says so (on
+  the title and on the room's status line); the three cases that are not progress offer New Game only, with the sentence. The title is plain
+  nodes and the hero's own `body.png` at its own size; Settings is disabled until `AppRoot.settings_scene` is wired.
+- **Credits** (`shell/credits/`, `content/story/credits.tres`): a `CreditsDefinition` of `CreditsSection`s (`schema/story/`), read through
+  `ContentDb.credits()` (a new one-of-a-kind kind). The Licenses block is generated from `THIRD_PARTY_NOTICES.md` (`tools/build_credits_licenses.gd`,
+  rules in `tools/credits_licenses.gd`); `test_credits_licenses_current` fails while they disagree, so a step that adds the font or the Kenney
+  pack to the notices must run the tool. Holding Confirm skips; the hold is read from events (`test_input_only_in_poller` stays true).
+- **New suites (12; 91 to 103)**: `tests/shell/` `test_app_flow`, `test_game_flow_states`, `test_new_game_resets_slot`,
+  `test_continue_loads_checkpoint`, `test_title_summary`, `test_title_screen`, `test_credits_screen`, `test_credits_licenses_current`,
+  `test_transition_layer`, `test_autosave_indicator`, `test_confirm_panel`, `test_app_root_is_main_scene`. Changed: `test_game_flow` (the music
+  player is not the game scene's), `test_validate_all` (the `credits` kind), `test_suites_isolate_the_save` (`boot_app`), `TestPaths`
+  (`main_scene()` is AppRoot, `game_scene()` the room, `title_scene()`, `credits_scene()`).
+- **Docs.** ARCHITECTURE ("The app around the game", the tree, persistence, tests), CLAUDE.md (one rule), AGENTS.md, README.md, OWNER_GUIDE
+  (the title, New Game and Continue, the credits row, the version row), tools/README, THIRD_PARTY_NOTICES (how the credits read it), the plan's M4 entry.
+- **Verification.** `python3 tools/run_all_tests.py --strict`: 103 suites, 0 failed, 0 warnings, GREEN, baseline labels 235 of 235 (14 through
+  `label_renames.txt`, unchanged); both `--self-test`s 0 failures; import clean; `stamp_uids.gd -- --check` CLEAN; `git diff --check` clean.
+- **Not done (steps 2 to 4), and why.** The pause key, menu, focus-loss pause and Controls panel (the input map comes first); settings (the
+  button is disabled); the first-run card (Tier B); `Ending.post_game_zone` on a completed Continue (M13); the title's real art and the hero's
+  pawn drawn as the plan's rug scene (owner assets, `docs/assets` `title_*`); words as `UI_` keys (the text pipeline, step 3). R still restarts the
+  room (D-18 moves it with the input map).
+
+
+## M4 step 2 - the input map and the pause menu (written down by step 3) - 2026-10-19
+
+Branch `base/m4-2`. The step finished green (109 suites) in its worktree without being committed or logged, so step 3 carried its files over in
+one commit ("Step 2's work lands on the branch") and records here what that code and its tests show; nothing below is new work.
+
+- **Input.** Every played action has a keyboard and a gamepad event (`test_input_actions_have_pad_events`); `skill_1` became `skill_slot_1`,
+  `restart_room` is gone and **R is `call_child`** (D-18; it does nothing visible until M10); Esc/Start, `B`/L3, F3 and F11 are `InputMap`
+  actions read from the snapshot. The `InputPoller` keeps the left stick's dominant axis and can publish an action as a hold-or-toggle switch
+  (`test_input_poller_rules`).
+- **The pause menu** (`shell/pause/`): Resume, Book of House Rules, Restart Room (a `ConfirmPanel` asks; the only way to restart a room,
+  `test_pause_restart_is_menu_only`), Quit to Title (asks, names the last checkpoint, writes nothing: `test_quit_to_title_confirm`). The tree is
+  paused with the flow (`test_pause_freezes_tick`), the game pauses when the window loses focus (`test_focus_loss_pauses`), and the Book freezes the
+  world with a `freeze_requested` command. Settings, Assist options and the Controls panel were left undone by this step and built in step 3
+  (the next entry); the glyph lookup too.
+
+## M4 step 3 - settings, controls and glyphs, then the text pipeline and the font slot - 2026-10-19
+
+Branch `base/m4-3` (from `base/m4-2`), the strict runner green (133 suites). An earlier attempt was cut off by a network error after the text
+pipeline and the font slot; this attempt kept those commits, applied the small fixes it had left uncommitted (`TextService` stops naming
+content/'s folder; the restart comments) and its docs, and built the four things step 2 never built, one commit each: the glyph lookup, the
+Controls panel, the settings (model and profile, then every target, then the screen) and the Assist options entry. The owner's rules for M4
+apply: nothing is downloaded, the font and the Kenney glyphs are "owner-supplied" slots, all in-game text is English source with an empty `vi`.
+
+### Settings, controls and glyphs
+
+- **The glyph lookup** (`presentation/ui/input_glyphs/`). `InputGlyphs.glyphs_of_action(action, device)`: one `InputGlyph` per event, the
+  owner's 16x16 file at `assets/ui/glyphs/keyboard|gamepad/<name>.png` (names from the asset list, group `glyphs_kenney`) or, when there is no
+  file, the words (`[Space]`, `[A]`, `[Left Stick Up]`, `[LT]`: key and button names are text keys `PROMPT_KEY_*`, `PROMPT_PAD_*`). Imported
+  files load as resources; a file dropped in before an import is read raw. `test_input_glyphs` holds every path to the asset list (it reads
+  `docs/assets/spec/ui_story.json`) and every control the InputMap binds to a slot. `LastInputDevice` is a Node in AppRoot that listens to
+  `_input` (a key press, a pad button, a stick or trigger past 0.5; drift, releases and the mouse say nothing); `GlyphStrip` and
+  `ActionPrompt` draw it.
+- **The Controls panel** (`presentation/ui/controls/`): three tabs, a keyboard and a gamepad column, rebuilt from the InputMap each time it
+  opens; `ControlsCatalog` holds the names, the pages and the actions that say "(coming later)" (call_child, skill 2, guard, focus, help_next,
+  free_step, interact, dialogue_advance: nothing reads them yet) and hides skill slots 3 and 4. An InputMap action the catalog does not know is
+  listed under its own name and the test fails. It opens from the pause menu and from Settings, covers what is under it (`set_covered`), Esc
+  closes only it and gives the focus back.
+- **The settings** (`schema/settings/`, `shell/settings/`): 17 `SettingDefinition`s; `GameSettings` (a Resource; `changed`, `value_changed`);
+  `SettingsStore` keeps them as `setting_<key>` in the profile (`SaveService.set_profile_values`, one write), a first run logs one line and a bad
+  value logs its reason and takes its default. `SettingsApplier` (AppRoot) does volumes, fullscreen, language and `UiContrast`; `SettingsBridge`
+  (game scene) does shake scale, reduce flash, high-contrast danger, hold-or-toggle and the assists as `tuning_set` commands (again after every
+  boot). New targets: `CameraBridge.shake_scale`, `GameHud.reduce_flash`, `PrototypeBoard.reduce_flash` and `.high_contrast_danger`,
+  `Tuning.reduce_flash` (read by `ViewSyncSystem`: no hurt tint, no invulnerability blink, a steady 0.6 alpha instead), `CommandSystem` accepts a
+  bool field. `SettingsScreen` has four pages built from the table; AppRoot lays it over the title or the pause menu, writes the settings when it
+  closes (and half a second after the last change, and on Quit and window close) and opens the Controls panel over it. The pause menu gained
+  Settings, Controls and Assist options. 15 suites: `test_settings_roundtrip`, `test_setting_{volumes,fullscreen,language,shake_scale,
+  reduce_flash,high_contrast_danger,ui_high_contrast,assists,hold_or_toggle}`, `test_every_setting_has_a_target`, `test_settings_screen`,
+  `test_pause_assist_options`, `test_input_glyphs`, `test_controls_panel_from_inputmap`.
+- **Decisions taken, and why.** Fullscreen's default is what `project.godot` ships (mode 3, fullscreen), read from the project setting so the
+  value lives in one place. Assists are per profile, not per save (plan 5.8 says per save): one place, reachable from the title. The Voice bus
+  has no slider (nothing plays on it until M6). The rescue hold's toggle waits for the rescue (M6). The language list is the languages that have
+  words loaded: English, Vietnamese (empty, falls back to English) and the generated `qps`, which AppRoot installs at start so the owner can
+  pick "Pseudo-language (test)" and see long words in place. F11 sets the window and then writes what the window really does into the
+  setting, so key and screen agree. UI high contrast changes the project theme's panel, tab, button and text entries and remembers what it
+  replaced, so the owner's own theme entries come back when it is turned off.
+- **What a headless run cannot show**, and so what the tests do instead: a window's mode (the root window reads windowed whatever it is set to:
+  the fullscreen suite hands the applier a `Window` that is not in the tree), and how a danger cell looks (the suite holds that the setting
+  reaches the board, that `_draw` runs for both looks and the numbers that make one bolder; the pictures were looked at with a throwaway script
+  that renders a scene in a `SubViewport` with a real renderer: `godot --path . -s <script>` without `--headless` works in this sandbox).
+
+### The text pipeline and the font slot
+
+- **The files.** `content/story/text/<language>/{story,ui,skills,rooms}.po`; `en` has 138 rows, each with a `#.` translator comment; `vi` is four
+  header-only files. `project.godot` lists all eight (several translations per locale) with `locale/fallback="en"`. `.po` files need no import
+  and no sidecar. Prefix -> file: `UI_`/`MSG_`/`PROMPT_` ui, `ROOM_` rooms, `SKILL_`/`ITEM_` skills, `DLG_ AMB_ BOOK_ PAGE_ CHAR_ ENEMY_ BOSS_ CREDIT_
+  END_ CLUE_` story (`MSG_` and `ITEM_` are additions to the plan's list). `test_po_domains_merge` also lints the files as text (a tiny reader in
+  `tests/support/po_file_reader.gd`): header language, UPPER_SNAKE keys, key in the file of its prefix, no duplicate in or across files, words and a
+  comment on every English row, `{lower_snake}` placeholders, Vietnamese rows only for English keys with the same placeholders.
+- **`TextService`** (static, `presentation/text/`): `t`, `has_key`, `language`, `languages`, `set_language`, `language_name`,
+  `install_pseudo_language`, `domain_of`. It calls `TranslationServer.translate`; nothing else may (`test_tr_only_in_text_service`).
+  `TextKey` (a key plus params that resolves late) and `LiveText` (a child node that rebinds text on NOTIFICATION_TRANSLATION_CHANGED) are what
+  make a language switch redraw live. `UnboundTest` sets English in a static initialiser, so every suite runs in `en` (the old `SceneTree` suites
+  that read words do it in their `_init`).
+- **The conversion.** Changed scripts: `GameHud` (keys, `LiveText`; `set_token_owner(TextKey)`, `set_cell_status(cell, TextKey)`,
+  `set_status(key, params)`, `show_result(title_key, subtitle_key)`), `HudBridge` (`facing_key`), `MessageBridge` (`*_KEY` constants,
+  `say(key, params)`), `EventBridge.piece_name_of` (a `TextKey`), `ShellKeys`, `BookBridge`, `RoomOutcomeBridge`, `RuleBookUI`,
+  `ConfirmPanel.ask(message_key, confirm_key, cancel_key, params)`, `PauseSummary`, `PauseMenu`, `TitleSummary` (`refresh_texts()`; a room's name
+  is `ROOM_<ID>_NAME`, falling back to the id as words for a room a save names and the game no longer has), `TitleScreen`, `CreditsScreen`,
+  `RoomEncounter`, `RoomObjective` (stock keys, one copy), the markers' docs. Changed data: five rooms, five Book pages, seven enemies, the hero,
+  two skills, three pickups, the credits and the licences heading (the builder tool writes the key). Scenes: HUD, title, pause menu, Book, credits.
+- **Visible changes.** The HUD help line says `PAUSE ESC` (it said `RESET R`, wrong since D-18); T1 is "White King's Fall" (the derived name
+  dropped the apostrophe); the HUD, the title logo and the result panel were re-laid so +40 percent text fits (below). Everything else reads as before.
+- **Layout.** `test_layout_pseudo_locale` first failed on: the HUD banner (205 px at 13 pt in a 150 px box), the hub's start line (538 px in a
+  490 px box, and colliding with the skill and count labels), the result panel (300 px wide for a 546 px line; in English the stock subtitle was
+  already wider than the panel), the title logo (440 px in a 376 px column) and the longest notice (three lines in a two-line box). Fixes: the
+  top strip's columns (banner 12..232, Courage 232..328, skill bar and label 334..532, count 540..622), the objective line takes the full second
+  row, the cell line moved to the bottom strip's right end, the token line up 4 px, the result panel 20..620, the title logo wraps upwards. The
+  HUD's columns moved right in English too, and the cell line now sits at the right end of the bottom strip; the title and the menus read as before. Overlaps that already existed in English are not flagged (the pair is skipped when it met in
+  English); the test measures where the text is drawn (alignment, line height) and the panel it sat on, not only control rectangles.
+- **Dumps print keys.** `tools/world_dumper.gd` prints the piece and weapon keys and the keys of door and unlock lines. Four `tests/baselines/dump_*`
+  were regenerated; `test_actor_collapse_golden` lists the three piece labels (REPLACED_LINES) and four room heads (ROOM_HEADS_CHANGED_ON_PURPOSE) that
+  moved, with the reason.
+- **The font slot.** `schema/ui/ui_theme.gd` (`UiTheme extends Theme`), `content/ui/theme/theme.tres`, `presentation/ui/theme/ui_fonts.gd`,
+  `assets/fonts/README.md`, `AppRoot._ready` calls `UiFonts.apply(ThemeDB.get_project_theme())`. `test_font_slots` (paths equal the asset list's,
+  absent -> engine font, present -> used and cleared again, AppRoot applies), `test_font_vietnamese_coverage` (134 letters; the engine default font
+  has them all). `THIRD_PARTY_NOTICES.md`: "UI fonts (owner-supplied)", no License bullet, so the credits do not list a font that is not there.
+- **New suites of the text pipeline (9; 109 to 118):** `tests/text/` `test_text_service`, `test_pseudo_locale`, `test_po_domains_merge`, `test_text_keys`,
+  `test_language_switch_redraws_live`, `test_layout_pseudo_locale`, `test_font_slots`, `test_font_vietnamese_coverage`; `tests/architecture/`
+  `test_tr_only_in_text_service`. Changed: the suites that compared sentences (they compare `TextService.t(key)` now: the labels did not change),
+  `test_credits_licenses_current`, `test_actor_collapse_golden`, `TestPaths` (`pause_menu_scene`, `rule_book_scene`).
+- **Docs.** OWNER_GUIDE (section 8 in Vietnamese: edit a `.po` line and see it, the font names, what to check; the keys and section 7 no longer say R
+  restarts), ARCHITECTURE ("Text"), CLAUDE.md ("Words"), coding-standards ("Text"), README (controls), where-we-are, `/new-enemy`, the plan's M4 entry
+  (steps 2 and 3), THIRD_PARTY_NOTICES (the glyph slot), task_plan.
+- **Not done, and why.** The production HUD (its help line should become hints made from the InputMap, `ActionPrompt` is ready for it) and the
+  camera snap: step 4. The first-run card (Tier B). `vi` rows, the font files and the glyph files: the owner's (D-25, the asset rules). Dialogue,
+  ambient and story rows: M6. The assists reach `world.tuning` and no system reads them yet (M7b, M8a, M8c).
+
+## M4 step 4 - the production HUD, the camera snap and the docs - 2026-10-19
+
+Branch `base/m4-4`, from `base/m4-3`. Four commits of work (camera, HUD, the preview tool, the docs) and the tag `m4-done`.
+
+- **The camera first (D-30, requirement 10).** `CameraRig` now ends every frame with the view's top-left corner on a whole pixel (`snap_to_whole_pixels`,
+  on). Probed on 4.6.3 before building: `Camera2D.offset` is added AFTER the limits ("offset is able to move it past this") and
+  `get_screen_center_position()` includes it; setting `offset` to the SAME value does not update the camera, a different one does; the engine's
+  own smoothing advances on every update, so a rig that pokes the camera twice a frame would ease twice as fast. So with the snap on the engine's
+  smoothing is off and the rig eases the follow point itself (`1 - exp(-speed * delta)`, cut on `setup()` and when follow changes), asks the engine
+  where the view lands with `offset = 0` and `force_update_scroll()`, then sets the offset to the sub-pixel correction plus the shake rounded to whole
+  pixels and updates once more. The measuring is the SubViewport's own canvas transform (`test_camera_snap`, 24 checks): fractional hero positions, the
+  ease (kept: a frame after a 120 px jump the view is still behind, then catches up and never steps back), the four room sizes pinned and still,
+  zoom 2, the world's corners (the snap never pushes the view past the board's edge), the clamp off, the shake (whole pixels every frame, still moves
+  the view 6 px at strength 6, back exactly at rest), the Screen shake scale (0 moves nothing, 0.25 stays in 2 px, 1.0 moves further), and the shipped
+  hero rig. **Not** a project setting: `rendering/2d/snap/snap_2d_transforms_to_pixel` rounds in WINDOW pixels (half a game pixel at 1280 x 720) and
+  no test can see it; `stretch/scale_mode = integer` letterboxes any window that is not a multiple of 640 x 360, which is the owner's call. The
+  piece's cell-to-cell slide is procedural gameplay timing and was left alone.
+- **The HUD (D-29, requirements 180 and 181).** The old `hud.tscn` was twenty loose nodes in one scene, a top panel at y 4 to 46 and a strike line at
+  y 322 to 336 (both over board rows, the M2 review's finding), and a `GameHud` with a setter per label. It is now `GameHud` (a `CanvasLayer` that
+  holds widgets, `widgets()`, `show_room(snapshot)`, `refresh(snapshot)`, and the few things a bridge hands in: `set_status`, `flash_damage`,
+  `show_result`, `set_strike_owner`, `set_debug_visible`, `configure_controls`) and one scene and script per widget under `widgets/`. See the plan's
+  M4 "step 4" entry for the list and the layout numbers. The `HudBridge` lost `set_courage`, the skill and count bookkeeping and the `healed` and
+  `skill_cooldown` handlers: the widgets read the snapshot, which is rebuilt at the end of the tick that took the Courage, before the events are
+  routed, so the frame that routes a hit already draws it (`test_hud_bridge` drives that order). `HudBridge.facing_key` moved to
+  `DebugReadout.compass_key`. `HudSnapshot.rank_label` is the one new field.
+- **Decisions taken, and why.** (1) Every widget, shown or reserved, is held to the strips by one test over `GameHud.widgets()`, so a later milestone
+  that fills the Believe slot or the boss bar cannot drift out of it. (2) The debug readout takes the control hints' place on F3 instead of sharing
+  the row: with +40 percent text the two cannot sit side by side in 624 px, and a developer view may replace a player hint. The test says the two
+  have exactly the same rectangle. (3) The Rank badge reads a snapshot field that stays 0 (hidden) until M7c, rather than showing "Rank 2" from the
+  first minute: the first-chain HUD must not show a system that has not started (ui1-hud-scope-spec). (4) The skill line lost its "Q": the hint beside
+  it is built from the InputMap, so a pad shows X. (5) No red for one Courage left: the plan (10) says the low-Courage cue is a pulse and a vignette,
+  never red-saturated, and the old red text is gone with the text; the pulse is M8c's. (6) The widgets are plain nodes (a `Panel` with a `StyleBoxFlat`
+  for a pip, `ColorRect`s, labels) with the pip's two looks as `StyleBox` exports; the owner's pictures (the `hud_*` groups of the asset list) arrive as
+  textures on these scenes. Nothing in `presentation/` loads `content/ui/hud/` by path. (7) `GameRoot` is 198 lines of its 200: the HUD wiring is a few
+  lines (the controls handed to the HUD, the debug flag clamped for a release build, the debug view after a boot).
+- **The scene the player sees.** Looked at with real-renderer screenshots in this sandbox (`godot --path . -s <script>` without `--headless`; the
+  scratch script rendered `game_root.tscn` in T4): the hero's Courage as three ivory ovals, the enemy count at the top right, the hints and the status
+  line at the bottom, row 0 of the board clear; F3 puts "CELL 02,05 FACE S" and "ENEMY STRIKE READY" where the hints were; the pseudo-language fits.
+  `tools/render_hud_preview.gd` now does the same for the owner (six pictures; it exits 2 without a renderer).
+- **Tests.** New: `test_hud_widgets` (44: each widget alone from a snapshot, the hints on a keyboard and on a pad and from a rebound key, the language,
+  the flash, and a scan that no widget script touches the simulation), `test_hud_safe_zone`, `test_debug_overlay_default`, `test_camera_snap`. Changed:
+  `test_hud_bridge`, `test_layout_pseudo_locale` (the HUD states are built from snapshots now: at rest, sword ready, cooling down, the top strip at its
+  fullest, the pad's words, the debug readout with the longest piece name, a win, a fall, and every status line), `test_language_switch_redraws_live`,
+  and the suites that read a label (the labels did not change; the baseline run still finds all 235). The owner-guide steps test says "Restart Room"
+  where it said "R" in three labels. 134 to 137 suites.
+- **Docs.** ARCHITECTURE ("The HUD: widgets in two strips", the camera paragraph, the bridge table, deviations, the test table), coding-standards ("The
+  HUD and the camera"), CLAUDE.md (one rule for the HUD and the camera, and the R/Restart sentence), AGENTS.md (the stale "a death or R", the M4
+  status), README (the controls with the pad), tools/README, OWNER_GUIDE in Vietnamese (the controls table with the gamepad column, how to read the
+  HUD, what to try in M4, the camera and `Scale Mode = integer`, the glossary, section 5 rows), where-we-are, task_plan (M4 `human_review`), the
+  plan's M4 entry, findings.
+- **Not done, and why.** The first-run card (Tier B). The HUD's pictures (the owner's). `test_hud_slots_from_data`, the equipped-weapon readout and skill
+  slots 2 to 4 (M7a: the snapshot has one skill). The Rank, Believe and boss-bar widgets are inert until M7c, M10 and M8b. The pad's Move hint
+  says "[Left Stick Up]" until the glyph files exist (the first pad event of `move_up` is the stick). Pixel-snapping the piece slide. `scale_mode =
+  integer`. The assists are still unread by any system (M7b, M8a, M8c).
+
+## M4 review fixes - 2026-10-20
+
+An independent reviewer played the shell with real keys, pad events and a real renderer and accepted M4 with fixes: no blocker, three major
+defects in the Settings and Assists screens the repo's own tests did not catch, and a handful of minor ones. Fixed on branch `base/m4-fix` (from
+`base/m4-4`), one commit each; the strict runner is green after each batch (137 suites before, 140 now; 235 of 235 baseline labels, 14 through
+`label_renames.txt`, unchanged; both `--self-test`s 0 failures; stamp-uids CLEAN; `git diff --check` clean). Tag `m4-done` moved to the last commit.
+
+1. **Major: a language chosen from the drop-down left no focus** (every key did nothing until Esc). `rebuild()` frees every page, and the focused
+   control with it. The screen now remembers the setting whose control had focus and gives it back from a deferred call (the tab container shows the
+   new page only after the frame's changes: the new control is not visible-in-tree at the moment `rebuild()` ends), unless something else has taken
+   the focus meanwhile.
+2. **Major: holes in the keyboard and pad walk of the Settings screen** (Down skipped the language list and one switch, Restore defaults and Back were
+   out of reach on some pages). The engine's guess by position is replaced by explicit focus neighbours, set after every build and every page change
+   (tab bar, the rows in the order they are drawn, then Controls, Restore defaults and Back; a switch or a drop-down keeps Left and Right to itself,
+   a slider uses them to move). `test_settings_focus_walk` presses real keys down, across and up every page and picks a language in the real drop-down.
+3. **Major: four assists and press-to-switch Guard and Focus changed nothing and the screen did not say so.** Marked `coming_later` on their
+   `SettingDefinition` (a flag set where the table is built), and the row ends with "(coming later)", the way the Controls panel marks an action. The
+   values are still stored. `test_settings_coming_later` holds the mark true in both directions: a setting is marked exactly when no system under
+   `ecs/systems/` reads its tuning field or its action, so the day M8a reads `telegraph_time_scale` the suite says to take the mark off. Not
+   implemented now (M4 leaves the gameplay rules as they are): reading the assists is M7b, M8a and M8c's work.
+4. **Minor, fixed:** requirement 10's motion half (ViewSyncSystem draws a slide on whole pixels; `test_piece_slide_snap`; the ledger row now names both
+   suites); English rows must hold exactly the `{placeholders}` their `#.` comment lists (`test_po_domains_merge`, with a bad sample); a refused write
+   to a newer game's profile is said on the Settings screen and in the log, a profile that cannot be read is no longer logged as "no settings stored
+   yet", and bytes that are no text are caught before decoding (no engine error per byte); the panels laid over another menu (Settings, Controls, the
+   questions) are opaque, through a theme type variation `OverMenuPanel` that High-contrast menus also takes over, and the rows of the Settings page
+   start at one x; Start on the pad answers "no" to a question; the language list offers only languages that have words (`offered_languages`) and the
+   generated `qps` only in a debug build.
+5. **Minor, not changed, on purpose:** the trailers of the carried commits `51e2199`, `9baa462`, `60ca331` and `7f4e835` say Claude Opus 5.5 and the rest
+   say Sonnet 5.5. Rewriting them would rewrite the commits `base/m4-1` to `base/m4-4`, which are tagged and reviewed; the later ones follow the harness
+   attribution (Sonnet 5.5). Left as they are, said here, for whoever squashes before a push.
+- **Tests.** New: `test_settings_focus_walk` (58), `test_settings_coming_later` (41), `test_piece_slide_snap` (7). Changed: `test_settings_screen` (a refused
+  write is said; the language list), `test_settings_roundtrip` (unreadable profile, noise bytes, a newer game's profile), `test_po_domains_merge`,
+  `test_confirm_panel`, `test_quit_to_title_confirm` (a real Start), `test_setting_ui_high_contrast` (the over-menu panels), `test_setting_language`,
+  `test_text_service`, `test_layout_pseudo_locale` (the not-saved line), `test_pause_assist_options` (the note is found by type, not by position).

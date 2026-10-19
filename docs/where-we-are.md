@@ -15,6 +15,22 @@ Trang này trả lời hai câu: **làm việc theo quy trình nào**, và **m�
 > `docs/ARCHITECTURE.md`; cảnh chính nay là `shell/game_root.tscn` (trước đây `main.tscn`); bảng cũ → mới
 > nằm trong `docs/migration-notes.md`. Tiến độ xây bản base: `docs/game-base-plan.md` và `task_plan.md`.
 >
+> **Ghi chú M4 bước 1 (2026-10-19):** cảnh chính nay là `shell/app_root.tscn` (không còn `shell/game_root.tscn`): game mở
+> bằng **màn title** (New Game, Continue khi có save đọc được, Credits, Quit; Settings tạm xám), có credits đọc
+> `content/story/credits.tres`, dấu tick nhỏ mỗi khi game tự lưu, số phiên bản, và một dòng báo khi save bị hỏng hoặc của
+> bản game mới hơn. Chọn New Game thì lần chơi mới được ghi đè lên save ngay (có hỏi trước). Xem `docs/OWNER_GUIDE.md` mục 1 và 7.
+>
+> **Ghi chú M4 bước 2 và 3 (2026-10-19):** có menu pause (`Esc`/`Start`; Restart Room hỏi xác nhận; `R` là phím gọi đứa trẻ, chưa
+> làm gì thấy được) và, ở bước 3, **mọi chữ trong game nằm trong file `.po`** (`content/story/text/en/`; sửa một dòng rồi chạy
+> lại là thấy), **chỗ đặt font** (`assets/fonts/`) và **chỗ đặt glyph phím** (`assets/ui/glyphs/`) của bạn, **màn Settings** (title và menu pause: âm lượng,
+> rung màn hình, nháy, tương phản, toàn màn hình, ngôn ngữ, assists, bật/tắt thay vì giữ phím) và **bảng Controls** đọc từ InputMap. HUD mới là bước 4. Xem
+> `docs/OWNER_GUIDE.md` mục 8.
+>
+> **Ghi chú M4 bước 4 (2026-10-19):** **HUD mới**: mỗi mảnh (chấm Courage, ô kỹ năng, số địch, dòng trạng thái, gợi ý phím...) là một scene riêng trong
+> `presentation/ui/hud/widgets/`, nằm trong hai dải (y 0-32 và y 326-360) nên **không còn đè lên hàng ô nào của bàn cờ**; dòng gợi ý phím lấy phím từ InputMap và đổi theo
+> bàn phím/tay cầm; số liệu debug (ô đang đứng, địch nào đánh tiếp) chỉ hiện khi bấm **F3**; camera luôn đặt hình đúng một pixel. M4 xong và chờ bạn duyệt. Xem
+> `docs/OWNER_GUIDE.md` mục 1 (bảng phím có cột tay cầm, cách đọc HUD, "thử gì ở M4"); `tools/render_hud_preview.gd` vẽ HUD ra ảnh cho bạn xem.
+>
 > **Ghi chú cuối M2 (2026-10-13):** M2 cũng không đổi luật chơi. Đổi ở phần hiển thị và dữ liệu: **quân cờ giờ nhỏ
 > hơn ô** theo quyết định của bạn ngày 2026-10-12 (bảng kích thước `content/feel/piece_sizes.tres`; thay phase 66, quân
 > cao 1,5 ô), chỉ còn **một** cảnh actor (`presentation/views/actors/actor_view_base.tscn`) thay cho bốn bản chép,

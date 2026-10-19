@@ -83,9 +83,11 @@ layer may name which (`tests/architecture/test_dependency_edges.gd` enforces it)
 - `presentation/` — how the world is shown: `views/` (`ActorView`, pickup views, and
   `views/actors/`: `actor_view_base.tscn`, the one actor view, plus the thin scenes inheriting it), `ui/hud/`, `ui/codex/`, `board/`, `camera/`, `audio/`, and
   `bridges/` (the `EventRouter` and the bridges that only draw, say or play). Reads events; never decides.
-- `shell/` — the game around the game: `game_root.tscn/.gd` (the in-game scene), `game_flow.gd` (a death or R
-  starts the room again, no scene reload), `bridges/` (the bridges that write the save, rebuild the world or flip a
-  component), `content/` (`ContentDb`, the content registry) and `save/` (`SaveService`, the save).
+- `shell/` — the game around the game: `app_root.tscn/.gd` (the MAIN scene: it owns the `GameFlow`, the music, the
+  fade and the autosave tick, and swaps the screen under it), `title/` and `credits/` (the screens), `game_root.tscn/.gd`
+  (the in-game scene, which also runs alone), `game_flow.gd` (the state machine of the run; a death or the pause menu's Restart Room starts the room
+  again, no scene reload), `bridges/` (the bridges that write the save, rebuild the world or flip a component),
+  `content/` (`ContentDb`, the content registry) and `save/` (`SaveService`, the save).
 - `assets/` shared raw art and audio (`tiles/`, `ui/`, `sfx/`, `music/`, `map_pieces/`; the
   gitignored `_generated/` is generator output only) · `tools/` build scripts and generators ·
   `tests/` headless tests · `docs/` documentation.
@@ -110,7 +112,11 @@ generated chess family drawn to it, `tools/render_actor_preview.gd`, `test_piece
 every shared field and seam once, with no gameplay change (the tick order as data in `ecs/schedule/`, the
 declared events and the commands channel, the input, HUD and player snapshots, each room's own origin and the
 camera framing it, the grid's cell kinds, leaps, rays and cached pathing, and a per-room tick budget test). Next
-was **M3b**, in three steps, all built and waiting for the owner (`human_review`): the `SaveService` that replaced `WorldState` with the v3 save and world flags; `game_root.gd` split into the `EventRouter`, one bridge per responsibility and `GameFlow` (no scene reload); and `ObjectiveSystem`, `CheckpointSystem`, the `PlayerSnapshot` in the zone swap and the checkpoint, death and cleared-room rules (D-16, D-17). The owner can browse `content/`, run `tools/list_placeholders.gd` for the art
+was **M3b**, in three steps, all built and waiting for the owner (`human_review`): the `SaveService` that replaced `WorldState` with the v3 save and world flags; `game_root.gd` split into the `EventRouter`, one bridge per responsibility and `GameFlow` (no scene reload); and `ObjectiveSystem`, `CheckpointSystem`, the `PlayerSnapshot` in the zone swap and the checkpoint, death and cleared-room rules (D-16, D-17). **M4 (shell, input, text) is built in four steps and waits for the owner (`human_review`)**: `AppRoot` as the
+main scene with the `GameFlow` state machine, the title with New Game and Continue, the credits, the autosave tick and the
+corrupt-save notice (1); the full input map with a gamepad event on every played action, and the pause menu (2); the settings
+screen, the Controls panel, the glyph lookup, the text pipeline and the font slot (3); the production HUD as widgets in two strips,
+the camera's integer snap and the docs (4). The owner can browse `content/`, run `tools/list_placeholders.gd` for the art
 and audio TODO, open `assets/_generated/previews/pieces_in_cells.png`, and read `docs/OWNER_GUIDE.md`
 (section 6 is the in-cell rule, in Vietnamese).
 Current status of every area, and what is waiting on the owner, lives in
@@ -485,7 +491,7 @@ registry and the generated art; see `tools/README.md`).
 ## Next Recommended Work
 
 Follow `docs/where-we-are.md` section 5 for the order of work and `docs/game-base-plan.md`
-section 15 for the milestone you are on. M1a, M1b, M2 and M3a are done; M3b is built and waits for the owner (`human_review`; the next milestone is M4,
-the shell, input and text). Three dependency edges and six room references are still
+section 15 for the milestone you are on. M1a, M1b, M2 and M3a are done; M3b is built and waits for the owner (`human_review`); M4 (the shell, input and text) is
+built (four steps) and waits for the owner (`human_review`); M5 (the vertical skeleton) is next. Three dependency edges and six room references are still
 undecided (listed in `tests/architecture/test_dependency_edges.gd` and `test_content_references.gd`);
 the owner decides them before `tests/architecture/allowed_edges.txt` is frozen.

@@ -100,13 +100,24 @@ others. The suites live in `tests/` (the older ones at the top, plus `architectu
 
 ## Controls
 
-- `WASD` or arrows: move one cell.
-- `Shift + direction`: turn without moving.
-- `Space` or `K`: Wooden Sword.
-- `Q`: Pencil Thrust.
-- `R`: reset the room.
+Every played action has a keyboard key and a gamepad button (the game follows whichever you touched last, and the hints at the
+bottom of the screen show that device's glyphs). The pause menu's Controls panel lists them all, read from the InputMap.
+
+- `WASD` or arrows (pad: left stick or d-pad): move one cell.
+- `Shift + direction` (pad: `LB`): turn without moving.
+- `Space` or `K` (pad: `A`): Wooden Sword.
+- `Q` (pad: `X`): Pencil Thrust.
+- `R` (pad: `RB`): call the child (the key exists; the child helps from M10, so it does nothing visible yet).
+  Restarting a room is not on `R`: it is Restart Room in the pause menu.
+- `Esc` (pad: `Start`): the pause menu: Resume, Book, Settings, Controls (the keys, read from the InputMap), Assist options,
+  Restart Room (asks first), Quit to Title (asks first). Settings is also on the title.
 - `B`: open the Book of House Rules.
-- `F3`: toggle the debug view. `F11`: fullscreen.
+- `F3`: toggle the debug view: the board's debug layer, and the HUD's debug readout (the pawn's cell, who strikes next) in the
+  place of the control hints. Off when the game starts. `F11`: fullscreen.
+
+The HUD keeps to two strips (the top 32 px and the bottom 34 px of the 640 x 360 picture), so it never covers a row of the board:
+Courage, the skill slot, the enemy count and (from M7c) the Rank badge on top; the status line and the control hints below.
+`tools/render_hud_preview.gd` draws it (needs a window) and `docs/ARCHITECTURE.md` ("The HUD: widgets in two strips") explains it.
 
 ## Design
 
@@ -137,9 +148,11 @@ may name which). The top-level folders are layers:
   baker (`EcsBoot`, `EcsActorFactory`).
 - `presentation/`: how the world is shown: `views/` (`ActorView`, pickups, the actor scenes), `ui/` (HUD,
   the Book), `board/`, `camera/`, `audio/`, `bridges/` (the event router and the bridges that draw, say or play).
-- `shell/`: the game around the game: `game_root.tscn/.gd` (the in-game scene), `game_flow.gd` (a death or R
-  starts the room again), `bridges/` (the bridges that write the save, rebuild the world or flip a component),
-  `content/` (`ContentDb`, the content registry) and `save/` (`SaveService`, the save).
+- `shell/`: the game around the game: `app_root.tscn/.gd` (the main scene: the flow, the music, the fade, the
+  autosave tick), `title/` and `credits/` (the two screens around the game), `game_root.tscn/.gd` (the in-game
+  scene), `game_flow.gd` (the state machine: title, playing, paused, ending, credits; a death or the pause menu's
+  Restart Room starts the room again), `bridges/` (the bridges that write the save, rebuild the world or flip a component), `content/`
+  (`ContentDb`, the content registry) and `save/` (`SaveService`, the save).
 - `assets/`: shared raw art and audio (tile atlases, interface pictures, sound effects, music, the
   hand-drawn bedroom pieces). `tools/`: generators, the test runner and the migration scripts (never
   shipped). `tests/`: headless tests, fixtures and baselines.

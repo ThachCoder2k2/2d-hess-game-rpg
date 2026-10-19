@@ -12,8 +12,9 @@ extends Node
 ##      (read_slot: the file, then the save an interrupted write left as .tmp if it is newer than the .bak,
 ##      then the .bak, then the v2 WorldState save, then a clean new game, each step logged), and migrated
 ##      from older formats (SaveMigration).
-##   3. The profile (`<root>/profile.cfg`): facts about the player that outlive a slot, today the
-##      `completed` mark, which survives a New Game (docs/game-base-plan.md 8.8, 9.1).
+##   3. The profile (`<root>/profile.cfg`): facts about the player that outlive a slot: the `completed` mark, which
+##      survives a New Game (docs/game-base-plan.md 8.8, 9.1), and the player's settings (SettingsStore keeps them
+##      under the `setting_` prefix, 9.2).
 ##
 ## Rules this node enforces:
 ##   - Autosave only on success events (R17). The only way the shell asks for a save is
@@ -24,8 +25,8 @@ extends Node
 ##   - A session must exist before anything is written: `has_session` becomes true when a slot is loaded
 ##     or a new game begins, so a stray request can never write an empty run over a real save.
 ##   - A save from a newer game is never read as damaged and never overwritten; new_game() sets it aside.
-##   - It loads nothing by itself. GameFlow loads on Continue (M3b/M4); until it exists the in-game scene
-##     calls ensure_session() when it starts, which is Continue.
+##   - It loads nothing by itself. GameFlow loads on Continue and begins on New Game (M4); a game scene started
+##     alone (a test, the editor's Run Current Scene) calls ensure_session() when it starts, which is Continue.
 ##
 ## There is deliberately no class_name: an autoload's name is a global, and a class_name of the same name
 ## is an error. Tests make their own instance with `load("res://shell/save/save_service.gd").new()` and
@@ -34,8 +35,8 @@ extends Node
 ## A save is about to be written for `reason`. The shell listens and copies the live facts the service
 ## cannot see (the ECS world's flags) into `state` first, so a request_save() call site never has to.
 signal saving(reason: StringName)
-## A slot was written. `reason` is the success event that asked (one of AUTOSAVE_REASONS); M4's autosave
-## indicator listens.
+## A slot was written. `reason` is the success event that asked (one of AUTOSAVE_REASONS); AppRoot's autosave
+## indicator listens. A New Game that writes its clean run (start_new_run) is not an autosave and does not emit it.
 signal autosaved(slot: int, reason: StringName)
 
 ## Where saves go unless configure() says otherwise: Godot's per-user data folder.
@@ -157,6 +158,18 @@ func new_game(slot := SINGLE_SLOT) -> void:
 	current_room_id = &""
 	has_session = true
 	last_load = null
+
+
+## New Game, chosen by the player: begins a clean run in `slot` AND makes the slot's file that clean run now, so a
+## relaunch and a Continue can never bring the old run back. Nothing is wiped: SaveFile.write keeps the good file it
+## replaces as the .bak (a damaged one as .corrupt), a file from a newer game is set aside by new_game(), the v2
+## WorldState save is retired by write_slot(), and the profile (the `completed` mark) is not touched. It is the
+## player's command and not a success event (R17), so it asks nobody and emits no `autosaved`: no tick shows.
+## Returns OK or the file error; the clean run is in memory either way, and the next success event writes it again.
+func start_new_run(slot := SINGLE_SLOT) -> Error:
+	new_game(slot)
+	state.saved_at_unix = int(Time.get_unix_time_from_system())
+	return write_slot(slot, state)
 
 
 ## Continue: loads `slot` (a missing or unusable slot starts a clean run, see read_slot) and makes it the
@@ -317,10 +330,29 @@ func read_profile() -> Dictionary:
 	return values
 
 
+## Why the profile cannot be read, in a sentence for the log; "" when it can be read or has never been written (a first
+## run). A profile that read_profile() answers with nothing for this reason is not "no settings stored yet": the file is
+## there and the game cannot use it (damaged, or written by hand without the footer).
+func profile_problem() -> String:
+	var reading := SaveFile.read(profile_path())
+	if reading.status != SaveFile.STATUS_DAMAGED:
+		return ""
+	if SaveFile.read(profile_path() + SaveFile.BACKUP_SUFFIX).is_readable():
+		return ""
+	return reading.reason
+
+
 ## Writes one profile value now (the whole file, safely). Returns OK or the file error.
 func set_profile_value(key: StringName, value: Variant) -> Error:
+	return set_profile_values({String(key): value})
+
+
+## Writes several profile values in one write (key String -> value), keeping every other value the profile holds.
+## The settings are stored this way: one slider drag is many changes but one file write. Returns OK or the file error.
+func set_profile_values(new_values: Dictionary) -> Error:
 	var values := read_profile()
-	values[String(key)] = value
+	for new_key: Variant in new_values:
+		values[String(new_key)] = new_values[new_key]
 	var config := ConfigFile.new()
 	config.set_value(SaveFile.META_SECTION, SaveFile.VERSION_KEY, PROFILE_FORMAT_VERSION)
 	var keys: Array = values.keys()

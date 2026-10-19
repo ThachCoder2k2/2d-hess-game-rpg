@@ -18,6 +18,7 @@ func _expect(condition: bool, label: String) -> void:
 
 
 func _init() -> void:
+	TextService.set_language(TextService.SOURCE_LANGUAGE)  # this suite reads the English words
 	var world := EcsWorld.new()
 	world.manual_tick = true
 	root.add_child(world)
@@ -44,7 +45,7 @@ func _init() -> void:
 
 	var armed_id := world.grid.entity_at(Vector2i(10, 1))
 	var armed_slot: EcsComponents.WeaponSlot = world.get_component(armed_id, EcsComponents.WEAPON_SLOT)
-	_expect(armed_slot != null and armed_slot.weapon != null and armed_slot.weapon.display_name == "Pencil Spear", "armed pawn carries its definition's default weapon")
+	_expect(armed_slot != null and armed_slot.weapon != null and TextService.t(armed_slot.weapon.display_name) == "Pencil Spear", "armed pawn carries its definition's default weapon")
 
 	var knight_id := world.grid.entity_at(Vector2i(13, 2))
 	var knight_ai: EcsComponents.EnemyAI = world.get_component(knight_id, EcsComponents.ENEMY_AI)
@@ -56,7 +57,7 @@ func _init() -> void:
 	_expect(not world.grid.blocked_cells.has(Vector2i(5, 4)), "open floor stays walkable")
 
 	var piece_names: Dictionary = cast["piece_name_by_entity"]
-	_expect(String(piece_names.get(armed_id, "")) == "Pawn", "cast knows each entity's piece name")
+	_expect(TextService.t(String(piece_names.get(armed_id, ""))) == "Pawn", "cast knows each entity's piece name")
 
 	_expect(String(room.call("get_start_message")).begins_with("First clash"), "room start message comes from the objective data")
 	_expect(String(room.call("get_clear_message")) == "ROOM CLEARED", "room clear message resolves")

@@ -6,7 +6,8 @@ extends RefCounted
 ## instance, EcsWorld.tuning; presentation changes it only through the `tuning_set` command. Every
 ## default is the neutral value, so a world that never touches it plays exactly as before M3a.
 ##
-## Nothing reads these yet; the milestone that makes a knob do something is named on it.
+## What reads each knob is named on it; the assists are read from M8a (telegraph time, enemy pace), M7b (the buffer) and
+## M3b/M8c (Courage), and until then a setting reaches the field and no system acts on it.
 
 ## Every component carries its store key (docs/coding-standards.md). Tuning is the one component
 ## the world holds directly, as EcsWorld.tuning, instead of on an entity.
@@ -24,6 +25,11 @@ var enemy_pace_scale := 1.0
 ## never expires, which is how the game plays today; M7b sets the real window (0.12 s, 0.20 s with
 ## the Input Forgiveness assist) and makes PlayerInputSystem read it.
 var input_buffer_window := 0.0
+
+## Reduce flashing (the setting, 10): the pieces drop the hurt tint and the invulnerability flicker, which blinks the
+## hero about seven times a second; the hero stays a steady, fainter colour while it cannot be hurt. A telegraph is
+## never touched (reduce-flash removes effects, not warnings). Read by ViewSyncSystem.
+var reduce_flash := false
 
 ## Courage added to the pawn's maximum by the Extra Courage assist (0, 1 or 2). Read when the
 ## player is spawned and at checkpoint refills (M3b, M8c).

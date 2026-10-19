@@ -8,7 +8,7 @@
 [ext_resource type="Texture2D" uid="uid://c8r7yummphfy3" path="res://content/rooms/t1_white_kings_fall/background.png" id="6_room"]
 
 [node name="T1_WhiteKingsFall" instance=ExtResource("1_room")]
-room_message = "The king has fallen. Move."
+room_message = "ROOM_T1_WHITE_KINGS_FALL_START"
 zone_id = &"t1_white_kings_fall"
 board_size = Vector2i(16, 9)
 

@@ -306,7 +306,7 @@ Never re-implement what a node already does.
 | Tile floors, walls and gaps | `TileMapLayer` + `TileSet` (`kind` and `solid` custom data) | per-cell Polygon2D or Sprite nodes |
 | UI layout | Containers, anchors | manual position math on Controls |
 | Screen-fixed UI | `CanvasLayer` | moving UI to follow the camera |
-| Camera follow, limits, shake | `Camera2D` properties | scripted camera math |
+| Camera follow, limits, shake | `Camera2D` properties (the one scripted step is `CameraRig`'s whole-pixel snap, below) | scripted camera math anywhere else |
 | Node lookup | scene-unique names (`%Node`), `@export` NodePath | brittle absolute paths |
 | Sound | `AnimationPlayer` audio tracks (motion), `SfxManager` registry (events), `default_bus_layout.tres` (mixing) | ad-hoc `AudioStreamPlayer.new()` in code |
 
@@ -385,10 +385,59 @@ Deliberately not used (do not add them without a real need and the owner's say):
   `git add -A` over uncommitted editor or UID changes.
 - Commit every new `.gd` together with its `.gd.uid` sidecar.
 
+## Text (M4 step 3)
+
+- A word the player reads is a row of `content/story/text/en/{ui,rooms,skills,story}.po`, named by a KEY: UPPER_SNAKE, its
+  prefix says the file (`TextService.PREFIXES_BY_DOMAIN`), every row carries a `#.` comment saying where it shows and what
+  it is for. Scenes, `.tres` files and scripts hold keys; a literal sentence in any of them fails `test_text_keys`.
+- Only `TextService` asks the engine to translate (`test_tr_only_in_text_service`): no `tr()`, `atr()` or
+  `TranslationServer.translate()` anywhere else. A Label a scene authors holds its key in `text` and the engine does the rest;
+  a script calls `TextService.t(key, params)`, and puts text that has to follow a language switch on a `LiveText`.
+  A name inside another line is a `TextKey` param, so it changes with the sentence.
+- A `{placeholder}` is lower_snake and is filled by `params`; the pseudo-language keeps it and lengthens everything else by
+  40 percent. A screen is checked for that at 640 x 360 (`test_layout_pseudo_locale`): a new HUD, menu or settings widget
+  that cannot take longer words is fixed in its layout, not exempted.
+- `schema/` and `ecs/` carry keys and never resolve them. A dump or a golden prints keys, never sentences.
+- Allowed non-game strings in code (developer sentences, tables of documentation, editor labels) are listed with their
+  reason in `ALLOWED_LITERALS` of `tests/text/test_text_keys.gd`; the list is exact, so an entry that matches nothing fails.
+
+## Settings and controls (M4 step 3)
+
+- What the player chooses is a row of the `GameSettings` table (`schema/settings/`): key, kind, page, name key, default, range. A setting
+  is DONE when something real moves because of it: the app-level ones in `SettingsApplier`, the room-level ones in `SettingsBridge`, and a
+  `tests/settings/test_setting_*.gd` suite sets it and looks at the target (`test_every_setting_has_a_target` fails without one).
+- A setting never sets a component. It reaches the simulation as a `tuning_set` command on `world.tuning` (a field of `Tuning`, with the
+  milestone that reads it named on it); a view reads the knob, a bridge sets a node. A new value is validated by its definition and a
+  stored value that fails falls back to its default with a logged reason.
+- Controls are never hard-coded text: a prompt or the Controls panel asks `InputGlyphs` for the glyph of an InputMap action for a
+  device, and shows the owner's picture when its file is there and the words (`[Space]`) when it is not. Only the InputPoller reads
+  the `Input` singleton; `LastInputDevice` listens to events.
+
+## The HUD and the camera (M4 step 4)
+
+- **Each HUD widget is a scene and a script of its own** under `presentation/ui/hud/widgets/`, extends `HudWidget`, and has ONE instance
+  in `hud.tscn`. A widget draws only what the `HudSnapshot` says (`refresh(snapshot)`, and only when it changed): a number a widget
+  needs and the snapshot does not have is a field of `HudSnapshot` and a line of `HudSnapshotSystem.build()`, never a read of a
+  component. A widget names no component, no `EcsWorld`, no `Input` and pushes no command (`test_hud_widgets` scans the scripts). What a
+  snapshot cannot say (a piece's name, the words of a sentence) a bridge hands in through the `GameHud` facade, as a text key or a `TextKey`.
+- **A widget lives in a strip**: the top strip (y 0 to 32, a bar at most 28 px tall) or the bottom strip (y 326 to 360), 4 px from the
+  edges of the picture, and off every row of every board (`test_hud_safe_zone` measures each widget, shown or reserved, against the board of
+  every room). Only a moment's effect (`DamageFlash`) or the end of a room (`ResultPanel`) may cover the board. A new widget is placed by
+  its offsets in `hud.tscn`, with the room it needs, and the test says whether it fits.
+- **A production widget shows what a player decides with.** The pawn's cell, who strikes next and anything else for a developer is a
+  field of `DebugReadout`, behind F3 and hidden at the start. A widget that will exist later is a RESERVED slot: a scene and a script
+  whose doc says which milestone fills it and what it needs, hidden, with its rectangle in the strip; it reads nothing before that.
+- **Never write a key's name in a text row** ("Q THRUST"): a control hint is built from the `InputMap` by `ControlPrompts` /
+  `ActionPrompt` and follows the device in use. A row names what a control DOES.
+- **The camera's view starts on a whole pixel** (D-30, requirement 10). `CameraRig` is the only code that sets a camera's `offset` or
+  `position`, and its `snap_to_whole_pixels` stays on unless the view must move between pixels; everything else asks for a shake through
+  `CameraBridge.shake()` (which the Screen shake setting scales) or moves the hero. A camera is measured by the SubViewport's own
+  `canvas_transform` (`test_camera_snap`), not by numbers the rig computed itself.
+
 ## What the plan adds next
 
 `docs/game-base-plan.md` §13.3 lists conventions that M1b did not need and later milestones add:
-the file-naming suffixes `*_effect.gd`, `*_handler.gd`, `*_bridge.gd` as those kinds appear, and `.po`
-text keys instead of literal strings. Those are targets, not rules yet; the rules above are the
+the file-naming suffixes `*_effect.gd`, `*_handler.gd`, `*_bridge.gd` as those kinds appear. The `.po`
+text keys are a rule since M4 step 3 (below). The rest are targets, not rules yet; the rules above are the
 ones the code and the guards already hold (the schedule, the declared events and commands, the snapshots, the
 cell kinds and the cached pathing landed with M3a).

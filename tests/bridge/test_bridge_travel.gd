@@ -99,7 +99,7 @@ func _run() -> void:
 	_expect(Support.player_view_position(main) == ecs_after.grid.cell_to_world(west_entry), "the hero view is placed on that cell's world position")
 	_expect(ecs_after.grid.exit_by_cell.size() == 2, "T2's two exits are baked into the new world")
 	_expect(ecs_after.grid.player_unlock_by_cell.size() == 1, "T2's sword unlock cell is baked into the new world")
-	_expect(String(hud.get("objective_label").text).begins_with("A weapon waits"), "the HUD shows T2's start message")
+	_expect(String((hud as GameHud).objective_line.text_label.text).begins_with("A weapon waits"), "the HUD shows T2's start message")
 
 	# --- The health carry: applied by the boot, then consumed ---
 	_expect(Support.player_health(main).current == 2, "the carried health (2) is applied to the new hero")
@@ -146,8 +146,8 @@ func _run() -> void:
 	Support.step_player(main, Vector2i.RIGHT)
 	_expect(not Support.travel_in_progress(main) and main.get("current_zone_id") == T3, "a requires_room_clear exit does not travel while an enemy lives")
 	var t3_door_line := Support.exit_locked_message(room_t3, &"t4_broken_rule_yard")
-	_expect(not t3_door_line.is_empty() and String(hud.get("objective_label").text) == t3_door_line, "the bridge answers a locked door with the line of that door (T3 has no captain, and its door does not blame one)")
-	_expect(not String(hud.get("objective_label").text).to_lower().contains("captain"), "T3's locked door says nothing about a captain")
+	_expect(not t3_door_line.is_empty() and String((hud as GameHud).objective_line.text_label.text) == TextService.t(t3_door_line), "the bridge answers a locked door with the line of that door (T3 has no captain, and its door does not blame one)")
+	_expect(not String((hud as GameHud).objective_line.text_label.text).to_lower().contains("captain"), "T3's locked door says nothing about a captain")
 	_expect(Support.run_of(save_service).room_id == T3, "a locked door leaves the run on the current zone")
 
 	Support.end_suite(self, save_service)

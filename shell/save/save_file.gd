@@ -87,8 +87,15 @@ static func read(path: String) -> Reading:
 		reading.status = STATUS_DAMAGED
 		reading.reason = "cannot open %s (error %d)" % [path, FileAccess.get_open_error()]
 		return reading
-	var text := file.get_as_text()
+	var bytes := file.get_buffer(file.get_length())
 	file.close()
+	if not is_valid_utf8(bytes):
+		# Decoding such bytes as text would print a line of engine error for every bad byte (dozens for a zeroed or
+		# random file), so a file that is not text is reported here, in one sentence, before anything decodes it.
+		reading.status = STATUS_DAMAGED
+		reading.reason = "%s is not text (it holds bytes no text can hold: damaged or not written by the game)" % path
+		return reading
+	var text := bytes.get_string_from_utf8()
 	reading.version = version_declared_in(text)
 
 	var footer_start := text.rfind("\n" + INTEGRITY_PREFIX)
@@ -116,6 +123,48 @@ static func read(path: String) -> Reading:
 	reading.config = config
 	reading.status = STATUS_READABLE
 	return reading
+
+
+## Whether `bytes` are well-formed UTF-8 (what the game writes, since a save is the text of a ConfigFile): every
+## lead byte is a real one, each is followed by the continuation bytes it needs, and no sequence is a longer form of a
+## shorter one, a surrogate or past U+10FFFF. A file is a few kilobytes, so the walk costs nothing.
+static func is_valid_utf8(bytes: PackedByteArray) -> bool:
+	var index := 0
+	var size := bytes.size()
+	while index < size:
+		var lead := bytes[index]
+		if lead < 0x80:
+			index += 1
+			continue
+		var continuation_count := 0
+		var lowest_second := 0x80
+		var highest_second := 0xBF
+		if lead >= 0xC2 and lead <= 0xDF:
+			continuation_count = 1
+		elif lead >= 0xE0 and lead <= 0xEF:
+			continuation_count = 2
+			if lead == 0xE0:
+				lowest_second = 0xA0
+			elif lead == 0xED:
+				highest_second = 0x9F
+		elif lead >= 0xF0 and lead <= 0xF4:
+			continuation_count = 3
+			if lead == 0xF0:
+				lowest_second = 0x90
+			elif lead == 0xF4:
+				highest_second = 0x8F
+		else:
+			return false
+		if index + continuation_count >= size:
+			return false
+		var second := bytes[index + 1]
+		if second < lowest_second or second > highest_second:
+			return false
+		for offset in range(2, continuation_count + 1):
+			if (bytes[index + offset] & 0xC0) != 0x80:
+				return false
+		index += continuation_count + 1
+	return true
 
 
 ## Reads a ConfigFile that carries no footer (the v2 WorldState save at user://world_state.cfg, which
