@@ -58,6 +58,8 @@ var hud_bridge := HudBridge.new()
 var despawn_bridge := DespawnBridge.new()
 ## What the room writes into the run and the run gives back to each room; the only asker of saves.
 var save_bridge := SaveBridge.new()
+## The Book of House Rules: a met piece writes its page, the B key opens the Book.
+var book_bridge := BookBridge.new()
 
 
 func _ready() -> void:
@@ -74,6 +76,7 @@ func _ready() -> void:
 	hud_bridge.attach(hud)
 	despawn_bridge.attach(self)
 	save_bridge.attach(self)
+	book_bridge.attach(self)
 
 	# Death and R both reload this scene; the SaveService (autoload) holds the run, so the
 	# reload boots in the zone the run is in, not the default. A game that has just launched
@@ -113,7 +116,7 @@ func _boot_zone(entry_id: StringName) -> void:
 	save_bridge.bind_world(ecs.hud_snapshot, cast)
 	current_zone_id = zone_id_of(current_room)
 	save_bridge.restore_run(current_zone_id)
-	_unlock_met_rules()
+	book_bridge.meet_pieces()
 	save_bridge.apply_unlocks()
 	total_enemies = cast.get("enemies", []).size()
 	remaining_enemies = total_enemies
@@ -158,7 +161,7 @@ func _process(delta: float) -> void:
 		var window := get_window()
 		window.mode = Window.MODE_WINDOWED if window.mode == Window.MODE_FULLSCREEN else Window.MODE_FULLSCREEN
 	if controls.is_just_pressed(&"rule_book_toggle"):
-		_toggle_rule_book()
+		book_bridge.toggle()
 
 	if not room_ending:
 		ecs.tick(delta)
@@ -208,7 +211,7 @@ func _check_completion() -> void:
 	if not complete:
 		return
 	room_ending = true
-	_set_player_control(false)
+	set_player_control(false)
 	audio_bridge.play(AudioBridge.ROOM_CLEAR_SOUND)
 	var clear_message := _room_text("get_clear_message", "ROOM CLEARED")
 	message_bridge.say(clear_message)
@@ -234,7 +237,7 @@ func _on_player_defeated() -> void:
 		tree.reload_current_scene()
 
 
-func _set_player_control(value: bool) -> void:
+func set_player_control(value: bool) -> void:
 	var tag: EcsComponents.PlayerTag = ecs.get_component(player_id, EcsComponents.PLAYER_TAG)
 	if tag != null:
 		tag.control_enabled = value
@@ -262,7 +265,7 @@ func _travel_to(zone_id: StringName, entry_id: StringName) -> void:
 	if travel_in_progress or room_ending or world_graph == null or not world_graph.has_zone(zone_id):
 		return
 	travel_in_progress = true
-	_set_player_control(false)
+	set_player_control(false)
 	var health: EcsComponents.Health = ecs.get_component(player_id, EcsComponents.HEALTH)
 	player_health_carry = health.current if health != null else -1
 	save_bridge.record_checkpoint(zone_id, entry_id)
@@ -270,7 +273,7 @@ func _travel_to(zone_id: StringName, entry_id: StringName) -> void:
 	current_room = _swap_zone_node(zone_id)
 	_boot_zone(entry_id)
 	await _fade_to(0.0)
-	_set_player_control(true)
+	set_player_control(true)
 	travel_in_progress = false
 
 
@@ -326,36 +329,3 @@ static func zone_id_of(zone_root: Node) -> StringName:
 ## The SaveService autoload, null-safe so headless tests without autoloads run.
 func save_service() -> SaveServiceScript:
 	return get_node_or_null("/root/SaveService") as SaveServiceScript
-
-
-## --- The Book of House Rules -------------------------------------------
-
-
-## Meeting a piece = sharing a zone with it. Every definition present in the
-## freshly booted zone writes its page into the book, once, forever.
-func _unlock_met_rules() -> void:
-	if current_room != null:
-		var met_piece_ids: Array[String] = []
-		for child in current_room.get_children():
-			var view := child as ActorView
-			if view != null and view.definition != null:
-				met_piece_ids.append(String(view.definition.id))
-		if save_bridge.record_rule_pages(met_piece_ids):
-			message_bridge.say("New pieces on the board. The book writes their rules. [B]")
-	var book := _rule_book_ui()
-	if book != null:
-		book.refresh(save_bridge.rule_page_ids())
-
-
-func _toggle_rule_book() -> void:
-	var book := _rule_book_ui()
-	if book == null or travel_in_progress:
-		return
-	book.visible = not book.visible
-	if book.visible:
-		book.refresh(save_bridge.rule_page_ids())
-	_set_player_control(not book.visible)
-
-
-func _rule_book_ui() -> RuleBookUI:
-	return get_node_or_null(^"RuleBookUI") as RuleBookUI

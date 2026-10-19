@@ -141,7 +141,7 @@ static func reboot_zone(main: Node, entry_id: StringName) -> void:
 
 ## The B key's handler, called directly.
 static func toggle_book(main: Node) -> void:
-	main._toggle_rule_book()
+	main.get("book_bridge").toggle()
 
 
 ## --- Reading the live simulation ------------------------------------------

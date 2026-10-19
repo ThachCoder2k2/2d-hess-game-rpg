@@ -1,8 +1,8 @@
 extends UnboundTest
 
-## Bridge characterization (M1a): the Book of House Rules and player control.
-## main._toggle_rule_book flips the Book's visibility and sets
-## PlayerTag.control_enabled to the opposite, nothing more. This suite drives it
+## Bridge characterization (M1a, ported in M3b step 2): the Book of House Rules and player control.
+## BookBridge.toggle (shell/bridges/book_bridge.gd; it was main._toggle_rule_book) flips the Book's
+## visibility and sets PlayerTag.control_enabled to the opposite, nothing more. This suite drives it
 ## with a real B key event and real input actions, and pins what the Book does
 ## and does NOT do today:
 ## - it blocks the hero's keys (moves, attacks) while open;
