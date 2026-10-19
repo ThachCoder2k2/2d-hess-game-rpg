@@ -1951,3 +1951,38 @@ Branch `base/m4-4`, from `base/m4-3`. Four commits of work (camera, HUD, the pre
   slots 2 to 4 (M7a: the snapshot has one skill). The Rank, Believe and boss-bar widgets are inert until M7c, M10 and M8b. The pad's Move hint
   says "[Left Stick Up]" until the glyph files exist (the first pad event of `move_up` is the stick). Pixel-snapping the piece slide. `scale_mode =
   integer`. The assists are still unread by any system (M7b, M8a, M8c).
+
+## M4 review fixes - 2026-10-20
+
+An independent reviewer played the shell with real keys, pad events and a real renderer and accepted M4 with fixes: no blocker, three major
+defects in the Settings and Assists screens the repo's own tests did not catch, and a handful of minor ones. Fixed on branch `base/m4-fix` (from
+`base/m4-4`), one commit each; the strict runner is green after each batch (137 suites before, 140 now; 235 of 235 baseline labels, 14 through
+`label_renames.txt`, unchanged; both `--self-test`s 0 failures; stamp-uids CLEAN; `git diff --check` clean). Tag `m4-done` moved to the last commit.
+
+1. **Major: a language chosen from the drop-down left no focus** (every key did nothing until Esc). `rebuild()` frees every page, and the focused
+   control with it. The screen now remembers the setting whose control had focus and gives it back from a deferred call (the tab container shows the
+   new page only after the frame's changes: the new control is not visible-in-tree at the moment `rebuild()` ends), unless something else has taken
+   the focus meanwhile.
+2. **Major: holes in the keyboard and pad walk of the Settings screen** (Down skipped the language list and one switch, Restore defaults and Back were
+   out of reach on some pages). The engine's guess by position is replaced by explicit focus neighbours, set after every build and every page change
+   (tab bar, the rows in the order they are drawn, then Controls, Restore defaults and Back; a switch or a drop-down keeps Left and Right to itself,
+   a slider uses them to move). `test_settings_focus_walk` presses real keys down, across and up every page and picks a language in the real drop-down.
+3. **Major: four assists and press-to-switch Guard and Focus changed nothing and the screen did not say so.** Marked `coming_later` on their
+   `SettingDefinition` (a flag set where the table is built), and the row ends with "(coming later)", the way the Controls panel marks an action. The
+   values are still stored. `test_settings_coming_later` holds the mark true in both directions: a setting is marked exactly when no system under
+   `ecs/systems/` reads its tuning field or its action, so the day M8a reads `telegraph_time_scale` the suite says to take the mark off. Not
+   implemented now (M4 leaves the gameplay rules as they are): reading the assists is M7b, M8a and M8c's work.
+4. **Minor, fixed:** requirement 10's motion half (ViewSyncSystem draws a slide on whole pixels; `test_piece_slide_snap`; the ledger row now names both
+   suites); English rows must hold exactly the `{placeholders}` their `#.` comment lists (`test_po_domains_merge`, with a bad sample); a refused write
+   to a newer game's profile is said on the Settings screen and in the log, a profile that cannot be read is no longer logged as "no settings stored
+   yet", and bytes that are no text are caught before decoding (no engine error per byte); the panels laid over another menu (Settings, Controls, the
+   questions) are opaque, through a theme type variation `OverMenuPanel` that High-contrast menus also takes over, and the rows of the Settings page
+   start at one x; Start on the pad answers "no" to a question; the language list offers only languages that have words (`offered_languages`) and the
+   generated `qps` only in a debug build.
+5. **Minor, not changed, on purpose:** the trailers of the carried commits `51e2199`, `9baa462`, `60ca331` and `7f4e835` say Claude Opus 5.5 and the rest
+   say Sonnet 5.5. Rewriting them would rewrite the commits `base/m4-1` to `base/m4-4`, which are tagged and reviewed; the later ones follow the harness
+   attribution (Sonnet 5.5). Left as they are, said here, for whoever squashes before a push.
+- **Tests.** New: `test_settings_focus_walk` (58), `test_settings_coming_later` (41), `test_piece_slide_snap` (7). Changed: `test_settings_screen` (a refused
+  write is said; the language list), `test_settings_roundtrip` (unreadable profile, noise bytes, a newer game's profile), `test_po_domains_merge`,
+  `test_confirm_panel`, `test_quit_to_title_confirm` (a real Start), `test_setting_ui_high_contrast` (the over-menu panels), `test_setting_language`,
+  `test_text_service`, `test_layout_pseudo_locale` (the not-saved line), `test_pause_assist_options` (the note is found by type, not by position).

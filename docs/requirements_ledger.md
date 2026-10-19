@@ -35,7 +35,7 @@ Written in M1a from section 1.5 of `docs/game-base-plan.md` (v1.1, branch `game-
 | 7 | s | movement | Turning cannot interrupt an active step or an attack impact window (turn branch currently runs before the moving check) | §5.1 | M7b | test_turn_lock | covered |
 | 8 | s | movement | Blocked step gives visible or audible bump feedback, never silent input loss (step_blocked event has no consumer in main.gd) | §10 | M8c | test_step_blocked_feedback | covered |
 | 9 | m | movement | Reserve-then-commit grid occupancy; both cells held during a step; no collision mid-step | §5.11 | M3a | test_leap_occupancy; baseline labels | covered |
-| 10 | s | movement | Pixel-snapped motion and camera, no subpixel blur (camera eases with smoothing_speed 8.0, no snap found) | §10, D-30 | M4 | test_camera_snap | covered |
+| 10 | s | movement | Pixel-snapped motion and camera, no subpixel blur (camera eases with smoothing_speed 8.0, no snap found) | §10, D-30 | M4 | test_camera_snap; test_piece_slide_snap | covered |
 | 11 | m | input | Every gameplay verb has a keyboard and a controller mapping (project.godot has zero joypad events) | §9.4 | M4 | test_input_actions_have_pad_events | covered |
 | 12 | s | input | Full input remapping | §1.2 | n/a | n/a | deferred W |
 | 13 | m | input | InputMap actions for Interact (E), Call child (R), Select help, Focus, Pause (project.godot holds only move, attack, skill_1, turn_mode, restart_room) | §9.4 | M4, M7a | test_input_actions_have_pad_events | covered |

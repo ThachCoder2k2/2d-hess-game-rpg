@@ -82,7 +82,7 @@ made the camera start its picture on a whole pixel.*
      gợi ý phím:       [W][A][S][D] MOVE   [Space] SWORD   [Q] THRUST   [Esc] PAUSE      (tay cầm: [A] SWORD, [X] THRUST, [Start] PAUSE...)
    ```
 
-   - **COURAGE:** mỗi chấm là một điểm Courage còn lại, hình chiếc đế quân cờ màu ngà; chấm rỗng là điểm đã mất. Tối đa 5 chấm (Extra Courage của Assists làm tăng số chấm).
+   - **COURAGE:** mỗi chấm là một điểm Courage còn lại, hình chiếc đế quân cờ màu ngà; chấm rỗng là điểm đã mất. Tối đa 5 chấm (Extra Courage của Assists sẽ làm tăng số chấm khi M8c xong; hôm nay nó chưa làm gì, màn Settings ghi "(coming later)").
    - **Ô kỹ năng:** ô vuông 24×24 đầy dần từ đáy khi kỹ năng hồi lại; chữ bên cạnh nói `FIND SWORD` (chưa nhặt kiếm), `THRUST READY` hay `THRUST 0.5`.
      Phím bấm không còn viết cứng trong chữ này: dòng gợi ý phím ở dải dưới lấy phím từ InputMap (đổi phím trong `project.godot` là HUD đổi theo).
    - **ENEMIES 3/4:** còn bao nhiêu địch trong phòng. **RANK:** nhãn Rank bằng các vạch kiểm đếm màu xanh (nhãn câu chuyện, không phải cấp độ); **ẩn cho tới M7c**.
@@ -106,7 +106,7 @@ made the camera start its picture on a whole pixel.*
    4. **Chơi lại phòng:** `Esc` → **Restart Room** → xác nhận. (Bấm `R` không còn chơi lại phòng: nó là phím gọi đứa trẻ.)
    5. **Sửa một dòng chữ rồi thấy nó:** mở `content/story/text/en/ui.po`, đổi dòng `msgstr` của `UI_HUD_PROMPT_SWORD` từ `"SWORD"` thành `"STRIKE"`, lưu, chạy lại game: dải dưới đổi theo
       (mục 8 nói chi tiết).
-   6. Mở **Settings** (từ title hoặc `Esc`): kéo Screen shake về 0, bật Reduce flashing, đổi Language sang Tiếng Việt rồi sang Pseudo-language: chữ trên HUD đổi ngay, và mọi thứ vẫn nằm trong hộp của nó.
+   6. Mở **Settings** (từ title hoặc `Esc`): kéo Screen shake về 0, bật Reduce flashing, đổi Language sang Pseudo-language (chỉ có khi chạy bằng editor; Tiếng Việt chỉ hiện trong danh sách khi `vi/*.po` đã có dòng chữ): chữ trên HUD đổi ngay, và mọi thứ vẫn nằm trong hộp của nó. Thử đi hết màn Settings chỉ bằng phím mũi tên (hoặc cần trái): Lên/Xuống đi qua từng dòng theo thứ tự, tới ba nút Controls / Restore defaults / Back; Trái/Phải đi giữa ba nút; chọn một ngôn ngữ xong vẫn đi tiếp được.
    7. Bấm **F3** giữa trận để xem số liệu debug, rồi F3 để tắt.
 
 *EN: Open `project.godot` in Godot 4.6 and press F5 (main scene `shell/app_root.tscn`, which opens the title;
@@ -125,7 +125,7 @@ their place), and section 8: all text is in `.po` files and the font files go in
 each, `presentation/ui/hud/widgets/`) that live in two strips, the top one (y 0 to 32: Courage pips, the reserved Believe slot, the skill slot, the
 reserved boss bar, the enemy count, the Rank badge) and the bottom one (y 326 to 360: the status line and the control hints, built from the InputMap
 for the device in use), so none covers a row of the board (`test_hud_safe_zone`); the pawn's cell and who strikes next are debug fields behind F3, off
-at the start. The controls table above has the gamepad column. The camera starts its picture on a whole pixel (`test_camera_snap`), shake included.
+at the start. The controls table above has the gamepad column. The camera starts its picture on a whole pixel (`test_camera_snap`), shake included, and a piece sliding between cells is drawn on whole pixels too (`test_piece_slide_snap`).
 "What to try in M4": launch and see the title, pause in the middle of a fight (the enemies freeze), play T1 to T3 on a gamepad (the hints change to
 [A], [X], [Start]), restart a room from the pause menu, edit a line of `ui.po` and see it, try the settings and F3.*
 
@@ -611,12 +611,13 @@ trong thư mục user data (chung với dấu "đã xem kết thúc"; **New Game
 | Comfort | Screen shake | cường độ rung màn hình, từ 0 (không rung) đến 100% |
 | Comfort | Reduce flashing | bỏ nháy đỏ trên màn hình khi trúng đòn, bỏ nháy khi đánh, bỏ chớp của con tốt khi đang bất khả xâm phạm (cảnh báo telegraph vẫn còn) |
 | Comfort | High-contrast danger marks | ô sắp bị đánh vẽ bằng viền dày và sọc, không phụ thuộc màu hay nhịp nháy |
-| Comfort | Turn / Guard / Focus: press to switch on and off | thay vì giữ phím, bấm một lần để bật và một lần nữa để tắt |
-| Assists | Warning time, Enemy pace, Extra Courage, Input forgiveness | các tuỳ chọn làm game dễ hơn (D-22): tên trung tính, **không bao giờ tự bật**, đổi lúc nào cũng được; mặc định là game chuẩn |
+| Comfort | Turn / Guard / Focus: press to switch on and off | thay vì giữ phím, bấm một lần để bật và một lần nữa để tắt (Guard và Focus ghi **(coming later)**: hai phím đó chưa làm gì tới M8a) |
+| Assists | Warning time, Enemy pace, Extra Courage, Input forgiveness | các tuỳ chọn làm game dễ hơn (D-22): tên trung tính, **không bao giờ tự bật**, đổi lúc nào cũng được; mặc định là game chuẩn. Mỗi dòng hôm nay ghi **(coming later)**: giá trị được lưu nhưng chưa hệ thống nào đọc nó |
 
 Menu pause có thêm mục **Assist options** mở thẳng trang Assists, luôn có từ lần chơi đầu tiên (không phải thứ game chỉ đưa ra sau khi bạn chết nhiều lần).
 Hôm nay các tuỳ chọn Assists đã chạm tới thế giới game (`world.tuning`) nhưng chưa hệ thống nào đọc chúng: kẻ địch chưa đổi nhịp và Courage chưa
-tăng (đó là việc của M7b, M8a và M8c, ghi trong `ecs/components/tuning.gd`). Âm lượng, rung, nháy, tương phản, ngôn ngữ, toàn màn hình và bật/tắt
+tăng (đó là việc của M7b, M8a và M8c, ghi trong `ecs/components/tuning.gd`), nên mỗi dòng đó (và Guard, Focus) có chữ **(coming later)** bên cạnh, như bảng Controls làm
+với một phím chưa làm gì; bài `test_settings_coming_later` bắt lỗi nếu chữ đó sai (một hệ thống đã đọc mà còn ghi, hoặc ghi cho thứ đã chạy). Nếu thấy dòng "These settings could not be saved" trên màn Settings: file `profile.cfg` là của một bản game mới hơn nên bản này không ghi đè; thay đổi chỉ sống tới khi tắt game. Âm lượng, rung, nháy, tương phản, ngôn ngữ, toàn màn hình và bật/tắt
 giữ phím thì đã có tác dụng thật. "Giữ hay bật tắt" cho thao tác giải cứu sẽ có cùng với việc giải cứu (M6).
 
 **Bảng Controls (Esc → Controls, hoặc nút Controls trong Settings).** Ba trang (Moving, Acting, Game), mỗi hàng một phím của game, hai cột Keyboard và
@@ -630,7 +631,7 @@ tile nào đặt tên gì). **Chưa có file thì game hiện chữ**: `[Space]`
 cho nó import; chép đè là đổi hình. Khi thêm file, ghi bộ này vào `THIRD_PARTY_NOTICES.md` (mục "Input glyphs (owner-supplied)" ở đó nói cách làm).
 
 **Thử độ dài chữ.** Có một "ngôn ngữ giả" `qps` làm mọi dòng dài hơn 40% và thêm dấu: bài test `test_layout_pseudo_locale` dùng nó để kiểm
-không dòng nào tràn khỏi ô của nó ở HUD, title, menu pause, màn Settings và bảng Controls. Ngôn ngữ giả này cũng nằm trong danh sách ngôn ngữ của màn Settings (tên "Pseudo-language (test)"): chọn nó là thấy ngay chữ dài hơn và có dấu. Bản dịch tiếng Việt thường dài hơn tiếng Anh, nên nếu bạn
+không dòng nào tràn khỏi ô của nó ở HUD, title, menu pause, màn Settings và bảng Controls. Ngôn ngữ giả này cũng nằm trong danh sách ngôn ngữ của màn Settings (tên "Pseudo-language (test)"), nhưng chỉ khi chạy bằng editor hoặc bản debug, không có trong bản phát hành: chọn nó là thấy ngay chữ dài hơn và có dấu. Tiếng Việt chỉ hiện trong danh sách khi một trong bốn file `vi/*.po` đã có ít nhất một dòng `msgstr`. Bản dịch tiếng Việt thường dài hơn tiếng Anh, nên nếu bạn
 thấy một câu dịch bị cắt, hộp chứa nó cần rộng hơn.
 
 **Font chữ: đặt file ở đâu.** Bạn tự cung cấp font (quy tắc của dự án: không ai tải font về hộ). Đặt file vào thư mục `assets/fonts/` **đúng tên này**
@@ -658,7 +659,9 @@ Chưa có file nào thì game dùng font mặc định của engine (đã kiểm
 options) and has four pages: volumes per bus; fullscreen, language and high-contrast menus; screen-shake scale, reduce flashing, high-contrast danger
 and hold-or-toggle for Turn, Guard and Focus; the four assists (neutral names, never switched on for you, D-22). Changes
 act at once and are kept in `profile.cfg`, which a New Game keeps. Today the assists reach `world.tuning` and no system reads them
-yet (M7b, M8a, M8c). The Controls panel is built from the InputMap each time it opens, says "(coming later)" beside a key that
+yet (M7b, M8a, M8c), so each assist, and press-to-switch Guard and Focus, says "(coming later)" beside its row. The screen can be walked with the arrow
+keys or the stick alone (down and up visit the rows in order, then Controls, Restore defaults and Back). The language list holds English and the languages whose `.po` files
+hold at least one row (the generated `qps` only in a debug build or the editor). The Controls panel is built from the InputMap each time it opens, says "(coming later)" beside a key that
 does nothing yet (R, the child) and shows the glyph set of the device used last. The glyph pictures are yours: copy the light
 16x16 tiles of Kenney's CC0 pack 'Input Prompts Pixel' to `assets/ui/glyphs/keyboard/` and `gamepad/` under the file names of the
 asset list (group `glyphs_kenney`); with no file a prompt reads [Space] or [A].*
@@ -669,7 +672,7 @@ editor, edit the text after `msgstr` (never the `msgid`, keep the `{placeholders
 files at every launch. A new line is a three-line block added to the file of its prefix (UI_/MSG_ in ui.po, ROOM_ in rooms.po,
 SKILL_/ITEM_ in skills.po, the rest in story.po), then its key goes in the Inspector field; `test_text_keys` fails on a literal
 sentence or an unknown key. `vi/` has the four files, empty on purpose: a line with no Vietnamese falls back to English (to preview
-Vietnamese pick it in Settings, Screen, Language). The generated `qps` language
+Vietnamese pick it in Settings, Screen, Language, once its files have a row). The generated `qps` language
 makes every line 40 percent longer for `test_layout_pseudo_locale`. Fonts are the owner's: put up to four files at the exact paths
 `assets/fonts/ui_body_pixel.ttf`, `ui_small_pixel.ttf`, `ui_title_pixel.ttf`, `child_hand.ttf`; with none the engine's default font is
 used (it covers all 134 Vietnamese letters); a file you add is used with no other change, must cover Vietnamese
@@ -704,5 +707,5 @@ options (antialiasing and hinting disabled, an integer size) are set in the edit
 | dải trên, dải dưới (strip) | hai vùng của khung 640×360 dành cho HUD: y 0-32 và y 326-360. Bàn cờ nằm giữa (y 36-324 với bàn 18×9), nên HUD không bao giờ che ô nào. Bài `test_hud_safe_zone` giữ điều đó |
 | chỗ để dành (reserved slot) | mảnh HUD đã có scene và đã có chỗ trong dải nhưng ẩn và chưa vẽ gì, để milestone sau điền vào mà không phải dời mảnh khác (Believe: M10, thanh boss: M8b) |
 | debug readout | dòng số liệu cho người làm game (ô con tốt đang đứng, hướng nhìn, địch nào đánh tiếp), chỉ hiện sau khi bấm `F3` và thế chỗ dòng gợi ý phím |
-| snap (đặt đúng pixel) | camera luôn đặt hình bắt đầu đúng trên một pixel của thế giới, để hình pixel art không bị nhoè giữa hai pixel khi camera đuổi theo hay rung (`test_camera_snap`) |
+| snap (đặt đúng pixel) | camera luôn đặt hình bắt đầu đúng trên một pixel của thế giới, và quân cờ đang trượt giữa hai ô luôn được vẽ trên pixel nguyên, để hình pixel art không bị nhoè giữa hai pixel khi camera đuổi theo, rung hay quân đi (`test_camera_snap`, `test_piece_slide_snap`) |
 | `qps` | "ngôn ngữ giả" do game tự sinh: mọi dòng dài hơn 40% và có dấu, để thử xem chữ dài có tràn khỏi ô không (mục 8) |

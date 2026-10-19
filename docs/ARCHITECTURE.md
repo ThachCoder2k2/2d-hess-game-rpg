@@ -708,7 +708,8 @@ tree (13.2) lists a `save` handler under `presentation/bridges/`; 13.1 forbids p
   pixel through the camera's `offset`, which the engine adds after the board's limits. The shake is rounded to
   whole pixels and is still scaled by the Screen shake setting (`CameraBridge.shake_scale`). Measured on the
   SubViewport's own canvas transform (`test_camera_snap`). The slide of a piece between cells is procedural gameplay
-  timing and is not snapped; the project's `snap_2d_transforms_to_pixel` rounds in window pixels (half a game pixel at
+  timing: it is worked out in floats and `ViewSyncSystem` draws the view on the nearest whole pixel (`test_piece_slide_snap`), the
+  simulation never sees the rounded position; the project's `snap_2d_transforms_to_pixel` rounds in window pixels (half a game pixel at
   1280 x 720) and was left alone, as was `stretch/scale_mode = integer` (the owner's call: it letterboxes a window that is not a
   multiple of 640 x 360).
 - `RuleBookUI` (`presentation/ui/codex/`) — the Book of House Rules screen (key `B`).

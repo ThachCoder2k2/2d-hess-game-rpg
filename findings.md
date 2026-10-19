@@ -875,3 +875,17 @@ was the commit attribution line, which matches the harness and is no defect).
 - Agent environment: a worktree-isolated agent's shell refuses a `for` loop, a computed command name and some long heredocs; a wrapper script in
   `/tmp` that takes the suite paths as arguments (`bash /tmp/<name>.sh tests/a.gd tests/b.gd`) runs them, and `python3 script.py` with the script written
   by the file tool edits many docs at once. BSD `sed` needs `-i ''`.
+- A control freed and rebuilt in the frame its own signal fires (a language chosen in an `OptionButton` rebuilds every page) is not visible-in-tree
+  until the next frame: a `TabContainer` shows its pages after the frame's changes. `grab_focus()` on it at once does nothing; a deferred call does
+  work, and a popup that has just closed must be allowed to finish first.
+- A `Control` with `focus_neighbor_*` unset takes the nearest control by position, which skips rows when the controls are of very different widths
+  (a switch beside a drop-down) and leaves a button that sits beside another out of reach of `ui_down`. Set the neighbours explicitly from the
+  tree order; a neighbour that is the control itself keeps the key on it (`Left` and `Right` on a switch).
+- `FileAccess.get_as_text()` and `PackedByteArray.get_string_from_utf8()` on bytes that are not UTF-8 print one engine error for every bad byte, and
+  `--strict` fails a suite on an engine error: check the bytes first (`SaveFile.is_valid_utf8`) and report one sentence.
+- A theme type variation (`OverMenuPanel`, base `PanelContainer`) is looked up before its base type, so a setting that restyles `PanelContainer.panel`
+  (UiContrast) must restyle the variation's entry too. In the `.tres` it is two lines: `Name/base_type = &"PanelContainer"` and
+  `Name/styles/panel = SubResource(...)`.
+- Godot's CheckButton keeps the left margin of its `normal` stylebox (6 px in the default theme) before its text, a Label does not: names in a row of
+  controls start 6 px apart unless the labels are indented by `get_theme_stylebox(&"normal", &"CheckButton").get_margin(SIDE_LEFT)`.
+- `ConfigFile`-based profile and save files are text, so `SaveFile.read` can check them as UTF-8 before the integrity footer.
