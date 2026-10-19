@@ -16,6 +16,10 @@ extends Control
 ## engine's ui_left and ui_right move a slider, ui_accept flips a switch or opens a drop-down, and Esc, Start or B close
 ## the screen (a drop-down that is open takes the key first). The mouse works as on any control. The Controls button
 ## asks for the Controls panel (AppRoot lays it over this screen), and Restore defaults puts every setting back.
+## Down and up walk the rows of the page in the order they are drawn, from the tab bar to the three buttons below, and
+## left and right walk the buttons: the neighbours are set here (_wire_focus) and not left to the engine's guess by
+## position, which skipped rows and left buttons out of reach.
+
 ##
 ## The words are text keys: the rows are written again when the language changes, since a drop-down's items and a
 ## slider's percent are words a script put there.
@@ -61,6 +65,8 @@ var _percent_label_by_key: Dictionary[StringName, Label] = {}
 var _focus_before_open: Control = null
 ## While the controls are being set from the settings (not by the player) they must not write back.
 var _refreshing := false
+## While the pages are being built again, the tab changes that come with it must not set the focus neighbours.
+var _rebuilding := false
 var _live_text := LiveText.new()
 
 
@@ -69,6 +75,7 @@ func _ready() -> void:
 	back_button.pressed.connect(close)
 	controls_button.pressed.connect(func() -> void: controls_requested.emit())
 	defaults_button.pressed.connect(_on_defaults_pressed)
+	tabs.tab_changed.connect(_on_tab_changed)
 	add_child(_live_text)
 	_live_text.on_language_change(_on_language_changed)
 
@@ -133,9 +140,12 @@ func page_of(key: StringName) -> int:
 
 
 ## Builds the pages again from the table: one page per group, one row per setting, the controls set to the settings'
-## values. Keeps the page the player was on.
+## values. Keeps the page the player was on and the control that had focus (the language drop-down, whose choice is what
+## calls for the rebuild: the old control goes away with the page, and without this the keys would find no focus).
 func rebuild() -> void:
 	var page_on_show := maxi(tabs.current_tab, 0)
+	var key_in_focus := _key_in_focus()
+	_rebuilding = true
 	for page in tabs.get_children():
 		tabs.remove_child(page)
 		page.queue_free()
@@ -152,13 +162,78 @@ func rebuild() -> void:
 		for definition in GameSettings.definitions_of_group(group):
 			page.add_child(_row_of(definition))
 	tabs.current_tab = clampi(page_on_show, 0, tabs.get_tab_count() - 1)
+	_rebuilding = false
 	_refresh_controls()
+	_wire_focus()
+	if key_in_focus != &"":
+		_restore_focus.call_deferred(key_in_focus)
+
+
+## Gives focus back to the control of `key` once the new page is on show (the tab container shows a page after the
+## frame's changes), unless the player or the screen has put the focus somewhere in the meantime.
+func _restore_focus(key: StringName) -> void:
+	var control_to_focus := control_of(key)
+	if control_to_focus == null or not control_to_focus.is_visible_in_tree() or get_viewport().gui_get_focus_owner() != null:
+		return
+	control_to_focus.grab_focus()
 
 
 func _unhandled_input(event: InputEvent) -> void:
 	if visible and (event.is_action_pressed(&"ui_cancel") or event.is_action_pressed(&"pause")):
 		get_viewport().set_input_as_handled()
 		close()
+
+
+func _on_tab_changed(_tab: int) -> void:
+	if not _rebuilding:
+		_wire_focus()
+
+
+## The setting whose control has focus, &"" when focus is elsewhere (the tab bar, a button) or nowhere.
+func _key_in_focus() -> StringName:
+	if not is_inside_tree():
+		return &""
+	var focused := get_viewport().gui_get_focus_owner()
+	if focused == null:
+		return &""
+	for key: StringName in _control_by_key:
+		if _control_by_key[key] == focused:
+			return key
+	return &""
+
+
+## Sets the focus neighbours of the page on show: the tab bar -> the rows in order -> Controls, and left and right along
+## the three buttons. A switch and a drop-down keep left and right to themselves (a slider uses them to move), so a key
+## never jumps to another row. Done again whenever the page changes or is built, since only the rows of the page on
+## show can take focus.
+func _wire_focus() -> void:
+	if tabs.current_tab < 0:
+		return
+	var tab_bar := tabs.get_tab_bar()
+	var rows: Array[Control] = []
+	for definition in GameSettings.definitions_of_group(tabs.current_tab as SettingDefinition.Group):
+		var control := control_of(definition.key)
+		if control != null:
+			rows.append(control)
+	var buttons: Array[Control] = [controls_button, defaults_button, back_button]
+	_link(tab_bar, SIDE_TOP, tab_bar)
+	_link(tab_bar, SIDE_LEFT, tab_bar)
+	_link(tab_bar, SIDE_RIGHT, tab_bar)
+	_link(tab_bar, SIDE_BOTTOM, rows[0] if not rows.is_empty() else controls_button)
+	for index in rows.size():
+		_link(rows[index], SIDE_TOP, rows[index - 1] if index > 0 else tab_bar)
+		_link(rows[index], SIDE_BOTTOM, rows[index + 1] if index < rows.size() - 1 else controls_button)
+		_link(rows[index], SIDE_LEFT, rows[index])
+		_link(rows[index], SIDE_RIGHT, rows[index])
+	for index in buttons.size():
+		_link(buttons[index], SIDE_TOP, rows[rows.size() - 1] if not rows.is_empty() else tab_bar)
+		_link(buttons[index], SIDE_BOTTOM, buttons[index])
+		_link(buttons[index], SIDE_LEFT, buttons[maxi(index - 1, 0)])
+		_link(buttons[index], SIDE_RIGHT, buttons[mini(index + 1, buttons.size() - 1)])
+
+
+func _link(from: Control, side: Side, to: Control) -> void:
+	from.set_focus_neighbor(side, from.get_path_to(to))
 
 
 func _on_language_changed() -> void:
