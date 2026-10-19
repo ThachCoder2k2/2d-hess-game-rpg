@@ -62,6 +62,18 @@ func _run() -> void:
 	panel._unhandled_input(cancel_when_hidden)
 	_expect(answers == ["no"], "and a ui_cancel while it is hidden is not an answer")
 
+	# --- The pause action (the pad's Start) is a no as well ---
+	answers.clear()
+	panel.ask("Leave the room?", "Leave", "Stay")
+	panel.confirm_button.grab_focus()
+	var pause_event := InputEventAction.new()
+	pause_event.action = &"pause"
+	pause_event.pressed = true
+	panel._unhandled_input(pause_event)
+	_expect(answers == ["no"] and not panel.visible, "the pause action (Start on the pad) answers no and hides the question")
+	panel._unhandled_input(pause_event)
+	_expect(answers == ["no"], "and a pause press while it is hidden is not an answer")
+
 	# --- A harmless question may start on yes ---
 	panel.cancel_is_default = false
 	panel.ask("Continue?", "Yes", "No")

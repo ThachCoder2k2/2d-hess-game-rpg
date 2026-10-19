@@ -45,6 +45,9 @@ func _run() -> void:
 	menu.quit_button.pressed.emit()
 	await ShellSupport.tap_key(self, KEY_ESCAPE, 1)
 	_expect(menu.is_open() and flow.state == GameFlow.State.PAUSED and not menu.confirm_panel.is_asking(), "Esc answers no as well")
+	menu.quit_button.pressed.emit()
+	await _tap_pad_button(JOY_BUTTON_START)
+	_expect(menu.is_open() and flow.state == GameFlow.State.PAUSED and not menu.confirm_panel.is_asking() and menu.question_on_screen() == &"", "and so does Start on the pad, which does not also resume the game")
 
 	# --- Yes: the title, the room gone, nothing written ---
 	menu.quit_button.pressed.emit()
@@ -72,3 +75,14 @@ func _run() -> void:
 		await app.until_settled()
 
 	Support.end_suite(self, save_service)
+
+
+## Presses and releases a button of the pad, with a frame between, the way a player taps it.
+func _tap_pad_button(button: JoyButton) -> void:
+	for pressed in [true, false]:
+		var event := InputEventJoypadButton.new()
+		event.button_index = button
+		event.pressed = pressed
+		Input.parse_input_event(event)
+		Input.flush_buffered_events()
+		await process_frame
