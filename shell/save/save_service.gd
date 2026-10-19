@@ -12,8 +12,9 @@ extends Node
 ##      (read_slot: the file, then the save an interrupted write left as .tmp if it is newer than the .bak,
 ##      then the .bak, then the v2 WorldState save, then a clean new game, each step logged), and migrated
 ##      from older formats (SaveMigration).
-##   3. The profile (`<root>/profile.cfg`): facts about the player that outlive a slot, today the
-##      `completed` mark, which survives a New Game (docs/game-base-plan.md 8.8, 9.1).
+##   3. The profile (`<root>/profile.cfg`): facts about the player that outlive a slot: the `completed` mark, which
+##      survives a New Game (docs/game-base-plan.md 8.8, 9.1), and the player's settings (SettingsStore keeps them
+##      under the `setting_` prefix, 9.2).
 ##
 ## Rules this node enforces:
 ##   - Autosave only on success events (R17). The only way the shell asks for a save is
@@ -331,8 +332,15 @@ func read_profile() -> Dictionary:
 
 ## Writes one profile value now (the whole file, safely). Returns OK or the file error.
 func set_profile_value(key: StringName, value: Variant) -> Error:
+	return set_profile_values({String(key): value})
+
+
+## Writes several profile values in one write (key String -> value), keeping every other value the profile holds.
+## The settings are stored this way: one slider drag is many changes but one file write. Returns OK or the file error.
+func set_profile_values(new_values: Dictionary) -> Error:
 	var values := read_profile()
-	values[String(key)] = value
+	for new_key: Variant in new_values:
+		values[String(new_key)] = new_values[new_key]
 	var config := ConfigFile.new()
 	config.set_value(SaveFile.META_SECTION, SaveFile.VERSION_KEY, PROFILE_FORMAT_VERSION)
 	var keys: Array = values.keys()

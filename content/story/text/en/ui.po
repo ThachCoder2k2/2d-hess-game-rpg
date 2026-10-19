@@ -499,3 +499,151 @@ msgstr "Debug view"
 #. surface=Controls panel row; purpose=switch between fullscreen and a window
 msgid "UI_ACTION_FULLSCREEN_TOGGLE"
 msgstr "Fullscreen"
+
+#. surface=settings screen heading
+msgid "UI_SETTINGS_TITLE"
+msgstr "Settings"
+
+#. surface=settings screen tab; purpose=the volumes
+msgid "UI_SETTINGS_TAB_SOUND"
+msgstr "Sound"
+
+#. surface=settings screen tab; purpose=fullscreen, the language and the high-contrast menus
+msgid "UI_SETTINGS_TAB_SCREEN"
+msgstr "Screen"
+
+#. surface=settings screen tab; purpose=screen shake, flashing, danger marks and hold-or-toggle
+msgid "UI_SETTINGS_TAB_COMFORT"
+msgstr "Comfort"
+
+#. surface=settings screen tab; purpose=the options that make the game gentler
+msgid "UI_SETTINGS_TAB_ASSISTS"
+msgstr "Assists"
+
+#. surface=settings screen button; purpose=close the settings
+msgid "UI_SETTINGS_BACK"
+msgstr "Back"
+
+#. surface=settings screen button; purpose=open the Controls panel
+msgid "UI_SETTINGS_CONTROLS"
+msgstr "Controls"
+
+#. surface=settings screen button; purpose=put every setting back to how the game ships
+msgid "UI_SETTINGS_DEFAULTS"
+msgstr "Restore defaults"
+
+#. surface=settings screen, top of the Assists tab; purpose=say that the choice is the player's
+msgid "UI_SETTINGS_ASSIST_NOTE"
+msgstr "Assists are never switched on for you. Change them whenever you like."
+
+#. surface=settings screen, next to a slider; placeholders={value} the number from 0 to 100; purpose=the slider's value as a percent
+msgid "UI_SETTINGS_PERCENT"
+msgstr "{value}%"
+
+#. surface=settings row; purpose=the loudness of everything
+msgid "UI_SETTINGS_VOLUME_MASTER"
+msgstr "Master volume"
+
+#. surface=settings row; purpose=the loudness of the music
+msgid "UI_SETTINGS_VOLUME_MUSIC"
+msgstr "Music volume"
+
+#. surface=settings row; purpose=the loudness of the sounds of the game
+msgid "UI_SETTINGS_VOLUME_SFX"
+msgstr "Sound effects volume"
+
+#. surface=settings row; purpose=the loudness of the sounds of the menus
+msgid "UI_SETTINGS_VOLUME_UI"
+msgstr "Menu sounds volume"
+
+#. surface=settings row, a switch; purpose=fullscreen or a window
+msgid "UI_SETTINGS_FULLSCREEN"
+msgstr "Fullscreen"
+
+#. surface=settings row; purpose=the language of the words of the game
+msgid "UI_SETTINGS_LANGUAGE"
+msgstr "Language"
+
+#. surface=settings row, a switch; purpose=menus and dialogue on an opaque background with a strong outline
+msgid "UI_SETTINGS_UI_HIGH_CONTRAST"
+msgstr "High-contrast menus"
+
+#. surface=settings row; purpose=how hard the screen shakes, from none to full
+msgid "UI_SETTINGS_SHAKE_SCALE"
+msgstr "Screen shake"
+
+#. surface=settings row, a switch; purpose=take out the flashes and flicker (warnings stay)
+msgid "UI_SETTINGS_REDUCE_FLASH"
+msgstr "Reduce flashing"
+
+#. surface=settings row, a switch; purpose=draw the cells that are about to hurt with a thick outline and stripes
+msgid "UI_SETTINGS_HIGH_CONTRAST_DANGER"
+msgstr "High-contrast danger marks"
+
+#. surface=settings row, a switch; purpose=instead of holding the key, press it once to turn on and again to turn off
+msgid "UI_SETTINGS_TOGGLE_TURN_MODE"
+msgstr "Turn without stepping: press to switch on and off"
+
+#. surface=settings row, a switch; purpose=instead of holding the key, press it once to guard and again to stop
+msgid "UI_SETTINGS_TOGGLE_GUARD"
+msgstr "Guard: press to switch on and off"
+
+#. surface=settings row, a switch; purpose=instead of holding the key, press it once to focus and again to stop
+msgid "UI_SETTINGS_TOGGLE_FOCUS"
+msgstr "Focus: press to switch on and off"
+
+#. surface=settings row in Assists; purpose=how long a danger mark shows before the blow
+msgid "UI_SETTINGS_ASSIST_TELEGRAPH_TIME"
+msgstr "Warning time"
+
+#. surface=settings row in Assists; purpose=how fast pieces act while the pawn stands still
+msgid "UI_SETTINGS_ASSIST_ENEMY_PACE"
+msgstr "Enemy pace"
+
+#. surface=settings row in Assists; purpose=more Courage than the standard game gives
+msgid "UI_SETTINGS_ASSIST_EXTRA_COURAGE"
+msgstr "Extra Courage"
+
+#. surface=settings row in Assists, a switch; purpose=a step pressed a little early is still taken
+msgid "UI_SETTINGS_ASSIST_INPUT_FORGIVENESS"
+msgstr "Input forgiveness"
+
+#. surface=settings option; purpose=the standard value of a percent setting
+msgid "UI_SETTINGS_OPTION_100"
+msgstr "100% (standard)"
+
+#. surface=settings option; purpose=a percent value
+msgid "UI_SETTINGS_OPTION_125"
+msgstr "125%"
+
+#. surface=settings option; purpose=a percent value
+msgid "UI_SETTINGS_OPTION_150"
+msgstr "150%"
+
+#. surface=settings option; purpose=a percent value
+msgid "UI_SETTINGS_OPTION_85"
+msgstr "85%"
+
+#. surface=settings option; purpose=a percent value
+msgid "UI_SETTINGS_OPTION_70"
+msgstr "70%"
+
+#. surface=settings option of Extra Courage; purpose=no extra Courage
+msgid "UI_SETTINGS_OPTION_COURAGE_0"
+msgstr "Standard"
+
+#. surface=settings option of Extra Courage; purpose=one more Courage
+msgid "UI_SETTINGS_OPTION_COURAGE_1"
+msgstr "+1 Courage"
+
+#. surface=settings option of Extra Courage; purpose=two more Courage
+msgid "UI_SETTINGS_OPTION_COURAGE_2"
+msgstr "+2 Courage"
+
+#. surface=pause menu button; purpose=open the settings
+msgid "UI_PAUSE_SETTINGS"
+msgstr "Settings"
+
+#. surface=pause menu button; purpose=open the settings on the Assists tab
+msgid "UI_PAUSE_ASSISTS"
+msgstr "Assist options"
