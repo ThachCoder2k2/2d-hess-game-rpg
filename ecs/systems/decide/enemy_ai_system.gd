@@ -10,6 +10,9 @@ extends EcsSystem
 ## The schedule stage this system is listed in (ecs/schedule/decide.gd).
 const PHASE := &"decide"
 
+## The four ways a piece faces, and so the four ways an enemy tries an attack from a cell.
+const CARDINAL_DIRECTIONS: Array[Vector2i] = [Vector2i.UP, Vector2i.DOWN, Vector2i.LEFT, Vector2i.RIGHT]
+
 
 func tick(delta: float) -> void:
 	var hero_id := _find_player()
@@ -199,17 +202,30 @@ func _nearest_item_cell(entity_id: int, self_cell: Vector2i, item_cells: Array[V
 	return result
 
 
+## The cell this enemy should walk to so that the hero stands in its attack shape: of the cells it could attack
+## from (some facing puts the hero in the shape), the nearest by path from `self_cell`, the first in reading order
+## (row by row, left to right) on a tie; the hero's own cell when there is none.
+##
+## Only the cells within the attack's reach of the hero are looked at (docs/game-base-plan.md 5.11, the bounded
+## search): a cell farther from the hero than the shape reaches cannot have the hero in it, whatever way it
+## faces, so the rest of the board cannot hold an answer. That is exactly the same answer as looking at every
+## cell of the board, found by looking at a handful, which on a 72 x 40 world is the difference between
+## 2880 cells and about 25. The box is walked in the order the whole board used to be, which keeps the same cell
+## on a tie. tests/ecs/test_attack_setup_search.gd holds the two side by side.
 func _find_attack_setup_goal(entity_id: int, ai: EcsComponents.EnemyAI, self_cell: Vector2i, hero_cell: Vector2i) -> Vector2i:
 	var best_cell := hero_cell
 	var best_distance := 999999
-	var bounds := world.grid.bounds
-	for y in range(bounds.position.y, bounds.end.y):
-		for x in range(bounds.position.x, bounds.end.x):
+	var reach := _attack_reach(entity_id, ai)
+	if reach < 0:
+		return best_cell
+	var search_box := Rect2i(hero_cell - Vector2i(reach, reach), Vector2i(reach * 2 + 1, reach * 2 + 1)).intersection(world.grid.bounds)
+	for y in range(search_box.position.y, search_box.end.y):
+		for x in range(search_box.position.x, search_box.end.x):
 			var candidate := Vector2i(x, y)
 			if not world.grid.is_plannable_cell(entity_id, candidate):
 				continue
 			var can_attack_from_cell := false
-			for direction: Vector2i in [Vector2i.UP, Vector2i.DOWN, Vector2i.LEFT, Vector2i.RIGHT]:
+			for direction in CARDINAL_DIRECTIONS:
 				if hero_cell in _get_attack_cells(entity_id, ai, candidate, direction):
 					can_attack_from_cell = true
 					break
@@ -220,6 +236,19 @@ func _find_attack_setup_goal(entity_id: int, ai: EcsComponents.EnemyAI, self_cel
 				best_distance = distance
 				best_cell = candidate
 	return best_cell if best_distance < 999999 else hero_cell
+
+
+## How far from the cell it attacks from the farthest cell of this enemy's attack shape lies, in cells along
+## either axis, for the four ways it can face: the largest |x| or |y| offset of the shape. -1 when it has no
+## shape at all. Measured from the shape itself (the held weapon's, else the unarmed pattern's) with nothing
+## clipped to the board, so a new weapon or pattern is covered without a number repeated here. The shape is the
+## same set of offsets wherever the enemy stands (a translation), which is what makes the reach a bound.
+func _attack_reach(entity_id: int, ai: EcsComponents.EnemyAI) -> int:
+	var reach := -1
+	for direction in CARDINAL_DIRECTIONS:
+		for offset in _attack_cells_on(entity_id, ai, Vector2i.ZERO, direction, null):
+			reach = maxi(reach, maxi(absi(offset.x), absi(offset.y)))
+	return reach
 
 
 func _execute_intent(entity_id: int, ai: EcsComponents.EnemyAI, intent: EnemyIntent) -> void:
@@ -302,11 +331,17 @@ func _weapon(entity_id: int) -> EnemyWeapon:
 
 
 func _get_attack_cells(entity_id: int, ai: EcsComponents.EnemyAI, origin: Vector2i, direction: Vector2i) -> Array[Vector2i]:
+	return _attack_cells_on(entity_id, ai, origin, direction, world.grid)
+
+
+## The attack shape (the held weapon's, else the unarmed pattern's) from `origin` facing `direction`. A pattern
+## that clips to the board drops the cells outside `board`; with no board (null) nothing is dropped.
+func _attack_cells_on(entity_id: int, ai: EcsComponents.EnemyAI, origin: Vector2i, direction: Vector2i, board: EcsGrid) -> Array[Vector2i]:
 	var weapon := _weapon(entity_id)
 	if weapon != null:
 		return weapon.get_attack_cells(origin, direction)
 	if ai.attack_pattern != null:
-		return ai.attack_pattern.get_attack_cells(world.grid, origin, direction)
+		return ai.attack_pattern.get_attack_cells(board, origin, direction)
 	return []
 
 

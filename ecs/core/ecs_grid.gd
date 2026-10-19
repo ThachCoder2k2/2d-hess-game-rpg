@@ -78,6 +78,13 @@ var gate_by_cell: Dictionary = {}
 
 ## What layout_version reads. Moved only by this class, when the terrain changes.
 var _layout_version := 0
+## The pathfinder for the layout whose version is _pathfinder_layout_version (see get_grid_path), or null
+## before the first question.
+var _pathfinder: AStarGrid2D = null
+var _pathfinder_layout_version := -1
+## How many pathfinders this grid has built in its life: one per layout that was asked about. Read by the
+## tests and the room tick budget to prove that a question does not build one.
+var pathfinder_build_count := 0
 
 
 ## The grid origin that centres a board of `board_cells` cells in a view of `view_size` pixels, in whole
@@ -360,27 +367,50 @@ func get_reservation_cells() -> Array[Vector2i]:
 
 ## Pathing — ported 1:1 from GridWorld (other movers and reservations are
 ## solid unless they sit on the goal).
+##
+## The walls are built into one AStarGrid2D per layout_version and kept (_pathfinder_for_this_layout);
+## a question marks the pieces and reservations that are in the way solid for the length of the question
+## and puts the grid back as it found it, so the answer is the one a pathfinder built from scratch for that
+## question would give, cell for cell (tests/ecs/test_path_cache.gd checks that against the old
+## build-per-question code). Building one costs a pass over the whole board, which a 72 x 40 world makes
+## expensive, and an enemy asks a dozen times per decision.
 func get_grid_path(entity_id: int, origin: Vector2i, goal: Vector2i) -> Array[Vector2i]:
 	if not is_inside(origin) or not is_inside(goal):
 		return []
+	var pathfinder := _pathfinder_for_this_layout()
+	var solid_for_this_question: Array[Vector2i] = []
+	for cell: Vector2i in entity_by_cell:
+		if entity_by_cell[cell] != entity_id and cell != goal and not pathfinder.is_point_solid(cell):
+			pathfinder.set_point_solid(cell)
+			solid_for_this_question.append(cell)
+	for cell: Vector2i in move_reservations:
+		if move_reservations[cell] != entity_id and cell != goal and not pathfinder.is_point_solid(cell):
+			pathfinder.set_point_solid(cell)
+			solid_for_this_question.append(cell)
+	var path: Array[Vector2i] = pathfinder.get_id_path(origin, goal)
+	for cell in solid_for_this_question:
+		pathfinder.set_point_solid(cell, false)
+	return path
+
+
+## The pathfinder that holds the walls of the current layout, built when there is none or when the layout
+## has changed since it was built (layout_version moved). Only walls, gaps and blocks (blocked_cells) are
+## solid in it between questions.
+func _pathfinder_for_this_layout() -> AStarGrid2D:
+	if _pathfinder != null and _pathfinder_layout_version == _layout_version:
+		return _pathfinder
 	var pathfinder := AStarGrid2D.new()
 	pathfinder.region = bounds
 	pathfinder.cell_size = Vector2.ONE
 	pathfinder.diagonal_mode = AStarGrid2D.DIAGONAL_MODE_NEVER
 	pathfinder.update()
 	for cell: Vector2i in blocked_cells:
-		pathfinder.set_point_solid(cell)
-	for cell: Vector2i in entity_by_cell:
-		if entity_by_cell[cell] != entity_id and cell != goal:
+		if bounds.has_point(cell):
 			pathfinder.set_point_solid(cell)
-	for cell: Vector2i in move_reservations:
-		if move_reservations[cell] != entity_id and cell != goal:
-			pathfinder.set_point_solid(cell)
-	var packed_path := pathfinder.get_id_path(origin, goal)
-	var path: Array[Vector2i] = []
-	for cell in packed_path:
-		path.append(cell)
-	return path
+	_pathfinder = pathfinder
+	_pathfinder_layout_version = _layout_version
+	pathfinder_build_count += 1
+	return pathfinder
 
 
 func get_path_distance(entity_id: int, origin: Vector2i, goal: Vector2i) -> int:
