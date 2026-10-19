@@ -5,13 +5,14 @@ extends RefCounted
 ## so it needs no import pass and registers no global. Suites load it with
 ##   const Support := preload("res://tests/bridge/bridge_support.gd")
 ##
-## The suites pin what shell/game_root.gd (the presentation bridge) does TODAY, so
-## the planned split of game_root.gd cannot silently change travel, death, carry,
-## persistence or Book behaviour. Nothing in here may change gameplay.
+## The suites pin what the in-game scene (shell/game_root.gd and its bridges) does, so
+## the split of game_root.gd into an EventRouter and bridges (M3b step 2) could not silently change
+## travel, death, carry, persistence or Book behaviour. Nothing in here may change gameplay.
 ##
 ## Design notes shared by every suite:
 ## - The real shell/game_root.tscn is instantiated and made the tree's current
-##   scene (death reloads it through SceneTree.reload_current_scene()).
+##   scene (a death or the restart key rebuilds its room through GameFlow, which used to
+##   reload the whole scene).
 ## - game_root.gd's own _process is switched off after boot and driven by hand in
 ##   fixed steps (pump), so a run is deterministic and has no real-time races.
 ##   Only the fade tweens and the death timer use real engine time.
@@ -351,23 +352,21 @@ static func send_key(keycode: Key, pressed: bool) -> void:
 	Input.flush_buffered_events()
 
 
-## Waits (real engine frames) until the scene tree has swapped to a freshly
-## instantiated main scene, which is what a death or the restart key does
-## through SceneTree.reload_current_scene(). Returns the new main with its
-## automatic _process switched off, or null if no reload happened in time.
-static func wait_for_reload(tree: SceneTree, old_main: Node) -> Node:
-	var old_main_id := old_main.get_instance_id()
+## Waits (real engine frames) until the scene has rebuilt its room from the run's checkpoint, which is
+## what a death or the restart key does through GameFlow: the room's world is a new EcsWorld (the scene
+## itself stays; it used to be reloaded). Returns false when nothing was rebuilt in time. When it returns
+## true the old world is gone and one more frame has run, so the new room is live.
+static func wait_for_respawn(tree: SceneTree, main: Node) -> bool:
+	var old_world_id := ecs_of(main).get_instance_id()
 	var started := Time.get_ticks_msec()
 	while Time.get_ticks_msec() - started < REAL_TIME_WAIT_CAP_MSEC:
-		if tree.current_scene != null and tree.current_scene.get_instance_id() != old_main_id:
+		if ecs_of(main).get_instance_id() != old_world_id:
 			break
 		await tree.process_frame
-	if tree.current_scene == null or tree.current_scene.get_instance_id() == old_main_id:
-		return null
+	if ecs_of(main).get_instance_id() == old_world_id:
+		return false
 	await tree.process_frame
-	var reloaded := tree.current_scene
-	reloaded.set_process(false)
-	return reloaded
+	return true
 
 
 ## Releases every input action a suite may have pressed. Call before quitting.

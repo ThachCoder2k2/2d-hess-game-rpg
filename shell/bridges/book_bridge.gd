@@ -45,5 +45,13 @@ func toggle() -> void:
 	root.set_player_control(not book.visible)
 
 
+## Shuts the Book without touching the hero's control (the room is being rebuilt and the new hero is
+## born with control on).
+func close() -> void:
+	var book := _book()
+	if book != null:
+		book.visible = false
+
+
 func _book() -> RuleBookUI:
 	return root.get_node_or_null(BOOK_NODE_PATH) as RuleBookUI

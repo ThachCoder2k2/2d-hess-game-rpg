@@ -9,8 +9,8 @@ extends ShellBridge
 ##     ends with a result screen (boss arenas, later). A win switches the hero's control off, plays the
 ##     clear sound and puts the room's clear lines on the status line and the result panel.
 ##   - a defeat: the hero fell. The room stops ticking (`room_ending`), the defeat jingle plays, the
-##     room's defeat lines go up, and after a short beat of 0.85 s the scene is asked to start the
-##     room again (GameFlow). A death writes no save (R17, D-16): autosave is for success events
+##     room's defeat lines go up, and after a short beat of 0.85 s GameFlow is asked to start the
+##     room again at the checkpoint. A death writes no save (R17, D-16): autosave is for success events
 ##     only, and the run already wrote down everything it learned when it learned it.
 ## While `room_ending` the scene stops ticking the world.
 ## Reads: events, the room's objective. Writes: the hero's control flag (through the scene), the HUD
@@ -84,6 +84,8 @@ func _on_player_defeated() -> void:
 	var tree := root.get_tree()
 	if tree == null:
 		return
+	var world_that_fell := root.ecs
 	await tree.create_timer(DEFEAT_BEAT_SECONDS).timeout
-	if root.is_inside_tree():
-		tree.reload_current_scene()
+	# If the restart key rebuilt the room during the beat, there is nothing left to start again.
+	if root.is_inside_tree() and root.ecs == world_that_fell:
+		root.game_flow.request_respawn(GameFlow.REASON_DEFEATED)

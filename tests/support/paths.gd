@@ -67,6 +67,11 @@ func main_script() -> String:
 	return _existing_file("res://shell/game_root.gd")
 
 
+## GameFlow (starts the room again after a death or the restart key).
+func game_flow_script() -> String:
+	return _existing_file("res://shell/game_flow.gd")
+
+
 func save_service_script() -> String:
 	return _existing_file("res://shell/save/save_service.gd")
 

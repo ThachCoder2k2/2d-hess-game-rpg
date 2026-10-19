@@ -34,12 +34,16 @@ func _on_defeated(event: Dictionary) -> void:
 		return
 	# The world that owns the entity, not the one running when the timer ends: a trip or a respawn
 	# inside the 0.6 s builds a new world whose entity numbers start over, and dropping the VIEW_REF of
-	# "entity 2" there would freeze somebody else's puppet.
-	var world := root.ecs
+	# "entity 2" there would freeze somebody else's puppet. The timer holds instance ids and not the
+	# nodes: a world or a zone freed meanwhile makes a lambda that captured it an engine error.
+	var world_id := root.ecs.get_instance_id()
+	var view_id := view.get_instance_id()
 	var tween := root.create_tween()
 	tween.tween_interval(DEFEAT_CLIP_SECONDS)
 	tween.tween_callback(func() -> void:
-		if is_instance_valid(world):
+		var world := instance_from_id(world_id) as EcsWorld
+		if world != null:
 			world.remove_component(entity, EcsComponents.VIEW_REF)
-		if is_instance_valid(view):
-			view.queue_free())
+		var dying_view := instance_from_id(view_id) as Node2D
+		if dying_view != null:
+			dying_view.queue_free())
