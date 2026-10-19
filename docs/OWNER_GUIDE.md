@@ -353,29 +353,53 @@ retraced on 15 rows to fit its box, an edit to an approved shape recorded in `TH
 
 ## 7. Lưu game, checkpoint và khi con tốt ngã (Save, checkpoints and death)
 
-**Quy tắc trong một câu:** chết chỉ làm phòng bạn vừa ngã bắt đầu lại; phòng đã dọn thì giữ sạch; mọi thứ bạn đã
-kiếm được giữ nguyên. (Quyết định D-16 và D-17; "Giữ sạch" là câu trả lời của bạn trong `docs/owner-decisions.md`.)
+**Quy tắc trong một câu:** chết chỉ làm phòng bạn vừa ngã bắt đầu lại, và bạn đứng lại **ở ô vào của chính phòng đó**
+(ô bạn bước vào khi đi qua cửa); phòng đã dọn thì giữ sạch; mọi thứ bạn đã kiếm được giữ nguyên. (Quyết định D-16 và
+D-17; "Giữ sạch" là câu trả lời của bạn trong `docs/owner-decisions.md`.)
 
-**Chơi thử (Owner can try).** Mở game (F5) rồi:
+**Ba nơi khác nhau, đừng lẫn (bản build làm đúng như bảng này):**
 
-1. *Chết và hồi sinh.* Để con tốt đen đánh hết 3 Courage của bạn. Sau chừng một giây, bạn đứng lại **ở ô vào của
-   chính phòng đó**, Courage đầy, địch trong phòng đầy máu trở lại, tay có kiếm nếu đã nhặt. Chết trong phòng boss B1
-   (cửa B1 là checkpoint): bạn đứng lại ở cửa B1, boss và hai lính đầy máu (vòng đầu của boss). Phím `R` làm
-   y như chết, không cần ngã.
-2. *Phòng đã dọn thì giữ sạch.* Hạ con tốt duy nhất của T3, sang phòng khác rồi quay lại, hoặc chết ngay trong T3:
-   T3 vẫn trống và cửa sang T4 đã mở. Phòng chưa dọn hết thì ngược lại: T4 có 3 con, hạ một con rồi rời đi, quay
-   lại là địch về đủ 3 con và đủ máu.
-3. *Checkpoint hồi Courage.* Bị thương ở T1, đi T2, T3: vẫn bị thương (đi qua phòng thường không hồi). Qua cửa phòng
-   boss B1, hoặc qua cửa hub H1: Courage đầy lại (các chấm trên HUD đầy lại).
-4. *Thoát game rồi mở lại.* Game mở đúng phòng bạn đang đứng ở lần lưu cuối, đúng ô vào, Courage đầy. Kiếm đã
-   nhặt, cổng đã mở và phòng đã dọn đều còn.
-5. *Vũ khí rơi trên sàn thì về chỗ.* Ở T4, để một con tốt nhặt cây giáo bút chì; chết hoặc bấm `R`: giáo lại nằm trên
-   sàn và con tốt tay không. Đó là luật "vũ khí trên sàn thuộc về phòng" (D-16).
+| Việc | Đưa bạn tới đâu | Việc đi kèm |
+|---|---|---|
+| Chết, hoặc bấm `R` | **ô vào của phòng bạn vừa ngã**, không bao giờ xa hơn. Chết trong phòng boss B1 thì đứng lại ở ô vào B1 | Courage đầy; phòng bắt đầu lại nguyên (địch đầy máu, vũ khí rơi về sàn); chết không lưu game |
+| Checkpoint: bước qua cửa vào hub hoặc vào một phòng boss | không đưa bạn đi đâu: đó là nơi **Courage được hồi đầy** (Believe cũng thế, từ M10) | game ghi lại "checkpoint gần nhất" (hub hoặc phòng boss, kèm ô vào) rồi lưu; màn pause sẽ gọi tên nó (M4). Chết **không** đưa bạn về đó |
+| Mở game lại (Continue) | phòng và ô vào của **lần lưu cuối**, không phải phòng cuối cùng bạn đứng | game chỉ lưu khi có việc tốt vừa xảy ra, nên ngay sau khi bước vào checkpoint thì lần lưu cuối chính là checkpoint và bạn tiếp tục ở đó; sau khi dọn xong một phòng khác thì bạn tiếp tục ở phòng đó |
+
+**Chơi thử (Owner can try).** Mọi bước dưới đây làm được trong các phòng hiện có. Bài test
+`tests/bridge/test_owner_guide_steps.gd` đi đúng các bước này: mọi bước chân là phím mũi tên qua các cửa, còn con tốt đen
+đánh gục bạn ở bước 1 và lính gác nhặt thước ở bước 4 là AI địch thật (chỉ nhát kiếm hạ địch và cú đánh làm bạn bị
+thương ở bước 2-3 được thay bằng một yêu cầu sát thương), nên nếu một phòng đổi mà bước không còn làm được thì test đỏ.
+Các cửa đi được **hai chiều**: cửa đi tiếp nằm ở góc đông-bắc của
+phòng, cửa quay lại nằm ở phía tây, sát tường, ngay cạnh ô vào (một bước sang trái từ ô vào là về phòng trước). Mở game
+(F5), rồi:
+
+0. *Chuẩn bị (một lần).* Từ T1 đi tới cửa góc đông-bắc để sang T2. Trong T2, đi sang phải tới thanh kiếm đang phát sáng và
+   bước lên nó: bạn có kiếm gỗ (Space hoặc K) và game lưu. Đi tiếp cửa đông-bắc của T2 sang T3: trong T3 chỉ có một con tốt
+   đen. Phòng T1 và T2 không có địch, nên chưa thể ngã ở đó.
+1. *Chết và hồi sinh (T3).* Đứng yên ở ô vào của T3 thì không sao: con tốt đen không tự đi tìm bạn. Hãy đi tới sát nó
+   (không đánh) rồi đứng yên cho nó đánh hết 3 Courage, chừng 4-6 giây. Sau khoảng một giây bạn đứng lại **ở ô vào của
+   T3**, Courage đầy (các chấm trên HUD cũng đầy), con tốt đen đầy máu, kiếm gỗ vẫn trong tay. Phím `R` làm y như chết mà
+   không cần ngã. (Ngã trong phòng boss B1 cho cùng kết quả: bạn đứng lại ở ô vào của B1, boss và hai lính đầy máu, vòng đầu của boss.)
+2. *Phòng đã dọn thì giữ sạch, phòng chưa dọn thì làm lại.* Hạ con tốt đen của T3 bằng kiếm: cửa đông của T3 mở. Sang T4,
+   rồi đi **cửa tây của T4** (một bước sang trái từ ô vào) để về T3: T3 vẫn trống. Bấm `R` trong T3: vẫn trống. Ngược lại
+   T4 chưa dọn: vào T4, hạ một trong ba con, rồi về T3 bằng cửa tây và sang T4 lần nữa: địch về đủ 3 con và đủ máu.
+3. *Checkpoint hồi Courage, cửa thường thì không.* Làm lại từ T3 nếu cần: để con tốt đen của T3 đánh trúng bạn ít nhất một
+   lần (đừng để hết 3 Courage; HUD cho thấy còn mấy chấm) rồi hạ nó. Sang T4: số chấm vẫn y như vậy (đi qua cửa phòng thường không hồi và không phải checkpoint). Hạ cả 3 con của
+   T4 để cửa đông mở, đi sang B1: các chấm Courage đầy lại, vì cửa phòng boss là checkpoint (hub H1 cũng vậy, nhưng cửa
+   sang H1 chỉ mở khi hạ boss).
+4. *Vũ khí rơi trên sàn thì về chỗ (B1).* Trong B1 có thanh thước (Ruler Blade) nằm trên sàn. Đứng yên ở ô vào vài giây:
+   một lính gác chưa cầm gì đi tới nhặt nó. Bấm `R` (hoặc để bị hạ): thước lại nằm trên sàn và tay lính trống như cũ. Đó
+   là luật "vũ khí trên sàn thuộc về phòng" (D-16). *Đừng thử ở T4:* cây giáo bút chì ở T4 đang nằm trên một ô tường nên
+   chưa con tốt nào nhặt được (lỗi nội dung đã ghi trong `findings.md`, chưa sửa).
+5. *Thoát game rồi mở lại.* Đang ở B1 sau bước 3, đi cửa tây của B1 về T4, cửa tây của T4 về T3 (hai chuyến qua phòng
+   thường, không lưu), rồi thoát. Mở lại: game đang ở **B1**, đúng ô vào, Courage đầy, kiếm còn, T3 và T4 vẫn trống, vì
+   lần lưu cuối là lúc bước vào B1 chứ không phải T3. (Muốn thấy "phòng đã dọn" làm điểm tiếp tục: hạ con tốt của T3 rồi
+   thoát ngay, lần sau game mở ở T3, T3 trống.)
 
 **Game lưu khi nào.** Chỉ khi một việc tốt vừa xảy ra, không bao giờ khi chết, khi bị đánh hay khi chỉ đi sang phòng
-khác: dọn xong một phòng, vào hub hoặc phòng boss (checkpoint), nhặt kiếm, mở một cổng tắt, ghi thêm một trang Book,
-nhặt một vật thưởng giữ mãi. Vì vậy nếu bạn đi sang hai phòng thường rồi thoát luôn, lần sau game mở ở phòng của lần lưu
-trước đó, không phải phòng cuối cùng bạn đứng.
+khác: dọn xong một phòng, bước vào hub hoặc phòng boss (checkpoint), nhặt kiếm, lần đầu gặp một loại quân (ghi thêm một
+trang Book), mở một cổng tắt (Stage 1 chưa có cổng nào), nhặt một vật thưởng giữ mãi. Nên nếu bạn đi sang hai phòng thường
+rồi thoát luôn, lần sau game mở ở phòng của lần lưu trước đó, không phải phòng cuối cùng bạn đứng.
 
 **Sau khi chết, cái gì còn và cái gì mất.**
 
@@ -393,26 +417,32 @@ tại game luôn tiếp tục lần chơi đã lưu.
 
 **Một chỗ agent đã tự chọn, bạn có thể đảo lại.** Kế hoạch viết cả "về checkpoint gần nhất" lẫn "chỉ phòng đang chơi
 bắt đầu lại". Nếu hiểu đúng từng chữ, chết ở T3 sẽ đưa bạn về đầu Stage 1, quá nặng so với "chết nhẹ nhàng". Agent chọn
-cách nhẹ nhất: **chết đưa bạn về ô vào của phòng vừa ngã** (không bao giờ xa hơn), còn checkpoint là nơi hồi Courage
-(và sau này Believe) và là nơi màn pause sẽ nhắc tên (M4). Nếu bạn muốn chết đưa về hẳn checkpoint: nói với agent,
-việc sửa nhỏ (`docs/game-base-plan.md` mục 5.2 ghi đúng chỗ phải sửa).
+cách nhẹ nhất, và bản build làm đúng như vậy: **chết đưa bạn về ô vào của phòng vừa ngã** (không bao giờ xa hơn). Còn
+**checkpoint** (ô vào của hub và của phòng boss) là nơi Courage được hồi đầy (và sau này Believe), được ghi lại trong file
+save và sẽ được màn pause nhắc tên (M4). **Mở game lại** đưa bạn tới phòng và ô vào của lần lưu cuối, nên ngay sau khi
+vào checkpoint thì đó cũng là checkpoint, nhưng game không có chỗ nào tự đưa bạn về checkpoint. Nếu bạn muốn chết (hoặc
+Continue) đưa về hẳn checkpoint: nói với agent, việc sửa nhỏ (`docs/game-base-plan.md` mục 5.2 ghi đúng chỗ phải sửa).
 
 **Chưa có:** màn title và pause (M4), bàn tay của đứa trẻ đặt con tốt lại (M8c), Believe (M10), boss nhiều pha với "pha
 đã qua điểm lưu" (M8b; hiện phòng boss bắt đầu lại từ đầu).
 
-*EN: Section 7 is what M3b added for you. One sentence: a death restarts only the room you fell in (on the entry you
-came by, full Courage, enemies back at full health, a boss room starts over), cleared rooms stay cleared (your answer
-"Giữ sạch"), and everything you earned stays. Things to try: die and respawn; clear T3 and see it stay empty after you
-leave or die; walk through T2 and T3 wounded (no heal) and through B1's or H1's door (full heal); quit and relaunch
-(it resumes in the room you stood in at the last save); watch the pencil spear come back after a death. The game saves
-only on a success event (a room cleared, a hub or boss door, the sword, an opened gate, a new Book page, a persistent
-pickup), never on a death or a plain trip. The save file is `saves/slot_0.cfg` (+ `.bak`) in the project's user data
-folder (macOS: `~/Library/Application Support/Godot/app_userdata/The Unbound Pawn/`; Godot: Project -> Open User Data
-Folder); delete both to start clean. The plan says both "back to the latest checkpoint" and "only the current room
-resets"; the least punishing reading was built (a death goes to the entry of the room you fell in), recorded in
-`docs/game-base-plan.md` 5.2, and flipping it is a small change if you disagree. To make a room a checkpoint, tick
-Checkpoint On Entry on its root node; to make a floor pickup a reward that never comes back, tick Persistent on its
-PickupSpawnPoint.*
+*EN: Section 7 is what M3b added for you. One sentence: a death restarts only the room you fell in, and you stand
+again on the ENTRY you came into it by (full Courage, enemies back at full health, floor weapons back on the floor, a
+boss room starts over); cleared rooms stay cleared (your answer "Giữ sạch"); everything you earned stays. Three
+places that are easy to confuse: a death (or `R`) sends you to the entry of the room you fell in, never farther back;
+the CHECKPOINT (the entry of a hub or a boss room, reached through a door) is where Courage refills, it is recorded in
+the save and the pause menu will name it (M4), but nothing sends you to it; a Continue opens the room and entry of the
+LAST SAVE, which right after a checkpoint is the checkpoint, and after clearing another room is that room. The
+"Chơi thử" steps are the ones the rooms allow today (T1 and T2 have no enemy, Stage 1 has no gate, and the pencil spear
+in T4 lies on a wall cell no pawn can reach, so the floor-weapon step is done in B1 with the Ruler Blade);
+`tests/bridge/test_owner_guide_steps.gd` walks them with the arrow keys. The game saves only on a success event (a
+room cleared, a hub or boss door, the sword, a first meeting with a piece, an opened gate, a persistent pickup), never
+on a death or a plain trip. The save file is `saves/slot_0.cfg` (+ `.bak`) in the project's user data folder (macOS:
+`~/Library/Application Support/Godot/app_userdata/The Unbound Pawn/`; Godot: Project -> Open User Data Folder);
+delete both to start clean. The plan says both "back to the latest checkpoint" and "only the current room resets"; the
+least punishing reading was built, recorded in `docs/game-base-plan.md` 5.2, and flipping it is a small change if you
+disagree. To make a room a checkpoint, tick Checkpoint On Entry on its root node; to make a floor pickup a reward that
+never comes back, tick Persistent on its PickupSpawnPoint.*
 
 ## 8. Từ điển nhỏ (Glossary)
 

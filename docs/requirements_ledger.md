@@ -85,7 +85,7 @@ Written in M1a from section 1.5 of `docs/game-base-plan.md` (v1.1, branch `game-
 | 57 | s | child | Crayon-blue visual language reserved for child help | §10 | M8c | palette lint (R7) | covered |
 | 58 | m | health | Three Courage points; boss signature attacks may remove two | §5.1 | exists | baseline labels | covered |
 | 59 | s | health | Rescued white pieces restore one Courage at fixed safe locations; three optional rescues | §2.1 D-34, D-40 | M3b, M6 | test_checkpoint_rules; test_rescue_in_h1 | amended D-34 |
-| 60 | m | failure | On defeat return to the latest checkpoint with the room reset; no progress lost (code reloads the scene at the last entry) | §5.2 | M3b | test_checkpoint_rules | covered |
+| 60 | m | failure | On defeat return to the latest checkpoint with the room reset; no progress lost (code reloads the scene at the last entry) | §5.2 | M3b | test_checkpoint_rules; test_owner_guide_steps | amended D-16 (read the least punishing way: the pawn returns to the entry of the room it fell in; the checkpoint is where Courage refills) |
 | 61 | m | failure | Boss defeat resets the boss room to phase one, retries are fast | §5.4, D-43 | M8b | test_boss_phase_checkpoints | amended D-43 |
 | 62 | m | failure | Checkpoints before bosses, at hubs, after major rewards | §5.2 | M3b | test_checkpoint_rules | covered |
 | 63 | m | failure | Pickup reset rule: room pickups reset unless marked persistent (code keeps every taken pickup forever) | §9.3 | M3b | test_pickup_persistence | covered |

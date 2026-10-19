@@ -672,3 +672,23 @@ June note).
 - The worktree sandbox refuses `HOME=` in front of any command and refuses to run a quoted binary path directly; the runner reads
   `GODOT` and `UNBOUND_GODOT_HOME` from the environment, and a short Python wrapper that sets `HOME` in a child process runs the
   UID check (`stamp_uids.gd -- --check`).
+
+## M3b review fixes (base/m3b-fix)
+
+- A door is a FLOOR cell one step inside the 16x9 ring of wall, its entry marker one step further in; the ring itself is solid.
+  A marker on the ring cannot be walked to (the wall is the collision since 0dddfd1), which is how every west return door of
+  Stage 1 was dead for as long as the rooms existed. `tests/content/test_room_doors_reachable.gd` boots every room of the world
+  graph and checks entries, doors, reachability and target entries on the real grid. Moving a marker changes the room dumps and
+  the actor golden's room fingerprints: regenerate `tests/baselines/dump_*.txt` (`tools/dump_world.gd -- --write-baselines`) and add
+  the new head line to `ROOM_HEADS_CHANGED_ON_PURPOSE` in `test_actor_collapse_golden.gd` with the reason (the golden file is never
+  re-recorded).
+- Standing still on a room's entry is safe in T3 (the Recruit does not come looking: 40 simulated seconds, no hit), but a hero who
+  walks up to it is struck down in 4 to 6 s; in B1 the guards take the Ruler Blade within about 1 to 2 s and two of the three
+  pieces already hold a weapon of their own (the captain's and a guard's default weapon).
+- The T4 Backstep pawn is parked at (7,6) as well, a wall cell: it is counted as an enemy of the room but starts on a cell the grid
+  does not list as walkable. Not fixed; the owner decides where T4's spear and that pawn stand.
+- A write that dies between the two renames of `SaveFile.write` leaves the NEW save as `<file>.tmp`; the loader takes it when it is not
+  older than the `.bak` (`SaveFile.read_unfinished_write`) and `load_slot` finishes the rename. File times are whole seconds, so the
+  comparison is "not older"; the one test that needs an older `.tmp` waits 1.1 s.
+- A Continue resumes at `[meta] room` and `room_entry` (the room of the LAST SAVE), not at the `[checkpoint]` record; the two coincide
+  only when the last save was the checkpoint's. Nothing in the build reads `checkpoint_zone_id` to place the pawn.

@@ -1643,3 +1643,40 @@ room's end move into the simulation (`ObjectiveSystem`, `CheckpointSystem`), D-1
   `beat_save_after` saves wait for their events (M6); the `deaths` counter and the reset presentation by relationship flags are M8c;
   nothing returns a pawn to the checkpoint (see the gap above); the shell still writes `PlayerTag.control_enabled`,
   `PlayerCombat.sword_unlocked` and `VIEW_REF` (`world.commands` has no handler for them yet; listed in ARCHITECTURE.md).
+
+## M3b review fixes - 2026-10-19
+
+The adversarial review accepted M3b (`m3b-done`) with five minors; they are fixed on branch `base/m3b-fix`, one commit each, the
+strict runner green after each (85 suites before, 88 now, 235 of 235 baseline labels, 14 through `label_renames.txt`, unchanged).
+
+- **Backtracking (a bug older than M3b).** The west return doors of T2, T3, T4, B1 and H1, and H1's top door to the Toybox, stood on
+  the ring of wall of the shared 16x9 tilemap (cells (0,5) and (2,0)); the east doors had always been one cell inside the ring
+  (cell 14), so the pawn went forward through every room and could never go back, and the old suites reached the previous room by
+  calling the travel function. The cause is the markers (the ring is right for a room), so the fix is room data: each west door moves
+  to (1,5) with its entry one cell further in at (2,5), H1's top door to (2,1) with its entry at (2,2); no tile data is touched. The
+  five room dumps are regenerated for exactly those cells, and `test_actor_collapse_golden` takes the five new head fingerprints through
+  a listed, explained table (`ROOM_HEADS_CHANGED_ON_PURPOSE`; the golden file stays the record of the old scenes). New:
+  `tests/content/test_room_doors_reachable.gd` (every room of the world graph booted for real: entries on floor and not on a door,
+  doors floor and reachable from every entry by a flood fill, target entry present by exact name; it fails on a door put back on the
+  ring, a misspelt entry and a wall across the room) and `tests/bridge/test_bridge_backtracking.gd` (T3 -> T2 across the whole room,
+  then H1 -> B1 -> T4 -> T3 -> T2 -> T1, by tapping arrow keys; `bridge_support.gd` gained `tap_direction`, `walk_to_cell`,
+  `walk_through_door`). `test_bridge_travel` now walks its way back instead of printing a NOTE. Ledger req 110: partial -> covered.
+- **`unlock_gained` saves only a new unlock.** The sword cell stays a trigger after it is taken, so every later step onto it rewrote
+  the save; `SaveBridge._on_player_unlock` now saves only when `add_unlock()` returns true (`test_bridge_persistence`).
+- **`request_save()` no longer blanks the room.** `load_slot()` did not set `current_room_id`, so a save asked for before the next
+  `note_room()` wrote an empty room; `new_game()` left the old run's room in it. `load_slot()` copies the loaded room, `new_game()`
+  clears it, and `request_save()` only overwrites the run's room when it knows one (`test_save_roundtrip`).
+- **The crash window of `SaveFile.write`.** A crash between "the old file becomes the .bak" and "the .tmp becomes the file" leaves no
+  file, the old save as `.bak` and the NEW save, complete, as `.tmp`; the loader fell back to the `.bak` and the progress was lost.
+  `read_slot()` now reads the `.tmp` before the `.bak` when it is readable and not older than it (equal whole-second times count as
+  newer: a `.tmp` is always written after the file that became the `.bak`), `load_slot()` finishes the rename (a damaged file in the way
+  is set aside as `.corrupt`), a newer game's `.tmp` is protected like its file and `.bak`, `has_save()` counts a lone complete `.tmp`
+  (`test_corrupt_save_falls_back`, on the exact layout the first two steps of `write()` leave; it fails on the old loader).
+- **Respawn wording and the "Chơi thử" steps.** The plan (5.2, 9.3, D-16, the M3b "Owner can try" line, ledger req 60), ARCHITECTURE
+  and OWNER_GUIDE section 7 now say what the build does: a fallen pawn is respawned on the entry of the room it fell in; the checkpoint
+  (hub and boss-room entries) is recorded, saved and is where Courage refills; a Continue resumes at the room and entry of the LAST
+  SAVE (the checkpoint's own entry right after a checkpoint). The guide's steps were rewritten after doing them: they asked for a death
+  in T1 (no enemy), a gate in Stage 1 (none), a spear no pawn can reach (T4's, on a wall cell), a way back no pawn could walk, and a
+  "death in a cleared room" (impossible). `tests/bridge/test_owner_guide_steps.gd` walks the new steps by key presses with the real
+  enemy AI (the fall in T3, a guard taking the Ruler Blade in B1), a damage request standing in for a sword stroke and a wound.
+- **Found and not fixed.** T4's `PencilSpearPickup` (7,6) and its Backstep pawn (7,6) are on a wall cell (findings.md).
