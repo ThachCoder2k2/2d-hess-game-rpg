@@ -548,6 +548,10 @@ msgstr "Restore defaults"
 msgid "UI_SETTINGS_ASSIST_NOTE"
 msgstr "Assists are never switched on for you. Change them whenever you like."
 
+#. surface=settings screen, at the end of a row; purpose=the setting is saved but nothing in the game reads it yet
+msgid "UI_SETTINGS_COMING_LATER"
+msgstr "(coming later)"
+
 #. surface=settings screen, next to a slider; placeholders={value} the number from 0 to 100; purpose=the slider's value as a percent
 msgid "UI_SETTINGS_PERCENT"
 msgstr "{value}%"

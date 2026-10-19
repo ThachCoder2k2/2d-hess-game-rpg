@@ -174,24 +174,26 @@ static func _build_definitions() -> Array[SettingDefinition]:
 	table.append(SettingDefinition.toggle(REDUCE_FLASH, SettingDefinition.Group.COMFORT, "UI_SETTINGS_REDUCE_FLASH", false))
 	table.append(SettingDefinition.toggle(HIGH_CONTRAST_DANGER, SettingDefinition.Group.COMFORT, "UI_SETTINGS_HIGH_CONTRAST_DANGER", false))
 	table.append(SettingDefinition.toggle(TOGGLE_TURN_MODE, SettingDefinition.Group.COMFORT, "UI_SETTINGS_TOGGLE_TURN_MODE", false))
-	table.append(SettingDefinition.toggle(TOGGLE_GUARD, SettingDefinition.Group.COMFORT, "UI_SETTINGS_TOGGLE_GUARD", false))
-	table.append(SettingDefinition.toggle(TOGGLE_FOCUS, SettingDefinition.Group.COMFORT, "UI_SETTINGS_TOGGLE_FOCUS", false))
+	# Guard and Focus are keys with no job until M8a, so their switches are stored and published and do nothing yet.
+	table.append(SettingDefinition.toggle(TOGGLE_GUARD, SettingDefinition.Group.COMFORT, "UI_SETTINGS_TOGGLE_GUARD", false, true))
+	table.append(SettingDefinition.toggle(TOGGLE_FOCUS, SettingDefinition.Group.COMFORT, "UI_SETTINGS_TOGGLE_FOCUS", false, true))
+	# The four assists reach world.tuning (SettingsBridge) and no system reads them yet: they are marked until one does.
 	table.append(SettingDefinition.choice(ASSIST_TELEGRAPH_TIME, SettingDefinition.Group.ASSISTS, "UI_SETTINGS_ASSIST_TELEGRAPH_TIME", 100, [
 		{"value": 100, "label_key": "UI_SETTINGS_OPTION_100"},
 		{"value": 125, "label_key": "UI_SETTINGS_OPTION_125"},
 		{"value": 150, "label_key": "UI_SETTINGS_OPTION_150"},
-	]))
+	], true))  # EnemyAISystem reads it from M8a
 	table.append(SettingDefinition.choice(ASSIST_ENEMY_PACE, SettingDefinition.Group.ASSISTS, "UI_SETTINGS_ASSIST_ENEMY_PACE", 100, [
 		{"value": 100, "label_key": "UI_SETTINGS_OPTION_100"},
 		{"value": 85, "label_key": "UI_SETTINGS_OPTION_85"},
 		{"value": 70, "label_key": "UI_SETTINGS_OPTION_70"},
-	]))
+	], true))  # EnemyAISystem reads it from M8a
 	table.append(SettingDefinition.choice(ASSIST_EXTRA_COURAGE, SettingDefinition.Group.ASSISTS, "UI_SETTINGS_ASSIST_EXTRA_COURAGE", 0, [
 		{"value": 0, "label_key": "UI_SETTINGS_OPTION_COURAGE_0"},
 		{"value": 1, "label_key": "UI_SETTINGS_OPTION_COURAGE_1"},
 		{"value": 2, "label_key": "UI_SETTINGS_OPTION_COURAGE_2"},
-	]))
-	table.append(SettingDefinition.toggle(ASSIST_INPUT_FORGIVENESS, SettingDefinition.Group.ASSISTS, "UI_SETTINGS_ASSIST_INPUT_FORGIVENESS", false))
+	], true))  # the spawn and the checkpoint refills read it from M8c
+	table.append(SettingDefinition.toggle(ASSIST_INPUT_FORGIVENESS, SettingDefinition.Group.ASSISTS, "UI_SETTINGS_ASSIST_INPUT_FORGIVENESS", false, true))  # PlayerInputSystem reads it from M7b
 	return table
 
 

@@ -24,6 +24,16 @@ extends ShellBridge
 ## M7b is 0.12 s). Without the assist the world keeps the standard of the moment.
 const INPUT_FORGIVENESS_BUFFER_SECONDS := 0.20
 
+## assist setting -> the world.tuning field it sets. The fields are named here once; Tuning says which system reads each
+## and from which milestone, and `test_settings_coming_later` holds the "(coming later)" mark of a setting to whether
+## one does.
+const TUNING_KNOB_BY_ASSIST := {
+	GameSettings.ASSIST_TELEGRAPH_TIME: &"telegraph_time_scale",
+	GameSettings.ASSIST_ENEMY_PACE: &"enemy_pace_scale",
+	GameSettings.ASSIST_EXTRA_COURAGE: &"extra_courage",
+	GameSettings.ASSIST_INPUT_FORGIVENESS: &"input_buffer_window",
+}
+
 ## hold-or-toggle setting -> the InputMap action that becomes a switch.
 const TOGGLED_ACTION_BY_SETTING := {
 	GameSettings.TOGGLE_TURN_MODE: &"turn_mode",
@@ -67,10 +77,10 @@ func apply_tuning() -> void:
 	var settings := root.settings
 	var neutral := Tuning.new()
 	var wanted := {
-		&"telegraph_time_scale": float(settings.value(GameSettings.ASSIST_TELEGRAPH_TIME)) / 100.0,
-		&"enemy_pace_scale": float(settings.value(GameSettings.ASSIST_ENEMY_PACE)) / 100.0,
-		&"extra_courage": int(settings.value(GameSettings.ASSIST_EXTRA_COURAGE)),
-		&"input_buffer_window": INPUT_FORGIVENESS_BUFFER_SECONDS if bool(settings.value(GameSettings.ASSIST_INPUT_FORGIVENESS)) else neutral.input_buffer_window,
+		TUNING_KNOB_BY_ASSIST[GameSettings.ASSIST_TELEGRAPH_TIME]: float(settings.value(GameSettings.ASSIST_TELEGRAPH_TIME)) / 100.0,
+		TUNING_KNOB_BY_ASSIST[GameSettings.ASSIST_ENEMY_PACE]: float(settings.value(GameSettings.ASSIST_ENEMY_PACE)) / 100.0,
+		TUNING_KNOB_BY_ASSIST[GameSettings.ASSIST_EXTRA_COURAGE]: int(settings.value(GameSettings.ASSIST_EXTRA_COURAGE)),
+		TUNING_KNOB_BY_ASSIST[GameSettings.ASSIST_INPUT_FORGIVENESS]: INPUT_FORGIVENESS_BUFFER_SECONDS if bool(settings.value(GameSettings.ASSIST_INPUT_FORGIVENESS)) else neutral.input_buffer_window,
 		&"reduce_flash": bool(settings.value(GameSettings.REDUCE_FLASH)),
 	}
 	for knob: StringName in wanted:

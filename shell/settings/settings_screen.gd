@@ -19,7 +19,8 @@ extends Control
 ## Down and up walk the rows of the page in the order they are drawn, from the tab bar to the three buttons below, and
 ## left and right walk the buttons: the neighbours are set here (_wire_focus) and not left to the engine's guess by
 ## position, which skipped rows and left buttons out of reach.
-
+##
+## A setting no system reads yet (SettingDefinition.coming_later) says "(coming later)" beside its row.
 ##
 ## The words are text keys: the rows are written again when the language changes, since a drop-down's items and a
 ## slider's percent are words a script put there.
@@ -38,6 +39,8 @@ const GROUP_TAB_KEYS := {
 }
 ## The line at the top of the Assists page: the choice is the player's.
 const ASSIST_NOTE_KEY := "UI_SETTINGS_ASSIST_NOTE"
+## The note beside a row whose setting does nothing yet.
+const COMING_LATER_KEY := "UI_SETTINGS_COMING_LATER"
 ## The width of the name column and of the control column of a row, so the rows line up.
 const NAME_COLUMN_WIDTH := 210.0
 const CONTROL_COLUMN_WIDTH := 150.0
@@ -262,6 +265,7 @@ func _row_of(definition: SettingDefinition) -> Control:
 			check.toggled.connect(func(on: bool) -> void: _write(definition.key, on))
 			row.add_child(check)
 			_control_by_key[definition.key] = check
+			_add_coming_later_note(row, definition)
 		SettingDefinition.Kind.SLIDER:
 			row.add_child(_name_label(definition))
 			var slider := HSlider.new()
@@ -287,6 +291,7 @@ func _row_of(definition: SettingDefinition) -> Control:
 			options.item_selected.connect(func(index: int) -> void: _write(definition.key, definition.choices[index]["value"]))
 			row.add_child(options)
 			_control_by_key[definition.key] = options
+			_add_coming_later_note(row, definition)
 		SettingDefinition.Kind.LANGUAGE:
 			row.add_child(_name_label(definition))
 			var languages := _option_button()
@@ -297,6 +302,16 @@ func _row_of(definition: SettingDefinition) -> Control:
 			row.add_child(languages)
 			_control_by_key[definition.key] = languages
 	return row
+
+
+## "(coming later)" at the end of the row of a setting no system reads yet (nothing for a setting that works).
+func _add_coming_later_note(row: Control, definition: SettingDefinition) -> void:
+	if not definition.coming_later:
+		return
+	var note := Label.new()
+	note.text = TextService.t(COMING_LATER_KEY)
+	note.add_theme_font_size_override(&"font_size", ROW_FONT_SIZE)
+	row.add_child(note)
 
 
 func _name_label(definition: SettingDefinition) -> Label:

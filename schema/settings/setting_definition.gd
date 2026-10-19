@@ -41,6 +41,11 @@ var maximum := 1.0
 var step := 0.05
 ## A CHOICE's options, each { "value": the stored value, "label_key": the text key of what the player reads }.
 var choices: Array[Dictionary] = []
+## The setting is stored and shown, but no system of the game reads its value yet, so choosing it changes nothing the
+## player can feel. The screen says "(coming later)" beside it (the way the Controls panel does for an action that does
+## nothing yet, ControlsCatalog.COMING_LATER_ACTIONS). It is set where the table is built and leaves with the milestone
+## that gives the setting its job; `test_settings_coming_later` fails when the mark and the code disagree.
+var coming_later := false
 
 
 static func slider(setting_key: StringName, setting_group: Group, name_key: String, default_amount: float, lowest := 0.0, highest := 1.0, slider_step := 0.05) -> SettingDefinition:
@@ -56,17 +61,18 @@ static func slider(setting_key: StringName, setting_group: Group, name_key: Stri
 	return definition
 
 
-static func toggle(setting_key: StringName, setting_group: Group, name_key: String, default_on: bool) -> SettingDefinition:
+static func toggle(setting_key: StringName, setting_group: Group, name_key: String, default_on: bool, does_nothing_yet := false) -> SettingDefinition:
 	var definition := SettingDefinition.new()
 	definition.key = setting_key
 	definition.kind = Kind.TOGGLE
 	definition.group = setting_group
 	definition.label_key = name_key
 	definition.default_value = default_on
+	definition.coming_later = does_nothing_yet
 	return definition
 
 
-static func choice(setting_key: StringName, setting_group: Group, name_key: String, default_choice: Variant, options: Array[Dictionary]) -> SettingDefinition:
+static func choice(setting_key: StringName, setting_group: Group, name_key: String, default_choice: Variant, options: Array[Dictionary], does_nothing_yet := false) -> SettingDefinition:
 	var definition := SettingDefinition.new()
 	definition.key = setting_key
 	definition.kind = Kind.CHOICE
@@ -74,6 +80,7 @@ static func choice(setting_key: StringName, setting_group: Group, name_key: Stri
 	definition.label_key = name_key
 	definition.default_value = default_choice
 	definition.choices = options
+	definition.coming_later = does_nothing_yet
 	return definition
 
 
