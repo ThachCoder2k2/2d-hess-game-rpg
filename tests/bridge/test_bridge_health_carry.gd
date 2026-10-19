@@ -1,8 +1,9 @@
 extends UnboundTest
 
 ## Bridge characterization (M1a, ported in M3b): the health carry across zone changes.
-## main._travel_to writes the hero's current health into main.player_health_carry, and
-## main._boot_zone applies it to the freshly spawned player and then consumes
+## ZoneTravelBridge.travel_to (it was main._travel_to) writes the hero's current health into its
+## player_health_carry, and GameRoot.boot_zone (it was main._boot_zone) applies it to the freshly
+## spawned player and then consumes
 ## it. This suite pins that contract, including its sharp edges, because the
 ## planned game_root.gd split moves exactly this write/apply/consume ordering.
 
@@ -55,9 +56,9 @@ func _run() -> void:
 	# --- A plain re-boot with no pending carry restores full health ---
 	# (T2 has no enemies, so re-booting its already-booted node is safe here.)
 	Support.reboot_zone(main, &"west_entry")
-	_expect(Support.player_health(main).current == max_courage, "CHARACTERIZATION: _boot_zone without a pending carry heals to full (health only survives via travel)")
+	_expect(Support.player_health(main).current == max_courage, "CHARACTERIZATION: boot_zone without a pending carry heals to full (health only survives via travel)")
 
-	# --- Carry edge values, applied by a plain _boot_zone ---
+	# --- Carry edge values, applied by a plain boot_zone ---
 	Support.plant_health_carry(main, 99)
 	Support.reboot_zone(main, &"west_entry")
 	_expect(Support.player_health(main).current == max_courage, "a carry above max is clamped to max courage")

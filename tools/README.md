@@ -239,7 +239,7 @@ stamped tree:
 "$G" --headless --path . -s tests/architecture/test_dump_baselines.gd                 # compare (enforcing)
 ```
 
-The dump mirrors `shell/game_root.gd` (`_make_world` + `_boot_zone`): the same systems in the same order
+The dump mirrors `shell/game_root.gd` (`_make_world` + `boot_zone`): the same systems in the same order
 (both call `Schedule.populate`, the order lives only in `ecs/schedule/`), the player view on the room's
 `start` entry marker, then `EcsBoot.boot` with no taken pickups and no opened gates, then 120 manual ticks
 of 1/60 s with the player idle. An entity's components print in `COMPONENT_DUMP_ORDER` (a list in

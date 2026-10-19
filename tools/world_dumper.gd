@@ -11,7 +11,7 @@ extends RefCounted
 ## There is no class_name on purpose: callers preload() this script, which keeps
 ## it usable on a fresh checkout before the editor import pass has run.
 ##
-## The boot path mirrors shell/game_root.gd (_make_world + _boot_zone): the same systems in
+## The boot path mirrors shell/game_root.gd (_make_world + boot_zone): the same systems in
 ## the same order (both ask Schedule.populate), the player view placed on the "start" entry marker,
 ## then EcsBoot.boot with no taken pickups and no opened gates (a fresh save).
 ## It deliberately skips the SaveService, the HUD, the board overlay and audio: they

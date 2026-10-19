@@ -37,7 +37,7 @@ func meet_pieces() -> void:
 ## The B key. Opening refreshes the pages and switches the hero's control off; closing gives it back.
 func toggle() -> void:
 	var book := _book()
-	if book == null or root.travel_in_progress:
+	if book == null or root.zone_travel_bridge.travel_in_progress:
 		return
 	book.visible = not book.visible
 	if book.visible:

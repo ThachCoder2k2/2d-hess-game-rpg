@@ -103,17 +103,17 @@ static func boot_main(suite: UnboundTest) -> Node:
 
 
 static func travel_in_progress(main: Node) -> bool:
-	return bool(main.get("travel_in_progress"))
+	return main.get("zone_travel_bridge").travel_in_progress
 
 
 ## The health carry that waits for the next boot (-1 = none).
 static func health_carry(main: Node) -> int:
-	return int(main.get("player_health_carry"))
+	return main.get("zone_travel_bridge").player_health_carry
 
 
 ## Plants a health carry as a trip would have left it, for the next boot to apply.
 static func plant_health_carry(main: Node, value: int) -> void:
-	main.set("player_health_carry", value)
+	main.get("zone_travel_bridge").player_health_carry = value
 
 
 static func room_ending(main: Node) -> bool:
@@ -131,12 +131,12 @@ static func total_enemies(main: Node) -> int:
 ## Starts a zone trip the way the zone_exit event does and waits for it to finish. Called without
 ## `await` it returns at the first suspension, with the trip under way.
 static func travel_to(main: Node, zone_id: StringName, entry_id: StringName) -> void:
-	await main._travel_to(zone_id, entry_id)
+	await main.get("zone_travel_bridge").travel_to(zone_id, entry_id)
 
 
 ## Rebuilds the room the hero is in without a trip (a boot with no pending travel).
 static func reboot_zone(main: Node, entry_id: StringName) -> void:
-	main._boot_zone(entry_id)
+	main.boot_zone(entry_id)
 
 
 ## The B key's handler, called directly.

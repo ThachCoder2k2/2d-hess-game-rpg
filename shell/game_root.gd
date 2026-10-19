@@ -31,11 +31,6 @@ var hud: GameHud
 var camera_rig: CameraRig
 var player_view: ActorView
 var current_zone_id: StringName = &""
-var travel_in_progress := false
-## Courage carried across a zone travel: the hero's health when the trip started, applied to the next
-## world's hero by _boot_zone and consumed there. -1 = no carry (a fresh boot, or a death). Never saved:
-## every launch starts the room with full Courage. The PlayerSnapshot (M3b) replaces it.
-var player_health_carry := -1
 ## The only reader of the Input singleton: copies the controls into ecs.input_snapshot once per frame.
 var input_poller := InputPoller.new()
 ## Hands the events the world drains each frame to the code that reacts to them.
@@ -58,6 +53,8 @@ var save_bridge := SaveBridge.new()
 var book_bridge := BookBridge.new()
 ## How a room ends: the enemy counts, a win, the hero's fall.
 var outcome_bridge := RoomOutcomeBridge.new()
+## The trip between zones: fade, swap, rebuild, fade, and the Courage carried across.
+var zone_travel_bridge := ZoneTravelBridge.new()
 
 
 func _ready() -> void:
@@ -76,6 +73,7 @@ func _ready() -> void:
 	save_bridge.attach(self)
 	book_bridge.attach(self)
 	outcome_bridge.attach(self)
+	zone_travel_bridge.attach(self)
 
 	# Death and R both reload this scene; the SaveService (autoload) holds the run, so the
 	# reload boots in the zone the run is in, not the default. A game that has just launched
@@ -83,15 +81,15 @@ func _ready() -> void:
 	save_bridge.begin()
 	var checkpoint_zone := save_bridge.checkpoint_zone_id()
 	if world_graph != null and checkpoint_zone != &"" and checkpoint_zone != zone_id_of(current_room):
-		current_room = _swap_zone_node(checkpoint_zone)
+		swap_zone(checkpoint_zone)
 	_register_event_handlers()
-	_boot_zone(save_bridge.checkpoint_entry_id())
+	boot_zone(save_bridge.checkpoint_entry_id())
 
 
 ## Builds a fresh EcsWorld from the current zone node. Called at scene start
 ## and again after every zone swap — the whole simulation is rebuilt, only
 ## the player view node and the SaveService persist.
-func _boot_zone(entry_id: StringName) -> void:
+func boot_zone(entry_id: StringName) -> void:
 	if ecs != null:
 		remove_child(ecs)
 		ecs.queue_free()
@@ -120,11 +118,7 @@ func _boot_zone(entry_id: StringName) -> void:
 	save_bridge.apply_unlocks()
 	outcome_bridge.begin_room(cast.get("enemies", []).size())
 
-	if player_health_carry > 0:
-		var health: EcsComponents.Health = ecs.get_component(player_id, EcsComponents.HEALTH)
-		if health != null:
-			health.current = mini(player_health_carry, health.max_value)
-	player_health_carry = -1
+	zone_travel_bridge.apply_health_carry()
 
 	# The HUD and the board draw from the snapshot, so it must hold the booted room (with the carried
 	# health and the unlocks written above) before the first tick builds it again.
@@ -176,11 +170,7 @@ func _register_event_handlers() -> void:
 	despawn_bridge.register(router)
 	outcome_bridge.register(router)
 	message_bridge.register(router)
-	router.on(Events.ZONE_EXIT, _on_zone_exit)
-
-
-func _on_zone_exit(event: Dictionary) -> void:
-	_travel_to(StringName(event.get("zone", &"")), StringName(event.get("entry", &"start")))
+	zone_travel_bridge.register(router)
 
 
 func set_player_control(value: bool) -> void:
@@ -202,34 +192,13 @@ func room_text(getter: StringName, fallback: String) -> String:
 	return fallback
 
 
-## --- Zone travel (the world map) -----------------------------------------
-
-
-## The player stepped on a door cell: fade out, swap the zone scene, rebuild
-## the simulation, fade back in. The shell carries health and the save remembers
-## the destination (as the checkpoint) so death/R reloads land in the right zone.
-func _travel_to(zone_id: StringName, entry_id: StringName) -> void:
-	if travel_in_progress or outcome_bridge.room_ending or world_graph == null or not world_graph.has_zone(zone_id):
-		return
-	travel_in_progress = true
-	set_player_control(false)
-	var health: EcsComponents.Health = ecs.get_component(player_id, EcsComponents.HEALTH)
-	player_health_carry = health.current if health != null else -1
-	save_bridge.record_checkpoint(zone_id, entry_id)
-	await _fade_to(1.0)
-	current_room = _swap_zone_node(zone_id)
-	_boot_zone(entry_id)
-	await _fade_to(0.0)
-	set_player_control(true)
-	travel_in_progress = false
-
-
 ## Replaces the current zone node with the target zone's scene, keeping the
-## tree position so draw order (board below, HUD above) stays intact.
-func _swap_zone_node(zone_id: StringName) -> Node:
+## tree position so draw order (board below, HUD above) stays intact. A zone the graph does not have
+## leaves the current one in place.
+func swap_zone(zone_id: StringName) -> void:
 	var zone_scene := world_graph.get_zone_scene(zone_id) if world_graph != null else null
 	if zone_scene == null:
-		return current_room
+		return
 	var slot_index := current_room.get_index() if current_room != null else get_child_count()
 	if current_room != null:
 		remove_child(current_room)
@@ -237,7 +206,7 @@ func _swap_zone_node(zone_id: StringName) -> Node:
 	var zone := zone_scene.instantiate()
 	add_child(zone)
 	move_child(zone, slot_index)
-	return zone
+	current_room = zone
 
 
 func _find_entry_cell(zone_root: Node, entry_id: StringName) -> Vector2i:
@@ -254,16 +223,6 @@ func _find_entry_cell(zone_root: Node, entry_id: StringName) -> Vector2i:
 		if fallback == Vector2i(-1, -1):
 			fallback = cell
 	return fallback
-
-
-## The editor-owned FadeLayer rect; the bridge only tweens its alpha.
-func _fade_to(target_alpha: float) -> void:
-	var fade_rect := get_node_or_null(fade_rect_path) as ColorRect
-	if fade_rect == null:
-		return
-	var tween := create_tween()
-	tween.tween_property(fade_rect, "modulate:a", target_alpha, 0.22)
-	await tween.finished
 
 
 static func zone_id_of(zone_root: Node) -> StringName:

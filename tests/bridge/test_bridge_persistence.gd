@@ -3,7 +3,7 @@ extends UnboundTest
 ## Bridge characterization (M1a, ported to the SaveService in M3b): what the world remembers.
 ## game_root.gd translates three kinds of simulation events into writes to the run held by
 ## the SaveService (pickup_taken, gate_opened, player_unlock) and feeds the run back into
-## every _boot_zone (taken pickups never respawn, opened gates boot as floor,
+## every boot_zone (taken pickups never respawn, opened gates boot as floor,
 ## the sword unlock re-applies). This suite drives each of them through the
 ## real path, then proves the memory survives a re-boot of the zone, a
 ## save/load round trip, and a full relaunch (a brand new main continuing the
@@ -67,7 +67,7 @@ func _check_player_unlock(main: Node) -> void:
 	_expect(Support.player_combat(main).sword_unlocked, "unlock: the sword survives re-entering the zone")
 	_expect(not _first_unlock_marker(main).visible, "unlock: the taken marker stays hidden after re-entering")
 	Support.reboot_zone(main, &"west_entry")
-	_expect(Support.player_combat(main).sword_unlocked, "unlock: the sword survives a bare _boot_zone")
+	_expect(Support.player_combat(main).sword_unlocked, "unlock: the sword survives a bare boot_zone")
 
 	# Persists across a save/load round trip; and the lock really is save-driven.
 	Support.write_the_run(save_service)
@@ -110,12 +110,12 @@ func _check_taken_pickup(main: Node) -> void:
 	_expect(_saved_list("world", "taken_pickup_ids").has(SPEAR_KEY), "pickup: the taken pickup is written to the save file immediately")
 	_expect(_saved_list("world", "unlocked_rule_ids").has("pawn_recruit"), "pickup: the Book pages from meeting T4's pieces are saved too")
 
-	# Never respawns: re-boot, bare _boot_zone, save/load.
+	# Never respawns: re-boot, bare boot_zone, save/load.
 	await Support.travel_to(main, T4, &"west_entry")
 	_expect(Support.ecs_of(main).grid.get_item_cells().is_empty() and main.get("cast")["pickup_name_by_entity"].is_empty(), "pickup: the spear does not respawn after re-entering T4")
 	_expect(main.get("cast")["pickup_view_by_entity"].is_empty(), "pickup: no floor view is rebuilt for the taken spear")
 	Support.reboot_zone(main, &"west_entry")
-	_expect(Support.ecs_of(main).grid.get_item_cells().is_empty(), "pickup: the spear does not respawn after a bare _boot_zone")
+	_expect(Support.ecs_of(main).grid.get_item_cells().is_empty(), "pickup: the spear does not respawn after a bare boot_zone")
 	Support.write_the_run(save_service)
 	Support.forget_the_run(save_service)
 	save_service.call("load_slot")
@@ -166,14 +166,14 @@ func _check_opened_gate(main: Node) -> void:
 	_expect(String((main.get("hud") as GameHud).objective_label.text).begins_with("The gate unbars"), "gate: the HUD announces the opening")
 	_expect(_saved_list("world", "opened_gate_ids").has("pass_home_gate"), "gate: the opened gate is written to the save file immediately")
 
-	# Persists across a re-boot, a bare _boot_zone and a save/load round trip.
+	# Persists across a re-boot, a bare boot_zone and a save/load round trip.
 	await Support.travel_to(main, KINGDOM, &"start")
 	ecs = Support.ecs_of(main)
 	pass_gate = _gate_marker(main, &"pass_home_gate")
 	lane_gate = _gate_marker(main, &"gardens_lane_gate")
 	_expect(ecs.grid.is_walkable(gate_cell) and ecs.grid.gate_by_cell.size() == 1 and not pass_gate.visible and lane_gate.visible, "gate: re-entering keeps the pass gate open and the lane gate closed")
 	Support.reboot_zone(main, &"start")
-	_expect(Support.ecs_of(main).grid.is_walkable(gate_cell) and not _gate_marker(main, &"pass_home_gate").visible, "gate: a bare _boot_zone keeps the pass gate open")
+	_expect(Support.ecs_of(main).grid.is_walkable(gate_cell) and not _gate_marker(main, &"pass_home_gate").visible, "gate: a bare boot_zone keeps the pass gate open")
 	Support.write_the_run(save_service)
 	Support.forget_the_run(save_service)
 	_expect(Support.run_of(save_service).opened_gate_ids.is_empty(), "gate: reset forgets the gate (the check below is meaningful)")

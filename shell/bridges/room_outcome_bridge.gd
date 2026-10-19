@@ -76,7 +76,7 @@ func _on_player_defeated() -> void:
 	if room_ending:
 		return
 	room_ending = true
-	root.player_health_carry = -1
+	root.zone_travel_bridge.forget_health_carry()
 	root.audio_bridge.play(AudioBridge.DEFEAT_JINGLE_SOUND)
 	var defeat_message := root.room_text("get_defeat_message", "THE PAWN FALLS")
 	root.message_bridge.say(defeat_message)

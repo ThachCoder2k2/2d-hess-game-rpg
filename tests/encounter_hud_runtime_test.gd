@@ -37,7 +37,7 @@ func _run() -> void:
 	save_service.new_game(0)
 
 	var main := (load("res://shell/game_root.tscn") as PackedScene).instantiate()
-	main.set("player_health_carry", 2)
+	main.get("zone_travel_bridge").player_health_carry = 2
 	root.add_child(main)
 	await process_frame
 
@@ -53,7 +53,7 @@ func _run() -> void:
 	_expect(int(main.get("outcome_bridge").enemies_total) == 0, "main starts in the quiet T1 opening room")
 	var player_health: EcsComponents.Health = ecs.get_component(player_id, EcsComponents.HEALTH)
 	_expect(player_health != null and player_health.current == 2, "a pending health carry applies to the booted player")
-	_expect(int(main.get("player_health_carry")) == -1, "the health carry is consumed by the boot")
+	_expect(int(main.get("zone_travel_bridge").player_health_carry) == -1, "the health carry is consumed by the boot")
 	var player_combat: EcsComponents.PlayerCombat = ecs.get_component(player_id, EcsComponents.PLAYER_COMBAT)
 	_expect(player_combat != null and not player_combat.sword_unlocked, "world-mode combat starts locked before T2 sword pickup")
 	var weapon_pivot := main.get_node_or_null("PawnHero/MotionRoot/SpriteRoot/WeaponPivot") as Node2D
