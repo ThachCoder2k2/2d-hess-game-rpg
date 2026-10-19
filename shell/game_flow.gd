@@ -39,6 +39,9 @@ signal respawned(reason: StringName)
 var state := State.PLAYING
 ## The reason of the latest accepted request, &"" before the first.
 var last_respawn_reason: StringName = &""
+## How many times the room has been rebuilt by a request. A caller that waits (the defeat beat) compares it
+## before and after to learn whether somebody else already started the room again.
+var respawn_count := 0
 
 var _root: GameRoot
 var _respawn_pending := false
@@ -73,6 +76,7 @@ func _serve_respawn(reason: StringName) -> void:
 	if is_instance_valid(_root) and _root.is_inside_tree():
 		state = State.RESPAWNING
 		_root.respawn()
+		respawn_count += 1
 		state = State.PLAYING
 		respawned.emit(reason)
 	_respawn_pending = false

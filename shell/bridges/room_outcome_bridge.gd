@@ -84,8 +84,9 @@ func _on_player_defeated() -> void:
 	var tree := root.get_tree()
 	if tree == null:
 		return
-	var world_that_fell := root.ecs
+	var respawns_at_fall := root.game_flow.respawn_count
 	await tree.create_timer(DEFEAT_BEAT_SECONDS).timeout
-	# If the restart key rebuilt the room during the beat, there is nothing left to start again.
-	if root.is_inside_tree() and root.ecs == world_that_fell:
+	# If the restart key rebuilt the room during the beat, there is nothing left to start again. A zone trip
+	# that swapped the world meanwhile is not a rebuild: the hero fell, so the room starts again regardless.
+	if root.is_inside_tree() and root.game_flow.respawn_count == respawns_at_fall:
 		root.game_flow.request_respawn(GameFlow.REASON_DEFEATED)

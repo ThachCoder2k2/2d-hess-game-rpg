@@ -117,6 +117,22 @@ func _run() -> void:
 	_expect(main.get_node_or_null("MusicPlayer") != null and tree_current_scene_is(main), "the music player and the scene itself were never replaced (no reload)")
 	_expect(Support.run_of(save_service).checkpoint_zone_id == T3, "and the run, which the rebuilds read, names the zone the hero was last sent to")
 
+	# --- A fall during a trip's fade-out still ends in a rebuild at the checkpoint, as the reload did ---
+	respawned_reasons.clear()
+	await Support.travel_to(main, T2, &"west_entry")
+	var door_back := Support.exit_cell(main, main.get("current_room"), T3)
+	Support.teleport_player(main, door_back + Vector2i.LEFT)
+	var back_intent: EcsComponents.MoveIntent = Support.ecs_of(main).get_component(Support.player_id_of(main), EcsComponents.MOVE_INTENT)
+	back_intent.direction = Vector2i.RIGHT
+	Support.pump_until(main, func() -> bool: return Support.travel_in_progress(main), 1.0)
+	Support.damage_player(main, 99)
+	await Support.wait_for_travel(self, main)
+	_expect(respawned_reasons.is_empty() and Support.player_health(main).current == max_courage, "setup: the trip finished and the new room's hero is unhurt (the fall happened in the old world)")
+	started_msec = Time.get_ticks_msec()
+	while respawned_reasons.is_empty() and Time.get_ticks_msec() - started_msec < Support.REAL_TIME_WAIT_CAP_MSEC:
+		await process_frame
+	_expect(respawned_reasons == [GameFlow.REASON_DEFEATED] and main.get("current_zone_id") == T3, "the defeat beat still starts the room again at the checkpoint, though a trip swapped the world meanwhile")
+
 	# --- With the engine driving the frames (the real loop, not pumped by hand) ---
 	# Everything above ticks the scene by hand. Here the engine calls _process, so a death's request is
 	# served between two real frames, and R goes through the real input path.
