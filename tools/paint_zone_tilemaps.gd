@@ -25,6 +25,7 @@ extends SceneTree
 ## the_kingdom.tscn names it by (see tools/save_keeping_uids.gd).
 
 const SaveKeepingUids := preload("res://tools/save_keeping_uids.gd")
+const CellKindPainter := preload("res://tools/cell_kind_painter.gd")
 
 const SIZE := Vector2i(72, 40)
 const START_CELL := Vector2i(4, 35)
@@ -368,6 +369,7 @@ func _paint(open: Dictionary, tile_set: TileSet) -> bool:
 	var landmark_cells: Dictionary = {}
 	for cell in LANDMARKS:
 		landmark_cells[cell] = true
+	var painter := CellKindPainter.new(tile_set)
 	for y in SIZE.y:
 		for x in SIZE.x:
 			var cell := Vector2i(x, y)
@@ -392,7 +394,13 @@ func _paint(open: Dictionary, tile_set: TileSet) -> bool:
 				atlas = district["rock"]
 			else:
 				atlas = DEEP_ROCK_MIX[_cell_hash(cell) % DEEP_ROCK_MIX.size()]
-			layer.set_cell(cell, 0, atlas)
+			# What the cell IS, stated next to the art chosen for it: carved space is floor, everything else (rock,
+			# a landmark, a cottage, the moat) is a wall. The painter refuses a tile that does not read as that kind.
+			var kind := CellKinds.FLOOR if open.has(cell) and not landmark_cells.has(cell) and not cottage_cells.has(cell) else CellKinds.WALL
+			var problem := painter.paint(layer, cell, kind, atlas)
+			if not problem.is_empty():
+				push_error("KINGDOM BOARD: " + problem)
+				return false
 			painted_atlas[cell] = atlas
 	var packed := PackedScene.new()
 	if packed.pack(layer) != OK:

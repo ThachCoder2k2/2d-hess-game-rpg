@@ -86,6 +86,19 @@ static func ecs_of(main: Node) -> EcsWorld:
 	return main.get("ecs")
 
 
+## True when the world holds exactly the systems of ecs/schedule/, in the same order. This is
+## what the old `systems.size() == 6` pins protected, without naming a count that every new
+## system would change (docs/game-base-plan.md 14.1).
+static func runs_the_schedule(world: EcsWorld) -> bool:
+	var scheduled_scripts := Schedule.system_scripts()
+	if world.systems.size() != scheduled_scripts.size():
+		return false
+	for index in scheduled_scripts.size():
+		if world.systems[index].get_script() != scheduled_scripts[index]:
+			return false
+	return true
+
+
 static func player_id_of(main: Node) -> int:
 	return int(main.get("player_id"))
 
@@ -211,13 +224,9 @@ static func walk_through_exit(tree: SceneTree, main: Node, target_zone: StringNa
 
 
 ## Real damage path: HealthSystem consumes world.damage_events (the queue the
-## enemy AI writes to), so this is exactly how an enemy strike lands.
+## enemy AI writes to through Events.emit_damage), so this is exactly how an enemy strike lands.
 static func damage_player(main: Node, amount: int) -> void:
-	ecs_of(main).damage_events.append({
-		"target": player_id_of(main),
-		"amount": amount,
-		"direction": Vector2i.LEFT,
-	})
+	Events.emit_damage(ecs_of(main), player_id_of(main), amount, Vector2i.LEFT, 0)
 	pump(main, SIM_STEP_SECONDS)
 
 

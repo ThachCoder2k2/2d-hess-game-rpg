@@ -201,7 +201,7 @@ any more fails the suite, so a fixed one has to be deleted. `allowed_edges.txt` 
 |---|---|
 | `authoring/ecs_boot.gd`, `entity_component.gd` -> `ActorView` (presentation) | allow authoring -> presentation/views for `ActorView`, or give the contract a base class in schema |
 | `authoring/markers/pickup_spawn_point.gd` -> `WeaponPickup` | allow it, or let the marker name a `PackedScene` export |
-| `presentation/board/prototype_board.gd` -> `EcsComponents`, `EcsWorld` | feed the overlay from the `HudSnapshot` and events (M3a/M3b), or allow this one reader |
+| ~~`presentation/board/prototype_board.gd` -> `EcsComponents`, `EcsWorld`~~ | settled by M3a step 2: the overlay draws from the `HudSnapshot`, which 13.1 lets presentation name; the edges are gone |
 | the six rooms -> `presentation/board/grid_lines_overlay.gd` | allow `presentation/board/` for room overlays, or let the game root add the overlay (M3b) |
 
 Documented exceptions (decided): `view_sync_system.gd -> ActorView` (plan 13.1) and `content/world/world.tres` ->

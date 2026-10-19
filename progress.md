@@ -1270,3 +1270,185 @@ ten commits (the last is this record), the strict runner green after each.
 - **Verification.** `python3 tools/run_all_tests.py --strict`: 35 suites, 0 failed, 0 warnings, GREEN, baseline labels 235 of 235
   (9 through `label_renames.txt`); `--self-test` and `move_res.py --self-test` 0 failures; `stamp_uids.gd -- --check` CLEAN;
   `git diff --check` clean. Tag `m2-done` moved to the last commit of this branch.
+
+## M3a step 1 - the runtime seams: schedule, events, commands, world fields - 2026-10-19
+
+Branch `base/m3a-1` (from `game-base`), seven code commits and this record, the strict runner green after each. M3a is "L"
+in the plan and is built in three steps; this is the first. Nothing the player can feel changed.
+
+- **The schedule.** `ecs/schedule/` holds one file per stage (`command`, `input`, `decide`, `cell_effects`, `move`, `act`,
+  `resolve`, `react`, `progress`, `view`; `SchedulePhase` is their base) and `schedule.gd` (`Schedule.populate(world)`,
+  `system_scripts()`, `build_systems()`). The plan names phases after folders, but its own order (13.4) visits the `world` folder
+  three times, so a stage is named for when it runs and each system carries `const PHASE` naming its stage. `game_root.gd` and
+  `tools/world_dumper.gd` lost their copies of the list. `test_schedule_order` holds the whole planned order (18 systems, the
+  ones that exist and the ones later milestones add) and proves its own check can fail; `test_schedule_complete` fails on an
+  unlisted, doubly listed or misfiled `*_system.gd`, and on a list reappearing in `game_root` or the dumper.
+- **Events.** `ecs/events/events.gd`: a const per event, a row per event (status, what happened, every payload key with its
+  type and meaning) in banner tables, so lanes append inside their own. The 19 types the plan counted are `emitted`; the 27 the
+  plan adds are reserved as `future`; `healed`, `flag_set` and `command_rejected` are new and emitted. `EcsWorld.emit_event`
+  asserts the declaration in debug builds (a bad emit is a `SCRIPT ERROR`, which the runner fails); producers say
+  `Events.STEP_STARTED`. `test_events_declared` reads the code for every emitted name, both ways.
+- **Damage and heals.** `Events.emit_damage(world, target, amount, direction, source, tags)` is the only way to queue damage;
+  `CombatSystem` (source: the player) and `EnemyAISystem` (source: the enemy; tags: the held weapon's tags, empty for an unarmed
+  pattern) call it, and so do the tests that used to build the dictionary by hand. `HealthSystem` carries `source`, `tags` and
+  `direction` into `damaged` and `source`, `tags` into `defeated` (what R8, R10 and R14 read). `Events.emit_heal` and
+  `world.heal_events` are served by `HealthSystem` after the damage of the same tick, clamped to the maximum, never reviving.
+  `test_emit_damage`, `test_heal_queue`.
+- **The world's fields.** All eight in one commit: `frozen`, `flags` (`WorldFlags`), `tuning` (`Tuning`, neutral defaults,
+  nothing reads it yet), `input_snapshot` (`InputSnapshot`), `hud_snapshot` (`HudSnapshot`, a revision counter for now),
+  `commands` (+ `command_handler_by_type`), `view_commands`, `heal_events`. `EcsSystem.runs_while_frozen()` (false by default);
+  a frozen world ticks only `CommandSystem` and `ViewSyncSystem`, checked before each system. `test_world_fields`,
+  `test_frozen_world` (nine of its checks fail if the freeze check is removed).
+- **Commands.** `ecs/events/commands.gd` declares the requests like events.gd declares events. `CommandSystem` (first in the
+  schedule, runs while frozen) drains `world.commands` in push order, validates each against its row, calls the handler
+  registered for its type and emits `command_rejected` with the reason for anything malformed, unhandled or refused. Four
+  requests are handled (`freeze_requested`, `unfreeze_requested`, `set_flag`, `tuning_set`); `actor_command` (M6) and
+  `equip_page` (M7c) are reserved. A system that owns the state a command changes registers its handler with
+  `world.register_command_handler()`, so a lane adds a command without editing `CommandSystem`. `ViewSyncSystem` plays
+  `world.view_commands` (`play_state` travels the actor's graph; it works while frozen). `test_commands_channel`,
+  `test_view_commands`.
+- **The pins.** `systems.size() == 6` (`encounter_hud_runtime_test`, `test_bridge_travel`) now asks the live world for exactly
+  the schedule's list in its order; its baseline label is renamed in `label_renames.txt`. The `EcsBoot` call sites the plan
+  names (and the other ten) moved to `EcsBoot.boot(world, EcsBootOptions)`; `test_boot_options`.
+- **One dump-tool fix.** The first run of the dump baselines after the schedule went in failed in all six rooms: the
+  dumper printed an entity's components `sort()`ed by StringName, which sorts by memory address, so loading scripts in a
+  different order (the schedule does) moved lines with nothing changed. The order the M1a baselines recorded is now an explicit
+  list, `COMPONENT_DUMP_ORDER` in `tools/world_dumper.gd`; no baseline line changed.
+- **Verification.** `python3 tools/run_all_tests.py --strict`: 45 suites (35 at the end of M2), 0 failed, 0 warnings, GREEN, baseline labels 235 of 235
+  (10 through `label_renames.txt`); `--self-test` and `move_res.py --self-test` 0 failures; `stamp_uids.gd -- --check` CLEAN;
+  import pass clean; `git diff --check` clean. The six room dumps equal their baselines byte for byte.
+- **Not done in this step (the rest of M3a).** `InputPoller` and `PlayerInputSystem` reading only the snapshot; the grid
+  (`cell_kind_by_cell`, the TileSet `kind` layer and paint-tool support, `begin_leap`, `ray_cells`, `layout_version` with a cached
+  `AStarGrid2D`, the bounded attack-setup search, per-room centred `grid_origin`); the `CameraRig` clamp; `PlayerSnapshot`;
+  `HudSnapshot` fields and `HudSnapshotSystem`; `tests/perf/test_room_tick_budget.gd`. Nothing pushes on `world.commands` or
+  `view_commands` yet, and the bridge still reads components directly (the listed deviation).
+
+## M3a step 2 - input, the HUD and player snapshots, room origin - 2026-10-19
+
+Branch `base/m3a-2` (from `base/m3a-1`), five code commits and this record, the strict runner green after each. Nothing the
+player can feel changed: the six room dumps are byte-identical to their baselines and all 235 baseline labels still pass.
+
+- **The controls have one reader.** `shell/input/input_poller.gd` is the only file that calls `Input`; `game_root` polls once
+  per frame, right before the world ticks, into `world.input_snapshot`, and `PlayerInputSystem` reads only that. The poller copies
+  the engine's own pressed / just-pressed / just-released flags verbatim (not edges of its own), so a tick that runs several times
+  inside one engine frame, the way the bridge suites pump, sees what the system saw when it asked `Input` itself; `held_time` and
+  the press timestamp are new and nothing reads them yet. `game_root`'s three raw keys (F3, F11, B) are published by the poller
+  as `debug_view_toggle`, `fullscreen_toggle`, `rule_book_toggle` (edges worked out there) and `restart_room` is read from the
+  snapshot; M4 turns the names into `InputMap` actions and deletes the table. **Byte-identical, proved two ways:** the bridge
+  suites pass unchanged, and a one-off comparison of the old system (from `git show`) against the new one with the poller ran
+  7,472 ticks of random play of every control (random frame times, several ticks per engine frame, control toggled, "moving"
+  toggled) and left identical state after every tick; with the poll removed the same comparison reports 2,724 differences, so it
+  can fail. `test_input_snapshot` (61 checks) holds the buffer (newest wins, never expires until M7b), the chord, the tap window
+  (a tap is one step, a hold repeats on the tick that reaches `held_repeat_delay`), the attack keys, a hero without control, and the
+  poller against the real `Input`. `test_input_only_in_poller` is the lint.
+- **The HUD and the board read a snapshot.** `HudSnapshot` holds the hero's courage, cell, facing, sword and skill cooldown, the
+  attack token owner and one `EnemyBrief` (cell, committed goal, telegraph progress) per enemy; `HudSnapshotSystem` rebuilds it in
+  place at the end of every tick (view stage, before `ViewSyncSystem`; not while frozen) and the shell builds it once after a boot.
+  `game_root` reads courage, cell and facing, the skill length and the token owner from it; `PrototypeBoard.setup(grid, snapshot)`
+  draws telegraph progress and the F3 intent paths from the briefs. **No script under `presentation/` names `EcsComponents` or
+  `EcsWorld`** (`test_hud_snapshot` and the edge test both fail if one does), and the board's two undecided dependency edges are
+  deleted. 13.1's presentation row names `HudSnapshot`, so `test_dependency_edges` gained `CLASS_ALLOWANCES`, an exact list like the
+  other two. The cadence of the HUD is unchanged (the skill slot is still redrawn on `skill_cooldown` events), which keeps one
+  pre-existing quirk: after the sword is found the slot says "find sword" until the first skill is used. The M4 widgets draw the
+  snapshot every frame and end it. `test_hud_snapshot` (39), `test_board_draws_from_snapshot` (9, runs the overlay's real draw
+  code on a snapshot with no world behind it); the `encounter_hud_runtime_test` pin `board.ecs == ecs` is retargeted and its
+  label renamed in `label_renames.txt`.
+- **`PlayerSnapshot`.** The plan's 14.2 carry table as data (`ecs/core/player_snapshot.gd`): courage current and max, Believe,
+  unlocked skills and applied upgrades, equipped pages and Margin, the direction lock, the facing, the flags. The per-room rows are
+  not fields, so they reset with the world. Plain data with a dictionary form (not a Resource: the save is a versioned dictionary);
+  `capture(world, hero)`, `apply_to(world, hero, restore_facing)`, `to_dictionary()`/`from_dictionary()` (JSON-safe, tolerant of a
+  damaged or older save, null for a newer one). Rows whose component does not exist yet have fields and round-trip now. The facing
+  is captured but restored only on request (a room change leaves it to the entry marker). `EcsBootOptions.player_snapshot` and
+  `restore_player_facing`; `EcsBoot.boot` applies it right after the hero. Nothing in the shell passes one yet (M3b's zone swap).
+  `test_player_snapshot_roundtrip` (52): dictionary, JSON string and JSON file; damaged, partial and newer saves; capture and apply
+  between two worlds; two room changes through JSON; no aliasing; the boot. Two mutations turn it red in 8 places.
+- **Per-room centred origin and the camera.** `EcsBoot.shape_grid` gives every room its bounds and the origin that centres its
+  board (`EcsGrid.centred_origin`: x 64 for 16 wide, 32 for 18 wide, y 36 for 9 rows; a board larger than the picture keeps the
+  fixed anchor on that axis, which keeps the 72x40 kingdom fixture where it was). The picture size is read from `project.godot`,
+  once. The shell shapes the grid before reading the entry marker as a cell. `CameraRig.limits_for_board` makes "a room that fits
+  the picture is held still, centred, every cell on screen" a contract instead of an accident of Godot's limit handling, and a
+  larger world scrolls and stops at its edges; the limits are redone on zoom, on a viewport change and on `setup()` for the next
+  room. `test_room_origin` (30) and `test_camera_frames` (37, ledger req 118, measured with a real `Camera2D` in a 640x360
+  `SubViewport`). Every shipped room is 16x9, so no dump moved.
+- **Verification.** `python3 tools/run_all_tests.py --strict`: 52 suites (45 at the end of step 1), 0 failed, 0 warnings, GREEN,
+  baseline labels 235 of 235 (11 through `label_renames.txt`; the new one is the board overlay's wiring); `--self-test` and
+  `move_res.py --self-test` 0 failures; the import pass clean; `stamp_uids.gd -- --check` CLEAN; `git diff --check` clean; every
+  new `.gd` has its `.gd.uid` committed. The six room dumps equal their baselines byte for byte (no baseline line changed).
+- **Not done in this step (the rest of M3a, step 3).** The grid: `cell_kind_by_cell`, the TileSet `kind` layer and the paint tool,
+  `begin_leap`, `ray_cells`, `layout_version` with a cached `AStarGrid2D`, the bounded attack-setup search, and
+  `tests/perf/test_room_tick_budget.gd`. `game_root` still WRITES `PlayerTag.control_enabled`, `PlayerCombat.sword_unlocked`, the
+  health carry and `VIEW_REF` (M3b moves them to commands and the `PlayerSnapshot`); nothing pushes on `world.commands` or
+  `view_commands` yet.
+
+## M3a step 3 - the grid: cell kinds, leaps, rays, cached paths, the tick budget - 2026-10-19
+
+Branch `base/m3a-3` (from `base/m3a-2`), six code commits and this record, the strict runner green after each. The first attempt of
+this step was cut off by a network error after four commits; this run re-verified them (strict runner, the six dumps, and a replay
+across two checkouts, below), found nothing wrong, added the paint-tool commit and finished the docs. Nothing the player can feel
+changed: the six room dumps are byte-identical to their baselines and all 235 baseline labels still pass.
+
+- **A cell knows what it is made of.** `CellKinds` (`ecs/core/cell_kinds.gd`) is the plan's 5.11 vocabulary as one table: floor,
+  wall, gap, leapable_block, chalk, corruption, each with three rules (walkable, stops a ray, a leap may cross) and the one reading
+  of a tile (`kind` when filled in, else `solid` is a wall, else floor; a kind nobody declared is an error). `EcsGrid` stores
+  `cell_kind_by_cell` (floor is the absence of an entry), `set_cell_kind` is the only writer of the terrain, `blocked_cells` is
+  derived from it, `layout_version` counts every real change (and a change of `bounds`), and `cell_effect_by_cell` is the empty,
+  documented store the M10 `CellEffectSystem` will own, so that milestone does not edit the hot file. A wall is refused under a
+  piece or a reservation, as `add_block` always did. The kingdom TileSet and the fixture's gained a `kind` custom-data layer (text,
+  next to `solid`, added as text so no uid moved); no shipped tile fills it in, because the art for a gap, a block, chalk and
+  corruption belongs to the milestones that use them. `EcsBoot.apply_solid_tiles` became `apply_tile_kinds`. **Paint tools:**
+  `tools/cell_kind_painter.gd` is the part of a paint tool that knows kinds (a tool states what a cell IS beside the art it picked and
+  the helper refuses a tile that does not read as that kind); `paint_kingdom_tilemap.gd` and, in the last code commit of this step,
+  `paint_zone_tilemaps.gd` paint through it. Rerun, both tools write byte-identical `tile_map_data` (only the node's random
+  `unique_id` and an `ext_resource` id differ, as documented), so no scene was touched. The world dumper prints a `cell_kinds:` line
+  and names the new kinds in the board legend only when a room has a kind besides floor and wall, so no baseline line moved.
+  `test_grid_cell_kinds` (110): in all six rooms and the 72x40 fixture the blocked cells are exactly the cells a `solid` tile was
+  painted on; `blocked_cells` stays derived through 4,000 random changes; a lint fails on any script but `ecs_grid.gd` that writes the
+  terrain. Two mutations turn it red.
+- **A leap lets go of its origin; a ray stops at what stops it.** `begin_leap(entity, from, to)` / `finish_leap(entity)`: a step
+  holds both its cells until it lands, a leap does not. At takeoff the origin is released and the landing cell reserved; in the air
+  the entity stands on no cell (`leap_by_entity` records from and to), so anything aimed at a cell finds nobody, and `HealthSystem`
+  ignores damage to an airborne entity (untargetable in flight). Takeoff is refused for a wall, a gap, a block, an occupied or
+  reserved cell, the outside, the same cell, a piece not standing on `from`, and a piece mid-step or already airborne; a refusal
+  changes nothing. `can_leap_over(cell)` is the table's third rule (never a door). `ray_cells(origin, direction, max_cells,
+  stop_kinds, stop_before_occupied)` covers any non-zero step and stops before the board's edge or the first stopping kind (walls
+  and blocks by default, never gaps); pieces are not terrain. No skill or attack uses either yet (Rule Step M7a, the Knight M8a).
+  `test_leap_occupancy` (67, including 3,000 random operations after each of which the books balance) and
+  `test_ray_stops_at_blockers` (45, including 400 random boards checked cell by cell). Three mutations turn them red.
+- **The pathfinder is built once per layout; the attack search looks near the hero.** `get_grid_path` keeps one `AStarGrid2D` per
+  `layout_version`, marks the pieces and reservations in the way solid for the length of one question and puts it back as it found it
+  (`pathfinder_build_count` lets a test count builds). `EnemyAISystem._find_attack_setup_goal` looks only at the cells within the
+  attack shape's reach of the hero, the reach measured from the shape itself, walked row by row as the board was so a tie keeps the
+  same cell. **Identical decisions, proved four ways:** (1) the old bodies are kept in `tests/support/reference_pathing.gd` and
+  `test_path_cache` (27) holds 5,000 random questions on 40 random boards cell for cell equal to them; (2) `test_attack_setup_search`
+  (23) holds 2,278 random searches equal to the whole-board scan and ticks whole runs side by side on the new code and the old, 6,900
+  ticks (an arena, the same arena strewn with walls, gaps, blocks and chalk, the six Stage 1 rooms and the kingdom), comparing every
+  entity, timer, goal, memory and event after every tick, and an enemy whose search is one cell too narrow is caught by the same
+  comparison; (3) the six dumps and the actor-collapse golden are untouched; (4) **re-verification in this run, across checkouts:** a
+  throwaway script (kept outside the repository) played the same scripted games on a fresh clone of `base/m3a-2` and on this
+  branch, 18,000 ticks in all (three seeded arenas of 2,500 ticks, two of them with walls appearing mid-run so the pathfinder
+  rebuilds, and the seven shipped zone scenes of 1,500 ticks, with a hero put on a random cell every 25 to 30 ticks), hashing the
+  whole state and every event after every tick. The two outputs were identical, line for line.
+- **A room's tick has a budget.** `tests/perf/test_room_tick_budget.gd` ticks an 18x9 room with the hero and eight enemies (every
+  shipped kind), every system of the schedule and a real view for each piece, 120 ticks to warm up and 1,800 timed. The hero keeps
+  changing place so no enemy sleeps (the run shows 259 decisions, 159 steps, 17 telegraphs and 17 strikes every time: no random
+  numbers). It asserts a mean and a median of 2 ms or less, a 99th percentile of 8 ms or less, and that the grid built ONE
+  pathfinder for the whole run, which does not depend on the clock. **Measured here** (Apple M5, Godot 4.6.3 headless): mean
+  0.15 ms, median 0.12 ms, 99th percentile 0.45 ms, slowest 0.5 to 1.0 ms on a quiet machine (three runs, this run); mean 0.49 to
+  0.55 ms, 99th percentile 1.7 to 2.0 ms on the busier machine of the first attempt; mean 0.8 to 1.2 ms and 99th percentile 7 to 10 ms
+  before the two changes. On a board this small nearly all of the gain is the bounded search; the cached pathfinder pays on big
+  boards (400 short questions on the 72x40 kingdom: 3.5 ms instead of 43 ms).
+- **Docs.** `docs/ARCHITECTURE.md` (the cell kinds, leaps and rays, pathing and its cost, the footprint note, the test folders),
+  `docs/coding-standards.md` (a section "The board answers, systems ask", the `tests/perf/` folder, the built-in table), `CLAUDE.md` (a
+  rule for the board; its "arrives in M3a" lines were already rewritten in steps 1 and 2), `AGENTS.md` (status and next milestone),
+  `tools/README.md` (the painter and both paint tools), `docs/OWNER_GUIDE.md` (a row for tagging a tile's `kind` in the TileSet
+  editor; the two rows that said "available after M3a" now say available now, with what is still missing), `task_plan.md` (row 82 is
+  `human_review`), `findings.md`.
+- **Verification.** `python3 tools/run_all_tests.py --strict`: 58 suites (52 at the end of step 2), 0 failed, 0 warnings, GREEN, baseline
+  labels 235 of 235 (11 through `label_renames.txt`); `--self-test` and `move_res.py --self-test` 0 failures; the import pass clean;
+  `stamp_uids.gd -- --check` CLEAN; `git diff --check` clean; every new `.gd` has its `.gd.uid`. The six room dumps equal their
+  baselines byte for byte. A fresh `git clone` of the branch plus `bootstrap_worktree.sh` is green too and its `git status` is clean
+  (see the final report of the run). Tag `m3a-done`.
+- **Not done (M3a is complete; these belong to M3b).** `game_root` still WRITES `PlayerTag.control_enabled`,
+  `PlayerCombat.sword_unlocked`, the health carry and `VIEW_REF`, and nothing pushes on `world.commands` or `view_commands` yet; the
+  shell does not pass a `PlayerSnapshot` to `EcsBoot` yet. Multi-cell footprints are M8b's. No tile of the shipped TileSets says `gap`,
+  `leapable_block`, `chalk` or `corruption`: the art comes with the milestones that use them.

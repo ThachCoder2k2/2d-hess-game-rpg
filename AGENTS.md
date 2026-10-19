@@ -69,10 +69,15 @@ layer may name which (`tests/architecture/test_dependency_edges.gd` enforces it)
   `content/_placeholders.json` lists which art and audio are still stand-ins.
 - `schema/` — Resource classes (`EnemyDefinition`, `MovementConfig`, `AttackPattern`, ...), one
   class per file, no behaviour beyond `validate()`-style checks.
-- `ecs/` — the simulation: `core/` (`EcsWorld`, `EcsGrid`, `EcsSystem`), `components/`
-  (`ecs_components.gd`, frozen), `systems/<phase>/`. No art, prose or tuning numbers.
+- `ecs/` — the simulation: `core/` (`EcsWorld`, `EcsGrid`, `EcsSystem`, `WorldFlags`,
+  `InputSnapshot`, `HudSnapshot`, `PlayerSnapshot`), `components/` (`ecs_components.gd`, frozen; every new component
+  its own file, such as `tuning.gd`), `systems/<folder>/`, `events/` (`events.gd` declares every
+  event, `commands.gd` every request presentation may push) and `schedule/` (one file per stage of
+  the tick plus `schedule.gd`: the order the systems run in is data there and nowhere else). No art,
+  prose or tuning numbers.
 - `authoring/` — things dragged into a scene: `entity_components/` (`EntityComponent` nodes),
-  `markers/`, `room_encounter`, and the baker (`ecs_boot.gd`, `ecs_actor_factory.gd`). No logic.
+  `markers/`, `room_encounter`, and the baker (`ecs_boot.gd` with its `EcsBootOptions`,
+  `ecs_actor_factory.gd`). No logic.
 - `presentation/` — how the world is shown: `views/` (`ActorView`, pickup views, and
   `views/actors/`: `actor_view_base.tscn`, the one actor view, plus the thin scenes inheriting it), `ui/hud/`, `ui/codex/`, `board/`, `camera/`, `audio/`. Reads events;
   never decides.
@@ -84,22 +89,25 @@ layer may name which (`tests/architecture/test_dependency_edges.gd` enforces it)
 
 Do not move authored room layout or gameplay placement into scripts. Do not move or rename a
 file by hand: `tools/move_res.py` does it with the sidecars and every `res://` string
-(`tools/README.md`). The rest of the plan's tree (`ecs/events/`, `ecs/schedule/`,
-`content/story|audio|ui|...` and the rest of `content/feel/`) appears with the milestones that need it
-(`shell/content/` and `content/feel/piece_sizes.tres` came with M2).
+(`tools/README.md`). The rest of the plan's tree (`content/story|audio|ui|...` and the rest of
+`content/feel/`) appears with the milestones that need it (`shell/content/` and
+`content/feel/piece_sizes.tres` came with M2; `ecs/events/` and `ecs/schedule/` with M3a).
 
 ## Current Priority
 
 The base is built milestone by milestone from `docs/game-base-plan.md` section 15.
-**M1a (safety net and tooling), M1b (folder migration) and M2 (content registry and actor collapse) are
-done and wait in `human_review`**. M1b moved every script, scene and resource into the new tree with no
+**M1a (safety net and tooling), M1b (folder migration), M2 (content registry and actor collapse) and
+M3a (runtime seams) are done and wait in `human_review`**. M1b moved every script, scene and resource into the new tree with no
 gameplay change (the strict runner stayed green after every move, the six room dumps changed only by path
 strings), applied the `CLAUDE.md` amendments the owner approved at OG0, and added the placeholder tools.
 M2 added `ContentDb` (content by id, two validators), `PlayerDefinition` (`content/player/player.tres`),
 collapsed the four 353-line actor scenes into one `actor_view_base.tscn` plus thin scenes, and built the
 owner's decision of 2026-10-12 that a piece is smaller than its cell (`content/feel/piece_sizes.tres`, the
-generated chess family drawn to it, `tools/render_actor_preview.gd`, `test_pieces_inside_cell`). Next is
-**M3a** (the runtime seams). The owner can browse `content/`, run `tools/list_placeholders.gd` for the art
+generated chess family drawn to it, `tools/render_actor_preview.gd`, `test_pieces_inside_cell`). M3a landed
+every shared field and seam once, with no gameplay change (the tick order as data in `ecs/schedule/`, the
+declared events and the commands channel, the input, HUD and player snapshots, each room's own origin and the
+camera framing it, the grid's cell kinds, leaps, rays and cached pathing, and a per-room tick budget test). Next
+is **M3b** (the split of `game_root.gd` and the save service). The owner can browse `content/`, run `tools/list_placeholders.gd` for the art
 and audio TODO, open `assets/_generated/previews/pieces_in_cells.png`, and read `docs/OWNER_GUIDE.md`
 (section 6 is the in-cell rule, in Vietnamese).
 Current status of every area, and what is waiting on the owner, lives in
@@ -470,7 +478,7 @@ registry and the generated art; see `tools/README.md`).
 ## Next Recommended Work
 
 Follow `docs/where-we-are.md` section 5 for the order of work and `docs/game-base-plan.md`
-section 15 for the milestone you are on. M1a, M1b and M2 are done; the next milestone is M3a (the
-runtime seams). Five dependency edges and six room references are still
+section 15 for the milestone you are on. M1a, M1b, M2 and M3a are done; the next milestone is M3b (the
+split of `game_root.gd`, the save service). Three dependency edges and six room references are still
 undecided (listed in `tests/architecture/test_dependency_edges.gd` and `test_content_references.gd`);
 the owner decides them before `tests/architecture/allowed_edges.txt` is frozen.

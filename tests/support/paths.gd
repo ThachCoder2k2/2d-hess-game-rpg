@@ -75,6 +75,11 @@ func actor_view_script() -> String:
 	return _existing_file("res://presentation/views/actor_view.gd")
 
 
+## The deterministic dump's shared logic (it boots a world the way game_root.gd does).
+func world_dumper_script() -> String:
+	return _existing_file("res://tools/world_dumper.gd")
+
+
 # --- Scenes ---
 
 func main_scene() -> String:
@@ -84,6 +89,12 @@ func main_scene() -> String:
 ## The 72x40 kingdom: a test fixture, not game content (plan D-02).
 func kingdom_scene() -> String:
 	return _existing_resource("res://tests/fixtures/the_kingdom.tscn")
+
+
+## The kingdom fixture's TileSet: a test fixture like the scene above, with the same custom-data layers
+## (`solid`, `kind`) as the game's own kingdom TileSet in content/tilesets/kingdom/.
+func kingdom_fixture_tileset() -> String:
+	return _existing_resource("res://tests/fixtures/the_kingdom/tileset.tres")
 
 
 ## The first-encounter demo room: a test fixture, not game content (plan D-02).
@@ -131,6 +142,31 @@ func project_directory() -> String:
 ## The actor scenes: player, pawns, knight, bishop, and so on.
 func actors_directory() -> String:
 	return _existing_directory("res://presentation/views/actors")
+
+
+## The folders whose code may emit events or queue damage: the simulation, the baker, the views and the shell.
+func event_producer_directories() -> Array[String]:
+	return [
+		_existing_directory("res://ecs"),
+		_existing_directory("res://authoring"),
+		_existing_directory("res://presentation"),
+		_existing_directory("res://shell"),
+	]
+
+
+## The one file that declares every event (and builds the damage and heal requests).
+func events_script() -> String:
+	return _existing_file("res://ecs/events/events.gd")
+
+
+## The system scripts of the simulation, one sub-folder per area (input, decide, move, ...).
+func ecs_systems_directory() -> String:
+	return _existing_directory("res://ecs/systems")
+
+
+## The schedule: one file per stage plus schedule.gd and schedule_phase.gd.
+func ecs_schedule_directory() -> String:
+	return _existing_directory("res://ecs/schedule")
 
 
 ## The enemy folders (one per enemy id, each holding `enemy.tres`; `_shared` is not an enemy).

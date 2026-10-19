@@ -91,7 +91,7 @@ func _run() -> void:
 		if child is EcsWorld:
 			world_count += 1
 	_expect(world_count == 1, "exactly one EcsWorld is parented to main")
-	_expect(ecs_after.systems.size() == 6, "the rebuilt world carries all six systems")
+	_expect(Support.runs_the_schedule(ecs_after), "the rebuilt world carries every system the schedule lists, in order")
 	_expect(main.get("player_view") == hero_view_before, "the hero view node survives the swap (only the simulation is rebuilt)")
 	var west_entry := Support.entry_cell(main, room_after, &"west_entry")
 	_expect(Support.player_cell(main) == west_entry, "the hero lands on T2's west_entry cell")

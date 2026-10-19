@@ -87,14 +87,14 @@ func _init() -> void:
 	_expect(world.grid.entity_at(Vector2i(4, 5)) == 0, "defeated non-player leaves the grid")
 	_expect(&"defeated" in _drain_types(world), "defeat emits its event")
 
-	world.damage_events.append({"target": hero, "amount": 1, "direction": Vector2i.RIGHT})
+	Events.emit_damage(world, hero, 1, Vector2i.RIGHT, 0)
 	world.tick(0.016)
-	world.damage_events.append({"target": hero, "amount": 1, "direction": Vector2i.RIGHT})
+	Events.emit_damage(world, hero, 1, Vector2i.RIGHT, 0)
 	world.tick(0.016)
 	_expect(hero_health.current == 2, "invulnerability window swallows the second hit")
 	for _i in range(50):
 		world.tick(0.016)
-	world.damage_events.append({"target": hero, "amount": 1, "direction": Vector2i.RIGHT})
+	Events.emit_damage(world, hero, 1, Vector2i.RIGHT, 0)
 	world.tick(0.016)
 	_expect(hero_health.current == 1, "damage applies again after invulnerability decays")
 

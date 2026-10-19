@@ -511,3 +511,91 @@ June note).
   that mix git with another directory. What works: a tiny wrapper script that exports `HOME` and `exec`s Godot, `GODOT` and
   `UNBOUND_GODOT_HOME` for `tools/run_all_tests.py`, `BOOTSTRAP_HOME` and `GODOT_BIN` for the bootstrap script, plain separate `git
   clone` and `git -C <dir>` calls.
+
+## Runtime Seam Facts (M3a step 1, 2026-10-19)
+
+- `StringName` `sort()` orders by memory address, not by letters. Anything that must print in a stable order sorts
+  `String(name)` or uses an explicit list (`COMPONENT_DUMP_ORDER`); the room dumps broke once because scripts loaded in another order.
+- A failed `assert` in a headless debug run prints `SCRIPT ERROR: Assertion failed: <message>` and the function returns at
+  once. The runner fails any suite that prints a `SCRIPT ERROR`, so `EcsWorld.emit_event`'s assert on a bad event stops the
+  first test that emits it (and costs nothing in an exported build, where asserts are removed).
+- A ternary such as `weapon.tags if weapon != null else []` is an untyped `Array`: returning it from a function declared
+  `-> Array[StringName]` is a runtime `SCRIPT ERROR`, only on the path that takes the `[]`. Build a typed array and `assign()`.
+- `a == b as T` parses as `(a == b) as T`; compare against a typed local instead.
+- A script's constants are read with `script.get_script_constant_map()` and its `class_name` with `script.get_global_name()`;
+  `get_property_list()` entries with `PROPERTY_USAGE_SCRIPT_VARIABLE` are exactly the variables a script declares (the engine's
+  own `script` property is not among them), which is how `tuning_set` knows its keys.
+- The schedule's stage names are not the system folders: the plan's order visits `world/` three times. A system's `PHASE` const
+  names its stage; its folder says what it is about.
+- A command handler is a `Callable(command: Dictionary) -> String` returning `""` when it applied the command or the reason it
+  refused; one that returns anything else is reported as a bug. Handlers are registered in `setup()`, so a test world that lacks a
+  system lacks its handlers and the request is dropped with `command_rejected`.
+- `world.commands` and `world.view_commands` are drained with `duplicate()` then `clear()`, never by swapping in a new array, so a
+  caller that kept the array keeps a live queue. (`damage_events` still swaps; nothing holds it.)
+- `ViewSyncSystem` can only play an animation state on a view that has an `AnimationTree`; a bare view or one without the state is
+  refused with `command_rejected`. `bow` and `hesitate` have no clips yet (only `wake` exists), which is the owner's art work.
+- The trailer on every commit of this branch is `Co-Authored-By: Claude Sonnet 5.5` (the session's attribution), not the
+  `Opus 5.5` line the task text named, as in M2.
+
+## Runtime Seam Facts (M3a step 2, 2026-10-19)
+
+- The engine's "just pressed" is a frame comparison: `Input.is_action_just_pressed` stays true for every call inside the frame of the
+  press, even after a release. The bridge suites pump many ticks inside one frame and depend on that, so `InputPoller` copies the
+  engine's flags verbatim; edges it worked out itself would have turned a held key into one press. Raw keys have no such flag, so the
+  three shell keys get their edge from the poller's memory of the previous poll.
+- A one-off equivalence check beats a claim: put the old script from `git show <commit>:path` (minus its `class_name`) in /tmp, load it
+  by absolute path, drive both with the same random play and compare state after every tick. Sabotage the new side once to see it fail.
+- `Camera2D` in Godot 4.6: when an axis's limits span less than the screen, the camera is centred on the limit rect (it is not
+  anchored to the left or top limit). The 16x9 room was centred by that accident; `CameraRig.limits_for_board` states it. `offset`
+  (screen shake) may pass the limits. A camera needs `is_inside_tree()` to `make_current()`, and a suite's `_init()` runs before the
+  tree is up, so `await process_frame` first. `get_screen_center_position()` in a `SubViewport` of the game's size measures framing
+  without a window.
+- JSON hands every number back as a float and StringNames as Strings; anything saved goes through `int()` and `StringName()` on the
+  way in (`PlayerSnapshot.from_dictionary`). `value is int` is false for a bool in GDScript.
+- In tests, build the typed array first (`[..] as Array[StringName]`) before comparing arrays of StringName or Vector2i.
+- Presentation reads a plain-data DTO that is rebuilt IN PLACE, never replaced: a widget that kept the reference sees every rebuild
+  (`HudSnapshotSystem`), and a steady room allocates nothing per tick.
+- The HUD's skill slot is redrawn on `skill_cooldown` events, so after the sword is found it keeps saying "find sword" until the first
+  skill is used (pre-existing, kept on purpose in M3a; M4's widgets draw the snapshot each frame).
+- A scene authored for a centred origin other than 16x9's (an 18x9 arena at x 32) must place its art, its `GridLinesOverlay` and its
+  markers for that origin; the grid only reports it (`EcsGrid.centred_origin`, `EcsBoot.shape_grid`). The first non-16x9 room is M8b.
+- The sandbox of a worktree-isolated agent refuses a command that combines a heredoc with git, and refuses `HOME=` in front of Godot.
+  What works: a heredoc that runs alone (a python edit script), the file tools for writing, and a small python wrapper that sets
+  `HOME` in the environment of the Godot subprocess.
+
+## Runtime Seam Facts (M3a step 3, 2026-10-19)
+
+- `AStarGrid2D` can be built once and reused: `set_point_solid(cell)` then `set_point_solid(cell, false)` puts it back exactly, so a
+  question that needs the pieces solid marks them, asks, and unmarks only the cells it marked (a cell already solid because it is a
+  wall must stay solid). The path is cell-for-cell the one a pathfinder built for that question gives; `test_path_cache` holds it.
+  `is_point_solid` and `set_point_solid` on a cell outside `region` print an engine error, so a cache is built from `blocked_cells`
+  inside the bounds only.
+- On a board as small as 18x9 the pathfinder rebuild was not the main cost; the attack-setup search that walked and shaped every cell
+  was (rebuilding the pathfinder for every question with the search bounded still measured a 99th percentile of 2.3 ms against 1.7 to
+  2.0 ms with the cache). The cache pays on the 72x40 kingdom (12x on short questions). Measure before attributing a gain.
+- A bound on a search is only safe if the thing bounded is a translation: the attack shape is the same set of offsets wherever the enemy
+  stands (a pattern that clips to the board only drops cells), so no cell farther than the shape's reach from the hero can contain the
+  hero. `AttackPattern.get_attack_cells(null, ...)` and `EnemyWeapon.get_attack_cells` give the unclipped shape. A future shape that
+  depends on the board (a line to the wall) breaks the bound, and `test_attack_setup_search` measures the reach from the data to catch it.
+- To keep a faster version honest, keep the old body in `tests/support/` as a subclass (`ReferenceGrid extends EcsGrid`,
+  `ReferenceEnemyAI extends EnemyAISystem`), tick two worlds side by side and compare the whole state and every event after every tick;
+  then sabotage the new side once (a search one cell too narrow) to see the comparison fail. A cross-checkout replay (a throwaway script
+  played on a fresh clone of the previous branch and on the new one, then diffed) is the same idea with the real old code and needs no
+  copy of it.
+- A leap and a step differ in who holds what: a step holds both cells until it lands; a leap holds only the landing cell, so an airborne
+  entity is in neither `entity_by_cell` nor `cell_by_entity`. Code that walks `cell_by_entity` to find "every entity" misses the leaper;
+  ask `is_airborne()` or `leap_by_entity`. `unregister_entity` also removes an in-flight leap.
+- `blocked_cells` is derived: write the terrain only through `EcsGrid.set_cell_kind()`; `test_grid_cell_kinds` greps for any other writer.
+  A cell effect (chalk over a gap, M10) is a temporary kind change recorded in `cell_effect_by_cell` with the `kind_before` to restore.
+- A TileSet custom-data layer can be added as text (`custom_data_layer_1/name = "kind"`, `custom_data_layer_1/type = 4`, string) without
+  moving a uid; `TileSet.has_custom_data_layer_by_name` lets a reader tolerate a TileSet that lacks it. A tile that leaves `kind` empty
+  means what its `solid` flag says, which is why adding the layer changed no room.
+- Rerunning a paint tool is the check that a refactor of it changed no cell: `tile_map_data` must be identical, and only the node's
+  `unique_id` and an `ext_resource` id differ (restore the file with `git checkout` when that is all).
+- A performance test on a shared machine: assert on the mean AND the median of a long run, give the 99th percentile a bound several times
+  above what it measures, only print the slowest tick (one tick of 88 ms was seen from outside the process), and assert one thing that does
+  not depend on the clock (the pathfinder is built once). The same test measured 0.15 ms mean on a quiet machine and 0.5 ms on a busy one.
+- The worktree-isolated sandbox refuses a command that mixes a heredoc with git, one that sets `HOME=` in front of Godot, and a
+  `git clone` or other git call chained after a `cd` into another directory. What works: plain separate commands, `git clone -q -b <branch>
+  . <dir>` run from the worktree, a wrapper script that exports `HOME` and `exec`s Godot, and `GODOT` / `UNBOUND_GODOT_HOME` /
+  `BOOTSTRAP_HOME` for the project's own tools.

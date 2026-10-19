@@ -39,7 +39,10 @@ func _run() -> void:
 	await process_frame
 
 	var ecs: EcsWorld = main.get("ecs")
-	_expect(ecs != null and ecs.systems.size() == 6, "main boots the world with all six systems")
+	# Was `systems.size() == 6`: a pin on the old count, not on behaviour (docs/game-base-plan.md 14.1).
+	# What it protected is that the live world has every system, in the tick order; the schedule is
+	# now the one list of both, and test_schedule_complete checks the list against the files.
+	_expect(ecs != null and _runs_the_schedule(ecs), "main boots the world with every system the schedule lists, in order")
 	var player_id := int(main.get("player_id"))
 	_expect(player_id != 0, "main spawns the player entity")
 	var player_pos: EcsComponents.GridPos = ecs.get_component(player_id, EcsComponents.GRID_POS)
@@ -58,7 +61,9 @@ func _run() -> void:
 	_expect(String(hud.objective_label.text).begins_with("The king has fallen"), "HUD shows the T1 start message")
 
 	var board := main.get("board") as PrototypeBoard
-	_expect(board != null and board.grid_world == ecs.grid and board.ecs == ecs, "board overlay reads the ECS world")
+	# Was `board.ecs == ecs`: the overlay no longer holds the world, it draws from the world's HudSnapshot
+	# (docs/game-base-plan.md 13.1: presentation never touches ecs/components).
+	_expect(board != null and board.grid_world == ecs.grid and board.hud_snapshot == ecs.hud_snapshot, "board overlay draws from the ECS grid and the world's hud snapshot")
 
 	var camera := main.get("camera_rig") as CameraRig
 	_expect(camera != null and camera.grid_world == ecs.grid, "camera rig clamps to the ECS board")
@@ -76,6 +81,17 @@ func _run() -> void:
 	var succeeded := failures == 0
 	print("ENCOUNTER HUD TEST: %s" % ["PASS" if succeeded else "FAIL (%d)" % failures])
 	quit(0 if succeeded else 1)
+
+
+## True when the world holds exactly the systems of ecs/schedule/, in the same order.
+func _runs_the_schedule(world: EcsWorld) -> bool:
+	var scheduled_scripts := Schedule.system_scripts()
+	if world.systems.size() != scheduled_scripts.size():
+		return false
+	for index in scheduled_scripts.size():
+		if world.systems[index].get_script() != scheduled_scripts[index]:
+			return false
+	return true
 
 
 func _parked_cell(ecs: EcsWorld, main: Node) -> Vector2i:

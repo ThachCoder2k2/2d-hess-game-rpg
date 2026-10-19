@@ -32,9 +32,8 @@ var room_ending := false
 var player_view: ActorView
 var current_zone_id: StringName = &""
 var travel_in_progress := false
-var _debug_key_was_pressed := false
-var _fullscreen_key_was_pressed := false
-var _book_key_was_pressed := false
+## The only reader of the Input singleton: copies the controls into ecs.input_snapshot once per frame.
+var input_poller := InputPoller.new()
 var _last_token_owner := 0
 
 
@@ -66,11 +65,17 @@ func _boot_zone(entry_id: StringName) -> void:
 		remove_child(ecs)
 		ecs.queue_free()
 	ecs = _make_world()
+	# The room's own grid origin first: the entry cell below is read off the marker's position with it.
+	EcsBoot.shape_grid(ecs, current_room)
 	var entry_cell := _find_entry_cell(current_room, entry_id)
 	if player_view != null and entry_cell != Vector2i(-1, -1):
 		player_view.position = ecs.grid.cell_to_world(entry_cell)
 
-	cast = EcsBoot.boot(ecs, player_view, current_room, hero_start_cell, _taken_pickup_names(), _opened_gate_ids())
+	var boot_options := EcsBootOptions.for_scene(player_view, current_room)
+	boot_options.fallback_player_cell = hero_start_cell
+	boot_options.skipped_pickup_names = _taken_pickup_names()
+	boot_options.opened_gate_ids = _opened_gate_ids()
+	cast = EcsBoot.boot(ecs, boot_options)
 	_hide_opened_gate_visuals()
 	_unlock_met_rules()
 	player_id = int(cast.get("player", 0))
@@ -92,9 +97,12 @@ func _boot_zone(entry_id: StringName) -> void:
 				health.current = mini(world_state.player_health_carry, health.max_value)
 		world_state.player_health_carry = -1
 
+	# The HUD and the board draw from the snapshot, so it must hold the booted room (with the carried
+	# health and the unlocks written above) before the first tick builds it again.
+	HudSnapshotSystem.build(ecs)
 	if board != null:
 		board.z_index = -5
-		board.setup(ecs.grid, ecs)
+		board.setup(ecs.grid, ecs.hud_snapshot)
 		board.set_debug_enabled(debug_enabled)
 	if camera_rig != null:
 		camera_rig.setup(ecs.grid)
@@ -106,28 +114,22 @@ func _make_world() -> EcsWorld:
 	world.name = "EcsWorld"
 	world.manual_tick = true
 	add_child(world)
-	world.add_system(PlayerInputSystem.new())
-	world.add_system(EnemyAISystem.new())
-	world.add_system(MovementSystem.new())
-	world.add_system(CombatSystem.new())
-	world.add_system(HealthSystem.new())
-	world.add_system(ViewSyncSystem.new())
+	Schedule.populate(world)
 	return world
 
 
 func _process(delta: float) -> void:
-	if Input.is_action_just_pressed("restart_room"):
+	input_poller.poll(delta, ecs.input_snapshot)
+	var controls := ecs.input_snapshot
+	if controls.is_just_pressed(&"restart_room"):
 		get_tree().reload_current_scene()
-	if Input.is_key_pressed(KEY_F3) and not _debug_key_was_pressed:
+	if controls.is_just_pressed(&"debug_view_toggle"):
 		_set_debug_enabled(not debug_enabled)
-	_debug_key_was_pressed = Input.is_key_pressed(KEY_F3)
-	if Input.is_key_pressed(KEY_F11) and not _fullscreen_key_was_pressed:
+	if controls.is_just_pressed(&"fullscreen_toggle"):
 		var window := get_window()
 		window.mode = Window.MODE_WINDOWED if window.mode == Window.MODE_FULLSCREEN else Window.MODE_FULLSCREEN
-	_fullscreen_key_was_pressed = Input.is_key_pressed(KEY_F11)
-	if Input.is_key_pressed(KEY_B) and not _book_key_was_pressed:
+	if controls.is_just_pressed(&"rule_book_toggle"):
 		_toggle_rule_book()
-	_book_key_was_pressed = Input.is_key_pressed(KEY_B)
 
 	if not room_ending:
 		ecs.tick(delta)
@@ -139,8 +141,8 @@ func _process(delta: float) -> void:
 func _setup_hud() -> void:
 	if hud == null:
 		return
-	var player_health: EcsComponents.Health = ecs.get_component(player_id, EcsComponents.HEALTH)
-	hud.setup(player_health.current if player_health != null else 3)
+	var snapshot := ecs.hud_snapshot
+	hud.setup(snapshot.player_courage_current if snapshot.player_entity != 0 else 3)
 	hud.set_encounter_count(remaining_enemies, total_enemies)
 	_update_skill_cooldown(0.0)
 	_update_token_hud()
@@ -303,9 +305,10 @@ func _on_player_defeated() -> void:
 
 
 func _update_token_hud() -> void:
-	if hud == null or ecs.attack_token_owner == _last_token_owner:
+	var token_owner := ecs.hud_snapshot.attack_token_owner
+	if hud == null or token_owner == _last_token_owner:
 		return
-	_last_token_owner = ecs.attack_token_owner
+	_last_token_owner = token_owner
 	if total_enemies <= 0:
 		hud.set_token_owner("", false)
 	elif _last_token_owner == 0:
@@ -317,17 +320,19 @@ func _update_token_hud() -> void:
 func _update_cell_status() -> void:
 	if hud == null:
 		return
-	var grid_pos: EcsComponents.GridPos = ecs.get_component(player_id, EcsComponents.GRID_POS)
-	var facing: EcsComponents.Facing = ecs.get_component(player_id, EcsComponents.FACING)
-	if grid_pos != null and facing != null:
-		hud.set_cell_status(grid_pos.cell, _facing_name(facing.direction))
+	var snapshot := ecs.hud_snapshot
+	if snapshot.player_entity != 0:
+		hud.set_cell_status(snapshot.player_cell, _facing_name(snapshot.player_facing))
 
 
+## Shows the skill slot for `time_left` seconds of cooldown. The slot is redrawn when a
+## skill_cooldown event arrives (and at boot), as it always was, from the snapshot's length and
+## sword flag. M4's widgets draw the snapshot every frame instead.
 func _update_skill_cooldown(time_left: float) -> void:
 	if hud == null:
 		return
-	var combat: EcsComponents.PlayerCombat = ecs.get_component(player_id, EcsComponents.PLAYER_COMBAT)
-	hud.set_skill_cooldown(time_left, combat.skill_cooldown_duration if combat != null else 1.0, combat != null and combat.sword_unlocked)
+	var snapshot := ecs.hud_snapshot
+	hud.set_skill_cooldown(time_left, snapshot.skill_cooldown_duration, snapshot.sword_unlocked)
 
 
 func _set_player_control(value: bool) -> void:
@@ -410,6 +415,8 @@ func _apply_player_unlocks() -> void:
 	var world_state := _world_state()
 	if world_graph != null and world_state != null:
 		combat.sword_unlocked = world_state.player_unlock_ids.has("wooden_sword")
+		# The shell just wrote a component the snapshot copies; publish it now rather than a tick late.
+		HudSnapshotSystem.build(ecs)
 	_hide_taken_player_unlocks()
 
 

@@ -16,9 +16,11 @@ extends Camera2D
 		_apply_follow_mode()
 
 ## When true, limit_* clamp the view to the current room's board rect so nothing past
-## the edges shows. A board smaller than the screen ends up statically framed; a board
-## larger than the screen scrolls as the target moves. When false, limits are removed
-## and the camera can always keep the target centered.
+## the edges shows. A board that fits the screen is statically framed: the camera is pinned
+## so the board sits centred in the view (limits_for_board), whatever the target does, and every
+## cell of it, so every threat, is on screen. A board larger than the screen scrolls as the target
+## moves and stops at the board's edges. When false, limits are removed and the camera can always
+## keep the target centered.
 @export var clamp_to_board_bounds := true:
 	set(value):
 		clamp_to_board_bounds = value
@@ -30,6 +32,7 @@ extends Camera2D
 	set(value):
 		zoom_level = maxf(0.05, value)
 		zoom = Vector2(zoom_level, zoom_level)
+		_apply_bounds()
 
 ## Follow smoothing speed. 0 snaps the camera to the target; >0 eases toward it.
 @export var smoothing_speed := 8.0:
@@ -54,7 +57,8 @@ var shake_strength := 0.0
 
 
 ## Binds the rig to a board and applies every current knob, then makes it the active
-## camera. Call again after a room changes grid_world.bounds so the clamp stays right.
+## camera. Call again after a room changes grid_world.bounds or grid_origin (the shell does, after
+## every boot) so the clamp stays on the new room.
 func setup(world) -> void:
 	grid_world = world
 	zoom = Vector2(zoom_level, zoom_level)
@@ -63,6 +67,27 @@ func setup(world) -> void:
 	_apply_bounds()
 	_apply_follow_mode()
 	make_current()
+	if is_inside_tree() and not get_viewport().size_changed.is_connected(_apply_bounds):
+		get_viewport().size_changed.connect(_apply_bounds)
+
+
+## The limits that frame a board seen through a view that shows `visible_size` world pixels
+## (docs/game-base-plan.md D-02, D-30). On an axis where the board fits the view, the limits are exactly
+## one view wide around the board's centre, so the camera cannot move and the board stays centred
+## (with a centred grid origin that is the centre of the picture). On an axis where it does not fit,
+## the limits are the board's own edges: the camera scrolls and stops there. Whole pixels, floored.
+static func limits_for_board(board_rect: Rect2, visible_size: Vector2) -> Rect2i:
+	var from := board_rect.position
+	var to := board_rect.end
+	if board_rect.size.x <= visible_size.x:
+		from.x = board_rect.get_center().x - visible_size.x * 0.5
+		to.x = from.x + visible_size.x
+	if board_rect.size.y <= visible_size.y:
+		from.y = board_rect.get_center().y - visible_size.y * 0.5
+		to.y = from.y + visible_size.y
+	var whole_from := Vector2i(floori(from.x), floori(from.y))
+	var whole_to := Vector2i(floori(to.x), floori(to.y))
+	return Rect2i(whole_from, whole_to - whole_from)
 
 
 func _process(delta: float) -> void:
@@ -111,16 +136,25 @@ func _apply_bounds() -> void:
 	if clamp_to_board_bounds:
 		var origin: Vector2 = grid_world.grid_origin
 		var board_pixel_size: Vector2i = grid_world.bounds.size * grid_world.cell_size
-		limit_left = int(origin.x)
-		limit_top = int(origin.y)
-		limit_right = int(origin.x + board_pixel_size.x)
-		limit_bottom = int(origin.y + board_pixel_size.y)
+		var limits := limits_for_board(Rect2(origin, Vector2(board_pixel_size)), _visible_world_size(Vector2(board_pixel_size)))
+		limit_left = limits.position.x
+		limit_top = limits.position.y
+		limit_right = limits.end.x
+		limit_bottom = limits.end.y
 	else:
 		# Godot's effectively-unlimited sentinels.
 		limit_left = -10000000
 		limit_top = -10000000
 		limit_right = 10000000
 		limit_bottom = 10000000
+
+
+## How many world pixels the view shows at the current zoom: the viewport divided by the zoom. Before the
+## rig is in a tree it has no viewport, so `fallback_size` (the board itself, which pins nothing) stands in.
+func _visible_world_size(fallback_size: Vector2) -> Vector2:
+	if not is_inside_tree():
+		return fallback_size
+	return get_viewport_rect().size / maxf(zoom.x, 0.0001)
 
 
 func _apply_follow_mode() -> void:

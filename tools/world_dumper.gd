@@ -11,8 +11,8 @@ extends RefCounted
 ## There is no class_name on purpose: callers preload() this script, which keeps
 ## it usable on a fresh checkout before the editor import pass has run.
 ##
-## The boot path mirrors shell/game_root.gd (_make_world + _boot_zone): the same six
-## systems in the same order, the player view placed on the "start" entry marker,
+## The boot path mirrors shell/game_root.gd (_make_world + _boot_zone): the same systems in
+## the same order (both ask Schedule.populate), the player view placed on the "start" entry marker,
 ## then EcsBoot.boot with no taken pickups and no opened gates (a fresh save).
 ## It deliberately skips WorldState, the HUD, the board overlay and audio: they
 ## depend on the player's save file or on real time, and this dump must not.
@@ -39,9 +39,38 @@ const START_ENTRY_ID: StringName = &"start"
 const DEFAULT_PLAYER_POSITION := Vector2(144, 212)
 const FALLBACK_PLAYER_CELL := Vector2i(3, 7)
 const NO_ENTRY_CELL := Vector2i(-1, -1)
+## The order an entity's components are printed in. The dump used to sort the component keys, but
+## StringName sorts by memory address, not by letters: the order followed the order in which the
+## engine first met each name, so loading scripts in another order (the schedule in M3a does) moved
+## lines in every baseline without anything having changed. This list is exactly the order the
+## M1a baselines recorded, now written down; a key it does not list prints after them, by name.
+const COMPONENT_DUMP_ORDER: Array[StringName] = [
+	EcsComponents.PICKUP_ITEM,
+	EcsComponents.WEAPON_SLOT,
+	EcsComponents.ENEMY_AI,
+	EcsComponents.PLAYER_COMBAT,
+	EcsComponents.VIEW_REF,
+	EcsComponents.PLAYER_INPUT,
+	EcsComponents.PLAYER_TAG,
+	EcsComponents.MOVE_STATE,
+	EcsComponents.MOVE_INTENT,
+	EcsComponents.ATTACK_INTENT,
+	EcsComponents.HEALTH,
+	EcsComponents.FACING,
+	EcsComponents.GRID_POS,
+]
 const MAX_VALUE_DEPTH := 3
 const MAX_COLLECTION_ITEMS := 24
 const MAX_BOARD_WIDTH := 96
+## cell kind -> the character the [board] map draws for a cell of that kind (CellKinds ids).
+const BOARD_SYMBOL_BY_KIND: Dictionary = {
+	&"floor": ".",
+	&"wall": "#",
+	&"gap": "~",
+	&"leapable_block": "b",
+	&"chalk": "c",
+	&"corruption": "x",
+}
 
 ## Why the last call returned "" (unknown room, missing scene...). Empty after a success.
 var last_error := ""
@@ -121,17 +150,14 @@ func dump_room(tree: SceneTree, room_id: String, tick_count := DEFAULT_TICK_COUN
 	world.name = "EcsWorld"
 	world.manual_tick = true
 	_dump_root.add_child(world)
-	world.add_system(PlayerInputSystem.new())
-	world.add_system(EnemyAISystem.new())
-	world.add_system(MovementSystem.new())
-	world.add_system(CombatSystem.new())
-	world.add_system(HealthSystem.new())
-	world.add_system(ViewSyncSystem.new())
+	Schedule.populate(world)
 
 	var entry_cell := _find_entry_cell(world, room)
 	if entry_cell != NO_ENTRY_CELL:
 		player_view.position = world.grid.cell_to_world(entry_cell)
-	var cast := EcsBoot.boot(world, player_view, room, FALLBACK_PLAYER_CELL, [], [])
+	var boot_options := EcsBootOptions.for_scene(player_view, room)
+	boot_options.fallback_player_cell = FALLBACK_PLAYER_CELL
+	var cast := EcsBoot.boot(world, boot_options)
 
 	var lines := PackedStringArray()
 	lines.append("# dump_world v%d: deterministic world dump. Regenerate with tools/dump_world.gd (see tools/README.md)." % DUMP_FORMAT_VERSION)
@@ -204,6 +230,9 @@ func _append_grid_section(lines: PackedStringArray, world: EcsWorld) -> void:
 	for cell in blocked_cells:
 		blocked_cell_texts.append(_format_cell(cell))
 	lines.append("  " + " ".join(blocked_cell_texts))
+	var kinds_beyond_walls := _kinds_beyond_walls(grid)
+	if not kinds_beyond_walls.is_empty():
+		lines.append("cell_kinds: " + _format_cell_kind_counts(grid))
 	lines.append("exits: %d" % grid.exit_by_cell.size())
 	for cell in _sorted_cells(grid.exit_by_cell.keys()):
 		lines.append("  %s %s" % [_format_cell(cell), _format_value(grid.exit_by_cell[cell], 1)])
@@ -218,10 +247,36 @@ func _append_grid_section(lines: PackedStringArray, world: EcsWorld) -> void:
 		lines.append("  %s entity=%d" % [_format_cell(cell), int(grid.item_by_cell[cell])])
 
 
-## An ASCII map of the booted board. P player, e enemy, i item, X exit, G gate, U unlock, # wall, . floor.
+## The cell kinds the grid holds besides plain floor and plain walls, in CellKinds order. Empty on every board
+## that exists today: a wall is the blocked_cells line above and floor is the rest, so the dump prints
+## nothing more until a room has a gap, a leapable block, chalk or corruption (docs/game-base-plan.md 5.11).
+func _kinds_beyond_walls(grid: EcsGrid) -> Array[StringName]:
+	var kinds: Array[StringName] = []
+	for kind: StringName in CellKinds.RULES_BY_KIND:
+		if kind != CellKinds.FLOOR and kind != CellKinds.WALL and grid.cell_kind_by_cell.values().has(kind):
+			kinds.append(kind)
+	return kinds
+
+
+## How many cells of each kind that is not plain floor the grid holds, in CellKinds order ("wall=50 gap=2").
+func _format_cell_kind_counts(grid: EcsGrid) -> String:
+	var texts := PackedStringArray()
+	for kind: StringName in CellKinds.RULES_BY_KIND:
+		var count := grid.cell_kind_by_cell.values().count(kind)
+		if kind != CellKinds.FLOOR and count > 0:
+			texts.append("%s=%d" % [kind, count])
+	return " ".join(texts)
+
+
+## An ASCII map of the booted board. P player, e enemy, i item, X exit, G gate, U unlock, # wall, . floor, and,
+## when the board has them, ~ gap, b leapable block, c chalk, x corruption (named in the legend only when
+## the board holds one, so a board of walls and floor reads as it always did).
 func _append_board_section(lines: PackedStringArray, world: EcsWorld) -> void:
 	var grid := world.grid
-	lines.append("[board] P player, e enemy, i item, X exit, G gate, U unlock, # wall, . floor")
+	var legend := "[board] P player, e enemy, i item, X exit, G gate, U unlock, # wall, . floor"
+	for kind in _kinds_beyond_walls(grid):
+		legend += ", %s %s" % [BOARD_SYMBOL_BY_KIND[kind], String(kind).replace("_", " ")]
+	lines.append(legend)
 	if grid.bounds.size.x > MAX_BOARD_WIDTH:
 		lines.append("(board wider than %d cells, map omitted)" % MAX_BOARD_WIDTH)
 		return
@@ -230,9 +285,7 @@ func _append_board_section(lines: PackedStringArray, world: EcsWorld) -> void:
 		for column in range(grid.bounds.position.x, grid.bounds.end.x):
 			var cell := Vector2i(column, row)
 			var occupant := grid.entity_at(cell)
-			var symbol := "."
-			if grid.blocked_cells.has(cell):
-				symbol = "#"
+			var symbol: String = BOARD_SYMBOL_BY_KIND.get(grid.kind_at(cell), "?")
 			if grid.gate_by_cell.has(cell):
 				symbol = "G"
 			if grid.exit_by_cell.has(cell):
@@ -272,10 +325,9 @@ func _entity_label(world: EcsWorld, entity_id: int) -> String:
 	return "entity"
 
 
-## Every component of every entity, with every script variable, sorted by component key.
+## Every component of every entity, with every script variable, in COMPONENT_DUMP_ORDER.
 func _append_entity_details(lines: PackedStringArray, world: EcsWorld) -> void:
-	var component_keys: Array = world.store_by_component.keys()
-	component_keys.sort()
+	var component_keys := _ordered_component_keys(world)
 	for entity_id in _all_entity_ids(world):
 		var grid_pos: EcsComponents.GridPos = world.get_component(entity_id, EcsComponents.GRID_POS)
 		lines.append("entity %d %s cell=%s" % [entity_id, _entity_label(world, entity_id), _format_cell(grid_pos.cell) if grid_pos != null else "none"])
@@ -283,6 +335,22 @@ func _append_entity_details(lines: PackedStringArray, world: EcsWorld) -> void:
 			var component: Object = world.get_component(entity_id, component_key)
 			if component != null:
 				lines.append("  %s: %s" % [component_key, _format_properties(component, 1)])
+
+
+## The component keys the world holds, listed ones first in COMPONENT_DUMP_ORDER and the rest by name.
+func _ordered_component_keys(world: EcsWorld) -> Array[StringName]:
+	var listed_keys: Array[StringName] = []
+	var unlisted_names: Array[String] = []
+	for component_key: StringName in world.store_by_component.keys():
+		if component_key in COMPONENT_DUMP_ORDER:
+			listed_keys.append(component_key)
+		else:
+			unlisted_names.append(String(component_key))
+	listed_keys.sort_custom(func(first: StringName, second: StringName) -> bool: return COMPONENT_DUMP_ORDER.find(first) < COMPONENT_DUMP_ORDER.find(second))
+	unlisted_names.sort()
+	for unlisted_name in unlisted_names:
+		listed_keys.append(StringName(unlisted_name))
+	return listed_keys
 
 
 ## One compact line per entity: where it is and what state it is in.

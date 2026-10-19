@@ -135,7 +135,7 @@ func describe_scene(tree: SceneTree, scene_path: String, role: String) -> String
 	world.name = "EcsWorld"
 	world.manual_tick = true
 	host.add_child(world)
-	EcsBoot.boot(world, view if role == ROLE_PLAYER else null, room)
+	EcsBoot.boot(world, EcsBootOptions.for_scene(view if role == ROLE_PLAYER else null, room))
 	lines.append_array(_entity_lines(world, host))
 
 	tree.root.remove_child(host)

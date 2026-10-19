@@ -7,6 +7,9 @@ extends EcsSystem
 ## HealthSystem applies it. Timing rules ported from the node-era
 ## PlayerCombatComponent (impact_delay wait, then recovery - impact_delay).
 
+## The schedule stage this system is listed in (ecs/schedule/act.gd).
+const PHASE := &"act"
+
 
 func tick(delta: float) -> void:
 	for entity_id in world.query([EcsComponents.PLAYER_COMBAT, EcsComponents.GRID_POS, EcsComponents.FACING]):
@@ -14,7 +17,7 @@ func tick(delta: float) -> void:
 		combat.attack_visual_time = maxf(0.0, combat.attack_visual_time - delta)
 		if combat.skill_cooldown_left > 0.0:
 			combat.skill_cooldown_left = maxf(0.0, combat.skill_cooldown_left - delta)
-			world.emit_event({"type": &"skill_cooldown", "entity": entity_id, "time_left": combat.skill_cooldown_left})
+			world.emit_event({"type": Events.SKILL_COOLDOWN, "entity": entity_id, "time_left": combat.skill_cooldown_left})
 
 		# Consume the intent every tick — a press during cooldown is swallowed,
 		# never banked (matches the node-era behavior).
@@ -39,7 +42,7 @@ func tick(delta: float) -> void:
 		if kind == &"none" or not _can_start_attack(entity_id):
 			continue
 		if not combat.sword_unlocked:
-			world.emit_event({"type": &"attack_locked", "entity": entity_id})
+			world.emit_event({"type": Events.ATTACK_LOCKED, "entity": entity_id})
 			continue
 
 		var profile: AttackProfile = combat.wooden_sword
@@ -48,7 +51,7 @@ func tick(delta: float) -> void:
 				continue
 			profile = combat.pencil_thrust
 			combat.skill_cooldown_left = combat.skill_cooldown_duration
-			world.emit_event({"type": &"skill_cooldown", "entity": entity_id, "time_left": combat.skill_cooldown_left})
+			world.emit_event({"type": Events.SKILL_COOLDOWN, "entity": entity_id, "time_left": combat.skill_cooldown_left})
 		if profile == null:
 			continue
 
@@ -60,7 +63,7 @@ func tick(delta: float) -> void:
 		combat.impact_left = profile.impact_delay
 		combat.recovery_left = maxf(0.0, profile.recovery - profile.impact_delay)
 		combat.attack_visual_time = profile.impact_delay + 0.10
-		world.emit_event({"type": &"attack_started", "entity": entity_id, "cells": combat.pending_cells})
+		world.emit_event({"type": Events.ATTACK_STARTED, "entity": entity_id, "cells": combat.pending_cells})
 
 
 func _can_start_attack(entity_id: int) -> bool:
@@ -77,11 +80,7 @@ func _resolve_impact(entity_id: int, combat: EcsComponents.PlayerCombat) -> void
 	for target_cell in combat.pending_cells:
 		var target := world.grid.entity_at(target_cell)
 		if target != 0 and target != entity_id and world.has_component(target, EcsComponents.HEALTH):
-			world.damage_events.append({
-				"target": target,
-				"amount": combat.active_attack.damage,
-				"direction": facing.direction if facing != null else Vector2i.ZERO,
-			})
+			Events.emit_damage(world, target, combat.active_attack.damage, facing.direction if facing != null else Vector2i.ZERO, entity_id)
 			hit_count += 1
-	world.emit_event({"type": &"attack_landed", "entity": entity_id, "cells": combat.pending_cells, "hit_count": hit_count, "profile": combat.active_attack})
+	world.emit_event({"type": Events.ATTACK_LANDED, "entity": entity_id, "cells": combat.pending_cells, "hit_count": hit_count, "profile": combat.active_attack})
 	combat.pending_cells = []

@@ -64,8 +64,9 @@ No tracked scene names a generated PNG (`tests/content/test_placeholders_manifes
 | `generate_demo_map.gd` | Draws the pawn-scale bedroom demo world with the kingdom tiles into `assets/_generated/maps/` and re-exports the paintable piece templates to `assets/_generated/piece_templates/`. |
 | `generate_stage1_room_art.gd` | Paints the Stage-1 room backgrounds (T1, T2, ...) into `assets/_generated/rooms/`. |
 | `generate_playground_tilemap.gd` | Builds the playground tile set and tilemap scene. Saves through `save_keeping_uids.gd` and stamps uids last. |
-| `paint_kingdom_tilemap.gd` | Paints the first room's throne-room floor into `content/tilesets/kingdom/tilemap.tscn`. Saves through `save_keeping_uids.gd` and stamps uids last. |
-| `paint_zone_tilemaps.gd` | Carves the 72x40 kingdom board into `tests/fixtures/the_kingdom/tilemap.tscn`. Saves through `save_keeping_uids.gd` and stamps uids last. |
+| `cell_kind_painter.gd` | The part of a paint tool that knows cell kinds (a helper, not a command; no `class_name`, `preload` it). `CellKindPainter.new(tile_set).paint(layer, cell, kind, preferred_atlas_coords)` paints a cell with a tile whose cell kind (`kind` custom data, else `solid`) is the one the tool states, and returns a sentence instead of painting when the TileSet has no such tile or the preferred tile reads as another kind; `kinds_by_cell(layer)` reads a layer back the way the game reads it. Both paint tools use it. Add the tile for a new kind in the TileSet editor (Custom Data -> kind) when its art exists, then state the kind in the tool; never edit `tile_map_data` by hand. Covered by `tests/ecs/test_grid_cell_kinds.gd`. |
+| `paint_kingdom_tilemap.gd` | Paints the first room's throne-room floor into `content/tilesets/kingdom/tilemap.tscn`, stating each cell's kind (floor or wall) through `cell_kind_painter.gd`. Saves through `save_keeping_uids.gd` and stamps uids last. |
+| `paint_zone_tilemaps.gd` | Carves the 72x40 kingdom board into `tests/fixtures/the_kingdom/tilemap.tscn` (carved space is floor, rock, landmarks, cottages and the moat are walls, stated through `cell_kind_painter.gd`). Saves through `save_keeping_uids.gd` and stamps uids last. |
 | `render_kingdom_map.gd` | Renders the whole kingdom to one image for review; needs a real renderer (no `--headless`) and `--write-movie`. |
 | `generate_sfx.py` | Generates the placeholder SFX as mono WAV files into `assets/sfx/`. |
 | `generate_music.py` | Generates the placeholder A-minor march loop into `assets/music/`. |
@@ -238,12 +239,17 @@ stamped tree:
 "$G" --headless --path . -s tests/architecture/test_dump_baselines.gd                 # compare (enforcing)
 ```
 
-The dump mirrors `shell/game_root.gd` (`_make_world` + `_boot_zone`): the same six systems in the same order,
-the player view on the room's `start` entry marker, then `EcsBoot.boot` with no taken pickups and no
-opened gates, then 120 manual ticks of 1/60 s with the player idle. It skips `WorldState`, the HUD, the
+The dump mirrors `shell/game_root.gd` (`_make_world` + `_boot_zone`): the same systems in the same order
+(both call `Schedule.populate`, the order lives only in `ecs/schedule/`), the player view on the room's
+`start` entry marker, then `EcsBoot.boot` with no taken pickups and no opened gates, then 120 manual ticks
+of 1/60 s with the player idle. An entity's components print in `COMPONENT_DUMP_ORDER` (a list in
+`world_dumper.gd`, not a sort: StringNames sort by memory address, so a sort moved lines whenever scripts
+loaded in another order); a component it does not list prints after them, by name. It skips `WorldState`, the HUD, the
 board overlay and audio on purpose: they depend on the save file or on real time. Output sections:
 `[grid]`, `[board]` (ASCII map), `[entities at boot]` (every component field), `[entities after 120 ticks]`,
-`[nodes]` (sorted paths with type, script, position) and `[textures]` (sorted sprite and tile-set paths).
+`[nodes]` (sorted paths with type, script, position) and `[textures]` (sorted sprite and tile-set paths). The grid
+section gains a `cell_kinds:` line, and the board legend names the kind's glyph, only for a room that has a cell kind
+besides floor and wall (none does today, so no baseline line says anything about kinds).
 Floats print with 4 decimals; engine-generated node names (`@Node2D@12`) lose their counter; nodes under an
 `ActorView` print structure only (animation drives their transforms).
 

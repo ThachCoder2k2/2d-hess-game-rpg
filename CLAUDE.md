@@ -19,12 +19,15 @@ session. Read `AGENTS.md` for the full workflow, and `docs/ARCHITECTURE.md` +
 - **Where things go (the ECS map):**
   - New state → a pure-data class with a `KEY` const in its own file under
 	`ecs/components/`. `ecs_components.gd` is frozen except for edits to existing classes.
-  - New decision/behavior → a system in `ecs/systems/<phase>/` plus one line in
-	`ecs/schedule/<phase>.gd`; `test_schedule_complete` fails if a system file is
-	unlisted. (The schedule files arrive in M3a; until then the tick order is the
-	list in `shell/game_root.gd`, mirrored in `tools/world_dumper.gd`: add the
-	system to both.) ONLY `ViewSyncSystem` may touch nodes. Systems talk via
-	components and the event/damage queues, never by calling each other or presentation.
+  - New decision/behavior → a system in `ecs/systems/<phase>/` (with `const PHASE`
+	naming its stage) plus one line in `ecs/schedule/<phase>.gd`;
+	`test_schedule_complete` fails if a system file is unlisted. The tick order is data
+	there and nowhere else: `shell/game_root.gd` and `tools/world_dumper.gd` both call
+	`Schedule.populate`, so never add a system to either. ONLY `ViewSyncSystem` may
+	touch nodes. Systems talk via components and the event/damage queues, never by
+	calling each other or presentation. A new event is a const and a row in
+	`ecs/events/events.gd` (payload keys documented; `test_events_declared`); damage and
+	heals are queued only through `Events.emit_damage()` / `Events.emit_heal()`.
   - New editor-draggable component → extend `EntityComponent` in
 	`authoring/entity_components/` (Inspector data + one `apply()`; `EcsBoot` bakes
 	it at spawn; a node on an instance beats the definition; zero logic). Runtime
@@ -40,11 +43,26 @@ session. Read `AGENTS.md` for the full workflow, and `docs/ARCHITECTURE.md` +
   - The cell-to-cell slide is procedural (MovementSystem/ViewSync) — gameplay
 	timing for the reserve→commit dodge window; never keyframe it.
   - Presentation consumes `drain_events()` and the read-only `HudSnapshot`. It
-	writes the simulation only by pushing typed requests on `world.commands`,
-	never by setting components. (`HudSnapshot` and `world.commands` arrive in
-	M3a; until then presentation consumes `drain_events()` only, and the one
-	known reader of components is listed as undecided in
-	`tests/architecture/test_dependency_edges.gd`.)
+	writes the simulation only by pushing typed requests on `world.commands`
+	(`world.push_command(Commands.set_flag(...))`, declared in `ecs/events/commands.gd`;
+	`CommandSystem` applies them at the head of the next tick), never by setting
+	components. (`world.commands` and the `HudSnapshot`, filled each tick by
+	`HudSnapshotSystem`, exist since M3a; no script under `presentation/` names
+	`EcsComponents` or `EcsWorld`, and `tests/architecture/test_dependency_edges.gd`
+	fails if one does.)
+  - Controls: `shell/input/input_poller.gd` is the only code that calls the `Input`
+	singleton. It fills `world.input_snapshot` once per frame and a system reads that
+	(`test_input_only_in_poller`); test a control rule by injecting an `InputSnapshot`
+	(`tests/ecs/test_input_snapshot.gd`).
+  - The board: what a cell is made of is a kind (`CellKinds` in `ecs/core/cell_kinds.gd`: floor, wall,
+	gap, leapable_block, chalk, corruption, each with three rules: walkable, stops a ray, a leap may cross).
+	`EcsGrid.set_cell_kind()` is the ONLY writer of the terrain (`blocked_cells` is derived from it;
+	`test_grid_cell_kinds` fails on any other writer) and moves `layout_version`. Kinds are authored as the
+	TileSet's `kind` custom data next to `solid`; a new kind is one row in `CellKinds`. A leap
+	(`begin_leap`) and a ray (`ray_cells`) are grid services: a skill asks the grid, it never keeps its own
+	occupancy or line-walking. Never build an `AStarGrid2D` or scan the whole board for a question a system
+	asks every decision (`get_grid_path` caches by `layout_version`; the attack-setup search is bounded to the
+	attack's reach). `tests/perf/test_room_tick_budget.gd` holds a room (18x9, 8 enemies) to a 2 ms tick.
   - Sound (three layers, one owner each): motion sounds → audio tracks inside
 	the actor's clips (keying its `AudioPlayer`, bus `SFX`); mixing →
 	`default_bus_layout.tres` (Master ← SFX/Music/UI); event sounds with no
@@ -109,7 +127,8 @@ session. Read `AGENTS.md` for the full workflow, and `docs/ARCHITECTURE.md` +
 - **A new `class_name` (global class) needs one `--editor --quit` import pass** before
   strict-typed scripts referencing it will parse headlessly. Run import, then tests.
 - TileMap `tile_map_data` is a binary blob — do not hand-edit; use a `tools/` paint
-  script (see `tools/paint_kingdom_tilemap.gd`).
+  script (see `tools/paint_kingdom_tilemap.gd`), which states each cell's kind through
+  `tools/cell_kind_painter.gd`.
 - Headless `--write-movie` capture leaks RIDs at exit — that error is cosmetic.
 - **Stamp UIDs before moving files** (`tools/stamp_uids.gd`; `-- --check` must say CLEAN),
   and **move or rename files only with `tools/move_res.py`** (`git mv` + `.uid`/`.import`

@@ -7,6 +7,12 @@ extends EcsSystem
 ## docs/ecs-conversion-plan.md). EnemyIntent (RefCounted) is reused unchanged.
 ## The attack token lives on the world (EncounterDirector port).
 
+## The schedule stage this system is listed in (ecs/schedule/decide.gd).
+const PHASE := &"decide"
+
+## The four ways a piece faces, and so the four ways an enemy tries an attack from a cell.
+const CARDINAL_DIRECTIONS: Array[Vector2i] = [Vector2i.UP, Vector2i.DOWN, Vector2i.LEFT, Vector2i.RIGHT]
+
 
 func tick(delta: float) -> void:
 	var hero_id := _find_player()
@@ -75,7 +81,7 @@ func _choose_action(entity_id: int, ai: EcsComponents.EnemyAI, hero_id: int) -> 
 	for candidate in intents:
 		if candidate.score > best.score:
 			best = candidate
-	world.emit_event({"type": &"intent_changed", "entity": entity_id, "intent": best})
+	world.emit_event({"type": Events.INTENT_CHANGED, "entity": entity_id, "intent": best})
 	_execute_intent(entity_id, ai, best)
 
 
@@ -196,17 +202,30 @@ func _nearest_item_cell(entity_id: int, self_cell: Vector2i, item_cells: Array[V
 	return result
 
 
+## The cell this enemy should walk to so that the hero stands in its attack shape: of the cells it could attack
+## from (some facing puts the hero in the shape), the nearest by path from `self_cell`, the first in reading order
+## (row by row, left to right) on a tie; the hero's own cell when there is none.
+##
+## Only the cells within the attack's reach of the hero are looked at (docs/game-base-plan.md 5.11, the bounded
+## search): a cell farther from the hero than the shape reaches cannot have the hero in it, whatever way it
+## faces, so the rest of the board cannot hold an answer. That is exactly the same answer as looking at every
+## cell of the board, found by looking at a handful, which on a 72 x 40 world is the difference between
+## 2880 cells and about 25. The box is walked in the order the whole board used to be, which keeps the same cell
+## on a tie. tests/ecs/test_attack_setup_search.gd holds the two side by side.
 func _find_attack_setup_goal(entity_id: int, ai: EcsComponents.EnemyAI, self_cell: Vector2i, hero_cell: Vector2i) -> Vector2i:
 	var best_cell := hero_cell
 	var best_distance := 999999
-	var bounds := world.grid.bounds
-	for y in range(bounds.position.y, bounds.end.y):
-		for x in range(bounds.position.x, bounds.end.x):
+	var reach := _attack_reach(entity_id, ai)
+	if reach < 0:
+		return best_cell
+	var search_box := Rect2i(hero_cell - Vector2i(reach, reach), Vector2i(reach * 2 + 1, reach * 2 + 1)).intersection(world.grid.bounds)
+	for y in range(search_box.position.y, search_box.end.y):
+		for x in range(search_box.position.x, search_box.end.x):
 			var candidate := Vector2i(x, y)
 			if not world.grid.is_plannable_cell(entity_id, candidate):
 				continue
 			var can_attack_from_cell := false
-			for direction: Vector2i in [Vector2i.UP, Vector2i.DOWN, Vector2i.LEFT, Vector2i.RIGHT]:
+			for direction in CARDINAL_DIRECTIONS:
 				if hero_cell in _get_attack_cells(entity_id, ai, candidate, direction):
 					can_attack_from_cell = true
 					break
@@ -217,6 +236,19 @@ func _find_attack_setup_goal(entity_id: int, ai: EcsComponents.EnemyAI, self_cel
 				best_distance = distance
 				best_cell = candidate
 	return best_cell if best_distance < 999999 else hero_cell
+
+
+## How far from the cell it attacks from the farthest cell of this enemy's attack shape lies, in cells along
+## either axis, for the four ways it can face: the largest |x| or |y| offset of the shape. -1 when it has no
+## shape at all. Measured from the shape itself (the held weapon's, else the unarmed pattern's) with nothing
+## clipped to the board, so a new weapon or pattern is covered without a number repeated here. The shape is the
+## same set of offsets wherever the enemy stands (a translation), which is what makes the reach a bound.
+func _attack_reach(entity_id: int, ai: EcsComponents.EnemyAI) -> int:
+	var reach := -1
+	for direction in CARDINAL_DIRECTIONS:
+		for offset in _attack_cells_on(entity_id, ai, Vector2i.ZERO, direction, null):
+			reach = maxi(reach, maxi(absi(offset.x), absi(offset.y)))
+	return reach
 
 
 func _execute_intent(entity_id: int, ai: EcsComponents.EnemyAI, intent: EnemyIntent) -> void:
@@ -234,7 +266,7 @@ func _execute_intent(entity_id: int, ai: EcsComponents.EnemyAI, intent: EnemyInt
 			ai.state = EcsComponents.EnemyAI.STATE_TELEGRAPH
 			ai.telegraph_duration = _telegraph_time(entity_id, ai)
 			ai.state_time_left = ai.telegraph_duration
-			world.emit_event({"type": &"telegraph_started", "entity": entity_id, "cells": ai.locked_attack_cells})
+			world.emit_event({"type": Events.TELEGRAPH_STARTED, "entity": entity_id, "cells": ai.locked_attack_cells})
 		EnemyIntent.Type.MOVE:
 			ai.last_move_direction = intent.direction
 			var move_intent: EcsComponents.MoveIntent = world.get_component(entity_id, EcsComponents.MOVE_INTENT)
@@ -262,18 +294,14 @@ func _execute_intent(entity_id: int, ai: EcsComponents.EnemyAI, intent: EnemyInt
 
 
 func _resolve_attack(entity_id: int, ai: EcsComponents.EnemyAI, hero_id: int) -> void:
-	world.emit_event({"type": &"telegraph_finished", "entity": entity_id})
+	world.emit_event({"type": Events.TELEGRAPH_FINISHED, "entity": entity_id})
 	var facing: EcsComponents.Facing = world.get_component(entity_id, EcsComponents.FACING)
 	var hero_pos: EcsComponents.GridPos = world.get_component(hero_id, EcsComponents.GRID_POS)
 	# Damage checks the hero's CURRENT cell against the locked cells — stepping
 	# out during the telegraph dodges the strike.
 	if hero_pos != null and hero_pos.cell in ai.locked_attack_cells:
-		world.damage_events.append({
-			"target": hero_id,
-			"amount": _attack_damage(entity_id, ai),
-			"direction": facing.direction,
-		})
-	world.emit_event({"type": &"attack_resolved", "entity": entity_id, "cells": ai.locked_attack_cells.duplicate()})
+		Events.emit_damage(world, hero_id, _attack_damage(entity_id, ai), facing.direction, entity_id, _attack_tags(entity_id))
+	world.emit_event({"type": Events.ATTACK_RESOLVED, "entity": entity_id, "cells": ai.locked_attack_cells.duplicate()})
 	ai.locked_attack_cells = []
 	if world.attack_token_owner == entity_id:
 		world.attack_token_owner = 0
@@ -293,8 +321,8 @@ func _collect_local_item(entity_id: int) -> void:
 	slot.weapon = pickup.weapon
 	world.grid.take_item(grid_pos.cell)
 	world.destroy_entity(item_id)
-	world.emit_event({"type": &"pickup_taken", "item": item_id, "cell": grid_pos.cell})
-	world.emit_event({"type": &"weapon_changed", "entity": entity_id, "weapon": slot.weapon})
+	world.emit_event({"type": Events.PICKUP_TAKEN, "item": item_id, "cell": grid_pos.cell})
+	world.emit_event({"type": Events.WEAPON_CHANGED, "entity": entity_id, "weapon": slot.weapon})
 
 
 func _weapon(entity_id: int) -> EnemyWeapon:
@@ -303,11 +331,17 @@ func _weapon(entity_id: int) -> EnemyWeapon:
 
 
 func _get_attack_cells(entity_id: int, ai: EcsComponents.EnemyAI, origin: Vector2i, direction: Vector2i) -> Array[Vector2i]:
+	return _attack_cells_on(entity_id, ai, origin, direction, world.grid)
+
+
+## The attack shape (the held weapon's, else the unarmed pattern's) from `origin` facing `direction`. A pattern
+## that clips to the board drops the cells outside `board`; with no board (null) nothing is dropped.
+func _attack_cells_on(entity_id: int, ai: EcsComponents.EnemyAI, origin: Vector2i, direction: Vector2i, board: EcsGrid) -> Array[Vector2i]:
 	var weapon := _weapon(entity_id)
 	if weapon != null:
 		return weapon.get_attack_cells(origin, direction)
 	if ai.attack_pattern != null:
-		return ai.attack_pattern.get_attack_cells(world.grid, origin, direction)
+		return ai.attack_pattern.get_attack_cells(board, origin, direction)
 	return []
 
 
@@ -319,6 +353,16 @@ func _telegraph_time(entity_id: int, ai: EcsComponents.EnemyAI) -> float:
 func _recovery_time(entity_id: int, ai: EcsComponents.EnemyAI) -> float:
 	var weapon := _weapon(entity_id)
 	return weapon.recovery_time if weapon != null else ai.unarmed_recovery_time
+
+
+## What the strike is, for the damage it deals: the held weapon's own tags. An unarmed pattern
+## carries none yet (the attack framework of M8a gives every attack tags).
+func _attack_tags(entity_id: int) -> Array[StringName]:
+	var weapon := _weapon(entity_id)
+	var tags: Array[StringName] = []
+	if weapon != null:
+		tags.assign(weapon.tags)
+	return tags
 
 
 func _attack_damage(entity_id: int, ai: EcsComponents.EnemyAI) -> int:
