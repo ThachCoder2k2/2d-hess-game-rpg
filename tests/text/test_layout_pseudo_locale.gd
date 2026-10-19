@@ -67,60 +67,92 @@ func _the_hud() -> void:
 	await _check_state("the HUD at rest (Courage 3, sword not found, no strike line)", hud_path, _hud_at_rest)
 	await _check_state("the HUD with the sword ready", hud_path, _hud_sword_ready)
 	await _check_state("the HUD with the thrust cooling down", hud_path, _hud_thrust_cooling_down)
-	await _check_state("the HUD naming the piece that strikes next (the longest name)", hud_path, _hud_naming_the_longest_piece)
-	await _check_state("the HUD with the strike line free", hud_path, _hud_strike_free)
+	await _check_state("the HUD with the top strip at its fullest (five pips, twelve enemies, Rank 8)", hud_path, _hud_top_strip_full)
+	await _check_state("the HUD with the control hints showing the gamepad's words", hud_path, _hud_with_the_gamepad)
+	await _check_state("the HUD with the debug readout naming the piece that strikes next (the longest name)", hud_path, _hud_naming_the_longest_piece)
+	await _check_state("the HUD with the debug readout and the strike line free", hud_path, _hud_strike_free)
 	await _check_state("the HUD after a win", hud_path, _hud_after_a_win)
 	await _check_state("the HUD after a fall", hud_path, _hud_after_a_fall)
 	# Every line the status bar can say, one by one.
 	for key in _status_line_keys():
 		await _check_state("the HUD status line says %s" % key, hud_path, func(screen: Node) -> void:
 			var hud := screen as GameHud
-			hud.setup(3)
+			hud.show_room(_hud_snapshot(3))
 			hud.set_status(key, {"attack": TextKey.of("SKILL_PENCIL_THRUST_NAME"), "piece": TextKey.of(longest_piece_key), "weapon": TextKey.of("ITEM_RULER_BLADE_NAME")}))
 
 
+## What the HUD draws from: a hero with `courage` of `courage_max` and a room of `enemies`.
+func _hud_snapshot(courage: int, courage_max := 3, enemies := 3) -> HudSnapshot:
+	var snapshot := HudSnapshot.new()
+	snapshot.player_entity = 1
+	snapshot.player_courage_current = courage
+	snapshot.player_courage_max = courage_max
+	snapshot.player_cell = Vector2i(10, 12)
+	snapshot.player_facing = Vector2i.UP
+	snapshot.room_enemies_remaining = enemies
+	snapshot.room_enemies_total = enemies
+	return snapshot
+
+
 func _hud_at_rest(screen: Node) -> void:
-	var hud := screen as GameHud
-	hud.setup(3)
-	hud.set_encounter_count(3, 3)
-	hud.set_cell_status(Vector2i(10, 12), TextKey.of("UI_COMPASS_NORTH"))
+	(screen as GameHud).show_room(_hud_snapshot(3))
 
 
 func _hud_sword_ready(screen: Node) -> void:
-	var hud := screen as GameHud
-	hud.setup(2)
-	hud.set_skill_cooldown(0.0, 1.0, true)
+	var snapshot := _hud_snapshot(2)
+	snapshot.sword_unlocked = true
+	(screen as GameHud).show_room(snapshot)
 
 
 func _hud_thrust_cooling_down(screen: Node) -> void:
+	var snapshot := _hud_snapshot(1)
+	snapshot.sword_unlocked = true
+	snapshot.skill_cooldown_left = 1.9
+	snapshot.skill_cooldown_duration = 2.0
+	(screen as GameHud).show_room(snapshot)
+
+
+func _hud_top_strip_full(screen: Node) -> void:
+	var snapshot := _hud_snapshot(5, 5, 12)
+	snapshot.sword_unlocked = true
+	snapshot.skill_cooldown_left = 1.9
+	snapshot.skill_cooldown_duration = 2.0
+	snapshot.rank_label = 8
+	(screen as GameHud).show_room(snapshot)
+
+
+func _hud_with_the_gamepad(screen: Node) -> void:
 	var hud := screen as GameHud
-	hud.setup(1)
-	hud.set_skill_cooldown(1.9, 2.0, true)
+	var device := LastInputDevice.new()
+	device.device = InputGlyphs.Device.GAMEPAD
+	hud.add_child(device)
+	hud.configure_controls(InputGlyphs.new("res://tests/fixtures/no_glyph_pictures_here"), device)
+	hud.show_room(_hud_snapshot(3))
 
 
 func _hud_naming_the_longest_piece(screen: Node) -> void:
 	var hud := screen as GameHud
-	hud.setup(3)
-	hud.set_encounter_count(12, 12)
-	hud.set_token_owner(TextKey.of(longest_piece_key))
+	hud.show_room(_hud_snapshot(3, 3, 12))
+	hud.set_strike_owner(TextKey.of(longest_piece_key))
+	hud.set_debug_visible(true)
 
 
 func _hud_strike_free(screen: Node) -> void:
 	var hud := screen as GameHud
-	hud.setup(3)
-	hud.set_encounter_count(1, 1)
-	hud.set_token_owner(null)
+	hud.show_room(_hud_snapshot(3, 3, 1))
+	hud.set_strike_owner(null)
+	hud.set_debug_visible(true)
 
 
 func _hud_after_a_win(screen: Node) -> void:
 	var hud := screen as GameHud
-	hud.setup(3)
+	hud.show_room(_hud_snapshot(3))
 	hud.show_result(RoomObjective.STOCK_CLEAR_KEY, RoomObjective.STOCK_CLEAR_SUBTITLE_KEY)
 
 
 func _hud_after_a_fall(screen: Node) -> void:
 	var hud := screen as GameHud
-	hud.setup(1)
+	hud.show_room(_hud_snapshot(1))
 	hud.show_result(RoomObjective.STOCK_DEFEAT_KEY, RoomObjective.STOCK_DEFEAT_SUBTITLE_KEY)
 
 

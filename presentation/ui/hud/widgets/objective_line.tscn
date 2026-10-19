@@ -1,0 +1,20 @@
+[gd_scene format=3 uid="uid://btrl6letp1pc"]
+
+[ext_resource type="Script" uid="uid://c2xusc6mha431" path="res://presentation/ui/hud/widgets/objective_line.gd" id="1"]
+
+[node name="ObjectiveLine" type="Control"]
+layout_mode = 3
+anchors_preset = 0
+offset_right = 624.0
+offset_bottom = 14.0
+mouse_filter = 2
+script = ExtResource("1")
+
+[node name="Line" type="Label" parent="."]
+layout_mode = 0
+offset_right = 624.0
+offset_bottom = 14.0
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.909804, 0.721569, 0.247059, 1)
+theme_override_font_sizes/font_size = 8
+vertical_alignment = 1

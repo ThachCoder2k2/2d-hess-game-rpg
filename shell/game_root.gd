@@ -14,7 +14,8 @@ const SaveServiceScript := preload("res://shell/save/save_service.gd")
 @export var board_path: NodePath = ^"PrototypeBoard"
 @export var hud_path: NodePath = ^"HUD"
 @export var hero_start_cell := Vector2i(3, 7)
-## Draw board boundaries, paths, and behavior labels. F3 still toggles at runtime.
+## The debug view: board boundaries, paths and behaviour labels, and the HUD's debug readout. Off in a release export
+## whatever the scene says (ShellKeys.debug_view_at_start); F3 toggles it at runtime.
 @export var debug_enabled := false
 ## The world as data: zone id -> scene. Assigned = world mode (zone travel on
 ## door cells, no clear-all win screen unless a zone carries an objective).
@@ -43,6 +44,10 @@ var shell_keys := ShellKeys.new()
 ## The player's settings. AppRoot hands in the one it owns before the scene is added (so a change on the settings screen
 ## reaches this room at once); a scene run alone has its own, at the defaults. SettingsBridge makes them true here.
 var settings := GameSettings.new()
+## Finds the glyph pictures of the HUD's control hints, and says which device the player used last. AppRoot hands in the
+## ones it owns; a scene run alone has a finder of its own and shows the keyboard.
+var input_glyphs := InputGlyphs.new()
+var last_input_device: LastInputDevice = null
 # One bridge per responsibility; the header of each file says what it owns.
 var board_bridge := BoardBridge.new()
 var camera_bridge := CameraBridge.new()
@@ -61,6 +66,9 @@ func _ready() -> void:
 	current_room = get_node_or_null(room_path)
 	board = get_node_or_null(board_path) as PrototypeBoard
 	hud = get_node_or_null(hud_path) as GameHud
+	debug_enabled = ShellKeys.debug_view_at_start(debug_enabled, OS.is_debug_build())
+	if hud != null:
+		hud.configure_controls(input_glyphs, last_input_device)
 	_attach_hero_view(get_node_or_null(hero_path) as ActorView)
 	hero_parked_position = player_view.position if player_view != null else Vector2.ZERO
 	board_bridge.attach(board)
@@ -118,6 +126,7 @@ func boot_zone(entry_id: StringName, entered_by_door := false) -> void:
 	board_bridge.show_room(ecs.grid, debug_enabled)
 	camera_bridge.show_room(ecs.grid)
 	hud_bridge.show_room()
+	hud_bridge.set_debug_view(debug_enabled)
 	message_bridge.say(ZoneStage.room_text(current_room, "get_start_message", RoomObjective.STOCK_START_KEY))
 
 

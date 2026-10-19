@@ -100,7 +100,7 @@ func _run() -> void:
 	_expect(await Support.walk_through_door(self, main, T4), "step 2: the hero goes into T4 again")
 	Support.remove_enemy_ai(main)
 	_expect(await Support.kill_with_sword(self, main, main.get("cast")["enemies"][0]), "step 2: the hero walks up to one of T4's three pawns and brings it down with the sword")
-	_expect((main.get("hud") as GameHud).encounter_label.text == "ENEMIES 2/3" and not run.cleared_room_ids.has(String(T4)), "step 2: T4 is not cleared")
+	_expect((main.get("hud") as GameHud).enemy_count.count_label.text == "ENEMIES 2/3" and not run.cleared_room_ids.has(String(T4)), "step 2: T4 is not cleared")
 	_expect(await Support.walk_through_door(self, main, T3) and await Support.walk_through_door(self, main, T4), "step 2: the hero leaves T4 by its west door and comes back")
 	_expect(Support.total_enemies(main) == 3 and _all_enemies_are_whole(main), "step 2: all three pawns are back, at full health")
 

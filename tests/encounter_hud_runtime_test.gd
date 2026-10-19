@@ -63,8 +63,8 @@ func _run() -> void:
 	_expect(weapon_pivot != null and not weapon_pivot.visible, "locked sword is not visible on the hero before pickup")
 
 	var hud := main.get("hud") as GameHud
-	_expect(hud != null and hud.courage_label.text.begins_with("COURAGE"), "HUD binds and shows courage")
-	_expect(String(hud.objective_label.text).begins_with("The king has fallen"), "HUD shows the T1 start message")
+	_expect(hud != null and hud.courage_pips.caption_label.atr(hud.courage_pips.caption_label.text).begins_with("COURAGE") and hud.courage_pips.filled_count() == 2 and hud.courage_pips.pip_count() == 3, "HUD binds and shows courage")
+	_expect(String(hud.objective_line.text_label.text).begins_with("The king has fallen"), "HUD shows the T1 start message")
 
 	var board := main.get("board") as PrototypeBoard
 	# Was `board.ecs == ecs`: the overlay no longer holds the world, it draws from the world's HudSnapshot
@@ -76,13 +76,13 @@ func _run() -> void:
 
 	for _i in range(10):
 		main._process(0.016)
-	_expect(String(hud.status_label.text).begins_with("CELL"), "bridge feeds the cell status line each frame")
+	_expect(String(hud.debug_readout.cell_label.text).begins_with("CELL"), "bridge feeds the cell status line each frame")
 
 	var attack_intent: EcsComponents.AttackIntent = ecs.get_component(player_id, EcsComponents.ATTACK_INTENT)
 	attack_intent.kind = &"sword"
 	main._process(0.016)
 	main._process(0.016)
-	_expect(String(hud.objective_label.text).begins_with("The pawn has no weapon yet"), "locked attack gives sword-search feedback")
+	_expect(String(hud.objective_line.text_label.text).begins_with("The pawn has no weapon yet"), "locked attack gives sword-search feedback")
 
 	SaveSupport.remove_root(save_root)
 	var succeeded := failures == 0

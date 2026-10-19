@@ -57,7 +57,7 @@ func _run() -> void:
 	_expect(Support.player_combat(game).sword_unlocked and run.has_unlock(&"wooden_sword"), "the sword the save held is in the hero's hand")
 	_expect(run.cleared_room_ids.has(String(T3)) and float(run.play_time_seconds) >= 3725.0, "the cleared room and the play time come back")
 	_expect(Support.player_health(game).current == Support.player_health(game).max_value, "Courage is full (health never saves)")
-	_expect(not game.hud.objective_label.text.contains("damaged"), "no notice on the status line for a clean save")
+	_expect(not game.hud.objective_line.text_label.text.contains("damaged"), "no notice on the status line for a clean save")
 
 	# --- Quitting writes nothing; Continue again is the same place ---
 	var file_before := SaveSupport.text_of(String(save_service.call("slot_path", 0)))
@@ -95,7 +95,7 @@ func _run() -> void:
 		await app.until_settled()
 		var game_from_backup := ShellSupport.game_of(app)
 		_expect(game_from_backup != null and game_from_backup.current_zone_id == ShellSupport.T4, "Continue loaded the previous save, not the damaged newer one")
-		_expect(game_from_backup != null and game_from_backup.hud.objective_label.text == TextService.t(TitleSummary.NOTICE_TEXT_KEY_BY_KEY[SaveLoadResult.NOTICE_BACKUP_USED]), "and the status line of the room says so")
+		_expect(game_from_backup != null and game_from_backup.hud.objective_line.text_label.text == TextService.t(TitleSummary.NOTICE_TEXT_KEY_BY_KEY[SaveLoadResult.NOTICE_BACKUP_USED]), "and the status line of the room says so")
 		_expect(app.game_flow.load_notice_key == SaveLoadResult.NOTICE_BACKUP_USED, "the flow remembers the notice")
 
 	Support.end_suite(self, save_service)

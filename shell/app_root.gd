@@ -205,6 +205,8 @@ func _show_game() -> void:
 	var game := game_scene.instantiate() as GameRoot
 	game.game_flow = game_flow
 	game.settings = settings
+	game.input_glyphs = input_glyphs
+	game.last_input_device = last_input_device
 	_put_screen(game)
 	var notice_text_key := String(TitleSummary.NOTICE_TEXT_KEY_BY_KEY.get(game_flow.load_notice_key, ""))
 	if not notice_text_key.is_empty():

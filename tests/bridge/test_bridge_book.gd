@@ -39,7 +39,7 @@ func _run() -> void:
 	_reset_hero(main, home_cell)
 	hud.set_status(SENTINEL_STATUS)
 	await Support.hold_action(self, main, &"attack", 0.1)
-	_expect(String(hud.objective_label.text).begins_with("The pawn has no weapon yet"), "control group: the attack key reaches the combat system with the Book closed")
+	_expect(String(hud.objective_line.text_label.text).begins_with("The pawn has no weapon yet"), "control group: the attack key reaches the combat system with the Book closed")
 	_reset_hero(main, home_cell)
 
 	# --- Opening the Book with a real B key press ---
@@ -60,7 +60,7 @@ func _run() -> void:
 	hud.set_status(SENTINEL_STATUS)
 	await Support.hold_action(self, main, &"attack", 0.1)
 	await Support.hold_action(self, main, &"skill_slot_1", 0.1)
-	_expect(String(hud.objective_label.text) == SENTINEL_STATUS, "attack and skill keys do nothing while the Book is open")
+	_expect(String(hud.objective_line.text_label.text) == SENTINEL_STATUS, "attack and skill keys do nothing while the Book is open")
 
 	# --- CHANGED (M4 step 2): the Book freezes the simulation ---
 	var health_before := Support.player_health(main).current

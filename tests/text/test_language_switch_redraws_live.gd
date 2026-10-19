@@ -34,24 +34,40 @@ func _the_hud() -> void:
 	var hud := paths.load_scene(paths.hud_scene()).instantiate() as GameHud
 	root.add_child(hud)
 	await wait_frames(1)
-	hud.setup(2)
-	hud.set_skill_cooldown(0.5, 1.0, true)
-	hud.set_token_owner(TextKey.of("ENEMY_PAWN_RECRUIT_PIECE"))
-	hud.set_encounter_count(1, 3)
-	hud.set_cell_status(Vector2i(3, 7), TextKey.of("UI_COMPASS_NORTH"))
+	var snapshot := HudSnapshot.new()
+	snapshot.player_entity = 1
+	snapshot.player_courage_current = 2
+	snapshot.player_courage_max = 3
+	snapshot.player_cell = Vector2i(3, 7)
+	snapshot.player_facing = Vector2i.UP
+	snapshot.sword_unlocked = true
+	snapshot.skill_cooldown_left = 0.5
+	snapshot.skill_cooldown_duration = 1.0
+	snapshot.room_enemies_remaining = 1
+	snapshot.room_enemies_total = 3
+	snapshot.rank_label = 3
+	hud.show_room(snapshot)
+	hud.set_strike_owner(TextKey.of("ENEMY_PAWN_RECRUIT_PIECE"))
 	hud.set_status("MSG_ENEMY_PICKED_UP", {"piece": TextKey.of("ENEMY_PAWN_ARMED_PIECE"), "weapon": TextKey.of("ITEM_PENCIL_SPEAR_NAME")})
 	hud.show_result("UI_RESULT_DEFEATED", "UI_RESULT_DEFEATED_SUBTITLE")
-	var labels: Array[Label] = [hud.get_node("TitleLabel"), hud.courage_label, hud.skill_label, hud.status_label, hud.encounter_label, hud.objective_label, hud.token_label, hud.get_node("HelpLabel"), hud.result_label]
+	var cell_label := hud.debug_readout.cell_label
+	var skill_label := hud.skill_slots.first_slot.name_label
+	var count_label := hud.enemy_count.count_label
+	var status_label := hud.objective_line.text_label
+	var strike_label := hud.debug_readout.strike_label
+	var labels: Array[Label] = [hud.courage_pips.caption_label, hud.rank_badge.get_node("Caption"), skill_label, cell_label, count_label, status_label, strike_label, hud.result_panel.text_label]
 	var english := _shown_texts(labels)
-	_expect(english[hud.courage_label].begins_with("COURAGE") and english[hud.objective_label].begins_with("Pawn picked up Pencil Spear"), "setup: the HUD shows English")
+	var english_hints := hud.control_prompts.hint_words()
+	_expect(english[hud.courage_pips.caption_label] == "COURAGE" and english[status_label].begins_with("Pawn picked up Pencil Spear"), "setup: the HUD shows English")
 	await _switch_to(&"qps")
 	var pseudo := _shown_texts(labels)
 	_expect(_every_text_changed(english, pseudo), "the HUD: every label changed (%s)" % _unchanged(english, pseudo))
-	_expect(pseudo[hud.courage_label].count("◆") == 2 and pseudo[hud.courage_label].count("◇") == 1, "and the Courage pips are the same")
-	_expect(pseudo[hud.skill_label].contains("0.5") and pseudo[hud.encounter_label].contains("1/3") and pseudo[hud.status_label].contains("03,07"), "and so are the numbers of the skill slot, the count and the cell")
-	_expect(not pseudo[hud.objective_label].contains("Pawn") and not pseudo[hud.objective_label].contains("Spear") and not pseudo[hud.token_label].contains("PAWN"), "and the names inside a sentence changed with it, they were not frozen in English")
+	_expect(hud.courage_pips.filled_count() == 2 and hud.courage_pips.empty_count() == 1, "and the Courage pips are the same")
+	_expect(pseudo[skill_label].contains("0.5") and pseudo[count_label].contains("1/3") and pseudo[cell_label].contains("03,07"), "and so are the numbers of the skill slot, the count and the cell")
+	_expect(not pseudo[status_label].contains("Pawn") and not pseudo[status_label].contains("Spear") and not pseudo[strike_label].contains("PAWN"), "and the names inside a sentence changed with it, they were not frozen in English")
+	_expect(hud.control_prompts.hint_words() != english_hints and hud.control_prompts.hint_count() == english_hints.size(), "and so are the words of the control hints (%s)" % ", ".join(hud.control_prompts.hint_words()))
 	await _switch_to(&"en")
-	_expect(_shown_texts(labels) == english, "back in English, the HUD says what it said")
+	_expect(_shown_texts(labels) == english and hud.control_prompts.hint_words() == english_hints, "back in English, the HUD says what it said")
 	hud.queue_free()
 
 

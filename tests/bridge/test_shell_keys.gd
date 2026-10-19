@@ -26,11 +26,11 @@ func _run() -> void:
 
 	_press(main, KEY_F3)
 	_expect(main.get("debug_enabled") and board.debug_enabled, "F3 switches the debug layer on, in the scene's flag and on the board")
-	_expect(hud.objective_label.text == TextService.t(ShellKeys.DEBUG_VIEW_ON_KEY), "and says so on the status line")
+	_expect(hud.objective_line.text_label.text == TextService.t(ShellKeys.DEBUG_VIEW_ON_KEY), "and says so on the status line")
 
 	_press(main, KEY_F3)
 	_expect(not main.get("debug_enabled") and not board.debug_enabled, "a second press switches it off again")
-	_expect(hud.objective_label.text == TextService.t(ShellKeys.DEBUG_VIEW_OFF_KEY), "and says so")
+	_expect(hud.objective_line.text_label.text == TextService.t(ShellKeys.DEBUG_VIEW_OFF_KEY), "and says so")
 
 	# The switch is the scene's, not a room's: a trip rebuilds the room and keeps it.
 	_press(main, KEY_F3)

@@ -52,7 +52,7 @@ func _run() -> void:
 	_expect(Support.ecs_of(game).tuning.reduce_flash, "and the world's tuning, once the command lands at the next tick")
 	_hit_the_hero(game)
 	_expect(not game.hud.damage_flash.visible, "on: a hit does not flash the screen")
-	_expect(game.hud.courage_label.text != "" and Support.hud_courage_pips(game) == 2, "but the Courage pips changed: the hit is shown (%d)" % Support.hud_courage_pips(game))
+	_expect(Support.hud_courage_pips(game) == 2, "but the Courage pips changed: the hit is shown (%d)" % Support.hud_courage_pips(game))
 	Support.pump(game, 0.02)
 	_expect(body.modulate.r == 1.0 and body.modulate.g == 1.0 and body.modulate.b == 1.0, "on: the hero's picture is not tinted")
 	var alphas_on := await _alphas_while_invulnerable(game, body)

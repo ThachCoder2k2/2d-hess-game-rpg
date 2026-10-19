@@ -69,7 +69,7 @@ func _check_player_unlock(main: Node) -> void:
 	_expect(Support.run_of(save_service).has_unlock(&"wooden_sword"), "unlock: stepping on the cell records the unlock in the run")
 	_expect(Support.player_combat(main).sword_unlocked, "unlock: the live hero can use the sword at once")
 	_expect(not marker.visible, "unlock: the marker is hidden once taken")
-	_expect(String((main.get("hud") as GameHud).objective_label.text).begins_with("The child whispers"), "unlock: the HUD shows the marker's message")
+	_expect(String((main.get("hud") as GameHud).objective_line.text_label.text).begins_with("The child whispers"), "unlock: the HUD shows the marker's message")
 	_expect(_saved_list("player", "unlocked_skill_ids").has("wooden_sword"), "unlock: the unlock is written to the save file immediately")
 	_expect(saved_reasons.count(&"unlock_gained") == 1 and unlock_events_seen == 1, "unlock: the first step onto the cell raised one event and saved once, for unlock_gained (%s)" % [saved_reasons])
 
@@ -128,7 +128,7 @@ func _check_taken_pickup(main: Node) -> void:
 	_expect(_pawn_takes_the_spear(main, enemy_ai, enemy_id, item_cells[0]), "pickup: the pawn picked the spear up")
 	_expect(not Support.run_of(save_service).taken_pickup_ids.has(SPEAR_KEY), "CHANGED (D-16): a floor weapon taken by an enemy is not written into the run")
 	_expect(not cast["pickup_view_by_entity"].has(item_id) and spear_view.is_queued_for_deletion(), "pickup: the bridge still frees the floor view")
-	_expect(String((main.get("hud") as GameHud).objective_label.text).contains("picked up"), "pickup: the HUD announces the weapon change")
+	_expect(String((main.get("hud") as GameHud).objective_line.text_label.text).contains("picked up"), "pickup: the HUD announces the weapon change")
 	_expect(not _saved_list("world", "taken_pickup_ids").has(SPEAR_KEY), "CHANGED (D-16, R17): and nothing is saved for it, it is not a success event")
 
 	# Room-local: back on the floor when the room starts again (re-entering, a bare boot_zone, a relaunch).
@@ -250,7 +250,7 @@ func _check_opened_gate(main: Node) -> void:
 	_expect(Support.run_of(save_service).opened_gate_ids.has("pass_home_gate") and Support.run_of(save_service).opened_gate_ids.size() == 1, "gate: the bridge records exactly the opened gate id")
 	_expect(not pass_gate.visible and lane_gate.visible, "gate: only the opened gate's visual disappears")
 	_expect(ecs.grid.is_walkable(gate_cell) and ecs.grid.gate_by_cell.size() == 1, "gate: the opened cell is floor and the other gate is still closed")
-	_expect(String((main.get("hud") as GameHud).objective_label.text).begins_with("The gate unbars"), "gate: the HUD announces the opening")
+	_expect(String((main.get("hud") as GameHud).objective_line.text_label.text).begins_with("The gate unbars"), "gate: the HUD announces the opening")
 	_expect(_saved_list("world", "opened_gate_ids").has("pass_home_gate"), "gate: the opened gate is written to the save file immediately")
 
 	# Persists across a re-boot, a bare boot_zone and a save/load round trip.

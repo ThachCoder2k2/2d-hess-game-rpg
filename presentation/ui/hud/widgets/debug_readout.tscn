@@ -1,0 +1,32 @@
+[gd_scene format=3 uid="uid://cc0k173g2xq1c"]
+
+[ext_resource type="Script" uid="uid://g5rt8uemk0bl" path="res://presentation/ui/hud/widgets/debug_readout.gd" id="1"]
+
+[node name="DebugReadout" type="Control"]
+visible = false
+layout_mode = 3
+anchors_preset = 0
+offset_right = 624.0
+offset_bottom = 16.0
+mouse_filter = 2
+script = ExtResource("1")
+
+[node name="CellLabel" type="Label" parent="."]
+layout_mode = 0
+offset_right = 250.0
+offset_bottom = 16.0
+mouse_filter = 2
+theme_override_colors/font_color = Color(1, 0.956863, 0.839216, 1)
+theme_override_font_sizes/font_size = 8
+vertical_alignment = 1
+
+[node name="StrikeLabel" type="Label" parent="."]
+layout_mode = 0
+offset_left = 254.0
+offset_right = 624.0
+offset_bottom = 16.0
+mouse_filter = 2
+theme_override_colors/font_color = Color(1, 0.603922, 0.458824, 1)
+theme_override_font_sizes/font_size = 8
+horizontal_alignment = 2
+vertical_alignment = 1

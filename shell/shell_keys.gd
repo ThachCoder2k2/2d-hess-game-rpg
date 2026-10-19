@@ -6,7 +6,8 @@ extends RefCounted
 ## InputMap action (docs/game-base-plan.md 9.4):
 ##   pause               Esc, Start: close the Book when it is open, otherwise ask the flow to pause (the pause menu
 ##                       itself closes on the same key, see PauseMenu, because a paused tree does not tick this)
-##   debug_view_toggle   F3: the debug layer on the board: boundaries, paths and behaviour labels
+##   debug_view_toggle   F3: the debug view: the board's boundaries, paths and behaviour labels, and the HUD's debug readout
+##                       (the pawn's cell, who strikes next) in the place of the control hints
 ##   fullscreen_toggle   F11: fullscreen and windowed
 ##   rule_book_toggle    B, L3: open and close the Book of House Rules
 ## R is not here: it is Call child (D-18), and restarting the room is a command of the pause menu.
@@ -28,6 +29,13 @@ func attach(game_root: GameRoot) -> void:
 	_root = game_root
 
 
+## Whether the game scene starts with the debug view on: what the scene asks for in a build that can debug, never in a
+## release export (docs/game-base-plan.md D-29: "debug fields only behind F3, off by default in exports"). A scene saved
+## with the view on by mistake still ships with it off; F3 can switch it on at runtime in any build.
+static func debug_view_at_start(requested: bool, is_debug_build: bool) -> bool:
+	return requested and is_debug_build
+
+
 func handle(controls: InputSnapshot) -> void:
 	if _is_fresh(controls, &"pause"):
 		if _root.book_bridge.is_open():
@@ -37,6 +45,7 @@ func handle(controls: InputSnapshot) -> void:
 	if _is_fresh(controls, &"debug_view_toggle"):
 		_root.debug_enabled = not _root.debug_enabled
 		_root.board_bridge.set_debug_view(_root.debug_enabled)
+		_root.hud_bridge.set_debug_view(_root.debug_enabled)
 		_root.message_bridge.say(DEBUG_VIEW_ON_KEY if _root.debug_enabled else DEBUG_VIEW_OFF_KEY)
 	if _is_fresh(controls, &"fullscreen_toggle"):
 		var window := _root.get_window()

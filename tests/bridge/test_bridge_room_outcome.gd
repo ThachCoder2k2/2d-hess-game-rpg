@@ -31,9 +31,9 @@ func _run() -> void:
 	# --- World mode: the count follows the defeats and clearing a zone is quiet ---
 	await Support.travel_to(main, T3, &"west_entry")
 	Support.remove_enemy_ai(main)
-	_expect(Support.total_enemies(main) == 1 and hud.encounter_label.text == "ENEMIES 1/1", "setup: T3 begins with one enemy and the HUD counts it")
+	_expect(Support.total_enemies(main) == 1 and hud.enemy_count.count_label.text == "ENEMIES 1/1", "setup: T3 begins with one enemy and the HUD counts it")
 	_expect(await _kill_enemy(main, 0), "setup: the hero's sword brings the pawn down")
-	_expect(hud.encounter_label.text == "ENEMIES 0/1", "a defeat takes one off the HUD count")
+	_expect(hud.enemy_count.count_label.text == "ENEMIES 0/1", "a defeat takes one off the HUD count")
 	_expect(not Support.room_ending(main) and not hud.result_panel.visible and Support.player_tag(main).control_enabled, "in world mode clearing a zone with no objective is quiet: no result panel, control stays on")
 	_expect(Support.run_of(save_service).cleared_room_ids.has(String(T3)), "but the run remembers the room as cleared (D-17); test_cleared_rooms holds what that means")
 
@@ -48,7 +48,7 @@ func _run() -> void:
 	main.set("world_graph", null)
 	_expect(await _kill_enemy(main, 0), "setup: the hero's sword brings the last pawn down")
 	_expect(Support.room_ending(main), "a standalone room ends when its last enemy falls")
-	_expect(hud.result_label.text == "ROOM CLEARED\n" + TextService.t(RoomObjective.STOCK_CLEAR_SUBTITLE_KEY) and hud.objective_label.text == "ROOM CLEARED", "with the stock clear lines when the room names none")
+	_expect(hud.result_panel.text_label.text == "ROOM CLEARED\n" + TextService.t(RoomObjective.STOCK_CLEAR_SUBTITLE_KEY) and hud.objective_line.text_label.text == "ROOM CLEARED", "with the stock clear lines when the room names none")
 	_expect(not Support.player_tag(main).control_enabled, "and the hero's control is off")
 
 	# --- An objective that counts defeats ends the room when it is met ---
@@ -68,8 +68,8 @@ func _run() -> void:
 	_expect(not Support.room_ending(main) and not hud.result_panel.visible, "one defeat of the two the objective asks for does not end the room")
 	_expect(await _kill_enemy(main, 1), "setup: the hero's sword brings the second pawn down")
 	_expect(Support.room_ending(main), "the second defeat meets the objective and ends the room")
-	_expect(hud.result_panel.visible and hud.result_label.text == "TWO DOWN\nTHE YARD GOES QUIET", "the result panel shows the objective's clear lines")
-	_expect(hud.objective_label.text == "TWO DOWN", "and the status line says the clear message")
+	_expect(hud.result_panel.visible and hud.result_panel.text_label.text == "TWO DOWN\nTHE YARD GOES QUIET", "the result panel shows the objective's clear lines")
+	_expect(hud.objective_line.text_label.text == "TWO DOWN", "and the status line says the clear message")
 	_expect(not Support.player_tag(main).control_enabled, "the hero's control is off after a win")
 	var cell_at_win := Support.player_cell(main)
 	var intent: EcsComponents.MoveIntent = Support.ecs_of(main).get_component(Support.player_id_of(main), EcsComponents.MOVE_INTENT)
@@ -80,7 +80,7 @@ func _run() -> void:
 	Support.ecs_of(main).emit_event({"type": Events.ROOM_CLEARED, "zone": T4, "defeated": enemy_count, "total": enemy_count, "has_objective": true})
 	hud.set_status("sentinel")
 	Support.route_events(main)
-	_expect(Support.room_ending(main) and hud.objective_label.text == "sentinel", "a clear that arrives after the win does not end the room a second time")
+	_expect(Support.room_ending(main) and hud.objective_line.text_label.text == "sentinel", "a clear that arrives after the win does not end the room a second time")
 
 	Support.end_suite(self, save_service)
 

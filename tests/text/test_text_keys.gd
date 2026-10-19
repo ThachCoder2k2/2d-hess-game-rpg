@@ -308,7 +308,7 @@ func _keys_built_in_code_exist() -> void:
 	for language in TextService.languages():
 		keys_used["UI_LANGUAGE_NAME_%s" % String(language).to_upper()] = "TextService.language_name"
 	for compass in ["NORTH", "SOUTH", "EAST", "WEST"]:
-		keys_used["UI_COMPASS_%s" % compass] = "HudBridge.facing_key"
+		keys_used["UI_COMPASS_%s" % compass] = "DebugReadout.compass_key"
 
 
 func _every_used_key_exists() -> void:

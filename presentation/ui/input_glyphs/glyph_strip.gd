@@ -15,6 +15,8 @@ const WORDS_FONT_SIZE := 10
 
 ## The glyphs on show, in order.
 var glyphs_on_show: Array[InputGlyph] = []
+## The size of the words of a glyph that has no picture. A strip on a small surface (the HUD's prompts) sets it lower.
+var words_font_size := WORDS_FONT_SIZE
 
 ## Keeps the words of an empty cell in the player's language. Made on first use.
 var _live_text: LiveText = null
@@ -76,7 +78,7 @@ func _picture_of(glyph: InputGlyph) -> TextureRect:
 
 func _words_label() -> Label:
 	var words := Label.new()
-	words.add_theme_font_size_override(&"font_size", WORDS_FONT_SIZE)
+	words.add_theme_font_size_override(&"font_size", words_font_size)
 	words.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	return words
 

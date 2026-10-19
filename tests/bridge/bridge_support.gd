@@ -219,10 +219,10 @@ static func player_view_position(main: Node) -> Vector2:
 	return (main.get("player_view") as Node2D).position
 
 
-## Courage pips currently drawn by the HUD (the filled diamonds in the label).
+## Courage pips currently drawn by the HUD (the filled ones of the Courage widget).
 static func hud_courage_pips(main: Node) -> int:
 	var hud := main.get("hud") as GameHud
-	return String(hud.courage_label.text).count("◆")
+	return hud.courage_pips.filled_count()
 
 
 ## Cell of the ZoneEntryMarker called entry_id inside zone_root, or (-999, -999).

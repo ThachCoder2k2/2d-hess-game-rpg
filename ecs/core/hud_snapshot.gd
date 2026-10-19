@@ -37,6 +37,14 @@ var sword_unlocked := false
 var skill_cooldown_left := 0.0
 var skill_cooldown_duration := 1.0
 
+## --- The story tally ---
+
+## The Rank label the badge draws as blue tally marks, 2 to 8 (docs/game-base-plan.md 6.1: a story label that reads
+## defeated-boss flags and that nothing else reads), or 0 while the game has no label to show. Nothing fills it yet:
+## M7c's ProgressionSystem copies the label here, and until then the badge stays hidden, so the first minutes of
+## the game do not show a tally of a system that has not started.
+var rank_label := 0
+
 ## --- The room ---
 
 ## Entity id of the enemy that holds the room's one attack token (EcsWorld.attack_token_owner); 0 when it is free.

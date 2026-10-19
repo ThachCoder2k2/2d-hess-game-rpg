@@ -142,61 +142,73 @@ msgstr "none yet"
 msgid "UI_CREDITS_SKIP_HINT"
 msgstr "Hold Confirm to skip"
 
-#. surface=HUD top left; purpose=the game's name as a banner
-msgid "UI_HUD_TITLE"
-msgstr "THE UNBOUND PAWN"
-
-#. surface=HUD; placeholders={pips} one filled or empty mark per Courage point; purpose=how much Courage the pawn has
+#. surface=HUD top strip, beside the Courage pips; purpose=name the row of marks that shows how much Courage the pawn has left
 msgid "UI_HUD_COURAGE"
-msgstr "COURAGE {pips}"
+msgstr "COURAGE"
+
+#. surface=HUD top strip, beside the Rank tally marks; purpose=name the tally the child draws for the pawn's Rank (a story label, never a level)
+msgid "UI_HUD_RANK"
+msgstr "RANK"
 
 #. surface=HUD skill slot; purpose=the sword has not been found, so the attack key does nothing yet
 msgid "UI_HUD_SKILL_LOCKED"
 msgstr "FIND SWORD"
 
-#. surface=HUD skill slot; purpose=the thrust can be used now
+#. surface=HUD skill slot; purpose=the thrust can be used now (the key that fires it is shown by the control hints, from the InputMap)
 msgid "UI_HUD_SKILL_READY"
-msgstr "Q THRUST READY"
+msgstr "THRUST READY"
 
 #. surface=HUD skill slot; placeholders={seconds} the seconds left, as 1.2; purpose=the thrust is cooling down
 msgid "UI_HUD_SKILL_COOLDOWN"
-msgstr "Q THRUST {seconds}"
+msgstr "THRUST {seconds}"
 
-#. surface=HUD strike line; purpose=no enemy holds the attack token, so any may strike next
+#. surface=HUD debug readout (F3); purpose=no enemy holds the attack token, so any may strike next
 msgid "UI_HUD_TOKEN_FREE"
 msgstr "ENEMY STRIKE READY"
 
-#. surface=HUD strike line; placeholders={piece} the enemy piece's name in capitals; purpose=say which enemy strikes next
+#. surface=HUD debug readout (F3); placeholders={piece} the enemy piece's name in capitals; purpose=say which enemy strikes next
 msgid "UI_HUD_TOKEN_OWNER"
 msgstr "STRIKE: {piece}"
 
-#. surface=HUD enemy count; placeholders={remaining} {total}; purpose=how many enemies are left in the room
+#. surface=HUD top strip; placeholders={remaining} {total}; purpose=how many enemies are left in the room
 msgid "UI_HUD_ENEMIES"
 msgstr "ENEMIES {remaining}/{total}"
 
-#. surface=HUD cell line; placeholders={x} {y} the pawn's cell, {facing} the compass word below; purpose=where the pawn stands
+#. surface=HUD debug readout (F3); placeholders={x} {y} the pawn's cell, {facing} the compass word below; purpose=where the pawn stands
 msgid "UI_HUD_CELL"
 msgstr "CELL {x},{y}  FACE {facing}"
 
-#. surface=HUD cell line; purpose=the pawn faces up the board
+#. surface=HUD debug readout (F3); purpose=the pawn faces up the board
 msgid "UI_COMPASS_NORTH"
 msgstr "N"
 
-#. surface=HUD cell line; purpose=the pawn faces down the board
+#. surface=HUD debug readout (F3); purpose=the pawn faces down the board
 msgid "UI_COMPASS_SOUTH"
 msgstr "S"
 
-#. surface=HUD cell line; purpose=the pawn faces right
+#. surface=HUD debug readout (F3); purpose=the pawn faces right
 msgid "UI_COMPASS_EAST"
 msgstr "E"
 
-#. surface=HUD cell line; purpose=the pawn faces left
+#. surface=HUD debug readout (F3); purpose=the pawn faces left
 msgid "UI_COMPASS_WEST"
 msgstr "W"
 
-#. surface=HUD bottom strip; purpose=the keys of the game, in one line (the Controls panel lists them all)
-msgid "UI_HUD_HELP"
-msgstr "MOVE WASD  TURN SHIFT+DIR  SWORD SPACE  THRUST Q  PAUSE ESC  DEBUG F3"
+#. surface=HUD bottom strip, control hints; purpose=what the move keys do, after the glyphs of the four directions
+msgid "UI_HUD_PROMPT_MOVE"
+msgstr "MOVE"
+
+#. surface=HUD bottom strip, control hints; purpose=what the attack key does, after its glyph
+msgid "UI_HUD_PROMPT_SWORD"
+msgstr "SWORD"
+
+#. surface=HUD bottom strip, control hints; purpose=what the first skill key does, after its glyph
+msgid "UI_HUD_PROMPT_THRUST"
+msgstr "THRUST"
+
+#. surface=HUD bottom strip, control hints; purpose=what the pause key does, after its glyph
+msgid "UI_HUD_PROMPT_PAUSE"
+msgstr "PAUSE"
 
 #. surface=result panel in the middle of the screen; placeholders={title} the big line, {subtitle} the line under it; purpose=how the two lines sit together
 msgid "UI_RESULT_PANEL"
