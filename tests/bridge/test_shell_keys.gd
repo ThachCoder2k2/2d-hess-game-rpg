@@ -1,11 +1,12 @@
 extends UnboundTest
 
 ## ShellKeys (shell/shell_keys.gd, M3b step 2): the keys that belong to the game and not to the hero,
-## answered from the frame's InputSnapshot. B (the Book) is pinned by test_bridge_book and R (restart)
-## by test_bridge_death_respawn and test_game_flow; this suite pins F3, which only the scene's own
-## code answered and no suite drove: it flips the exported debug flag, tells the board overlay and
-## says so on the status line, and a second press undoes all three. F11 changes the window mode,
-## which a headless run has no window to show, so it is not pressed here.
+## answered from the frame's InputSnapshot. B (the Book) is pinned by test_bridge_book and the pause menu's
+## Restart Room (R is Call child since M4, D-18) by test_bridge_death_respawn and test_game_flow; this suite pins
+## F3, which only the scene's own code answered and no suite drove: it flips the exported debug flag, tells the
+## board overlay and says so on the status line, and a second press undoes all three. F11 changes the window
+## mode, which a headless run has no window to show, so it is not pressed here. The pause key is pinned by
+## test_pause_freezes_tick and test_book_freezes_world (shell).
 
 const Support := preload("res://tests/bridge/bridge_support.gd")
 const SUITE_NAME := "shell_keys"

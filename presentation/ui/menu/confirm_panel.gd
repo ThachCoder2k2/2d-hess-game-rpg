@@ -49,6 +49,13 @@ func is_asking() -> bool:
 	return visible
 
 
+## Takes the question off the screen WITHOUT answering it: the screen it was asked over went away. Neither signal is
+## emitted and the focus is not given back.
+func dismiss() -> void:
+	visible = false
+	_focus_before_ask = null
+
+
 func _unhandled_input(event: InputEvent) -> void:
 	if visible and event.is_action_pressed(&"ui_cancel"):
 		get_viewport().set_input_as_handled()

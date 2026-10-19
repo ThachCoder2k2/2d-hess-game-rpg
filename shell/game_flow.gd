@@ -21,10 +21,12 @@ extends RefCounted
 ##     nothing (R17).
 ##   - Reaching the ending writes the `completed` mark to the profile (docs/game-base-plan.md 8.8).
 ##   - A pause is refused while a zone trip is under way, while a room rebuild is waiting and while the room is
-##     ending (9.2: "Pause is blocked during zone travel").
+##     ending (9.2: "Pause is blocked during zone travel"), and in the engine frame a pause was lifted: the
+##     key that closed the menu was pressed in that same frame, and the room, running again, would read it as a
+##     new press of Pause and open the menu at once.
 ##
-## The room rebuild is the one request the in-game scene makes of its flow (M3b): a death and the R key
-## both raise it, `GameRoot.respawn()` serves it. Before this class existed both reloaded the whole scene,
+## The room rebuild is the one request the in-game scene makes of its flow (M3b): a death and the pause menu's
+## Restart Room both raise it, `GameRoot.respawn()` serves it. Before this class existed both reloaded the whole scene,
 ## which would reload the title now that AppRoot is the main scene, restarted the music, and threw away the
 ## hero's view and every node with it. The scene stays, the run (the SaveService autoload) stays, and the
 ## zone the run says the pawn is in is rebuilt on the entry it came by (D-16: a death resets only the room
@@ -78,9 +80,8 @@ const NEXT_STATES := {
 
 ## A death asked: the hero fell and the defeat beat is over.
 const REASON_DEFEATED := &"defeated"
-## The restart key (R) asked. M4 moves it to the pause menu's Restart Room.
-const REASON_RESTART_KEY := &"restart_key"
-## The pause menu's Restart Room asked (the same rebuild, no key).
+## The pause menu's Restart Room asked, after its confirm (D-18: restarting the room is a menu command, not a
+## key; R is Call child).
 const REASON_RESTART_MENU := &"restart_menu"
 
 ## The flow moved from `previous` to `current`. AppRoot shows the screen of `current`.
@@ -106,6 +107,9 @@ var respawn_count := 0
 var save_service: SaveServiceScript = null
 ## The slot New Game and Continue use.
 var slot := SaveServiceScript.SINGLE_SLOT
+## Whether whoever owns the flow has a pause menu to show. AppRoot turns it on. A game scene run alone (the bridge
+## suites, Run Current Scene) has none, so its pause key does nothing instead of leaving the flow paused with no way back.
+var pause_menu_available := false
 ## Coroutine called with the reason before a room is rebuilt, which the rebuild waits for (AppRoot: fade to black).
 var before_respawn := Callable()
 ## Called with the reason right after the room was rebuilt, not waited for (AppRoot: fade back in).
@@ -113,6 +117,8 @@ var after_respawn := Callable()
 
 var _root: GameRoot
 var _respawn_pending := false
+## The engine frame (Engine.get_process_frames()) in which the latest pause was lifted, -1 for none yet.
+var _resumed_at_frame := -1
 
 
 ## `initial_state` is BOOT for the flow AppRoot owns; the in-game scene makes its own flow already PLAYING.
@@ -173,7 +179,7 @@ func continue_game() -> bool:
 ## PLAYING -> PAUSED. Refused while a zone trip is under way (the trip is mid-fade and swaps the zone itself), while
 ## a room rebuild is waiting and while the room is ending (the defeat beat, which asks for the rebuild itself).
 func request_pause() -> bool:
-	if state != State.PLAYING or _respawn_pending:
+	if state != State.PLAYING or _respawn_pending or _resumed_at_frame == Engine.get_process_frames():
 		return false
 	if _root_is_alive() and (_root.zone_travel_bridge.travel_in_progress or _root.outcome_bridge.room_ending):
 		return false
@@ -182,7 +188,10 @@ func request_pause() -> bool:
 
 ## PAUSED -> PLAYING.
 func request_resume() -> bool:
-	return _go(State.PLAYING) if state == State.PAUSED else false
+	if state != State.PAUSED:
+		return false
+	_resumed_at_frame = Engine.get_process_frames()
+	return _go(State.PLAYING)
 
 
 ## PLAYING, PAUSED or ENDING -> TITLE: Quit to Title. Nothing is saved (a quit is not a success event, R17), so

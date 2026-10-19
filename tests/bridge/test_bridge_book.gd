@@ -1,16 +1,16 @@
 extends UnboundTest
 
-## Bridge characterization (M1a, ported in M3b step 2): the Book of House Rules and player control.
-## BookBridge.toggle (shell/bridges/book_bridge.gd; it was main._toggle_rule_book) flips the Book's
-## visibility and sets PlayerTag.control_enabled to the opposite, nothing more. This suite drives it
-## with a real B key event and real input actions, and pins what the Book does
-## and does NOT do today:
+## Bridge characterization (M1a, ported in M3b step 2, CHANGED in M4 step 2): the Book of House Rules, player
+## control and the freeze. BookBridge (shell/bridges/book_bridge.gd; it was main._toggle_rule_book) flips the
+## Book's visibility, sets PlayerTag.control_enabled to the opposite and, since M4, FREEZES THE WORLD while the Book
+## is open (plan 4.7: "The world freezes while the Book is open"; a freeze_requested / unfreeze_requested command).
+## This suite drives it with a real B key event and real input actions, and pins what the Book does:
 ## - it blocks the hero's keys (moves, attacks) while open;
-## - it does NOT pause the simulation (steps in flight land, damage applies);
+## - CHANGED: it freezes the simulation (a step in flight waits, damage waits, nothing is lost: all of it
+##   resumes when the Book closes). Until M4 the world kept running under the open Book;
 ## - it cannot be toggled during a zone trip;
-## - a zone trip that ends while it is open hands control back under the open
-##   Book. Those last two-sided facts are labelled CHARACTERIZATION: they pin
-##   current behaviour, they do not endorse it.
+## - CHANGED: a step that would have taken the hero through a door does not start a trip while the Book is open
+##   (the world is frozen), so there is no longer a trip that ends under an open Book.
 
 const Support := preload("res://tests/bridge/bridge_support.gd")
 const SUITE_NAME := "book"
@@ -59,29 +59,33 @@ func _run() -> void:
 	_expect(input_state.buffered_direction == Vector2i.ZERO, "no step is buffered behind the open Book")
 	hud.set_status(SENTINEL_STATUS)
 	await Support.hold_action(self, main, &"attack", 0.1)
-	await Support.hold_action(self, main, &"skill_1", 0.1)
+	await Support.hold_action(self, main, &"skill_slot_1", 0.1)
 	_expect(String(hud.objective_label.text) == SENTINEL_STATUS, "attack and skill keys do nothing while the Book is open")
 
-	# --- CHARACTERIZATION: the Book does not pause the simulation ---
+	# --- CHANGED (M4 step 2): the Book freezes the simulation ---
 	var health_before := Support.player_health(main).current
+	var open_world := Support.ecs_of(main)
+	_expect(open_world.frozen, "the open Book froze the world (the command reached it on the first tick)")
 	Support.damage_player(main, 1)
-	_expect(Support.player_health(main).current == health_before - 1, "CHARACTERIZATION: damage still lands while the Book is open (the world is not paused)")
-	_expect(Support.hud_courage_pips(main) == health_before - 1, "CHARACTERIZATION: the HUD still reacts to that damage under the open Book")
-	Support.wait_out_invulnerability(main)
+	_expect(Support.player_health(main).current == health_before, "CHANGED: a hit waits while the Book is open (the world is frozen)")
+	_expect(Support.hud_courage_pips(main) == health_before, "CHANGED: and so does the HUD's reaction to it")
 
-	# Close it with the key again; control must come back.
+	# Close it with the key again; control must come back, the world thaws and the hit that waited lands.
 	Support.send_key(KEY_B, true)
 	Support.pump(main, 0.05)
 	Support.send_key(KEY_B, false)
 	Support.pump(main, 0.05)
 	_expect(not book.visible and Support.player_tag(main).control_enabled, "pressing B again closes the Book and returns control")
+	_expect(not open_world.frozen, "and thaws the world")
+	_expect(Support.player_health(main).current == health_before - 1 and Support.hud_courage_pips(main) == health_before - 1, "the hit that waited under the Book lands once it is closed, and the HUD reacts to it")
+	Support.wait_out_invulnerability(main)
 	var cell_after_close := Support.player_cell(main)
 	await Support.hold_action(self, main, &"move_right", 0.45)
 	Support.pump(main, 0.3)
 	_expect(Support.player_cell(main).x > cell_after_close.x, "the hero walks again once the Book is closed")
 	_reset_hero(main, home_cell)
 
-	# CHARACTERIZATION: a step already in flight when the Book opens still lands.
+	# CHANGED: a step already in flight when the Book opens waits for it and lands after it closes.
 	var intent: EcsComponents.MoveIntent = Support.ecs_of(main).get_component(Support.player_id_of(main), EcsComponents.MOVE_INTENT)
 	intent.direction = Vector2i.RIGHT
 	Support.pump(main, 0.05)
@@ -89,9 +93,11 @@ func _run() -> void:
 	Support.toggle_book(main)
 	_expect(book.visible, "setup: the Book opens mid-step")
 	Support.pump(main, 0.4)
-	_expect(Support.player_cell(main) == home_cell + Vector2i.RIGHT and not Support.player_move_state(main).moving, "CHARACTERIZATION: a step in flight when the Book opens still completes")
+	_expect(Support.player_cell(main) == home_cell and Support.player_move_state(main).moving, "CHANGED: a step in flight when the Book opens does not complete while it is open")
 	Support.toggle_book(main)
 	_expect(not book.visible and Support.player_tag(main).control_enabled, "the direct toggle closes the Book and returns control too")
+	Support.pump(main, 0.4)
+	_expect(Support.player_cell(main) == home_cell + Vector2i.RIGHT and not Support.player_move_state(main).moving, "and the step lands once the Book is closed")
 	_reset_hero(main, home_cell)
 
 	# --- The Book cannot be toggled during a zone trip ---
@@ -102,11 +108,9 @@ func _run() -> void:
 	await Support.wait_for_travel(self, main)
 	_expect(main.get("current_zone_id") == T2 and Support.player_tag(main).control_enabled and not book.visible, "the trip ends with control on and the Book closed")
 
-	# --- CHARACTERIZATION: a trip that ends under an open Book re-enables control ---
-	# A step already landing on the exit when the Book opens still triggers the
-	# trip (see the in-flight step above); the rebuilt hero starts with control
-	# on, and nothing re-asserts the Book. Likely a defect for the pause work
-	# (plan milestone M4); update this block when it is fixed.
+	# --- CHANGED: a step onto a door under an open Book starts no trip ---
+	# Until M4 an in-flight step still landed on the exit when the Book opened, the trip ran, and its last step
+	# gave the hero control back under the still-open Book. The world is frozen now, so the step waits.
 	var door := Support.exit_cell(main, main.get("current_room"), &"t3_first_pawn_clash")
 	Support.teleport_player(main, door + Vector2i.LEFT)
 	var door_intent: EcsComponents.MoveIntent = Support.ecs_of(main).get_component(Support.player_id_of(main), EcsComponents.MOVE_INTENT)
@@ -114,16 +118,12 @@ func _run() -> void:
 	Support.pump(main, 0.05)
 	Support.toggle_book(main)
 	_expect(book.visible and not Support.player_tag(main).control_enabled, "setup: the Book is open with the hero stepping onto the exit")
-	Support.pump_until(main, func() -> bool: return Support.travel_in_progress(main), 1.0)
-	_expect(Support.travel_in_progress(main), "CHARACTERIZATION: the open Book does not stop a trip already triggered by an in-flight step")
-	await Support.wait_for_travel(self, main)
-	_expect(book.visible, "CHARACTERIZATION: the Book is still open after the trip")
-	_expect(Support.player_tag(main).control_enabled, "CHARACTERIZATION: control is back on under the still-open Book (the trip's last step re-enables it)")
-	var cell_under_open_book := Support.player_cell(main)
-	await Support.hold_action(self, main, &"move_right", 0.45)
-	_expect(Support.player_cell(main).x > cell_under_open_book.x, "CHARACTERIZATION: the hero can walk while the Book is open after such a trip")
+	Support.pump(main, 1.0)
+	_expect(not Support.travel_in_progress(main) and main.get("current_zone_id") == T2, "CHANGED: the open Book lets no trip start: the step onto the door waits")
 	Support.toggle_book(main)
-	_expect(not book.visible and Support.player_tag(main).control_enabled, "the Book closes normally afterwards")
+	_expect(Support.pump_until(main, func() -> bool: return Support.travel_in_progress(main), 1.0), "and when the Book closes the step lands and the trip starts")
+	await Support.wait_for_travel(self, main)
+	_expect(main.get("current_zone_id") != T2 and Support.player_tag(main).control_enabled and not book.visible, "the trip ends with control on and the Book closed")
 
 	Support.end_suite(self, save_service)
 

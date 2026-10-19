@@ -188,8 +188,8 @@ func _check_counts_and_the_result_panel() -> void:
 	hud.encounter_label.text = "touched"
 	bridge.refresh()
 	_expect(hud.encounter_label.text == "touched", "and is redrawn only when the count changes")
-	bridge.show_result("ROOM CLEARED", "PRESS R TO RESET")
-	_expect(hud.result_panel.visible and hud.result_label.text == "ROOM CLEARED\nPRESS R TO RESET", "and puts the result panel up")
+	bridge.show_result("ROOM CLEARED", RoomObjective.STOCK_CLEAR_SUBTITLE)
+	_expect(hud.result_panel.visible and hud.result_label.text == "ROOM CLEARED\n" + RoomObjective.STOCK_CLEAR_SUBTITLE, "and puts the result panel up")
 
 
 func _check_a_scene_without_a_hud() -> void:

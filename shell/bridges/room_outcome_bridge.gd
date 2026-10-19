@@ -47,7 +47,7 @@ func _on_room_cleared(event: Dictionary) -> void:
 	root.audio_bridge.play(AudioBridge.ROOM_CLEAR_SOUND)
 	var clear_message := ZoneStage.room_text(root.current_room, "get_clear_message", "ROOM CLEARED")
 	root.message_bridge.say(clear_message)
-	root.hud_bridge.show_result(clear_message, ZoneStage.room_text(root.current_room, "get_clear_subtitle", "PRESS R TO RESET"))
+	root.hud_bridge.show_result(clear_message, ZoneStage.room_text(root.current_room, "get_clear_subtitle", RoomObjective.STOCK_CLEAR_SUBTITLE))
 
 
 func _on_respawn_requested(_event: Dictionary) -> void:

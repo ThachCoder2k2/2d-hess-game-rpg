@@ -11,7 +11,7 @@ extends RefCounted
 ##
 ## Design notes shared by every suite:
 ## - The real shell/game_root.tscn is instantiated and made the tree's current
-##   scene (a death or the restart key rebuilds its room through GameFlow, which used to
+##   scene (a death or the pause menu's Restart Room rebuilds its room through GameFlow, which used to
 ##   reload the whole scene).
 ## - game_root.gd's own _process is switched off after boot and driven by hand in
 ##   fixed steps (pump), so a run is deterministic and has no real-time races.
@@ -515,7 +515,7 @@ static func send_key(keycode: Key, pressed: bool) -> void:
 
 
 ## Waits (real engine frames) until the scene has rebuilt its room from the run's checkpoint, which is
-## what a death or the restart key does through GameFlow: the room's world is a new EcsWorld (the scene
+## what a death or the pause menu's Restart Room does through GameFlow: the room's world is a new EcsWorld (the scene
 ## itself stays; it used to be reloaded). Returns false when nothing was rebuilt in time. When it returns
 ## true the old world is gone and one more frame has run, so the new room is live.
 static func wait_for_respawn(tree: SceneTree, main: Node) -> bool:
@@ -531,11 +531,18 @@ static func wait_for_respawn(tree: SceneTree, main: Node) -> bool:
 	return true
 
 
-## Releases every input action a suite may have pressed. Call before quitting.
+## What the pause menu's confirmed Restart Room does: it asks the flow to start the room again (D-18: restarting is
+## a menu command, there is no key). A game scene run alone has no menu, so a suite makes the same request the menu
+## makes (AppRoot: `request_respawn(GameFlow.REASON_RESTART_MENU)`; tests/shell/test_pause_restart_is_menu_only
+## drives the real menu).
+static func restart_room_from_the_menu(main: Node) -> void:
+	main.get("game_flow").request_respawn(GameFlow.REASON_RESTART_MENU)
+
+
+## Releases every input action a suite may have pressed (every action the project defines, so a new one is covered
+## without editing this). Call before quitting.
 static func release_all_actions() -> void:
-	for action in MOVE_ACTIONS:
-		Input.action_release(action)
-	for action in [&"attack", &"skill_1", &"turn_mode", &"restart_room"]:
+	for action in InputMap.get_actions():
 		Input.action_release(action)
 
 

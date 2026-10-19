@@ -29,7 +29,7 @@ func get_clear_message() -> String:
 
 
 func get_clear_subtitle() -> String:
-	return _objective_text("clear_subtitle", "PRESS R TO RESET")
+	return _objective_text("clear_subtitle", RoomObjective.STOCK_CLEAR_SUBTITLE)
 
 
 func get_defeat_message() -> String:

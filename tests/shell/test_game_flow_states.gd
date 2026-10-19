@@ -112,7 +112,7 @@ func _every_request_is_legal_only_where_the_table_says() -> void:
 	_expect(wrong.is_empty(), "each request is accepted in exactly the states it should be (wrong: %s)" % "; ".join(PackedStringArray(wrong)))
 	_expect(refusals_that_changed_something == 0, "a refused request changes nothing and says nothing")
 	var respawn_flow := _flow_in(GameFlow.State.TITLE)
-	respawn_flow.request_respawn(GameFlow.REASON_RESTART_KEY)
+	respawn_flow.request_respawn(GameFlow.REASON_RESTART_MENU)
 	_expect(respawn_flow.state == GameFlow.State.TITLE and not respawn_flow.respawn_is_pending(), "a room rebuild is ignored when no room is live")
 
 

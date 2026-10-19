@@ -15,7 +15,7 @@ const ProjectFiles := preload("res://tests/architecture/project_files.gd")
 const MINIMUM_SOURCE_FILES := 20
 const FORBIDDEN_CALL := "reload_current_scene"
 ## The two ways the game asks GameFlow to start the room again, as they are written at the call sites.
-const REQUESTS: Array[String] = ["request_respawn(GameFlow.REASON_DEFEATED)", "request_respawn(GameFlow.REASON_RESTART_KEY)"]
+const REQUESTS: Array[String] = ["request_respawn(GameFlow.REASON_DEFEATED)", "request_respawn(GameFlow.REASON_RESTART_MENU)"]
 const GAME_FLOW_PATH := "res://shell/game_flow.gd"
 
 
@@ -44,12 +44,12 @@ func _init() -> void:
 	_expect(callers.is_empty(), "no source script reloads the scene (found: %s)" % ", ".join(PackedStringArray(callers)))
 
 	# The replacement exists and is wired: GameFlow serves a respawn request through GameRoot.respawn(),
-	# and the game asks it for a death and for the restart key.
+	# and the game asks it for a death and for the pause menu's Restart Room.
 	var paths := TestPaths.new(self)
 	var flow_source := paths.read_text(paths.game_flow_script())
 	_expect(flow_source.contains("signal respawn_requested") and flow_source.contains("func request_respawn(") and flow_source.contains("_root.respawn()"), "GameFlow raises respawn_requested and serves it through GameRoot.respawn()")
 	_expect(requesters.has("request_respawn(GameFlow.REASON_DEFEATED)"), "a death asks GameFlow to start the room again")
-	_expect(requesters.has("request_respawn(GameFlow.REASON_RESTART_KEY)"), "and so does the restart key")
+	_expect(requesters.has("request_respawn(GameFlow.REASON_RESTART_MENU)"), "and so does the pause menu's Restart Room")
 
 	# The lint must be able to fail.
 	var sample := "func f():\n\tget_tree().reload_current_scene()\n"

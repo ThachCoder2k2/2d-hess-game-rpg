@@ -79,3 +79,61 @@ static func run_in_t4_with_b1_checkpoint() -> SaveData:
 	data.saved_at_unix = 1760000000
 	data.add_unlock(&"wooden_sword")
 	return data
+
+
+## A system that counts the ticks the world gives it. A frozen world skips every system that does not answer
+## runs_while_frozen(), so the count is exactly how many ticks the rules of the game got.
+class TickCounter extends EcsSystem:
+	var ticks := 0
+
+	func tick(_delta: float) -> void:
+		ticks += 1
+
+
+## Adds a TickCounter to the game's live world (the next room's world is a new one, and has none).
+static func count_ticks_of(game: GameRoot) -> TickCounter:
+	var counter := TickCounter.new()
+	Support.ecs_of(game).add_system(counter)
+	return counter
+
+
+## What every enemy of the room is doing, as text: its cell, its AI state and how long it has been in it. Two
+## readings differ when any enemy moved or its AI clock ran.
+static func enemy_picture(game: GameRoot) -> String:
+	var ecs := Support.ecs_of(game)
+	var lines: Array[String] = []
+	for enemy_id in ecs.query([EcsComponents.ENEMY_AI]):
+		var ai: EcsComponents.EnemyAI = ecs.get_component(enemy_id, EcsComponents.ENEMY_AI)
+		lines.append("%d|%s|%d|%.3f" % [enemy_id, str(ecs.grid.cell_by_entity.get(enemy_id, Vector2i.ZERO)), ai.state, ai.state_time_left])
+	lines.sort()
+	return ";".join(PackedStringArray(lines))
+
+
+## Presses a key the way a player does: down for `frames_down` frames, then up. The press is sent at the START of a
+## frame, before the nodes' _process, as the OS delivers input: the engine's "just pressed" is only true for the
+## rest of the frame the press happened in, and a suite that resumes after a timer is resumed at the END of a frame.
+static func tap_key(tree: SceneTree, keycode: Key, frames_down := 2) -> void:
+	await tree.process_frame
+	Support.send_key(keycode, true)
+	for _frame in frames_down:
+		await tree.process_frame
+	Support.send_key(keycode, false)
+	await tree.process_frame
+
+
+## Waits `seconds` of real time with the tree paused or not (the timer ignores the pause).
+static func wait_real_seconds(tree: SceneTree, seconds: float) -> void:
+	await tree.create_timer(seconds, true, false, true).timeout
+
+
+## Plants the run of run_in_t4_with_b1_checkpoint, boots the app, Continues into T4 and returns the app with the game
+## on screen (fades shortened). The game is left ticking on its own.
+static func boot_into_t4(suite: UnboundTest, save_service: Node) -> AppRoot:
+	plant_run(save_service, run_in_t4_with_b1_checkpoint())
+	var app := await boot_app(suite)
+	app.transition.default_fade_seconds = 0.04
+	var title := title_of(app)
+	if title != null:
+		title.continue_button.pressed.emit()
+		await app.until_settled()
+	return app

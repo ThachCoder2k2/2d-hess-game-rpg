@@ -133,10 +133,8 @@ func _run() -> void:
 	_expect(Support.total_enemies(main) == 1 and Support.player_health(main).current == max_courage, "T3 is whole again (its pawn alive) and the hero at full Courage")
 	_expect(saved_reasons.is_empty(), "no save")
 	var restart_world := Support.ecs_of(main)
-	Input.action_press(&"restart_room")
-	main._process(0.0)
-	Input.action_release(&"restart_room")
-	_expect(await Support.wait_for_respawn(self, main) and Support.ecs_of(main) != restart_world and main.get("current_zone_id") == T3, "the restart key starts the room again the same way")
+	Support.restart_room_from_the_menu(main)
+	_expect(await Support.wait_for_respawn(self, main) and Support.ecs_of(main) != restart_world and main.get("current_zone_id") == T3, "Restart Room starts the room again the same way")
 	_expect(saved_reasons.is_empty() and run.checkpoint_zone_id == H1, "and is no checkpoint and no save either")
 
 	# --- A Continue returns to the room the pawn was in at the last save ---
@@ -159,7 +157,7 @@ func _run() -> void:
 		if reason not in allowed_reasons:
 			unexpected_reasons.append(String(reason))
 	_expect(not every_saved_reason.is_empty() and every_saved_reason.has(&"checkpoint_reached") and unexpected_reasons.is_empty(), "over the whole session the run was saved only for the success events in it (a checkpoint, a Book page): %s" % [every_saved_reason])
-	_expect(respawn_requests.size() == 2, "and the simulation asked for a room to start again exactly twice, once per fall (the boss room, T3); the restart key is the player's own request and not one of them (%d)" % respawn_requests.size())
+	_expect(respawn_requests.size() == 2, "and the simulation asked for a room to start again exactly twice, once per fall (the boss room, T3); Restart Room is the player's own request and not one of them (%d)" % respawn_requests.size())
 
 	Support.end_suite(self, save_service)
 

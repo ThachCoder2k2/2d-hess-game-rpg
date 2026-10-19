@@ -11,7 +11,7 @@ extends UnboundTest
 ## for success events only and a death is not one, so a death now writes nothing (the run in memory
 ## already holds everything the hero earned: each earning wrote the save when it happened).
 ##
-## CHANGED BY M3b step 2 (the plan, 9.1: "never reload_current_scene"): a death and the R key used to
+## CHANGED BY M3b step 2 (the plan, 9.1: "never reload_current_scene"): a death and the R key (restart_room, gone in M4: D-18) used to
 ## reload the whole scene, which would reload the title once AppRoot is the main scene (M4). GameFlow
 ## now rebuilds the room inside the scene: the same Main node stays, its old world and zone node and
 ## hero view are replaced by fresh ones. Three checks pinned the reload itself and say so below:
@@ -118,21 +118,19 @@ func _run() -> void:
 	_expect(Support.player_health(main).current == max_courage and Support.player_tag(main).control_enabled, "the T1 respawn has full courage and control")
 	_expect(main.get("current_room") != t1_node_before_death and main.get("current_room").get("zone_id") == T1, "CHANGED (M3b step 2): the respawn builds a fresh zone node even in the scene's own zone; there is no reload to bring the authored CurrentZone node back")
 
-	# --- The restart key asks GameFlow the same way without a death ---
+	# --- The pause menu's Restart Room asks GameFlow the same way without a death (D-18: no restart key) ---
 	await Support.travel_to(main, T2, &"west_entry")
 	Support.damage_player(main, 1)
-	_expect(Support.player_health(main).current == max_courage - 1, "setup: a wounded hero presses the restart key")
-	Input.action_press(&"restart_room")
-	main._process(0.0)
-	Input.action_release(&"restart_room")
+	_expect(Support.player_health(main).current == max_courage - 1, "setup: a wounded hero chooses Restart Room")
+	Support.restart_room_from_the_menu(main)
 	var restarted := await Support.wait_for_respawn(self, main)
-	_expect(restarted, "the restart key rebuilds the room through GameFlow, with no scene reload")
+	_expect(restarted, "Restart Room rebuilds the room through GameFlow, with no scene reload")
 	if not restarted:
 		_finish(save_service)
 		return
-	_expect(main.get("current_zone_id") == T2, "the restart key reboots the same zone")
-	_expect(Support.player_health(main).current == max_courage, "the restart key heals (the rebuild carries nothing)")
-	_expect(main.get("game_flow").last_respawn_reason == &"restart_key", "and GameFlow knows it was the key, not a death")
+	_expect(main.get("current_zone_id") == T2, "Restart Room reboots the same zone")
+	_expect(Support.player_health(main).current == max_courage, "Restart Room heals (the rebuild carries nothing)")
+	_expect(main.get("game_flow").last_respawn_reason == GameFlow.REASON_RESTART_MENU, "and GameFlow knows it was the menu, not a death")
 
 	_finish(save_service)
 

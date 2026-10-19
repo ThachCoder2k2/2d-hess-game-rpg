@@ -38,7 +38,7 @@ func tick(delta: float) -> void:
 		if attack_intent != null:
 			if controls.is_just_pressed(&"attack"):
 				attack_intent.kind = &"sword"
-			elif controls.is_just_pressed(&"skill_1"):
+			elif controls.is_just_pressed(&"skill_slot_1"):
 				attack_intent.kind = &"skill"
 
 		var pressed_direction := _just_pressed_direction(controls)
