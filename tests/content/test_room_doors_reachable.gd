@@ -13,22 +13,29 @@ extends UnboundTest
 ##     walk over walkable cells reaches it (a flood fill by cardinal steps, which is how the pawn moves);
 ##   - the exit's target zone is in the graph and has an entry marker with exactly the entry id the exit
 ##     names (the shell falls back to the target's first entry for a name it does not find, which would hide a
-##     typo, so this check does not).
+##     typo, so this check does not);
+##   - a door that stays shut until the room is cleared says why (its own locked_message): the status line
+##     used to answer every shut door with the boss's line, which T3 and T4, rooms with no captain, said too.
 ## The rooms are 16x9 with a ring of wall; the doors of Stage 1 sit one cell inside the ring. The last part of
 ## the suite proves the check can fail: a door put back on the ring, a typo in an entry name and a wall across
-## the room each produce a sentence.
+## the room, and a shut door with no line, each produce a sentence.
 
 const MINIMUM_ZONES := 7
 const MINIMUM_EXITS := 11
 const MINIMUM_ENTRIES := 12
+const MINIMUM_SHUT_DOORS := 3
 
 ## The zone whose west door was on the ring before the fix: the case the check exists for.
 const ZONE_WITH_RETURN_DOOR := &"t2_fallen_sword_tile"
 const RETURN_DOOR_NAME := "Exit_To_T1"
+## A door that is shut until its room is cleared (T3's east door): the case the locked-door check exists for.
+const ZONE_WITH_SHUT_DOOR := &"t3_first_pawn_clash"
+const SHUT_DOOR_NAME := "Exit_To_T4"
 ## Cell (0, 5) of the 16x9 board: the wall column, where the return doors used to be.
 const RING_CELL := Vector2i(0, 5)
 
 var exits_checked := 0
+var shut_doors_checked := 0
 var entries_checked := 0
 var zones_checked := 0
 
@@ -44,6 +51,7 @@ func _init() -> void:
 	_expect(zones_checked >= MINIMUM_ZONES, "%d zones were booted and checked (at least %d, so an empty walk cannot pass)" % [zones_checked, MINIMUM_ZONES])
 	_expect(exits_checked >= MINIMUM_EXITS, "%d doors were checked (at least %d)" % [exits_checked, MINIMUM_EXITS])
 	_expect(entries_checked >= MINIMUM_ENTRIES, "%d entries were checked (at least %d)" % [entries_checked, MINIMUM_ENTRIES])
+	_expect(shut_doors_checked >= MINIMUM_SHUT_DOORS, "%d doors that wait for a clear were checked (at least %d: T3, T4 and B1)" % [shut_doors_checked, MINIMUM_SHUT_DOORS])
 	_check_the_scan_can_fail(graph)
 	finish()
 
@@ -112,6 +120,10 @@ func _problems_in(graph: WorldGraph, zone_id: StringName, room: Node, world: Ecs
 				if not _walkable_cells_reached_from(grid, entry_cell_by_id[entry_id]).has(door_cell):
 					problems.append("door %s at %s cannot be reached on foot from entry '%s'" % [door_name, door_cell, entry_id])
 		problems.append_array(_problems_with_target(graph, door_name, exit_marker))
+		if exit_marker.requires_room_clear:
+			shut_doors_checked += 1
+			if exit_marker.locked_message.strip_edges().is_empty():
+				problems.append("door %s stays shut until the room is cleared but gives no reason: its locked_message is empty" % door_name)
 	return problems
 
 
@@ -150,7 +162,7 @@ func _walkable_cells_reached_from(grid: EcsGrid, start: Vector2i) -> Dictionary:
 	return reached
 
 
-## The check is worth nothing if it cannot fail, so three broken rooms are built on purpose.
+## The check is worth nothing if it cannot fail, so four broken rooms are built on purpose.
 func _check_the_scan_can_fail(graph: WorldGraph) -> void:
 	var scene := graph.get_zone_scene(ZONE_WITH_RETURN_DOOR)
 
@@ -175,6 +187,12 @@ func _check_the_scan_can_fail(graph: WorldGraph) -> void:
 	var cut_problems := _problems_in(graph, ZONE_WITH_RETURN_DOOR, cut_in_two["room"], cut_in_two["world"])
 	_expect(_any_contains(cut_problems, "cannot be reached on foot"), "the scan can fail: a wall across the room that cuts a door off from an entry is reported (%s)" % [cut_problems])
 	_free(cut_in_two)
+
+	var silent_door := _boot(graph.get_zone_scene(ZONE_WITH_SHUT_DOOR), func(room: Node) -> void:
+		(room.get_node(SHUT_DOOR_NAME) as ZoneExitMarker).locked_message = "")
+	var silent_problems := _problems_in(graph, ZONE_WITH_SHUT_DOOR, silent_door["room"], silent_door["world"])
+	_expect(_any_contains(silent_problems, "gives no reason"), "the scan can fail: a door that waits for a clear and says nothing about why is reported (%s)" % [silent_problems])
+	_free(silent_door)
 
 
 func _any_contains(sentences: PackedStringArray, text: String) -> bool:

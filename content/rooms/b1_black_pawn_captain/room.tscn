@@ -86,3 +86,4 @@ script = ExtResource("5_exit")
 target_zone = &"h1_chess_rug_hub"
 target_entry = &"from_boss"
 requires_room_clear = true
+locked_message = "The captain still holds the rug edge. Break the black line first."

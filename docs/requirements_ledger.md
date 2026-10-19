@@ -133,10 +133,10 @@ Written in M1a from section 1.5 of `docs/game-base-plan.md` (v1.1, branch `game-
 | 105 | m | world | Rooms are separate editable scenes with the standard tree (RoomArt, Entries, Exits, Enemies, Pickups, Props, RoomLogic) | §7.5 | M5 | test_room_tree | covered |
 | 106 | m | world | Room metadata: zone_id, board_size, room_message, objective, entry markers, exit markers | §7.5 | M5 | test_room_status | covered |
 | 107 | m | world | World graph as one resource; every door resolves to a real zone and entry (tested) | §7.1, §7.5 | M5 | test_world_graph | covered |
-| 108 | m | world | Exit data: target_zone, target_entry, requires_flag, locked_message, one_way (only requires_room_clear exists) | §7.1, §7.5 | M5 | test_world_graph | covered |
+| 108 | m | world | Exit data: target_zone, target_entry, requires_flag, locked_message, one_way (only requires_room_clear exists) | §7.1, §7.5 | M5; `locked_message` exists since the M3b review | test_world_graph; test_room_doors_reachable | covered |
 | 109 | m | world | Fade-swap transition and spawn at the target entry | §9.1 | exists; M1a | test_bridge_travel | covered |
 | 110 | m | world | Backtracking works unless intentionally blocked | §9.1 | exists; M1a; fixed in the M3b review | test_bridge_backtracking (the hero walks H1 -> B1 -> T4 -> T3 -> T2 -> T1 on foot); test_room_doors_reachable (every door of every room is floor, reachable, and leads to a real entry) | covered |
-| 111 | m | world | Each locked exit explains why it is locked (code has one hard-coded captain message for every lock) | §5.7 | M5 | test_world_graph | covered |
+| 111 | m | world | Each locked exit explains why it is locked (code has one hard-coded captain message for every lock) | §5.7 | M5; each shut door of Stage 1 says its own line since the M3b review (text keys in M4/M5) | test_world_graph; test_room_doors_reachable; test_message_bridge | covered |
 | 112 | m | world | Locks are visible before they open and tied to skill, story or district completion | §5.7 | M5 | test_world_graph | covered |
 | 113 | m | world | One-way shortcut gates opened from the far side stay open forever | §5.7 | exists | gate fixture test | covered |
 | 114 | m | world | Shortcut back to the hub at the end of every district (mechanism exists, no district uses it) | §7.2 | M9-M13 | test_district_shortcuts | covered |

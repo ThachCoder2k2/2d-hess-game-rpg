@@ -72,3 +72,4 @@ script = ExtResource("5_exit")
 target_zone = &"t4_broken_rule_yard"
 target_entry = &"west_entry"
 requires_room_clear = true
+locked_message = "The black pawn still bars the way. Break the black line first."

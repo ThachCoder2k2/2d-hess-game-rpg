@@ -65,8 +65,9 @@ var move_reservations: Dictionary = {}
 ## finish_leap): where it took off and the landing cell it has reserved. An airborne entity stands on NO
 ## cell (it is in neither entity_by_cell nor cell_by_entity) and holds one reservation, its landing cell.
 var leap_by_entity: Dictionary = {}
-## cell -> {"zone": StringName, "entry": StringName}. Door cells baked from
-## ZoneExitMarkers; the player landing here triggers a zone travel.
+## cell -> {"zone": StringName, "entry": StringName, "requires_room_clear": bool, "locked_message": String}.
+## Door cells baked from ZoneExitMarkers; the player landing here triggers a zone travel, or, on a door
+## that needs the room cleared first, the zone_exit_locked event carrying the door's own locked_message.
 var exit_by_cell: Dictionary = {}
 ## cell -> {"id": StringName, "message": String}. Player-only unlock cells
 ## baked from PlayerUnlockMarker nodes; the player landing here gains a flag.

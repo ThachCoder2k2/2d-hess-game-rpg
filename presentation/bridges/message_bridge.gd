@@ -18,8 +18,9 @@ const ONE_COURAGE_LEFT := "One courage left. Wait for the warning, then cut thro
 const PAWN_IS_HIT := "The pawn is hit. Move out before the next strike."
 ## An enemy took a floor weapon; %s are the piece's name and the weapon's display name.
 const ENEMY_PICKED_UP_FORMAT := "%s picked up %s. Its chess attack has been replaced."
-## The hero stepped on a door that needs its room cleared first.
-const DOOR_IS_LOCKED := "The captain still holds the rug edge. Break the black line first."
+## The hero stepped on a door that needs its room cleared first and the door carries no line of its own
+## (ZoneExitMarker.locked_message). It names no piece, because the door may be in any room.
+const DOOR_IS_LOCKED := "The way on is shut. Break the black line here first."
 ## A shortcut gate was unbarred.
 const GATE_UNBARS := "The gate unbars. It will never close again."
 ## A verb was unlocked and its marker carries no line of its own.
@@ -87,5 +88,7 @@ func _on_gate_opened(_event: Dictionary) -> void:
 	say(GATE_UNBARS)
 
 
-func _on_zone_exit_locked(_event: Dictionary) -> void:
-	say(DOOR_IS_LOCKED)
+## The door's own line, from the marker that was stepped on, else the generic one.
+func _on_zone_exit_locked(event: Dictionary) -> void:
+	var message := String(event.get("message", ""))
+	say(message if not message.is_empty() else DOOR_IS_LOCKED)

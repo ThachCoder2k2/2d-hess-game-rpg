@@ -558,7 +558,7 @@ presentation, and the router drops a type nobody registered for.
 | `player_unlock` | `entity`, `id`, `message` | SaveBridge (`unlock_gained`, the sword), AudioBridge, MessageBridge |
 | `gate_opened` | `entity`, `gate`, `cell` | SaveBridge (`shortcut_opened`, hide the gate picture), AudioBridge, MessageBridge |
 | `zone_exit` | `entity`, `zone`, `entry` | ZoneTravelBridge |
-| `zone_exit_locked` | `entity`, `zone`, `entry`, `cell` | MessageBridge (locked-door line) |
+| `zone_exit_locked` | `entity`, `zone`, `entry`, `cell`, `message` | MessageBridge (locked-door line: the door's own `locked_message`, else a generic one) |
 | `room_cleared` | `zone`, `defeated`, `total`, `has_objective` | SaveBridge (`cleared_room_ids`, saves `room_cleared`), RoomOutcomeBridge (the result screen, when the room ends) |
 | `checkpoint_set` | `zone`, `entry`, `refills` | SaveBridge (the run's checkpoint, saves `checkpoint_reached`) |
 | `respawn_requested` | `entity`, `zone`, `entry` | SaveBridge (takes the world's flags), RoomOutcomeBridge (the defeat beat, then `GameFlow.request_respawn`) |

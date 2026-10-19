@@ -162,6 +162,7 @@ static func _bake_zone_exits(world: EcsWorld, room_root: Node) -> void:
 			"zone": exit_marker.target_zone,
 			"entry": exit_marker.target_entry,
 			"requires_room_clear": exit_marker.requires_room_clear,
+			"locked_message": exit_marker.locked_message,
 		}
 
 

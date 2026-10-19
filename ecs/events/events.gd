@@ -86,6 +86,7 @@ const MOVEMENT_EVENTS: Dictionary = {
 			"zone": "StringName: id of the zone the door leads to",
 			"entry": "StringName: id of the entry marker it would arrive on",
 			"cell": "Vector2i: the door cell",
+			"message": "String: the line the HUD shows for it (ZoneExitMarker.locked_message); empty when the door carries none",
 		},
 	},
 	PLAYER_UNLOCK: {

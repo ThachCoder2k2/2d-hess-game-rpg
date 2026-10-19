@@ -13,6 +13,11 @@ extends Marker2D
 ## If true, this exit only works after every enemy in the current room falls.
 ## Use this for boss exits and mastery gates, not ordinary backtracking doors.
 @export var requires_room_clear := false
+## The line the status bar says when the hero steps on this door while it is shut (requires_room_clear and
+## the room not cleared yet). Say what holds THIS door: a room with no captain must not blame one. Empty
+## uses MessageBridge's own generic line. Like PlayerUnlockMarker.message, the words travel with the
+## marker; M4 moves them to a text key.
+@export_multiline var locked_message := ""
 
 
 func _get_configuration_warnings() -> PackedStringArray:

@@ -85,3 +85,4 @@ script = ExtResource("5_exit")
 target_zone = &"b1_black_pawn_captain"
 target_entry = &"west_entry"
 requires_room_clear = true
+locked_message = "The black pawns still hold the yard. Break the black line first."

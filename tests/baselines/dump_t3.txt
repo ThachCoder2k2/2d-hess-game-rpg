@@ -12,8 +12,8 @@ grid_origin: (64.00,36.00)
 blocked_cells: 50
   (0,0) (1,0) (2,0) (3,0) (4,0) (5,0) (6,0) (7,0) (8,0) (9,0) (10,0) (11,0) (12,0) (13,0) (14,0) (15,0) (0,1) (15,1) (0,2) (7,2) (15,2) (0,3) (7,3) (15,3) (0,4) (15,4) (0,5) (7,5) (15,5) (0,6) (7,6) (15,6) (0,7) (15,7) (0,8) (1,8) (2,8) (3,8) (4,8) (5,8) (6,8) (7,8) (8,8) (9,8) (10,8) (11,8) (12,8) (13,8) (14,8) (15,8)
 exits: 2
-  (14,1) {"entry": &"west_entry", "requires_room_clear": true, "zone": &"t4_broken_rule_yard"}
-  (1,5) {"entry": &"from_t3", "requires_room_clear": false, "zone": &"t2_fallen_sword_tile"}
+  (14,1) {"entry": &"west_entry", "locked_message": "The black pawn still bars the way. Break the black line first.", "requires_room_clear": true, "zone": &"t4_broken_rule_yard"}
+  (1,5) {"entry": &"from_t3", "locked_message": "", "requires_room_clear": false, "zone": &"t2_fallen_sword_tile"}
 gates: 0
 player_unlocks: 0
 items: 0
