@@ -76,6 +76,19 @@ yet. Please say how each was produced and whether it will ship.
   credits show it. `tests/text/test_font_vietnamese_coverage.gd` fails if the file cannot write every
   Vietnamese letter.
 
+### Input glyphs (owner-supplied)
+
+- **What:** the keyboard and gamepad pictures of the control prompts and the Controls panel. The game looks for them at
+  the paths of the asset list (`docs/assets/spec/ui_story.json`, group `glyphs_kenney`, folder `assets/ui/glyphs`), for
+  example `assets/ui/glyphs/keyboard/key_w.png` and `assets/ui/glyphs/gamepad/btn_a.png`
+  (`presentation/ui/input_glyphs/input_glyphs.gd` holds the table of which control uses which file).
+- **Status:** **owner-supplied.** No glyph file is in this repository today: nothing was downloaded, and a prompt reads
+  its words (`[Space]`, `[A]`) until a file is put at its path. The owner's plan is Kenney's pack "Input Prompts Pixel",
+  which Kenney publishes under CC0 (public domain): the light 16x16 tiles, copied and renamed as the asset list says.
+- **Action when the files are added:** CC0 asks for no credit, but the project credits it anyway: add an entry here under
+  its own `###` heading with a `- **License:**` bullet and the licence text in a `text` block, then run
+  `godot --headless --path . -s tools/build_credits_licenses.gd` so the credits show it.
+
 ## Third-party software that ships or is required
 
 ### Godot Engine
