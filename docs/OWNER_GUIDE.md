@@ -392,8 +392,10 @@ phòng, cửa quay lại nằm ở phía tây, sát tường, ngay cạnh ô và
    quay lại T4: số chấm vẫn y như vậy (đi qua cửa phòng thường không hồi, và T3, T4 không phải checkpoint), còn ba con tốt
    của T4 về đủ. Hạ cả ba con bằng kiếm để cửa đông mở, đi sang B1: các chấm Courage đầy lại, vì cửa phòng boss là
    checkpoint (hub H1 cũng vậy, nhưng cửa sang H1 chỉ mở khi hạ boss).
-4. *Vũ khí rơi trên sàn thì về chỗ (B1).* Trong B1 có thanh thước (Ruler Blade) nằm trên sàn. Đứng yên ở ô vào vài giây:
-   một lính gác chưa cầm gì đi tới nhặt nó. Bấm `R` (hoặc để bị hạ): thước lại nằm trên sàn và tay lính trống như cũ. Đó
+4. *Vũ khí rơi trên sàn thì về chỗ (B1).* Trong B1 có thanh thước (Ruler Blade) nằm trên sàn. Đứng yên ở ô vào, **chừng một giây**
+   là đủ (nhanh hơn bạn nghĩ): một lính gác chưa cầm gì đi tới nhặt nó, thanh thước biến khỏi sàn và dòng trạng thái ghi
+   `... picked up Ruler Blade`. Nếu bạn nhìn chỗ khác thì có thể đã bỏ lỡ, không sao: bấm `R` (hoặc để bị hạ) là phòng bắt
+   đầu lại, thước lại nằm trên sàn và tay lính trống như cũ, rồi xem lại từ đầu. Đó
    là luật "vũ khí trên sàn thuộc về phòng" (D-16). Cây giáo bút chì ở T4 là một vũ khí rơi như vậy: nó nằm ở cuối phòng,
    ngay sau con tốt cầm giáo, cạnh cửa đông, và con tốt chưa cầm gì của T4 sẽ đi về phía nó khi bạn lại gần. Nhưng ở bước
    này T4 đã được dọn (bước 3), nên bước thước ở B1 là bước làm được; muốn thấy cây giáo thì làm trên save sạch và dừng ở T4

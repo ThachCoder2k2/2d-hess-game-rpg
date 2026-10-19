@@ -740,3 +740,36 @@ June note).
   done once step 2 has cleared T3, and the suite got its wound in the empty room by a request. Step 3 now starts in T4, where step 2
   ended: wound, west door and back (an ordinary door heals nothing), sword clears T4, B1's door refills. Steps 1-3 are once-per-save;
   deleting `slot_0.cfg` and `slot_0.cfg.bak` is how the owner repeats them (the guide says so).
+
+## M3b review fixes, third round (base/m3b-fix3)
+
+A second independent verifier played Stage 1 on foot with real input (T1 to the hub and back, 13 runs, zero-delay and human-paced) on
+`base/m3b-fix2`: every enemy hittable, every door opens, the guide's section 7 followed literally, no blocker. It left six
+non-blocking notes. Two were wrong in the build and are fixed; one was wrong in the guide and is fixed; two are M7 and stay (one more
+was the commit attribution line, which matches the harness and is no defect).
+
+- **A locked door blamed a captain that was not there.** Every door that waits for a clear answered with one constant ("The captain still
+  holds the rug edge..."), so T3's door (one pawn) and T4's (three pawns) named the boss. The words now travel with the door, the way the
+  sword's line travels with `PlayerUnlockMarker.message`: `ZoneExitMarker.locked_message` is baked into `EcsGrid.exit_by_cell`,
+  `MovementSystem` puts it in `zone_exit_locked` (`message`), `MessageBridge` says it, and an empty one falls back to a generic line that
+  names no piece (`MessageBridge.DOOR_IS_LOCKED`). T3, T4 and B1 each say their own (B1 keeps the captain's line, where it is true).
+  `test_room_doors_reachable` fails a `requires_room_clear` door with no line, and proves it can (a silenced T3 door). This is the
+  editor-first half of ledger rows 108 and 111; the `.po` text key, `requires_flag` and `one_way` stay M4/M5. The six world dumps gained
+  the `locked_message` key on every exit line and nothing else (reviewed line by line); the actor golden's table of room heads moved on
+  purpose (`ROOM_HEADS_CHANGED_ON_PURPOSE`) now lists all six rooms, T1 included, with the reason.
+- **The skill slot said "FIND SWORD" after the sword was taken.** `HudBridge` redrew the slot only on a `skill_cooldown` event and at
+  boot, and taking the sword raises none, so the slot kept the old line until the next room or the first swing (7 s and more in the
+  verifier's walk). `refresh()` now redraws the slot the frame the snapshot's `sword_unlocked` differs from what was last drawn
+  (`last_sword_shown`); that does not depend on the order the bridges handle `player_unlock` in. A unit test in `test_hud_bridge`, and the
+  on-foot route suite reads the real HUD before and after the sword.
+- **The guide said a guard takes the Ruler Blade "after a few seconds".** `test_owner_guide_steps` measures it and prints it: about 1.0 s
+  after the hero arrives on B1's entry (steps of 0.25 s, so 0.75 to 1.0); the verifier saw 0.5 to 1 s. Step 4 now says about a second,
+  what the owner sees (the blade leaves the floor, the status line says `... picked up Ruler Blade`) and that `R` shows it again.
+- **Left: a weaponless T4 pawn carries the Pencil Spear off.** In the verifier's ten human-paced runs a weaponless pawn (usually the
+  Recruit) walked to (13,2) and took the spear while the hero fought near the middle of the room; the pawn that holds it drops nothing
+  when it falls, and a cleared room stays empty (D-17), so the spear is gone for the run (the zero-delay bot killed that pawn first and
+  kept it). That is how D-16 floor weapons work, the guide's step 4 already says weaponless pawns go for it, and the hero cannot take the
+  spear in this build anyway. The durable conclusion is for M7: the T4 Pencil is a hero-only `GrantMarker` (D-11's "guaranteed on the exit
+  path"), never a floor weapon; the plan's M7a entry now says so.
+- **Left: the hero cannot take the spear** ("take the pencil spear" is not possible in this build; Q works from the sword on). The Pencil
+  grant that locks Q is M7 (D-11); the M3b review rounds do not build that lock.

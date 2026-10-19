@@ -1717,3 +1717,28 @@ strict runner green after each (88 suites before, 91 now; 235 of 235 baseline la
 - **Not done, and why.** The spear cannot be taken by the hero yet (the Pencil grant that unlocks Q is M7, D-11); a weaponless T4 pawn
   can still carry it off before the hero arrives, which is how floor weapons have always worked and stays so until the grant replaces
   the pickup. `GrantMarker` does not exist yet, so the scan covers `PlayerUnlockMarker`; a new kind of marker adds a check there.
+
+## M3b review fixes, third round - 2026-10-19
+
+A second independent verifier played Stage 1 on foot with real key input (T1 to the hub and back to T1, 13 runs, zero-delay and
+human-paced, the real enemy AI, a throwaway save): every piece can be hit and killed, every door opens, the guide's section 7 works
+step by step. It left six non-blocking notes; the three that were defects are fixed on branch `base/m3b-fix3` (from `base/m3b-fix2`), one
+commit each, tag `m3b-done` moved to the last commit. 91 suites (no suite added; six extended), 235 of 235 baseline labels (14 through
+`label_renames.txt`, unchanged), both `--self-test`s 0 failures, import pass clean, stamp-uids CLEAN, `git diff --check` clean.
+
+1. **A shut door says why, in its own words.** `ZoneExitMarker.locked_message` (Inspector, like `PlayerUnlockMarker.message`) is baked
+   into the exit, carried by `zone_exit_locked` (`message`) and said by `MessageBridge`; an empty one falls back to a generic line that
+   blames no piece. T3's door blamed a captain (and T4's), rooms with none; T3, T4 and B1 each carry their own line now (B1's is the old
+   captain line, true there). `test_room_doors_reachable` fails a shut door with no line and proves it can; `test_message_bridge`,
+   `test_bridge_travel` (T3's real door) and `ecs_runtime_test` (the event's payload) pin the rest. The six world dumps changed on the
+   exit lines only (a `locked_message` key), regenerated and reviewed.
+2. **The skill slot follows the sword.** It said "FIND SWORD" until the next room or swing because only a cooldown event redrew it;
+   `HudBridge.refresh()` redraws it the frame the snapshot's sword flag changes. `test_hud_bridge` (flag up, down, mid-cooldown, not
+   redrawn when nothing changed) and `test_bridge_route_on_foot` (the real HUD before and after T2's sword) fail on the old bridge.
+3. **The guide's step 4 says "about a second".** The guard takes the Ruler Blade about 1.0 s after the hero arrives (the suite prints
+   it); the guide said a few seconds. It now says what the owner sees and that `R` shows it again.
+
+- **Left on purpose, and why.** (a) A weaponless T4 pawn carries the Pencil Spear off in most human-paced runs: that is how D-16 floor
+  weapons work and the guide says so; the fix is M7's (the Pencil is a hero-only `GrantMarker`, now written into the plan's M7a entry
+  and findings.md), not a tweak to T4. (b) The hero cannot take the spear: the grant that locks Q is M7 (D-11). (c) The commit
+  attribution line says Sonnet 5.5, as the harness asks; not a defect.
