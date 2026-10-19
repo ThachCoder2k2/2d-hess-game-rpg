@@ -21,13 +21,14 @@ Add a new sound without breaking the three-layer audio structure.
 	 the right time. No code. Looping clips re-fire the key each loop.
    - **Event sound** (no clip — pickups, room clear, jingles, UI): open
 	 `presentation/audio/sfx_manager.tscn` → Inspector → add the stream to the
-	 `streams` dictionary under a `&"name"` key. Then have the `shell/game_root.gd`
-	 bridge call `_play_sfx(&"name")` from the matching drained event. One line.
+	 `streams` dictionary under a `&"name"` key. Then have the `AudioBridge`
+	 (`presentation/bridges/audio_bridge.gd`) call `play(&"name")` from the matching drained event:
+	 one const for the name and one `router.on(...)` line in its `register()`.
 	 (The registry will move to `content/audio/sound_bank.tres` with the shell milestones;
 	 this recipe is then rewritten.)
 
 3. Never: play audio from a system, from a view, or from anywhere that isn't
-   a clip track or the bridge. Mixing tweaks (volumes per group, effects) go
+   a clip track or the `AudioBridge`. Mixing tweaks (volumes per group, effects) go
    in `default_bus_layout.tres`, not on individual players.
 
 4. Verify: editor import pass (the new `.wav` needs its committed `.import`), then `/verify`

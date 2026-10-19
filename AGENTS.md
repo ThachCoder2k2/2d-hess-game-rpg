@@ -430,7 +430,7 @@ Gate 12: Release polish
   audio nodes attached in `.tscn` files.
 - Sound has three layers with one owner each: motion sounds are audio tracks inside the actor's
   clips; mixing lives in `default_bus_layout.tres`; event sounds with no clip go through the
-  `SfxManager` registry, played only by the `shell/game_root.gd` bridge from drained events.
+  `SfxManager` registry, played only by the `AudioBridge` (`presentation/bridges/audio_bridge.gd`) from drained events.
   Systems never play audio. Recipe: `/new-sound`.
 
 ## Testing And Verification

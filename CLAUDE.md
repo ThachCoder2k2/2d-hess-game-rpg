@@ -67,8 +67,8 @@ session. Read `AGENTS.md` for the full workflow, and `docs/ARCHITECTURE.md` +
 	the actor's clips (keying its `AudioPlayer`, bus `SFX`); mixing →
 	`default_bus_layout.tres` (Master ← SFX/Music/UI); event sounds with no
 	clip (pickups, room clear, jingles, UI) → the `SfxManager` autoload's
-	Inspector stream registry, played ONLY by the `shell/game_root.gd` bridge from
-	drained events. Systems never play audio. The registry will be keyed from
+	Inspector stream registry, played ONLY by the `AudioBridge`
+	(`presentation/bridges/audio_bridge.gd`) from drained events. Systems never play audio. The registry will be keyed from
 	`content/audio/sound_bank.tres` (not built yet; today the keys are
 	Inspector exports on `presentation/audio/sfx_manager.tscn`). Recipe: `/new-sound`.
 - **Content is looked up by id.** `ContentDb` (`shell/content/`, a static class, no autoload) lists

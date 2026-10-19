@@ -47,6 +47,8 @@ var router := EventRouter.new()
 var board_bridge := BoardBridge.new()
 ## When the screen shakes, and framing each room that boots.
 var camera_bridge := CameraBridge.new()
+## The event sounds that belong to no clip, played through the SfxManager registry.
+var audio_bridge := AudioBridge.new()
 var _last_token_owner := 0
 
 
@@ -59,6 +61,7 @@ func _ready() -> void:
 	if player_view != null:
 		camera_rig = player_view.get_node_or_null("Camera2D") as CameraRig
 	camera_bridge.attach(camera_rig)
+	audio_bridge.attach(self)
 
 	# Death and R both reload this scene; the SaveService (autoload) holds the run, so the
 	# reload boots in the zone the run is in, not the default. A game that has just launched
@@ -181,6 +184,7 @@ func _setup_hud() -> void:
 func _register_event_handlers() -> void:
 	board_bridge.register(router)
 	camera_bridge.register(router)
+	audio_bridge.register(router)
 	router.on(Events.ATTACK_LANDED, _on_player_attack_landed)
 	router.on(Events.ATTACK_LOCKED, _on_attack_locked)
 	router.on(Events.DAMAGED, _on_damaged)
@@ -204,7 +208,6 @@ func _on_skill_cooldown(event: Dictionary) -> void:
 
 func _on_pickup_taken(event: Dictionary) -> void:
 	_record_pickup_taken(int(event.get("item", 0)))
-	_play_sfx(&"pickup")
 	_free_pickup_view(int(event.get("item", 0)))
 
 
@@ -292,7 +295,7 @@ func _check_completion() -> void:
 		return
 	room_ending = true
 	_set_player_control(false)
-	_play_sfx(&"room_clear")
+	audio_bridge.play(AudioBridge.ROOM_CLEAR_SOUND)
 	var clear_message := _room_text("get_clear_message", "ROOM CLEARED")
 	_update_status(clear_message)
 	_show_result(clear_message, _room_text("get_clear_subtitle", "PRESS R TO RESET"))
@@ -305,7 +308,7 @@ func _on_player_defeated() -> void:
 	# A death writes no save: autosave is for success events only (R17, D-16), and the run already
 	# wrote down everything it learned when it learned it.
 	player_health_carry = -1
-	_play_sfx(&"defeat_jingle")
+	audio_bridge.play(AudioBridge.DEFEAT_JINGLE_SOUND)
 	var defeat_message := _room_text("get_defeat_message", "THE PAWN FALLS")
 	_update_status(defeat_message)
 	_show_result(defeat_message, _room_text("get_defeat_subtitle", "THE CHILD RESETS THE BOARD"))
@@ -376,15 +379,6 @@ func _show_result(title: String, subtitle: String) -> void:
 		hud.show_result(title, subtitle)
 
 
-## Event sounds route through the SfxManager autoload (layer 3 of the sound
-## structure). Looked up by path so headless tests without autoloads stay
-## silent instead of crashing.
-func _play_sfx(sound_name: StringName) -> void:
-	var sfx := get_node_or_null("/root/SfxManager")
-	if sfx != null:
-		sfx.call("play", sound_name)
-
-
 ## --- Zone travel (the world map) -----------------------------------------
 
 
@@ -437,7 +431,6 @@ func _on_player_unlock(event: Dictionary) -> void:
 		save.state.add_unlock(unlock_id)
 		save.request_save(&"unlock_gained")
 	_apply_player_unlocks()
-	_play_sfx(&"pickup")
 	_update_status(message if not message.is_empty() else "The pawn grips the sword. The rules crack.")
 
 
@@ -512,7 +505,6 @@ func _on_gate_opened(event: Dictionary) -> void:
 		save.state.opened_gate_ids[String(gate_id)] = true
 		save.request_save(&"shortcut_opened")
 	_hide_opened_gate_visuals()
-	_play_sfx(&"gate_open")
 	_update_status("The gate unbars. It will never close again.")
 
 
