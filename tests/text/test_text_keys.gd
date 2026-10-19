@@ -104,7 +104,7 @@ func _init() -> void:
 func _source_keys() -> Dictionary:
 	var rows := {}
 	for domain: StringName in TextService.PREFIXES_BY_DOMAIN:
-		var path := "%s/%s/%s.po" % [TextService.TEXT_FOLDER, TextService.SOURCE_LANGUAGE, domain]
+		var path := PoReader.path_of(TextService.SOURCE_LANGUAGE, domain)
 		for entry in PoReader.parse(FileAccess.get_file_as_string(path))["entries"]:
 			rows[String(entry["key"])] = String(entry["text"])
 	return rows

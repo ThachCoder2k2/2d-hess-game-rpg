@@ -64,7 +64,7 @@ func _on_respawn_requested(_event: Dictionary) -> void:
 		return
 	var respawns_at_fall := root.game_flow.respawn_count
 	await tree.create_timer(DEFEAT_BEAT_SECONDS).timeout
-	# If the restart key rebuilt the room during the beat, there is nothing left to start again. A zone trip
+	# If the pause menu's Restart Room rebuilt the room during the beat, there is nothing left to start again. A zone trip
 	# that swapped the world meanwhile is not a rebuild: the hero fell, so the room starts again regardless.
 	# The player may have left for the title during the beat (Quit to Title frees the scene).
 	if is_instance_valid(root) and root.is_inside_tree() and root.game_flow.respawn_count == respawns_at_fall:

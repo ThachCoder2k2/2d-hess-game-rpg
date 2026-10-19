@@ -35,7 +35,7 @@ var hero_parked_position := Vector2.ZERO
 ## The only reader of the Input singleton: copies the controls into ecs.input_snapshot once per frame.
 var input_poller := InputPoller.new()
 var router := EventRouter.new()
-## The flow this scene belongs to: starts the room again after a death or the restart key, without reloading
+## The flow this scene belongs to: starts the room again after a death or the pause menu's Restart Room, without reloading
 ## the scene. AppRoot gives the scene its own flow before adding it; a scene run alone makes one that is
 ## already PLAYING.
 var game_flow := GameFlow.new(GameFlow.State.PLAYING)
@@ -130,7 +130,7 @@ func _process(delta: float) -> void:
 
 
 ## Starts the room the pawn is in again, on the entry it came by, without leaving the scene (GameFlow calls
-## it for a death or the restart key; D-16: a death resets only this room): a fresh zone, a fresh hero view
+## it for a death or the pause menu's Restart Room; D-16: a death resets only this room): a fresh zone, a fresh hero view
 ## in its boot pose, the Book closed, nothing carried. What the scene keeps is the run (it takes the world's
 ## flags first), the music and the F3 switch.
 func respawn() -> void:

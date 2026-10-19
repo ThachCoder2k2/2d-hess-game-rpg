@@ -11,6 +11,9 @@ extends RefCounted
 ## Supported: `#`, `#.` and `#:` lines, `msgid`, `msgstr`, strings continued over several quoted lines, and the
 ## escapes \n \t \" \\ . `msgctxt` is reported as a problem: the game does not use contexts.
 
+## Where the words live: `<folder>/<language>/<domain>.po`.
+const TEXT_FOLDER := "res://content/story/text"
+
 var _entries: Array[Dictionary] = []
 var _problems := PackedStringArray()
 var _header := ""
@@ -21,6 +24,11 @@ var _text := ""
 var _entry_line := 0
 var _reading := ""  # "msgid", "msgstr" or "" between entries
 var _has_entry := false
+
+
+## The path of one language's file of one domain.
+static func path_of(language: Variant, domain: Variant) -> String:
+	return "%s/%s/%s.po" % [TEXT_FOLDER, language, domain]
 
 
 static func parse(po_text: String) -> Dictionary:

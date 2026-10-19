@@ -23,10 +23,10 @@ const SOURCE_LANGUAGE := &"en"
 ## The generated test language: every string longer by 40 percent and accented (PseudoLocale). Not a file: it is
 ## built from the source rows when install_pseudo_language() is called.
 const PSEUDO_LANGUAGE := &"qps"
-## The project setting that lists the .po files the engine loads.
+## The project setting that lists the .po files the engine loads. The files themselves are content/story/text/
+## <language>/<domain>.po; this class never names that folder (presentation does not load content/ by path): the
+## engine loads them from the project settings and the tests read them with PoFileReader.
 const TRANSLATIONS_SETTING := "internationalization/locale/translations"
-## Where the words live: `<folder>/<language>/<domain>.po`.
-const TEXT_FOLDER := "res://content/story/text"
 
 ## domain (the .po file name) -> the key prefixes that belong in it. A key goes in the file of its prefix, so
 ## two lanes adding keys rarely touch the same file (plan 14.5). `test_po_domains_merge` enforces the table.

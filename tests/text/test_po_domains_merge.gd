@@ -51,7 +51,7 @@ func _init() -> void:
 
 
 func _path_of(language: String, domain: String) -> String:
-	return "%s/%s/%s.po" % [TextService.TEXT_FOLDER, language, domain]
+	return PoReader.path_of(language, domain)
 
 
 func _the_files_are_the_registered_ones() -> void:
