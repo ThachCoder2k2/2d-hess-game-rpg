@@ -67,9 +67,9 @@ func _check_completion() -> void:
 	room_ending = true
 	root.set_player_control(false)
 	root.audio_bridge.play(AudioBridge.ROOM_CLEAR_SOUND)
-	var clear_message := root.room_text("get_clear_message", "ROOM CLEARED")
+	var clear_message := ZoneStage.room_text(root.current_room, "get_clear_message", "ROOM CLEARED")
 	root.message_bridge.say(clear_message)
-	root.hud_bridge.show_result(clear_message, root.room_text("get_clear_subtitle", "PRESS R TO RESET"))
+	root.hud_bridge.show_result(clear_message, ZoneStage.room_text(root.current_room, "get_clear_subtitle", "PRESS R TO RESET"))
 
 
 func _on_player_defeated() -> void:
@@ -78,9 +78,9 @@ func _on_player_defeated() -> void:
 	room_ending = true
 	root.zone_travel_bridge.forget_health_carry()
 	root.audio_bridge.play(AudioBridge.DEFEAT_JINGLE_SOUND)
-	var defeat_message := root.room_text("get_defeat_message", "THE PAWN FALLS")
+	var defeat_message := ZoneStage.room_text(root.current_room, "get_defeat_message", "THE PAWN FALLS")
 	root.message_bridge.say(defeat_message)
-	root.hud_bridge.show_result(defeat_message, root.room_text("get_defeat_subtitle", "THE CHILD RESETS THE BOARD"))
+	root.hud_bridge.show_result(defeat_message, ZoneStage.room_text(root.current_room, "get_defeat_subtitle", "THE CHILD RESETS THE BOARD"))
 	var tree := root.get_tree()
 	if tree == null:
 		return

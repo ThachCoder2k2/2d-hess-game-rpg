@@ -72,6 +72,21 @@ func game_flow_script() -> String:
 	return _existing_file("res://shell/game_flow.gd")
 
 
+## The bridge that decides how a room ends, a death included.
+func room_outcome_bridge_script() -> String:
+	return _existing_file("res://shell/bridges/room_outcome_bridge.gd")
+
+
+## The game's own keys (restart, the debug layer, fullscreen, the Book).
+func shell_keys_script() -> String:
+	return _existing_file("res://shell/shell_keys.gd")
+
+
+## The helper that builds the in-game scene's world node (and so calls Schedule.populate()).
+func zone_stage_script() -> String:
+	return _existing_file("res://shell/zone_stage.gd")
+
+
 func save_service_script() -> String:
 	return _existing_file("res://shell/save/save_service.gd")
 

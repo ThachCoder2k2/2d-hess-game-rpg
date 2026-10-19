@@ -92,7 +92,7 @@ func rule_page_ids() -> Array:
 ## Before the room boots: what the run already knows that EcsBoot must not spawn again. Taken pickups
 ## never respawn; opened gates boot as floor.
 func fill_boot_options(options: EcsBootOptions, zone_root: Node) -> void:
-	options.skipped_pickup_names = _taken_pickup_names(root.zone_id_of(zone_root))
+	options.skipped_pickup_names = _taken_pickup_names(ZoneStage.zone_id_of(zone_root))
 	options.opened_gate_ids = _opened_gate_ids()
 
 
