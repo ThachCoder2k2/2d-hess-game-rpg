@@ -106,6 +106,11 @@ func main_scene() -> String:
 	return _existing_resource("res://shell/game_root.tscn")
 
 
+## The credits roll.
+func credits_scene() -> String:
+	return _existing_resource("res://shell/credits/credits_screen.tscn")
+
+
 ## The 72x40 kingdom: a test fixture, not game content (plan D-02).
 func kingdom_scene() -> String:
 	return _existing_resource("res://tests/fixtures/the_kingdom.tscn")

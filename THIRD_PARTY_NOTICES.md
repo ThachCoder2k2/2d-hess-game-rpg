@@ -6,6 +6,13 @@ by design: milestone M4 adds the pixel font and M14 completes the file
 (`docs/game-base-plan.md` section 1.1 D20, section 12). The project's own license is in
 `LICENSE`. Nothing here has been legally reviewed.
 
+**The credits are generated from this file** (`docs/game-base-plan.md` 9.2). Every `###` entry that has a
+`- **License:**` bullet is credited in the game's Licenses block (`content/story/credits_licenses.tres`): its
+heading is the name, the bullet is the licence, and the first fenced `text` block after the bullet is the
+licence text. An entry with no License bullet (a provenance question, a slot nobody has filled) is not a credit.
+After editing an entry, run `godot --headless --path . -s tools/build_credits_licenses.gd`;
+`tests/shell/test_credits_licenses_current.gd` fails while the credits are stale.
+
 ## Needs the owner's check
 
 ### The Black Knight silhouette was traced from a system font glyph

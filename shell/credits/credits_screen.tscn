@@ -1,0 +1,71 @@
+[gd_scene load_steps=2 format=3 uid="uid://dg1hoijirfki8"]
+
+[ext_resource type="Script" uid="uid://d4ntvps283xjq" path="res://shell/credits/credits_screen.gd" id="1"]
+
+[node name="CreditsScreen" type="Control" node_paths=PackedStringArray("clip", "roll", "skip_hint_label", "skip_progress_bar")]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1")
+clip = NodePath("Clip")
+roll = NodePath("Clip/Roll")
+skip_hint_label = NodePath("SkipHint")
+skip_progress_bar = NodePath("SkipProgress")
+
+[node name="Backdrop" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0.055, 0.047, 0.052, 1)
+
+[node name="Clip" type="Control" parent="."]
+clip_contents = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="Roll" type="VBoxContainer" parent="Clip"]
+layout_mode = 0
+offset_left = 120.0
+offset_top = 360.0
+offset_right = 520.0
+offset_bottom = 360.0
+mouse_filter = 2
+
+[node name="SkipHint" type="Label" parent="."]
+layout_mode = 1
+anchors_preset = 2
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_left = 8.0
+offset_top = -20.0
+offset_right = 200.0
+offset_bottom = -4.0
+grow_vertical = 0
+theme_override_colors/font_color = Color(0.5, 0.48, 0.45, 1)
+theme_override_font_sizes/font_size = 9
+text = "Hold Confirm to skip"
+
+[node name="SkipProgress" type="ProgressBar" parent="."]
+layout_mode = 1
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = -3.0
+grow_horizontal = 2
+grow_vertical = 0
+max_value = 1.0
+step = 0.01
+show_percentage = false

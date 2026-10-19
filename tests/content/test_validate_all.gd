@@ -16,6 +16,7 @@ const MINIMUM_IDS_BY_KIND := {
 	&"player": 1,
 	&"world": 1,
 	&"piece_sizes": 1,
+	&"credits": 1,
 	&"enemies": 7,
 	&"rooms": 6,
 	&"rules": 5,
@@ -26,10 +27,10 @@ const MINIMUM_IDS_BY_KIND := {
 }
 ## Kinds that are one file with the kind's own name as its only id (content/player/player.tres,
 ## content/feel/piece_sizes.tres): they have no id property to compare with a folder.
-const ONE_OF_A_KIND_KINDS: Array[StringName] = [&"player", &"world", &"piece_sizes"]
+const ONE_OF_A_KIND_KINDS: Array[StringName] = [&"player", &"world", &"piece_sizes", &"credits"]
 ## Entries whose class is a script class and so must answer validate(): player, world, the piece
-## size table, 7 enemies, 5 rules, 2 skills, 3 pickups and 1 difficulty profile.
-const MINIMUM_VALIDATED_DEFINITIONS := 21
+## size table, the credits, 7 enemies, 5 rules, 2 skills, 3 pickups and 1 difficulty profile.
+const MINIMUM_VALIDATED_DEFINITIONS := 22
 
 
 func _init() -> void:
