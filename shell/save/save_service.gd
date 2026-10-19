@@ -24,8 +24,8 @@ extends Node
 ##   - A session must exist before anything is written: `has_session` becomes true when a slot is loaded
 ##     or a new game begins, so a stray request can never write an empty run over a real save.
 ##   - A save from a newer game is never read as damaged and never overwritten; new_game() sets it aside.
-##   - It loads nothing by itself. GameFlow loads on Continue (M3b/M4); until it exists the in-game scene
-##     calls ensure_session() when it starts, which is Continue.
+##   - It loads nothing by itself. GameFlow loads on Continue and begins on New Game (M4); a game scene started
+##     alone (a test, the editor's Run Current Scene) calls ensure_session() when it starts, which is Continue.
 ##
 ## There is deliberately no class_name: an autoload's name is a global, and a class_name of the same name
 ## is an error. Tests make their own instance with `load("res://shell/save/save_service.gd").new()` and
@@ -34,8 +34,8 @@ extends Node
 ## A save is about to be written for `reason`. The shell listens and copies the live facts the service
 ## cannot see (the ECS world's flags) into `state` first, so a request_save() call site never has to.
 signal saving(reason: StringName)
-## A slot was written. `reason` is the success event that asked (one of AUTOSAVE_REASONS); M4's autosave
-## indicator listens.
+## A slot was written. `reason` is the success event that asked (one of AUTOSAVE_REASONS); AppRoot's autosave
+## indicator listens. A New Game that writes its clean run (start_new_run) is not an autosave and does not emit it.
 signal autosaved(slot: int, reason: StringName)
 
 ## Where saves go unless configure() says otherwise: Godot's per-user data folder.
@@ -157,6 +157,18 @@ func new_game(slot := SINGLE_SLOT) -> void:
 	current_room_id = &""
 	has_session = true
 	last_load = null
+
+
+## New Game, chosen by the player: begins a clean run in `slot` AND makes the slot's file that clean run now, so a
+## relaunch and a Continue can never bring the old run back. Nothing is wiped: SaveFile.write keeps the good file it
+## replaces as the .bak (a damaged one as .corrupt), a file from a newer game is set aside by new_game(), the v2
+## WorldState save is retired by write_slot(), and the profile (the `completed` mark) is not touched. It is the
+## player's command and not a success event (R17), so it asks nobody and emits no `autosaved`: no tick shows.
+## Returns OK or the file error; the clean run is in memory either way, and the next success event writes it again.
+func start_new_run(slot := SINGLE_SLOT) -> Error:
+	new_game(slot)
+	state.saved_at_unix = int(Time.get_unix_time_from_system())
+	return write_slot(slot, state)
 
 
 ## Continue: loads `slot` (a missing or unusable slot starts a clean run, see read_slot) and makes it the

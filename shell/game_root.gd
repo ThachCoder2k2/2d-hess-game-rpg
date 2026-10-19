@@ -35,8 +35,10 @@ var hero_parked_position := Vector2.ZERO
 ## The only reader of the Input singleton: copies the controls into ecs.input_snapshot once per frame.
 var input_poller := InputPoller.new()
 var router := EventRouter.new()
-## Starts the room again after a death or the restart key, without reloading the scene.
-var game_flow := GameFlow.new()
+## The flow this scene belongs to: starts the room again after a death or the restart key, without reloading
+## the scene. AppRoot gives the scene its own flow before adding it; a scene run alone makes one that is
+## already PLAYING.
+var game_flow := GameFlow.new(GameFlow.State.PLAYING)
 var shell_keys := ShellKeys.new()
 # One bridge per responsibility; the header of each file says what it owns.
 var board_bridge := BoardBridge.new()
