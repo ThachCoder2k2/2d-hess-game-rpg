@@ -26,8 +26,12 @@ extends RefCounted
 ##   2. the current file, if it is a good save, becomes <path>.bak (a damaged one becomes <path>.corrupt
 ##      instead, so it can never push a good .bak out);
 ##   3. <path>.tmp is renamed to <path>.
-## A crash between 2 and 3 leaves no <path> and a good .bak, which the loader falls back to. The file a
-## newer game wrote is never replaced (write returns ERR_LOCKED).
+## A crash between 2 and 3 leaves no <path>, the previous save as <path>.bak and the NEW save, complete and
+## verified, as <path>.tmp. The loader must not fall back to the .bak and forget the .tmp: it is the player's
+## latest progress. read_unfinished_write() hands the loader that .tmp when it is not older than the .bak, and
+## finish_unfinished_write() completes step 3 by rename, so the disk is back to the ordinary layout. A crash
+## before step 2 leaves the old file in place and a .tmp nobody needs: the old file wins and the next write
+## overwrites the .tmp. The file a newer game wrote is never replaced (write returns ERR_LOCKED).
 
 const TEMP_SUFFIX := ".tmp"
 const BACKUP_SUFFIX := ".bak"
@@ -133,6 +137,32 @@ static func read_unchecked(path: String) -> Reading:
 	reading.config = config
 	reading.status = STATUS_READABLE
 	return reading
+
+
+## What an interrupted write left as <path>.tmp (see the class comment), for the loader to use when <path> is
+## missing or damaged: the .tmp's reading when it exists and is not older than the .bak. A .tmp is always
+## written after the file that became the .bak, so equal modification times (the clock counts whole seconds, and
+## two saves can fall in the same second) mean the .tmp is the newer. A .bak that cannot be read cannot be newer
+## than anything, so it never keeps a good .tmp out. The returned reading may be damaged or from a newer game:
+## the loader judges it like any other file. A reading with STATUS_MISSING means there is nothing to recover.
+static func read_unfinished_write(path: String) -> Reading:
+	var temp_path := path + TEMP_SUFFIX
+	var temp := read(temp_path)
+	if temp.status == STATUS_MISSING:
+		return temp
+	var backup_path := path + BACKUP_SUFFIX
+	if read(backup_path).is_readable() and FileAccess.get_modified_time(temp_path) < FileAccess.get_modified_time(backup_path):
+		return Reading.new()
+	return temp
+
+
+## Finishes an interrupted write: <path>.tmp becomes <path> by rename, step 3 of write(). A damaged file in the
+## way is set aside as .corrupt first (never deleted, never allowed to push a good .bak out). Returns OK or the
+## error; whatever happens nothing is deleted.
+static func finish_unfinished_write(path: String) -> Error:
+	if FileAccess.file_exists(path):
+		set_aside(path, DAMAGED_SUFFIX)
+	return DirAccess.rename_absolute(path + TEMP_SUFFIX, path)
 
 
 ## The version a file's [meta] section declares, found in the raw text, or -1. Used on text that may be

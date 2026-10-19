@@ -2,8 +2,9 @@ extends UnboundTest
 
 ## A damaged or missing save never wipes the player's progress and never crashes the loader
 ## (docs/game-base-plan.md 9.2 "Corrupt or newer save", 9.3, risk 9). The chain read_slot() follows:
-## the slot's file, then its .bak, then (first slot) the v2 WorldState save, then a clean new game, each
-## step logged. A save from a NEWER game is never read as damaged and never overwritten.
+## the slot's file, then the save an interrupted write left as .tmp (when it is not older than the .bak),
+## then its .bak, then (first slot) the v2 WorldState save, then a clean new game, each step logged. A
+## save from a NEWER game is never read as damaged and never overwritten.
 ##
 ## Every damaged file here is damaged for real (truncated, zeroed, flipped, garbage), and the suite runs
 ## under --strict: the loader must tell damage apart before the ConfigFile parser sees it, because the
@@ -20,6 +21,8 @@ func _init() -> void:
 	_check_no_save_is_a_normal_first_run()
 	_check_a_damaged_file_falls_back_to_the_backup()
 	_check_a_missing_file_falls_back_to_the_backup()
+	_check_a_write_that_died_between_its_renames_is_finished()
+	_check_a_temp_file_that_is_not_the_latest_save_is_left_alone()
 	_check_nothing_usable_is_a_clean_new_game()
 	_check_the_next_save_after_damage_keeps_the_good_backup()
 	_check_a_newer_game_is_never_overwritten()
@@ -88,7 +91,7 @@ func _check_a_damaged_file_falls_back_to_the_backup() -> void:
 
 
 func _check_a_missing_file_falls_back_to_the_backup() -> void:
-	# A crash between "the old file becomes the .bak" and "the new file takes its place" leaves exactly this.
+	# The file is simply gone (and no .tmp is beside it): the previous save is all there is.
 	var made := _root_with_two_saves("missing_main")
 	var service: Node = made[1]
 	DirAccess.remove_absolute(service.slot_path(0))
@@ -96,6 +99,119 @@ func _check_a_missing_file_falls_back_to_the_backup() -> void:
 	var result: SaveLoadResult = reader.load_slot(0)
 	_expect(result.outcome == SaveLoadResult.LOADED_FROM_BACKUP and reader.state.checkpoint_zone_id == &"t1_white_kings_fall", "a missing file with a good .bak loads the .bak")
 	_expect(reader.has_save(0), "has_save counts a lone .bak")
+
+
+## The disk a crash leaves when SaveFile.write dies after its second step and before its third: it built and
+## verified <file>.tmp from the new save, and renamed the old file to <file>.bak; <file> does not exist. The two
+## steps are done here with the calls write() makes. Returns [root, service, the newer SaveData].
+func _root_after_a_crash_between_the_renames(label: String) -> Array:
+	var root_directory := _new_root(label)
+	var service := SaveSupport.new_service(root_directory)
+	var older := SaveData.new()
+	older.checkpoint_zone_id = &"t1_white_kings_fall"
+	var newer := SaveData.new()
+	newer.checkpoint_zone_id = &"t2_fallen_sword_tile"
+	newer.taken_pickup_ids["t2_fallen_sword_tile/Shield"] = true
+	service.write_slot(0, older)
+	var path: String = service.slot_path(0)
+	SaveSupport.plant(path + SaveFile.TEMP_SUFFIX, SaveFile.encode(newer.to_config()))
+	DirAccess.rename_absolute(path, path + SaveFile.BACKUP_SUFFIX)
+	return [root_directory, service, newer]
+
+
+func _check_a_write_that_died_between_its_renames_is_finished() -> void:
+	var made := _root_after_a_crash_between_the_renames("crash_window")
+	var writer: Node = made[1]
+	var path: String = writer.slot_path(0)
+	_expect(not FileAccess.file_exists(path) and SaveFile.read(path + ".bak").is_readable() and SaveFile.read(path + ".tmp").is_readable(), "setup: the disk is what the crash leaves: no file, the old save as .bak, the new save complete as .tmp")
+	_expect(SaveData.from_config(SaveFile.read(path + ".bak").config).checkpoint_zone_id == &"t1_white_kings_fall" and SaveData.from_config(SaveFile.read(path + ".tmp").config).checkpoint_zone_id == &"t2_fallen_sword_tile", "setup: the .tmp is the newer of the two")
+
+	# Reading it (a slot card) takes the .tmp and changes nothing on the disk.
+	var peeker := SaveSupport.new_service(made[0])
+	_expect(peeker.has_save(0), "has_save sees the slot")
+	var peeked: SaveLoadResult = peeker.read_slot(0)
+	_expect(peeked.outcome == SaveLoadResult.LOADED and peeked.notice_key == &"" and peeked.data.checkpoint_zone_id == &"t2_fallen_sword_tile" and peeked.data.taken_pickup_ids.has("t2_fallen_sword_tile/Shield"), "read_slot takes the newer save from the .tmp, as a normal load: the player lost nothing and is told nothing")
+	_expect(peeked.source_path == peeker.temp_path(0) and peeked.log_lines.size() >= 2 and peeked.log_lines[0].contains("not there"), "and says where it came from and what it tried first")
+	_expect(not FileAccess.file_exists(path) and FileAccess.file_exists(path + ".tmp") and FileAccess.file_exists(path + ".bak"), "read_slot writes and renames nothing")
+
+	# Loading it makes it the run and finishes the write by rename.
+	var reader := SaveSupport.new_service(made[0])
+	var result: SaveLoadResult = reader.load_slot(0)
+	_expect(result.outcome == SaveLoadResult.LOADED and reader.state.checkpoint_zone_id == &"t2_fallen_sword_tile" and reader.state.taken_pickup_ids.size() == 1 and result.slot_is_writable(), "load_slot makes the .tmp's save the run, not the .bak's")
+	_expect(result.source_path == reader.slot_path(0) and result.log_lines[result.log_lines.size() - 1].contains("finished the interrupted write"), "and finishes the write, and the log says so")
+	_expect(SaveFile.read(path).is_readable() and SaveData.from_config(SaveFile.read(path).config).checkpoint_zone_id == &"t2_fallen_sword_tile" and not FileAccess.file_exists(path + ".tmp"), "the file is the newer save again and the .tmp is gone")
+	_expect(SaveData.from_config(SaveFile.read(path + ".bak").config).checkpoint_zone_id == &"t1_white_kings_fall", "the .bak is still the save before it")
+	reader.state.checkpoint_zone_id = &"t3_first_pawn_clash"
+	_expect(reader.request_save(&"checkpoint_reached") and SaveData.from_config(SaveFile.read(path + ".bak").config).checkpoint_zone_id == &"t2_fallen_sword_tile", "the next save moves the recovered one to the .bak, as after any ordinary write")
+
+	# The player's progress is in the .tmp even when the file in the way is damaged rather than missing.
+	var damaged_made := _root_after_a_crash_between_the_renames("crash_window_damaged_file")
+	var damaged_path: String = damaged_made[1].slot_path(0)
+	SaveSupport.plant(damaged_path, "[meta]\nversion=3\n")
+	var damaged_reader := SaveSupport.new_service(damaged_made[0])
+	var damaged_result: SaveLoadResult = damaged_reader.load_slot(0)
+	_expect(damaged_result.outcome == SaveLoadResult.LOADED and damaged_reader.state.checkpoint_zone_id == &"t2_fallen_sword_tile", "a damaged file with a newer .tmp loads the .tmp")
+	_expect(SaveSupport.text_of(damaged_path + ".corrupt") == "[meta]\nversion=3\n" and SaveFile.read(damaged_path).is_readable(), "and the damaged file is set aside as .corrupt, not deleted")
+
+	# A .tmp alone (the very first save died before its rename) is the save.
+	var first_root := _new_root("crash_first_save")
+	var first_path := first_root + "/saves/slot_0.cfg"
+	SaveSupport.plant(first_path + ".tmp", SaveFile.encode((made[2] as SaveData).to_config()))
+	var first_service := SaveSupport.new_service(first_root)
+	_expect(first_service.has_save(0) and first_service.load_slot(0).outcome == SaveLoadResult.LOADED and first_service.state.checkpoint_zone_id == &"t2_fallen_sword_tile", "a complete .tmp with nothing else is a save: Continue offers it and loads it")
+
+
+func _check_a_temp_file_that_is_not_the_latest_save_is_left_alone() -> void:
+	var newer_data := SaveData.new()
+	newer_data.checkpoint_zone_id = &"t2_fallen_sword_tile"
+	var older_data := SaveData.new()
+	older_data.checkpoint_zone_id = &"t1_white_kings_fall"
+
+	# A write that died BEFORE its second step leaves the old file in place and a .tmp nobody needs: the file wins.
+	var before_rename := _root_with_two_saves("crash_before_renames")
+	var before_path: String = before_rename[1].slot_path(0)
+	SaveSupport.plant(before_path + ".tmp", SaveFile.encode(older_data.to_config()))
+	var before_reader := SaveSupport.new_service(before_rename[0])
+	var before_result: SaveLoadResult = before_reader.load_slot(0)
+	_expect(before_result.outcome == SaveLoadResult.LOADED and before_reader.state.checkpoint_zone_id == &"t2_fallen_sword_tile" and before_result.source_path == before_path, "a readable file is the save: a stray .tmp is not looked at")
+	_expect(FileAccess.file_exists(before_path + ".tmp"), "and the .tmp is left where it is for the next write to overwrite")
+
+	# A .tmp OLDER than the .bak is not the latest progress (it cannot come from the write that made the .bak).
+	var stale_root := _new_root("stale_temp")
+	var stale_path := stale_root + "/saves/slot_0.cfg"
+	SaveSupport.plant(stale_path + ".tmp", SaveFile.encode(older_data.to_config()))
+	OS.delay_msec(1100)
+	SaveSupport.plant(stale_path + ".bak", SaveFile.encode(newer_data.to_config()))
+	_expect(FileAccess.get_modified_time(stale_path + ".tmp") < FileAccess.get_modified_time(stale_path + ".bak"), "setup: the .tmp is older than the .bak")
+	var stale_reader := SaveSupport.new_service(stale_root)
+	var stale_result: SaveLoadResult = stale_reader.load_slot(0)
+	_expect(stale_result.outcome == SaveLoadResult.LOADED_FROM_BACKUP and stale_reader.state.checkpoint_zone_id == &"t2_fallen_sword_tile", "an older .tmp is passed over: the .bak is loaded")
+	_expect(FileAccess.file_exists(stale_path + ".tmp") and not FileAccess.file_exists(stale_path), "and nothing is renamed")
+
+	# A .tmp that is damaged (a write that died while writing it) is not a save; the .bak is.
+	var torn := _root_after_a_crash_between_the_renames("torn_temp")
+	var torn_path: String = torn[1].slot_path(0)
+	SaveSupport.plant(torn_path + ".tmp", SaveSupport.text_of(torn_path + ".tmp").substr(0, 60))
+	var torn_reader := SaveSupport.new_service(torn[0])
+	var torn_result: SaveLoadResult = torn_reader.load_slot(0)
+	_expect(torn_result.outcome == SaveLoadResult.LOADED_FROM_BACKUP and torn_reader.state.checkpoint_zone_id == &"t1_white_kings_fall" and torn_result.notice_key == SaveLoadResult.NOTICE_BACKUP_USED, "a damaged .tmp falls back to the .bak and the player is told")
+	_expect(torn_result.log_lines.size() >= 3 and String(torn_result.log_lines[1]).contains(".tmp: ") and String(torn_result.log_lines[1]).contains("damaged"), "the log names the damaged .tmp")
+
+	# A .tmp from a NEWER game is never overwritten or read as ours: the same rule as the file and the .bak.
+	var future := ConfigFile.new()
+	future.set_value("meta", "version", 99)
+	future.set_value("future", "shiny_new_thing", "very important progress")
+	var future_text := SaveFile.encode(future)
+	var future_made := _root_after_a_crash_between_the_renames("newer_temp")
+	var future_path: String = future_made[1].slot_path(0)
+	SaveSupport.plant(future_path + ".tmp", future_text)
+	var future_service := SaveSupport.new_service(future_made[0])
+	var future_result: SaveLoadResult = future_service.load_slot(0)
+	_expect(future_result.outcome == SaveLoadResult.NEWER_GAME_REQUIRED and not future_result.slot_is_writable(), "a .tmp from a newer game asks for a newer game, even with a good .bak beside it")
+	future_service.state.checkpoint_zone_id = &"t3_first_pawn_clash"
+	_expect(not future_service.request_save(&"checkpoint_reached") and SaveSupport.text_of(future_path + ".tmp") == future_text and not FileAccess.file_exists(future_path), "and no save is written over it, and the .tmp was not renamed into the file")
+	future_service.new_game(0)
+	_expect(SaveSupport.text_of(future_path + ".tmp.newer_game") == future_text and not FileAccess.file_exists(future_path + ".tmp"), "a New Game sets it aside, byte for byte, before anything is written")
 
 
 func _check_nothing_usable_is_a_clean_new_game() -> void:

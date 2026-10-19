@@ -1526,7 +1526,9 @@ There is no `game_over` screen (the draft's `shell/game_over/` folder is dropped
 
 `SaveService` autoload. `ConfigFile` at `user://saves/slot_N.cfg`.
 - Schema v3: `[meta]` (which also holds `room` and `room_entry`, where the pawn stands: a death and a Continue return to it, see 5.2) plus world flags (namespaced bool/int), counters (`child_calls_used`, `child_trust`, shard count), `checkpoint_zone/entry` (the latest hub or boss-room door only), `cleared_room_ids`, `defeated_boss_ids`, taken pickup ids, opened gates, unlocked skill and rule ids, equipped pages, Margin, Believe, Courage max, `dialogue_log` (Tier B).
-- Atomic write (tmp file, rename, keep `.bak`); `Error` checked.
+- Atomic write (tmp file, rename, keep `.bak`); `Error` checked. A crash between the two renames leaves no file, the
+  old save as `.bak` and the new save, complete, as `.tmp`: the loader reads that `.tmp` (when it is not older than
+  the `.bak`) before the `.bak`, and `load_slot` finishes the rename, so the interrupted save is not lost.
 - A `_migrate(from_version)` chain replaces the silent wipe on mismatch. The v2 fixture is tested.
 - No auto-load in `_ready`; `GameFlow` loads on Continue.
 - `SaveService.configure(root_dir)` is injectable. Tests pass a unique `user://test_saves/<id>/` folder (and run with `HOME=/tmp/unbound-pawn-godot`) so a stale save can never change which room a test boots into.

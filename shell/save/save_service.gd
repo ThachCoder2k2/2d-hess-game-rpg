@@ -9,8 +9,9 @@ extends Node
 ##   2. The slots on disk. One slot exists today (SINGLE_SLOT) behind an API that takes a slot id, so a
 ##      slots screen is a UI-only change later. A slot is `<root>/saves/slot_<n>.cfg`, written
 ##      atomically with a .bak (SaveFile), read back through a fallback chain that never wipes anything
-##      (read_slot: the file, then the .bak, then the v2 WorldState save, then a clean new game, each step
-##      logged), and migrated from older formats (SaveMigration).
+##      (read_slot: the file, then the save an interrupted write left as .tmp if it is newer than the .bak,
+##      then the .bak, then the v2 WorldState save, then a clean new game, each step logged), and migrated
+##      from older formats (SaveMigration).
 ##   3. The profile (`<root>/profile.cfg`): facts about the player that outlive a slot, today the
 ##      `completed` mark, which survives a New Game (docs/game-base-plan.md 8.8, 9.1).
 ##
@@ -122,6 +123,11 @@ func backup_path(slot: int) -> String:
 	return slot_path(slot) + SaveFile.BACKUP_SUFFIX
 
 
+## The file a write builds the new save in before it replaces the slot's file (SaveFile.write).
+func temp_path(slot: int) -> String:
+	return slot_path(slot) + SaveFile.TEMP_SUFFIX
+
+
 func profile_path() -> String:
 	return _root_directory.path_join(PROFILE_FILE)
 
@@ -130,9 +136,11 @@ func legacy_world_state_path() -> String:
 	return _root_directory.path_join(LEGACY_WORLD_STATE_FILE)
 
 
-## Whether anything is on the disk for this slot (the file, its backup, or for the first slot the v2 save).
+## Whether anything is on the disk for this slot (the file, its backup, a complete save an interrupted write
+## left as .tmp, or for the first slot the v2 save).
 func has_save(slot: int) -> bool:
 	return FileAccess.file_exists(slot_path(slot)) or FileAccess.file_exists(backup_path(slot)) \
+		or SaveFile.read(temp_path(slot)).is_readable() \
 		or (slot == SINGLE_SLOT and FileAccess.file_exists(legacy_world_state_path()))
 
 
@@ -155,6 +163,8 @@ func new_game(slot := SINGLE_SLOT) -> void:
 ## run. Logs why when anything other than a normal load happened.
 func load_slot(slot := SINGLE_SLOT) -> SaveLoadResult:
 	var result := read_slot(slot)
+	if result.outcome == SaveLoadResult.LOADED and result.source_path == temp_path(slot):
+		_finish_the_interrupted_write(slot, result)
 	active_slot = slot
 	state = result.data
 	current_room_id = state.room_id
@@ -204,6 +214,23 @@ func read_slot(slot: int) -> SaveLoadResult:
 		&"obsolete":
 			return _obsolete(result, main_path, main)
 
+	# The file is missing or damaged. A write that died between its two renames (SaveFile.write) left the new,
+	# complete save as <file>.tmp and the previous one as <file>.bak: the .tmp is the latest progress, so it is
+	# read before the .bak when it is not older than it.
+	var unfinished_path := temp_path(slot)
+	var unfinished := SaveFile.read_unfinished_write(main_path)
+	var unfinished_verdict := _verdict_of(unfinished)
+	if unfinished_verdict != &"missing":
+		result.log_lines.append(_describe(unfinished_path, unfinished, unfinished_verdict))
+	match unfinished_verdict:
+		&"readable":
+			if _take_data_from(result, unfinished, unfinished_path, SaveLoadResult.LOADED):
+				result.log_lines.append("%s is the newest save: the write that made it was interrupted before it replaced the file, so it is loaded" % unfinished_path)
+				return result
+			return _newer_game(result, unfinished_path, unfinished)
+		&"newer":
+			return _newer_game(result, unfinished_path, unfinished)
+
 	var backup_path_of_slot := backup_path(slot)
 	var backup := SaveFile.read(backup_path_of_slot)
 	var backup_verdict := _verdict_of(backup)
@@ -218,7 +245,8 @@ func read_slot(slot: int) -> SaveLoadResult:
 		&"newer":
 			return _newer_game(result, backup_path_of_slot, backup)
 
-	var anything_damaged := main_verdict == &"damaged" or backup_verdict == &"damaged" or backup_verdict == &"obsolete"
+	var anything_damaged := main_verdict == &"damaged" or backup_verdict == &"damaged" or backup_verdict == &"obsolete" \
+		or unfinished_verdict == &"damaged"
 	if main_verdict == &"missing" and backup_verdict == &"missing" and slot == SINGLE_SLOT:
 		var legacy_result := _read_legacy_world_state(result)
 		if legacy_result != null:
@@ -406,9 +434,22 @@ func _read_legacy_world_state(result: SaveLoadResult) -> SaveLoadResult:
 	return result
 
 
-## A file from a newer game in `slot` (its save or its .bak) is renamed out of the way, so the new run can be
+## The load took the save from <file>.tmp: finish the write that was interrupted (the rename it never got to), so
+## the disk is back to the ordinary layout (file, .bak). The data is already in `result`, so a rename that
+## fails only costs a log line: the next write starts from the same place.
+func _finish_the_interrupted_write(slot: int, result: SaveLoadResult) -> void:
+	var error := SaveFile.finish_unfinished_write(slot_path(slot))
+	if error == OK:
+		result.source_path = slot_path(slot)
+		result.log_lines.append("finished the interrupted write: %s is the slot's file again" % temp_path(slot))
+	else:
+		result.log_lines.append("could not finish the interrupted write (error %d: %s); the save is loaded from %s as it is" % [error, error_string(error), temp_path(slot)])
+		push_warning("SaveService: slot %d: %s" % [slot, result.log_lines[result.log_lines.size() - 1]])
+
+
+## A file from a newer game in `slot` (its save, its .bak or its .tmp) is renamed out of the way, so the new run can be
 ## saved without ever overwriting it. Anything else is left alone.
 func _set_newer_game_files_aside(slot: int) -> void:
-	for path in [slot_path(slot), backup_path(slot)]:
+	for path in [slot_path(slot), backup_path(slot), temp_path(slot)]:
 		if _verdict_of(SaveFile.read(path)) == &"newer":
 			SaveFile.set_aside(path, NEWER_GAME_SUFFIX)

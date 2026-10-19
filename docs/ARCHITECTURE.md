@@ -669,8 +669,16 @@ owner of everything written about a playthrough (`docs/game-base-plan.md` 9.3, D
   never saves) and `[flags]` (the `WorldFlags`). Written by write-temp, verify, keep the old file as `.bak`,
   rename (`SaveFile`); the file ends with an integrity footer (a ConfigFile comment) so a damaged file is
   recognised before the parser prints an engine error on it.
-- **Loading** (`read_slot`) never wipes and never throws: the file, else its `.bak`, else (first slot) the v2
-  `world_state.cfg`, else a clean new game, each step logged and a notice key set for the title (M4). An older
+- **Loading** (`read_slot`) never wipes and never throws: the file, else the save an interrupted write left as
+  `.tmp` (see below), else its `.bak`, else (first slot) the v2 `world_state.cfg`, else a clean new game, each
+  step logged and a notice key set for the title (M4). A write has three steps (build and verify `.tmp`, the old
+  file becomes `.bak`, `.tmp` becomes the file); a crash between the last two leaves no file, the old save as
+  `.bak` and the NEW save, complete, as `.tmp`. The loader takes that `.tmp` when it is readable and not older
+  than the `.bak` (a `.tmp` is always written after the file that became the `.bak`, so equal times, which the
+  clock's whole seconds give two quick saves, count as newer) and `load_slot` finishes the rename, so the
+  player does not lose the progress the interrupted save was writing and no notice is shown. A `.tmp` that is
+  damaged, older than the `.bak`, or beside a readable file is not used (and a `.tmp` from a newer game is
+  protected like the file and the `.bak`). An older
   format is migrated by `SaveMigration` (v2 to v3 today; the v2 file is kept as `world_state.cfg.migrated`
   after the first v3 save); a format too old to migrate is reported obsolete and left on disk; a save from a
   newer game is never read as damaged and never overwritten (`new_game` renames it to `.newer_game`).
