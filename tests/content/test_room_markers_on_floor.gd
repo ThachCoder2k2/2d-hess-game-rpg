@@ -31,9 +31,11 @@ extends UnboundTest
 ## wall and a gate nobody can push, each in a copy of a room that is right, produce a sentence, and the same
 ## kinds of marker put on floor produce none.
 
-const MINIMUM_ZONES := 7
-const MINIMUM_ENTRIES := 12
-const MINIMUM_ENEMIES := 20
+const PlanRoomTable := preload("res://tests/fixtures/plan_room_table.gd")
+
+const MINIMUM_ZONES := 35
+const MINIMUM_ENTRIES := 67
+const MINIMUM_ENEMIES := 62
 const MINIMUM_PICKUPS := 7
 const MINIMUM_UNLOCKS := 1
 const MINIMUM_GATES := 2
@@ -45,6 +47,9 @@ const CELL_SIZE := 32
 var zones_checked := 0
 var entries_checked := 0
 var enemies_checked := 0
+## How many entries and enemies the check looked at in each zone, by zone id: what proves that no room of the plan was skipped (M5 step 3).
+var entries_checked_by_zone: Dictionary[StringName, int] = {}
+var enemies_checked_by_zone: Dictionary[StringName, int] = {}
 var pickups_checked := 0
 var unlocks_checked := 0
 var gates_checked := 0
@@ -68,17 +73,43 @@ func _init() -> void:
 	_expect(pickups_checked >= MINIMUM_PICKUPS, "%d pickups were checked (at least %d)" % [pickups_checked, MINIMUM_PICKUPS])
 	_expect(unlocks_checked >= MINIMUM_UNLOCKS, "%d unlock markers were checked (at least %d)" % [unlocks_checked, MINIMUM_UNLOCKS])
 	_expect(gates_checked >= MINIMUM_GATES, "%d gates were checked (at least %d)" % [gates_checked, MINIMUM_GATES])
+	_check_every_room_of_the_plan_was_covered(graph)
 	_check_the_scan_can_fail(graph)
 	finish()
 
 
+## M5 step 3: every one of the 34 rooms of the plan's table (and the kingdom fixture) was booted, and the check looked at EVERY entry and EVERY piece the
+## scene parks (counted independently, by reading the scene), so a room the walk skipped, or a piece it did not see, shows here by name.
+func _check_every_room_of_the_plan_was_covered(graph: WorldGraph) -> void:
+	var plan_ids: Array[StringName] = []
+	for row in PlanRoomTable.ROWS:
+		plan_ids.append(row["id"])
+	var checked_ids: Array[StringName] = []
+	checked_ids.assign(entries_checked_by_zone.keys())
+	for room_id in plan_ids:
+		_expect(room_id in checked_ids, "%s: the room was booted and checked" % room_id)
+	_expect(checked_ids.size() == plan_ids.size() + 1, "the zones checked are the 34 rooms of the plan and the kingdom fixture (%d)" % checked_ids.size())
+	var rooms_with_every_marker_seen := 0
+	for room_id in plan_ids:
+		var scan := RoomScan.of(graph.get_zone_scene(room_id))
+		var every_entry_seen: bool = entries_checked_by_zone.get(room_id, -1) == scan.entry_ids.size()
+		var every_piece_seen: bool = enemies_checked_by_zone.get(room_id, -1) == scan.enemy_definitions.size()
+		_expect(every_entry_seen and every_piece_seen, "%s: all %d entries and all %d pieces of the scene were checked (looked at %d and %d)" % [room_id, scan.entry_ids.size(), scan.enemy_definitions.size(), entries_checked_by_zone.get(room_id, -1), enemies_checked_by_zone.get(room_id, -1)])
+		rooms_with_every_marker_seen += 1 if every_entry_seen and every_piece_seen else 0
+	_expect(rooms_with_every_marker_seen == 34, "in all 34 rooms every entry and every piece was seen (%d)" % rooms_with_every_marker_seen)
+
+
 func _check_zone(scene: PackedScene, zone_id: StringName) -> void:
+	var entries_before := entries_checked
+	var enemies_before := enemies_checked
 	var booted := _boot(scene)
 	var problems := _problems_in(booted)
 	for problem in problems:
 		printerr("  %s: %s: %s" % [zone_id, problem["node"], problem["text"]])
 	_expect(problems.is_empty(), "%s: every entry, enemy, pickup, unlock and gate stands on floor the pawn can use (%d problem(s))" % [zone_id, problems.size()])
 	zones_checked += 1
+	entries_checked_by_zone[zone_id] = entries_checked - entries_before
+	enemies_checked_by_zone[zone_id] = enemies_checked - enemies_before
 	_free(booted)
 
 
