@@ -42,6 +42,9 @@ const PIECE_TYPE_BY_PIECE := {
 	"double_step": "pawn",
 	"knight": "knight",
 	"bishop": "bishop",
+	"rook": "rook",
+	"queen": "queen",
+	"king": "king",
 }
 
 ## Every palette is exactly four entries: [outline, dark, mid, light].
@@ -307,6 +310,55 @@ func _build_pieces() -> void:
 		"rows": [
 			_lathe(6.0), _lathe(5.0, "SB"), _lathe(4.8), _lathe(5.2),
 			_lathe(6.0), _lathe(7.0, "SB"), _lathe(7.6),
+		],
+	}
+
+	# The rest of the black family, drawn at M5 so every boss and the rook enemies have a picture that reads as
+	# THEIR kind of piece (the pictures of a boss are stand-ins the owner replaces, the same swap as the others):
+	# a rook is a squat tower (a wide drum on top, a steel ring), the queen carries a gold crown on a ball, the
+	# king a gold cross (the promoted pawn's own cross spans). All three are lathe pieces on the pawn's pedestal,
+	# so they stand in the same family; each fits the box of its row in content/feel/piece_sizes.tres.
+	_pieces["rook"] = {
+		"width": 16,
+		"palette": "BK",
+		"eye_row": 5,
+		"rows": [
+			_lathe(3.4), _lathe(4.4), _lathe(4.4),
+			_lathe(3.0, "ST"), _lathe(3.0),
+			_lathe(3.4), _lathe(3.8), _lathe(3.8), _lathe(3.6), _lathe(3.6),
+			_lathe(4.4, "ST"), _lathe(4.8, "ST"),
+			_lathe(4.2), _lathe(4.6), _lathe(5.2), _lathe(5.6), _lathe(6.0),
+		],
+	}
+	_pieces["queen"] = {
+		"width": 16,
+		"palette": "BK",
+		"eye_row": 9,
+		"rows": [
+			_lathe(1.0), _lathe(1.8), _lathe(1.0),
+			_lathe(2.6, "GB"), _lathe(3.8, "GB"), _lathe(4.2, "GB"), _lathe(3.2),
+			_lathe(2.6), _lathe(3.4), _lathe(3.8), _lathe(3.8), _lathe(3.2),
+			_lathe(2.0), _lathe(2.0),
+			_lathe(3.6, "GB"), _lathe(4.0, "GB"),
+			_lathe(2.8), _lathe(3.2), _lathe(3.6),
+			_lathe(4.8), _lathe(5.6), _lathe(6.2),
+		],
+	}
+	var king_cross: Array[Array] = []
+	for span: Array in CROSS_SPANS:
+		king_cross.append([span[0], span[1]])
+	_pieces["king"] = {
+		"width": 16,
+		"palette": "BK",
+		"head": king_cross,
+		"head_palette": "GB",
+		"eye_row": 7,
+		"rows": [
+			_lathe(2.6, "GB"), _lathe(3.6, "GB"), _lathe(4.0), _lathe(4.0), _lathe(3.4),
+			_lathe(2.2), _lathe(2.0),
+			_lathe(3.6, "GB"), _lathe(4.0, "GB"),
+			_lathe(2.8), _lathe(3.2), _lathe(3.6),
+			_lathe(4.2), _lathe(4.8), _lathe(5.6), _lathe(6.2),
 		],
 	}
 

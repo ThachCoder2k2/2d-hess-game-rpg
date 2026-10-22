@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="EnemyDefinition" format=3 uid="uid://b6anc0gnh3ed"]
+
+[ext_resource type="Script" uid="uid://bmdisg36ew8g5" path="res://schema/entity/enemy_definition.gd" id="1"]
+[ext_resource type="Resource" uid="uid://bd5f1gyudx2h1" path="res://content/enemies/_shared/movement/eight_way_step.tres" id="2"]
+[ext_resource type="Resource" uid="uid://cq4qwwrl876l2" path="res://content/enemies/_shared/decisions/pawn_skirmisher.tres" id="3"]
+[ext_resource type="Resource" uid="uid://bd7lftq7w8x0i" path="res://content/enemies/_shared/attacks/king_reach.tres" id="4"]
+[ext_resource type="Resource" uid="uid://bljy20srlkuwm" path="res://content/enemies/black_king/visual.tres" id="5"]
+[ext_resource type="Resource" uid="uid://cq15s5oalg3r5" path="res://content/difficulty/standard.tres" id="6"]
+
+[resource]
+script = ExtResource("1")
+id = &"black_king"
+display_name = "ENEMY_BLACK_KING_NAME"
+piece_name = "ENEMY_BLACK_KING_PIECE"
+role = &"captain"
+max_health = 12
+movement = ExtResource("2")
+decision = ExtResource("3")
+unarmed_attack = ExtResource("4")
+visual = ExtResource("5")
+difficulty = ExtResource("6")
+defeat_flag = &"boss.black_king"

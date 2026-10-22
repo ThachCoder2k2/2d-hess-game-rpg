@@ -26,3 +26,4 @@ weapon_preferences = {
 visual = ExtResource("5")
 difficulty = ExtResource("6")
 default_weapon = ExtResource("7")
+defeat_flag = &"boss.black_pawn_captain"
