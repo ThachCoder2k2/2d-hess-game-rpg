@@ -19,6 +19,8 @@ layout_archetype = &"islands"
 recipe = 4
 content_status = 0
 time_of_night = 2
+threat_budget = 7
+intensity = 8
 
 [node name="RoomArt" type="Node2D" parent="."]
 z_index = -20

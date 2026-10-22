@@ -20,6 +20,10 @@ layout_archetype = &"waves"
 recipe = 2
 content_status = 0
 time_of_night = 3
+objective_kind = 3
+threat_budget = 6
+threat_shapes = 4
+intensity = 7
 
 [node name="RoomArt" type="Node2D" parent="."]
 z_index = -20

@@ -36,6 +36,11 @@ recipe = boss
 status = greybox
 time_of_night = small_hours
 checkpoint_on_entry = true
+objective = waves
+threat = 7
+shapes = 3
+intro = false
+intensity = 8
 tileset = greybox
 name = Kitchen Sink
 start = Everything the builder knows, once.
@@ -228,6 +233,8 @@ func _every_kind_builds_and_boots() -> void:
 
 	var root_room := room as RoomEncounter
 	_expect(root_room.checkpoint_on_entry and root_room.recipe == RoomEncounter.Recipe.BOSS and root_room.content_status == RoomEncounter.ContentStatus.GREYBOX and root_room.time_of_night == RoomEncounter.TimeOfNight.SMALL_HOURS and root_room.act == 3 and root_room.district == &"bookshelf" and root_room.layout_archetype == &"islands", "the meta of the layout is the meta of the root")
+	_expect(root_room.objective_kind == RoomEncounter.ObjectiveKind.WAVES and root_room.threat_budget == 7 and root_room.threat_shapes == 3 and root_room.intensity == 8 and not root_room.intro, "...and so is the encounter meta: the objective kind, the threat in points and shapes, the intensity")
+	_expect(root_room.configuration_problems().is_empty(), "the root has no configuration warning of its own")
 	room.free()
 	world.free()
 

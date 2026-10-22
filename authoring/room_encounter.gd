@@ -33,6 +33,12 @@ enum TimeOfNight { DUSK, EVENING, NIGHT, SMALL_HOURS, DAWN, MORNING }
 ## What the room is for in the formula of docs/game-base-plan.md 7.5 (the Role column of 7.4). Append only.
 enum Recipe { REST, TEACH, TEST, TWIST, BOSS, SHORTCUT, OPTIONAL, ENDING, DEV }
 
+## What the room asks of the pawn (the Obj column of docs/game-base-plan.md 7.4). Inert data until M9 builds the kinds: the runtime
+## judges a room by the fall of its pieces, whatever it says here, so the field tells the owner and the lints what the room is MEANT
+## to be (`reach`: walk to the door; `survive`: hold out a timer; `waves`: several waves of pieces; `none`: nothing to do).
+## Append only: a saved scene stores the number.
+enum ObjectiveKind { CLEAR, REACH, SURVIVE, WAVES, NONE }
+
 ## The acts are 1 to 6; the Ending ("Morning") is act 7 (D-06). Zero means the room is no part of the story.
 const LAST_ACT := 7
 ## A room fits one screen: at most this many cells wide and high (D-02: 16x9 by default, arenas up to 18x9).
@@ -41,6 +47,21 @@ const LARGEST_BOARD := Vector2i(18, 9)
 const SMALLEST_BOARD := Vector2i(8, 7)
 ## Scenes under this folder are shipped rooms: their zone_id is their folder name.
 const ROOMS_FOLDER := "res://content/rooms/"
+## The threat rules of docs/game-base-plan.md 5.3 (R4, R18, R28), the ONE place they are written: the Inspector's warnings read them
+## here, and the lints of tests/ read them here too, so a number is changed once. The room's own budget is in points
+## (EnemyDefinition.threat_points) and never goes above this.
+const LARGEST_THREAT_BUDGET := 12
+## A Teach room carries at most this much live threat (R4); the new shape in it is shown fenced first.
+const TEACH_THREAT_LIMIT := 3
+## A Test or Twist room carries between these (R18), per wave in a gauntlet. A room flagged `intro` (T3's one Recruit) is exempt from the floor.
+const TEST_TWIST_THREAT_RANGE := Vector2i(3, 6)
+## The room before a boss carries at most this much, and always less than the boss's phase-1 budget (R18).
+const ROOM_BEFORE_BOSS_THREAT_LIMIT := 6
+## Shapes at once (R28), by act 1 to 6 (index 0 is act 1): a normal room, and a boss room. An Ending has none.
+const SHAPES_AT_ONCE_BY_ACT: Array[int] = [2, 2, 2, 2, 3, 4]
+const BOSS_SHAPES_AT_ONCE_BY_ACT: Array[int] = [2, 3, 3, 3, 4, 4]
+## Intensity is 0 to 10 (R32).
+const LARGEST_INTENSITY := 10
 const TEXT_KEY_PATTERN := "^[A-Z][A-Z0-9]*(_[A-Z0-9]+)+$"
 const SNAKE_CASE_PATTERN := "^[a-z][a-z0-9_]*$"
 
@@ -72,6 +93,22 @@ const SNAKE_CASE_PATTERN := "^[a-z][a-z0-9_]*$"
 @export var content_status := ContentStatus.STUB
 ## When in the one night the room happens (inert data until the tint is applied).
 @export var time_of_night := TimeOfNight.DUSK
+
+@export_group("Encounter meta")
+## What the room asks of the pawn: the Obj column of 7.4. Inert until M9 (see ObjectiveKind).
+@export var objective_kind := ObjectiveKind.CLEAR
+## The threat the room holds at once, in points (the Threat column of 7.4): the sum of the `threat_points` of the pieces that are live
+## together, the biggest wave in a gauntlet, a boss's phase-1 budget in a boss room, zero in a room with nothing to fear. It is the DESIGN
+## number the budget lints hold to the rules (R4, R18); the pieces the scene parks today are checked against it in report-only mode,
+## because a stub parks live what a fenced preview will show (M8a).
+@export_range(0, 12) var threat_budget := 0
+## How many different threat shapes (a diagonal slash, a straight bar, a knight's landing, a diagonal lane...) are live at once: R28
+## caps it by act (2/2/2/2/3/4, bosses 2/3/3/3/4/4). A boss room leaves it 0 until the boss frameworks say (M8b).
+@export_range(0, 6) var threat_shapes := 0
+## True for a room that is a first lesson with a single piece (T3): it is exempt from the Test floor of the threat budget.
+@export var intro := false
+## How intense the room is, 0 to 10 (the Int column of 7.4, R32): the sawtooth the route must keep (no three equal in a row).
+@export_range(0, 10) var intensity := 0
 
 
 ## The text key of the line to say on arrival: the objective's, else the room's own.
@@ -117,6 +154,36 @@ static func recipe_name(room_recipe: Recipe) -> String:
 	return Recipe.keys()[room_recipe].to_lower()
 
 
+static func objective_kind_name(kind: ObjectiveKind) -> String:
+	return ObjectiveKind.keys()[kind].to_lower()
+
+
+## What is wrong with the threat numbers of a room of this role in this act, one sentence each (empty = nothing). Static and written over
+## plain values so that the Inspector's warnings (configuration_problems) and the lints of tests/ (which run it over the rows of the
+## plan's table before any room is built) are one rule. `recipe` is a Recipe, `act` 1 to 7.
+static func threat_problems(room_recipe: Recipe, room_act: int, budget: int, shapes: int, is_intro: bool) -> PackedStringArray:
+	var problems := PackedStringArray()
+	if budget < 0 or budget > LARGEST_THREAT_BUDGET:
+		problems.append("threat_budget %d must be between 0 and %d." % [budget, LARGEST_THREAT_BUDGET])
+	var quiet_rooms := [Recipe.REST, Recipe.SHORTCUT, Recipe.OPTIONAL, Recipe.ENDING]
+	if room_recipe in quiet_rooms and budget != 0:
+		problems.append("A %s room holds no threat: threat_budget is %d (it should be 0)." % [recipe_name(room_recipe), budget])
+	if room_recipe == Recipe.TEACH and budget > TEACH_THREAT_LIMIT:
+		problems.append("A Teach room carries at most %d threat (R4): threat_budget is %d." % [TEACH_THREAT_LIMIT, budget])
+	if room_recipe == Recipe.TEST or room_recipe == Recipe.TWIST:
+		if budget > TEST_TWIST_THREAT_RANGE.y:
+			problems.append("A %s room carries at most %d threat (R18): threat_budget is %d." % [recipe_name(room_recipe), TEST_TWIST_THREAT_RANGE.y, budget])
+		elif budget < TEST_TWIST_THREAT_RANGE.x and not is_intro:
+			problems.append("A %s room carries at least %d threat (R18) unless it is flagged `intro`: threat_budget is %d." % [recipe_name(room_recipe), TEST_TWIST_THREAT_RANGE.x, budget])
+	if shapes < 0:
+		problems.append("threat_shapes %d cannot be negative." % shapes)
+	elif room_act >= 1 and room_act <= SHAPES_AT_ONCE_BY_ACT.size():
+		var cap: int = BOSS_SHAPES_AT_ONCE_BY_ACT[room_act - 1] if room_recipe == Recipe.BOSS else SHAPES_AT_ONCE_BY_ACT[room_act - 1]
+		if shapes > cap:
+			problems.append("act %d allows %d threat shapes at once in a %s room (R28): threat_shapes is %d." % [room_act, cap, "boss" if room_recipe == Recipe.BOSS else "normal", shapes])
+	return problems
+
+
 ## What is wrong with this room's meta, one sentence each (empty = nothing). The same list the editor shows
 ## as configuration warnings. A room under content/rooms/ is a shipped room and is held to the shipped rules
 ## (an id equal to its folder, a start line, an act and a district); a scene anywhere else (a test fixture, a
@@ -140,6 +207,10 @@ func configuration_problems() -> PackedStringArray:
 		problems.append("A boss room is a checkpoint (D-16): tick checkpoint_on_entry.")
 	if layout_archetype == &"hub" and not checkpoint_on_entry:
 		problems.append("A hub is a checkpoint (D-16): tick checkpoint_on_entry.")
+
+	problems.append_array(threat_problems(recipe, act, threat_budget, threat_shapes, intro))
+	if intensity < 0 or intensity > LARGEST_INTENSITY:
+		problems.append("intensity %d must be between 0 and %d." % [intensity, LARGEST_INTENSITY])
 
 	if is_shipped_room:
 		var folder_id := scene_file_path.trim_prefix(ROOMS_FOLDER).get_slice("/", 0)

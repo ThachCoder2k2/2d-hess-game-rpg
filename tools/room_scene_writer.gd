@@ -74,6 +74,16 @@ static func scene_text(layout: RefCounted, kept_header_uid_text: String) -> Dict
 	root_block.append("recipe = %d" % layout.recipe)
 	root_block.append("content_status = %d" % layout.status)
 	root_block.append("time_of_night = %d" % layout.time_of_night)
+	if layout.objective_kind != RoomEncounter.ObjectiveKind.CLEAR:
+		root_block.append("objective_kind = %d" % layout.objective_kind)
+	if layout.threat_budget != 0:
+		root_block.append("threat_budget = %d" % layout.threat_budget)
+	if layout.threat_shapes != 0:
+		root_block.append("threat_shapes = %d" % layout.threat_shapes)
+	if layout.intro:
+		root_block.append("intro = true")
+	if layout.intensity != 0:
+		root_block.append("intensity = %d" % layout.intensity)
 	node_blocks.append("\n".join(root_block))
 	text_rows.append({"key": layout.text_key("NAME"), "text": layout.name_text, "purpose": "the room's name on the save card and the checkpoint line"})
 	text_rows.append({"key": layout.text_key("START"), "text": layout.start_text, "purpose": "what the room says as the pawn comes in"})

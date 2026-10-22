@@ -17,6 +17,10 @@ layout_archetype = &"track"
 recipe = 3
 content_status = 0
 time_of_night = 1
+objective_kind = 1
+threat_budget = 4
+threat_shapes = 2
+intensity = 6
 
 [node name="RoomArt" type="Node2D" parent="."]
 z_index = -20

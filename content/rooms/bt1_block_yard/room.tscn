@@ -18,6 +18,9 @@ layout_archetype = &"yard"
 recipe = 1
 content_status = 0
 time_of_night = 2
+threat_budget = 2
+threat_shapes = 1
+intensity = 3
 
 [node name="RoomArt" type="Node2D" parent="."]
 z_index = -20

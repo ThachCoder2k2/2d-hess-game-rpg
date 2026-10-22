@@ -31,6 +31,13 @@ var time_of_night_name := ""
 var checkpoint_on_entry := false
 ## The text key of the room's start line (RoomEncounter.room_message).
 var start_message_key := ""
+## The encounter meta of the room (RoomEncounter): the objective kind as the layout files spell it (clear, reach, survive, waves, none),
+## the design threat in points and shapes at once, the intro flag and the intensity 0 to 10.
+var objective_kind_name := ""
+var threat_budget := 0
+var threat_shapes := 0
+var intro := false
+var intensity := 0
 
 
 static func of(scene: PackedScene) -> RoomScan:
@@ -52,6 +59,11 @@ static func of(scene: PackedScene) -> RoomScan:
 		scan.time_of_night_name = RoomEncounter.time_of_night_name(room.time_of_night)
 		scan.checkpoint_on_entry = room.checkpoint_on_entry
 		scan.start_message_key = room.room_message
+		scan.objective_kind_name = RoomEncounter.objective_kind_name(room.objective_kind)
+		scan.threat_budget = room.threat_budget
+		scan.threat_shapes = room.threat_shapes
+		scan.intro = room.intro
+		scan.intensity = room.intensity
 	for child in root.get_children():
 		if child is ZoneEntryMarker:
 			scan.entry_ids.append((child as ZoneEntryMarker).entry_id)

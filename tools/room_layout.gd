@@ -25,6 +25,11 @@ extends RefCounted
 ##   status               stub greybox dressed final [default stub]
 ##   time_of_night        dusk evening night small_hours dawn morning [default dusk]
 ##   checkpoint_on_entry  true or false: coming in through a door is a checkpoint (D-16) [default false]
+##   objective            clear reach survive waves none: what the room asks of the pawn (7.4 Obj). Inert until M9 [default clear]
+##   threat               0..12 points of threat live at once: the biggest wave in a gauntlet, a boss's phase-1 budget [default 0]
+##   shapes               0..6 different threat shapes live at once (R28) [default 0]
+##   intro                true or false: a first lesson of one piece (T3), exempt from the Test floor of the threat budget [default false]
+##   intensity            0..10, the Int column of 7.4 (R32) [default 0]
 ##   tileset              the id of a content/tilesets/ kit [default greybox]
 ##   name                 the English words of ROOM_<ID>_NAME (the title card, the pause menu) [required]
 ##   start                the English words of ROOM_<ID>_START (the status line on arrival) [required]
@@ -104,6 +109,7 @@ const OPENS_DIRECTIONS := {"left": Vector2i.LEFT, "right": Vector2i.RIGHT, "up":
 const ROOM_KEYS := {
 	"id": true, "size": false, "act": true, "district": true, "archetype": true, "recipe": true, "status": false,
 	"time_of_night": false, "checkpoint_on_entry": false, "tileset": false, "name": true, "start": true,
+	"objective": false, "threat": false, "shapes": false, "intro": false, "intensity": false,
 }
 
 ## What was read. Filled by parse().
@@ -116,6 +122,12 @@ var recipe: RoomEncounter.Recipe = RoomEncounter.Recipe.REST
 var status: RoomEncounter.ContentStatus = RoomEncounter.ContentStatus.STUB
 var time_of_night: RoomEncounter.TimeOfNight = RoomEncounter.TimeOfNight.DUSK
 var checkpoint_on_entry := false
+## The encounter meta (the [room] keys objective, threat, shapes, intro and intensity).
+var objective_kind: RoomEncounter.ObjectiveKind = RoomEncounter.ObjectiveKind.CLEAR
+var threat_budget := 0
+var threat_shapes := 0
+var intro := false
+var intensity := 0
 var tileset_id := "greybox"
 ## The English words of ROOM_<ID>_NAME and ROOM_<ID>_START.
 var name_text := ""
@@ -301,12 +313,32 @@ func _read_room_line(trimmed: String, line_number: int) -> void:
 				_problem(line_number, "checkpoint_on_entry is true or false (it is '%s')." % value)
 			else:
 				checkpoint_on_entry = value == "true"
+		"objective":
+			objective_kind = _enum_value(RoomEncounter.ObjectiveKind, value, "objective", line_number, objective_kind)
+		"threat":
+			threat_budget = _whole_number_value(value, "threat", line_number, threat_budget)
+		"shapes":
+			threat_shapes = _whole_number_value(value, "shapes", line_number, threat_shapes)
+		"intensity":
+			intensity = _whole_number_value(value, "intensity", line_number, intensity)
+		"intro":
+			if value not in ["true", "false"]:
+				_problem(line_number, "intro is true or false (it is '%s')." % value)
+			else:
+				intro = value == "true"
 		"tileset":
 			tileset_id = value
 		"name":
 			name_text = value
 		"start":
 			start_text = value
+
+
+func _whole_number_value(value: String, key: String, line_number: int, fallback: int) -> int:
+	if not value.is_valid_int():
+		_problem(line_number, "%s is a whole number (it is '%s')." % [key, value])
+		return fallback
+	return int(value)
 
 
 func _enum_value(enum_dictionary: Dictionary, value: String, key: String, line_number: int, fallback: int) -> int:
@@ -415,6 +447,10 @@ func _check(expected_id: String) -> void:
 		_whole_file_problem("archetype '%s' must be lowercase snake_case." % archetype)
 	if not ContentDb.has_id(&"tilesets", StringName(tileset_id)):
 		_whole_file_problem("tileset '%s' is not a kit under content/tilesets/ (kits: %s)." % [tileset_id, ", ".join(PackedStringArray(ContentDb.ids(&"tilesets")))])
+	for sentence in RoomEncounter.threat_problems(recipe, act, threat_budget, threat_shapes, intro):
+		_whole_file_problem(sentence)
+	if intensity < 0 or intensity > RoomEncounter.LARGEST_INTENSITY:
+		_whole_file_problem("intensity %d must be between 0 and %d." % [intensity, RoomEncounter.LARGEST_INTENSITY])
 	if recipe == RoomEncounter.Recipe.BOSS and not checkpoint_on_entry:
 		_whole_file_problem("a boss room is a checkpoint (D-16): set `checkpoint_on_entry = true`.")
 	if archetype == &"hub" and not checkpoint_on_entry:

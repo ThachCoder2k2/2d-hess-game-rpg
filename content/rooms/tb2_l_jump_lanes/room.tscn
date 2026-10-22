@@ -18,6 +18,9 @@ layout_archetype = &"lanes"
 recipe = 2
 content_status = 0
 time_of_night = 1
+threat_budget = 5
+threat_shapes = 2
+intensity = 5
 
 [node name="RoomArt" type="Node2D" parent="."]
 z_index = -20
