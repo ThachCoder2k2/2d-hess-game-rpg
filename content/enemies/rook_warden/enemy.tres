@@ -20,3 +20,4 @@ unarmed_attack = ExtResource("4")
 visual = ExtResource("5")
 difficulty = ExtResource("6")
 defeat_flag = &"boss.rook_warden"
+threat_points = 8

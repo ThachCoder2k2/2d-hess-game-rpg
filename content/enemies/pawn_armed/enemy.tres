@@ -24,3 +24,4 @@ weapon_preferences = {
 visual = ExtResource("5")
 difficulty = ExtResource("6")
 default_weapon = ExtResource("7")
+threat_points = 2

@@ -25,6 +25,7 @@ decision = ExtResource("3")
 unarmed_attack = ExtResource("4")
 visual = ExtResource("5")
 difficulty = ExtResource("6")
+threat_points = 1
 """
 
 

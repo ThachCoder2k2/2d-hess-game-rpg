@@ -48,7 +48,8 @@ Steps:
      `ENEMY_<ID>_NAME` and `ENEMY_<ID>_PIECE`, with their two rows in `content/story/text/en/story.po`; the
      rows carry a `#.` translator comment and `test_text_keys` / `test_po_domains_merge` fail without them),
      `role`, `max_health`
-     (default 2, between 1 and 100), and refs to the four below plus the shared
+     (default 2, between 1 and 100), `threat_points` (what the piece adds to a room's budget: recruit 1, armed 2, knight 3, bishop 3, rook 4,
+     docs/game-base-plan.md 5.3; `validate()` refuses 0, so a new enemy is rated before a room holds it), and refs to the four below plus the shared
      `content/difficulty/standard.tres`. Optional: `default_weapon`, `allowed_weapon_tags`.
      `validate()` must return no warnings. The smallest useful enemy is this file alone, pointing at
      `_shared/` (see the worked example below).

@@ -20,3 +20,4 @@ unarmed_attack = ExtResource("4")
 visual = ExtResource("5")
 difficulty = ExtResource("6")
 defeat_flag = &"boss.black_king"
+threat_points = 9
