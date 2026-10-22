@@ -889,3 +889,24 @@ was the commit attribution line, which matches the harness and is no defect).
 - Godot's CheckButton keeps the left margin of its `normal` stylebox (6 px in the default theme) before its text, a Label does not: names in a row of
   controls start 6 px apart unless the labels are indented by `get_theme_stylebox(&"normal", &"CheckButton").get_margin(SIDE_LEFT)`.
 - `ConfigFile`-based profile and save files are text, so `SaveFile.read` can check them as UTF-8 before the integrity footer.
+
+## World Graph and Room Builder Facts (M5 step 1, 2026-10-22)
+
+- A scene written as text needs a uid on its header and on every `[ext_resource]`, and a deterministic header uid keeps every reference alive across a
+  rebuild: the builder derives it from a hash of the room id (`ResourceUID.id_to_text` of the first eight bytes of the sha256, masked to 63 bits), so
+  the same layout gives the same bytes on every machine. `tools/stamp_uids.gd -- --check` is the proof it did.
+- `TileMapLayer.tile_map_data` is the one non-text part of a room scene. It is produced by painting a throwaway `TileMapLayer` through
+  `CellKindPainter` and storing `Marshalls.raw_to_base64(layer.tile_map_data)`; reading it back with `kinds_by_cell` is the check that every cell
+  reads as the kind the layout stated.
+- A "may the tool overwrite this?" rule that rests on a file's sha256 is safer than one that rests on a flag: a scene the owner has opened and moved a
+  prop in no longer matches the recorded hash, so `--force` refuses it, with the reason, without anyone having to remember to protect it.
+- The layout reader refuses a board whose ring of cells is not wall and any object standing on the ring (a door on the ring is a solid cell nobody can
+  stand on). A door's arrival cell is a separate `entry` object, by convention the cell beside the door, one step further in.
+- `WorldGraph` edges name a door by the node name of its `ZoneExitMarker`, so a rename of a door in the editor breaks `edges_match_doors` by name
+  instead of silently losing a route. A way in with no way back is an error unless the edge says `one_way` (the shortcuts home).
+- Enum properties are stored in a scene as their integer value (`recipe = 0`, `content_status = 1`): the enums of `RoomEncounter` are append-only, and
+  a layout file spells them as lowercase words that `room_layout.gd` maps to the ints.
+- Agent environment: a worktree-isolated agent's shell refuses `HOME=...` in front of a command, even `env HOME=...`. A wrapper script in `/tmp` that
+  exports the private HOME and `exec`s Godot with its arguments (`/tmp/godot-m5-1.sh --headless --path . -s tools/print_world_map.gd`) runs it; the
+  runner and the bootstrap script take the home from `UNBOUND_GODOT_HOME` and `BOOTSTRAP_HOME` and need no wrapper. A long heredoc in the same command
+  as a `git` call is refused as too complex: write the text with the file tool and append it in a command of its own.

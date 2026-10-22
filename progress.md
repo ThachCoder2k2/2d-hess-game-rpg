@@ -1986,3 +1986,45 @@ defects in the Settings and Assists screens the repo's own tests did not catch, 
   write is said; the language list), `test_settings_roundtrip` (unreadable profile, noise bytes, a newer game's profile), `test_po_domains_merge`,
   `test_confirm_panel`, `test_quit_to_title_confirm` (a real Start), `test_setting_ui_high_contrast` (the over-menu panels), `test_setting_language`,
   `test_text_service`, `test_layout_pseudo_locale` (the not-saved line), `test_pause_assist_options` (the note is found by type, not by position).
+
+## M5 step 1 - the room builder, the marker schemas and the world file - 2026-10-22
+
+Branch `base/m5-1` (from `game-base`, which holds M4), the strict runner green. The first of M5's three steps (the tool and the data it needs;
+the stub rooms, the H1 locks, `e1` and the route bot are steps 2 and 3). An earlier attempt of this step was cut off by a usage limit after three
+commits; this run re-checked them against the step's list, found them complete, and wrote the documentation that was still missing.
+
+- **`tools/build_room.gd`** (with `room_layout.gd`, `room_builder.gd`, `room_scene_writer.gd`, `built_rooms_manifest.gd`): an ASCII layout in
+  `tools/layouts/<room_id>.txt` becomes `content/rooms/<id>/room.tscn` written as TEXT with uids (the header uid is a hash of the room id, so a rebuild
+  keeps it), then the stamper. The legend (`--legend`) covers floor, wall, gap, leapable block, chalk, corruption, entry, door with its target and
+  optional clear-lock words, enemy, pickup (persistent or not), unlock, gate, traversal crossing, state variant, and the room keys (id, size, act,
+  district, archetype, recipe, status, time of night, checkpoint flag, tileset, name and start words). The tiles are painted one by one from the new
+  greybox kit (`content/tilesets/greybox/`, a flat tile for every cell kind) through `cell_kind_painter.gd`, floor in a two-tile checker so the
+  grid reads without an overlay; no painted background, no polygon. The English rows of the room's keys are appended to `rooms.po` once.
+- **It refuses to overwrite.** An existing scene is refused. `--force` rebuilds only a scene that has a row in `tools/layouts/built_rooms.json` whose
+  sha256 still equals the file's: a scene the tool built and nobody edited. The six Stage 1 scenes are hand-made, so they have no row and not even
+  `--force` reaches them (`test_build_room` holds their bytes). A build is checked before it is kept: the scene it wrote is booted and its grid, doors,
+  entries and enemies are compared with the layout; a failed build leaves the target as it was.
+- **The proof.** `t4_broken_rule_yard` drawn as a layout (`tests/fixtures/layouts/`, because `tools/layouts/` holds only rooms that ship) and built
+  into a scratch folder boots to the same picture as the hand-made scene: 23 facts compared (bounds, origin, every cell's kind, doors, entries, enemies,
+  the pickup, the meta).
+- **`RoomEncounter` meta**: `act`, `district`, `layout_archetype`, `recipe`, `content_status` (STUB, GREYBOX, DRESSED, FINAL), `time_of_night` (inert,
+  D-31), next to `checkpoint_on_entry` and `board_size`; each has a doc and a configuration warning, and `configuration_problems()` is the list the
+  tests and tools read. The six Stage 1 scenes gained their meta lines (a text edit; nothing else changed in them but H1's top door).
+- **Marker schemas**: `TraversalGapMarker` (verb chalk_path or rule_step, length 1 to 3, direction, free when calm; `EcsBoot` copies it per covered
+  cell into `marker_by_cell` under `KIND`) and `StateVariantMarker` (variant id, requires and forbids flag lists). Data only; the verbs arrive with M7
+  and M10, the flag-driven visibility with M6. `GridMarker` now follows its room's board size and centred origin (an 18x9 arena starts at x 32).
+- **`content/world/world.tres`** is rooms (with the `map_slot`, its only home), edges, locks (room clear, flag, unlock, counter, each with a message key)
+  and district regions, in the classes of `schema/world/`. The 72x40 kingdom left the graph (D-02) and is a fixture the tests load by path
+  (`TestPaths.shipped_rooms_and_kingdom()`); the assertions of `tests/run_tests.gd` over the graph were ported to the new shape (every zone carries its
+  id, has an entry, every door resolves to a real entry; the three clear-lock facts), and the kingdom is still covered through its fixture path.
+  H1's top door, which led into the kingdom, leads to `tb1_toybox_gate`, a stub the tool built from `tools/layouts/tb1_toybox_gate.txt` so the door
+  resolves; step 2 edits that layout and rebuilds the scene with `--force` while nobody has touched it.
+- **`WorldCheck`** (`shell/content/`) holds graph and scenes together: `ContentDb.validate_cross_refs()`, `test_world_graph` and `tools/print_world_map.gd`
+  all call it. `tools/print_world_map.gd` prints the slot map, the rooms, the doors, the locks with their words and a checks line.
+- **Verification.** Strict runner: 146 suites, 0 failed, GREEN; 235 of 235 baseline labels (14 through `label_renames.txt`, unchanged); both
+  `--self-test`s 0 failures; stamp-uids CLEAN; import pass clean; `git diff --check` clean.
+- **Tests.** New: `test_build_room` (100), `test_room_layout` (93), `test_print_world_map` (44), `test_world_graph`, `test_room_meta`,
+  `test_marker_schemas`. Changed: `test_content_references` (no exception for the kingdom any more), `test_fixtures_present`,
+  `test_content_db_detects_problems`, the room-walking suites (they take the kingdom from `TestPaths`), `dump_h1.txt` (H1's top door).
+- **Not done here, on purpose.** Everything else of M5: stub rooms for every id of 7.4, boss stubs, the H1 flag locks (a `WorldLock` of kind `flag`
+  is data that nothing enforces yet), `e1` and the credits, the `tools/list_placeholders.gd` rows for the new rooms, the full-route bot and the lints.

@@ -92,13 +92,14 @@ content/                 THE OWNER'S FOLDER: data, art, audio, words. Zero .gd f
   ui/theme/theme.tres    UiTheme: the project theme; it names the four font files the owner supplies (assets/fonts/)
   rules/<id>/page.tres   Book of House Rules pages; rule_book.tres lists them
   skills/<id>/           the Wooden Sword and Pencil Thrust AttackProfile .tres and the sword icon
-  tilesets/<kit>/        tileset.tres + tilemap.tscn (kingdom, playground); tile_map_data is binary
-  world/world.tres       WorldGraph: zone id -> room scene
+  tilesets/<kit>/        tileset.tres + tilemap.tscn (kingdom, playground); tile_map_data is binary. `greybox/` is the
+                         kit tools/build_room.gd paints with: one flat tile for each kind of cell (CellKinds)
+  world/world.tres       WorldGraph: the rooms with their map slots, the doors between them, the locks, the districts' regions
 
 schema/                  THE SHAPE OF CONTENT: one Resource class per file
   entity/                EnemyDefinition, PlayerDefinition, VisualDefinition, MovementConfig, DecisionConfig, EnemyIntent
   attacks/               AttackPattern, AttackProfile, EnemyWeapon
-  world/                 WorldGraph, RoomObjective, RuleBook, RuleEntry
+  world/                 WorldGraph (+ WorldRoom, WorldEdge, WorldLock, WorldRegion, FlagId), RoomObjective, RuleBook, RuleEntry
   feel/                  DifficultyProfile, PieceSizeTable, PieceSize
   story/                 CreditsDefinition, CreditsSection
   ui/                    UiTheme (a Theme that names the owner's font files)
@@ -119,8 +120,8 @@ authoring/               THINGS YOU DRAG INTO A SCENE: Inspector data + apply();
   ecs_boot_options.gd    everything boot() needs besides the world, as named fields (EcsBootOptions)
   ecs_actor_factory.gd   builds actor entities from definitions (EcsActorFactory)
   entity_components/     EntityComponent nodes (Combat, Health, Input, Movement, AI, Weapon)
-  markers/               zone entry/exit, gate, player unlock, pickup spawn, blocker (+ their scenes)
-  room_encounter.gd/.tscn  the room scene root (zone id, objective, `checkpoint_on_entry`)
+  markers/               zone entry/exit, gate, player unlock, pickup spawn, blocker, traversal gap, state variant (+ their scenes)
+  room_encounter.gd/.tscn  the room scene root (zone id, objective, `checkpoint_on_entry`, and the room's meta)
 
 presentation/            HOW THE WORLD IS SHOWN: reads events, never decides
   views/                 actor_view.gd, weapon_pickup + pickup_visual, and actors/: actor_view_base.tscn
@@ -493,8 +494,8 @@ several times slower still does.
 | `EcsBoot` | `authoring/ecs_boot.gd` | static `boot(world, options)`, where `options` is an `EcsBootOptions` (`authoring/ecs_boot_options.gd`: `player_view`, `room_root`, `fallback_player_cell`, `skipped_pickup_names`, `opened_gate_ids`, `room_already_cleared`, `with_room_rules`, `entry_id`, `entered_by_door`, `player_snapshot`, `restore_player_facing`; a new need is a new field, never a new argument; `EcsBootOptions.for_scene(hero, room)` is the common case): sizes the grid from `RoomEncounter.board_size`, bakes the tile kinds (`apply_tile_kinds`), `ZoneExitMarker`, `PlayerUnlockMarker` and `GateMarker`; spawns the player from the view's `PlayerDefinition` (class defaults when it names none) and applies its `EntityComponent` nodes, then every `ActorView` child of the room that has a `definition` (none, and their puppets removed, when the run already cleared the room), then pickups, then (with `with_room_rules`) the room's own entity, last, so every other entity keeps its number. Returns the cast dictionary (`player`, `enemies`, `view_by_entity`, `piece_name_by_entity`, pickup maps, `persistent_pickup_by_entity`, `room`). |
 | `EcsActorFactory` | `authoring/ecs_actor_factory.gd` | `spawn_player` (bare hero, kept), `spawn_player_from_definition` (what `EcsBoot` calls), `spawn_enemy`, `spawn_pickup`: assemble an entity's components from the `.tres` data and apply the difficulty multipliers. |
 | `ContentDb` | `shell/content/content_db.gd` (+ `content_kind.gd`) | the content registry, a static class (no autoload, so it works inside a suite's `_init()`). Ids are folder names under `content/<kind>/`, listed lazily once per kind. `ids(kind)`, `fetch(kind, id)`, `all(kind)`, `player()`, `world()`, `piece_sizes()`, `validate()`, `validate_cross_refs()`. Ten kinds registered (one line each in `_ensure_kinds()`). Only the shell may name it; tests and tools call the two validators, nothing calls them at game start. |
-| `RoomEncounter` | `authoring/room_encounter.gd` | a room scene root: `board_size`, `zone_id`, prose, a `RoomObjective`, and `checkpoint_on_entry` (true on the hub and the boss room: coming in through a door is a checkpoint, D-16). It carries data only. |
-| Markers | `authoring/markers/` | `GridMarker` base (drag to snap, writes `grid_cell`). `ZoneEntryMarker`/`ZoneExitMarker` (doors: a door is a FLOOR cell one step inside the room's ring of wall, like the east doors, and its entry marker is the cell next to it, one further in, so the pawn arrives beside the door and a step back through it is the way home; a door on the ring itself is a solid cell nobody can stand on, and `tests/content/test_room_doors_reachable.gd` fails it), `GateMarker`, `PlayerUnlockMarker`, `PickupSpawnPoint` (`persistent`: a reward taken once for the whole run; off, it is a floor weapon of its room and is back whenever the room starts). `BlockerMarker` is a legacy marker `EcsBoot` no longer bakes; walls are painted tiles. |
+| `RoomEncounter` | `authoring/room_encounter.gd` | a room scene root: `board_size`, `zone_id`, prose, a `RoomObjective`, and `checkpoint_on_entry` (true on the hub and the boss room: coming in through a door is a checkpoint, D-16). Since M5 it also carries the room's META (docs/game-base-plan.md 7.5): `act` (1 to 6, 7 = the Ending), `district`, `layout_archetype`, `recipe` (Rest, Teach, Test, Twist, Boss, Shortcut...), `content_status` (STUB, GREYBOX, DRESSED, FINAL) and `time_of_night` (inert data, D-31). Every field has a doc and an editor configuration warning; `configuration_problems()` is the same list for tests and tools (a scene under `content/rooms/` is a shipped room and is also held to an id equal to its folder, a start line, an act, a district and an archetype). It carries data only. |
+| Markers | `authoring/markers/` | `GridMarker` base (drag to snap, writes `grid_cell`). `ZoneEntryMarker`/`ZoneExitMarker` (doors: a door is a FLOOR cell one step inside the room's ring of wall, like the east doors, and its entry marker is the cell next to it, one further in, so the pawn arrives beside the door and a step back through it is the way home; a door on the ring itself is a solid cell nobody can stand on, and `tests/content/test_room_doors_reachable.gd` fails it), `GateMarker`, `PlayerUnlockMarker`, `PickupSpawnPoint` (`persistent`: a reward taken once for the whole run; off, it is a floor weapon of its room and is back whenever the room starts). `BlockerMarker` is a legacy marker `EcsBoot` no longer bakes; walls are painted tiles. A `GridMarker` follows its room: with a `RoomEncounter` parent it snaps to that room's `board_size` and the origin that centres it (an 18x9 arena starts at x 32, not 64), and `PlayerUnlockMarker` bakes from `grid_cell` like a pickup. M5 adds two DATA-ONLY schemas. `TraversalGapMarker` (`grid_cell`, `length` 1 to 3, `direction`, `verb` chalk_path or rule_step, `free_when_calm`): a mandatory crossing over gap cells; `EcsBoot` copies it to each cell it covers in `EcsGrid.marker_by_cell` under `TraversalGapMarker.KIND`, and the verbs that cross it arrive with M7 and M10. `StateVariantMarker` (`variant_id`, `requires_flags`, `forbids_flags`): a prop, its children, that shows only in a state; M6 bakes it into a `FlagVisible` component. Both warn in the Inspector and answer `configuration_problems()`. |
 | Terrain | `RoomArt/TileMap` | a tile's custom data says what its cell is: `kind` (floor, wall, gap, leapable_block, chalk, corruption) when filled in, else `solid = true` is a wall and anything else floor. A cell that cannot be walked on is a blocked cell. Paint = collision. |
 
 Enemies are real scene children: instance an actor scene from `presentation/views/actors/`
@@ -513,7 +514,7 @@ its `enemy.tres`, named for the `EnemyDefinition` export they fill (`movement.tr
 whether the sword starts unlocked, and the two `AttackProfile` `.tres` files
 `content/skills/wooden_sword/` and `content/skills/pencil_thrust/`).
 `RuleBook`/`RuleEntry` (the Book of House Rules, `content/rules/`), `RoomObjective` and
-`WorldGraph` (`content/world/world.tres`: zone id -> room scene) are the other schemas. Shared
+`WorldGraph` (`content/world/world.tres`; see "The world graph and the room builder" below) are the other schemas. Shared
 Resources are treated as immutable at runtime; instances `duplicate(true)` before mutating (a
 picked-up weapon).
 
@@ -558,7 +559,7 @@ property equals the folder and no two entries claim one id, and every property a
 entries: a Book page's `piece_id` is an enemy, an enemy's difficulty, default weapon and weapon preferences are
 registered, the player's two attacks are skills, **every actor's `piece_type` is a row of the size table and its body
 picture fits that row (a tight picture inside the box, or the 32 x 32 canvas of the art spec with its drawn pixels inside the box)**, the world graph and the room folders agree, every door leads to a zone and an
-entry marker that exist, every room's `zone_id` equals its folder and every enemy parked in a room is a registered
+entry marker that exist (`WorldCheck` does the world part: see below), every room's `zone_id` equals its folder and every enemy parked in a room is a registered
 enemy. `tests/content/test_validate_all.gd` runs both over the real tree; `test_content_db_detects_problems` runs them
 over a deliberately broken tree under `user://` and requires each defect to be named. A new kind is one
 `_add_kind` line, a `validate()` on its class and a minimum count in `test_validate_all`.
@@ -936,6 +937,41 @@ What the rules of D-16 and D-17 are made of (M3b step 3). The simulation judges,
 | Room-local, resets with the room | the room's scene | floor weapons (a `PickupSpawnPoint` that is not `persistent`), what an enemy holds, every timer, telegraph and cell effect |
 | Believe | `CheckpointSystem._refill_believe` | a named seam that refills nothing until M10 adds the component |
 
+## The world graph and the room builder
+
+What the world is made of and how a room gets made (M5 step 1; plan 7.1, 7.5). The scenes stay the truth about a room's
+doors, entries and enemies; `content/world/world.tres` is the truth about how rooms join and where each sits on the map.
+
+| Thing | Where it lives | Rule |
+|---|---|---|
+| The world as data | `content/world/world.tres` (`WorldGraph`, `schema/world/`) | `rooms` (`WorldRoom`: id, scene, `map_slot` on the 8 x 10 slot grid: the slot has no other home), `edges` (`WorldEdge`: the door `from_room/door` leads to `to_room/to_entry`, `one_way`, an optional `lock_id`), `locks` (`WorldLock`: `room_clear`, `flag`, `unlock` or `counter_at_least`, and a `message_key`), `regions` (`WorldRegion`: the slots a district may use). `start_room_id` is T1. The runtime's questions stay `has_zone()` and `get_zone_scene()`. |
+| Flag ids | `schema/world/flag_id.gd` (`FlagId`) | one spelling for `boss.knight_captain`-style ids, used by a flag lock and by a `StateVariantMarker`, so a typo is caught where it is written |
+| The 72x40 kingdom | `tests/fixtures/the_kingdom.tscn` | NOT in the graph (D-02). Tests load it by path (`TestPaths.shipped_rooms_and_kingdom()` for the suites that walk every board); no door leads into it |
+| Checks that need both the graph and the scenes | `shell/content/world_check.gd` (`WorldCheck`), fed by `RoomScan` (`shell/content/room_scan.gd`: one read of a scene) | `graph`, `folders`, `scenes`, `entries`, `exits_resolve`, `edges_match_doors`, `return_doors` (every way in has a way back unless the edge is `one_way`), `no_orphan_rooms`, `locks` (every lock has a message key with an English row, and a door that waits for a clear is held by a `room_clear` lock), `map`, `room_meta`. One implementation for `ContentDb.validate_cross_refs()`, `tests/content/test_world_graph.gd` (which also breaks a copy of the graph on purpose to prove each check can fail) and `tools/print_world_map.gd` |
+| Room meta | `RoomEncounter` (`act`, `district`, `layout_archetype`, `recipe`, `content_status`, `time_of_night`, `checkpoint_on_entry`, `board_size`) | every field has a doc and a configuration warning; `configuration_problems()` is the same list for the editor, the tests and the tools |
+| The map for QA | `tools/print_world_map.gd` (the drawing is `tools/world_map_printer.gd`) | an ASCII map of every slot, room, door and lock, ending in a line of what `WorldCheck` finds wrong |
+| The room builder | `tools/build_room.gd` (the steps are `tools/room_builder.gd`, `room_layout.gd`, `room_scene_writer.gd`, `built_rooms_manifest.gd`) | an ASCII layout in `tools/layouts/<room_id>.txt` becomes `content/rooms/<id>/room.tscn`. `--legend` prints the format (it is the header of `room_layout.gd`), `--check` validates every layout, `--layout=` and `--out=` build a scratch copy |
+| The greybox tile kit | `content/tilesets/greybox/` | one flat tile for every cell kind (`CellKinds`): a room the builder makes is painted from these INDIVIDUAL tiles, never from a picture of a room (owner decision 2026-10-12) |
+
+How the builder keeps its promises:
+
+- **Text, with uids.** The scene is written as `.tscn` text (the header uid is a hash of the room id, so a rebuild keeps it, and every `ext_resource` has its
+  `uid=`), then `tools/stamp_uids.gd` runs. The tiles are the one thing that is not text, and nobody hand-edits that blob: they are painted by
+  `tools/cell_kind_painter.gd`, which states the kind of every cell next to the tile chosen for it and refuses a tile that does not read as that kind.
+- **It never overwrites a scene it cannot prove is its own.** A scene is the truth once it exists (the owner may have edited it in the editor), so an existing
+  `room.tscn` is refused. `--force` rebuilds only a scene that has a row in `tools/layouts/built_rooms.json` AND whose sha256 still equals the recorded one,
+  that is, one the tool built and nobody touched. A hand-made scene (all six of Stage 1) has no row, so not even `--force` reaches it.
+- **It checks what it wrote.** Before keeping a build, the builder boots the scene it wrote and compares the grid, the doors, the entries and the enemies with the
+  layout; a build that fails any step leaves the target as it was.
+- **The proof.** `tests/tools/test_build_room.gd` draws the hand-made Stage 1 room `t4_broken_rule_yard` as a layout (`tests/fixtures/layouts/`, not
+  `tools/layouts/`, which holds only rooms that ship), builds it into a scratch folder and requires the booted picture (bounds, origin, every cell's kind, doors,
+  entries, enemies, the pickup, the meta) to equal the hand-made room's.
+- **The words.** A layout carries the English of its room's name, arrival line and any locked-door or unlock line; the builder appends each row to
+  `content/story/text/en/rooms.po` with its `#.` comment, once, and the scene holds only the keys.
+
+The two data-only marker schemas of M5 (`TraversalGapMarker`, `StateVariantMarker`) are described with the markers above; the verbs that cross a traversal gap
+arrive with M7 and M10, and a state variant is baked into a flag-driven visibility component by M6.
+
 ## Known deviations from the rules (honest list)
 
 These exist today and are scheduled to be fixed by `docs/game-base-plan.md` §14, not by
@@ -962,10 +998,14 @@ ad-hoc edits:
 - The HUD's rank badge, Believe slot and boss bar are inert: the Rank label (`HudSnapshot.rank_label`) stays 0 until M7c fills it, and
   the other two draw nothing before M10 and M8b. Skill slots 2 to 4 are declared in the `InputMap` and absent from the HUD until M7a gives
   the snapshot a list of skills.
-- The 72x40 kingdom (`tests/fixtures/the_kingdom.tscn`) is still a zone in the shipped world
-  graph (`content/world/world.tres`, the one documented exception in
-  `test_content_references.gd`, so the H1 exit keeps resolving until M5), and `first_encounter`
-  (`tests/fixtures/first_encounter.tscn`) is a standalone room only the tests load.
+- The 72x40 kingdom (`tests/fixtures/the_kingdom.tscn`) left the shipped world graph at M5 step 1 (plan D-02):
+  it is a fixture the tests load by path (`TestPaths.shipped_rooms_and_kingdom()` for the suites that walk every
+  board), no door of the game leads into it, and `test_content_references.gd` no longer has an exception for it.
+  `first_encounter` (`tests/fixtures/first_encounter.tscn`) is a standalone room only the tests load.
+- The doors of H1 are not locked yet. `WorldLock` has the data (room clear, flag, unlock, counter, each with its
+  message key) and the three Stage 1 clear-locks use it, but a FLAG lock is enforced by nothing: wiring the hub's doors
+  to `boss.<id>` flags is M5 step 2 (it needs the shell to hand the room's locks to `EcsBoot`, and `MovementSystem` to
+  read them), and the skill locks arrive in M7c.
 
 ## Reading order
 
@@ -1003,7 +1043,8 @@ kind:
 | `tests/text/` | the words (M4 step 3): `test_text_service`, `test_pseudo_locale`, `test_po_domains_merge`, `test_text_keys`, `test_language_switch_redraws_live`, `test_layout_pseudo_locale`, `test_font_slots`, `test_font_vietnamese_coverage` |
 | `tests/presentation/` | the board overlay drawing from the snapshot, the camera framing the room and starting on a whole pixel (`test_board_draws_from_snapshot`, `test_camera_frames`, `test_camera_snap`), and the HUD (M4 step 4): `test_hud_widgets` (each widget alone, from a snapshot), `test_hud_safe_zone` (every widget in a strip and off every board), `test_debug_overlay_default` (F3 on the real scene) |
 | `tests/perf/` | `test_room_tick_budget`: an 18x9 room with eight enemies ticks in 2 ms or less on average, and builds one pathfinder |
-| `tests/audio/`, `tests/content/` | the bus layout; the requirements ledger and the placeholder manifest; `test_room_doors_reachable` (every room of the world graph booted for real: every entry on floor, every door floor, reachable from every entry and leading to an entry that exists); `test_room_markers_on_floor` (the same boot: every parked enemy stands on floor and is in the grid, every pickup and unlock marker is on floor and can be walked to from every entry, every gate is on floor and can be pushed) |
+| `tests/audio/`, `tests/content/` | the bus layout; the requirements ledger and the placeholder manifest; `test_room_doors_reachable` (every room of the world graph booted for real: every entry on floor, every door floor, reachable from every entry and leading to an entry that exists); `test_room_markers_on_floor` (the same boot: every parked enemy stands on floor and is in the grid, every pickup and unlock marker is on floor and can be walked to from every entry, every gate is on floor and can be pushed); and since M5 step 1 `test_world_graph` (every exit resolves, every room has an entry, no orphan, every lock has a message key with an English row, the kingdom is not in the graph, and each `WorldCheck` check is broken on purpose to prove it can fail), `test_room_meta` (the `RoomEncounter` meta and its configuration warnings) and `test_marker_schemas` (`TraversalGapMarker` and `StateVariantMarker`) |
+| `tests/tools/` | the tools that make content (M5 step 1): `test_room_layout` (the layout format: every kind of cell and object, every way a layout can be wrong), `test_build_room` (the rebuilt Stage 1 room equals the hand-made one, the refusals, the manifest, a failed build leaves nothing), `test_print_world_map` (the ASCII map and its checks line) |
 | `tests/support/` | `UnboundTest`, `TestPaths` (the only place a new test names a `res://` path), `reference_pathing.gd` (the pathing and the attack search as they were before M3a, the yardstick the new code is compared with), the harness's own test |
 | `tests/fixtures/`, `tests/baselines/` | the kingdom, `first_encounter`, the harness fixtures and the v2 save; the six deterministic room dumps |
 
@@ -1035,7 +1076,9 @@ cleared-room rules of D-16 and D-17 (step 3), and, from M4 step 3, the settings 
 state machine, the persistent fade, the title, the credits (data in `content/story/credits.tres`, licences generated
 from `THIRD_PARTY_NOTICES.md`), the autosave tick and the corrupt-save notice. The ECS contract is kept as it was.
 and, from M4 step 4, the HUD as widgets in two strips with its safe-zone test, the control hints from the `InputMap`, the F3 debug
-readout and the camera's integer-pixel snap, which closes M4's Tier A. Still to come, in plan order: the first-run card (Tier B), story, skills, bosses
+readout and the camera's integer-pixel snap, which closes M4's Tier A, and, from M5 step 1, the room builder (`tools/build_room.gd`), the world as one graph of rooms, doors, map slots and locks
+(`content/world/world.tres`, with the kingdom out of it), the room meta on `RoomEncounter`, the two data-only marker schemas and `tools/print_world_map.gd`.
+Still to come, in plan order: the first-run card (Tier B), story, skills, bosses
 and the other five districts. The
 owner-facing "how do I change X" table, with real paths for what exists today, is
 `docs/OWNER_GUIDE.md`.
