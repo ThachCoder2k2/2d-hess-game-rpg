@@ -689,7 +689,7 @@ chúng tôi biết bộ khung có "đúng" không. Chưa cần chấm art, nhạ
 
 Một phòng **stub** là phòng mới có **hình dáng**: đúng id, đúng kích thước (16×9 ô, các phòng boss và `ub2` rộng 18×9), đúng kiểu bố cục (`layout_archetype`: `winding`, `lanes`, `stairs`, `islands`...), các cửa nối đúng phòng, và quân cờ **đúng họ** của nó
 (tốt, mã, tượng, xe, hậu, vua) theo bảng §7.4 của plan. Nó **chưa** có: art của bạn (sàn tường dùng bộ tile `greybox`, mỗi loại ô một ô phẳng, hình quân là hình tạm), chữ truyện, nhạc riêng, kỹ năng mới (cửa nào plan ghi "cần Rule Step / Chalk Path /
-Eraser Guard" thì **vẫn mở**, và `world.tres` ghi lời hứa: mở thật ở M7c), boss thật (**năm boss là quân một ô**, Courage 8 tới 12, đánh bằng kiếm khoảng 8-12 nhát: M8b làm boss đúng), và những thứ phải thấy mới có (tàu đồ chơi của `tb3`, tiệc trà của `dh1`).
+Eraser Guard" thì **vẫn mở**, và `world.tres` ghi lời hứa: mở thật ở M7c), boss thật (**năm boss là quân một ô**, Courage 8 tới 12, kèm **một quân Recruit hộ tống** đứng cạnh; cả phòng boss đánh bằng kiếm hết khoảng **10 tới 20 nhát** thật: M8b làm boss đúng), và những thứ phải thấy mới có (tàu đồ chơi của `tb3`, tiệc trà của `dh1`).
 
 Mỗi phòng có một **trạng thái** (`content_status`) trên node gốc: `STUB` (hình dáng), `GREYBOX` (chơi được, địch thật), `DRESSED` (đã có art tạm), `FINAL` (**chỉ bạn** đặt). Hôm nay: **34 phòng, 28 STUB, 6 GREYBOX** (sáu phòng Stage 1: T1, T2, T3, T4, B1, H1). Số đếm này in ra bằng `tools/list_placeholders.gd`
 (dòng `ROOMS: 34 rooms, 28 STUB, 6 GREYBOX, 0 DRESSED, 0 FINAL`).
@@ -699,10 +699,10 @@ Mỗi phòng có một **trạng thái** (`content_status`) trên node gốc: `S
 1. Mở game (F5) → **New Game**. Bạn bắt đầu ở **T1**. (Muốn chơi lại từ đầu: New Game; save cũ thành `.bak`, mục 7.)
 2. **Stage 1** như cũ: T1 → T2 (nhặt kiếm ở giữa phòng) → T3 → T4 → **B1** (Black Pawn Captain) → **H1**, cái hub. Cửa phía đông của T3, T4, B1 chỉ mở khi bạn dọn hết địch.
 3. **H1 có năm cửa vào năm quận.** Chỉ cửa **Toybox** (cửa trên) mở sau B1. Bốn cửa kia **đứng yên và nói vì sao** (dòng trạng thái ở đáy): mỗi cửa chờ **boss của quận trước** ngã xuống (D-21). **Bước lên** một cửa đóng (ô khung đỏ gạch chéo, xem ngay dưới) là cách đọc lý do và thử câu chữ.
-4. Đi **từng quận theo thứ tự**, mỗi quận có 4 phòng và một boss:
+4. Đi **từng quận theo thứ tự**, mỗi quận có 4 phòng và một boss (riêng **Under-Bed chỉ có 3 phòng** và một boss, và không có lối tắt về):
    `Toybox` (tb1, tb2, tb3, **tbb** Knight Captain, tb4) → về H1 qua **lối tắt một chiều** ở cuối quận → `Bookshelf` (bs1 tới bs4, boss Bishop Oracle) → `Block Tower` (bt1 tới bt4, boss Rook Warden) → `Dollhouse` (dh1 tới dh4, boss Queen of Tricks) → `Under-Bed` (ub1, ub2, ub3, **ubb** Black King).
    Mỗi quận: phòng dạy (một họ quân mới, có quân đứng sẵn), phòng thử, phòng lạ (đổi nhịp), phòng boss (checkpoint: vào cửa là hồi đầy Courage), rồi lối tắt. Ba phòng ngách tuỳ chọn (`tbo`, `bso`, `bto`) nằm ngoài tuyến, đi từ lối tắt của quận.
-5. **Boss giả**: một quân một ô, nhiều Courage. Đánh bằng kiếm tới khi ngã: cờ `boss.<id>` được đặt, game tự lưu (`boss_defeated`), và cửa hub của quận sau mở.
+5. **Boss giả**: một quân một ô, nhiều Courage, có một quân Recruit hộ tống. Đánh bằng kiếm tới khi boss ngã (và hạ cả quân hộ tống thì cửa phòng mới mở): cờ `boss.<id>` được đặt, game tự lưu (`boss_defeated`), và cửa hub của quận sau mở.
 6. Hết **ubb**, cửa phòng boss dẫn sang **bàn học (Desk, `e1`)**: đi tới **cửa ở cuối bàn** (cửa kết thúc, không dẫn đi đâu). Bốn thẻ chữ hiện lần lượt (Enter bỏ qua từng thẻ), rồi **credits**, rồi về **title**, nơi một ô của bàn cờ để trống (bạn đã chơi xong).
 
 **Cửa nhìn thế nào** (thêm sau review M5: trước đó cửa chỉ là ô sàn thường, không ai thấy chỗ đi tiếp). Mỗi cửa là **một ô có khung vẽ đè lên sàn**, và hình dáng khác nhau chứ không chỉ khác màu:
@@ -718,13 +718,23 @@ Chết không mất gì ngoài phòng vừa ngã (mục 7); **Esc** → Restart 
 
 Để biết bộ khung dài bao nhiêu **khi không có gì cản**, đọc `docs/route_times.md`: một con bot chơi cả game từ title tới credits (bằng phím bấm, kiếm thật, boss bằng một đòn sát thương, địch đứng yên) và ghi **thời gian của con bot ở từng phòng** cạnh ước lượng của plan. Hôm nay: **khoảng 3,5 phút** cả tuyến. Đây là **mốc của một con bot chậm, không phải mức tối thiểu**: nó đi tới quân đứng yên rồi chờ hết cả nhịp thu kiếm sau mỗi nhát, nên người chơi thạo (địch đang đánh lại) còn **nhanh hơn** nó ở 25 trong 31 phòng (review M5 đo bằng phím thật: 172 giây so với 195 giây); chỉ sáu phòng boss lâu hơn, vì đánh boss thật cần nhiều nhát thật (gấp 1,4 tới 2,9 lần) còn con bot chỉ dùng một đòn sát thương. Con số của bạn lần đầu sẽ cao hơn vì bạn đọc, đi vòng, thử cửa, và vì địch đánh lại; đó là chuyện bình thường. Mức tối thiểu thật do M9 đo khi phòng có trận đánh thật. (Bài test chạy lại bot mỗi lần: `tests/playthrough/test_full_route.gd`, dưới 90 giây; nó chỉ ghi lại file khi con số đổi.)
 
+### Điều đã biết trước khi bạn chơi (đừng đọc những chỗ này là chuyện tuning)
+
+Review M5 chơi cả tuyến bằng phím thật và ghi lại các chỗ stub **chưa giống thiết kế**. Chúng không phải lỗi mới, và bạn không cần báo lại; chỉ cần biết để khỏi hiểu nhầm:
+
+- **Ba phòng dạy `tb1`, `bs1`, `bt1` đang chứa quân thật (mã, tượng, xe) đứng đánh thật**, còn plan để quân đó ở dạng **"rào"** chỉ để xem (R27, cần chế độ rào của M8a). Hôm nay `tb1` chứa 4 điểm đe doạ (trần phòng dạy là 3), `bs1` và `bt1` chứa 6. Nếu bạn thấy ba phòng này khó hơn một phòng dạy nên khó, **đúng như vậy**.
+- **Mỗi phòng boss có thêm một quân hộ tống**; `ub2` đặt cả ba đợt quân lên bàn một lúc (plan: ba đợt nối tiếp, M13); `tb3` chưa có tàu đồ chơi (M9); `ub3` mới có một quân Recruit, chưa có xung viết lại luật (M13); `t2` chưa có Crayon Target.
+- **Một số trận stub gần như không đánh trả.** Review thấy ở `tb1, tb2, tb3, bs2, bs3, bsb_bishop_oracle, bt2, ub3` một con tốt đứng im vẫn sống được 45 giây giữa quân sống (ở các phòng khác nó ngã sau 2,7 tới 9,7 giây). Quân stub ít ra đòn; đừng đọc nó là "địch dễ" hay "địch khó" của bản cuối.
+- **Bốn phòng "phá khuôn" (`tb3`, `bs3`, `bt2`, `dh1`) chơi như phòng dọn địch thường**: `bt2` ("giữ 30 giây") thắng sau 4,5 giây nếu bạn giết hết, `dh1` chưa có tiệc trà. Mười một cửa cần kỹ năng (Rule Step, Chalk Path...) **đều mở** cho tới M7c, nên chưa có hố hay Rule Mark nào để băng qua.
+- Danh sách "phòng đang chứa khác với thiết kế" được **ghim trong test** (`tests/content/test_threat_budget.gd`, `KNOWN_STUB_PARKED_THREAT`): phòng nào bắt đầu lệch, hay hết lệch, làm test đỏ và nêu tên.
+
 ### Điều cần để ý, và cách báo lại
 
 Khi chơi, thử trả lời ba câu này (ghi một dòng cho mỗi phòng nếu có chuyện gì; **gọi phòng bằng id**, ví dụ `tb2_l_jump_lanes`, id nằm ở bản đồ in ra bên dưới; mỗi phòng có một dòng chào riêng ở đáy màn hình khi bạn bước vào, bạn chép vài chữ của nó cũng đủ):
 
 1. **Tuyến có hợp lý không?** Thứ tự quận, việc quay về hub sau mỗi quận, cửa hub đứng yên với một lý do, lối tắt một chiều. Có chỗ nào bạn **không biết đi đâu**, hay đi một vòng vô nghĩa?
 2. **Mỗi hồi có khác nhau không, ngay cả khi chỉ là stub?** Thứ **có** khác: họ quân (tốt, mã, tượng, xe, hậu, vua), hình phòng và kiểu bố cục, kích thước (phòng boss rộng hơn), nhịp (phòng dạy, thử, lạ, boss, lối tắt), dòng chào mỗi phòng. Thứ **chưa** khác: tile (cùng bộ greybox), nhạc, art, chữ truyện. Bạn thấy năm quận **có vị riêng** không, hay chỉ là năm lần cùng một thứ?
-3. **Có gì gây bối rối?** Cửa khoá không rõ vì sao, phòng quá dài hay quá ngắn, boss đánh lâu quá (8-12 nhát là chủ ý của stub, nhưng cảm giác ra sao?), thiếu chỗ thở, quân đứng chỗ khó chịu, một phòng nào đó cảm giác thừa.
+3. **Có gì gây bối rối?** Cửa khoá không rõ vì sao, phòng quá dài hay quá ngắn, boss đánh lâu quá (10-20 nhát cả phòng, gồm quân hộ tống, là chủ ý của stub, nhưng cảm giác ra sao?), thiếu chỗ thở, quân đứng chỗ khó chịu, một phòng nào đó cảm giác thừa.
 
 Và hai câu hỏi dành riêng cho bạn:
 - **Under-Bed không có lối tắt về** (cửa cuối của Black King kết thúc game): giữ như vậy? (bài `test_district_loops` ghi đây là ngoại lệ có chủ ý, và sẽ báo đỏ nếu một ngày nó có vòng lặp mà ngoại lệ vẫn còn.)
@@ -756,7 +766,7 @@ Nó in: **MAP** (lưới 8 cột × 10 hàng; `[t1]` là phòng, chữ cái tr�
 
 *EN: Gate OG1 (section 9): play from the title to the credits through the stub rooms, about ten minutes, and tell us whether the skeleton feels right. A **stub** is a room that has only its shape: the plan's id, size, layout archetype, the doors to its neighbours and a piece of each family it should hold, in the flat greybox
 tiles; it has no art, story text, music or new skills (a door that "needs Rule Step" is open until M7c) and the five bosses are one-cell stand-ins with 8 to 12 Courage. 34 rooms: 28 STUB and 6 GREYBOX (Stage 1). The route: Stage 1 to the hub, then the five districts in order (each hub door waits for the boss before it and says so), the Desk's last door, four cards, the credits, the title with an empty square.
-`docs/route_times.md` is what a slow bot needs, a baseline and not a minimum (a player with the enemy AI on beat it in 25 of 31 rooms in the review; about 3.5 minutes; written by `tests/playthrough/test_full_route.gd` every run, only when it changed). We want three answers: does the route make sense, does each act feel distinct even as stubs (what differs is the family, the shape, the size and the beat; what does not is the tiles, the music and the words), and what is confusing
+Known gaps, so they are not read as tuning (the M5 review): the three Teach rooms park a live Knight, Bishop and Rook where the plan fences them (4, 6 and 6 threat against a cap of 3), each boss arena has an escort Recruit, ub2 parks its whole gauntlet at once, several stub fights barely strike back (an idle pawn lived 45 s in eight rooms), and the four format-breaker rooms and the eleven skill-locked doors play like plain ones until M7c. `docs/route_times.md` is what a slow bot needs, a baseline and not a minimum (a player with the enemy AI on beat it in 25 of 31 rooms in the review; about 3.5 minutes; written by `tests/playthrough/test_full_route.gd` every run, only when it changed). We want three answers: does the route make sense, does each act feel distinct even as stubs (what differs is the family, the shape, the size and the beat; what does not is the tiles, the music and the words), and what is confusing
 (and two questions of yours: keep the Under-Bed one-way, and which format-breaker first). Tell us in chat or in `docs/owner-review-template.md`; the answer is recorded verbatim in `progress.md`. To print the map: `tools/print_world_map.gd` (MAP, ROOMS, EDGES, LOCKS, ROUTE and the checks line). To add or edit a room: a layout in `tools/layouts/`,
 `tools/build_room.gd -- --room=<id>` (never overwrites a scene that exists; `--force` only for a scene the tool built and nobody edited), the import pass, the stamp check, then a `WorldRoom` and its `WorldEdge`s in `content/world/world.tres` and the doors in the neighbouring scenes; `/verify` runs the seven lints.*
 
