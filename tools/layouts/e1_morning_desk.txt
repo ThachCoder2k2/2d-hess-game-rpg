@@ -17,7 +17,7 @@ objective = none
 intensity = 6
 tileset = greybox
 name = The Morning Desk
-start = Morning. The board is quiet. Walk to the end of the blue line.
+start = Morning. The board is quiet. Walk to the door at the far end.
 
 [grid]
 ################

@@ -326,7 +326,7 @@ msgstr "The Morning Desk"
 
 #. room=e1_morning_desk; surface=status line on arrival; purpose=what the room says as the pawn comes in; placeholder; written by tools/build_room.gd from tools/layouts/e1_morning_desk.txt
 msgid "ROOM_E1_MORNING_DESK_START"
-msgstr "Morning. The board is quiet. Walk to the end of the blue line."
+msgstr "Morning. The board is quiet. Walk to the door at the far end."
 
 #. room=h1_chess_rug_hub; surface=status line when the pawn steps on the shut door; purpose=the Toybox door waits for boss.black_pawn_captain; placeholder
 msgid "ROOM_H1_CHESS_RUG_HUB_LOCKED_TOYBOX"
