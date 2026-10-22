@@ -176,6 +176,7 @@ func _check_list_tool_prints_the_todo(paths: TestPaths, entries: Array[Dictionar
 	var printed := "".join(PackedStringArray(output))
 	_expect(exit_code == 0, "tools/list_placeholders.gd exits 0 (got %d)" % exit_code)
 	_expect(printed.contains("PLACEHOLDERS: %d recorded" % entries.size()), "tools/list_placeholders.gd prints the summary line for %d recorded files" % entries.size())
+	_expect(printed.contains("ROOMS: 34 rooms, ") and printed.contains(" STUB, ") and printed.contains(" GREYBOX, ") and printed.contains(" DRESSED, ") and printed.contains(" FINAL "), "tools/list_placeholders.gd also prints how many rooms are STUB, GREYBOX, DRESSED and FINAL")
 
 
 func _check_no_scene_names_generated_art() -> void:
