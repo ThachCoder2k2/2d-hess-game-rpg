@@ -111,6 +111,7 @@ func boot_zone(entry_id: StringName, entered_by_door := false) -> void:
 	boot_options.entry_id = entry_id
 	boot_options.entered_by_door = entered_by_door
 	boot_options.player_snapshot = zone_travel_bridge.take_carried_snapshot()
+	input_poller.require_fresh_press()
 	save_bridge.fill_boot_options(boot_options, current_room)
 	cast = EcsBoot.boot(ecs, boot_options)
 	player_id = int(cast.get("player", 0))
