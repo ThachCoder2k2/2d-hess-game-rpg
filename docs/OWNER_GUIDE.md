@@ -1,6 +1,6 @@
 # Hướng dẫn cho chủ dự án (Owner Guide)
 
-> **Trạng thái (Status): CẬP NHẬT Ở M4 bước 4 (2026-10-19).** Tạo ở M1a, M1b điền đường dẫn thật vào mục 5,
+> **Trạng thái (Status): CẬP NHẬT Ở M5 bước 3 (2026-10-23): mục 9 là cổng OG1, chơi từ title tới credits qua các phòng stub.** (Trước đó: M4 bước 4, 2026-10-19.) Tạo ở M1a, M1b điền đường dẫn thật vào mục 5,
 > M2 thêm mục 6 (quân cờ nhỏ hơn ô) và cập nhật các hàng về con tốt, enemy, sprite, M3b thêm mục 7
 > (lưu game, checkpoint, chết và hồi sinh). M4 bước 1 thêm màn title (New Game, Continue), credits và dấu tick
 > lưu game, và đổi cảnh chính thành `shell/app_root.tscn` (mục 1, 5, 7). M4 bước 2 thêm menu pause (`Esc`), đổi `R`
@@ -39,7 +39,7 @@ made the camera start its picture on a whole pixel.*
    đè lên, save cũ còn lại làm `.bak`), **Continue** (chỉ hiện khi có save đọc được; mở phòng và ô vào của lần lưu cuối,
    kèm một dòng "thẻ save": tên phòng, thời gian chơi, ngày lưu), **Settings** (mục 8), **Credits** và Quit.
    Góc dưới bên phải là số phiên bản. Sau khi xem hết kết thúc, một ô của bàn cờ trên title để trống. Vào game là đi
-   theo tuyến Stage 1: T1 → T2 → T3 → T4 → B1 → H1 (greybox, chưa chỉnh art). Muốn chơi lại từ đầu: chọn **New Game**
+   theo tuyến Stage 1: T1 → T2 → T3 → T4 → B1 → H1 (greybox, chưa chỉnh art); từ H1, năm cửa dẫn sang năm quận (Toybox, Bookshelf, Block Tower, Dollhouse, Under-Bed, mỗi cửa chờ boss của quận trước) rồi tới bàn học và credits: bộ khung đầy đủ nhưng toàn **phòng stub**, cách chơi và điều cần xem ở **mục 9 (cổng OG1)**. Muốn chơi lại từ đầu: chọn **New Game**
    (hoặc xoá file save `saves/slot_0.cfg` và `saves/slot_0.cfg.bak` trong thư mục user data của
    game; trong Godot: menu **Project → Open User Data Folder**; trên macOS là
    `~/Library/Application Support/Godot/app_userdata/The Unbound Pawn/`). Chi tiết ở mục 7.
@@ -258,7 +258,7 @@ are later work, and nothing in the tree blocks them.*
 | Đổi một trang của Book of House Rules | **chữ của trang:** `content/story/text/en/story.po` (các dòng `PAGE_<ID>_TITLE`, `_RULE`, `_AMENDMENT`, `_FLAVOR`; mục 8). **Quân nào mở trang:** `content/rules/<id>/page.tres` (ô `piece_id`; các ô chữ trong đó chỉ chứa mã `PAGE_...`); danh sách trang: `content/rules/rule_book.tres` |
 | Đổi độ khó (nhân máu và sát thương toàn cục) | `content/difficulty/standard.tres` |
 | Đổi vũ khí nhặt được trên sàn | `content/pickups/<id>/<id>.tres` |
-| Dựng một phòng mới từ một bản vẽ ký tự (Build a new room from a layout) | **1 file bản vẽ** `tools/layouts/<id>.txt` (id là tên file; mỗi ô một ký tự: `.` sàn, `#` tường, `o` hố, `+` khối nhảy qua được, `=` phấn, `~` sàn hỏng, chữ hoa là cửa, điểm vào, enemy, vật nhặt... khai báo ở mục `[objects]`; `tools/build_room.gd -- --legend` in đủ bảng), rồi chạy `tools/build_room.gd -- --room=<id>` (xem `tools/README.md`). Tool viết `content/rooms/<id>/room.tscn` bằng chữ, tô từng tile từ bộ `greybox`, thêm các dòng chữ tiếng Anh vào `rooms.po`, và **không bao giờ ghi đè** một scene đã có (bạn sửa scene trong Godot thì scene là bản đúng). Muốn xem cả thế giới: `tools/print_world_map.gd` |
+| Dựng một phòng mới từ một bản vẽ ký tự (Build a new room from a layout) | **1 file bản vẽ** `tools/layouts/<id>.txt` (id là tên file; mỗi ô một ký tự: `.` sàn, `#` tường, `o` hố, `+` khối nhảy qua được, `=` phấn, `~` sàn hỏng, chữ hoa là cửa, điểm vào, enemy, vật nhặt... khai báo ở mục `[objects]`; mục `[room]` còn có năm khoá ngân sách `objective`, `threat`, `shapes`, `intro`, `intensity`; `tools/build_room.gd -- --legend` in đủ bảng; cả quy trình ở mục 9), rồi chạy `tools/build_room.gd -- --room=<id>` (xem `tools/README.md`). Tool viết `content/rooms/<id>/room.tscn` bằng chữ, tô từng tile từ bộ `greybox`, thêm các dòng chữ tiếng Anh vào `rooms.po`, và **không bao giờ ghi đè** một scene đã có (bạn sửa scene trong Godot thì scene là bản đúng). Muốn xem cả thế giới: `tools/print_world_map.gd` |
 | Đổi đồ thị thế giới (phòng nào nối phòng nào) | `content/world/world.tres` |
 | Đổi bộ tile của sàn/tường | `content/tilesets/<bộ>/tileset.tres` và `tilemap.tscn` (đừng sửa tay `tile_map_data`, dùng `tools/paint_*.gd`); atlas ở `assets/tiles/<bộ>/atlas.svg` là đồ cũ; bạn vẽ từng tile riêng (`assets/tiles/<khu>/<tile_id>.png`), công cụ sẽ tự ghép atlas |
 | Đánh dấu một tile là hố, khối nhảy qua được, phấn hay sàn bị hỏng (Mark a tile as a gap, a leapable block, chalk or corrupted floor) | **1 file**, trong Godot: mở `content/tilesets/<bộ>/tileset.tres`, ở TileSet editor chọn tile, trong Inspector mục **Custom Data** điền ô **kind**: `gap` (hố: không đi vào được, đường đạn và cú nhảy bay qua), `leapable_block` (khối: không đi qua được, chắn đường đạn, nhảy qua được), `chalk` (phấn: đi được), `corruption` (sàn hỏng: đi được); `wall` và `floor` cũng dùng được. Để trống thì tile là tường khi `solid` bật, còn không là sàn, nên mọi tile cũ vẫn như cũ. Hiện chưa tile nào điền `kind`: hình cho hố, khối, phấn và sàn hỏng thuộc về các milestone dùng chúng (M10, M13). Muốn tô chúng vào bản đồ thì công cụ `tools/paint_*.gd` nêu loại ô qua `tools/cell_kind_painter.gd`; đừng sửa tay `tile_map_data` |
@@ -680,7 +680,79 @@ used (it covers all 134 Vietnamese letters); a file you add is used with no othe
 (`test_font_vietnamese_coverage` fails otherwise), needs its licence added to `THIRD_PARTY_NOTICES.md`, and the pixel-font import
 options (antialiasing and hinting disabled, an integer size) are set in the editor's Import dock.*
 
-## 9. Từ điển nhỏ (Glossary)
+## 9. OG1: chơi từ title tới credits qua các phòng stub (M5)
+
+**OG1 là một điểm dừng dành cho bạn** (`docs/game-base-plan.md` §15 và `AGENTS.md`): sau M5, game chơi được từ màn title tới credits, nhưng **chỉ là bộ khung**. Việc của bạn: chơi một lượt (khoảng **10 phút**), rồi cho
+chúng tôi biết bộ khung có "đúng" không. Chưa cần chấm art, nhạc hay chữ truyện: những thứ đó chưa có. Cần biết **tuyến đường, nhịp đi, và độ dài** có hợp lý không, trước khi chúng tôi làm đầy từng khu (M6 trở đi).
+
+### "Stub" nghĩa là gì
+
+Một phòng **stub** là phòng mới có **hình dáng**: đúng id, đúng kích thước (16×9 ô, các phòng boss và `ub2` rộng 18×9), đúng kiểu bố cục (`layout_archetype`: `winding`, `lanes`, `stairs`, `islands`...), các cửa nối đúng phòng, và quân cờ **đúng họ** của nó
+(tốt, mã, tượng, xe, hậu, vua) theo bảng §7.4 của plan. Nó **chưa** có: art của bạn (sàn tường dùng bộ tile `greybox`, mỗi loại ô một ô phẳng, hình quân là hình tạm), chữ truyện, nhạc riêng, kỹ năng mới (cửa nào plan ghi "cần Rule Step / Chalk Path /
+Eraser Guard" thì **vẫn mở**, và `world.tres` ghi lời hứa: mở thật ở M7c), boss thật (**năm boss là quân một ô**, Courage 8 tới 12, đánh bằng kiếm khoảng 8-12 nhát: M8b làm boss đúng), và những thứ phải thấy mới có (tàu đồ chơi của `tb3`, tiệc trà của `dh1`).
+
+Mỗi phòng có một **trạng thái** (`content_status`) trên node gốc: `STUB` (hình dáng), `GREYBOX` (chơi được, địch thật), `DRESSED` (đã có art tạm), `FINAL` (**chỉ bạn** đặt). Hôm nay: **34 phòng, 28 STUB, 6 GREYBOX** (sáu phòng Stage 1: T1, T2, T3, T4, B1, H1). Số đếm này in ra bằng `tools/list_placeholders.gd`
+(dòng `ROOMS: 34 rooms, 28 STUB, 6 GREYBOX, 0 DRESSED, 0 FINAL`).
+
+### Cách chơi (khoảng 10 phút)
+
+1. Mở game (F5) → **New Game**. Bạn bắt đầu ở **T1**. (Muốn chơi lại từ đầu: New Game; save cũ thành `.bak`, mục 7.)
+2. **Stage 1** như cũ: T1 → T2 (nhặt kiếm ở giữa phòng) → T3 → T4 → **B1** (Black Pawn Captain) → **H1**, cái hub. Cửa phía đông của T3, T4, B1 chỉ mở khi bạn dọn hết địch.
+3. **H1 có năm cửa vào năm quận.** Chỉ cửa **Toybox** (cửa trên) mở sau B1. Bốn cửa kia **đứng yên và nói vì sao** (dòng trạng thái ở đáy): mỗi cửa chờ **boss của quận trước** ngã xuống (D-21). Đứng trước cửa đóng là cách thử câu chữ.
+4. Đi **từng quận theo thứ tự**, mỗi quận có 4 phòng và một boss:
+   `Toybox` (tb1, tb2, tb3, **tbb** Knight Captain, tb4) → về H1 qua **lối tắt một chiều** ở cuối quận → `Bookshelf` (bs1 tới bs4, boss Bishop Oracle) → `Block Tower` (bt1 tới bt4, boss Rook Warden) → `Dollhouse` (dh1 tới dh4, boss Queen of Tricks) → `Under-Bed` (ub1, ub2, ub3, **ubb** Black King).
+   Mỗi quận: phòng dạy (một họ quân mới, có quân đứng sẵn), phòng thử, phòng lạ (đổi nhịp), phòng boss (checkpoint: vào cửa là hồi đầy Courage), rồi lối tắt. Ba phòng ngách tuỳ chọn (`tbo`, `bso`, `bto`) nằm ngoài tuyến, đi từ lối tắt của quận.
+5. **Boss giả**: một quân một ô, nhiều Courage. Đánh bằng kiếm tới khi ngã: cờ `boss.<id>` được đặt, game tự lưu (`boss_defeated`), và cửa hub của quận sau mở.
+6. Hết **ubb**, cửa phòng boss dẫn sang **bàn học (Desk, `e1`)**: đi tới **cửa ở cuối bàn** (cửa kết thúc, không dẫn đi đâu). Bốn thẻ chữ hiện lần lượt (Enter bỏ qua từng thẻ), rồi **credits**, rồi về **title**, nơi một ô của bàn cờ để trống (bạn đã chơi xong).
+
+Chết không mất gì ngoài phòng vừa ngã (mục 7); **Esc** → Restart Room chơi lại phòng. Phòng đã dọn giữ sạch cả lượt chơi (D-17).
+
+Để biết bộ khung dài bao nhiêu **khi không có gì cản**, đọc `docs/route_times.md`: một con bot chơi cả game từ title tới credits (bằng phím bấm, kiếm thật, boss bằng một đòn sát thương, địch đứng yên) và ghi **thời gian ngắn nhất của từng phòng** cạnh ước lượng của plan. Hôm nay: **khoảng 3,5 phút** cả tuyến. Con số của bạn sẽ cao hơn vì bạn đọc, đi vòng, đánh nhau
+thật, và vì địch đánh lại; đó là chuyện bình thường. (Bài test chạy lại bot mỗi lần: `tests/playthrough/test_full_route.gd`, dưới 90 giây; nó chỉ ghi lại file khi con số đổi.)
+
+### Điều cần để ý, và cách báo lại
+
+Khi chơi, thử trả lời ba câu này (ghi một dòng cho mỗi phòng nếu có chuyện gì; **gọi phòng bằng id**, ví dụ `tb2_l_jump_lanes`, id nằm ở bản đồ in ra bên dưới; mỗi phòng có một dòng chào riêng ở đáy màn hình khi bạn bước vào, bạn chép vài chữ của nó cũng đủ):
+
+1. **Tuyến có hợp lý không?** Thứ tự quận, việc quay về hub sau mỗi quận, cửa hub đứng yên với một lý do, lối tắt một chiều. Có chỗ nào bạn **không biết đi đâu**, hay đi một vòng vô nghĩa?
+2. **Mỗi hồi có khác nhau không, ngay cả khi chỉ là stub?** Thứ **có** khác: họ quân (tốt, mã, tượng, xe, hậu, vua), hình phòng và kiểu bố cục, kích thước (phòng boss rộng hơn), nhịp (phòng dạy, thử, lạ, boss, lối tắt), dòng chào mỗi phòng. Thứ **chưa** khác: tile (cùng bộ greybox), nhạc, art, chữ truyện. Bạn thấy năm quận **có vị riêng** không, hay chỉ là năm lần cùng một thứ?
+3. **Có gì gây bối rối?** Cửa khoá không rõ vì sao, phòng quá dài hay quá ngắn, boss đánh lâu quá (8-12 nhát là chủ ý của stub, nhưng cảm giác ra sao?), thiếu chỗ thở, quân đứng chỗ khó chịu, một phòng nào đó cảm giác thừa.
+
+Và hai câu hỏi dành riêng cho bạn:
+- **Under-Bed không có lối tắt về** (cửa cuối của Black King kết thúc game): giữ như vậy? (bài `test_district_loops` ghi đây là ngoại lệ có chủ ý, và sẽ báo đỏ nếu một ngày nó có vòng lặp mà ngoại lệ vẫn còn.)
+- **Plan bảo mỗi quận có một phòng "phá khuôn"** (tb3 đuổi tàu, bs3 trượt trang, bt2 giữ tuyến 30 giây, dh1 tiệc trà): hôm nay chúng mới chỉ là phòng có mục tiêu khác tên (`objective_kind`), chưa chơi khác. Bạn muốn phòng phá khuôn nào được làm trước?
+
+**Báo lại bằng cách nào:** nói thẳng trong chat, hoặc điền `docs/owner-review-template.md` (mục *Fast Verdict* và *Gameplay Feel Review* là đủ); chúng tôi ghi nguyên văn câu trả lời vào `progress.md` (như đã làm với OG0) và sửa theo. Nếu bạn **không trả lời**, các mặc định ở `AGENTS.md` (mục "Gates and defaults") vẫn đứng, chúng tôi ghi giả định đó vào `progress.md` và làm tiếp M6.
+
+### In bản đồ thế giới
+
+```bash
+../Godot.app/Contents/MacOS/Godot --headless --path . -s tools/print_world_map.gd
+```
+
+Nó in: **MAP** (lưới 8 cột × 10 hàng; `[t1]` là phòng, chữ cái trống là chỗ của một quận: c Chess Rug, t Toybox, b Bookshelf, k Block Tower, d Dollhouse, u Under-Bed, e Desk, w Window; `-` `|` cửa hai chiều, `>` `v` `<` `^` một chiều, `x` có khoá),
+**ROOMS** (id, ô trên lưới, quận, hồi, vai trò, kiểu bố cục, trạng thái, kích thước, số cửa ra/vào), **EDGES** (mỗi cửa dẫn đâu), **LOCKS** (câu mỗi khoá nói), **ROUTE** (đi từ T1 theo thứ tự boss ngã) và một dòng cuối nói `WorldCheck` thấy gì sai (không thấy gì thì ghi sạch).
+`tools/print_world_map.gd` chỉ đọc, không sửa gì.
+
+### Thêm hoặc sửa một phòng bằng `build_room`
+
+1. **Phòng mới:** chép bản vẽ của một phòng gần giống (`tools/layouts/tb2_l_jump_lanes.txt` chẳng hạn) thành `tools/layouts/<id_mới>.txt`. Đổi `[room]` (id **bằng tên file**, `act`, `district`, `archetype`, `recipe`, và từ M5 bước 3 các khoá của phòng: `objective`, `threat`, `shapes`, `intro`, `intensity`; `name` và `start` là chữ tiếng Anh), vẽ `[grid]` (mỗi ô một ký tự: `.` sàn, `#` tường, `o` hố, `+` khối nhảy qua được, `=` phấn, `~` sàn hỏng, chữ hoa là cửa/điểm vào/địch ghi ở `[objects]`), rồi liệt kê đồ vật ở `[objects]`.
+   In bảng ký hiệu đầy đủ bằng `tools/build_room.gd -- --legend`.
+2. `tools/build_room.gd -- --check` kiểm mọi bản vẽ (không dựng gì), rồi `tools/build_room.gd -- --room=<id_mới>` dựng `content/rooms/<id>/room.tscn` (chữ, có uid, tô từng tile từ `greybox`) và thêm các dòng chữ tiếng Anh vào `rooms.po`.
+   Lệnh **từ chối ghi đè** một scene đã có: scene mà bạn đã sửa trong Godot là bản đúng. `--force` chỉ dựng lại scene mà **chính tool đã dựng và chưa ai sửa** (`tools/layouts/built_rooms.json` ghi mã băm), nên chỉnh bản vẽ rồi `--force` là cách sửa nhanh một stub chưa ai đụng.
+3. Chạy import một lần (`../Godot.app/Contents/MacOS/Godot --headless --path . --editor --quit`) và `tools/stamp_uids.gd -- --check` (phải ghi `STAMP UIDS: CLEAN`); commit scene, dòng `.po`, file `.import`/`.uid` mới và `built_rooms.json` cùng nhau.
+4. **Nối phòng vào thế giới**: mở `content/world/world.tres` trong Godot, thêm một `WorldRoom` (id, scene, ô trên lưới `map_slot` nằm trong vùng của quận) và các `WorldEdge` cho **mỗi cửa** (cửa `from_room/door` dẫn tới `to_room/to_entry`); ở phòng bên cạnh, thêm node cửa (`ZoneExitMarker`) và điểm vào. `tests/content/test_world_graph.gd` đỏ và nêu đúng chỗ nếu thiếu, và `tools/print_world_map.gd` cho bạn thấy phòng mới nằm đâu.
+5. **Sửa một phòng đã có:** mở `room.tscn` trong Godot và kéo node (từ lúc đó scene là bản đúng, bản vẽ không còn mô tả nó). Nếu phòng còn là stub chưa ai sửa, sửa bản vẽ rồi `--force` cũng được.
+6. Chạy `/verify`. Bảy bài lint của M5 sẽ nói nếu phòng của bạn phá một luật của plan: ngân sách đe doạ (phòng dạy tối đa 3, phòng thử và phòng lạ từ 3 tới 6; phòng trước boss thấp hơn boss), quân mới phải được xem trước ở dạng "rào" (R27), mỗi quân phải có chỗ đứng (§5.3), hai phòng liền nhau trên tuyến không cùng kiểu bố cục, mỗi quận có vòng lặp hoặc lối tắt, mỗi sáu phút tuyến chính có một phần thưởng giữ mãi.
+   Bài nào chưa thể kiểm trên phòng stub chỉ **in một dòng `REPORT`** và nói khi nào nó thành bắt buộc, chứ không đỏ.
+
+*EN: Gate OG1 (section 9): play from the title to the credits through the stub rooms, about ten minutes, and tell us whether the skeleton feels right. A **stub** is a room that has only its shape: the plan's id, size, layout archetype, the doors to its neighbours and a piece of each family it should hold, in the flat greybox
+tiles; it has no art, story text, music or new skills (a door that "needs Rule Step" is open until M7c) and the five bosses are one-cell stand-ins with 8 to 12 Courage. 34 rooms: 28 STUB and 6 GREYBOX (Stage 1). The route: Stage 1 to the hub, then the five districts in order (each hub door waits for the boss before it and says so), the Desk's last door, four cards, the credits, the title with an empty square.
+`docs/route_times.md` is what a bot needs at the least (about 3.5 minutes; written by `tests/playthrough/test_full_route.gd` every run, only when it changed). We want three answers: does the route make sense, does each act feel distinct even as stubs (what differs is the family, the shape, the size and the beat; what does not is the tiles, the music and the words), and what is confusing
+(and two questions of yours: keep the Under-Bed one-way, and which format-breaker first). Tell us in chat or in `docs/owner-review-template.md`; the answer is recorded verbatim in `progress.md`. To print the map: `tools/print_world_map.gd` (MAP, ROOMS, EDGES, LOCKS, ROUTE and the checks line). To add or edit a room: a layout in `tools/layouts/`,
+`tools/build_room.gd -- --room=<id>` (never overwrites a scene that exists; `--force` only for a scene the tool built and nobody edited), the import pass, the stamp check, then a `WorldRoom` and its `WorldEdge`s in `content/world/world.tres` and the doors in the neighbouring scenes; `/verify` runs the seven lints.*
+
+## 10. Từ điển nhỏ (Glossary)
 
 | Thuật ngữ | Nghĩa trong dự án này |
 |---|---|
@@ -694,7 +766,11 @@ options (antialiasing and hinting disabled, an integer size) are set in the edit
 | Book of House Rules | cuốn sách luật mà con tốt "viết thêm", phím `B` |
 | placeholder | nội dung tạm do agent làm (art, lời, nhạc, số liệu) để bạn thay bằng tay. Với file art/âm thanh, "còn là tạm" nghĩa là mã băm sha256 của file vẫn bằng mã đã ghi trong `content/_placeholders.json` |
 | id | tên thư mục của một thứ trong `content/` (ví dụ `knight_tracker`); chỉ viết ở một chỗ. Thư mục bắt đầu bằng `_` (như `_shared`) không phải id |
-| gate (OG0-OG4) | điểm dừng để bạn duyệt hoặc chơi thử trước khi làm tiếp |
+| gate (OG0-OG4) | điểm dừng để bạn duyệt hoặc chơi thử trước khi làm tiếp (OG1 là mục 9) |
+| stub | phòng mới có hình dáng (id, kích thước, kiểu bố cục, cửa, quân đúng họ), chưa có art, chữ truyện, nhạc hay kỹ năng; `content_status` của nó là `STUB` (mục 9) |
+| lint | bài test kiểm một luật của plan trên bảng §7.4 (ngân sách đe doạ, xem quân trước khi bị đánh, thưởng đều...). Mỗi lint được chứng minh là **có thể đỏ**; bài nào chưa kiểm được trên stub chỉ in một dòng `REPORT` và nói khi nào nó bắt buộc |
+| route bot | con bot trong `tests/playthrough/` chơi cả game từ title tới credits bằng phím bấm và ghi thời gian ngắn nhất của từng phòng vào `docs/route_times.md` |
+| `threat_points` | điểm đe doạ một quân cộng vào ngân sách của phòng (tốt 1, mã và tượng 3, xe 4; boss: ngân sách pha 1 của nó), nằm trong `enemy.tres` |
 | `ContentDb` | sổ đăng ký nội dung của game: tra mọi thứ trong `content/` theo id (tên thư mục), và có hai hàm kiểm tra (`validate()`, `validate_cross_refs()`) mà các bài test chạy để chắc mọi file hợp lệ và mọi tham chiếu trỏ tới một id có thật. Bạn không phải gọi nó |
 | `actor_view_base.tscn` | **một** cảnh duy nhất vẽ mọi con tốt/enemy (`presentation/views/actors/`); enemy mới chỉ cần kéo cảnh này vào phòng rồi đặt `definition`. `player.tscn`, `black_pawn.tscn`, `knight_enemy.tscn`, `bishop_enemy.tscn` là cảnh mỏng kế thừa nó |
 | `PlayerDefinition` | file `content/player/player.tres`: mọi con số của con tốt (Courage, thời gian bước, hồi chiêu...) |

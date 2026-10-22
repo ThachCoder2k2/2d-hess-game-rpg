@@ -173,7 +173,7 @@ gives the owner cheap vetoes at five gates:
 | Gate | When | The owner checks |
 |---|---|---|
 | OG0 | end of M1a, before M1b | the `CLAUDE.md` diff, the standing-rule table, the migration plan (**answered 2026-10-12**: the move and the amendments, cleared rooms stay cleared, English story source, the control changes; verbatim in `progress.md`) |
-| OG1 | after M5 | plays title to credits through stub rooms: does the skeleton feel right? |
+| OG1 | after M5 | plays title to credits through stub rooms: does the skeleton feel right? (**waiting on the owner since 2026-10-23**: the guide is `docs/OWNER_GUIDE.md` section 9) |
 | OG2 | after M7b | the feel: Sword, Pencil, Rule Step, movement lock, stagger, buffer expiry |
 | OG3 | after M9 | Stage 1 plus Toybox, the first complete district |
 | OG4 | after M13 | the whole game, before handoff polish |

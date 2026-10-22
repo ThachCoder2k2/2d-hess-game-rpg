@@ -36,6 +36,13 @@ The first playable foundation includes:
   (`presentation/views/actors/actor_view_base.tscn`) serves the pawn, the black pawns, the knight and the
   bishop, and `assets/_generated/previews/pieces_in_cells.png` shows every piece in its cell.
 
+From M5 the game is a **skeleton you can play from the title to the credits**: the six Stage 1 rooms, the hub and the five districts
+(Toybox, Bookshelf, Block Tower, Dollhouse, Under-Bed) as 34 rooms on one world graph (`content/world/world.tres`), five stand-in bosses
+whose falls open the hub's doors, and the Desk's last door that ends the run through the ending cards and the credits. Most rooms are
+**stubs** (the plan's id, size, shape, doors and a piece of each family, in flat greybox tiles); the guide for the owner's play-through
+(gate OG1) is section 9 of `docs/OWNER_GUIDE.md`, `tools/print_world_map.gd` prints the map, `tools/build_room.gd` builds a room from an ASCII
+layout, and `docs/route_times.md` is what a bot needs at the least to walk it (`tests/playthrough/test_full_route.gd`).
+
 ## First run after a fresh clone
 
 A fresh clone has no class registry (`.godot/`) and none of the generated art, so run one
@@ -96,7 +103,11 @@ HOME=/tmp/unbound-pawn-godot ../Godot.app/Contents/MacOS/Godot --headless --path
 
 Expect `TESTS COMPLETE: 0 failure(s)` from that one and `... TEST: PASS` from each of the
 others. The suites live in `tests/` (the older ones at the top, plus `architecture/`,
-`audio/`, `bridge/`, `content/` and `support/`).
+`audio/`, `bridge/`, `content/`, `playthrough/` and `support/`). Two of them look at the whole game: `tests/playthrough/test_full_route.gd`
+plays it from the title to the credits in about 20 seconds (and rewrites `docs/route_times.md` when a measurement changed), and the seven lints
+of M5 (`test_preview_before_lethal`, `test_threat_budget`, `test_room_data_audit`, `test_enemy_placement`, `test_layout_archetypes`,
+`test_district_loops`, `test_reward_cadence`) hold the rooms to the plan's 7.4 table: each can fail, and a rule a stub room cannot be held to yet
+prints a `REPORT` line that says when it becomes a check.
 
 ## Controls
 

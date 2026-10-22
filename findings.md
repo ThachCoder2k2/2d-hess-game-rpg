@@ -928,3 +928,34 @@ was the commit attribution line, which matches the harness and is no defect).
   branch (the fall-back answer) went from 5 or more to 2. Assert that the branch is exercised, not how often.
 - Agent environment: a worktree-isolated agent's shell refuses a command that mixes `cd`, `HOME=` or a heredoc with other work. Write a script file with the
   file tool and run it as a plain command (`python3 /tmp/x.py`, `bash /tmp/build_all.sh`, `/tmp/godot-m5-2.sh ...`); simple `a; b` lists are accepted.
+
+
+## Lint, Route Bot and Plan Facts (M5 step 3, 2026-10-23)
+
+- The plan's 7.4 table is a usable lint fixture, and it is not free of faults: read as written, R37 (a persistent reward every six minutes) fails at `dhb` (6.5 minutes
+  of boss with the reward at the end) and `ubb` (9 minutes), and "every district has a loop or shortcut" (D-02) fails for the Under-Bed. The plan's own boss text
+  closes the first (S20: the Queen's address in P3; S24: three memory alcoves in P3 are earned story beats inside those fights, so the fixture lists them as
+  `mid_rewards`); the second is by design (the Black King's door ends the run, 7.2) and is a written exemption that fails when it goes stale. **The plan's Reward
+  column should list those beats, and 7.5 should say the guard is for districts with a way home.** The Ending is exempt from R37: its eight minutes are the reward (R30).
+- Plan 7.4's Threat/shapes numbers reproduce from data: threat is the sum of each live piece's `EnemyDefinition.threat_points` (and 1 for a hazard), shapes are the
+  distinct shapes thrown (a Backstep Pawn throws a Recruit's diagonal; an Iron Rook throws a Rook's line), and `ub3`'s 4 is a Recruit plus three rewrite pulses. A boss
+  row states only its phase-1 budget, so boss shapes are unknown until M8b. `ub2`'s "up to 4 shapes" is the act's cap, not a count of any wave (the waves throw 2, 3
+  and 2 by this reading).
+- "Preview before lethal" is judged on the FAMILY (pawn, knight, bishop, rook, queen, king), not the variant: the Armed and Charging pawns have no fenced preview of
+  their own, the pawn family is introduced by T3's lone Recruit (the `intro` room), the Queen's by a fenced lane in `dh3` and the King's by the fenced rewrite pulse of
+  `ub3`. A fenced piece cannot be a stub piece yet: every stub parks its pieces live, so the scene half of that lint is a REPORT (M8a).
+- A lint that must "be able to fail" is one function over data the test can copy: the suite breaks a copy of the table (or `PlanLints.copy_of_graph()`), requires
+  the sentence, and judges the real table clean again. Editing a real `.tres` or scene by hand, then restoring it, is the second proof.
+- The threat caps are one static function on `RoomEncounter` (`threat_problems`), read by the Inspector's warnings, the layout reader and the lints. A rule written in
+  three places drifts; a test asserts the caps equal the plan's numbers so a constant edited by accident is named.
+- The route bot is deterministic because nothing in it runs on the wall clock: the game scene is held still and driven by `Support.pump`, the clock it reads is
+  `SaveService.state.play_time_seconds` (the game scene adds each simulated step's delta), and the walk's fades are real time that adds none. The same bot gives the
+  same `docs/route_times.md` byte for byte, so the test can rewrite the file without dirtying the tree.
+- `Support.walk_to_cell` follows `EcsGrid.get_grid_path`, which does NOT avoid door cells: in `tb2` the entry stands in a one-cell lane with its door beside it, so the
+  shortest way to the rest of the room is through the door, which leaves the room (and frees the world under a coroutine that still holds it: "previously freed").
+  The walk now goes round a door it does not mean to take.
+- A suite that is allowed to run longer than the runner's 60 s default is named in `SUITE_TIMEOUT_OVERRIDES` (`tools/run_all_tests.py`, with self-tests); its own
+  watchdog stays above its budget so a broken budget and a hang read differently.
+- `Dictionary[StringName, int].get(...)` is a Variant: `var ok := a.get(k, 0) == b` does not infer (a parse error in a strict suite); declare `var ok: bool = ...`.
+- macOS `sed -i` needs `-i ''`; and a heredoc mixed with `cd` or `git` in one command is refused for a worktree-isolated agent (step 2's note): write the script with
+  the file tool and run `python3 /tmp/x.py`.

@@ -2073,3 +2073,47 @@ run against the 7.4 table are step 3.
 - **Not done here (step 3):** `tests/playthrough/test_full_route.gd` and its bot, `docs/route_times.md`, the lints against the 7.4 table
   (`test_preview_before_lethal`, `test_threat_budget`, `test_room_data_audit`, `test_enemy_placement`, `test_layout_archetypes`, `test_district_loops`,
   `test_reward_cadence`) and the `RoomEncounter` fields they read (threat budget, objective kind, intensity...).
+
+
+## M5 step 3 - the route bot, the lints against the 7.4 table and the owner's guide - 2026-10-23
+
+Branch `base/m5-3` (from `base/m5-2`), the strict runner green (159 suites, 235 of 235 baseline labels). The last of M5's three steps; M5 is `human_review` and the
+owner's gate OG1 is waiting.
+
+- **The route bot and the whole-route test.** `tests/playthrough/route_bot.gd` and `test_full_route.gd`: boot `AppRoot`, press New Game, walk the 35 steps of the
+  critical path (T1 to B1, the hub, the five districts with the hub between them, the Desk) by key presses, clear each room (the sword for every ordinary piece by
+  `Support.kill_with_sword`, a damage event for each of the six bosses, which M5 allows), go through the doors the clears and the boss flags opened, walk onto the
+  Desk's last door, let the four cards and the credits play and stop on the title with the completed mark. About 21 s of real time (budget 90 s). It isolates the
+  save itself, and drives the simulation by hand (`Support.pump`, 0.05 s steps) so the clock is the game's own and every number is the same on every run.
+  `docs/route_times.md` holds the measured minimum per room (31 rooms, 207.55 game seconds for the whole skeleton, hub returns apart) beside the plan's Min column;
+  the test rewrites it only when its text changed (run twice: byte-identical). Proved able to fail by hand: a boss with no `defeat_flag` stops the route at the
+  hub's door.
+- **Two support changes the walk needed.** `Support.walk_to_cell` goes round a door cell when the grid's shortest path would cross one (`tb2`'s entry stands in a
+  one-cell lane beside its door, so the shortest way to the far side of the room is out through the door); and the runner gives the whole-route suite 120 s
+  instead of 60 (`SUITE_TIMEOUT_OVERRIDES`, four new self-test checks) so the plan's 90 s budget is the suite's to judge, with its own watchdog at 100 s.
+- **What the lints read.** `EnemyDefinition.threat_points` on the 14 enemies (recruit 1, armed 2, backstep 2, charging 2, knight 3, bishop 3, rook 4; bosses 6, 7,
+  7, 8, 8, 9 = their phase-1 budgets); `validate()` refuses 0. `RoomEncounter` gained `objective_kind`, `threat_budget`, `threat_shapes`, `intro`, `intensity` (an
+  Encounter meta group, docs and configuration warnings), `RoomScan` reads them, the layout format has five new `[room]` keys (`objective`, `threat`, `shapes`,
+  `intro`, `intensity`) and the writer emits the non-default ones. The 28 stubs were rebuilt with `--force` (only lines added: 87 in the 34 scenes, none removed,
+  the manifest moved) and the six Stage 1 scenes were edited by hand. `RoomEncounter.threat_problems()` is the one rule of R4, R18 and R28.
+- **The seven lints.** `tests/fixtures/plan_encounter_table.gd` is the plan's 7.4 table as data (live pieces, fenced previews, objective, intensity, rewards,
+  minutes), `tests/support/plan_lints.gd` holds each rule as a function over a table, and `test_preview_before_lethal`, `test_threat_budget`,
+  `test_room_data_audit`, `test_enemy_placement`, `test_layout_archetypes`, `test_district_loops` and `test_reward_cadence` run them over the table and the 34
+  rooms. Each proves it can fail (a copy of the table or the graph is broken on purpose, the sentence is required, then the real data is judged clean again;
+  and a real `.tres` and a real scene were edited by hand and turned the matching suites red, then restored). REPORT lines, with the milestone that makes them
+  enforcing: the fenced instance of a family (stubs park live what the plan fences, M8a), near groups of at most two common enemies (no aggro groups, M8a), boss
+  shapes (M8b), the parked pieces' threat against the designed budget (22 of 34 rooms match; the rest are tb1, bs1, bt1, ub2, ub3, tb3 and the boss rooms, M8a to
+  M13), rewards as pickups and beats (M6 on), ub2's Charging Pawn and Rook (waves, M13).
+- **The monotony guard moved.** `test_plan_rooms` no longer walks archetypes along the route: `test_layout_archetypes` does, on the table and on the scenes.
+- **Coverage.** `test_room_markers_on_floor` (floors 7, 12, 20 raised to 35 zones, 67 entries, 62 pieces) and `test_room_doors_reachable` (70 doors, 66 entries) now
+  count what they looked at in each room and compare it with what the scene declares, so a skipped room or marker is named.
+- **Deviations.** (1) The trailer is `Co-Authored-By: Claude Sonnet 5.5`, the harness attribution, as in step 2; the task text said Opus 5.5 (see step 2's note).
+  (2) The five-field subset of the plan's `RoomEncounter` meta (7.5): the fields with no reader before M6, M12 or M14 are left for the milestone that reads them.
+  (3) `ub3`'s `4/2` is read as a Recruit and three rewrite pulses (1 point each); the plan does not say how the 4 is made. (4) The R37 reading of two boss fights
+  (`mid_rewards`) and the two exemptions of `test_district_loops` (Under-Bed, Desk) are described in the plan's M5 paragraph and `findings.md`.
+- **Docs.** `docs/ARCHITECTURE.md` (the encounter meta, the lints, the route bot, the testing table), `docs/OWNER_GUIDE.md` in Vietnamese (section 9: OG1, what a
+  stub is, how to play title to credits in about 10 minutes, what to look for and how to tell us, how to print the map, how to add or edit a room with
+  `build_room`; the glossary moved to section 10), `README.md`, `tools/README.md`, `AGENTS.md` (OG1 waiting), `docs/where-we-are.md`, `task_plan.md` (row 85,
+  `human_review`), this entry and `findings.md`.
+- **Not done, and why.** The fenced Queen preview in `dh3` (the only Queen is the boss, and her defeat flag must stay hers: step 2's note); the optional nooks
+  (`tbo`, `bso`, `bto`) are not walked by the bot (off the critical path, each waits for a verb of M7c); `dev_sandbox` is M6's.
