@@ -10,7 +10,9 @@ extends UnboundTest
 ## Three parts: the table as the plan wrote it passes, with the numbers behind the pass stated in the open; the lint is shown able to fail (a COPY of
 ## the table is broken in nine ways, one at a time, and each is named; the real table is judged clean again at the end); and the shipped rooms:
 ## their meta is the plan's numbers (enforced, in test_room_data_audit), and the pieces they PARK are weighed against it here in report-only mode,
-## because a stub parks live what the plan fences (tb1, bs1, bt1), a gauntlet's waves all at once (ub2) and no hazard at all.
+## because a stub parks live what the plan fences (tb1, bs1, bt1), a gauntlet's waves all at once (ub2) and no hazard at all. The disagreement is PINNED
+## (KNOWN_STUB_PARKED_THREAT, an exact list in the manner of test_dependency_edges): a room that starts to disagree, and one that stops, fails the suite by
+## name, so a gap between what a room parks and what it is designed for cannot grow or close unnoticed (the M5 review found twelve rooms nobody was told of).
 
 const PlanLints := preload("res://tests/support/plan_lints.gd")
 const PlanEncounterTable := preload("res://tests/fixtures/plan_encounter_table.gd")
@@ -19,6 +21,17 @@ const PlanRoomTable := preload("res://tests/fixtures/plan_room_table.gd")
 ## The boss of each arena and the phase-1 budget the plan gives it (5.3: B1 6, KB 7, BSB 7, BTB 8, Queen 8, King 9), read from the definitions.
 const BOSS_BUDGETS := {
 	&"black_pawn_captain": 6, &"knight_captain": 7, &"bishop_oracle": 7, &"rook_warden": 8, &"queen_of_tricks": 8, &"black_king": 9,
+}
+
+## The twelve rooms whose parked pieces weigh something other than the designed budget (the meta, which is the plan's table), and what they park today:
+## room id -> parked threat. Exact in both directions: a room that begins to disagree is a new line to explain, and a room fixed by its stage (M8a fenced pieces for
+## tb1, bs1, bt1; M9's toy train for tb3; M13's waves and rewrite pulses for ub2, ub3; M8b's real bosses for the five arenas and B1's captain) loses its line here.
+## What the gap means for a player today: the three Teach rooms park a LIVE piece of the new family where the plan fences it (tb1 parks 4 against a Teach cap of
+## 3, bs1 and bt1 park 6), each boss arena parks its escort Recruit on top of the boss, ub2 parks its whole gauntlet at once, tb3 has no train and ub3 no pulses.
+const KNOWN_STUB_PARKED_THREAT := {
+	&"b1_black_pawn_captain": 9, &"tb1_toybox_gate": 4, &"tb3_toy_track_ambush": 3, &"tbb_knight_captain": 8,
+	&"bs1_book_spine_steps": 6, &"bsb_bishop_oracle": 8, &"bt1_block_yard": 6, &"btb_rook_warden": 9,
+	&"dhb_queen_of_tricks": 9, &"ub2_last_board": 9, &"ub3_rule_engine": 1, &"ubb_black_king": 10,
 }
 
 
@@ -120,6 +133,7 @@ func _check_the_shipped_rooms() -> void:
 	var scan_by_room := PlanLints.scans_of(graph)
 	var matches: Array[String] = []
 	var differs: Array[String] = []
+	var parked_by_diverging_room: Dictionary = {}
 	var rooms_with_meta_in_the_rules := 0
 	for row in PlanEncounterTable.ROWS:
 		var room_id: StringName = row["id"]
@@ -134,10 +148,26 @@ func _check_the_shipped_rooms() -> void:
 			matches.append(String(room_id).get_slice("_", 0))
 		else:
 			differs.append("%s parks %d against a designed %d" % [String(room_id).get_slice("_", 0), parked, scan.threat_budget])
+			parked_by_diverging_room[room_id] = parked
 	_expect(rooms_with_meta_in_the_rules == 34, "the budget rules were applied to the meta of all 34 scenes")
 	print("REPORT threat_budget (scenes): the pieces the shipped rooms PARK weigh the room's designed budget in %d of 34 rooms (%s). The others: %s." % [matches.size(), ", ".join(PackedStringArray(matches)), "; ".join(PackedStringArray(differs))])
 	print("REPORT threat_budget (scenes): report-only. A stub parks live what the plan fences (tb1, bs1, bt1), every piece of a gauntlet at once (ub2), a guard beside each boss and no hazard (the toy train of tb3 is M9's, the rewrite pulses of ub3 are M13's). It becomes enforcing when the fenced mode (M8a), the waves (M13) and the hazards exist, room by room as each stage lands.")
 	_expect(matches.size() + differs.size() == 34 and matches.size() >= 10, "(the report weighed all 34 rooms, and at least ten already match their design)")
+	var unpinned: Array[String] = []
+	for room_id: StringName in parked_by_diverging_room:
+		if KNOWN_STUB_PARKED_THREAT.get(room_id, -1) != parked_by_diverging_room[room_id]:
+			unpinned.append("%s parks %d (the list says %s)" % [room_id, parked_by_diverging_room[room_id], KNOWN_STUB_PARKED_THREAT.get(room_id, "nothing: a new disagreement")])
+	for room_id: StringName in KNOWN_STUB_PARKED_THREAT:
+		if not parked_by_diverging_room.has(room_id):
+			unpinned.append("%s is on the list but now parks what it is designed for (delete its line)" % room_id)
+	for sentence in unpinned:
+		printerr("  %s" % sentence)
+	_expect(unpinned.is_empty(), "the rooms whose parked threat differs from the design are exactly the %d on KNOWN_STUB_PARKED_THREAT, each at its pinned value (%d problem(s))" % [KNOWN_STUB_PARKED_THREAT.size(), unpinned.size()])
+	# The pin can fail: a copy of the findings with one room's value changed and one room removed is not the list.
+	var tampered := parked_by_diverging_room.duplicate()
+	tampered[&"tb1_toybox_gate"] = 1
+	tampered.erase(&"ub3_rule_engine")
+	_expect(tampered != KNOWN_STUB_PARKED_THREAT and parked_by_diverging_room == KNOWN_STUB_PARKED_THREAT, "the pin can fail: a changed value and a missing room make the findings differ from the list, and the real findings equal it")
 
 
 # --------------------------------------------------------------------------- helpers
