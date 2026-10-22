@@ -11,8 +11,9 @@ var root_is_room_encounter := false
 var declared_zone_id: StringName = &""
 ## entry_id of every ZoneEntryMarker child.
 var entry_ids: Array[StringName] = []
-## One {door, target_zone, target_entry, requires_room_clear, locked_message} per ZoneExitMarker child. `door` is
-## the marker's node name, which a WorldEdge names.
+## One {door, target_zone, target_entry, requires_room_clear, locked_message, requires_flag, ends_run} per
+## ZoneExitMarker child. `door` is the marker's node name, which a WorldEdge names; `requires_flag` is the world
+## flag the door waits for (&"" = none) and `ends_run` is true for the door that ends the game (it leads nowhere).
 var exits: Array[Dictionary] = []
 ## The definition of every ActorView child (parked enemies).
 var enemy_definitions: Array[EnemyDefinition] = []
@@ -62,6 +63,8 @@ static func of(scene: PackedScene) -> RoomScan:
 				"target_entry": exit_marker.target_entry,
 				"requires_room_clear": exit_marker.requires_room_clear,
 				"locked_message": exit_marker.locked_message,
+				"requires_flag": exit_marker.requires_flag,
+				"ends_run": exit_marker.ends_run,
 			})
 		elif child is ActorView and (child as ActorView).definition != null:
 			scan.enemy_definitions.append((child as ActorView).definition)

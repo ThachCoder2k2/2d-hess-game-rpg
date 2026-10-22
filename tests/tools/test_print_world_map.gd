@@ -36,7 +36,16 @@ func _check_every_node_edge_and_lock_is_there(graph: WorldGraph, text: String) -
 	for edge in graph.edges:
 		if edge.lock_id != &"":
 			_expect(edges_section.contains("LOCK %s" % edge.lock_id), "...and the edge list marks the locked door %s/%s" % [edge.from_room, edge.door])
-	_expect(text.contains("CHECKS  every door resolves, every room has an entry and can be reached, every lock says why: clean"), "the last line says the checks are clean")
+	_expect(text.contains("CHECKS  every door resolves, every room has an entry and can be reached, every lock says why, and the route can be walked to the ending: clean"), "the last line says the checks are clean")
+	for edge in graph.edges:
+		if edge.skill_lock_id != &"":
+			_expect(edges_section.contains("SKILL %s (arrives in %s)" % [edge.skill_lock_id, graph.find_lock(edge.skill_lock_id).arrives_in]), "...and the edge list marks the door %s/%s that a skill will hold (M7c)" % [edge.from_room, edge.door])
+	var route_section := text.get_slice("\nROUTE", 1).get_slice("\nCHECKS", 0)
+	var every_room_on_the_route := true
+	for room in graph.rooms:
+		every_room_on_the_route = every_room_on_the_route and route_section.contains(String(room.room_id))
+	_expect(every_room_on_the_route and not route_section.contains("NEVER REACHED"), "the route walks every one of the %d rooms, and none is marked never reached" % graph.rooms.size())
+	_expect(route_section.contains("sets boss.black_pawn_captain") and route_section.contains("sets boss.black_king") and route_section.contains("the run ends here"), "...says which room sets each boss's flag, and where the run ends")
 
 
 ## The grid is 8 columns by 10 rows, a room sits on its own slot, an empty slot shows its district, and neighbours that
@@ -54,9 +63,9 @@ func _check_the_map_grid(graph: WorldGraph, text: String) -> void:
 	_expect(rug_row.contains("[t1]") and rug_row.contains("[t2]") and rug_row.contains("[t3]") and rug_row.contains("[t4]") and rug_row.find("[t1]") < rug_row.find("[t2]") and rug_row.find("[t2]") < rug_row.find("[t3]"), "row 6 holds T1, T2, T3 and T4, left to right, as their slots say")
 	_expect(rug_row.contains("[t1]") and rug_row.contains("-[t2]") and rug_row.contains("-[t3]"), "T1, T2 and T3 are joined by doors both ways (-)")
 	_expect(rug_row.contains("x[t4]"), "T3 and T4 are joined by a locked way (x): T3's door waits for a clear")
-	_expect((row_lines[0] as String).contains("w") and (row_lines[0] as String).contains("e") and (row_lines[3] as String).contains("k") and (row_lines[3] as String).contains("t"), "empty slots show the first letter of their district's region (window, desk, block tower, toybox)")
+	_expect((row_lines[0] as String).contains("w") and (row_lines[1] as String).contains("e") and (row_lines[2] as String).contains("k") and (row_lines[7] as String).contains("t"), "empty slots show the first letter of their district's region (window, desk, block tower, toybox)")
 	var hub_row: String = row_lines[5]
-	_expect(hub_row.contains("[h1]") and hub_row.contains("[b1]") and hub_row.contains("[tb1]"), "row 5 holds the hub, the boss room and the Toybox gate")
+	_expect(hub_row.contains("[h1]") and hub_row.contains("[b1]") and hub_row.contains("[tb1]") and hub_row.contains("[bt2]"), "row 5 holds the hub, the boss room, the Toybox gate and the second room of the Block Tower")
 
 
 func _check_a_broken_world_shows_its_problems(graph: WorldGraph) -> void:

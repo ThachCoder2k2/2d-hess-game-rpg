@@ -21,3 +21,8 @@ extends Resource
 ## The WorldLock that holds this door shut, empty for a door that is always open. Locks are listed once, in
 ## WorldGraph.locks, and may hold several doors.
 @export var lock_id: StringName = &""
+## A second lock the pawn will need to pass this door once its milestone lands: the verb the way asks for (a
+## `unlock` lock such as `needs_rule_step`, whose `arrives_in` says when). It is DATA until then: the runtime
+## holds the door for `lock_id` only, so a door never dead-ends on a verb that does not exist yet. Empty for a
+## door that needs no verb. Locks are listed once, in WorldGraph.locks, and may belong to several doors.
+@export var skill_lock_id: StringName = &""

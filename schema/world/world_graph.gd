@@ -201,8 +201,18 @@ func validate() -> PackedStringArray:
 			problems.append("%s names no entry to arrive on." % edge_label)
 		if edge.lock_id != &"":
 			lock_id_used[edge.lock_id] = true
-			if find_lock(edge.lock_id) == null:
+			var held_by := find_lock(edge.lock_id)
+			if held_by == null:
 				problems.append("%s is held by lock '%s', which the graph does not list." % [edge_label, edge.lock_id])
+			elif not held_by.is_enforced():
+				problems.append("%s is held by lock '%s' of kind %s, which the runtime does not hold yet: name it as the door's skill_lock_id until its milestone lands." % [edge_label, edge.lock_id, held_by.kind])
+		if edge.skill_lock_id != &"":
+			lock_id_used[edge.skill_lock_id] = true
+			var skill_lock := find_lock(edge.skill_lock_id)
+			if skill_lock == null:
+				problems.append("%s names the skill lock '%s', which the graph does not list." % [edge_label, edge.skill_lock_id])
+			elif skill_lock.kind != WorldLock.KIND_UNLOCK:
+				problems.append("%s names '%s' as its skill lock, but that lock is of kind %s (a skill lock is an `unlock`)." % [edge_label, edge.skill_lock_id, skill_lock.kind])
 	for lock in locks:
 		if lock != null and not lock_id_used.has(lock.lock_id):
 			problems.append("Lock '%s' holds no door." % lock.lock_id)

@@ -7,8 +7,9 @@ extends RefCounted
 ##           letter of the district whose region it lies in; between neighbours a connector says how they join:
 ##           `-` `|` a door both ways, `>` `v` `<` `^` a way one way only, `x` a way that has a lock.
 ##   ROOMS   every room: slot, district, act, recipe, archetype, status, size, doors out, entries in
-##   EDGES   every door: room/door -> room/entry, one-way, lock
+##   EDGES   every door: room/door -> room/entry, one-way, lock, and the skill lock that will also hold it (M7c)
 ##   LOCKS   every lock: id, kind, subject, the key and the English words, the doors it holds
+##   ROUTE   the whole world walked in the order the doors open, with the flag each boss sets and where the run ends
 ##
 ## and a last line of what WorldCheck finds wrong, so the map doubles as a QA report.
 
@@ -36,6 +37,9 @@ static func map_text(graph: WorldGraph, scan_by_room: Dictionary[StringName, Roo
 	lines.append("")
 	lines.append("LOCKS")
 	lines.append_array(_lock_lines(graph))
+	lines.append("")
+	lines.append("ROUTE  (every room in the order the doors open; a boss's flag is set when its room is cleared)")
+	lines.append_array(_route_lines(graph, scan_by_room))
 	lines.append("")
 	lines.append_array(_check_lines(graph, scan_by_room))
 	return "\n".join(lines) + "\n"
@@ -150,6 +154,9 @@ static func _edge_lines(graph: WorldGraph) -> PackedStringArray:
 		if edge.lock_id != &"":
 			var lock := graph.find_lock(edge.lock_id)
 			notes.append("LOCK %s (%s)" % [edge.lock_id, lock.kind if lock != null else "missing"])
+		if edge.skill_lock_id != &"":
+			var skill_lock := graph.find_lock(edge.skill_lock_id)
+			notes.append("SKILL %s (arrives in %s)" % [edge.skill_lock_id, skill_lock.arrives_in if skill_lock != null else "?"])
 		lines.append("  %s -> %s%s" % [_padded("%s/%s" % [edge.from_room, edge.door], 48), "%s/%s" % [edge.to_room, edge.to_entry], ("   " + ", ".join(notes)) if not notes.is_empty() else ""])
 	if lines.is_empty():
 		lines.append("  (no doors)")
@@ -171,11 +178,35 @@ static func _lock_lines(graph: WorldGraph) -> PackedStringArray:
 		lines.append("      says %s  \"%s\"" % [lock.message_key, TextService.t(lock.message_key)])
 		var doors := PackedStringArray()
 		for edge in graph.edges:
-			if edge.lock_id == lock.lock_id:
+			if edge.lock_id == lock.lock_id or edge.skill_lock_id == lock.lock_id:
 				doors.append("%s/%s" % [edge.from_room, edge.door])
-		lines.append("      holds %s" % (", ".join(doors) if not doors.is_empty() else "nothing"))
+		var holding_note := "" if lock.is_enforced() else "   (not held until %s: the doors are open today)" % lock.arrives_in
+		lines.append("      holds %s%s" % [", ".join(doors) if not doors.is_empty() else "nothing", holding_note])
 	if lines.is_empty():
 		lines.append("  (no locks)")
+	return lines
+
+
+static func _route_lines(graph: WorldGraph, scan_by_room: Dictionary[StringName, RoomScan]) -> PackedStringArray:
+	var lines := PackedStringArray()
+	var walk := WorldCheck.walk_the_route(graph, scan_by_room)
+	var number := 0
+	for room_id: StringName in walk["rooms_in_order"]:
+		number += 1
+		var scan: RoomScan = scan_by_room.get(room_id)
+		var notes := PackedStringArray()
+		if scan != null:
+			for definition in scan.enemy_definitions:
+				if definition != null and definition.defeat_flag != &"":
+					notes.append("sets %s" % definition.defeat_flag)
+			for door in scan.exits:
+				if bool(door.get("ends_run", false)):
+					notes.append("the run ends here")
+		lines.append(("  %2d %s%s" % [number, _padded(String(room_id), 26), ("  " + ", ".join(notes)) if not notes.is_empty() else ""]).rstrip(" "))
+	for room_id: StringName in walk["unreachable"]:
+		lines.append("  -- %s  NEVER REACHED" % room_id)
+	if lines.is_empty():
+		lines.append("  (no rooms)")
 	return lines
 
 
@@ -187,7 +218,7 @@ static func _check_lines(graph: WorldGraph, scan_by_room: Dictionary[StringName,
 	var problems := WorldCheck.flatten(WorldCheck.run(graph, scan_by_room, folder_ids, scene_path_of, TextService.has_key))
 	var lines := PackedStringArray()
 	if problems.is_empty():
-		lines.append("CHECKS  every door resolves, every room has an entry and can be reached, every lock says why: clean")
+		lines.append("CHECKS  every door resolves, every room has an entry and can be reached, every lock says why, and the route can be walked to the ending: clean")
 	else:
 		lines.append("CHECKS  %d problem(s)" % problems.size())
 		for problem in problems:
