@@ -86,6 +86,53 @@ const GENERATED_SEEDS: Array[Dictionary] = [
 		"id": "bishop_zoner",
 		"supersedes_stand_in": true,
 	},
+	# M5 step 2: the bosses and the two rook enemies. Each has a body.png of its own so the owner overwrites
+	# ONE file per piece and nothing else changes; until then it is a copy of the generated picture of its
+	# kind of piece (a rook, a queen and a king are drawn by tools/generate_chess_sprites.gd for this; the
+	# Knight Captain and the Bishop Oracle borrow the knight and the bishop). Bosses are sized per boss later
+	# (owner decision 2026-10-13: the Rook Warden is 2x2, the Rule Engine 3x3, M8b); these are one cell.
+	{
+		"source": "res://assets/_generated/chess/knight_idle.png",
+		"target": "res://content/enemies/knight_captain/body.png",
+		"kind": "body",
+		"id": "knight_captain",
+	},
+	{
+		"source": "res://assets/_generated/chess/bishop_idle.png",
+		"target": "res://content/enemies/bishop_oracle/body.png",
+		"kind": "body",
+		"id": "bishop_oracle",
+	},
+	{
+		"source": "res://assets/_generated/chess/rook_idle.png",
+		"target": "res://content/enemies/wooden_rook/body.png",
+		"kind": "body",
+		"id": "wooden_rook",
+	},
+	{
+		"source": "res://assets/_generated/chess/rook_idle.png",
+		"target": "res://content/enemies/iron_rook/body.png",
+		"kind": "body",
+		"id": "iron_rook",
+	},
+	{
+		"source": "res://assets/_generated/chess/rook_idle.png",
+		"target": "res://content/enemies/rook_warden/body.png",
+		"kind": "body",
+		"id": "rook_warden",
+	},
+	{
+		"source": "res://assets/_generated/chess/queen_idle.png",
+		"target": "res://content/enemies/queen_of_tricks/body.png",
+		"kind": "body",
+		"id": "queen_of_tricks",
+	},
+	{
+		"source": "res://assets/_generated/chess/king_idle.png",
+		"target": "res://content/enemies/black_king/body.png",
+		"kind": "body",
+		"id": "black_king",
+	},
 ]
 
 ## Files that already stand in the tree as placeholders and are recorded exactly where they are.
@@ -98,6 +145,7 @@ const ADOPTED_PLACEHOLDERS: Array[Dictionary] = [
 	{"path": "res://content/pickups/ruler_blade/icon.png", "kind": "icon", "id": "ruler_blade", "origin": "tracked sprite adopted at M1b (was ruler_blade.png)"},
 	{"path": "res://content/pickups/toy_weapon/pickup.png", "kind": "pickup", "id": "toy_weapon", "origin": "tracked sprite adopted at M1b (was toy_weapon_pickup.png)"},
 	{"path": "res://assets/tiles/kingdom/atlas.svg", "kind": "tileset", "id": "kingdom", "origin": "tracked tile atlas adopted at M1b (was kingdom_tiles.svg); the owner's single-tile PNGs will replace it"},
+	{"path": "res://content/tilesets/greybox/atlas.svg", "kind": "tileset", "id": "greybox", "origin": "the greybox tile kit of M5 (one flat tile per kind of cell, drawn for tools/build_room.gd); the owner's single-tile PNGs will replace it"},
 	{"path": "res://assets/ui/actor_view/facing_arrow.png", "kind": "ui", "id": "facing_arrow", "origin": "tracked sprite adopted at M1b"},
 	{"path": "res://assets/ui/actor_view/health_pip_full.png", "kind": "ui", "id": "health_pip_full", "origin": "tracked sprite adopted at M1b"},
 	{"path": "res://assets/ui/actor_view/health_pip_empty.png", "kind": "ui", "id": "health_pip_empty", "origin": "tracked sprite adopted at M1b"},

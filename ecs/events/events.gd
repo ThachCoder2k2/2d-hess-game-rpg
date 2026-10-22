@@ -80,7 +80,7 @@ const MOVEMENT_EVENTS: Dictionary = {
 	},
 	ZONE_EXIT_LOCKED: {
 		"status": STATUS_EMITTED,
-		"about": "The player landed on a door cell that needs the room cleared first; the door stays shut.",
+		"about": "The player landed on a door cell that needs the room cleared first, or a world flag set (a boss fallen); the door stays shut.",
 		"payload": {
 			"entity": "int: the player entity",
 			"zone": "StringName: id of the zone the door leads to",
@@ -311,7 +311,15 @@ const KNOCKED_BACK := &"knocked_back"
 const BOSS_EVENTS: Dictionary = {
 	BOSS_ENGAGED: {"status": STATUS_FUTURE, "about": "M8b: the player entered a boss fight.", "payload": {}},
 	BOSS_PHASE_CHANGED: {"status": STATUS_FUTURE, "about": "M8b: a boss moved to its next phase.", "payload": {}},
-	BOSS_DEFEATED: {"status": STATUS_FUTURE, "about": "M8b: a boss fell for good.", "payload": {}},
+	BOSS_DEFEATED: {
+		"status": STATUS_EMITTED,
+		"about": "A piece whose definition names a defeat flag (a boss) is down: the flag is set in the world's flags, once. The hub's doors wait for these flags; the shell saves.",
+		"payload": {
+			"entity": "int: the boss that fell",
+			"boss": "StringName: the boss's id (EnemyDefinition.id, `knight_captain`)",
+			"flag": "StringName: the flag that was set (EnemyDefinition.defeat_flag, `boss.knight_captain`)",
+		},
+	},
 	KNOCKED_BACK: {"status": STATUS_FUTURE, "about": "M8c: KnockbackSystem shoved an entity.", "payload": {}},
 }
 
@@ -369,7 +377,13 @@ const FLOW_EVENTS: Dictionary = {
 	RESCUE_COMPLETED: {"status": STATUS_FUTURE, "about": "M11: a held interaction freed a captive piece.", "payload": {}},
 	DIRECTION_LOCKED: {"status": STATUS_FUTURE, "about": "M13: Act 6 locked one of the pawn's directions.", "payload": {}},
 	DIRECTION_RESTORED: {"status": STATUS_FUTURE, "about": "M13: a locked direction came back.", "payload": {}},
-	ENDING_REACHED: {"status": STATUS_FUTURE, "about": "M13: the player reached the ending.", "payload": {}},
+	ENDING_REACHED: {
+		"status": STATUS_EMITTED,
+		"about": "The player stepped on the door that ends the run (ZoneExitMarker.ends_run, the last cell of the Desk, e1). The shell shows the ending cards, then the credits (GameFlow.reach_ending). Said every time the cell is landed on; the shell takes it once.",
+		"payload": {
+			"entity": "int: the player entity",
+		},
+	},
 }
 
 ## What a damage request carries (Events.emit_damage builds it, HealthSystem consumes it).

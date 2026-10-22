@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="224" height="32" viewBox="0 0 224 32" shape-rendering="crispEdges">
+  <!-- The greybox tile kit: one flat tile per kind of cell (CellKinds), no pattern a reader could mistake for
+       art. A STAND-IN for the owner's single-tile pictures (content/_placeholders.json lists it). Each tile is
+       32 x 32, drawn in whole pixels; the 1 px rim is the grid line. -->
+
+  <!-- 0: floor, light (kind floor; the checker's light cell) -->
+  <rect x="0" y="0" width="32" height="32" fill="#c9c5bb"/>
+  <rect x="0" y="0" width="32" height="32" fill="none" stroke="#b7b2a6" stroke-width="1"/>
+
+  <!-- 1: floor, dark (kind floor; the checker's dark cell) -->
+  <rect x="32" y="0" width="32" height="32" fill="#bcb8ad"/>
+  <rect x="32" y="0" width="32" height="32" fill="none" stroke="#aaa599" stroke-width="1"/>
+
+  <!-- 2: wall (kind wall, solid) -->
+  <rect x="64" y="0" width="32" height="32" fill="#4b4b55"/>
+  <rect x="64" y="0" width="32" height="32" fill="none" stroke="#33333b" stroke-width="1"/>
+  <rect x="68" y="4" width="24" height="3" fill="#5a5a66"/>
+
+  <!-- 3: gap, a hole in the floor (kind gap) -->
+  <rect x="96" y="0" width="32" height="32" fill="#0f0f14"/>
+  <rect x="96" y="0" width="32" height="32" fill="none" stroke="#2a2a35" stroke-width="2"/>
+  <rect x="104" y="8" width="16" height="16" fill="#08080b"/>
+
+  <!-- 4: leapable block, a toy brick on the floor (kind leapable_block) -->
+  <rect x="128" y="0" width="32" height="32" fill="#c9c5bb"/>
+  <rect x="134" y="8" width="20" height="18" fill="#b5652a"/>
+  <rect x="134" y="8" width="20" height="4" fill="#d38a4a"/>
+  <rect x="138" y="4" width="4" height="4" fill="#d38a4a"/>
+  <rect x="146" y="4" width="4" height="4" fill="#d38a4a"/>
+
+  <!-- 5: chalk, chalk laid over a gap (kind chalk) -->
+  <rect x="160" y="0" width="32" height="32" fill="#bcb8ad"/>
+  <rect x="162" y="2" width="28" height="28" fill="none" stroke="#f4f1e6" stroke-width="2"/>
+  <rect x="168" y="14" width="16" height="4" fill="#f4f1e6"/>
+
+  <!-- 6: corruption, floor the Rule Engine rewrote (kind corruption) -->
+  <rect x="192" y="0" width="32" height="32" fill="#4a2a66"/>
+  <rect x="192" y="0" width="32" height="32" fill="none" stroke="#6b3d92" stroke-width="1"/>
+  <rect x="198" y="6" width="10" height="4" fill="#8a56b8"/>
+  <rect x="210" y="16" width="10" height="4" fill="#8a56b8"/>
+  <rect x="200" y="24" width="6" height="4" fill="#8a56b8"/>
+</svg>

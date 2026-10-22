@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="AttackPattern" format=3 uid="uid://bd7lftq7w8x0i"]
+
+[ext_resource type="Script" uid="uid://dia1hkly2tk2v" path="res://schema/attacks/attack_pattern.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"king_reach"
+uses_facing = false
+cell_offsets = Array[Vector2i]([Vector2i(0, -1), Vector2i(0, 1), Vector2i(-1, 0), Vector2i(1, 0), Vector2i(1, 1), Vector2i(1, -1), Vector2i(-1, 1), Vector2i(-1, -1)])
+clip_to_board = true
+telegraph_duration = 0.7
+recovery_duration = 0.6
+locks_facing = false

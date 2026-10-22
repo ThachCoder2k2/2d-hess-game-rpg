@@ -6,7 +6,7 @@ extends ShellBridge
 ##
 ##   room -> run   A success event happened, so the fact is written into the run and a save is
 ##                 requested for it: a room cleared (room_cleared, D-17), a checkpoint reached
-##                 (checkpoint_reached, D-16), a persistent pickup taken (pickup_taken), a gate unbarred
+##                 (checkpoint_reached, D-16), a boss fallen (boss_defeated), a persistent pickup taken (pickup_taken), a gate unbarred
 ##                 (shortcut_opened), a verb unlocked (unlock_gained), a Book page written
 ##                 (rule_page_unlocked). A death, a hit, a plain trip between rooms, a floor weapon taken
 ##                 by an enemy or a quit is not one.
@@ -35,6 +35,7 @@ func register(router: EventRouter) -> void:
 	router.on(Events.GATE_OPENED, _on_gate_opened)
 	router.on(Events.ROOM_CLEARED, _on_room_cleared)
 	router.on(Events.CHECKPOINT_SET, _on_checkpoint_set)
+	router.on(Events.BOSS_DEFEATED, _on_boss_defeated)
 	router.on(Events.RESPAWN_REQUESTED, _on_respawn_requested)
 
 
@@ -215,6 +216,18 @@ func _on_checkpoint_set(event: Dictionary) -> void:
 	save.state.checkpoint_zone_id = zone_id
 	save.state.checkpoint_entry_id = StringName(event.get("entry", &"start"))
 	save.request_save(&"checkpoint_reached")
+
+
+## A boss fell: the run remembers it for good (a boss never comes back, D-17) and it is a success event, so the run
+## is saved. The flag the doors wait for (`boss.<id>`) is in the world's flags already; the save learns the flags
+## in the moment it is written (`_on_save_service_saving`).
+func _on_boss_defeated(event: Dictionary) -> void:
+	var save := root.save_service()
+	var boss_id := StringName(event.get("boss", &""))
+	if save == null or boss_id == &"":
+		return
+	save.state.defeated_boss_ids[String(boss_id)] = true
+	save.request_save(&"boss_defeated")
 
 
 ## The hero fell: the room is about to start again from the run, so the run takes the world's flags first.

@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="VisualDefinition" format=3 uid="uid://b2rqrnirvamuv"]
+
+[ext_resource type="Script" uid="uid://whbf5imveje" path="res://schema/entity/visual_definition.gd" id="1"]
+[ext_resource type="Texture2D" uid="uid://cyuujwkeo3nmw" path="res://content/enemies/bishop_oracle/body.png" id="2"]
+
+[resource]
+script = ExtResource("1")
+piece_type = &"bishop"
+body_texture = ExtResource("2")
+id = &"bishop_oracle"
+clip_speed_scales = Dictionary[StringName, float]({
+&"idle": 1.25,
+&"step": 0.9,
+&"telegraph": 1.1667
+})

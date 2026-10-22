@@ -1,0 +1,43 @@
+; ub2_last_board: Act 6, Test (18x9, objective WAVES): the plan sends three waves (Knight + Recruit; Bishop + Charging + Recruit; Rook + Armed). The waves arrive
+; with M13; this stub holds four pieces of the first two families at once (a Recruit, a Knight, an Armed Pawn and a Bishop) and the way on waits for
+; a clear, which is what "every wave fallen" will mean.
+; A STUB made at M5 step 2 by tools/build_room.gd from this layout (docs/game-base-plan.md 15 M5). The scene is the truth once it exists;
+; this file is its source until somebody edits the scene in the editor. Read the legend with: tools/build_room.gd -- --legend
+
+[room]
+id = ub2_last_board
+size = 18x9
+act = 6
+district = under_bed
+archetype = waves
+recipe = test
+status = stub
+time_of_night = small_hours
+objective = waves
+threat = 6
+shapes = 4
+intensity = 7
+tileset = greybox
+name = The Last Board
+start = Every piece you met stands on the board. One more time.
+
+[grid]
+##################
+#....R...........#
+#..+....+.K..+...#
+#................#
+#XA............EY#
+#................#
+#...+..P.+....+..#
+#.............S..#
+##################
+
+[objects]
+A = entry id=from_ub1
+E = entry id=from_ub3
+X = exit to=ub1_castle_gate:from_ub2
+Y = exit to=ub3_rule_engine:from_ub2 clear locked="The board is not finished. Every piece must fall."
+R = enemy def=pawn_recruit
+K = enemy def=knight_tracker
+P = enemy def=pawn_armed
+S = enemy def=bishop_zoner

@@ -21,3 +21,4 @@ allowed_weapon_tags = Array[StringName]([&"melee", &"reach"])
 weapon_preferences = {}
 visual = ExtResource("5")
 difficulty = ExtResource("6")
+threat_points = 3

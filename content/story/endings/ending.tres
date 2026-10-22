@@ -1,0 +1,33 @@
+[gd_resource type="Resource" script_class="Ending" format=3 uid="uid://bwbjaf4w7bkll"]
+
+[ext_resource type="Script" uid="uid://cjn7ikbp7ch0j" path="res://schema/story/ending.gd" id="1"]
+[ext_resource type="Script" uid="uid://cpgx4oxxxcxds" path="res://schema/story/ending_card.gd" id="2"]
+
+[sub_resource type="Resource" id="Resource_morning"]
+script = ExtResource("2")
+text_key = "END_CARD_MORNING"
+hold_seconds = 3.0
+fade_seconds = 1.0
+
+[sub_resource type="Resource" id="Resource_board"]
+script = ExtResource("2")
+text_key = "END_CARD_BOARD"
+hold_seconds = 4.0
+fade_seconds = 0.8
+
+[sub_resource type="Resource" id="Resource_crown"]
+script = ExtResource("2")
+text_key = "END_CARD_CROWN"
+hold_seconds = 5.0
+fade_seconds = 0.8
+
+[sub_resource type="Resource" id="Resource_line"]
+script = ExtResource("2")
+text_key = "END_CARD_LINE"
+hold_seconds = 5.0
+fade_seconds = 1.0
+
+[resource]
+script = ExtResource("1")
+cards = Array[ExtResource("2")]([SubResource("Resource_morning"), SubResource("Resource_board"), SubResource("Resource_crown"), SubResource("Resource_line")])
+post_game_zone = &"h1_chess_rug_hub"

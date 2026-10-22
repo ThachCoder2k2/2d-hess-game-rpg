@@ -79,3 +79,283 @@ msgstr "The captain blocks the rug edge. Everything you learned is on the board 
 #. room=b1_black_pawn_captain; surface=status line when the pawn steps on the shut door; purpose=say what holds this door; placeholder
 msgid "ROOM_B1_BLACK_PAWN_CAPTAIN_LOCKED"
 msgstr "The captain still holds the rug edge. Break the black line first."
+
+#. room=tb1_toybox_gate; surface=save card, title card, pause menu; purpose=the room's name on the save card and the checkpoint line; placeholder; written by tools/build_room.gd from tools/layouts/tb1_toybox_gate.txt
+msgid "ROOM_TB1_TOYBOX_GATE_NAME"
+msgstr "Toybox Gate"
+
+#. room=tb1_toybox_gate; surface=status line on arrival; purpose=what the room says as the pawn comes in; placeholder; written by tools/build_room.gd from tools/layouts/tb1_toybox_gate.txt
+msgid "ROOM_TB1_TOYBOX_GATE_START"
+msgstr "A fence of toy blocks. Something small waits on the far side."
+
+#. room=tb2_l_jump_lanes; surface=save card, title card, pause menu; purpose=the room's name on the save card and the checkpoint line; placeholder; written by tools/build_room.gd from tools/layouts/tb2_l_jump_lanes.txt
+msgid "ROOM_TB2_L_JUMP_LANES_NAME"
+msgstr "L-Jump Lanes"
+
+#. room=tb2_l_jump_lanes; surface=status line on arrival; purpose=what the room says as the pawn comes in; placeholder; written by tools/build_room.gd from tools/layouts/tb2_l_jump_lanes.txt
+msgid "ROOM_TB2_L_JUMP_LANES_START"
+msgstr "Lanes of toy track. Knights jump between them; pawns charge down them."
+
+#. room=tb3_toy_track_ambush; surface=save card, title card, pause menu; purpose=the room's name on the save card and the checkpoint line; placeholder; written by tools/build_room.gd from tools/layouts/tb3_toy_track_ambush.txt
+msgid "ROOM_TB3_TOY_TRACK_AMBUSH_NAME"
+msgstr "Toy Track Ambush"
+
+#. room=tb3_toy_track_ambush; surface=status line on arrival; purpose=what the room says as the pawn comes in; placeholder; written by tools/build_room.gd from tools/layouts/tb3_toy_track_ambush.txt
+msgid "ROOM_TB3_TOY_TRACK_AMBUSH_START"
+msgstr "Toy track runs around the block. Something rattles behind you. Keep moving."
+
+#. room=tbb_knight_captain; surface=save card, title card, pause menu; purpose=the room's name on the save card and the checkpoint line; placeholder; written by tools/build_room.gd from tools/layouts/tbb_knight_captain.txt
+msgid "ROOM_TBB_KNIGHT_CAPTAIN_NAME"
+msgstr "The Knight Captain"
+
+#. room=tbb_knight_captain; surface=status line on arrival; purpose=what the room says as the pawn comes in; placeholder; written by tools/build_room.gd from tools/layouts/tbb_knight_captain.txt
+msgid "ROOM_TBB_KNIGHT_CAPTAIN_START"
+msgstr "The Knight Captain rears up among the toys. He may move twice."
+
+#. room=tbb_knight_captain; surface=status line when the pawn steps on the shut door; purpose=say what holds this door; placeholder; written by tools/build_room.gd from tools/layouts/tbb_knight_captain.txt
+msgid "ROOM_TBB_KNIGHT_CAPTAIN_LOCKED"
+msgstr "The Knight Captain still guards the toybox lid. Bring him down."
+
+#. room=tb4_lid_path; surface=save card, title card, pause menu; purpose=the room's name on the save card and the checkpoint line; placeholder; written by tools/build_room.gd from tools/layouts/tb4_lid_path.txt
+msgid "ROOM_TB4_LID_PATH_NAME"
+msgstr "Lid Path"
+
+#. room=tb4_lid_path; surface=status line on arrival; purpose=what the room says as the pawn comes in; placeholder; written by tools/build_room.gd from tools/layouts/tb4_lid_path.txt
+msgid "ROOM_TB4_LID_PATH_START"
+msgstr "The toybox lid is open. The way home is short."
+
+#. room=tbo_crayon_cache; surface=save card, title card, pause menu; purpose=the room's name on the save card and the checkpoint line; placeholder; written by tools/build_room.gd from tools/layouts/tbo_crayon_cache.txt
+msgid "ROOM_TBO_CRAYON_CACHE_NAME"
+msgstr "Crayon Cache"
+
+#. room=tbo_crayon_cache; surface=status line on arrival; purpose=what the room says as the pawn comes in; placeholder; written by tools/build_room.gd from tools/layouts/tbo_crayon_cache.txt
+msgid "ROOM_TBO_CRAYON_CACHE_START"
+msgstr "Crayon stubs and a quiet corner."
+
+#. room=bs1_book_spine_steps; surface=save card, title card, pause menu; purpose=the room's name on the save card and the checkpoint line; placeholder; written by tools/build_room.gd from tools/layouts/bs1_book_spine_steps.txt
+msgid "ROOM_BS1_BOOK_SPINE_STEPS_NAME"
+msgstr "Book Spine Steps"
+
+#. room=bs1_book_spine_steps; surface=status line on arrival; purpose=what the room says as the pawn comes in; placeholder; written by tools/build_room.gd from tools/layouts/bs1_book_spine_steps.txt
+msgid "ROOM_BS1_BOOK_SPINE_STEPS_START"
+msgstr "Book spines rise like steps. Something with a long reach watches from the corner."
+
+#. room=bs2_diagonal_chapel; surface=save card, title card, pause menu; purpose=the room's name on the save card and the checkpoint line; placeholder; written by tools/build_room.gd from tools/layouts/bs2_diagonal_chapel.txt
+msgid "ROOM_BS2_DIAGONAL_CHAPEL_NAME"
+msgstr "Diagonal Chapel"
+
+#. room=bs2_diagonal_chapel; surface=status line on arrival; purpose=what the room says as the pawn comes in; placeholder; written by tools/build_room.gd from tools/layouts/bs2_diagonal_chapel.txt
+msgid "ROOM_BS2_DIAGONAL_CHAPEL_START"
+msgstr "The pews line up on the diagonals. Cross a lane between its bands."
+
+#. room=bs3_torn_page_bridge; surface=save card, title card, pause menu; purpose=the room's name on the save card and the checkpoint line; placeholder; written by tools/build_room.gd from tools/layouts/bs3_torn_page_bridge.txt
+msgid "ROOM_BS3_TORN_PAGE_BRIDGE_NAME"
+msgstr "Torn Page Bridge"
+
+#. room=bs3_torn_page_bridge; surface=status line on arrival; purpose=what the room says as the pawn comes in; placeholder; written by tools/build_room.gd from tools/layouts/bs3_torn_page_bridge.txt
+msgid "ROOM_BS3_TORN_PAGE_BRIDGE_START"
+msgstr "A page has torn. The bridge is narrow, and a bishop waits at the far end."
+
+#. room=bsb_bishop_oracle; surface=save card, title card, pause menu; purpose=the room's name on the save card and the checkpoint line; placeholder; written by tools/build_room.gd from tools/layouts/bsb_bishop_oracle.txt
+msgid "ROOM_BSB_BISHOP_ORACLE_NAME"
+msgstr "The Bishop Oracle"
+
+#. room=bsb_bishop_oracle; surface=status line on arrival; purpose=what the room says as the pawn comes in; placeholder; written by tools/build_room.gd from tools/layouts/bsb_bishop_oracle.txt
+msgid "ROOM_BSB_BISHOP_ORACLE_START"
+msgstr "The floor tears into islands. The Oracle calls your line \"not real\"."
+
+#. room=bsb_bishop_oracle; surface=status line when the pawn steps on the shut door; purpose=say what holds this door; placeholder; written by tools/build_room.gd from tools/layouts/bsb_bishop_oracle.txt
+msgid "ROOM_BSB_BISHOP_ORACLE_LOCKED"
+msgstr "The Oracle still reads the board. Silence it first."
+
+#. room=bs4_page_tear_shortcut; surface=save card, title card, pause menu; purpose=the room's name on the save card and the checkpoint line; placeholder; written by tools/build_room.gd from tools/layouts/bs4_page_tear_shortcut.txt
+msgid "ROOM_BS4_PAGE_TEAR_SHORTCUT_NAME"
+msgstr "Page Tear"
+
+#. room=bs4_page_tear_shortcut; surface=status line on arrival; purpose=what the room says as the pawn comes in; placeholder; written by tools/build_room.gd from tools/layouts/bs4_page_tear_shortcut.txt
+msgid "ROOM_BS4_PAGE_TEAR_SHORTCUT_START"
+msgstr "A torn page hangs over the drop. Home is on the other side."
+
+#. room=bso_margin_nook; surface=save card, title card, pause menu; purpose=the room's name on the save card and the checkpoint line; placeholder; written by tools/build_room.gd from tools/layouts/bso_margin_nook.txt
+msgid "ROOM_BSO_MARGIN_NOOK_NAME"
+msgstr "Margin Nook"
+
+#. room=bso_margin_nook; surface=status line on arrival; purpose=what the room says as the pawn comes in; placeholder; written by tools/build_room.gd from tools/layouts/bso_margin_nook.txt
+msgid "ROOM_BSO_MARGIN_NOOK_START"
+msgstr "A quiet margin, and a note in the corner."
+
+#. room=bt1_block_yard; surface=save card, title card, pause menu; purpose=the room's name on the save card and the checkpoint line; placeholder; written by tools/build_room.gd from tools/layouts/bt1_block_yard.txt
+msgid "ROOM_BT1_BLOCK_YARD_NAME"
+msgstr "Block Yard"
+
+#. room=bt1_block_yard; surface=status line on arrival; purpose=what the room says as the pawn comes in; placeholder; written by tools/build_room.gd from tools/layouts/bt1_block_yard.txt
+msgid "ROOM_BT1_BLOCK_YARD_START"
+msgstr "Wooden blocks stacked into walls. A rook stands among the guards."
+
+#. room=bt2_ruler_bridge; surface=save card, title card, pause menu; purpose=the room's name on the save card and the checkpoint line; placeholder; written by tools/build_room.gd from tools/layouts/bt2_ruler_bridge.txt
+msgid "ROOM_BT2_RULER_BRIDGE_NAME"
+msgstr "Ruler Bridge"
+
+#. room=bt2_ruler_bridge; surface=status line on arrival; purpose=what the room says as the pawn comes in; placeholder; written by tools/build_room.gd from tools/layouts/bt2_ruler_bridge.txt
+msgid "ROOM_BT2_RULER_BRIDGE_START"
+msgstr "A ruler for a bridge. Hold the line."
+
+#. room=bt3_breakable_wall_test; surface=save card, title card, pause menu; purpose=the room's name on the save card and the checkpoint line; placeholder; written by tools/build_room.gd from tools/layouts/bt3_breakable_wall_test.txt
+msgid "ROOM_BT3_BREAKABLE_WALL_TEST_NAME"
+msgstr "Breakable Wall"
+
+#. room=bt3_breakable_wall_test; surface=status line on arrival; purpose=what the room says as the pawn comes in; placeholder; written by tools/build_room.gd from tools/layouts/bt3_breakable_wall_test.txt
+msgid "ROOM_BT3_BREAKABLE_WALL_TEST_START"
+msgstr "The wall will not hold forever. Neither will the rook."
+
+#. room=btb_rook_warden; surface=save card, title card, pause menu; purpose=the room's name on the save card and the checkpoint line; placeholder; written by tools/build_room.gd from tools/layouts/btb_rook_warden.txt
+msgid "ROOM_BTB_ROOK_WARDEN_NAME"
+msgstr "The Rook Warden"
+
+#. room=btb_rook_warden; surface=status line on arrival; purpose=what the room says as the pawn comes in; placeholder; written by tools/build_room.gd from tools/layouts/btb_rook_warden.txt
+msgid "ROOM_BTB_ROOK_WARDEN_START"
+msgstr "The Rook Warden will not turn. Make it charge the throne."
+
+#. room=btb_rook_warden; surface=status line when the pawn steps on the shut door; purpose=say what holds this door; placeholder; written by tools/build_room.gd from tools/layouts/btb_rook_warden.txt
+msgid "ROOM_BTB_ROOK_WARDEN_LOCKED"
+msgstr "The Warden still holds the gate. Make it fall."
+
+#. room=bt4_ruler_gate_shortcut; surface=save card, title card, pause menu; purpose=the room's name on the save card and the checkpoint line; placeholder; written by tools/build_room.gd from tools/layouts/bt4_ruler_gate_shortcut.txt
+msgid "ROOM_BT4_RULER_GATE_SHORTCUT_NAME"
+msgstr "Ruler Gate"
+
+#. room=bt4_ruler_gate_shortcut; surface=status line on arrival; purpose=what the room says as the pawn comes in; placeholder; written by tools/build_room.gd from tools/layouts/bt4_ruler_gate_shortcut.txt
+msgid "ROOM_BT4_RULER_GATE_SHORTCUT_START"
+msgstr "A gate of rulers. A rule mark glows on the way home."
+
+#. room=bto_rubble_nook; surface=save card, title card, pause menu; purpose=the room's name on the save card and the checkpoint line; placeholder; written by tools/build_room.gd from tools/layouts/bto_rubble_nook.txt
+msgid "ROOM_BTO_RUBBLE_NOOK_NAME"
+msgstr "Rubble Nook"
+
+#. room=bto_rubble_nook; surface=status line on arrival; purpose=what the room says as the pawn comes in; placeholder; written by tools/build_room.gd from tools/layouts/bto_rubble_nook.txt
+msgid "ROOM_BTO_RUBBLE_NOOK_START"
+msgstr "Rubble, and a mark that wants rubbing out."
+
+#. room=dh1_foyer; surface=save card, title card, pause menu; purpose=the room's name on the save card and the checkpoint line; placeholder; written by tools/build_room.gd from tools/layouts/dh1_foyer.txt
+msgid "ROOM_DH1_FOYER_NAME"
+msgstr "Dollhouse Foyer"
+
+#. room=dh1_foyer; surface=status line on arrival; purpose=what the room says as the pawn comes in; placeholder; written by tools/build_room.gd from tools/layouts/dh1_foyer.txt
+msgid "ROOM_DH1_FOYER_START"
+msgstr "Tea is laid for guests. Mind the table rules."
+
+#. room=dh2_mixed_court; surface=save card, title card, pause menu; purpose=the room's name on the save card and the checkpoint line; placeholder; written by tools/build_room.gd from tools/layouts/dh2_mixed_court.txt
+msgid "ROOM_DH2_MIXED_COURT_NAME"
+msgstr "Mixed Court"
+
+#. room=dh2_mixed_court; surface=status line on arrival; purpose=what the room says as the pawn comes in; placeholder; written by tools/build_room.gd from tools/layouts/dh2_mixed_court.txt
+msgid "ROOM_DH2_MIXED_COURT_START"
+msgstr "Knights jump, bishops slide. The court keeps both."
+
+#. room=dh3_royal_stage; surface=save card, title card, pause menu; purpose=the room's name on the save card and the checkpoint line; placeholder; written by tools/build_room.gd from tools/layouts/dh3_royal_stage.txt
+msgid "ROOM_DH3_ROYAL_STAGE_NAME"
+msgstr "Royal Stage"
+
+#. room=dh3_royal_stage; surface=status line on arrival; purpose=what the room says as the pawn comes in; placeholder; written by tools/build_room.gd from tools/layouts/dh3_royal_stage.txt
+msgid "ROOM_DH3_ROYAL_STAGE_START"
+msgstr "A stage for a royal show. The rook has the lead."
+
+#. room=dhb_queen_of_tricks; surface=save card, title card, pause menu; purpose=the room's name on the save card and the checkpoint line; placeholder; written by tools/build_room.gd from tools/layouts/dhb_queen_of_tricks.txt
+msgid "ROOM_DHB_QUEEN_OF_TRICKS_NAME"
+msgstr "The Queen of Tricks"
+
+#. room=dhb_queen_of_tricks; surface=status line on arrival; purpose=what the room says as the pawn comes in; placeholder; written by tools/build_room.gd from tools/layouts/dhb_queen_of_tricks.txt
+msgid "ROOM_DHB_QUEEN_OF_TRICKS_START"
+msgstr "The Queen smiles. Every rule you learned is hers now."
+
+#. room=dhb_queen_of_tricks; surface=status line when the pawn steps on the shut door; purpose=say what holds this door; placeholder; written by tools/build_room.gd from tools/layouts/dhb_queen_of_tricks.txt
+msgid "ROOM_DHB_QUEEN_OF_TRICKS_LOCKED"
+msgstr "The Queen still holds the seal. Break her game."
+
+#. room=dh4_seal_stair; surface=save card, title card, pause menu; purpose=the room's name on the save card and the checkpoint line; placeholder; written by tools/build_room.gd from tools/layouts/dh4_seal_stair.txt
+msgid "ROOM_DH4_SEAL_STAIR_NAME"
+msgstr "Seal Stair"
+
+#. room=dh4_seal_stair; surface=status line on arrival; purpose=what the room says as the pawn comes in; placeholder; written by tools/build_room.gd from tools/layouts/dh4_seal_stair.txt
+msgid "ROOM_DH4_SEAL_STAIR_START"
+msgstr "The seal is open. The stair goes down to the rug."
+
+#. room=ub1_castle_gate; surface=save card, title card, pause menu; purpose=the room's name on the save card and the checkpoint line; placeholder; written by tools/build_room.gd from tools/layouts/ub1_castle_gate.txt
+msgid "ROOM_UB1_CASTLE_GATE_NAME"
+msgstr "Castle Gate"
+
+#. room=ub1_castle_gate; surface=status line on arrival; purpose=what the room says as the pawn comes in; placeholder; written by tools/build_room.gd from tools/layouts/ub1_castle_gate.txt
+msgid "ROOM_UB1_CASTLE_GATE_START"
+msgstr "The lid is shut. Pieces line the wall: memories."
+
+#. room=ub2_last_board; surface=save card, title card, pause menu; purpose=the room's name on the save card and the checkpoint line; placeholder; written by tools/build_room.gd from tools/layouts/ub2_last_board.txt
+msgid "ROOM_UB2_LAST_BOARD_NAME"
+msgstr "The Last Board"
+
+#. room=ub2_last_board; surface=status line on arrival; purpose=what the room says as the pawn comes in; placeholder; written by tools/build_room.gd from tools/layouts/ub2_last_board.txt
+msgid "ROOM_UB2_LAST_BOARD_START"
+msgstr "Every piece you met stands on the board. One more time."
+
+#. room=ub2_last_board; surface=status line when the pawn steps on the shut door; purpose=say what holds this door; placeholder; written by tools/build_room.gd from tools/layouts/ub2_last_board.txt
+msgid "ROOM_UB2_LAST_BOARD_LOCKED"
+msgstr "The board is not finished. Every piece must fall."
+
+#. room=ub3_rule_engine; surface=save card, title card, pause menu; purpose=the room's name on the save card and the checkpoint line; placeholder; written by tools/build_room.gd from tools/layouts/ub3_rule_engine.txt
+msgid "ROOM_UB3_RULE_ENGINE_NAME"
+msgstr "Rule Engine"
+
+#. room=ub3_rule_engine; surface=status line on arrival; purpose=what the room says as the pawn comes in; placeholder; written by tools/build_room.gd from tools/layouts/ub3_rule_engine.txt
+msgid "ROOM_UB3_RULE_ENGINE_START"
+msgstr "The floor is being rewritten. Do not trust a tile."
+
+#. room=ubb_black_king; surface=save card, title card, pause menu; purpose=the room's name on the save card and the checkpoint line; placeholder; written by tools/build_room.gd from tools/layouts/ubb_black_king.txt
+msgid "ROOM_UBB_BLACK_KING_NAME"
+msgstr "The Black King"
+
+#. room=ubb_black_king; surface=status line on arrival; purpose=what the room says as the pawn comes in; placeholder; written by tools/build_room.gd from tools/layouts/ubb_black_king.txt
+msgid "ROOM_UBB_BLACK_KING_START"
+msgstr "The Black King holds the last rule. Take one step he cannot predict."
+
+#. room=ubb_black_king; surface=status line when the pawn steps on the shut door; purpose=say what holds this door; placeholder; written by tools/build_room.gd from tools/layouts/ubb_black_king.txt
+msgid "ROOM_UBB_BLACK_KING_LOCKED"
+msgstr "The Black King still holds the box shut. Bring him down."
+
+#. room=e1_morning_desk; surface=save card, title card, pause menu; purpose=the room's name on the save card and the checkpoint line; placeholder; written by tools/build_room.gd from tools/layouts/e1_morning_desk.txt
+msgid "ROOM_E1_MORNING_DESK_NAME"
+msgstr "The Morning Desk"
+
+#. room=e1_morning_desk; surface=status line on arrival; purpose=what the room says as the pawn comes in; placeholder; written by tools/build_room.gd from tools/layouts/e1_morning_desk.txt
+msgid "ROOM_E1_MORNING_DESK_START"
+msgstr "Morning. The board is quiet. Walk to the door at the far end."
+
+#. room=h1_chess_rug_hub; surface=status line when the pawn steps on the shut door; purpose=the Toybox door waits for boss.black_pawn_captain; placeholder
+msgid "ROOM_H1_CHESS_RUG_HUB_LOCKED_TOYBOX"
+msgstr "The toybox lid is shut. The black captain still holds the rug."
+
+#. room=h1_chess_rug_hub; surface=status line when the pawn steps on the shut door; purpose=the Bookshelf door waits for boss.knight_captain; placeholder
+msgid "ROOM_H1_CHESS_RUG_HUB_LOCKED_BOOKSHELF"
+msgstr "The shelf is out of reach. The Knight Captain still rules the toybox."
+
+#. room=h1_chess_rug_hub; surface=status line when the pawn steps on the shut door; purpose=the Block Tower door waits for boss.bishop_oracle; placeholder
+msgid "ROOM_H1_CHESS_RUG_HUB_LOCKED_BLOCK_TOWER"
+msgstr "The tower door is bolted. The Bishop Oracle still reads the shelf."
+
+#. room=h1_chess_rug_hub; surface=status line when the pawn steps on the shut door; purpose=the Dollhouse door waits for boss.rook_warden; placeholder
+msgid "ROOM_H1_CHESS_RUG_HUB_LOCKED_DOLLHOUSE"
+msgstr "The dollhouse is locked. The Rook Warden still holds the tower."
+
+#. room=h1_chess_rug_hub; surface=status line when the pawn steps on the shut door; purpose=the Under-Bed door waits for boss.queen_of_tricks; placeholder
+msgid "ROOM_H1_CHESS_RUG_HUB_LOCKED_UNDER_BED"
+msgstr "The dark under the bed is shut. The Queen of Tricks still plays her game."
+
+#. surface=status line when the pawn steps on a door that needs the Rule Step; purpose=the skill lock that arrives in M7c (the door is open until then); placeholder
+msgid "ROOM_LOCK_NEEDS_RULE_STEP"
+msgstr "A gap too wide to walk. A new kind of step would cross it."
+
+#. surface=status line when the pawn steps on a door that needs the Chalk Path; purpose=the skill lock that arrives in M7c (the door is open until then); placeholder
+msgid "ROOM_LOCK_NEEDS_CHALK_PATH"
+msgstr "A tear too wide to cross. Something drawn in chalk could bridge it."
+
+#. surface=status line when the pawn steps on a door that needs the Eraser Guard; purpose=the skill lock that arrives in M7c (the door is open until then); placeholder
+msgid "ROOM_LOCK_NEEDS_ERASER_GUARD"
+msgstr "A rule mark glows here. Only a guard that rubs out rules could pass."

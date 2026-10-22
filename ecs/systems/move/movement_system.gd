@@ -67,14 +67,16 @@ func _try_open_gate(entity_id: int, destination: Vector2i, direction: Vector2i) 
 
 
 ## Door cells (EcsGrid.exit_by_cell, baked from ZoneExitMarkers): the player
-## landing on one asks the bridge for a zone travel. Enemies never travel.
+## landing on one asks the bridge for a zone travel. Enemies never travel. A door that waits for the room to be
+## cleared, or for a world flag (a boss fallen: `requires_flag`), stays shut and says why; the door that ends the
+## run says `ending_reached` instead of travelling.
 func _check_zone_exit(entity_id: int, cell: Vector2i) -> void:
 	if world.get_component(entity_id, EcsComponents.PLAYER_TAG) == null:
 		return
 	var exit: Dictionary = world.grid.exit_by_cell.get(cell, {})
 	if exit.is_empty():
 		return
-	if bool(exit.get("requires_room_clear", false)) and not _room_is_clear():
+	if DoorRules.is_shut(world, exit):
 		world.emit_event({
 			"type": Events.ZONE_EXIT_LOCKED,
 			"entity": entity_id,
@@ -83,6 +85,9 @@ func _check_zone_exit(entity_id: int, cell: Vector2i) -> void:
 			"cell": cell,
 			"message": exit.get("locked_message", ""),
 		})
+		return
+	if bool(exit.get("ends_run", false)):
+		world.emit_event({"type": Events.ENDING_REACHED, "entity": entity_id})
 		return
 	world.emit_event({
 		"type": Events.ZONE_EXIT,
@@ -104,12 +109,3 @@ func _check_player_unlock(entity_id: int, cell: Vector2i) -> void:
 		"id": unlock.get("id", &""),
 		"message": unlock.get("message", ""),
 	})
-
-
-func _room_is_clear() -> bool:
-	for enemy_id in world.query([EcsComponents.ENEMY_AI, EcsComponents.HEALTH]):
-		var health: EcsComponents.Health = world.get_component(enemy_id, EcsComponents.HEALTH)
-		var ai: EcsComponents.EnemyAI = world.get_component(enemy_id, EcsComponents.ENEMY_AI)
-		if health != null and health.current > 0 and ai != null and ai.state != EcsComponents.EnemyAI.STATE_DEFEATED:
-			return false
-	return true

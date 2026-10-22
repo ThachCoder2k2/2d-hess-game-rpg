@@ -1,0 +1,38 @@
+; bs4_page_tear_shortcut: Act 3, Shortcut: a corridor with a three-cell tear on either side of the walkway. Door Y is the one-way shortcut home. The plan forces
+; Chalk Path over a three-cell tear here (a free TraversalGap): that skill lock arrives in M7c (needs_chalk_path on the doors Y and Z),
+; and until then the walkway through the tear is whole.
+; A STUB made at M5 step 2 by tools/build_room.gd from this layout (docs/game-base-plan.md 15 M5). The scene is the truth once it exists;
+; this file is its source until somebody edits the scene in the editor. Read the legend with: tools/build_room.gd -- --legend
+
+[room]
+id = bs4_page_tear_shortcut
+size = 16x9
+act = 3
+district = bookshelf
+archetype = tear
+recipe = shortcut
+status = stub
+time_of_night = night
+objective = reach
+intensity = 3
+tileset = greybox
+name = Page Tear
+start = A torn page hangs over the drop. Home is on the other side.
+
+[grid]
+################
+################
+#..............#
+#.......ooo....#
+#XA...........Y#
+#.......ooo....#
+#............BZ#
+################
+################
+
+[objects]
+A = entry id=from_bsb
+B = entry id=from_bso
+X = exit to=bsb_bishop_oracle:from_bs4
+Y = exit to=h1_chess_rug_hub:from_bookshelf
+Z = exit to=bso_margin_nook:from_bs4

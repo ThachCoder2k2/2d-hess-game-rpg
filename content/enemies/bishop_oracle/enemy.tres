@@ -1,0 +1,23 @@
+[gd_resource type="Resource" script_class="EnemyDefinition" format=3 uid="uid://bphb0onvhbkkd"]
+
+[ext_resource type="Script" uid="uid://bmdisg36ew8g5" path="res://schema/entity/enemy_definition.gd" id="1"]
+[ext_resource type="Resource" uid="uid://bi5lushtlitch" path="res://content/enemies/bishop_zoner/movement.tres" id="2"]
+[ext_resource type="Resource" uid="uid://bym46kf4lsn6w" path="res://content/enemies/bishop_zoner/decision.tres" id="3"]
+[ext_resource type="Resource" uid="uid://d3uumcyp51arn" path="res://content/enemies/bishop_zoner/unarmed_attack.tres" id="4"]
+[ext_resource type="Resource" uid="uid://b2rqrnirvamuv" path="res://content/enemies/bishop_oracle/visual.tres" id="5"]
+[ext_resource type="Resource" uid="uid://cq15s5oalg3r5" path="res://content/difficulty/standard.tres" id="6"]
+
+[resource]
+script = ExtResource("1")
+id = &"bishop_oracle"
+display_name = "ENEMY_BISHOP_ORACLE_NAME"
+piece_name = "ENEMY_BISHOP_ORACLE_PIECE"
+role = &"captain"
+max_health = 8
+movement = ExtResource("2")
+decision = ExtResource("3")
+unarmed_attack = ExtResource("4")
+visual = ExtResource("5")
+difficulty = ExtResource("6")
+defeat_flag = &"boss.bishop_oracle"
+threat_points = 7

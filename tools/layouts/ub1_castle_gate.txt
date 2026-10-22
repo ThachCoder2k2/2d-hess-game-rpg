@@ -1,0 +1,36 @@
+; ub1_castle_gate: Act 6, Rest (no combat): the castle gate, a wall with an archway. The plan closes the lid behind the pawn (H1 becomes `boxed`, M13); the door
+; back to the hub stays open meanwhile, so the route never traps the pawn.
+; A STUB made at M5 step 2 by tools/build_room.gd from this layout (docs/game-base-plan.md 15 M5). The scene is the truth once it exists;
+; this file is its source until somebody edits the scene in the editor. Read the legend with: tools/build_room.gd -- --legend
+
+[room]
+id = ub1_castle_gate
+size = 16x9
+act = 6
+district = under_bed
+archetype = gate
+recipe = rest
+status = stub
+time_of_night = small_hours
+objective = none
+intensity = 3
+tileset = greybox
+name = Castle Gate
+start = The lid is shut. Pieces line the wall: memories.
+
+[grid]
+################
+#......##......#
+#......##......#
+#......##......#
+#XA..........EY#
+#......##......#
+#......##......#
+#......##......#
+################
+
+[objects]
+A = entry id=from_h1
+E = entry id=from_ub2
+X = exit to=h1_chess_rug_hub:from_under_bed
+Y = exit to=ub2_last_board:from_ub1

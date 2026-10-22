@@ -12,6 +12,7 @@ extends RefCounted
 ##   ContentDb.player()                           -> content/player/player.tres
 ##   ContentDb.piece_sizes()                      -> content/feel/piece_sizes.tres
 ##   ContentDb.credits()                          -> content/story/credits.tres
+##   ContentDb.ending()                           -> content/story/endings/ending.tres
 ##
 ## The id of a thing is its folder name (or its file name for flat kinds), spelled in
 ## one place; ids are found by listing the folders, once per kind, on first use.
@@ -24,7 +25,7 @@ extends RefCounted
 ## it names is of another class than the property takes). validate_cross_refs()
 ## checks that references between content name ids that exist (a Book page's piece, a
 ## door's target zone and entry, a weapon preference, the world graph against the room
-## folders). Both return readable sentences, empty when all is well. Tests and tools
+## folders and scenes: see WorldCheck). Both return readable sentences, empty when all is well. Tests and tools
 ## call them; nothing calls them at game start.
 ##
 ## Not built yet: the exported-build fallback `content/_index.json` of plan 14.1.
@@ -33,11 +34,6 @@ extends RefCounted
 const DEFAULT_CONTENT_ROOT := "res://content"
 ## A folder or file name that is a valid id: lowercase snake_case.
 const ID_PATTERN := "^[a-z][a-z0-9_]*$"
-## Zone ids world.tres may name although content/rooms/ has no folder for them: the
-## 72x40 kingdom is a test fixture the graph keeps until M5 ports the world assertions
-## (tests/architecture/test_content_references.gd lists the same exception).
-const FIXTURE_ZONE_IDS: Array[StringName] = [&"kingdom"]
-
 ## kind name -> ContentKind, built on the first call (a const cannot hold objects).
 static var _kind_by_name: Dictionary[StringName, ContentKind] = {}
 ## kind names in the order validate() reports them.
@@ -130,6 +126,11 @@ static func credits() -> CreditsDefinition:
 	return fetch(&"credits", &"credits") as CreditsDefinition
 
 
+## content/story/endings/ending.tres: the cards between the last boss and the credits (plan 8.8).
+static func ending() -> Ending:
+	return fetch(&"ending", &"ending") as Ending
+
+
 ## Points the registry at another content folder (a throwaway tree under user:// in a
 ## test) and forgets everything it listed. Pass DEFAULT_CONTENT_ROOT to go back.
 static func configure_root(content_root: String) -> void:
@@ -182,6 +183,7 @@ static func validate_cross_refs() -> PackedStringArray:
 	_check_player_references(problems)
 	_check_visual_references(problems)
 	_check_world_and_rooms(problems)
+	_check_ending_references(problems)
 	return problems
 
 
@@ -193,6 +195,7 @@ static func _ensure_kinds() -> void:
 	_add_kind(ContentKind.new(&"world", ContentKind.IdSource.KIND_ITSELF, "world.tres", WorldGraph))
 	_add_kind(ContentKind.new(&"piece_sizes", ContentKind.IdSource.KIND_ITSELF, "piece_sizes.tres", PieceSizeTable, &"feel"))
 	_add_kind(ContentKind.new(&"credits", ContentKind.IdSource.KIND_ITSELF, "credits.tres", CreditsDefinition, &"story"))
+	_add_kind(ContentKind.new(&"ending", ContentKind.IdSource.KIND_ITSELF, "ending.tres", Ending, &"story/endings"))
 	_add_kind(ContentKind.new(&"enemies", ContentKind.IdSource.FOLDER_NAME, "{id}/enemy.tres", EnemyDefinition))
 	_add_kind(ContentKind.new(&"rooms", ContentKind.IdSource.FOLDER_NAME, "{id}/room.tscn", PackedScene))
 	_add_kind(ContentKind.new(&"rules", ContentKind.IdSource.FOLDER_NAME, "{id}/page.tres", RuleEntry))
@@ -380,45 +383,40 @@ static func _check_visual_references(problems: PackedStringArray) -> void:
 				problems.append("%s: %s" % [owner_label, sentence])
 
 
+## The world graph against the room folders and the room scenes: WorldCheck does the checking (its header lists
+## what), this reports every sentence of it except the graph-as-data ones (validate() already reports those with the
+## entry's label) and asks each room's parked enemies to be registered.
 static func _check_world_and_rooms(problems: PackedStringArray) -> void:
 	var graph := world()
 	if graph == null:
 		return
-	var room_ids := ids(&"rooms")
-	for zone_id in graph.zone_scene_by_id:
-		if zone_id in FIXTURE_ZONE_IDS:
-			continue
-		if zone_id not in room_ids:
-			problems.append("world/world: zone '%s' has no folder content/rooms/%s/." % [zone_id, zone_id])
-			continue
-		var zone_scene := graph.get_zone_scene(zone_id)
-		if zone_scene != null and zone_scene.resource_path != path_of(&"rooms", zone_id):
-			problems.append("world/world: zone '%s' points at %s, not at %s." % [zone_id, zone_scene.resource_path, path_of(&"rooms", zone_id)])
-	for room_id in room_ids:
-		if not graph.has_zone(room_id):
-			problems.append("rooms/%s: no zone of content/world/world.tres leads here (add it to the graph)." % room_id)
-
-	var scan_by_zone: Dictionary[StringName, RoomScan] = {}
-	for zone_id in graph.zone_scene_by_id:
-		var scan := RoomScan.of(graph.get_zone_scene(zone_id))
+	var scan_by_room: Dictionary[StringName, RoomScan] = {}
+	for room_id in graph.room_ids():
+		var scan := RoomScan.of(graph.get_zone_scene(room_id))
 		if scan != null:
-			scan_by_zone[zone_id] = scan
-	for zone_id in scan_by_zone:
-		var scan: RoomScan = scan_by_zone[zone_id]
-		var label := "rooms/%s" % zone_id
-		if not scan.root_is_room_encounter:
-			problems.append("%s: the scene root is not a RoomEncounter." % label)
-		elif scan.declared_zone_id != zone_id:
-			problems.append("%s: the root's zone_id is '%s' but the zone is '%s'; they must be equal." % [label, scan.declared_zone_id, zone_id])
-		for exit_target in scan.exit_targets:
-			var target_zone: StringName = exit_target["target_zone"]
-			var target_entry: StringName = exit_target["target_entry"]
-			if not scan_by_zone.has(target_zone):
-				problems.append("%s: a door leads to zone '%s', which is not in content/world/world.tres." % [label, target_zone])
-			elif target_entry not in (scan_by_zone[target_zone] as RoomScan).entry_ids:
-				problems.append("%s: a door leads to entry '%s' of zone '%s', which has no such entry marker." % [label, target_entry, target_zone])
-		for enemy in scan.enemy_definitions:
-			_expect_registered(problems, label, "an enemy parked here", enemy, &"enemies")
+			scan_by_room[room_id] = scan
+	var scene_path_of := func(room_id: StringName) -> String: return path_of(&"rooms", room_id)
+	var problems_by_check := WorldCheck.run(graph, scan_by_room, ids(&"rooms"), scene_path_of, TextService.has_key)
+	for check in WorldCheck.CHECKS:
+		if check != WorldCheck.CHECK_GRAPH:
+			problems.append_array(problems_by_check[check])
+	for room_id in scan_by_room:
+		for enemy in (scan_by_room[room_id] as RoomScan).enemy_definitions:
+			_expect_registered(problems, "rooms/%s" % room_id, "an enemy parked here", enemy, &"enemies")
+
+
+
+## The ending's cards say words that exist, and the room Continue loads after the ending is a room of the world.
+static func _check_ending_references(problems: PackedStringArray) -> void:
+	var ending_definition := ending()
+	if ending_definition == null:
+		return
+	for card in ending_definition.cards:
+		if card != null and not TextService.has_key(card.text_key):
+			problems.append("ending/ending: the card '%s' has no row in the English files." % card.text_key)
+	var graph := world()
+	if graph != null and not graph.has_zone(ending_definition.post_game_zone):
+		problems.append("ending/ending: post_game_zone '%s' is not a room of content/world/world.tres." % ending_definition.post_game_zone)
 
 
 ## Adds a problem unless `resource` is null (validate() reports a missing required
@@ -459,40 +457,3 @@ static func _id_list(kind_name: StringName) -> String:
 	for id in ids(kind_name):
 		texts.append(String(id))
 	return ", ".join(texts)
-
-
-## What validate_cross_refs() needs to know about one room scene, read once: it is
-## instanced (never added to a tree) and freed straight away.
-class RoomScan:
-	extends RefCounted
-
-	var root_is_room_encounter := false
-	## The root's own zone_id export.
-	var declared_zone_id: StringName = &""
-	## entry_id of every ZoneEntryMarker child.
-	var entry_ids: Array[StringName] = []
-	## One {target_zone, target_entry} per ZoneExitMarker child.
-	var exit_targets: Array[Dictionary] = []
-	## The definition of every ActorView child (parked enemies).
-	var enemy_definitions: Array[EnemyDefinition] = []
-
-
-	static func of(scene: PackedScene) -> RoomScan:
-		if scene == null or not scene.can_instantiate():
-			return null
-		var root := scene.instantiate()
-		var scan := RoomScan.new()
-		var room := root as RoomEncounter
-		scan.root_is_room_encounter = room != null
-		if room != null:
-			scan.declared_zone_id = room.zone_id
-		for child in root.get_children():
-			if child is ZoneEntryMarker:
-				scan.entry_ids.append((child as ZoneEntryMarker).entry_id)
-			elif child is ZoneExitMarker:
-				var exit_marker := child as ZoneExitMarker
-				scan.exit_targets.append({"target_zone": exit_marker.target_zone, "target_entry": exit_marker.target_entry})
-			elif child is ActorView and (child as ActorView).definition != null:
-				scan.enemy_definitions.append((child as ActorView).definition)
-		root.free()
-		return scan

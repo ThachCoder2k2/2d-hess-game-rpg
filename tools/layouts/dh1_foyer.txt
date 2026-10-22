@@ -1,0 +1,36 @@
+; dh1_foyer: Act 5, Rest (no combat; the Queen's voice is offstage): a tea table of blocks in the middle. The plan's format-breaker here is a tea party where
+; the pawn obeys table rules (Tier B, M12): objective NONE, so nothing to clear and no door waits for one.
+; A STUB made at M5 step 2 by tools/build_room.gd from this layout (docs/game-base-plan.md 15 M5). The scene is the truth once it exists;
+; this file is its source until somebody edits the scene in the editor. Read the legend with: tools/build_room.gd -- --legend
+
+[room]
+id = dh1_foyer
+size = 16x9
+act = 5
+district = dollhouse
+archetype = foyer
+recipe = rest
+status = stub
+time_of_night = small_hours
+objective = none
+intensity = 3
+tileset = greybox
+name = Dollhouse Foyer
+start = Tea is laid for guests. Mind the table rules.
+
+[grid]
+################
+#..............#
+#..............#
+#.....++++.....#
+#XA..........EY#
+#.....++++.....#
+#..............#
+#..............#
+################
+
+[objects]
+A = entry id=from_h1
+E = entry id=from_dh2
+X = exit to=h1_chess_rug_hub:from_dollhouse
+Y = exit to=dh2_mixed_court:from_dh1

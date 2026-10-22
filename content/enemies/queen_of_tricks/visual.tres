@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="VisualDefinition" format=3 uid="uid://bcmyfjrso330p"]
+
+[ext_resource type="Script" uid="uid://whbf5imveje" path="res://schema/entity/visual_definition.gd" id="1"]
+[ext_resource type="Texture2D" uid="uid://dpsq7uj7alf85" path="res://content/enemies/queen_of_tricks/body.png" id="2"]
+
+[resource]
+script = ExtResource("1")
+piece_type = &"queen"
+body_texture = ExtResource("2")
+id = &"queen_of_tricks"
+clip_speed_scales = Dictionary[StringName, float]({
+&"idle": 1.25,
+&"step": 0.9,
+&"telegraph": 1.1667
+})

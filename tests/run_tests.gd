@@ -208,8 +208,15 @@ func _init() -> void:
 	_expect(world_graph != null and world_graph.validate().is_empty(), "the world graph loads with zones")
 	var entry_ids_by_zone := {}
 	var zone_roots := {}
-	for zone_id: StringName in world_graph.zone_scene_by_id:
-		var zone_root := world_graph.get_zone_scene(zone_id).instantiate()
+	# M5 moved the world graph to rooms, edges, slots and locks (content/world/world.tres, tests/content/test_world_graph.gd
+	# holds the rest of its rules) and took the 72x40 kingdom out of it: it is a test fixture now (plan D-02), so these
+	# zone checks reach it by its fixture path and keep covering it.
+	var scene_by_zone := {}
+	for zone_id: StringName in world_graph.room_ids():
+		scene_by_zone[zone_id] = world_graph.get_zone_scene(zone_id)
+	scene_by_zone[&"kingdom"] = load("res://tests/fixtures/the_kingdom.tscn")
+	for zone_id: StringName in scene_by_zone:
+		var zone_root := (scene_by_zone[zone_id] as PackedScene).instantiate()
 		root.add_child(zone_root)
 		zone_roots[zone_id] = zone_root
 		_expect(StringName(zone_root.get("zone_id")) == zone_id, "zone '%s' carries its own zone_id" % zone_id)
@@ -225,6 +232,10 @@ func _init() -> void:
 		for child in zone_roots[zone_id].get_children():
 			if child is ZoneExitMarker:
 				var exit_label := "%s/%s" % [zone_id, child.name]
+				if child.ends_run:
+					# The one door that ends the run (the Desk, M5 step 2) leads nowhere on purpose.
+					_expect(child.target_zone == &"", "door %s ends the run, so it names no zone" % exit_label)
+					continue
 				_expect(world_graph.has_zone(child.target_zone), "door %s targets a zone in the graph" % exit_label)
 				_expect(child.target_entry in entry_ids_by_zone.get(child.target_zone, []), "door %s lands on a real entry marker" % exit_label)
 				if zone_id == &"t3_first_pawn_clash" and child.name == "Exit_To_T4":

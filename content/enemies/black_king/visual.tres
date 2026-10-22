@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="VisualDefinition" format=3 uid="uid://bljy20srlkuwm"]
+
+[ext_resource type="Script" uid="uid://whbf5imveje" path="res://schema/entity/visual_definition.gd" id="1"]
+[ext_resource type="Texture2D" uid="uid://oweqwoq1dvde" path="res://content/enemies/black_king/body.png" id="2"]
+
+[resource]
+script = ExtResource("1")
+piece_type = &"king"
+body_texture = ExtResource("2")
+id = &"black_king"
+clip_speed_scales = Dictionary[StringName, float]({
+&"idle": 1.25,
+&"step": 0.9,
+&"telegraph": 1.1667
+})

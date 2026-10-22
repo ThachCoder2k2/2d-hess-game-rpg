@@ -1986,3 +1986,165 @@ defects in the Settings and Assists screens the repo's own tests did not catch, 
   write is said; the language list), `test_settings_roundtrip` (unreadable profile, noise bytes, a newer game's profile), `test_po_domains_merge`,
   `test_confirm_panel`, `test_quit_to_title_confirm` (a real Start), `test_setting_ui_high_contrast` (the over-menu panels), `test_setting_language`,
   `test_text_service`, `test_layout_pseudo_locale` (the not-saved line), `test_pause_assist_options` (the note is found by type, not by position).
+
+## M5 step 1 - the room builder, the marker schemas and the world file - 2026-10-22
+
+Branch `base/m5-1` (from `game-base`, which holds M4), the strict runner green. The first of M5's three steps (the tool and the data it needs;
+the stub rooms, the H1 locks, `e1` and the route bot are steps 2 and 3). An earlier attempt of this step was cut off by a usage limit after three
+commits; this run re-checked them against the step's list, found them complete, and wrote the documentation that was still missing.
+
+- **`tools/build_room.gd`** (with `room_layout.gd`, `room_builder.gd`, `room_scene_writer.gd`, `built_rooms_manifest.gd`): an ASCII layout in
+  `tools/layouts/<room_id>.txt` becomes `content/rooms/<id>/room.tscn` written as TEXT with uids (the header uid is a hash of the room id, so a rebuild
+  keeps it), then the stamper. The legend (`--legend`) covers floor, wall, gap, leapable block, chalk, corruption, entry, door with its target and
+  optional clear-lock words, enemy, pickup (persistent or not), unlock, gate, traversal crossing, state variant, and the room keys (id, size, act,
+  district, archetype, recipe, status, time of night, checkpoint flag, tileset, name and start words). The tiles are painted one by one from the new
+  greybox kit (`content/tilesets/greybox/`, a flat tile for every cell kind) through `cell_kind_painter.gd`, floor in a two-tile checker so the
+  grid reads without an overlay; no painted background, no polygon. The English rows of the room's keys are appended to `rooms.po` once.
+- **It refuses to overwrite.** An existing scene is refused. `--force` rebuilds only a scene that has a row in `tools/layouts/built_rooms.json` whose
+  sha256 still equals the file's: a scene the tool built and nobody edited. The six Stage 1 scenes are hand-made, so they have no row and not even
+  `--force` reaches them (`test_build_room` holds their bytes). A build is checked before it is kept: the scene it wrote is booted and its grid, doors,
+  entries and enemies are compared with the layout; a failed build leaves the target as it was.
+- **The proof.** `t4_broken_rule_yard` drawn as a layout (`tests/fixtures/layouts/`, because `tools/layouts/` holds only rooms that ship) and built
+  into a scratch folder boots to the same picture as the hand-made scene: 23 facts compared (bounds, origin, every cell's kind, doors, entries, enemies,
+  the pickup, the meta).
+- **`RoomEncounter` meta**: `act`, `district`, `layout_archetype`, `recipe`, `content_status` (STUB, GREYBOX, DRESSED, FINAL), `time_of_night` (inert,
+  D-31), next to `checkpoint_on_entry` and `board_size`; each has a doc and a configuration warning, and `configuration_problems()` is the list the
+  tests and tools read. The six Stage 1 scenes gained their meta lines (a text edit; nothing else changed in them but H1's top door).
+- **Marker schemas**: `TraversalGapMarker` (verb chalk_path or rule_step, length 1 to 3, direction, free when calm; `EcsBoot` copies it per covered
+  cell into `marker_by_cell` under `KIND`) and `StateVariantMarker` (variant id, requires and forbids flag lists). Data only; the verbs arrive with M7
+  and M10, the flag-driven visibility with M6. `GridMarker` now follows its room's board size and centred origin (an 18x9 arena starts at x 32).
+- **`content/world/world.tres`** is rooms (with the `map_slot`, its only home), edges, locks (room clear, flag, unlock, counter, each with a message key)
+  and district regions, in the classes of `schema/world/`. The 72x40 kingdom left the graph (D-02) and is a fixture the tests load by path
+  (`TestPaths.shipped_rooms_and_kingdom()`); the assertions of `tests/run_tests.gd` over the graph were ported to the new shape (every zone carries its
+  id, has an entry, every door resolves to a real entry; the three clear-lock facts), and the kingdom is still covered through its fixture path.
+  H1's top door, which led into the kingdom, leads to `tb1_toybox_gate`, a stub the tool built from `tools/layouts/tb1_toybox_gate.txt` so the door
+  resolves; step 2 edits that layout and rebuilds the scene with `--force` while nobody has touched it.
+- **`WorldCheck`** (`shell/content/`) holds graph and scenes together: `ContentDb.validate_cross_refs()`, `test_world_graph` and `tools/print_world_map.gd`
+  all call it. `tools/print_world_map.gd` prints the slot map, the rooms, the doors, the locks with their words and a checks line.
+- **Verification.** Strict runner: 146 suites, 0 failed, GREEN; 235 of 235 baseline labels (14 through `label_renames.txt`, unchanged); both
+  `--self-test`s 0 failures; stamp-uids CLEAN; import pass clean; `git diff --check` clean.
+- **Tests.** New: `test_build_room` (100), `test_room_layout` (93), `test_print_world_map` (44), `test_world_graph`, `test_room_meta`,
+  `test_marker_schemas`. Changed: `test_content_references` (no exception for the kingdom any more), `test_fixtures_present`,
+  `test_content_db_detects_problems`, the room-walking suites (they take the kingdom from `TestPaths`), `dump_h1.txt` (H1's top door).
+- **Not done here, on purpose.** Everything else of M5: stub rooms for every id of 7.4, boss stubs, the H1 flag locks (a `WorldLock` of kind `flag`
+  is data that nothing enforces yet), `e1` and the credits, the `tools/list_placeholders.gd` rows for the new rooms, the full-route bot and the lints.
+
+## M5 step 2 - every room, the boss stubs, the hub's locks and the ending - 2026-10-22
+
+Branch `base/m5-2` (from `base/m5-1`), the strict runner green. The second of M5's three steps; the route bot, `docs/route_times.md` and the lints that
+run against the 7.4 table are step 3.
+
+- **Every room of plan 7.4 exists.** 27 new rooms and `tb1` rebuilt (its layout extended and the scene rebuilt with `--force`, which the manifest
+  allowed because nobody had edited it) = 28 stubs, from layouts in `tools/layouts/` made by `tools/build_room.gd`; with the six hand-made Stage 1
+  rooms that is the plan's 34 (`print_world_map` shows 34 nodes, 69 doors, 17 locks). Each has the plan's id, size (the five boss arenas and `ub2` are
+  18x9), archetype, role, act, district and time of night, `content_status` STUB, and the pieces of the plan's family: the Knight, Bishop and Rook
+  previews, the captains, a boss and a Recruit in each arena. Doors are open unless the plan gates them behind a clear (the boss rooms' way on, `ub2`).
+  **No stub needs a verb that does not exist**: no layout puts a gap on the walk or uses a `traversal` crossing; where the plan wants Rule Step, Chalk
+  Path or Eraser Guard the floor is whole and the need is data (below). A Knight or a Bishop the plan wants fenced stands in a corner pocket (the
+  cells it could move or strike to are wall): harmless, and the pawn can still strike it. The words of every room are `.po` rows.
+  **Deviation:** `dev_sandbox` is in the 7.4 table but is not a shipping room (the plan counts 34 "plus the sandbox") and is M6's; it is not built.
+- **Boss stubs and rook stand-ins.** `wooden_rook`, `iron_rook`, `knight_captain`, `bishop_oracle`, `rook_warden`, `queen_of_tricks`, `black_king`: each an
+  `enemy.tres` of shared pieces (a pawn's moves for the rooks and the Warden, the Knight's and the Bishop's own for their captains, a new eight-way
+  one-step movement and a king's-reach attack for the Queen and the King), a `visual.tres` and its own `body.png` (a placeholder row each, so the owner
+  swaps one file). `tools/generate_chess_sprites.gd` draws the rook, queen and king from the same lathe rows as the rest of the family. One cell each,
+  Courage 8 to 12 (the plan's 10 to 18 is M8b's to tune), no new behaviour.
+- **A boss's fall sets `boss.<id>`.** `EnemyDefinition.defeat_flag`; `BossDefeatSystem` (progress stage) sets it once and says `boss_defeated`;
+  `SaveBridge` writes `defeated_boss_ids` and autosaves (`boss_defeated`, a success event). The Black Pawn Captain names its flag too.
+- **The hub's doors wait for their bosses (D-21).** `ZoneExitMarker.requires_flag`; `MovementSystem` keeps the door shut and says its line until the flag
+  is set. H1 gained four doors and four entries (Bookshelf, Block Tower, Dollhouse, Under-Bed) and the Toybox door waits for `boss.black_pawn_captain`.
+  The skill needs are promises: `WorldLock.arrives_in = "M7c"` on three `unlock` locks, named by `WorldEdge.skill_lock_id` on eleven doors; the runtime
+  holds nothing for them, so a route never dead-ends. `WorldCheck` holds flag doors and locks together and gained a `progression` check (the world walked
+  from T1 in the order the bosses fall; `tools/print_world_map.gd` prints the ROUTE).
+- **The ending.** `ZoneExitMarker.ends_run` on the Desk's far cell; `ending_reached`; `EndingBridge`; `GameFlow.reach_ending()` (the `completed` mark);
+  `AppRoot` shows `shell/ending/ending_screen.tscn` (the `Ending` of `content/story/endings/ending.tres`: four `END_` cards that fade in, hold and fade
+  out, Confirm moves on), then the credits, then the title with the empty square. `ContentDb.ending()`; the way into the Desk is a one-way edge.
+- **`tools/list_placeholders.gd`** counts the rooms at each status (28 STUB, 6 GREYBOX, 0 DRESSED, 0 FINAL).
+- **Stage 1 dump baselines.** The five of T1 to B1 are byte-identical. **`dump_h1.txt` moved, and had to:** the hub got its five district doors and four
+  entries, which are its exits and nodes; the golden's head for h1 says so. (The task said the baselines must not change; wiring the hub's doors cannot
+  leave H1's dump alone, and step 1 had already moved it once for the retargeted Toybox door.)
+- **Tests.** New: `test_boss_defeat_system`, `test_boss_flow`, `test_ending_flow`, `test_plan_rooms`, `test_room_status`; changed: `test_world_graph` (the hub's six
+  doors, flag locks, skill locks as data, every way a flag door, a skill lock or the route can break), `test_room_layout`, `test_room_doors_reachable`,
+  `test_room_origin` (x 32 for an 18-wide arena), `test_print_world_map`, `test_validate_all`, `test_placeholders_manifest`, `test_schedule_order`,
+  `test_request_save_callers`, `test_events_declared` (another future event stands as the example), `test_attack_setup_search` (the seeded draw moved with
+  the new definitions: the fall-back branch is hit twice, so the floor of that non-triviality check is 1, not 5), `tests/run_tests.gd` (skips the door that
+  ends the run; labels unchanged).
+- **Trailer.** These commits end `Co-Authored-By: Claude Sonnet 5.5`, the harness attribution; the task text asked for Opus 5.5 and step 1's first
+  three commits say so. Reconcile before any squash.
+- **Not done here (step 3):** `tests/playthrough/test_full_route.gd` and its bot, `docs/route_times.md`, the lints against the 7.4 table
+  (`test_preview_before_lethal`, `test_threat_budget`, `test_room_data_audit`, `test_enemy_placement`, `test_layout_archetypes`, `test_district_loops`,
+  `test_reward_cadence`) and the `RoomEncounter` fields they read (threat budget, objective kind, intensity...).
+
+
+## M5 step 3 - the route bot, the lints against the 7.4 table and the owner's guide - 2026-10-23
+
+Branch `base/m5-3` (from `base/m5-2`), the strict runner green (159 suites, 235 of 235 baseline labels). The last of M5's three steps; M5 is `human_review` and the
+owner's gate OG1 is waiting.
+
+- **The route bot and the whole-route test.** `tests/playthrough/route_bot.gd` and `test_full_route.gd`: boot `AppRoot`, press New Game, walk the 35 steps of the
+  critical path (T1 to B1, the hub, the five districts with the hub between them, the Desk) by key presses, clear each room (the sword for every ordinary piece by
+  `Support.kill_with_sword`, a damage event for each of the six bosses, which M5 allows), go through the doors the clears and the boss flags opened, walk onto the
+  Desk's last door, let the four cards and the credits play and stop on the title with the completed mark. About 21 s of real time (budget 90 s). It isolates the
+  save itself, and drives the simulation by hand (`Support.pump`, 0.05 s steps) so the clock is the game's own and every number is the same on every run.
+  `docs/route_times.md` holds the measured minimum per room (31 rooms, 207.55 game seconds for the whole skeleton, hub returns apart) beside the plan's Min column;
+  the test rewrites it only when its text changed (run twice: byte-identical). Proved able to fail by hand: a boss with no `defeat_flag` stops the route at the
+  hub's door.
+- **Two support changes the walk needed.** `Support.walk_to_cell` goes round a door cell when the grid's shortest path would cross one (`tb2`'s entry stands in a
+  one-cell lane beside its door, so the shortest way to the far side of the room is out through the door); and the runner gives the whole-route suite 120 s
+  instead of 60 (`SUITE_TIMEOUT_OVERRIDES`, four new self-test checks) so the plan's 90 s budget is the suite's to judge, with its own watchdog at 100 s.
+- **What the lints read.** `EnemyDefinition.threat_points` on the 14 enemies (recruit 1, armed 2, backstep 2, charging 2, knight 3, bishop 3, rook 4; bosses 6, 7,
+  7, 8, 8, 9 = their phase-1 budgets); `validate()` refuses 0. `RoomEncounter` gained `objective_kind`, `threat_budget`, `threat_shapes`, `intro`, `intensity` (an
+  Encounter meta group, docs and configuration warnings), `RoomScan` reads them, the layout format has five new `[room]` keys (`objective`, `threat`, `shapes`,
+  `intro`, `intensity`) and the writer emits the non-default ones. The 28 stubs were rebuilt with `--force` (only lines added: 87 in the 34 scenes, none removed,
+  the manifest moved) and the six Stage 1 scenes were edited by hand. `RoomEncounter.threat_problems()` is the one rule of R4, R18 and R28.
+- **The seven lints.** `tests/fixtures/plan_encounter_table.gd` is the plan's 7.4 table as data (live pieces, fenced previews, objective, intensity, rewards,
+  minutes), `tests/support/plan_lints.gd` holds each rule as a function over a table, and `test_preview_before_lethal`, `test_threat_budget`,
+  `test_room_data_audit`, `test_enemy_placement`, `test_layout_archetypes`, `test_district_loops` and `test_reward_cadence` run them over the table and the 34
+  rooms. Each proves it can fail (a copy of the table or the graph is broken on purpose, the sentence is required, then the real data is judged clean again;
+  and a real `.tres` and a real scene were edited by hand and turned the matching suites red, then restored). REPORT lines, with the milestone that makes them
+  enforcing: the fenced instance of a family (stubs park live what the plan fences, M8a), near groups of at most two common enemies (no aggro groups, M8a), boss
+  shapes (M8b), the parked pieces' threat against the designed budget (22 of 34 rooms match; the rest are tb1, bs1, bt1, ub2, ub3, tb3 and the boss rooms, M8a to
+  M13), rewards as pickups and beats (M6 on), ub2's Charging Pawn and Rook (waves, M13).
+- **The monotony guard moved.** `test_plan_rooms` no longer walks archetypes along the route: `test_layout_archetypes` does, on the table and on the scenes.
+- **Coverage.** `test_room_markers_on_floor` (floors 7, 12, 20 raised to 35 zones, 67 entries, 62 pieces) and `test_room_doors_reachable` (70 doors, 66 entries) now
+  count what they looked at in each room and compare it with what the scene declares, so a skipped room or marker is named.
+- **Deviations.** (1) The trailer is `Co-Authored-By: Claude Sonnet 5.5`, the harness attribution, as in step 2; the task text said Opus 5.5 (see step 2's note).
+  (2) The five-field subset of the plan's `RoomEncounter` meta (7.5): the fields with no reader before M6, M12 or M14 are left for the milestone that reads them.
+  (3) `ub3`'s `4/2` is read as a Recruit and three rewrite pulses (1 point each); the plan does not say how the 4 is made. (4) The R37 reading of two boss fights
+  (`mid_rewards`) and the two exemptions of `test_district_loops` (Under-Bed, Desk) are described in the plan's M5 paragraph and `findings.md`.
+- **Docs.** `docs/ARCHITECTURE.md` (the encounter meta, the lints, the route bot, the testing table), `docs/OWNER_GUIDE.md` in Vietnamese (section 9: OG1, what a
+  stub is, how to play title to credits in about 10 minutes, what to look for and how to tell us, how to print the map, how to add or edit a room with
+  `build_room`; the glossary moved to section 10), `README.md`, `tools/README.md`, `AGENTS.md` (OG1 waiting), `docs/where-we-are.md`, `task_plan.md` (row 85,
+  `human_review`), this entry and `findings.md`.
+- **Not done, and why.** The fenced Queen preview in `dh3` (the only Queen is the boss, and her defeat flag must stay hers: step 2's note); the optional nooks
+  (`tbo`, `bso`, `bto`) are not walked by the bot (off the critical path, each waits for a verb of M7c); `dev_sandbox` is M6's.
+
+
+## M5 fix lane - the review's real-input findings - 2026-10-23
+
+Branch `base/m5-fix` (from `base/m5-3`, tag `m5-done` moved to its last commit), the strict runner green (161 suites, 235 of 235 baseline labels). The M5 review
+(`accept_with_fixes`) passed every acceptance item as written, played the route from a clean save by real input from title to credits (35 steps, 69 of 69 doors), and found
+two defects of how the owner would experience OG1, both major, and a list of minor ones. All are fixed or answered here; nothing in the review's acceptance moved.
+
+- **Major 1: doors were invisible.** The board overlay (`PrototypeBoard`) now draws one mark per door cell from the read-only `HudSnapshot`: `DoorBrief` (is_shut, ends_run)
+  per cell, filled by `HudSnapshotSystem`, and redrawn when a door opens. Shut = a dark frame crossed out; open = two nested gold frames in a dark outline (readable on the
+  light floor tile); the door that ends the run = green with a diamond. One-pixel lines in the cell, colours as exports on the board. "Is this door shut" was `MovementSystem`'s
+  private rule; it moved to `DoorRules` (`ecs/core`) and both systems ask it. Looked at with the real renderer (tb2 shut and cleared, H1 with and without a boss flag, the Desk).
+  `test_room_doors_marked` boots all 34 rooms: one brief and one mark per door (69 in the world), shut as the marker asks, all open once cleared and flagged, and each check able
+  to fail; `test_hud_snapshot` and `test_board_draws_from_snapshot` gained the unit checks. The guide says what the marks mean and where the hub's doors are (section 9).
+- **Major 2: a held walking key bounced the pawn back out.** `InputPoller.require_fresh_press()` (called by `GameRoot.boot_zone`, so for a trip and a respawn) publishes a
+  walking control that was down when the room began as released until it is let go; the stick has to return to the centre. 14 of the 194 door approaches arrive one step
+  from the door they came by (tb4/tbo, H1's four doors, dh4's shortcut home...). `test_held_key_through_a_door` holds the key on the real `Input` through the tb4 nook door and
+  through a respawn (fails without the call: the hero walks back out), `test_input_poller_rules` has the unit checks. The reviewer's real-input bot, run against this branch
+  unchanged: 0 problems, 69 of 69 doors, by taps and by held keys.
+- **Minor, fixed:** the Desk's arrival line no longer promises a blue line that is not drawn (row and layout changed); `docs/route_times.md` and the guide call the numbers a slow bot's
+  baseline and not a minimum (the review beat the bot in 25 of 31 rooms); the route bot steps on every shut hub door before its boss and requires the door's own line (ten probes:
+  4+3+2+1, excluded from the times; removing the Bookshelf door's flag turns `test_full_route` red); the twelve rooms that park other pieces than their design are an exact pinned list in
+  `test_threat_budget` (`KNOWN_STUB_PARKED_THREAT`); the guide says the Under-Bed has three rooms, a boss arena takes 10 to 20 strokes with its escort, and lists what is known before
+  playing (live previews in the three Teach rooms, escorts, ub2 at once, tb3 without a train, ub3 without pulses, no Crayon Target in T2, eight fights that barely strike, the
+  format-breakers and eleven skill-locked doors playing like plain rooms).
+- **Not changed, and why.** (1) The parked rosters themselves: the three Teach rooms keep their live Knight, Bishop and Rook because the shipped-scene lint of R27 requires each family to
+  enter where the plan introduces it and the fenced mode is M8a's; the answer is the pin and the guide, not a quiet roster change. (2) The commit trailers of `base/m5-3`: the first three
+  commits say `Claude Opus 5.5` and the rest (and this lane) `Claude Sonnet 5.5`; rewriting would change every later hash and the tags, so reword them on any squash. (3) The eleven
+  skill-locked doors and the format-breaker rooms are M7c's and M9's (documented, per the review). (4) `T2`'s Crayon Target (a prop) and `dev_sandbox` (M6's).
+- **Verification.** Both self-tests 0 failures; the strict runner 161 suites, 0 failed, GREEN, 235/235 labels; the import pass clean; `stamp_uids --check` CLEAN; `git diff --check` clean.
+  Mutations shown red and restored: the `require_fresh_press` call removed (held-key suite), the Bookshelf door's `requires_flag` removed (route test), each new check's own fail case.

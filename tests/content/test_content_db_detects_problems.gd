@@ -25,6 +25,7 @@ decision = ExtResource("3")
 unarmed_attack = ExtResource("4")
 visual = ExtResource("5")
 difficulty = ExtResource("6")
+threat_points = 1
 """
 
 
@@ -150,13 +151,18 @@ target_entry = &"start"
 	_write(FIXTURE_ROOT.path_join("world/world.tres"), """[gd_resource type="Resource" script_class="WorldGraph" format=3]
 
 [ext_resource type="Script" path="res://schema/world/world_graph.gd" id="1"]
-[ext_resource type="PackedScene" path="user://content_db_fixture/rooms/lonely/room.tscn" id="2"]
+[ext_resource type="Script" path="res://schema/world/world_room.gd" id="2"]
+[ext_resource type="PackedScene" path="user://content_db_fixture/rooms/lonely/room.tscn" id="3"]
+
+[sub_resource type="Resource" id="Resource_nowhere"]
+script = ExtResource("2")
+room_id = &"nowhere"
+scene = ExtResource("3")
 
 [resource]
 script = ExtResource("1")
-zone_scene_by_id = Dictionary[StringName, PackedScene]({
-&"nowhere": ExtResource("2")
-})
+start_room_id = &"nowhere"
+rooms = Array[ExtResource("2")]([SubResource("Resource_nowhere")])
 """)
 
 

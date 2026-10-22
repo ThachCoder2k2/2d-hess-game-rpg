@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="VisualDefinition" format=3 uid="uid://1y61q2bhcoxv"]
+
+[ext_resource type="Script" uid="uid://whbf5imveje" path="res://schema/entity/visual_definition.gd" id="1"]
+[ext_resource type="Texture2D" uid="uid://c041q1fcfs8dy" path="res://content/enemies/rook_warden/body.png" id="2"]
+
+[resource]
+script = ExtResource("1")
+piece_type = &"rook"
+body_texture = ExtResource("2")
+id = &"rook_warden"
+clip_speed_scales = Dictionary[StringName, float]({
+&"idle": 1.25,
+&"step": 0.9,
+&"telegraph": 1.1667
+})

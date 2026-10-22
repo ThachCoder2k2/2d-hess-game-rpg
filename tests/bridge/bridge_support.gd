@@ -347,6 +347,45 @@ static func tap_direction(tree: SceneTree, main: Node, direction: Vector2i) -> b
 	return pump_until(main, arrived, 1.0)
 
 
+## True when a walk steps on a door cell (an exit) before its last cell: stepping on one leaves the room. The grid's own path does not avoid them, and
+## a room whose door stands in a one-cell lane beside its entry (tb2, the lanes) has its shortest way to the far side of the room through that door.
+static func path_crosses_a_door(main: Node, path: Array[Vector2i]) -> bool:
+	var grid := ecs_of(main).grid
+	for index in range(1, path.size() - 1):
+		if grid.exit_by_cell.has(path[index]):
+			return true
+	return false
+
+
+## The shortest walk from the hero's cell to `goal` that steps on no door cell on the way (the goal itself may be a door), round the pieces that
+## stand in the way. Cell by cell from the hero's, `goal` last; empty when there is no such walk.
+static func path_around_doors(main: Node, goal: Vector2i) -> Array[Vector2i]:
+	var grid := ecs_of(main).grid
+	var start := player_cell(main)
+	var came_from: Dictionary = {start: start}
+	var frontier: Array[Vector2i] = [start]
+	while not frontier.is_empty() and not came_from.has(goal):
+		var cell: Vector2i = frontier.pop_front()
+		for direction: Vector2i in ACTION_BY_DIRECTION:
+			var next: Vector2i = cell + direction
+			if came_from.has(next) or not grid.is_inside(next) or not grid.is_walkable(next):
+				continue
+			var occupant := grid.entity_at(next)
+			if next != goal and (grid.exit_by_cell.has(next) or (occupant != 0 and occupant != player_id_of(main))):
+				continue
+			came_from[next] = cell
+			frontier.append(next)
+	var path: Array[Vector2i] = []
+	if not came_from.has(goal):
+		return path
+	var step := goal
+	while step != start:
+		path.push_front(step)
+		step = came_from[step]
+	path.push_front(start)
+	return path
+
+
 ## Walks the hero to `goal` by key presses along the shortest path the board allows, one cell per tap,
 ## the way a player would cross the room. True when the hero stands on `goal` (or a trip has begun because
 ## `goal` is a door). False when there is no path or a step does not land.
@@ -354,6 +393,11 @@ static func walk_to_cell(tree: SceneTree, main: Node, goal: Vector2i) -> bool:
 	var path := ecs_of(main).grid.get_grid_path(player_id_of(main), player_cell(main), goal)
 	if path.is_empty():
 		return false
+	if path_crosses_a_door(main, path):
+		# A player does not step on a door he does not mean to take (it leaves the room): the way round, when there is one.
+		path = path_around_doors(main, goal)
+		if path.is_empty():
+			return false
 	for index in range(1, path.size()):
 		if not await tap_direction(tree, main, path[index] - path[index - 1]):
 			return false

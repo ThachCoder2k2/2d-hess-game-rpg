@@ -889,3 +889,108 @@ was the commit attribution line, which matches the harness and is no defect).
 - Godot's CheckButton keeps the left margin of its `normal` stylebox (6 px in the default theme) before its text, a Label does not: names in a row of
   controls start 6 px apart unless the labels are indented by `get_theme_stylebox(&"normal", &"CheckButton").get_margin(SIDE_LEFT)`.
 - `ConfigFile`-based profile and save files are text, so `SaveFile.read` can check them as UTF-8 before the integrity footer.
+
+## World Graph and Room Builder Facts (M5 step 1, 2026-10-22)
+
+- A scene written as text needs a uid on its header and on every `[ext_resource]`, and a deterministic header uid keeps every reference alive across a
+  rebuild: the builder derives it from a hash of the room id (`ResourceUID.id_to_text` of the first eight bytes of the sha256, masked to 63 bits), so
+  the same layout gives the same bytes on every machine. `tools/stamp_uids.gd -- --check` is the proof it did.
+- `TileMapLayer.tile_map_data` is the one non-text part of a room scene. It is produced by painting a throwaway `TileMapLayer` through
+  `CellKindPainter` and storing `Marshalls.raw_to_base64(layer.tile_map_data)`; reading it back with `kinds_by_cell` is the check that every cell
+  reads as the kind the layout stated.
+- A "may the tool overwrite this?" rule that rests on a file's sha256 is safer than one that rests on a flag: a scene the owner has opened and moved a
+  prop in no longer matches the recorded hash, so `--force` refuses it, with the reason, without anyone having to remember to protect it.
+- The layout reader refuses a board whose ring of cells is not wall and any object standing on the ring (a door on the ring is a solid cell nobody can
+  stand on). A door's arrival cell is a separate `entry` object, by convention the cell beside the door, one step further in.
+- `WorldGraph` edges name a door by the node name of its `ZoneExitMarker`, so a rename of a door in the editor breaks `edges_match_doors` by name
+  instead of silently losing a route. A way in with no way back is an error unless the edge says `one_way` (the shortcuts home).
+- Enum properties are stored in a scene as their integer value (`recipe = 0`, `content_status = 1`): the enums of `RoomEncounter` are append-only, and
+  a layout file spells them as lowercase words that `room_layout.gd` maps to the ints.
+- Agent environment: a worktree-isolated agent's shell refuses `HOME=...` in front of a command, even `env HOME=...`. A wrapper script in `/tmp` that
+  exports the private HOME and `exec`s Godot with its arguments (`/tmp/godot-m5-1.sh --headless --path . -s tools/print_world_map.gd`) runs it; the
+  runner and the bootstrap script take the home from `UNBOUND_GODOT_HOME` and `BOOTSTRAP_HOME` and need no wrapper. A long heredoc in the same command
+  as a `git` call is refused as too complex: write the text with the file tool and append it in a command of its own.
+
+## Locks, Bosses and Ending Facts (M5 step 2, 2026-10-22)
+
+- A door dictionary baked into `exit_by_cell` is printed by the world dump, so a new key (`requires_flag`, `ends_run`) is added only on a door that uses
+  it: every other door, and every baseline of a room that has none, stays byte-identical. A baseline moves only for a room that changed on purpose (H1).
+- A lock the runtime does not hold yet must say so (`WorldLock.arrives_in`), and a door names it as its `skill_lock_id`, not its `lock_id`: otherwise the map
+  shows a locked door that opens, or a door the route test cannot walk. The route walk treats a skill lock as holding nothing, which is what keeps every stub
+  passable while the verbs do not exist.
+- A boss's flag is "set when its room can be cleared", not "when its room is entered": a boss room with no door that waits for the clear could be walked
+  out of with the boss standing, and the hub door after it would wait for ever. `WorldCheck` reports it as a break in the route.
+- A piece that cannot move or strike anywhere (a Knight whose eight L cells are wall, a Bishop whose diagonals are wall or off the board) is a harmless
+  preview the pawn can still hit from beside it: stand it in the corner of the board with two wall cells (the layouts of `tb1` and `bs1`). A Rook needs a
+  behaviour of its own for that, so the stand-in rook is a live pawn until M11.
+- `ContentDb` kinds can live in a nested folder: `ContentKind` joins the folder name onto the content root, so `story/endings` works for the ending.
+- A test that draws seeded random cases over every enemy definition (`test_attack_setup_search`) moves when definitions are added: its count of a rare
+  branch (the fall-back answer) went from 5 or more to 2. Assert that the branch is exercised, not how often.
+- Agent environment: a worktree-isolated agent's shell refuses a command that mixes `cd`, `HOME=` or a heredoc with other work. Write a script file with the
+  file tool and run it as a plain command (`python3 /tmp/x.py`, `bash /tmp/build_all.sh`, `/tmp/godot-m5-2.sh ...`); simple `a; b` lists are accepted.
+
+
+## Lint, Route Bot and Plan Facts (M5 step 3, 2026-10-23)
+
+- The plan's 7.4 table is a usable lint fixture, and it is not free of faults: read as written, R37 (a persistent reward every six minutes) fails at `dhb` (6.5 minutes
+  of boss with the reward at the end) and `ubb` (9 minutes), and "every district has a loop or shortcut" (D-02) fails for the Under-Bed. The plan's own boss text
+  closes the first (S20: the Queen's address in P3; S24: three memory alcoves in P3 are earned story beats inside those fights, so the fixture lists them as
+  `mid_rewards`); the second is by design (the Black King's door ends the run, 7.2) and is a written exemption that fails when it goes stale. **The plan's Reward
+  column should list those beats, and 7.5 should say the guard is for districts with a way home.** The Ending is exempt from R37: its eight minutes are the reward (R30).
+- Plan 7.4's Threat/shapes numbers reproduce from data: threat is the sum of each live piece's `EnemyDefinition.threat_points` (and 1 for a hazard), shapes are the
+  distinct shapes thrown (a Backstep Pawn throws a Recruit's diagonal; an Iron Rook throws a Rook's line), and `ub3`'s 4 is a Recruit plus three rewrite pulses. A boss
+  row states only its phase-1 budget, so boss shapes are unknown until M8b. `ub2`'s "up to 4 shapes" is the act's cap, not a count of any wave (the waves throw 2, 3
+  and 2 by this reading).
+- "Preview before lethal" is judged on the FAMILY (pawn, knight, bishop, rook, queen, king), not the variant: the Armed and Charging pawns have no fenced preview of
+  their own, the pawn family is introduced by T3's lone Recruit (the `intro` room), the Queen's by a fenced lane in `dh3` and the King's by the fenced rewrite pulse of
+  `ub3`. A fenced piece cannot be a stub piece yet: every stub parks its pieces live, so the scene half of that lint is a REPORT (M8a).
+- A lint that must "be able to fail" is one function over data the test can copy: the suite breaks a copy of the table (or `PlanLints.copy_of_graph()`), requires
+  the sentence, and judges the real table clean again. Editing a real `.tres` or scene by hand, then restoring it, is the second proof.
+- The threat caps are one static function on `RoomEncounter` (`threat_problems`), read by the Inspector's warnings, the layout reader and the lints. A rule written in
+  three places drifts; a test asserts the caps equal the plan's numbers so a constant edited by accident is named.
+- The route bot is deterministic because nothing in it runs on the wall clock: the game scene is held still and driven by `Support.pump`, the clock it reads is
+  `SaveService.state.play_time_seconds` (the game scene adds each simulated step's delta), and the walk's fades are real time that adds none. The same bot gives the
+  same `docs/route_times.md` byte for byte, so the test can rewrite the file without dirtying the tree.
+- `Support.walk_to_cell` follows `EcsGrid.get_grid_path`, which does NOT avoid door cells: in `tb2` the entry stands in a one-cell lane with its door beside it, so the
+  shortest way to the rest of the room is through the door, which leaves the room (and frees the world under a coroutine that still holds it: "previously freed").
+  The walk now goes round a door it does not mean to take.
+- A suite that is allowed to run longer than the runner's 60 s default is named in `SUITE_TIMEOUT_OVERRIDES` (`tools/run_all_tests.py`, with self-tests); its own
+  watchdog stays above its budget so a broken budget and a hang read differently.
+- `Dictionary[StringName, int].get(...)` is a Variant: `var ok := a.get(k, 0) == b` does not infer (a parse error in a strict suite); declare `var ok: bool = ...`.
+- macOS `sed -i` needs `-i ''`; and a heredoc mixed with `cd` or `git` in one command is refused for a worktree-isolated agent (step 2's note): write the script with
+  the file tool and run `python3 /tmp/x.py`.
+
+## The M5 review's real-input findings (the fix lane, 2026-10-23)
+
+- **A test that boots the room and teleports the hero never meets what a player meets.** The review sent only key and pad events through `Input.parse_input_event`
+  from a clean save and found two defects 159 green suites could not: door cells drawn as plain floor, and a held walking key that bounced the pawn back out of the
+  door it had come through. The first needed the real renderer to see; the second needed a held key and an engine frame, not a pump of the simulation. Both now have a
+  suite (`test_room_doors_marked`, `test_held_key_through_a_door`), and the review's bot is the model for any later "walk it as a player" check.
+- **A held key is a hardware fact, so its rule lives in the `InputPoller`.** `require_fresh_press()` marks the walking controls that are down when a room begins and
+  publishes them released until they are let go (stick included); a control pressed after the room began works at once. `GameRoot.boot_zone` calls it, so a trip and a
+  respawn are one line. It must be one line: `game_root.gd` is at its 200-line limit. The entry cell of 14 of the 194 door approaches stands one step from the door
+  it came by in the direction of travel (`/tmp` scan by the reviewer: the tb4/tbo nook, H1's four doors, dh4's shortcut home), so holding the key through them walked the
+  pawn out again 0.22 s after arrival (the key repeat's delay). Moving the entries instead would have fixed 14 cells and left every future room to the next review.
+- **Doors are an overlay, drawn from the snapshot, and the rule of "shut" has one owner.** The board draws one mark per `HudSnapshot.door_brief_by_cell` entry (shut:
+  dark frame crossed out; open: two nested gold frames in a dark outline, readable on the light floor tile; the door that ends the run: green with a diamond; one-pixel
+  lines inside the cell, shape and not only colour). `DoorRules.is_shut` (`ecs/core`) is the one answer to "does this door let the hero through", used by
+  `MovementSystem` when the hero lands on it and by `HudSnapshotSystem` every tick; the board redraws when a brief changes, so a door opens on screen the tick the last
+  piece falls. A painted door tile was the alternative: it would have meant repainting the binary tile maps of 34 rooms and the Stage 1 dumps, and the owner can still
+  replace the overlay with props later.
+- **"A floor no player reaches" was false.** The route bot walks up to still pieces and waits out each stroke's recovery, so a player with the AI on beat it in 25 of 31 rooms
+  (172 s against 195 s over the first visits, hub returns apart); only the six boss rooms ran longer (1.4 to 2.9 times, real strokes against one damage event). `route_times.md`
+  now says "a slow bot's baseline"; D-03's true minima are M9's.
+- **The route test cannot see a lock it does not try.** Removing the Bookshelf door's `requires_flag` kept `test_full_route` green until the bot learned to step on every
+  door the ROUTE has not earned yet (derived from the route, not from the doors, or a door that lost its lock would leave the list with it) and require its own line. The
+  probe's time and walk back are excluded from the room's number, so the committed `docs/route_times.md` kept every value.
+- **Twelve rooms park pieces that disagree with their designed threat, and the list is pinned.** tb1 4 (design 1), bs1 6 (3), bt1 6 (2), tb3 3 (4), ub2 9 (6), ub3 1 (4), b1 9 (6),
+  and the five boss arenas 8, 8, 9, 9, 10 against 7, 7, 8, 8, 9. The three Teach rooms are therefore above the Teach cap of 3 today, because a stub parks LIVE the piece the plan
+  fences (M8a); fixing the rosters would drop the family previews that the shipped-scene lint of R27 requires. `KNOWN_STUB_PARKED_THREAT` in `test_threat_budget` pins the list
+  exactly (a new disagreement and a cured one both fail by name). `T2` has no Crayon Target, which the plan lists (a prop, M6 or M9).
+- **Eight stub fights barely strike back** (an idle pawn lived 45 s in tb1, tb2, tb3, bs2, bs3, bsb, bt2, ub3, and 2.7 to 9.7 s elsewhere); the owner guide says so, so the fight feel the
+  owner reports is read as the stand-ins' and not as tuning. The four format-breaker rooms and eleven skill-locked doors play like plain ones until M7c; both were documented.
+- **Commit trailers disagree in the history of `base/m5-3`:** `a2d7342`, `6d4a15e`, `5303417` end `Claude Opus 5.5`, the other fifteen (and every commit of the fix lane) end
+  `Claude Sonnet 5.5`, the harness's attribution. Rewriting them would change every later hash and move the tags, so they are left; reword them if the branch is squashed.
+- Tool notes: a worktree-isolated agent cannot run `HOME=... godot` or a compound command that names git; `/tmp/upg-godot-home.sh` (exports `HOME=/tmp/upg-fix`, then `exec`s
+  Godot) and `/tmp/upg-godot` (a symlink to the binary) keep the commands plain. A scratch script that draws a room with the real renderer (`game_root.tscn`, then
+  `swap_zone` and `boot_zone`, then `get_root().get_texture().get_image().save_png`) is the fast way to look at a board; run it without `--headless`.

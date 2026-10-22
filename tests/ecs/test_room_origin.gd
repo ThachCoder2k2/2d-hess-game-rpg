@@ -97,28 +97,31 @@ func _check_shape_grid() -> void:
 		world.free()
 
 
-## Every room the shipped world graph lists gets the origin it always had. The six Stage 1 rooms are all
-## 16x9; the kingdom fixture the graph still lists is 72x40 and scrolls.
+## Every room the shipped world graph lists gets the origin its width says (D-02): x 64 for a 16-wide room, which is
+## what every room had until M5, and x 32 for an 18-wide boss arena, with y 36 for both. The kingdom fixture (no longer
+## in the graph since M5) is 72x40, scrolls, and keeps (64, 36).
 func _check_every_shipped_room_keeps_its_origin() -> void:
-	var world_graph := ContentDb.world()
-	_expect(world_graph != null and world_graph.zone_scene_by_id.size() >= 6, "setup: the world graph lists at least the six Stage 1 rooms")
-	if world_graph == null:
-		return
+	var scene_by_zone := TestPaths.new(self).shipped_rooms_and_kingdom()
+	_expect(scene_by_zone.size() >= 35, "setup: the world graph lists the plan's 34 rooms, and the kingdom fixture is added (%d scenes)" % scene_by_zone.size())
 	var sixteen_by_nine := 0
+	var eighteen_by_nine := 0
 	var all_keep_the_origin := true
-	for zone_id: StringName in world_graph.zone_scene_by_id:
-		var room := world_graph.get_zone_scene(zone_id).instantiate()
+	for zone_id: StringName in scene_by_zone:
+		var room := scene_by_zone[zone_id].instantiate()
 		var world := EcsWorld.new()
 		EcsBoot.shape_grid(world, room)
-		if world.grid.grid_origin != Vector2(64, 36):
+		var expected_origin := Vector2(32, 36) if world.grid.bounds == Rect2i(0, 0, 18, 9) else Vector2(64, 36)
+		if world.grid.grid_origin != expected_origin:
 			all_keep_the_origin = false
-			printerr("  room %s starts at %s" % [zone_id, world.grid.grid_origin])
+			printerr("  room %s starts at %s, not %s" % [zone_id, world.grid.grid_origin, expected_origin])
 		if world.grid.bounds == Rect2i(0, 0, 16, 9):
 			sixteen_by_nine += 1
+		if world.grid.bounds == Rect2i(0, 0, 18, 9):
+			eighteen_by_nine += 1
 		room.free()
 		world.free()
-	_expect(all_keep_the_origin, "every room of the world graph starts at (64, 36), where it always did")
-	_expect(sixteen_by_nine >= 6, "and at least six of them are 16x9 (%d)" % sixteen_by_nine)
+	_expect(all_keep_the_origin, "every room of the world graph starts at (64, 36) when it is 16 wide and at (32, 36) when it is 18 wide")
+	_expect(sixteen_by_nine >= 28 and eighteen_by_nine == 6, "the graph holds 28 or more 16x9 rooms and the six 18x9 rooms of the plan (the five boss arenas and ub2: %d and %d)" % [sixteen_by_nine, eighteen_by_nine])
 
 
 ## The boot turns a hero's view position into a cell with the room's own origin, so a hero standing on the

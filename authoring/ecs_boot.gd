@@ -40,6 +40,7 @@ static func boot(world: EcsWorld, options: EcsBootOptions) -> Dictionary:
 		_bake_zone_exits(world, room_root)
 		_bake_player_unlocks(world, room_root)
 		_bake_gates(world, room_root, opened_gate_ids)
+		_bake_traversal_gaps(world, room_root)
 
 	if player_view != null:
 		var player_cell := world.grid.world_to_cell(player_view.position)
@@ -150,6 +151,18 @@ static func _bake_gates(world: EcsWorld, room_root: Node, opened_gate_ids: Array
 		}
 
 
+## Mandatory crossings: every TraversalGapMarker child puts its data on each cell it covers, in the grid's marker
+## store (EcsGrid.marker_by_cell under TraversalGapMarker.KIND). Nothing reads it yet: the verbs that cross a gap
+## (Rule Step, Chalk Path) arrive in M7 and M10 and ask the grid for it.
+static func _bake_traversal_gaps(world: EcsWorld, room_root: Node) -> void:
+	for child in room_root.get_children():
+		var gap_marker := child as TraversalGapMarker
+		if gap_marker == null:
+			continue
+		for cell in gap_marker.get_cells():
+			world.grid.add_marker(TraversalGapMarker.KIND, cell, gap_marker.get_baked_data())
+
+
 ## Door cells: every ZoneExitMarker child becomes an exit_by_cell entry the
 ## MovementSystem watches for the player.
 static func _bake_zone_exits(world: EcsWorld, room_root: Node) -> void:
@@ -158,12 +171,18 @@ static func _bake_zone_exits(world: EcsWorld, room_root: Node) -> void:
 		if exit_marker == null:
 			continue
 		var cell := world.grid.world_to_cell(exit_marker.position)
-		world.grid.exit_by_cell[cell] = {
+		var door := {
 			"zone": exit_marker.target_zone,
 			"entry": exit_marker.target_entry,
 			"requires_room_clear": exit_marker.requires_room_clear,
 			"locked_message": exit_marker.locked_message,
 		}
+		# Only a door that uses them carries these two keys, so every other door is baked exactly as it always was.
+		if exit_marker.requires_flag != &"":
+			door["requires_flag"] = exit_marker.requires_flag
+		if exit_marker.ends_run:
+			door["ends_run"] = true
+		world.grid.exit_by_cell[cell] = door
 
 
 static func _bake_player_unlocks(world: EcsWorld, room_root: Node) -> void:
@@ -171,7 +190,9 @@ static func _bake_player_unlocks(world: EcsWorld, room_root: Node) -> void:
 		var unlock_marker := child as PlayerUnlockMarker
 		if unlock_marker == null:
 			continue
-		var cell := world.grid.world_to_cell(unlock_marker.position)
+		# A marker that snaps to the grid stands on its grid_cell (like a pickup: the cell is the truth, the position
+		# follows it once the marker is ready); one that does not is placed by its position.
+		var cell := unlock_marker.grid_cell if unlock_marker.sync_position_to_grid else world.grid.world_to_cell(unlock_marker.position)
 		world.grid.player_unlock_by_cell[cell] = {
 			"id": unlock_marker.unlock_id,
 			"message": unlock_marker.message,

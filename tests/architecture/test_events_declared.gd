@@ -130,6 +130,6 @@ func _init() -> void:
 	_expect(Events.problem_with({"type": &"not_an_event"}).contains("not declared"), "an undeclared event is refused")
 	_expect(Events.problem_with({"type": Events.STEP_STARTED, "entity": 1}).contains("missing the documented key 'cell'"), "an event missing a documented key is refused")
 	_expect(Events.problem_with({"type": Events.STEP_STARTED, "entity": 1, "cell": Vector2i.ZERO, "extra": 1}).contains("undocumented key 'extra'"), "an event with an undocumented key is refused")
-	_expect(Events.problem_with({"type": Events.BOSS_DEFEATED}).contains("FUTURE"), "an event reserved for a later milestone is refused until its status is flipped")
+	_expect(Events.problem_with({"type": Events.BOSS_PHASE_CHANGED}).contains("FUTURE"), "an event reserved for a later milestone is refused until its status is flipped")
 
 	finish()

@@ -72,3 +72,19 @@ class EnemyBrief:
 ## enemy entity id (int) -> its EnemyBrief. Holds every entity that has an EnemyAI and a cell
 ## (defeated enemies stay until the entity is destroyed); an entity missing from it has no AI.
 var enemy_brief_by_entity: Dictionary = {}
+
+
+## --- The doors (the board overlay draws them; without a mark a door cell is plain floor) ---
+
+## What the board needs to know about one door cell.
+class DoorBrief:
+	## True while the door does not let the hero through: it waits for the room to be cleared or for a world flag
+	## (DoorRules.is_shut, the same rule MovementSystem uses when the hero lands on it).
+	var is_shut := false
+	## True for the door that ends the run instead of leading to another room (the Desk's last door).
+	var ends_run := false
+
+
+## door cell (Vector2i) -> its DoorBrief, one per ZoneExitMarker of the room (EcsGrid.exit_by_cell). The doors of a
+## room never move, only open: the briefs are made once and their is_shut follows the world every tick.
+var door_brief_by_cell: Dictionary = {}

@@ -57,6 +57,17 @@ func tile_count_for(kind: StringName) -> int:
 	return _tiles_by_kind.get(kind, []).size()
 
 
+## The atlas coordinates of every base tile (alternative 0) of the TileSet whose cell is of this kind, in the order
+## the TileSet lists them. A tool that wants to vary the art within a kind (a checker of two floor tiles) picks
+## among these and still states the kind through paint().
+func atlas_coords_of_kind(kind: StringName) -> Array[Vector2i]:
+	var coords: Array[Vector2i] = []
+	for tile: Dictionary in _tiles_by_kind.get(kind, []):
+		if tile["alternative_tile"] == 0 and tile["atlas_coords"] not in coords:
+			coords.append(tile["atlas_coords"])
+	return coords
+
+
 ## The kinds the TileSet can paint, in CellKinds order.
 func paintable_kinds() -> Array[StringName]:
 	var kinds: Array[StringName] = []

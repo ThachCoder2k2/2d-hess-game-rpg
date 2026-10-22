@@ -20,9 +20,11 @@ extends UnboundTest
 ## the suite proves the check can fail: a door put back on the ring, a typo in an entry name and a wall across
 ## the room, and a shut door with no line, each produce a sentence.
 
-const MINIMUM_ZONES := 7
-const MINIMUM_EXITS := 11
-const MINIMUM_ENTRIES := 12
+const PlanRoomTable := preload("res://tests/fixtures/plan_room_table.gd")
+
+const MINIMUM_ZONES := 34
+const MINIMUM_EXITS := 70
+const MINIMUM_ENTRIES := 66
 const MINIMUM_SHUT_DOORS := 3
 
 ## The zone whose west door was on the ring before the fix: the case the check exists for.
@@ -31,32 +33,63 @@ const RETURN_DOOR_NAME := "Exit_To_T1"
 ## A door that is shut until its room is cleared (T3's east door): the case the locked-door check exists for.
 const ZONE_WITH_SHUT_DOOR := &"t3_first_pawn_clash"
 const SHUT_DOOR_NAME := "Exit_To_T4"
+## The hub's district doors: Toybox, Bookshelf, Block Tower, Dollhouse, Under-Bed.
+const MINIMUM_FLAG_DOORS := 5
 ## Cell (0, 5) of the 16x9 board: the wall column, where the return doors used to be.
 const RING_CELL := Vector2i(0, 5)
 
 var exits_checked := 0
 var shut_doors_checked := 0
+var flag_doors_checked := 0
 var entries_checked := 0
 var zones_checked := 0
+## How many entries and doors the check looked at in each room, by room id: what proves that no room of the plan was skipped (M5 step 3).
+var entries_checked_by_zone: Dictionary[StringName, int] = {}
+var exits_checked_by_zone: Dictionary[StringName, int] = {}
 
 
 func _init() -> void:
 	suite_title = "ROOM DOORS REACHABLE TEST"
 	var graph := ContentDb.world()
-	if not _expect(graph != null and not graph.zone_scene_by_id.is_empty(), "the world graph loads and lists zones"):
+	if not _expect(graph != null and not graph.rooms.is_empty(), "the world graph loads and lists zones"):
 		finish()
 		return
-	for zone_id: StringName in graph.zone_scene_by_id:
+	for zone_id: StringName in graph.room_ids():
 		_check_zone(graph, zone_id)
 	_expect(zones_checked >= MINIMUM_ZONES, "%d zones were booted and checked (at least %d, so an empty walk cannot pass)" % [zones_checked, MINIMUM_ZONES])
 	_expect(exits_checked >= MINIMUM_EXITS, "%d doors were checked (at least %d)" % [exits_checked, MINIMUM_EXITS])
 	_expect(entries_checked >= MINIMUM_ENTRIES, "%d entries were checked (at least %d)" % [entries_checked, MINIMUM_ENTRIES])
 	_expect(shut_doors_checked >= MINIMUM_SHUT_DOORS, "%d doors that wait for a clear were checked (at least %d: T3, T4 and B1)" % [shut_doors_checked, MINIMUM_SHUT_DOORS])
+	_expect(flag_doors_checked >= MINIMUM_FLAG_DOORS, "%d doors that wait for a boss's flag were checked (at least %d: the hub's five district doors)" % [flag_doors_checked, MINIMUM_FLAG_DOORS])
+	_check_every_room_of_the_plan_was_covered(graph)
 	_check_the_scan_can_fail(graph)
 	finish()
 
 
+## M5 step 3: every one of the 34 rooms of the plan's table was booted, and the check looked at EVERY entry and EVERY door the scene declares (counted
+## independently, by reading the scene), so a room the walk skipped, or a door it did not see, shows here by name.
+func _check_every_room_of_the_plan_was_covered(graph: WorldGraph) -> void:
+	var plan_ids: Array[StringName] = []
+	for row in PlanRoomTable.ROWS:
+		plan_ids.append(row["id"])
+	var checked_ids: Array[StringName] = []
+	checked_ids.assign(entries_checked_by_zone.keys())
+	plan_ids.sort()
+	checked_ids.sort()
+	_expect(checked_ids == plan_ids, "the rooms the check booked are exactly the 34 rooms of the plan (%d booted)" % checked_ids.size())
+	var rooms_with_every_marker_seen := 0
+	for room_id in plan_ids:
+		var scan := RoomScan.of(graph.get_zone_scene(room_id))
+		var every_entry_seen: bool = entries_checked_by_zone.get(room_id, -1) == scan.entry_ids.size()
+		var every_door_seen: bool = exits_checked_by_zone.get(room_id, -1) == scan.exits.size()
+		_expect(every_entry_seen and every_door_seen, "%s: all %d entries and all %d doors of the scene were checked (looked at %d and %d)" % [room_id, scan.entry_ids.size(), scan.exits.size(), entries_checked_by_zone.get(room_id, -1), exits_checked_by_zone.get(room_id, -1)])
+		rooms_with_every_marker_seen += 1 if every_entry_seen and every_door_seen else 0
+	_expect(rooms_with_every_marker_seen == 34, "in all 34 rooms every entry and every door was seen (%d)" % rooms_with_every_marker_seen)
+
+
 func _check_zone(graph: WorldGraph, zone_id: StringName) -> void:
+	var entries_before := entries_checked
+	var exits_before := exits_checked
 	var booted := _boot(graph.get_zone_scene(zone_id))
 	var room: Node = booted["room"]
 	var world: EcsWorld = booted["world"]
@@ -65,6 +98,8 @@ func _check_zone(graph: WorldGraph, zone_id: StringName) -> void:
 		printerr("  %s: %s" % [zone_id, problem])
 	_expect(problems.is_empty(), "%s: every entry stands on floor and every door can be walked to and leads to a real entry (%d problem(s))" % [zone_id, problems.size()])
 	zones_checked += 1
+	entries_checked_by_zone[zone_id] = entries_checked - entries_before
+	exits_checked_by_zone[zone_id] = exits_checked - exits_before
 	_free(booted)
 
 
@@ -119,7 +154,15 @@ func _problems_in(graph: WorldGraph, zone_id: StringName, room: Node, world: Ecs
 			for entry_id: StringName in entry_cell_by_id:
 				if not _walkable_cells_reached_from(grid, entry_cell_by_id[entry_id]).has(door_cell):
 					problems.append("door %s at %s cannot be reached on foot from entry '%s'" % [door_name, door_cell, entry_id])
-		problems.append_array(_problems_with_target(graph, door_name, exit_marker))
+		if exit_marker.ends_run:
+			if exit_marker.target_zone != &"":
+				problems.append("door %s ends the run, so it must lead to no zone (it names '%s')" % [door_name, exit_marker.target_zone])
+		else:
+			problems.append_array(_problems_with_target(graph, door_name, exit_marker))
+		if exit_marker.requires_flag != &"":
+			flag_doors_checked += 1
+			if exit_marker.locked_message.strip_edges().is_empty():
+				problems.append("door %s waits for the flag %s but gives no reason: its locked_message is empty" % [door_name, exit_marker.requires_flag])
 		if exit_marker.requires_room_clear:
 			shut_doors_checked += 1
 			if exit_marker.locked_message.strip_edges().is_empty():

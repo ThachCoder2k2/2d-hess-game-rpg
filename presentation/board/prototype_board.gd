@@ -1,8 +1,8 @@
 class_name PrototypeBoard
 extends Node2D
 
-## Runtime combat overlay only: telegraph danger cells, hit flashes, and the F3
-## debug view. Reads the board geometry and occupancy from the grid (duck-typed, so this script
+## Runtime board overlay only: the door marks (the cells a shut or open door stands on), telegraph danger cells, hit
+## flashes, and the F3 debug view. Reads the board geometry and occupancy from the grid (duck-typed, so this script
 ## names no ecs class) and every other fact about the simulation (telegraph progress, where each
 ## enemy stands and what it is heading for) from the HudSnapshot; telegraphs and intents are keyed
 ## by entity id. It never touches a component: presentation reads events and the snapshot
@@ -18,6 +18,18 @@ extends Node2D
 @export var danger_outline_color := Color("#fff2a8")
 @export var danger_slash_color := Color("#ff9a75")
 @export var danger_center_color := Color("#fff4d6")
+
+@export_group("Door Theme")
+## An open door: a lit doorway, two nested gold frames in a dark outline (the outline keeps it readable on a light floor
+## tile). The way on.
+@export var open_door_frame_color := Color("#ffd34e")
+@export var open_door_light_color := Color("#fff0b0")
+@export var open_door_outline_color := Color("#2b1d0e")
+## A shut door: one dark frame crossed out. It waits for the room to be cleared or for a boss; stepping on it says which.
+@export var shut_door_frame_color := Color("#d0705a")
+@export var shut_door_fill_color := Color("#2a1714")
+## The door that ends the run (the Desk's last door): an open doorway with a diamond in it, in a colour of its own.
+@export var ending_door_color := Color("#8fe3a0")
 
 @export_group("Debug Theme")
 @export var debug_board_color := Color("#6ee7f2")
@@ -37,6 +49,9 @@ var grid_world
 ## the F3 intent paths. Optional: without it telegraphs draw at zero progress and intent paths
 ## are skipped.
 var hud_snapshot: HudSnapshot
+## door cell -> whether the door was drawn shut at the last draw: a door that opens (the room is cleared, a boss
+## falls) is noticed by comparing this with the snapshot's briefs, and the board redraws.
+var drawn_door_shut_by_cell: Dictionary = {}
 ## entity id -> locked cells while that entity telegraphs.
 var telegraphs: Dictionary = {}
 var impact_cells: Array[Vector2i] = []
@@ -59,6 +74,8 @@ var high_contrast_danger := false:
 		high_contrast_danger = value
 		queue_redraw()
 
+## Pixels between a door mark's frame and the cell's edge (and between its two frames): the mark stays inside the cell.
+const DOOR_MARGIN := 3.0
 const HIGH_CONTRAST_OUTLINE_WIDTH := 4.0
 const HIGH_CONTRAST_STRIPE_SPACING := 6.0
 const HIGH_CONTRAST_STRIPE_WIDTH := 2.0
@@ -72,6 +89,7 @@ func setup(world, snapshot: HudSnapshot = null) -> void:
 	hud_snapshot = snapshot
 	telegraphs.clear()
 	enemy_intents.clear()
+	drawn_door_shut_by_cell.clear()
 	impact_cells = []
 	impact_time = 0.0
 	queue_redraw()
@@ -123,6 +141,8 @@ func _process(delta: float) -> void:
 		queue_redraw()
 	if not telegraphs.is_empty():
 		queue_redraw()
+	if _doors_changed_since_drawn():
+		queue_redraw()
 	if debug_enabled and not enemy_intents.is_empty():
 		queue_redraw()
 
@@ -141,6 +161,8 @@ func _draw() -> void:
 	var origin: Vector2 = grid_world.grid_origin
 	var size: int = grid_world.cell_size
 
+	_draw_doors(origin, size)
+
 	for source_entity in telegraphs:
 		var progress := _telegraph_progress(source_entity)
 		for cell: Vector2i in telegraphs[source_entity]:
@@ -158,6 +180,69 @@ func _draw() -> void:
 
 	if debug_enabled:
 		_draw_debug_layer(origin, size)
+
+
+## True when a door of the snapshot is not drawn the way the snapshot says it is now (opened, or a room's doors replaced).
+func _doors_changed_since_drawn() -> bool:
+	if hud_snapshot == null:
+		return not drawn_door_shut_by_cell.is_empty()
+	var briefs := hud_snapshot.door_brief_by_cell
+	if briefs.size() != drawn_door_shut_by_cell.size():
+		return true
+	for cell: Vector2i in briefs:
+		var brief: HudSnapshot.DoorBrief = briefs[cell]
+		if drawn_door_shut_by_cell.get(cell) != brief.is_shut:
+			return true
+	return false
+
+
+## Every door cell, drawn from the snapshot's briefs: without a mark a door is plain floor and the player cannot find the
+## way on (the M5 review). Shut and open differ in SHAPE and not only in colour: a shut door is one frame on a dark
+## fill with a cross over it, an open door is two nested frames on a light one, and the door that ends the run has a
+## diamond in the middle. All of it is one-pixel lines inside the cell. Drawn first, so a telegraph or a strike flash
+## lies over it.
+func _draw_doors(origin: Vector2, size: int) -> void:
+	drawn_door_shut_by_cell.clear()
+	if hud_snapshot == null:
+		return
+	for cell: Vector2i in hud_snapshot.door_brief_by_cell:
+		var brief: HudSnapshot.DoorBrief = hud_snapshot.door_brief_by_cell[cell]
+		drawn_door_shut_by_cell[cell] = brief.is_shut
+		if not grid_world.is_inside(cell):
+			continue
+		var cell_rect := Rect2(origin + Vector2(cell * size), Vector2.ONE * size)
+		if brief.is_shut:
+			_draw_shut_door(cell_rect)
+		else:
+			_draw_open_door(cell_rect, ending_door_color if brief.ends_run else open_door_frame_color, brief.ends_run)
+
+
+func _draw_shut_door(cell_rect: Rect2) -> void:
+	var frame := cell_rect.grow(-DOOR_MARGIN)
+	draw_rect(frame, Color(shut_door_fill_color, 0.72))
+	draw_rect(frame, Color(shut_door_frame_color, 0.95), false, 1.0)
+	var inner := frame.grow(-DOOR_MARGIN)
+	draw_line(inner.position, inner.end, Color(shut_door_frame_color, 0.8), 1.0)
+	draw_line(inner.position + Vector2(inner.size.x, 0.0), inner.position + Vector2(0.0, inner.size.y), Color(shut_door_frame_color, 0.8), 1.0)
+
+
+func _draw_open_door(cell_rect: Rect2, frame_color: Color, ends_run: bool) -> void:
+	var outline := cell_rect.grow(-DOOR_MARGIN)
+	draw_rect(outline, Color(open_door_light_color, 0.42))
+	draw_rect(outline, Color(open_door_outline_color, 0.9), false, 1.0)
+	var frame := outline.grow(-1.0)
+	draw_rect(frame, Color(frame_color, 1.0), false, 1.0)
+	var inner := frame.grow(-DOOR_MARGIN)
+	draw_rect(inner, Color(open_door_outline_color, 0.55), false, 1.0)
+	draw_rect(inner.grow(-1.0), Color(frame_color, 0.9), false, 1.0)
+	if ends_run:
+		var center := cell_rect.get_center()
+		var reach := cell_rect.size.x / 8.0
+		var diamond := PackedVector2Array([
+			center + Vector2(0.0, -reach), center + Vector2(reach, 0.0), center + Vector2(0.0, reach),
+			center + Vector2(-reach, 0.0), center + Vector2(0.0, -reach),
+		])
+		draw_polyline(diamond, Color(frame_color, 0.95), 1.0)
 
 
 func _draw_danger_cell(origin: Vector2, size: int, cell: Vector2i, progress: float) -> void:

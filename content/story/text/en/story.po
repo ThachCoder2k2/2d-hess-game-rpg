@@ -5,7 +5,7 @@
 # (content/rules/<id>/page.tres), the pieces (content/enemies/<id>/enemy.tres) and the credits
 # (content/story/credits.tres) look the words up by. {name} is filled in by the game: keep it as it is.
 # Prefixes in this file: BOOK_ (the Book's own labels), PAGE_ (a Book page), ENEMY_ and CHAR_ (a piece's names),
-# CREDIT_ (the credits roll); dialogue (DLG_), ambient lines (AMB_) and the rest of the story arrive with the story.
+# CREDIT_ (the credits roll), END_ (the ending cards); dialogue (DLG_), ambient lines (AMB_) and the rest of the story arrive with the story.
 #
 # Cách sửa một dòng: đổi chữ sau "msgstr", đừng đổi "msgid" (đó là mã mà game và các scene dùng để tìm chữ).
 # Lưu tệp rồi chạy game (F5). Giữ nguyên mọi phần trong ngoặc nhọn, ví dụ {room}.
@@ -181,6 +181,62 @@ msgstr "Black Pawn Captain"
 msgid "ENEMY_BLACK_PAWN_CAPTAIN_PIECE"
 msgstr "Pawn Captain"
 
+#. enemy=wooden_rook; surface=the long name of the piece; placeholder; a stand-in: it fights as a pawn until the Rook arrives with the Block Tower (M11)
+msgid "ENEMY_WOODEN_ROOK_NAME"
+msgstr "Wooden Rook"
+
+#. enemy=wooden_rook; surface=status line and HUD strike line; purpose=the short name of the piece in a sentence; placeholder
+msgid "ENEMY_WOODEN_ROOK_PIECE"
+msgstr "Rook"
+
+#. enemy=iron_rook; surface=the long name of the piece; placeholder; a stand-in: it fights as a pawn until the Rook arrives with the Block Tower (M11)
+msgid "ENEMY_IRON_ROOK_NAME"
+msgstr "Iron Rook"
+
+#. enemy=iron_rook; surface=status line and HUD strike line; purpose=the short name of the piece in a sentence; placeholder
+msgid "ENEMY_IRON_ROOK_PIECE"
+msgstr "Rook"
+
+#. enemy=knight_captain; surface=the long name of the piece; placeholder; the Toybox boss, a stand-in until M9
+msgid "ENEMY_KNIGHT_CAPTAIN_NAME"
+msgstr "Knight Captain"
+
+#. enemy=knight_captain; surface=status line and HUD strike line; purpose=the short name of the piece in a sentence; placeholder
+msgid "ENEMY_KNIGHT_CAPTAIN_PIECE"
+msgstr "Knight Captain"
+
+#. enemy=bishop_oracle; surface=the long name of the piece; placeholder; the Bookshelf boss, a stand-in until M10
+msgid "ENEMY_BISHOP_ORACLE_NAME"
+msgstr "Bishop Oracle"
+
+#. enemy=bishop_oracle; surface=status line and HUD strike line; purpose=the short name of the piece in a sentence; placeholder
+msgid "ENEMY_BISHOP_ORACLE_PIECE"
+msgstr "Bishop Oracle"
+
+#. enemy=rook_warden; surface=the long name of the piece; placeholder; the Block Tower boss, a stand-in until M11
+msgid "ENEMY_ROOK_WARDEN_NAME"
+msgstr "Rook Warden"
+
+#. enemy=rook_warden; surface=status line and HUD strike line; purpose=the short name of the piece in a sentence; placeholder
+msgid "ENEMY_ROOK_WARDEN_PIECE"
+msgstr "Rook Warden"
+
+#. enemy=queen_of_tricks; surface=the long name of the piece; placeholder; the Dollhouse boss, a stand-in until M12
+msgid "ENEMY_QUEEN_OF_TRICKS_NAME"
+msgstr "Queen of Tricks"
+
+#. enemy=queen_of_tricks; surface=status line and HUD strike line; purpose=the short name of the piece in a sentence; placeholder
+msgid "ENEMY_QUEEN_OF_TRICKS_PIECE"
+msgstr "Queen"
+
+#. enemy=black_king; surface=the long name of the piece; placeholder; the last boss, a stand-in until M13
+msgid "ENEMY_BLACK_KING_NAME"
+msgstr "The Black King"
+
+#. enemy=black_king; surface=status line and HUD strike line; purpose=the short name of the piece in a sentence; placeholder
+msgid "ENEMY_BLACK_KING_PIECE"
+msgstr "Black King"
+
 #. surface=status line and HUD strike line; purpose=what a piece the game has no name for is called
 msgid "ENEMY_UNKNOWN_PIECE"
 msgstr "Enemy"
@@ -220,3 +276,19 @@ msgstr "Licenses"
 #. surface=credits roll, the last line
 msgid "CREDIT_CLOSING_LINE"
 msgstr "Thank you for playing."
+
+#. surface=ending card 1; purpose=the Ending opens on the light after the one night; placeholder until the Desk is built (M13)
+msgid "END_CARD_MORNING"
+msgstr "Morning."
+
+#. surface=ending card 2; purpose=the pieces are back in the box that the child opens; placeholder until the Desk is built (M13)
+msgid "END_CARD_BOARD"
+msgstr "The board is quiet. The pieces stand on their squares."
+
+#. surface=ending card 3; purpose=the refusal of the promotion, D-33: a loving no the child must accept; placeholder until the Desk is built (M13)
+msgid "END_CARD_CROWN"
+msgstr "A small hand offers a crown. The pawn walks past it."
+
+#. surface=ending card 4; purpose=the held image before the credits, the crayon line the pawn follows off the board; placeholder until the Desk is built (M13)
+msgid "END_CARD_LINE"
+msgstr "There is a blue line on the desk. It goes on past the edge."

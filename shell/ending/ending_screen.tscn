@@ -1,0 +1,58 @@
+[gd_scene load_steps=2 format=3 uid="uid://bn33krb7k1twm"]
+
+[ext_resource type="Script" uid="uid://c82ybehmkud0x" path="res://shell/ending/ending_screen.gd" id="1"]
+
+[node name="EndingScreen" type="Control" node_paths=PackedStringArray("card_label", "skip_hint_label")]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1")
+card_label = NodePath("CardLabel")
+skip_hint_label = NodePath("SkipHint")
+
+[node name="Backdrop" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0.055, 0.047, 0.052, 1)
+
+[node name="CardLabel" type="Label" parent="."]
+modulate = Color(1, 1, 1, 0)
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -220.0
+offset_top = -40.0
+offset_right = 220.0
+offset_bottom = 40.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_colors/font_color = Color(0.945098, 0.909804, 0.823529, 1)
+theme_override_font_sizes/font_size = 16
+horizontal_alignment = 1
+vertical_alignment = 1
+autowrap_mode = 3
+
+[node name="SkipHint" type="Label" parent="."]
+layout_mode = 1
+anchors_preset = 2
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_left = 8.0
+offset_top = -20.0
+offset_right = 200.0
+offset_bottom = -4.0
+grow_vertical = 0
+theme_override_colors/font_color = Color(0.5, 0.48, 0.45, 1)
+theme_override_font_sizes/font_size = 9
+text = "UI_ENDING_SKIP_HINT"

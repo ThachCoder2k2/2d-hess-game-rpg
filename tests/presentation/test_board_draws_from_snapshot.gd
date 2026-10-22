@@ -67,8 +67,54 @@ func _run() -> void:
 	await process_frame
 	_expect(not board.enemy_intents.has(hunter), "an enemy that leaves the snapshot loses its intent path")
 
+	await _check_the_doors_are_drawn_and_follow_the_snapshot(board, grid, snapshot)
+
 	for node: Node in [board, unwired]:
 		node.queue_free()
+
+
+## The door marks (M5 fix: doors were plain floor): the board draws one mark per door brief, in both states and for
+## the door that ends the run, and notices a door that opens without being told.
+func _check_the_doors_are_drawn_and_follow_the_snapshot(board: PrototypeBoard, grid: EcsGrid, snapshot: HudSnapshot) -> void:
+	var shut_cell := Vector2i(2, 1)
+	var open_cell := Vector2i(8, 7)
+	var ending_cell := Vector2i(14, 4)
+	var shut_brief := _door_brief(true, false)
+	snapshot.door_brief_by_cell[shut_cell] = shut_brief
+	snapshot.door_brief_by_cell[open_cell] = _door_brief(false, false)
+	snapshot.door_brief_by_cell[ending_cell] = _door_brief(false, true)
+	_expect(board._doors_changed_since_drawn(), "doors the board has not drawn yet are a change it will redraw for")
+	board.queue_redraw()
+	await process_frame
+	await process_frame
+	_expect(board.drawn_door_shut_by_cell.size() == 3 and board.drawn_door_shut_by_cell[shut_cell] and not board.drawn_door_shut_by_cell[open_cell], "all three door marks were drawn: one shut, two open (the draw ran, in every style, without a script error)")
+	_expect(not board._doors_changed_since_drawn(), "and nothing is pending once they are drawn")
+
+	shut_brief.is_shut = false
+	_expect(board._doors_changed_since_drawn(), "a door that opens in the snapshot is noticed without the board being told")
+	await process_frame
+	await process_frame
+	_expect(not board.drawn_door_shut_by_cell[shut_cell] and not board._doors_changed_since_drawn(), "the board redrew it open")
+
+	snapshot.door_brief_by_cell.erase(shut_cell)
+	snapshot.door_brief_by_cell.erase(open_cell)
+	snapshot.door_brief_by_cell.erase(ending_cell)
+	await process_frame
+	await process_frame
+	_expect(board.drawn_door_shut_by_cell.is_empty(), "doors that leave the snapshot leave the board")
+	var no_snapshot_board := PrototypeBoard.new()
+	root.add_child(no_snapshot_board)
+	no_snapshot_board.setup(grid)
+	await process_frame
+	_expect(no_snapshot_board.drawn_door_shut_by_cell.is_empty() and not no_snapshot_board._doors_changed_since_drawn(), "a board with no snapshot draws no door marks")
+	no_snapshot_board.queue_free()
+
+
+func _door_brief(is_shut: bool, ends_run: bool) -> HudSnapshot.DoorBrief:
+	var brief := HudSnapshot.DoorBrief.new()
+	brief.is_shut = is_shut
+	brief.ends_run = ends_run
+	return brief
 
 
 func _brief(cell: Vector2i, committed_goal: Vector2i, telegraph_progress: float) -> HudSnapshot.EnemyBrief:

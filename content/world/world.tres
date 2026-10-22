@@ -1,22 +1,919 @@
-[gd_resource type="Resource" script_class="WorldGraph" load_steps=9 format=3 uid="uid://cq5g8vgd1g6fx"]
+[gd_resource type="Resource" script_class="WorldGraph" format=3 uid="uid://cq5g8vgd1g6fx"]
 
-[ext_resource type="Script" uid="uid://bdljqs4d3rq8v" path="res://schema/world/world_graph.gd" id="1"]
-[ext_resource type="PackedScene" uid="uid://dcky3f3xqn4eo" path="res://tests/fixtures/the_kingdom.tscn" id="2"]
-[ext_resource type="PackedScene" uid="uid://clh36vjegdepp" path="res://content/rooms/t1_white_kings_fall/room.tscn" id="3_t1"]
-[ext_resource type="PackedScene" uid="uid://b0j75epjvjhp7" path="res://content/rooms/t2_fallen_sword_tile/room.tscn" id="4_t2"]
-[ext_resource type="PackedScene" uid="uid://deol181510fne" path="res://content/rooms/t3_first_pawn_clash/room.tscn" id="5_t3"]
-[ext_resource type="PackedScene" uid="uid://dgkw4dtw6mu8d" path="res://content/rooms/t4_broken_rule_yard/room.tscn" id="6_t4"]
-[ext_resource type="PackedScene" uid="uid://c4e70yo1o6tf2" path="res://content/rooms/b1_black_pawn_captain/room.tscn" id="7_b1"]
-[ext_resource type="PackedScene" uid="uid://8vrgrtjl3y20" path="res://content/rooms/h1_chess_rug_hub/room.tscn" id="8_h1"]
+[ext_resource type="Script" uid="uid://bdljqs4d3rq8v" path="res://schema/world/world_graph.gd" id="1_graph"]
+[ext_resource type="Script" uid="uid://3vphfxpaxm88" path="res://schema/world/world_room.gd" id="2_room"]
+[ext_resource type="Script" uid="uid://cxy6hnc0fmmo4" path="res://schema/world/world_edge.gd" id="3_edge"]
+[ext_resource type="Script" uid="uid://xabh3phkmkm2" path="res://schema/world/world_lock.gd" id="4_lock"]
+[ext_resource type="Script" uid="uid://w30w86snvyaa" path="res://schema/world/world_region.gd" id="5_region"]
+[ext_resource type="PackedScene" uid="uid://clh36vjegdepp" path="res://content/rooms/t1_white_kings_fall/room.tscn" id="10_t1"]
+[ext_resource type="PackedScene" uid="uid://b0j75epjvjhp7" path="res://content/rooms/t2_fallen_sword_tile/room.tscn" id="11_t2"]
+[ext_resource type="PackedScene" uid="uid://deol181510fne" path="res://content/rooms/t3_first_pawn_clash/room.tscn" id="12_t3"]
+[ext_resource type="PackedScene" uid="uid://dgkw4dtw6mu8d" path="res://content/rooms/t4_broken_rule_yard/room.tscn" id="13_t4"]
+[ext_resource type="PackedScene" uid="uid://c4e70yo1o6tf2" path="res://content/rooms/b1_black_pawn_captain/room.tscn" id="14_b1"]
+[ext_resource type="PackedScene" uid="uid://8vrgrtjl3y20" path="res://content/rooms/h1_chess_rug_hub/room.tscn" id="15_h1"]
+[ext_resource type="PackedScene" uid="uid://dyjaog80btpiy" path="res://content/rooms/tb1_toybox_gate/room.tscn" id="16_tb1"]
+[ext_resource type="PackedScene" uid="uid://d3m3qqrrkcdru" path="res://content/rooms/tb2_l_jump_lanes/room.tscn" id="17_tb2"]
+[ext_resource type="PackedScene" uid="uid://dkrw6h8n0c2cu" path="res://content/rooms/tb3_toy_track_ambush/room.tscn" id="18_tb3"]
+[ext_resource type="PackedScene" uid="uid://do0vt00x0ywma" path="res://content/rooms/tbb_knight_captain/room.tscn" id="19_tbb"]
+[ext_resource type="PackedScene" uid="uid://b02rci3027iba" path="res://content/rooms/tb4_lid_path/room.tscn" id="20_tb4"]
+[ext_resource type="PackedScene" uid="uid://c3ikhshj3u02k" path="res://content/rooms/tbo_crayon_cache/room.tscn" id="21_tbo"]
+[ext_resource type="PackedScene" uid="uid://b7o6c8y65hky5" path="res://content/rooms/bs1_book_spine_steps/room.tscn" id="22_bs1"]
+[ext_resource type="PackedScene" uid="uid://ced68u86ppq8o" path="res://content/rooms/bs2_diagonal_chapel/room.tscn" id="23_bs2"]
+[ext_resource type="PackedScene" uid="uid://ce0jgwocj154u" path="res://content/rooms/bs3_torn_page_bridge/room.tscn" id="24_bs3"]
+[ext_resource type="PackedScene" uid="uid://cgw3aoaxr6lfd" path="res://content/rooms/bsb_bishop_oracle/room.tscn" id="25_bsb"]
+[ext_resource type="PackedScene" uid="uid://cntwih1icpe50" path="res://content/rooms/bs4_page_tear_shortcut/room.tscn" id="26_bs4"]
+[ext_resource type="PackedScene" uid="uid://c3o7b0ep7n28y" path="res://content/rooms/bso_margin_nook/room.tscn" id="27_bso"]
+[ext_resource type="PackedScene" uid="uid://bpcaxpo66by6a" path="res://content/rooms/bt1_block_yard/room.tscn" id="28_bt1"]
+[ext_resource type="PackedScene" uid="uid://61b5mxprrml0" path="res://content/rooms/bt2_ruler_bridge/room.tscn" id="29_bt2"]
+[ext_resource type="PackedScene" uid="uid://b1eyvx7c8yoyh" path="res://content/rooms/bt3_breakable_wall_test/room.tscn" id="30_bt3"]
+[ext_resource type="PackedScene" uid="uid://tufn3dc0vcpv" path="res://content/rooms/btb_rook_warden/room.tscn" id="31_btb"]
+[ext_resource type="PackedScene" uid="uid://b6c3s66aw56bh" path="res://content/rooms/bt4_ruler_gate_shortcut/room.tscn" id="32_bt4"]
+[ext_resource type="PackedScene" uid="uid://ba515kv1kecs7" path="res://content/rooms/bto_rubble_nook/room.tscn" id="33_bto"]
+[ext_resource type="PackedScene" uid="uid://bh1bxvxq05h6u" path="res://content/rooms/dh1_foyer/room.tscn" id="34_dh1"]
+[ext_resource type="PackedScene" uid="uid://dc1vwk1bx3mpk" path="res://content/rooms/dh2_mixed_court/room.tscn" id="35_dh2"]
+[ext_resource type="PackedScene" uid="uid://vdkpbyixp2ct" path="res://content/rooms/dh3_royal_stage/room.tscn" id="36_dh3"]
+[ext_resource type="PackedScene" uid="uid://dfshp3k778q0r" path="res://content/rooms/dhb_queen_of_tricks/room.tscn" id="37_dhb"]
+[ext_resource type="PackedScene" uid="uid://cefe3lqsivp4v" path="res://content/rooms/dh4_seal_stair/room.tscn" id="38_dh4"]
+[ext_resource type="PackedScene" uid="uid://behpgl6sut3xx" path="res://content/rooms/ub1_castle_gate/room.tscn" id="39_ub1"]
+[ext_resource type="PackedScene" uid="uid://qk73dt75g3td" path="res://content/rooms/ub2_last_board/room.tscn" id="40_ub2"]
+[ext_resource type="PackedScene" uid="uid://bl5vnquo45fe6" path="res://content/rooms/ub3_rule_engine/room.tscn" id="41_ub3"]
+[ext_resource type="PackedScene" uid="uid://dejsfb0eurq84" path="res://content/rooms/ubb_black_king/room.tscn" id="42_ubb"]
+[ext_resource type="PackedScene" uid="uid://bhtcn56ifyq73" path="res://content/rooms/e1_morning_desk/room.tscn" id="43_e1"]
+
+[sub_resource type="Resource" id="Resource_room_t1"]
+script = ExtResource("2_room")
+room_id = &"t1_white_kings_fall"
+scene = ExtResource("10_t1")
+map_slot = Vector2i(2, 6)
+
+[sub_resource type="Resource" id="Resource_room_t2"]
+script = ExtResource("2_room")
+room_id = &"t2_fallen_sword_tile"
+scene = ExtResource("11_t2")
+map_slot = Vector2i(3, 6)
+
+[sub_resource type="Resource" id="Resource_room_t3"]
+script = ExtResource("2_room")
+room_id = &"t3_first_pawn_clash"
+scene = ExtResource("12_t3")
+map_slot = Vector2i(4, 6)
+
+[sub_resource type="Resource" id="Resource_room_t4"]
+script = ExtResource("2_room")
+room_id = &"t4_broken_rule_yard"
+scene = ExtResource("13_t4")
+map_slot = Vector2i(5, 6)
+
+[sub_resource type="Resource" id="Resource_room_b1"]
+script = ExtResource("2_room")
+room_id = &"b1_black_pawn_captain"
+scene = ExtResource("14_b1")
+map_slot = Vector2i(5, 5)
+
+[sub_resource type="Resource" id="Resource_room_h1"]
+script = ExtResource("2_room")
+room_id = &"h1_chess_rug_hub"
+scene = ExtResource("15_h1")
+map_slot = Vector2i(4, 5)
+
+[sub_resource type="Resource" id="Resource_room_tb1"]
+script = ExtResource("2_room")
+room_id = &"tb1_toybox_gate"
+scene = ExtResource("16_tb1")
+map_slot = Vector2i(6, 5)
+
+[sub_resource type="Resource" id="Resource_room_tb2"]
+script = ExtResource("2_room")
+room_id = &"tb2_l_jump_lanes"
+scene = ExtResource("17_tb2")
+map_slot = Vector2i(6, 4)
+
+[sub_resource type="Resource" id="Resource_room_tb3"]
+script = ExtResource("2_room")
+room_id = &"tb3_toy_track_ambush"
+scene = ExtResource("18_tb3")
+map_slot = Vector2i(6, 3)
+
+[sub_resource type="Resource" id="Resource_room_tbb"]
+script = ExtResource("2_room")
+room_id = &"tbb_knight_captain"
+scene = ExtResource("19_tbb")
+map_slot = Vector2i(7, 3)
+
+[sub_resource type="Resource" id="Resource_room_tb4"]
+script = ExtResource("2_room")
+room_id = &"tb4_lid_path"
+scene = ExtResource("20_tb4")
+map_slot = Vector2i(7, 4)
+
+[sub_resource type="Resource" id="Resource_room_tbo"]
+script = ExtResource("2_room")
+room_id = &"tbo_crayon_cache"
+scene = ExtResource("21_tbo")
+map_slot = Vector2i(7, 5)
+
+[sub_resource type="Resource" id="Resource_room_bs1"]
+script = ExtResource("2_room")
+room_id = &"bs1_book_spine_steps"
+scene = ExtResource("22_bs1")
+map_slot = Vector2i(2, 2)
+
+[sub_resource type="Resource" id="Resource_room_bs2"]
+script = ExtResource("2_room")
+room_id = &"bs2_diagonal_chapel"
+scene = ExtResource("23_bs2")
+map_slot = Vector2i(3, 2)
+
+[sub_resource type="Resource" id="Resource_room_bs3"]
+script = ExtResource("2_room")
+room_id = &"bs3_torn_page_bridge"
+scene = ExtResource("24_bs3")
+map_slot = Vector2i(4, 2)
+
+[sub_resource type="Resource" id="Resource_room_bsb"]
+script = ExtResource("2_room")
+room_id = &"bsb_bishop_oracle"
+scene = ExtResource("25_bsb")
+map_slot = Vector2i(5, 2)
+
+[sub_resource type="Resource" id="Resource_room_bs4"]
+script = ExtResource("2_room")
+room_id = &"bs4_page_tear_shortcut"
+scene = ExtResource("26_bs4")
+map_slot = Vector2i(5, 1)
+
+[sub_resource type="Resource" id="Resource_room_bso"]
+script = ExtResource("2_room")
+room_id = &"bso_margin_nook"
+scene = ExtResource("27_bso")
+map_slot = Vector2i(4, 1)
+
+[sub_resource type="Resource" id="Resource_room_bt1"]
+script = ExtResource("2_room")
+room_id = &"bt1_block_yard"
+scene = ExtResource("28_bt1")
+map_slot = Vector2i(1, 6)
+
+[sub_resource type="Resource" id="Resource_room_bt2"]
+script = ExtResource("2_room")
+room_id = &"bt2_ruler_bridge"
+scene = ExtResource("29_bt2")
+map_slot = Vector2i(1, 5)
+
+[sub_resource type="Resource" id="Resource_room_bt3"]
+script = ExtResource("2_room")
+room_id = &"bt3_breakable_wall_test"
+scene = ExtResource("30_bt3")
+map_slot = Vector2i(1, 4)
+
+[sub_resource type="Resource" id="Resource_room_btb"]
+script = ExtResource("2_room")
+room_id = &"btb_rook_warden"
+scene = ExtResource("31_btb")
+map_slot = Vector2i(1, 3)
+
+[sub_resource type="Resource" id="Resource_room_bt4"]
+script = ExtResource("2_room")
+room_id = &"bt4_ruler_gate_shortcut"
+scene = ExtResource("32_bt4")
+map_slot = Vector2i(0, 3)
+
+[sub_resource type="Resource" id="Resource_room_bto"]
+script = ExtResource("2_room")
+room_id = &"bto_rubble_nook"
+scene = ExtResource("33_bto")
+map_slot = Vector2i(0, 4)
+
+[sub_resource type="Resource" id="Resource_room_dh1"]
+script = ExtResource("2_room")
+room_id = &"dh1_foyer"
+scene = ExtResource("34_dh1")
+map_slot = Vector2i(5, 8)
+
+[sub_resource type="Resource" id="Resource_room_dh2"]
+script = ExtResource("2_room")
+room_id = &"dh2_mixed_court"
+scene = ExtResource("35_dh2")
+map_slot = Vector2i(6, 8)
+
+[sub_resource type="Resource" id="Resource_room_dh3"]
+script = ExtResource("2_room")
+room_id = &"dh3_royal_stage"
+scene = ExtResource("36_dh3")
+map_slot = Vector2i(7, 8)
+
+[sub_resource type="Resource" id="Resource_room_dhb"]
+script = ExtResource("2_room")
+room_id = &"dhb_queen_of_tricks"
+scene = ExtResource("37_dhb")
+map_slot = Vector2i(7, 9)
+
+[sub_resource type="Resource" id="Resource_room_dh4"]
+script = ExtResource("2_room")
+room_id = &"dh4_seal_stair"
+scene = ExtResource("38_dh4")
+map_slot = Vector2i(6, 9)
+
+[sub_resource type="Resource" id="Resource_room_ub1"]
+script = ExtResource("2_room")
+room_id = &"ub1_castle_gate"
+scene = ExtResource("39_ub1")
+map_slot = Vector2i(4, 8)
+
+[sub_resource type="Resource" id="Resource_room_ub2"]
+script = ExtResource("2_room")
+room_id = &"ub2_last_board"
+scene = ExtResource("40_ub2")
+map_slot = Vector2i(3, 8)
+
+[sub_resource type="Resource" id="Resource_room_ub3"]
+script = ExtResource("2_room")
+room_id = &"ub3_rule_engine"
+scene = ExtResource("41_ub3")
+map_slot = Vector2i(2, 8)
+
+[sub_resource type="Resource" id="Resource_room_ubb"]
+script = ExtResource("2_room")
+room_id = &"ubb_black_king"
+scene = ExtResource("42_ubb")
+map_slot = Vector2i(1, 8)
+
+[sub_resource type="Resource" id="Resource_room_e1"]
+script = ExtResource("2_room")
+room_id = &"e1_morning_desk"
+scene = ExtResource("43_e1")
+map_slot = Vector2i(7, 0)
+
+[sub_resource type="Resource" id="Resource_lock_t3_clear"]
+script = ExtResource("4_lock")
+lock_id = &"t3_clear"
+kind = "room_clear"
+message_key = "ROOM_T3_FIRST_PAWN_CLASH_LOCKED"
+
+[sub_resource type="Resource" id="Resource_lock_t4_clear"]
+script = ExtResource("4_lock")
+lock_id = &"t4_clear"
+kind = "room_clear"
+message_key = "ROOM_T4_BROKEN_RULE_YARD_LOCKED"
+
+[sub_resource type="Resource" id="Resource_lock_b1_clear"]
+script = ExtResource("4_lock")
+lock_id = &"b1_clear"
+kind = "room_clear"
+message_key = "ROOM_B1_BLACK_PAWN_CAPTAIN_LOCKED"
+
+[sub_resource type="Resource" id="Resource_lock_tbb_clear"]
+script = ExtResource("4_lock")
+lock_id = &"tbb_clear"
+kind = "room_clear"
+message_key = "ROOM_TBB_KNIGHT_CAPTAIN_LOCKED"
+
+[sub_resource type="Resource" id="Resource_lock_bsb_clear"]
+script = ExtResource("4_lock")
+lock_id = &"bsb_clear"
+kind = "room_clear"
+message_key = "ROOM_BSB_BISHOP_ORACLE_LOCKED"
+
+[sub_resource type="Resource" id="Resource_lock_btb_clear"]
+script = ExtResource("4_lock")
+lock_id = &"btb_clear"
+kind = "room_clear"
+message_key = "ROOM_BTB_ROOK_WARDEN_LOCKED"
+
+[sub_resource type="Resource" id="Resource_lock_dhb_clear"]
+script = ExtResource("4_lock")
+lock_id = &"dhb_clear"
+kind = "room_clear"
+message_key = "ROOM_DHB_QUEEN_OF_TRICKS_LOCKED"
+
+[sub_resource type="Resource" id="Resource_lock_ub2_clear"]
+script = ExtResource("4_lock")
+lock_id = &"ub2_clear"
+kind = "room_clear"
+message_key = "ROOM_UB2_LAST_BOARD_LOCKED"
+
+[sub_resource type="Resource" id="Resource_lock_ubb_clear"]
+script = ExtResource("4_lock")
+lock_id = &"ubb_clear"
+kind = "room_clear"
+message_key = "ROOM_UBB_BLACK_KING_LOCKED"
+
+[sub_resource type="Resource" id="Resource_lock_after_black_pawn_captain"]
+script = ExtResource("4_lock")
+lock_id = &"after_black_pawn_captain"
+kind = "flag"
+subject = &"boss.black_pawn_captain"
+message_key = "ROOM_H1_CHESS_RUG_HUB_LOCKED_TOYBOX"
+
+[sub_resource type="Resource" id="Resource_lock_after_knight_captain"]
+script = ExtResource("4_lock")
+lock_id = &"after_knight_captain"
+kind = "flag"
+subject = &"boss.knight_captain"
+message_key = "ROOM_H1_CHESS_RUG_HUB_LOCKED_BOOKSHELF"
+
+[sub_resource type="Resource" id="Resource_lock_after_bishop_oracle"]
+script = ExtResource("4_lock")
+lock_id = &"after_bishop_oracle"
+kind = "flag"
+subject = &"boss.bishop_oracle"
+message_key = "ROOM_H1_CHESS_RUG_HUB_LOCKED_BLOCK_TOWER"
+
+[sub_resource type="Resource" id="Resource_lock_after_rook_warden"]
+script = ExtResource("4_lock")
+lock_id = &"after_rook_warden"
+kind = "flag"
+subject = &"boss.rook_warden"
+message_key = "ROOM_H1_CHESS_RUG_HUB_LOCKED_DOLLHOUSE"
+
+[sub_resource type="Resource" id="Resource_lock_after_queen_of_tricks"]
+script = ExtResource("4_lock")
+lock_id = &"after_queen_of_tricks"
+kind = "flag"
+subject = &"boss.queen_of_tricks"
+message_key = "ROOM_H1_CHESS_RUG_HUB_LOCKED_UNDER_BED"
+
+[sub_resource type="Resource" id="Resource_lock_needs_rule_step"]
+script = ExtResource("4_lock")
+lock_id = &"needs_rule_step"
+kind = "unlock"
+subject = &"rule_step"
+message_key = "ROOM_LOCK_NEEDS_RULE_STEP"
+arrives_in = "M7c"
+
+[sub_resource type="Resource" id="Resource_lock_needs_chalk_path"]
+script = ExtResource("4_lock")
+lock_id = &"needs_chalk_path"
+kind = "unlock"
+subject = &"chalk_path"
+message_key = "ROOM_LOCK_NEEDS_CHALK_PATH"
+arrives_in = "M7c"
+
+[sub_resource type="Resource" id="Resource_lock_needs_eraser_guard"]
+script = ExtResource("4_lock")
+lock_id = &"needs_eraser_guard"
+kind = "unlock"
+subject = &"eraser_guard"
+message_key = "ROOM_LOCK_NEEDS_ERASER_GUARD"
+arrives_in = "M7c"
+
+[sub_resource type="Resource" id="Resource_edge_t1_to_t2"]
+script = ExtResource("3_edge")
+from_room = &"t1_white_kings_fall"
+door = &"Exit_To_T2"
+to_room = &"t2_fallen_sword_tile"
+to_entry = &"west_entry"
+
+[sub_resource type="Resource" id="Resource_edge_t2_to_t1"]
+script = ExtResource("3_edge")
+from_room = &"t2_fallen_sword_tile"
+door = &"Exit_To_T1"
+to_room = &"t1_white_kings_fall"
+to_entry = &"from_t2"
+
+[sub_resource type="Resource" id="Resource_edge_t2_to_t3"]
+script = ExtResource("3_edge")
+from_room = &"t2_fallen_sword_tile"
+door = &"Exit_To_T3"
+to_room = &"t3_first_pawn_clash"
+to_entry = &"west_entry"
+
+[sub_resource type="Resource" id="Resource_edge_t3_to_t2"]
+script = ExtResource("3_edge")
+from_room = &"t3_first_pawn_clash"
+door = &"Exit_To_T2"
+to_room = &"t2_fallen_sword_tile"
+to_entry = &"from_t3"
+
+[sub_resource type="Resource" id="Resource_edge_t3_to_t4"]
+script = ExtResource("3_edge")
+from_room = &"t3_first_pawn_clash"
+door = &"Exit_To_T4"
+to_room = &"t4_broken_rule_yard"
+to_entry = &"west_entry"
+lock_id = &"t3_clear"
+
+[sub_resource type="Resource" id="Resource_edge_t4_to_t3"]
+script = ExtResource("3_edge")
+from_room = &"t4_broken_rule_yard"
+door = &"Exit_To_T3"
+to_room = &"t3_first_pawn_clash"
+to_entry = &"from_t4"
+
+[sub_resource type="Resource" id="Resource_edge_t4_to_b1"]
+script = ExtResource("3_edge")
+from_room = &"t4_broken_rule_yard"
+door = &"Exit_To_B1"
+to_room = &"b1_black_pawn_captain"
+to_entry = &"west_entry"
+lock_id = &"t4_clear"
+
+[sub_resource type="Resource" id="Resource_edge_b1_to_t4"]
+script = ExtResource("3_edge")
+from_room = &"b1_black_pawn_captain"
+door = &"Exit_To_T4"
+to_room = &"t4_broken_rule_yard"
+to_entry = &"from_b1"
+
+[sub_resource type="Resource" id="Resource_edge_b1_to_h1"]
+script = ExtResource("3_edge")
+from_room = &"b1_black_pawn_captain"
+door = &"Exit_To_Hub"
+to_room = &"h1_chess_rug_hub"
+to_entry = &"from_boss"
+lock_id = &"b1_clear"
+
+[sub_resource type="Resource" id="Resource_edge_h1_to_b1"]
+script = ExtResource("3_edge")
+from_room = &"h1_chess_rug_hub"
+door = &"Exit_To_Boss"
+to_room = &"b1_black_pawn_captain"
+to_entry = &"from_hub"
+
+[sub_resource type="Resource" id="Resource_edge_h1_to_tb1"]
+script = ExtResource("3_edge")
+from_room = &"h1_chess_rug_hub"
+door = &"Exit_To_Act2Toybox"
+to_room = &"tb1_toybox_gate"
+to_entry = &"from_h1"
+lock_id = &"after_black_pawn_captain"
+
+[sub_resource type="Resource" id="Resource_edge_h1_to_bs1"]
+script = ExtResource("3_edge")
+from_room = &"h1_chess_rug_hub"
+door = &"Exit_To_Bookshelf"
+to_room = &"bs1_book_spine_steps"
+to_entry = &"from_h1"
+lock_id = &"after_knight_captain"
+skill_lock_id = &"needs_rule_step"
+
+[sub_resource type="Resource" id="Resource_edge_h1_to_bt1"]
+script = ExtResource("3_edge")
+from_room = &"h1_chess_rug_hub"
+door = &"Exit_To_BlockTower"
+to_room = &"bt1_block_yard"
+to_entry = &"from_h1"
+lock_id = &"after_bishop_oracle"
+skill_lock_id = &"needs_chalk_path"
+
+[sub_resource type="Resource" id="Resource_edge_h1_to_dh1"]
+script = ExtResource("3_edge")
+from_room = &"h1_chess_rug_hub"
+door = &"Exit_To_Dollhouse"
+to_room = &"dh1_foyer"
+to_entry = &"from_h1"
+lock_id = &"after_rook_warden"
+skill_lock_id = &"needs_eraser_guard"
+
+[sub_resource type="Resource" id="Resource_edge_h1_to_ub1"]
+script = ExtResource("3_edge")
+from_room = &"h1_chess_rug_hub"
+door = &"Exit_To_UnderBed"
+to_room = &"ub1_castle_gate"
+to_entry = &"from_h1"
+lock_id = &"after_queen_of_tricks"
+
+[sub_resource type="Resource" id="Resource_edge_tb1_to_h1"]
+script = ExtResource("3_edge")
+from_room = &"tb1_toybox_gate"
+door = &"Exit_To_H1"
+to_room = &"h1_chess_rug_hub"
+to_entry = &"from_toybox"
+
+[sub_resource type="Resource" id="Resource_edge_tb1_to_tb2"]
+script = ExtResource("3_edge")
+from_room = &"tb1_toybox_gate"
+door = &"Exit_To_TB2"
+to_room = &"tb2_l_jump_lanes"
+to_entry = &"from_tb1"
+
+[sub_resource type="Resource" id="Resource_edge_tb2_to_tb1"]
+script = ExtResource("3_edge")
+from_room = &"tb2_l_jump_lanes"
+door = &"Exit_To_TB1"
+to_room = &"tb1_toybox_gate"
+to_entry = &"from_tb2"
+
+[sub_resource type="Resource" id="Resource_edge_tb2_to_tb3"]
+script = ExtResource("3_edge")
+from_room = &"tb2_l_jump_lanes"
+door = &"Exit_To_TB3"
+to_room = &"tb3_toy_track_ambush"
+to_entry = &"from_tb2"
+
+[sub_resource type="Resource" id="Resource_edge_tb3_to_tb2"]
+script = ExtResource("3_edge")
+from_room = &"tb3_toy_track_ambush"
+door = &"Exit_To_TB2"
+to_room = &"tb2_l_jump_lanes"
+to_entry = &"from_tb3"
+
+[sub_resource type="Resource" id="Resource_edge_tb3_to_tbb"]
+script = ExtResource("3_edge")
+from_room = &"tb3_toy_track_ambush"
+door = &"Exit_To_Tbb"
+to_room = &"tbb_knight_captain"
+to_entry = &"from_tb3"
+
+[sub_resource type="Resource" id="Resource_edge_tbb_to_tb3"]
+script = ExtResource("3_edge")
+from_room = &"tbb_knight_captain"
+door = &"Exit_To_TB3"
+to_room = &"tb3_toy_track_ambush"
+to_entry = &"from_tbb"
+
+[sub_resource type="Resource" id="Resource_edge_tbb_to_tb4"]
+script = ExtResource("3_edge")
+from_room = &"tbb_knight_captain"
+door = &"Exit_To_TB4"
+to_room = &"tb4_lid_path"
+to_entry = &"from_tbb"
+lock_id = &"tbb_clear"
+
+[sub_resource type="Resource" id="Resource_edge_tb4_to_tbb"]
+script = ExtResource("3_edge")
+from_room = &"tb4_lid_path"
+door = &"Exit_To_Tbb"
+to_room = &"tbb_knight_captain"
+to_entry = &"from_tb4"
+
+[sub_resource type="Resource" id="Resource_edge_tb4_to_h1"]
+script = ExtResource("3_edge")
+from_room = &"tb4_lid_path"
+door = &"Exit_To_H1"
+to_room = &"h1_chess_rug_hub"
+to_entry = &"from_toybox"
+one_way = true
+skill_lock_id = &"needs_rule_step"
+
+[sub_resource type="Resource" id="Resource_edge_tb4_to_tbo"]
+script = ExtResource("3_edge")
+from_room = &"tb4_lid_path"
+door = &"Exit_To_Tbo"
+to_room = &"tbo_crayon_cache"
+to_entry = &"from_tb4"
+skill_lock_id = &"needs_rule_step"
+
+[sub_resource type="Resource" id="Resource_edge_tbo_to_tb4"]
+script = ExtResource("3_edge")
+from_room = &"tbo_crayon_cache"
+door = &"Exit_To_TB4"
+to_room = &"tb4_lid_path"
+to_entry = &"from_tbo"
+
+[sub_resource type="Resource" id="Resource_edge_bs1_to_h1"]
+script = ExtResource("3_edge")
+from_room = &"bs1_book_spine_steps"
+door = &"Exit_To_H1"
+to_room = &"h1_chess_rug_hub"
+to_entry = &"from_bookshelf"
+
+[sub_resource type="Resource" id="Resource_edge_bs1_to_bs2"]
+script = ExtResource("3_edge")
+from_room = &"bs1_book_spine_steps"
+door = &"Exit_To_BS2"
+to_room = &"bs2_diagonal_chapel"
+to_entry = &"from_bs1"
+
+[sub_resource type="Resource" id="Resource_edge_bs2_to_bs1"]
+script = ExtResource("3_edge")
+from_room = &"bs2_diagonal_chapel"
+door = &"Exit_To_BS1"
+to_room = &"bs1_book_spine_steps"
+to_entry = &"from_bs2"
+
+[sub_resource type="Resource" id="Resource_edge_bs2_to_bs3"]
+script = ExtResource("3_edge")
+from_room = &"bs2_diagonal_chapel"
+door = &"Exit_To_BS3"
+to_room = &"bs3_torn_page_bridge"
+to_entry = &"from_bs2"
+skill_lock_id = &"needs_rule_step"
+
+[sub_resource type="Resource" id="Resource_edge_bs3_to_bs2"]
+script = ExtResource("3_edge")
+from_room = &"bs3_torn_page_bridge"
+door = &"Exit_To_BS2"
+to_room = &"bs2_diagonal_chapel"
+to_entry = &"from_bs3"
+
+[sub_resource type="Resource" id="Resource_edge_bs3_to_bsb"]
+script = ExtResource("3_edge")
+from_room = &"bs3_torn_page_bridge"
+door = &"Exit_To_Bsb"
+to_room = &"bsb_bishop_oracle"
+to_entry = &"from_bs3"
+
+[sub_resource type="Resource" id="Resource_edge_bsb_to_bs3"]
+script = ExtResource("3_edge")
+from_room = &"bsb_bishop_oracle"
+door = &"Exit_To_BS3"
+to_room = &"bs3_torn_page_bridge"
+to_entry = &"from_bsb"
+
+[sub_resource type="Resource" id="Resource_edge_bsb_to_bs4"]
+script = ExtResource("3_edge")
+from_room = &"bsb_bishop_oracle"
+door = &"Exit_To_BS4"
+to_room = &"bs4_page_tear_shortcut"
+to_entry = &"from_bsb"
+lock_id = &"bsb_clear"
+
+[sub_resource type="Resource" id="Resource_edge_bs4_to_bsb"]
+script = ExtResource("3_edge")
+from_room = &"bs4_page_tear_shortcut"
+door = &"Exit_To_Bsb"
+to_room = &"bsb_bishop_oracle"
+to_entry = &"from_bs4"
+
+[sub_resource type="Resource" id="Resource_edge_bs4_to_h1"]
+script = ExtResource("3_edge")
+from_room = &"bs4_page_tear_shortcut"
+door = &"Exit_To_H1"
+to_room = &"h1_chess_rug_hub"
+to_entry = &"from_bookshelf"
+one_way = true
+skill_lock_id = &"needs_chalk_path"
+
+[sub_resource type="Resource" id="Resource_edge_bs4_to_bso"]
+script = ExtResource("3_edge")
+from_room = &"bs4_page_tear_shortcut"
+door = &"Exit_To_Bso"
+to_room = &"bso_margin_nook"
+to_entry = &"from_bs4"
+skill_lock_id = &"needs_chalk_path"
+
+[sub_resource type="Resource" id="Resource_edge_bso_to_bs4"]
+script = ExtResource("3_edge")
+from_room = &"bso_margin_nook"
+door = &"Exit_To_BS4"
+to_room = &"bs4_page_tear_shortcut"
+to_entry = &"from_bso"
+
+[sub_resource type="Resource" id="Resource_edge_bt1_to_h1"]
+script = ExtResource("3_edge")
+from_room = &"bt1_block_yard"
+door = &"Exit_To_H1"
+to_room = &"h1_chess_rug_hub"
+to_entry = &"from_block_tower"
+
+[sub_resource type="Resource" id="Resource_edge_bt1_to_bt2"]
+script = ExtResource("3_edge")
+from_room = &"bt1_block_yard"
+door = &"Exit_To_BT2"
+to_room = &"bt2_ruler_bridge"
+to_entry = &"from_bt1"
+skill_lock_id = &"needs_chalk_path"
+
+[sub_resource type="Resource" id="Resource_edge_bt2_to_bt1"]
+script = ExtResource("3_edge")
+from_room = &"bt2_ruler_bridge"
+door = &"Exit_To_BT1"
+to_room = &"bt1_block_yard"
+to_entry = &"from_bt2"
+
+[sub_resource type="Resource" id="Resource_edge_bt2_to_bt3"]
+script = ExtResource("3_edge")
+from_room = &"bt2_ruler_bridge"
+door = &"Exit_To_BT3"
+to_room = &"bt3_breakable_wall_test"
+to_entry = &"from_bt2"
+
+[sub_resource type="Resource" id="Resource_edge_bt3_to_bt2"]
+script = ExtResource("3_edge")
+from_room = &"bt3_breakable_wall_test"
+door = &"Exit_To_BT2"
+to_room = &"bt2_ruler_bridge"
+to_entry = &"from_bt3"
+
+[sub_resource type="Resource" id="Resource_edge_bt3_to_btb"]
+script = ExtResource("3_edge")
+from_room = &"bt3_breakable_wall_test"
+door = &"Exit_To_Btb"
+to_room = &"btb_rook_warden"
+to_entry = &"from_bt3"
+
+[sub_resource type="Resource" id="Resource_edge_btb_to_bt3"]
+script = ExtResource("3_edge")
+from_room = &"btb_rook_warden"
+door = &"Exit_To_BT3"
+to_room = &"bt3_breakable_wall_test"
+to_entry = &"from_btb"
+
+[sub_resource type="Resource" id="Resource_edge_btb_to_bt4"]
+script = ExtResource("3_edge")
+from_room = &"btb_rook_warden"
+door = &"Exit_To_BT4"
+to_room = &"bt4_ruler_gate_shortcut"
+to_entry = &"from_btb"
+lock_id = &"btb_clear"
+
+[sub_resource type="Resource" id="Resource_edge_bt4_to_btb"]
+script = ExtResource("3_edge")
+from_room = &"bt4_ruler_gate_shortcut"
+door = &"Exit_To_Btb"
+to_room = &"btb_rook_warden"
+to_entry = &"from_bt4"
+
+[sub_resource type="Resource" id="Resource_edge_bt4_to_h1"]
+script = ExtResource("3_edge")
+from_room = &"bt4_ruler_gate_shortcut"
+door = &"Exit_To_H1"
+to_room = &"h1_chess_rug_hub"
+to_entry = &"from_block_tower"
+one_way = true
+skill_lock_id = &"needs_eraser_guard"
+
+[sub_resource type="Resource" id="Resource_edge_bt4_to_bto"]
+script = ExtResource("3_edge")
+from_room = &"bt4_ruler_gate_shortcut"
+door = &"Exit_To_Bto"
+to_room = &"bto_rubble_nook"
+to_entry = &"from_bt4"
+skill_lock_id = &"needs_eraser_guard"
+
+[sub_resource type="Resource" id="Resource_edge_bto_to_bt4"]
+script = ExtResource("3_edge")
+from_room = &"bto_rubble_nook"
+door = &"Exit_To_BT4"
+to_room = &"bt4_ruler_gate_shortcut"
+to_entry = &"from_bto"
+
+[sub_resource type="Resource" id="Resource_edge_dh1_to_h1"]
+script = ExtResource("3_edge")
+from_room = &"dh1_foyer"
+door = &"Exit_To_H1"
+to_room = &"h1_chess_rug_hub"
+to_entry = &"from_dollhouse"
+
+[sub_resource type="Resource" id="Resource_edge_dh1_to_dh2"]
+script = ExtResource("3_edge")
+from_room = &"dh1_foyer"
+door = &"Exit_To_DH2"
+to_room = &"dh2_mixed_court"
+to_entry = &"from_dh1"
+
+[sub_resource type="Resource" id="Resource_edge_dh2_to_dh1"]
+script = ExtResource("3_edge")
+from_room = &"dh2_mixed_court"
+door = &"Exit_To_DH1"
+to_room = &"dh1_foyer"
+to_entry = &"from_dh2"
+
+[sub_resource type="Resource" id="Resource_edge_dh2_to_dh3"]
+script = ExtResource("3_edge")
+from_room = &"dh2_mixed_court"
+door = &"Exit_To_DH3"
+to_room = &"dh3_royal_stage"
+to_entry = &"from_dh2"
+
+[sub_resource type="Resource" id="Resource_edge_dh3_to_dh2"]
+script = ExtResource("3_edge")
+from_room = &"dh3_royal_stage"
+door = &"Exit_To_DH2"
+to_room = &"dh2_mixed_court"
+to_entry = &"from_dh3"
+
+[sub_resource type="Resource" id="Resource_edge_dh3_to_dhb"]
+script = ExtResource("3_edge")
+from_room = &"dh3_royal_stage"
+door = &"Exit_To_Dhb"
+to_room = &"dhb_queen_of_tricks"
+to_entry = &"from_dh3"
+
+[sub_resource type="Resource" id="Resource_edge_dhb_to_dh3"]
+script = ExtResource("3_edge")
+from_room = &"dhb_queen_of_tricks"
+door = &"Exit_To_DH3"
+to_room = &"dh3_royal_stage"
+to_entry = &"from_dhb"
+
+[sub_resource type="Resource" id="Resource_edge_dhb_to_dh4"]
+script = ExtResource("3_edge")
+from_room = &"dhb_queen_of_tricks"
+door = &"Exit_To_DH4"
+to_room = &"dh4_seal_stair"
+to_entry = &"from_dhb"
+lock_id = &"dhb_clear"
+
+[sub_resource type="Resource" id="Resource_edge_dh4_to_dhb"]
+script = ExtResource("3_edge")
+from_room = &"dh4_seal_stair"
+door = &"Exit_To_Dhb"
+to_room = &"dhb_queen_of_tricks"
+to_entry = &"from_dh4"
+
+[sub_resource type="Resource" id="Resource_edge_dh4_to_h1"]
+script = ExtResource("3_edge")
+from_room = &"dh4_seal_stair"
+door = &"Exit_To_H1"
+to_room = &"h1_chess_rug_hub"
+to_entry = &"from_dollhouse"
+one_way = true
+
+[sub_resource type="Resource" id="Resource_edge_ub1_to_h1"]
+script = ExtResource("3_edge")
+from_room = &"ub1_castle_gate"
+door = &"Exit_To_H1"
+to_room = &"h1_chess_rug_hub"
+to_entry = &"from_under_bed"
+
+[sub_resource type="Resource" id="Resource_edge_ub1_to_ub2"]
+script = ExtResource("3_edge")
+from_room = &"ub1_castle_gate"
+door = &"Exit_To_UB2"
+to_room = &"ub2_last_board"
+to_entry = &"from_ub1"
+
+[sub_resource type="Resource" id="Resource_edge_ub2_to_ub1"]
+script = ExtResource("3_edge")
+from_room = &"ub2_last_board"
+door = &"Exit_To_UB1"
+to_room = &"ub1_castle_gate"
+to_entry = &"from_ub2"
+
+[sub_resource type="Resource" id="Resource_edge_ub2_to_ub3"]
+script = ExtResource("3_edge")
+from_room = &"ub2_last_board"
+door = &"Exit_To_UB3"
+to_room = &"ub3_rule_engine"
+to_entry = &"from_ub2"
+lock_id = &"ub2_clear"
+
+[sub_resource type="Resource" id="Resource_edge_ub3_to_ub2"]
+script = ExtResource("3_edge")
+from_room = &"ub3_rule_engine"
+door = &"Exit_To_UB2"
+to_room = &"ub2_last_board"
+to_entry = &"from_ub3"
+
+[sub_resource type="Resource" id="Resource_edge_ub3_to_ubb"]
+script = ExtResource("3_edge")
+from_room = &"ub3_rule_engine"
+door = &"Exit_To_Ubb"
+to_room = &"ubb_black_king"
+to_entry = &"from_ub3"
+
+[sub_resource type="Resource" id="Resource_edge_ubb_to_ub3"]
+script = ExtResource("3_edge")
+from_room = &"ubb_black_king"
+door = &"Exit_To_UB3"
+to_room = &"ub3_rule_engine"
+to_entry = &"from_ubb"
+
+[sub_resource type="Resource" id="Resource_edge_ubb_to_e1"]
+script = ExtResource("3_edge")
+from_room = &"ubb_black_king"
+door = &"Exit_To_E1"
+to_room = &"e1_morning_desk"
+to_entry = &"from_ubb"
+one_way = true
+lock_id = &"ubb_clear"
+
+[sub_resource type="Resource" id="Resource_region_chess_rug"]
+script = ExtResource("5_region")
+district = &"chess_rug"
+slots = Rect2i(2, 4, 4, 3)
+
+[sub_resource type="Resource" id="Resource_region_toybox"]
+script = ExtResource("5_region")
+district = &"toybox"
+slots = Rect2i(6, 3, 2, 5)
+
+[sub_resource type="Resource" id="Resource_region_bookshelf"]
+script = ExtResource("5_region")
+district = &"bookshelf"
+slots = Rect2i(2, 0, 4, 3)
+
+[sub_resource type="Resource" id="Resource_region_block_tower"]
+script = ExtResource("5_region")
+district = &"block_tower"
+slots = Rect2i(0, 2, 2, 5)
+
+[sub_resource type="Resource" id="Resource_region_dollhouse"]
+script = ExtResource("5_region")
+district = &"dollhouse"
+slots = Rect2i(5, 8, 3, 2)
+
+[sub_resource type="Resource" id="Resource_region_under_bed"]
+script = ExtResource("5_region")
+district = &"under_bed"
+slots = Rect2i(1, 7, 4, 3)
+
+[sub_resource type="Resource" id="Resource_region_desk"]
+script = ExtResource("5_region")
+district = &"desk"
+slots = Rect2i(6, 0, 2, 2)
+
+[sub_resource type="Resource" id="Resource_region_window"]
+script = ExtResource("5_region")
+district = &"window"
+slots = Rect2i(0, 0, 2, 2)
 
 [resource]
-script = ExtResource("1")
-zone_scene_by_id = Dictionary[StringName, PackedScene]({
-&"b1_black_pawn_captain": ExtResource("7_b1"),
-&"h1_chess_rug_hub": ExtResource("8_h1"),
-&"kingdom": ExtResource("2"),
-&"t1_white_kings_fall": ExtResource("3_t1"),
-&"t2_fallen_sword_tile": ExtResource("4_t2"),
-&"t3_first_pawn_clash": ExtResource("5_t3"),
-&"t4_broken_rule_yard": ExtResource("6_t4")
-})
+script = ExtResource("1_graph")
+start_room_id = &"t1_white_kings_fall"
+rooms = Array[ExtResource("2_room")]([SubResource("Resource_room_t1"), SubResource("Resource_room_t2"), SubResource("Resource_room_t3"), SubResource("Resource_room_t4"), SubResource("Resource_room_b1"), SubResource("Resource_room_h1"), SubResource("Resource_room_tb1"), SubResource("Resource_room_tb2"), SubResource("Resource_room_tb3"), SubResource("Resource_room_tbb"), SubResource("Resource_room_tb4"), SubResource("Resource_room_tbo"), SubResource("Resource_room_bs1"), SubResource("Resource_room_bs2"), SubResource("Resource_room_bs3"), SubResource("Resource_room_bsb"), SubResource("Resource_room_bs4"), SubResource("Resource_room_bso"), SubResource("Resource_room_bt1"), SubResource("Resource_room_bt2"), SubResource("Resource_room_bt3"), SubResource("Resource_room_btb"), SubResource("Resource_room_bt4"), SubResource("Resource_room_bto"), SubResource("Resource_room_dh1"), SubResource("Resource_room_dh2"), SubResource("Resource_room_dh3"), SubResource("Resource_room_dhb"), SubResource("Resource_room_dh4"), SubResource("Resource_room_ub1"), SubResource("Resource_room_ub2"), SubResource("Resource_room_ub3"), SubResource("Resource_room_ubb"), SubResource("Resource_room_e1")])
+edges = Array[ExtResource("3_edge")]([SubResource("Resource_edge_t1_to_t2"), SubResource("Resource_edge_t2_to_t1"), SubResource("Resource_edge_t2_to_t3"), SubResource("Resource_edge_t3_to_t2"), SubResource("Resource_edge_t3_to_t4"), SubResource("Resource_edge_t4_to_t3"), SubResource("Resource_edge_t4_to_b1"), SubResource("Resource_edge_b1_to_t4"), SubResource("Resource_edge_b1_to_h1"), SubResource("Resource_edge_h1_to_b1"), SubResource("Resource_edge_h1_to_tb1"), SubResource("Resource_edge_h1_to_bs1"), SubResource("Resource_edge_h1_to_bt1"), SubResource("Resource_edge_h1_to_dh1"), SubResource("Resource_edge_h1_to_ub1"), SubResource("Resource_edge_tb1_to_h1"), SubResource("Resource_edge_tb1_to_tb2"), SubResource("Resource_edge_tb2_to_tb1"), SubResource("Resource_edge_tb2_to_tb3"), SubResource("Resource_edge_tb3_to_tb2"), SubResource("Resource_edge_tb3_to_tbb"), SubResource("Resource_edge_tbb_to_tb3"), SubResource("Resource_edge_tbb_to_tb4"), SubResource("Resource_edge_tb4_to_tbb"), SubResource("Resource_edge_tb4_to_h1"), SubResource("Resource_edge_tb4_to_tbo"), SubResource("Resource_edge_tbo_to_tb4"), SubResource("Resource_edge_bs1_to_h1"), SubResource("Resource_edge_bs1_to_bs2"), SubResource("Resource_edge_bs2_to_bs1"), SubResource("Resource_edge_bs2_to_bs3"), SubResource("Resource_edge_bs3_to_bs2"), SubResource("Resource_edge_bs3_to_bsb"), SubResource("Resource_edge_bsb_to_bs3"), SubResource("Resource_edge_bsb_to_bs4"), SubResource("Resource_edge_bs4_to_bsb"), SubResource("Resource_edge_bs4_to_h1"), SubResource("Resource_edge_bs4_to_bso"), SubResource("Resource_edge_bso_to_bs4"), SubResource("Resource_edge_bt1_to_h1"), SubResource("Resource_edge_bt1_to_bt2"), SubResource("Resource_edge_bt2_to_bt1"), SubResource("Resource_edge_bt2_to_bt3"), SubResource("Resource_edge_bt3_to_bt2"), SubResource("Resource_edge_bt3_to_btb"), SubResource("Resource_edge_btb_to_bt3"), SubResource("Resource_edge_btb_to_bt4"), SubResource("Resource_edge_bt4_to_btb"), SubResource("Resource_edge_bt4_to_h1"), SubResource("Resource_edge_bt4_to_bto"), SubResource("Resource_edge_bto_to_bt4"), SubResource("Resource_edge_dh1_to_h1"), SubResource("Resource_edge_dh1_to_dh2"), SubResource("Resource_edge_dh2_to_dh1"), SubResource("Resource_edge_dh2_to_dh3"), SubResource("Resource_edge_dh3_to_dh2"), SubResource("Resource_edge_dh3_to_dhb"), SubResource("Resource_edge_dhb_to_dh3"), SubResource("Resource_edge_dhb_to_dh4"), SubResource("Resource_edge_dh4_to_dhb"), SubResource("Resource_edge_dh4_to_h1"), SubResource("Resource_edge_ub1_to_h1"), SubResource("Resource_edge_ub1_to_ub2"), SubResource("Resource_edge_ub2_to_ub1"), SubResource("Resource_edge_ub2_to_ub3"), SubResource("Resource_edge_ub3_to_ub2"), SubResource("Resource_edge_ub3_to_ubb"), SubResource("Resource_edge_ubb_to_ub3"), SubResource("Resource_edge_ubb_to_e1")])
+locks = Array[ExtResource("4_lock")]([SubResource("Resource_lock_t3_clear"), SubResource("Resource_lock_t4_clear"), SubResource("Resource_lock_b1_clear"), SubResource("Resource_lock_tbb_clear"), SubResource("Resource_lock_bsb_clear"), SubResource("Resource_lock_btb_clear"), SubResource("Resource_lock_dhb_clear"), SubResource("Resource_lock_ub2_clear"), SubResource("Resource_lock_ubb_clear"), SubResource("Resource_lock_after_black_pawn_captain"), SubResource("Resource_lock_after_knight_captain"), SubResource("Resource_lock_after_bishop_oracle"), SubResource("Resource_lock_after_rook_warden"), SubResource("Resource_lock_after_queen_of_tricks"), SubResource("Resource_lock_needs_rule_step"), SubResource("Resource_lock_needs_chalk_path"), SubResource("Resource_lock_needs_eraser_guard")])
+regions = Array[ExtResource("5_region")]([SubResource("Resource_region_chess_rug"), SubResource("Resource_region_toybox"), SubResource("Resource_region_bookshelf"), SubResource("Resource_region_block_tower"), SubResource("Resource_region_dollhouse"), SubResource("Resource_region_under_bed"), SubResource("Resource_region_desk"), SubResource("Resource_region_window")])

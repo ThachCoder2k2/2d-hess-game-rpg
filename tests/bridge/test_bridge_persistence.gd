@@ -42,6 +42,7 @@ func _run() -> void:
 	save_service = Support.install_isolated_save_service(self, SUITE_NAME)
 	save_service.autosaved.connect(func(_slot: int, reason: StringName) -> void: saved_reasons.append(reason))
 	var main := await Support.boot_main(self)
+	_add_the_kingdom_fixture_to(main.get("world_graph"))
 	(main.get("router") as EventRouter).on(Events.PLAYER_UNLOCK, func(_event: Dictionary) -> void: unlock_events_seen += 1)
 
 	await _check_player_unlock(main)
@@ -203,14 +204,28 @@ func _make_t4_spear_persistent(main: Node, persistent: bool) -> void:
 	if original_t4_scene == null:
 		original_t4_scene = graph.get_zone_scene(T4)
 	if not persistent:
-		graph.zone_scene_by_id[T4] = original_t4_scene
+		graph.find_room(T4).scene = original_t4_scene
 		return
 	var room := original_t4_scene.instantiate()
 	(room.get_node("PencilSpearPickup") as PickupSpawnPoint).persistent = true
 	var patched := PackedScene.new()
 	_expect(patched.pack(room) == OK, "setup: a copy of T4 with a persistent spear packs")
 	room.free()
-	graph.zone_scene_by_id[T4] = patched
+	graph.find_room(T4).scene = patched
+
+
+## The 72x40 kingdom is a test fixture since M5 (plan D-02) and no room of the game leads into it, so a suite that
+## wants the shell to travel there adds it to the loaded world graph as one more room for the length of the process
+## (the suite's own process: the runner starts every suite in a fresh Godot). The graph file is never touched.
+func _add_the_kingdom_fixture_to(graph: WorldGraph) -> void:
+	if graph.has_zone(KINGDOM):
+		return
+	var paths := TestPaths.new(self)
+	var fixture_room := WorldRoom.new()
+	fixture_room.room_id = KINGDOM
+	fixture_room.scene = paths.load_scene(paths.kingdom_scene())
+	graph.rooms.append(fixture_room)
+	edited_world_graph = graph
 
 
 ## Stands the enemy on the pickup's cell and lets its AI take it (EnemyAISystem._collect_local_item, the one

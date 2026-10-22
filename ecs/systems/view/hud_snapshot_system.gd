@@ -4,8 +4,8 @@ extends EcsSystem
 ## Publishes the simulation for the HUD and the board overlay: rebuilds world.hud_snapshot from
 ## the components at the end of every tick, so presentation reads a data object and never a
 ## component (docs/game-base-plan.md 13.4 step 17, 14.3, D-38).
-## Reads: PLAYER_TAG, HEALTH, GRID_POS, FACING, PLAYER_COMBAT, ENEMY_AI, the room's RoomObjectiveState and the
-## world's attack token.
+## Reads: PLAYER_TAG, HEALTH, GRID_POS, FACING, PLAYER_COMBAT, ENEMY_AI, the room's RoomObjectiveState, the
+## world's attack token and the grid's door cells (shut or open by DoorRules).
 ## Writes: world.hud_snapshot only (in place; the snapshot object never changes identity).
 ## Emits: nothing. It decides nothing: every number it copies was decided by another system.
 ##
@@ -29,6 +29,7 @@ static func build(target_world: EcsWorld) -> void:
 	_fill_hero(target_world, snapshot)
 	_fill_room(target_world, snapshot)
 	_fill_enemies(target_world, snapshot)
+	_fill_doors(target_world, snapshot)
 
 
 static func _fill_hero(target_world: EcsWorld, snapshot: HudSnapshot) -> void:
@@ -69,6 +70,24 @@ static func _fill_room(target_world: EcsWorld, snapshot: HudSnapshot) -> void:
 		var state: RoomObjectiveState = target_world.get_component(room_entity, RoomObjectiveState.KEY)
 		snapshot.room_enemies_total = state.enemies_total
 		snapshot.room_enemies_remaining = state.enemies_remaining
+
+
+## Keeps one DoorBrief per door cell of the room, updated in place: the board draws a door shut or open from it. A room
+## with no door allocates nothing.
+static func _fill_doors(target_world: EcsWorld, snapshot: HudSnapshot) -> void:
+	var door_by_cell: Dictionary = target_world.grid.exit_by_cell
+	var briefs := snapshot.door_brief_by_cell
+	for cell: Vector2i in briefs.keys():
+		if not door_by_cell.has(cell):
+			briefs.erase(cell)
+	for cell: Vector2i in door_by_cell:
+		var door: Dictionary = door_by_cell[cell]
+		var brief: HudSnapshot.DoorBrief = briefs.get(cell)
+		if brief == null:
+			brief = HudSnapshot.DoorBrief.new()
+			briefs[cell] = brief
+		brief.is_shut = DoorRules.is_shut(target_world, door)
+		brief.ends_run = bool(door.get("ends_run", false))
 
 
 ## Keeps one EnemyBrief per enemy: updated in place, created for a new enemy, dropped for one that

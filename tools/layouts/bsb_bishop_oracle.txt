@@ -1,0 +1,40 @@
+; bsb_bishop_oracle: Act 3, Boss (18x9 arena): the Bishop Oracle, a STAND-IN with the Bishop Zoner's moves and a boss's Courage, on one cell, and one Recruit.
+; Defeating it sets the flag boss.bishop_oracle, which opens the Block Tower door of the hub. The strip of gap down the middle is the tear of
+; phase 3; the row through it is whole, so both islands are one board for now.
+; A STUB made at M5 step 2 by tools/build_room.gd from this layout (docs/game-base-plan.md 15 M5). The scene is the truth once it exists;
+; this file is its source until somebody edits the scene in the editor. Read the legend with: tools/build_room.gd -- --legend
+
+[room]
+id = bsb_bishop_oracle
+size = 18x9
+act = 3
+district = bookshelf
+archetype = islands
+recipe = boss
+status = stub
+time_of_night = night
+threat = 7
+intensity = 8
+checkpoint_on_entry = true
+tileset = greybox
+name = The Bishop Oracle
+start = The floor tears into islands. The Oracle calls your line "not real".
+
+[grid]
+##################
+#.......oo.......#
+#.......oo.......#
+#.......oo...O...#
+#XA............BY#
+#.......oo.......#
+#...R...oo.......#
+#.......oo.......#
+##################
+
+[objects]
+A = entry id=from_bs3
+B = entry id=from_bs4
+X = exit to=bs3_torn_page_bridge:from_bsb
+Y = exit to=bs4_page_tear_shortcut:from_bsb clear locked="The Oracle still reads the board. Silence it first."
+O = enemy def=bishop_oracle
+R = enemy def=pawn_recruit

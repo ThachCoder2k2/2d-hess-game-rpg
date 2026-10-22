@@ -29,6 +29,7 @@ const PLANNED_SYSTEM_ORDER: Array[String] = [
 	"react/TriggerSystem",
 	"react/ObjectiveSystem",
 	"progress/BossPhaseSystem",
+	"progress/BossDefeatSystem",
 	"progress/CheckpointSystem",
 	"progress/ProgressionSystem",
 	"progress/StoryBeatSystem",

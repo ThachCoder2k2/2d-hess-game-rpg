@@ -1,0 +1,39 @@
+; dhb_queen_of_tricks: Act 5, Boss (18x9 arena): the Queen of Tricks, a STAND-IN (the king's one-cell step, the bishop's lane) with a boss's Courage, on one cell, and one
+; Recruit. Defeating her sets the flag boss.queen_of_tricks, which opens the Under-Bed door of the hub.
+; A STUB made at M5 step 2 by tools/build_room.gd from this layout (docs/game-base-plan.md 15 M5). The scene is the truth once it exists;
+; this file is its source until somebody edits the scene in the editor. Read the legend with: tools/build_room.gd -- --legend
+
+[room]
+id = dhb_queen_of_tricks
+size = 18x9
+act = 5
+district = dollhouse
+archetype = arena
+recipe = boss
+status = stub
+time_of_night = small_hours
+threat = 8
+intensity = 9
+checkpoint_on_entry = true
+tileset = greybox
+name = The Queen of Tricks
+start = The Queen smiles. Every rule you learned is hers now.
+
+[grid]
+##################
+#................#
+#.#............#.#
+#........Q.......#
+#XA............BY#
+#................#
+#.#.........R..#.#
+#................#
+##################
+
+[objects]
+A = entry id=from_dh3
+B = entry id=from_dh4
+X = exit to=dh3_royal_stage:from_dhb
+Y = exit to=dh4_seal_stair:from_dhb clear locked="The Queen still holds the seal. Break her game."
+Q = enemy def=queen_of_tricks
+R = enemy def=pawn_recruit

@@ -92,20 +92,21 @@ content/                 THE OWNER'S FOLDER: data, art, audio, words. Zero .gd f
   ui/theme/theme.tres    UiTheme: the project theme; it names the four font files the owner supplies (assets/fonts/)
   rules/<id>/page.tres   Book of House Rules pages; rule_book.tres lists them
   skills/<id>/           the Wooden Sword and Pencil Thrust AttackProfile .tres and the sword icon
-  tilesets/<kit>/        tileset.tres + tilemap.tscn (kingdom, playground); tile_map_data is binary
-  world/world.tres       WorldGraph: zone id -> room scene
+  tilesets/<kit>/        tileset.tres + tilemap.tscn (kingdom, playground); tile_map_data is binary. `greybox/` is the
+                         kit tools/build_room.gd paints with: one flat tile for each kind of cell (CellKinds)
+  world/world.tres       WorldGraph: the rooms with their map slots, the doors between them, the locks, the districts' regions
 
 schema/                  THE SHAPE OF CONTENT: one Resource class per file
   entity/                EnemyDefinition, PlayerDefinition, VisualDefinition, MovementConfig, DecisionConfig, EnemyIntent
   attacks/               AttackPattern, AttackProfile, EnemyWeapon
-  world/                 WorldGraph, RoomObjective, RuleBook, RuleEntry
+  world/                 WorldGraph (+ WorldRoom, WorldEdge, WorldLock, WorldRegion, FlagId), RoomObjective, RuleBook, RuleEntry
   feel/                  DifficultyProfile, PieceSizeTable, PieceSize
   story/                 CreditsDefinition, CreditsSection
   ui/                    UiTheme (a Theme that names the owner's font files)
   settings/              GameSettings (the player's choices, ONE object) and SettingDefinition (one row of its table)
 
 ecs/                     THE SIMULATION: rules only; no art, prose or tuning numbers
-  core/                  EcsWorld, EcsGrid, CellKinds, EcsSystem, WorldFlags, InputSnapshot, HudSnapshot, PlayerSnapshot
+  core/                  EcsWorld, EcsGrid, CellKinds, DoorRules, EcsSystem, WorldFlags, InputSnapshot, HudSnapshot, PlayerSnapshot
   components/            ecs_components.gd (frozen); tuning.gd (Tuning), room_objective_state.gd, room_checkpoint.gd,
                          and every new component in its own file
   systems/<folder>/      command/CommandSystem  input/PlayerInputSystem  decide/EnemyAISystem
@@ -119,8 +120,8 @@ authoring/               THINGS YOU DRAG INTO A SCENE: Inspector data + apply();
   ecs_boot_options.gd    everything boot() needs besides the world, as named fields (EcsBootOptions)
   ecs_actor_factory.gd   builds actor entities from definitions (EcsActorFactory)
   entity_components/     EntityComponent nodes (Combat, Health, Input, Movement, AI, Weapon)
-  markers/               zone entry/exit, gate, player unlock, pickup spawn, blocker (+ their scenes)
-  room_encounter.gd/.tscn  the room scene root (zone id, objective, `checkpoint_on_entry`)
+  markers/               zone entry/exit, gate, player unlock, pickup spawn, blocker, traversal gap, state variant (+ their scenes)
+  room_encounter.gd/.tscn  the room scene root (zone id, objective, `checkpoint_on_entry`, and the room's meta)
 
 presentation/            HOW THE WORLD IS SHOWN: reads events, never decides
   views/                 actor_view.gd, weapon_pickup + pickup_visual, and actors/: actor_view_base.tscn
@@ -305,7 +306,7 @@ exactly once.
 | 6 | `HealthSystem` (`resolve`, `resolve/`) | `damage_events`, `heal_events` | `HEALTH`; defeat (disables player control, or unregisters an enemy and frees the token); emits `damaged`, `defeated`, `healed` |
 | 7 | `ObjectiveSystem` (`react`, `react/`) | `ENEMY_AI`, `PLAYER_TAG`, `HEALTH`, the room's `RoomObjectiveState` (and its `RoomObjective`) | `RoomObjectiveState` (the counts, `cleared`, `failed`); emits `room_cleared` |
 | 8 | `CheckpointSystem` (`progress`, `progress/`) | the room's `RoomCheckpoint` and `RoomObjectiveState`, `PLAYER_TAG`, `HEALTH` | `RoomCheckpoint` (what it has said); `heal_events` (the checkpoint refill); emits `checkpoint_set`, `respawn_requested` |
-| 9 | `HudSnapshotSystem` (`view`, `view/`) | the hero, the room's counts, the enemies | `world.hud_snapshot`, in place |
+| 9 | `HudSnapshotSystem` (`view`, `view/`) | the hero, the room's counts, the enemies, the doors | `world.hud_snapshot`, in place |
 | 10 | `ViewSyncSystem` (`view`, `view/`) | almost everything, read-only; `view_commands`. Runs while the world is frozen | the **only** node writes: position, depth (`z_index = 2 + row`), tint, aura, facing arrow, weapon, health pips, `AnimationTree` conditions and `travel()` |
 
 Enemy AI is a utility scorer (`EnemyIntent`: attack, move, pickup, turn, wait) driving a
@@ -355,7 +356,7 @@ behaviour and never a field to the hot file. Each is documented where it is decl
 | `flags` | `WorldFlags`: switches (bool) and counters (int) the story and progression ask about; `to_dictionary()` for the save | the `set_flag` command, or a system that owns a counter |
 | `tuning` | `Tuning`: `telegraph_time_scale`, `enemy_pace_scale`, `input_buffer_window`, `extra_courage`; neutral by default, nothing reads them yet | the `tuning_set` command |
 | `input_snapshot` | `InputSnapshot`: per action pressed, just pressed, just released, held time, press timestamp (`InputPoller` in the shell fills it once per frame; `PlayerInputSystem` reads only it) | the shell |
-| `hud_snapshot` | `HudSnapshot`: the hero's courage, cell, facing, sword and skill cooldown, the attack token owner, and one `EnemyBrief` per enemy (cell, committed goal, telegraph progress); rebuilt in place at the end of every tick, plus a revision counter | `HudSnapshotSystem` (the shell also calls its `build()` once after booting a room) |
+| `hud_snapshot` | `HudSnapshot`: the hero's courage, cell, facing, sword and skill cooldown, the attack token owner, one `EnemyBrief` per enemy (cell, committed goal, telegraph progress) and one `DoorBrief` per door cell (shut or open by `DoorRules`, the rule `MovementSystem` also uses when the hero lands on a door, and whether it ends the run); rebuilt in place at the end of every tick, plus a revision counter | `HudSnapshotSystem` (the shell also calls its `build()` once after booting a room) |
 | `commands`, `command_handler_by_type` | the requests from presentation, and the Callable that applies each type | `push_command()`; `register_command_handler()` |
 | `view_commands` | cosmetic instructions for the views (`Commands.play_state`) | `push_view_command()`; consumed by `ViewSyncSystem` |
 | `heal_events` | heal requests `{target, source, amount}` | `Events.emit_heal()`; consumed by `HealthSystem` |
@@ -493,8 +494,8 @@ several times slower still does.
 | `EcsBoot` | `authoring/ecs_boot.gd` | static `boot(world, options)`, where `options` is an `EcsBootOptions` (`authoring/ecs_boot_options.gd`: `player_view`, `room_root`, `fallback_player_cell`, `skipped_pickup_names`, `opened_gate_ids`, `room_already_cleared`, `with_room_rules`, `entry_id`, `entered_by_door`, `player_snapshot`, `restore_player_facing`; a new need is a new field, never a new argument; `EcsBootOptions.for_scene(hero, room)` is the common case): sizes the grid from `RoomEncounter.board_size`, bakes the tile kinds (`apply_tile_kinds`), `ZoneExitMarker`, `PlayerUnlockMarker` and `GateMarker`; spawns the player from the view's `PlayerDefinition` (class defaults when it names none) and applies its `EntityComponent` nodes, then every `ActorView` child of the room that has a `definition` (none, and their puppets removed, when the run already cleared the room), then pickups, then (with `with_room_rules`) the room's own entity, last, so every other entity keeps its number. Returns the cast dictionary (`player`, `enemies`, `view_by_entity`, `piece_name_by_entity`, pickup maps, `persistent_pickup_by_entity`, `room`). |
 | `EcsActorFactory` | `authoring/ecs_actor_factory.gd` | `spawn_player` (bare hero, kept), `spawn_player_from_definition` (what `EcsBoot` calls), `spawn_enemy`, `spawn_pickup`: assemble an entity's components from the `.tres` data and apply the difficulty multipliers. |
 | `ContentDb` | `shell/content/content_db.gd` (+ `content_kind.gd`) | the content registry, a static class (no autoload, so it works inside a suite's `_init()`). Ids are folder names under `content/<kind>/`, listed lazily once per kind. `ids(kind)`, `fetch(kind, id)`, `all(kind)`, `player()`, `world()`, `piece_sizes()`, `validate()`, `validate_cross_refs()`. Ten kinds registered (one line each in `_ensure_kinds()`). Only the shell may name it; tests and tools call the two validators, nothing calls them at game start. |
-| `RoomEncounter` | `authoring/room_encounter.gd` | a room scene root: `board_size`, `zone_id`, prose, a `RoomObjective`, and `checkpoint_on_entry` (true on the hub and the boss room: coming in through a door is a checkpoint, D-16). It carries data only. |
-| Markers | `authoring/markers/` | `GridMarker` base (drag to snap, writes `grid_cell`). `ZoneEntryMarker`/`ZoneExitMarker` (doors: a door is a FLOOR cell one step inside the room's ring of wall, like the east doors, and its entry marker is the cell next to it, one further in, so the pawn arrives beside the door and a step back through it is the way home; a door on the ring itself is a solid cell nobody can stand on, and `tests/content/test_room_doors_reachable.gd` fails it), `GateMarker`, `PlayerUnlockMarker`, `PickupSpawnPoint` (`persistent`: a reward taken once for the whole run; off, it is a floor weapon of its room and is back whenever the room starts). `BlockerMarker` is a legacy marker `EcsBoot` no longer bakes; walls are painted tiles. |
+| `RoomEncounter` | `authoring/room_encounter.gd` | a room scene root: `board_size`, `zone_id`, prose, a `RoomObjective`, and `checkpoint_on_entry` (true on the hub and the boss room: coming in through a door is a checkpoint, D-16). Since M5 it also carries the room's META (docs/game-base-plan.md 7.5): `act` (1 to 6, 7 = the Ending), `district`, `layout_archetype`, `recipe` (Rest, Teach, Test, Twist, Boss, Shortcut...), `content_status` (STUB, GREYBOX, DRESSED, FINAL) and `time_of_night` (inert data, D-31). Every field has a doc and an editor configuration warning; `configuration_problems()` is the same list for tests and tools (a scene under `content/rooms/` is a shipped room and is also held to an id equal to its folder, a start line, an act, a district and an archetype). It carries data only. |
+| Markers | `authoring/markers/` | `GridMarker` base (drag to snap, writes `grid_cell`). `ZoneEntryMarker`/`ZoneExitMarker` (doors: a door is a FLOOR cell one step inside the room's ring of wall, like the east doors, and its entry marker is the cell next to it, one further in, so the pawn arrives beside the door and a step back through it is the way home; a door on the ring itself is a solid cell nobody can stand on, and `tests/content/test_room_doors_reachable.gd` fails it), `GateMarker`, `PlayerUnlockMarker`, `PickupSpawnPoint` (`persistent`: a reward taken once for the whole run; off, it is a floor weapon of its room and is back whenever the room starts). `BlockerMarker` is a legacy marker `EcsBoot` no longer bakes; walls are painted tiles. A `GridMarker` follows its room: with a `RoomEncounter` parent it snaps to that room's `board_size` and the origin that centres it (an 18x9 arena starts at x 32, not 64), and `PlayerUnlockMarker` bakes from `grid_cell` like a pickup. M5 adds two DATA-ONLY schemas. `TraversalGapMarker` (`grid_cell`, `length` 1 to 3, `direction`, `verb` chalk_path or rule_step, `free_when_calm`): a mandatory crossing over gap cells; `EcsBoot` copies it to each cell it covers in `EcsGrid.marker_by_cell` under `TraversalGapMarker.KIND`, and the verbs that cross it arrive with M7 and M10. `StateVariantMarker` (`variant_id`, `requires_flags`, `forbids_flags`): a prop, its children, that shows only in a state; M6 bakes it into a `FlagVisible` component. Both warn in the Inspector and answer `configuration_problems()`. |
 | Terrain | `RoomArt/TileMap` | a tile's custom data says what its cell is: `kind` (floor, wall, gap, leapable_block, chalk, corruption) when filled in, else `solid = true` is a wall and anything else floor. A cell that cannot be walked on is a blocked cell. Paint = collision. |
 
 Enemies are real scene children: instance an actor scene from `presentation/views/actors/`
@@ -513,7 +514,7 @@ its `enemy.tres`, named for the `EnemyDefinition` export they fill (`movement.tr
 whether the sword starts unlocked, and the two `AttackProfile` `.tres` files
 `content/skills/wooden_sword/` and `content/skills/pencil_thrust/`).
 `RuleBook`/`RuleEntry` (the Book of House Rules, `content/rules/`), `RoomObjective` and
-`WorldGraph` (`content/world/world.tres`: zone id -> room scene) are the other schemas. Shared
+`WorldGraph` (`content/world/world.tres`; see "The world graph and the room builder" below) are the other schemas. Shared
 Resources are treated as immutable at runtime; instances `duplicate(true)` before mutating (a
 picked-up weapon).
 
@@ -558,7 +559,7 @@ property equals the folder and no two entries claim one id, and every property a
 entries: a Book page's `piece_id` is an enemy, an enemy's difficulty, default weapon and weapon preferences are
 registered, the player's two attacks are skills, **every actor's `piece_type` is a row of the size table and its body
 picture fits that row (a tight picture inside the box, or the 32 x 32 canvas of the art spec with its drawn pixels inside the box)**, the world graph and the room folders agree, every door leads to a zone and an
-entry marker that exist, every room's `zone_id` equals its folder and every enemy parked in a room is a registered
+entry marker that exist (`WorldCheck` does the world part: see below), every room's `zone_id` equals its folder and every enemy parked in a room is a registered
 enemy. `tests/content/test_validate_all.gd` runs both over the real tree; `test_content_db_detects_problems` runs them
 over a deliberately broken tree under `user://` and requires each defect to be named. A new kind is one
 `_add_kind` line, a `validate()` on its class and a minimum count in `test_validate_all`.
@@ -689,8 +690,9 @@ tree (13.2) lists a `save` handler under `presentation/bridges/`; 13.1 forbids p
   the pause menu's Restart Room `request_respawn()`, it raises `respawn_requested` and, once per frame, after a trip under way and
   after AppRoot's fade, `GameRoot.respawn()` starts the room again. Nothing reloads the scene
   (`test_no_scene_reload`) and nothing calls `change_scene` (`test_app_root_is_main_scene`).
-- `PrototypeBoard` (`presentation/board/`) — the combat overlay: telegraph cells, hit flashes,
-  F3 debug paths. The one place `_draw()` is allowed for gameplay overlays. It reads the board
+- `PrototypeBoard` (`presentation/board/`) — the board overlay: the door marks (a shut door is a dark frame crossed out,
+  an open door two nested gold frames, the door that ends the run has a diamond; they come from `HudSnapshot.door_brief_by_cell`
+  and the board redraws when one opens), telegraph cells, hit flashes, F3 debug paths. The one place `_draw()` is allowed for gameplay overlays. It reads the board
   geometry from the grid (duck-typed) and everything else from `world.hud_snapshot`.
 - `GameHud` (`presentation/ui/hud/`, a `CanvasLayer`) — the layer that holds the widgets and routes to them (see "The HUD:
   widgets in two strips"). It decides nothing; every word it shows is a text key resolved by `TextService` and kept in the
@@ -936,6 +938,91 @@ What the rules of D-16 and D-17 are made of (M3b step 3). The simulation judges,
 | Room-local, resets with the room | the room's scene | floor weapons (a `PickupSpawnPoint` that is not `persistent`), what an enemy holds, every timer, telegraph and cell effect |
 | Believe | `CheckpointSystem._refill_believe` | a named seam that refills nothing until M10 adds the component |
 
+## The world graph and the room builder
+
+What the world is made of and how a room gets made (M5 step 1; plan 7.1, 7.5). The scenes stay the truth about a room's
+doors, entries and enemies; `content/world/world.tres` is the truth about how rooms join and where each sits on the map.
+
+| Thing | Where it lives | Rule |
+|---|---|---|
+| The world as data | `content/world/world.tres` (`WorldGraph`, `schema/world/`) | `rooms` (`WorldRoom`: id, scene, `map_slot` on the 8 x 10 slot grid: the slot has no other home), `edges` (`WorldEdge`: the door `from_room/door` leads to `to_room/to_entry`, `one_way`, an optional `lock_id`), `locks` (`WorldLock`: `room_clear`, `flag`, `unlock` or `counter_at_least`, and a `message_key`), `regions` (`WorldRegion`: the slots a district may use). `start_room_id` is T1. The runtime's questions stay `has_zone()` and `get_zone_scene()`. |
+| Flag ids | `schema/world/flag_id.gd` (`FlagId`) | one spelling for `boss.knight_captain`-style ids, used by a flag lock and by a `StateVariantMarker`, so a typo is caught where it is written |
+| The 72x40 kingdom | `tests/fixtures/the_kingdom.tscn` | NOT in the graph (D-02). Tests load it by path (`TestPaths.shipped_rooms_and_kingdom()` for the suites that walk every board); no door leads into it |
+| Checks that need both the graph and the scenes | `shell/content/world_check.gd` (`WorldCheck`), fed by `RoomScan` (`shell/content/room_scan.gd`: one read of a scene) | `graph`, `folders`, `scenes`, `entries`, `exits_resolve`, `edges_match_doors`, `return_doors` (every way in has a way back unless the edge is `one_way`), `no_orphan_rooms`, `locks` (every lock has a message key with an English row; a door that waits for a clear is held by a `room_clear` lock and a door that waits for a flag by a `flag` lock on the same flag and the same line), `progression` (the whole world walked in the order the bosses fall: see below), `map`, `room_meta`. One implementation for `ContentDb.validate_cross_refs()`, `tests/content/test_world_graph.gd` (which also breaks a copy of the graph on purpose to prove each check can fail) and `tools/print_world_map.gd` |
+| Room meta | `RoomEncounter` (`act`, `district`, `layout_archetype`, `recipe`, `content_status`, `time_of_night`, `checkpoint_on_entry`, `board_size`, and since step 3 the encounter meta `objective_kind`, `threat_budget`, `threat_shapes`, `intro`, `intensity`) | every field has a doc and a configuration warning; `configuration_problems()` is the same list for the editor, the tests and the tools |
+| The map for QA | `tools/print_world_map.gd` (the drawing is `tools/world_map_printer.gd`) | an ASCII map of every slot, room, door and lock, ending in a line of what `WorldCheck` finds wrong |
+| The room builder | `tools/build_room.gd` (the steps are `tools/room_builder.gd`, `room_layout.gd`, `room_scene_writer.gd`, `built_rooms_manifest.gd`) | an ASCII layout in `tools/layouts/<room_id>.txt` becomes `content/rooms/<id>/room.tscn`. `--legend` prints the format (it is the header of `room_layout.gd`), `--check` validates every layout, `--layout=` and `--out=` build a scratch copy |
+| The greybox tile kit | `content/tilesets/greybox/` | one flat tile for every cell kind (`CellKinds`): a room the builder makes is painted from these INDIVIDUAL tiles, never from a picture of a room (owner decision 2026-10-12) |
+
+How the builder keeps its promises:
+
+- **Text, with uids.** The scene is written as `.tscn` text (the header uid is a hash of the room id, so a rebuild keeps it, and every `ext_resource` has its
+  `uid=`), then `tools/stamp_uids.gd` runs. The tiles are the one thing that is not text, and nobody hand-edits that blob: they are painted by
+  `tools/cell_kind_painter.gd`, which states the kind of every cell next to the tile chosen for it and refuses a tile that does not read as that kind.
+- **It never overwrites a scene it cannot prove is its own.** A scene is the truth once it exists (the owner may have edited it in the editor), so an existing
+  `room.tscn` is refused. `--force` rebuilds only a scene that has a row in `tools/layouts/built_rooms.json` AND whose sha256 still equals the recorded one,
+  that is, one the tool built and nobody touched. A hand-made scene (all six of Stage 1) has no row, so not even `--force` reaches it.
+- **It checks what it wrote.** Before keeping a build, the builder boots the scene it wrote and compares the grid, the doors, the entries and the enemies with the
+  layout; a build that fails any step leaves the target as it was.
+- **The proof.** `tests/tools/test_build_room.gd` draws the hand-made Stage 1 room `t4_broken_rule_yard` as a layout (`tests/fixtures/layouts/`, not
+  `tools/layouts/`, which holds only rooms that ship), builds it into a scratch folder and requires the booted picture (bounds, origin, every cell's kind, doors,
+  entries, enemies, the pickup, the meta) to equal the hand-made room's.
+- **The words.** A layout carries the English of its room's name, arrival line and any locked-door or unlock line; the builder appends each row to
+  `content/story/text/en/rooms.po` with its `#.` comment, once, and the scene holds only the keys.
+
+**The 34 rooms, the bosses, the hub's locks and the ending (M5 step 2).** Every room of plan 7.4 exists: 28 stubs (the 27 new rooms and `tb1`) made by
+`tools/build_room.gd` from `tools/layouts/`, beside the six hand-made Stage 1 rooms. A stub has the plan's id, size (16x9, the five boss arenas and `ub2`
+18x9), archetype, role, act, district and time of night, `content_status` STUB, at least one piece of its family where the plan gives it combat, and doors
+that are open unless the plan gates them behind a clear (the boss rooms' way on, `ub2`). **No stub needs a verb that does not exist**: no layout uses a
+gap on the walk or a `traversal` crossing; where the plan wants a skill (Rule Step, Chalk Path, Eraser Guard) the floor is whole and the need is a
+promise in the world file (below). The Knight of `tb1` and the Bishop of `bs1` stand in a corner pocket (the cells they could move or strike to are
+wall): a preview the pawn can still reach. `dev_sandbox` is not here: it is not a shipping room (the plan counts 34 plus the sandbox) and M6 builds it.
+
+| Thing | Where it lives | Rule |
+|---|---|---|
+| A boss | `EnemyDefinition.defeat_flag` (`boss.<its own id>`, held by `validate()`) | a piece is a boss because its definition names the flag. `BossDefeatSystem` (`ecs/systems/progress/`, after the phases M8b adds and before `CheckpointSystem`) sets the flag in the world's flags the first tick the piece is down and says `boss_defeated` once (the flag already being set is the "once"); a hero who fell in the same tick wins, so the flag is never set over a boss who stands again. `SaveBridge` answers with `defeated_boss_ids` and a `boss_defeated` autosave; the flag rides the world's flags into the run like any other. The six: `black_pawn_captain` and the stand-ins `knight_captain`, `bishop_oracle`, `rook_warden`, `queen_of_tricks`, `black_king` (data only, one cell, Courage 8 to 12; footprints and phases are M8b) |
+| A door that waits for a flag | `ZoneExitMarker.requires_flag` + `locked_message`; a `flag` `WorldLock` on its edge | `EcsBoot` bakes `requires_flag` into the door's dictionary only when it is set (so every other door and every Stage 1 baseline is byte-identical); `MovementSystem` says `zone_exit_locked` with the door's line until `world.flags` holds the flag. The hub's five district doors wait for the boss before each (D-21) |
+| A door that ends the run | `ZoneExitMarker.ends_run` (a layout's `ending_exit`) | leads nowhere (no target, no edge); `MovementSystem` says `ending_reached` instead of travelling. Only the Desk (`e1_morning_desk`) has one, at the far end of the board |
+| A lock that is a promise | `WorldLock.arrives_in` (`M7c`), `WorldEdge.skill_lock_id` | the runtime holds a door for `room_clear` and `flag` locks (`WorldEdge.lock_id`); an `unlock` or `counter_at_least` lock names the milestone that will hold it and until then holds nothing, so a door can name the verb it will also need (`needs_rule_step`, `needs_chalk_path`, `needs_eraser_guard`, eleven doors) and stays open. `WorldCheck` refuses a promise with no date and a date on a lock that is held |
+| The route | `WorldCheck.walk_the_route` and the `progression` check | walks the graph from T1 with the flags unset: a door passes when it has no lock, a clear lock in a room that holds something to clear, or a flag lock whose flag is set; a boss's flag is set when its room can be cleared (it holds a piece and has a door that waits for the clear); a skill lock holds nothing. Reports a flag nobody sets, a clear door in a room with nothing to clear, a room cut off by a lock, and a world with no door that ends the run. `tools/print_world_map.gd` prints the walk (the ROUTE section) |
+| The ending | `Ending` and `EndingCard` (`schema/story/`), `content/story/endings/ending.tres`, `ContentDb.ending()`, `shell/ending/ending_screen.tscn`, `shell/bridges/ending_bridge.gd` | `ending_reached` -> `EndingBridge` (once; refused during a zone trip or a room's end) turns the hero's control off and asks `GameFlow.reach_ending()` (which writes the `completed` mark) -> `AppRoot` shows the cards in place of the room -> `finished` -> `GameFlow.finish_ending()` -> the credits -> the title with the empty square. The cards are `END_` rows of `story.po`; the playable Desk, the tokens and the ten-second hold are M13 |
+
+The world file was written once from the scenes by a throwaway script (the scenes are the truth about doors; the file adds the slots, the one-way
+shortcuts, the skill locks and the regions); it is plain data and is edited by hand from here. The rooms' counts, ids and families are held by
+`tests/content/test_plan_rooms.gd` against the plan's table (`tests/fixtures/plan_room_table.gd`), `tests/content/test_room_status.gd` counts the statuses (and
+`tools/list_placeholders.gd` prints them), and `tests/bridge/test_boss_flow.gd` and `tests/shell/test_ending_flow.gd` drive the flag doors and the ending through the real scene.
+
+The two data-only marker schemas of M5 (`TraversalGapMarker`, `StateVariantMarker`) are described with the markers above; the verbs that cross a traversal gap
+arrive with M7 and M10, and a state variant is baked into a flag-driven visibility component by M6.
+
+### Rooms are content: the encounter meta, the lints and the route bot (M5 step 3)
+
+A room is content (`content/rooms/<id>/room.tscn`, the folder name is the id), the world is content (`content/world/world.tres`), and what a room is MEANT to be is data on its
+root, so the rules about rooms can be checked before the room is good. Three things were added, none of which the game runs:
+
+| Thing | Where it lives | Rule |
+|---|---|---|
+| What a piece weighs | `EnemyDefinition.threat_points` (every `content/enemies/<id>/enemy.tres`) | recruit 1, armed 2, backstep 2, charging 2, knight 3, bishop 3, rook 4 (plan 5.3); a boss's is its phase-1 budget (6, 7, 7, 8, 8, 9). `validate()` refuses 0, so an enemy is rated before a room holds it; `/new-enemy` says so |
+| What a room is meant to be | `RoomEncounter`: `objective_kind` (clear, reach, survive, waves, none: inert until M9), `threat_budget` (points live at once; the biggest wave in a gauntlet; a boss's phase-1 budget), `threat_shapes` (shapes live at once, R28), `intro`, `intensity` (0-10, R32) | the numbers of plan 7.4 as Inspector fields under an Encounter meta group. The layout format has the five keys (`objective`, `threat`, `shapes`, `intro`, `intensity`), so a room built by `tools/build_room.gd` carries them; the six Stage 1 scenes have them written by hand. `RoomEncounter.threat_problems()` is the ONE written form of R4 (a Teach room carries 3 or less), R18 (Test and Twist 3 to 6, per wave in a gauntlet, T3's `intro` exempt from the floor, the room before a boss 6 or less) and R28 (shapes by act 2/2/2/2/3/4, bosses 2/3/3/3/4/4): the Inspector's warnings, the layout reader and the lints all call it |
+| The lints | `tests/support/plan_lints.gd` (the rules, as functions over a table), `tests/fixtures/plan_encounter_table.gd` (the plan's 7.4 table as data: live pieces, fenced previews, objective, intensity, rewards, minutes; with `plan_room_table.gd` it is the fixture the lints run on) | seven suites, each over the table AND over the shipped rooms: `test_preview_before_lethal` (R27: every family is introduced fenced, or by the `intro` room, before its first live piece), `test_threat_budget` (R18 and R28: sums, shapes, Teach, Test and Twist, waves, the room before a boss), `test_room_data_audit` (R4's Teach ladder, one new geometry at a time, every room answers, why adjacent, each district's format-breaker, the arc of R32, and the encounter meta of all 34 scenes equal to the plan's rows), `test_enemy_placement` (5.3's Placed in column against 7.4 and against the scenes), `test_layout_archetypes` (no two rooms in a row of the critical path share one), `test_district_loops` (every district stands on a loop or a one-way shortcut of the doors; the Under-Bed and the Desk are exemptions that fail when stale), `test_reward_cadence` (R37: no more than six minutes of critical path between two persistent rewards) |
+| The route bot | `tests/playthrough/route_bot.gd`, run by `tests/playthrough/test_full_route.gd` | boots `AppRoot`, presses New Game, walks the 35 steps of the critical path by key presses (the sword for ordinary pieces, a damage event for a boss: the plan allows it until M8b), ends the run at the Desk and stops on the title, in about 20 s of real time (the plan's budget is 90 s; the runner gives the suite 120 s, `SUITE_TIMEOUT_OVERRIDES`). It drives the simulation by hand, so its measurements are the game's own seconds and the same on every run: `docs/route_times.md` is rewritten by the test, only when it changed |
+
+How the lints stay honest:
+
+- **Each can fail, shown in the suite.** A suite copies the table (`PlanEncounterTable.copy_of_rows()`, `PlanLints.copy_of_graph()`), breaks one row on purpose (a second Knight, a missing fenced preview, a
+  room with no loop, a boss that gives nothing) and requires the sentence, then judges the real data clean again. A hand edit of a real `.tres` or scene turns the matching suite red too (tried, then undone).
+- **A rule a stub cannot be held to is a REPORT line, and the line says when it becomes enforcing.** The scenes park live what the plan shows fenced (tb1, bs1, bt1), a gauntlet's waves at once (ub2), a guard beside
+  every boss and no hazard, so the parked pieces are weighed against the designed budget in report-only mode (22 of 34 rooms match today); the fenced instance of a family (M8a), near groups (M8a), boss shapes (M8b), rewards
+  as pickups and beats (M6 on) and ub2's waves (M13) are the other REPORT lines. Everything else is enforced, in the table and on the 34 scenes.
+- **The table is the plan's and the lints found two things in it.** R37 fails on the plan's own Reward column at the Queen's room (6.5 minutes) and the Black King's (9) unless the story beats the plan lists INSIDE those fights
+  (S20, the Queen's address; S24, the three memory alcoves) count, which they do (the fixture lists them as `mid_rewards`; `findings.md` asks the plan's table to say so); and the Under-Bed has no loop or shortcut because its
+  boss's door ends the run, so it is written down as an exemption. Plan 7.4's ub3 (`4/2`) is a Recruit and three rewrite pulses of 1 point each.
+- **Where the numbers live.** Threat points on the definition, the caps on `RoomEncounter`, the plan's columns in the fixture: a tuned value in the content is judged against the plan's table (M14 tunes them and edits both).
+
+`tests/playthrough/test_full_route.gd` needs two things of the support code: `Support.walk_to_cell` goes round a door cell when the grid's shortest path would cross one (tb2's entry sits in a one-cell lane beside its
+door), and every other room it walks is the ordinary stub, so a stub that cannot be walked, cleared or left fails the route by name (`test_room_doors_reachable` and `test_room_markers_on_floor` hold the same 34 rooms
+floor by floor and now say which room and how many markers they looked at).
+
 ## Known deviations from the rules (honest list)
 
 These exist today and are scheduled to be fixed by `docs/game-base-plan.md` §14, not by
@@ -962,10 +1049,14 @@ ad-hoc edits:
 - The HUD's rank badge, Believe slot and boss bar are inert: the Rank label (`HudSnapshot.rank_label`) stays 0 until M7c fills it, and
   the other two draw nothing before M10 and M8b. Skill slots 2 to 4 are declared in the `InputMap` and absent from the HUD until M7a gives
   the snapshot a list of skills.
-- The 72x40 kingdom (`tests/fixtures/the_kingdom.tscn`) is still a zone in the shipped world
-  graph (`content/world/world.tres`, the one documented exception in
-  `test_content_references.gd`, so the H1 exit keeps resolving until M5), and `first_encounter`
-  (`tests/fixtures/first_encounter.tscn`) is a standalone room only the tests load.
+- The 72x40 kingdom (`tests/fixtures/the_kingdom.tscn`) left the shipped world graph at M5 step 1 (plan D-02):
+  it is a fixture the tests load by path (`TestPaths.shipped_rooms_and_kingdom()` for the suites that walk every
+  board), no door of the game leads into it, and `test_content_references.gd` no longer has an exception for it.
+  `first_encounter` (`tests/fixtures/first_encounter.tscn`) is a standalone room only the tests load.
+- The doors of H1 are not locked yet. `WorldLock` has the data (room clear, flag, unlock, counter, each with its
+  message key) and the three Stage 1 clear-locks use it, but a FLAG lock is enforced by nothing: wiring the hub's doors
+  to `boss.<id>` flags is M5 step 2 (it needs the shell to hand the room's locks to `EcsBoot`, and `MovementSystem` to
+  read them), and the skill locks arrive in M7c.
 
 ## Reading order
 
@@ -994,21 +1085,23 @@ kind:
 | Folder | What it holds |
 |---|---|
 | `tests/architecture/` | the guards: `test_dependency_edges`, `test_content_references`, `test_content_has_no_gd`, `test_sidecars_tracked`, `test_no_path_only_ext_resource`, `test_no_old_res_paths`, `test_fixtures_present`, `test_tools_keep_uids`, `test_all_scripts_load`, `test_dump_baselines`, `test_world_dumper_entry_cell`, `test_schedule_complete`, `test_events_declared`, `test_input_only_in_poller`, `test_save_written_only_by_save_service`, `test_suites_isolate_the_save`, `test_game_root_is_thin`, `test_no_scene_reload` |
-| `tests/ecs/` | the runtime seams of M3a and the two systems of M3b: `test_objective_system`, `test_checkpoint_system`, `test_schedule_order`, `test_world_fields`, `test_frozen_world`, `test_commands_channel`, `test_view_commands`, `test_emit_damage`, `test_heal_queue`, `test_boot_options`, `test_input_snapshot`, `test_hud_snapshot`, `test_player_snapshot_roundtrip`, `test_room_origin`, `test_grid_cell_kinds`, `test_leap_occupancy`, `test_ray_stops_at_blockers`, `test_path_cache`, `test_attack_setup_search` |
-| `tests/bridge/` | the in-game scene and its bridges: the characterization suites (travel, death and respawn, persistence, health carry, the Book, the world flags), `test_game_flow`, `test_event_router`, one suite per bridge (`test_board_bridge`, `test_camera_bridge`, `test_audio_bridge`, `test_message_bridge`, `test_hud_bridge`, `test_bridge_despawn`, `test_bridge_room_outcome`), `test_shell_keys`, and the rules of M3b step 3 through the real scene: `test_checkpoint_rules`, `test_cleared_rooms`, `test_player_carry_zone_swaps`; `test_bridge_backtracking` walks the pawn home from H1 to T1 on foot, by key presses, through every west door, and `test_bridge_route_on_foot` walks it forward from a clean T1 to the hub (the sword in T2, every piece of T3, T4 and B1 brought down with the sword, each east door the clear opened); `test_owner_guide_steps` does the "things to try" of `docs/OWNER_GUIDE.md` section 7 in the rooms as they are, in the guide's order from a clean save (a fall, Restart Room from the pause menu, a cleared room, a checkpoint, a floor weapon, a relaunch); a suite that follows a player brings a pawn down with the sword by the real input path (`Support.kill_with_sword`: walk beside it, face it, press attack), never with a damage request, which needs no cell and let a pawn on a wall go unnoticed; `test_kill_with_sword` proves that helper can say no; `bridge_support.gd` is their shared fixture (it also walks: `tap_direction`, `walk_to_cell`, `walk_through_door`, and fights: `kill_with_sword`) |
-| `tests/shell/` | the app around the game (M4 step 1): `test_app_flow` (boot, title, New Game into T1, pause, a rebuild behind the fade, Quit to Title, Continue, the credits, the ending), `test_game_flow_states` (the state machine's table), `test_new_game_resets_slot`, `test_continue_loads_checkpoint`, `test_title_summary`, `test_title_screen`, `test_credits_screen`, `test_credits_licenses_current`, `test_transition_layer`, `test_autosave_indicator`, `test_confirm_panel`, `test_app_root_is_main_scene`; `shell_support.gd` boots AppRoot for them |
+| `tests/ecs/` | the runtime seams of M3a and the two systems of M3b: `test_objective_system`, `test_checkpoint_system`, `test_schedule_order`, `test_world_fields`, `test_frozen_world`, `test_commands_channel`, `test_view_commands`, `test_emit_damage`, `test_heal_queue`, `test_boot_options`, `test_input_snapshot`, `test_hud_snapshot` (with the door briefs), `test_player_snapshot_roundtrip`, `test_room_origin`, `test_grid_cell_kinds`, `test_leap_occupancy`, `test_ray_stops_at_blockers`, `test_path_cache`, `test_attack_setup_search` |
+| `tests/bridge/` | the in-game scene and its bridges: the characterization suites (travel, death and respawn, persistence, health carry, the Book, the world flags), `test_game_flow`, `test_event_router`, one suite per bridge (`test_board_bridge`, `test_camera_bridge`, `test_audio_bridge`, `test_message_bridge`, `test_hud_bridge`, `test_bridge_despawn`, `test_bridge_room_outcome`), `test_shell_keys`, and the rules of M3b step 3 through the real scene: `test_checkpoint_rules`, `test_cleared_rooms`, `test_player_carry_zone_swaps`; `test_bridge_backtracking` walks the pawn home from H1 to T1 on foot, by key presses, through every west door, and `test_bridge_route_on_foot` walks it forward from a clean T1 to the hub (the sword in T2, every piece of T3, T4 and B1 brought down with the sword, each east door the clear opened); `test_owner_guide_steps` does the "things to try" of `docs/OWNER_GUIDE.md` section 7 in the rooms as they are, in the guide's order from a clean save (a fall, Restart Room from the pause menu, a cleared room, a checkpoint, a floor weapon, a relaunch); a suite that follows a player brings a pawn down with the sword by the real input path (`Support.kill_with_sword`: walk beside it, face it, press attack), never with a damage request, which needs no cell and let a pawn on a wall go unnoticed; `test_kill_with_sword` proves that helper can say no; `test_held_key_through_a_door` holds a walking key down through a door and through a respawn and shows the pawn stays where it arrived (`InputPoller.require_fresh_press`, called by `GameRoot.boot_zone`); `bridge_support.gd` is their shared fixture (it also walks: `tap_direction`, `walk_to_cell`, `walk_through_door`, and fights: `kill_with_sword`) |
+| `tests/shell/` | the app around the game (M4 step 1): `test_app_flow` (boot, title, New Game into T1, pause, a rebuild behind the fade, Quit to Title, Continue, the credits, the ending), `test_ending_flow` (the ending's data, the card screen alone, and the whole way from the Desk's last door through the cards and the credits to the title with the mark), `test_game_flow_states` (the state machine's table), `test_new_game_resets_slot`, `test_continue_loads_checkpoint`, `test_title_summary`, `test_title_screen`, `test_credits_screen`, `test_credits_licenses_current`, `test_transition_layer`, `test_autosave_indicator`, `test_confirm_panel`, `test_app_root_is_main_scene`; `shell_support.gd` boots AppRoot for them |
 | `tests/save/` | the save: `test_save_roundtrip`, `test_save_migration_v2` (with the real v2 file in `tests/fixtures/saves/`), `test_corrupt_save_falls_back`, `test_request_save_callers` (R17), `test_profile_survives_new_game` |
-| `tests/input/` | the controls (M4 steps 2 and 3): `test_input_actions_have_pad_events`, `test_input_poller_rules` (dominant axis, hold-or-toggle), `test_input_glyphs` (every path is the asset list's, every bound control has a slot, the words stand in, the device is followed), `test_controls_panel_from_inputmap` |
+| `tests/input/` | the controls (M4 steps 2 and 3): `test_input_actions_have_pad_events`, `test_input_poller_rules` (dominant axis, hold-or-toggle, a fresh press for a new room), `test_input_glyphs` (every path is the asset list's, every bound control has a slot, the words stand in, the device is followed), `test_controls_panel_from_inputmap` |
 | `tests/settings/` | the settings (M4 step 3): `test_settings_roundtrip` (the table, the profile, garbage and missing keys with a logged reason), one `test_setting_*` suite per setting that looks at the real target (volumes, fullscreen, language, shake scale, reduce flash, high-contrast danger, high-contrast menus, assists, hold-or-toggle), `test_every_setting_has_a_target` (fails a setting no suite moves), `test_settings_screen` (built from the table, reachable from the title and the pause menu), `test_pause_assist_options`; `settings_support.gd` boots the app for them |
 | `tests/text/` | the words (M4 step 3): `test_text_service`, `test_pseudo_locale`, `test_po_domains_merge`, `test_text_keys`, `test_language_switch_redraws_live`, `test_layout_pseudo_locale`, `test_font_slots`, `test_font_vietnamese_coverage` |
-| `tests/presentation/` | the board overlay drawing from the snapshot, the camera framing the room and starting on a whole pixel (`test_board_draws_from_snapshot`, `test_camera_frames`, `test_camera_snap`), and the HUD (M4 step 4): `test_hud_widgets` (each widget alone, from a snapshot), `test_hud_safe_zone` (every widget in a strip and off every board), `test_debug_overlay_default` (F3 on the real scene) |
+| `tests/presentation/` | the board overlay drawing from the snapshot, the camera framing the room and starting on a whole pixel (`test_board_draws_from_snapshot` (with the door marks), `test_camera_frames`, `test_camera_snap`), and the HUD (M4 step 4): `test_hud_widgets` (each widget alone, from a snapshot), `test_hud_safe_zone` (every widget in a strip and off every board), `test_debug_overlay_default` (F3 on the real scene) |
 | `tests/perf/` | `test_room_tick_budget`: an 18x9 room with eight enemies ticks in 2 ms or less on average, and builds one pathfinder |
-| `tests/audio/`, `tests/content/` | the bus layout; the requirements ledger and the placeholder manifest; `test_room_doors_reachable` (every room of the world graph booted for real: every entry on floor, every door floor, reachable from every entry and leading to an entry that exists); `test_room_markers_on_floor` (the same boot: every parked enemy stands on floor and is in the grid, every pickup and unlock marker is on floor and can be walked to from every entry, every gate is on floor and can be pushed) |
-| `tests/support/` | `UnboundTest`, `TestPaths` (the only place a new test names a `res://` path), `reference_pathing.gd` (the pathing and the attack search as they were before M3a, the yardstick the new code is compared with), the harness's own test |
-| `tests/fixtures/`, `tests/baselines/` | the kingdom, `first_encounter`, the harness fixtures and the v2 save; the six deterministic room dumps |
+| `tests/audio/`, `tests/content/` | the bus layout; the requirements ledger and the placeholder manifest; `test_room_doors_reachable` (every room of the world graph booted for real: every entry on floor, every door floor, reachable from every entry and leading to an entry that exists); `test_room_doors_marked` (the same boot: every door of every room has a brief in the snapshot and a mark on the board, shut or open as its marker asks, and all open once the room is cleared and the flags set); `test_room_markers_on_floor` (the same boot: every parked enemy stands on floor and is in the grid, every pickup and unlock marker is on floor and can be walked to from every entry, every gate is on floor and can be pushed); and since M5 step 1 `test_world_graph` (every exit resolves, every room has an entry, no orphan, every lock has a message key with an English row, the kingdom is not in the graph, and each `WorldCheck` check is broken on purpose to prove it can fail), `test_room_meta` (the `RoomEncounter` meta and its configuration warnings), `test_marker_schemas` (`TraversalGapMarker` and `StateVariantMarker`) and, since M5 step 2, `test_plan_rooms` (the 34 rooms against the plan's table: id, size, archetype, role, act, district, pieces, shut doors, bosses), `test_room_status` (the content ladder counted) and, since M5 step 3, the seven lints against the plan's 7.4 table (`test_preview_before_lethal`, `test_threat_budget`, `test_room_data_audit`, `test_enemy_placement`, `test_layout_archetypes`, `test_district_loops`, `test_reward_cadence`: the section above), with `test_room_doors_reachable` and `test_room_markers_on_floor` now proving they covered every room of the plan and every marker in it |
+| `tests/playthrough/` | the whole game (M5 step 3): `test_full_route` (boot, title, New Game, the 35 steps of the critical path, every boss, the ending, the credits, the title; under 90 s; writes `docs/route_times.md`) and its bot `route_bot.gd` |
+| `tests/tools/` | the tools that make content (M5 step 1): `test_room_layout` (the layout format: every kind of cell and object, every way a layout can be wrong), `test_build_room` (the rebuilt Stage 1 room equals the hand-made one, the refusals, the manifest, a failed build leaves nothing), `test_print_world_map` (the ASCII map, the route and its checks line) |
+| `tests/support/` | `UnboundTest`, `TestPaths` (the only place a new test names a `res://` path), `reference_pathing.gd` (the pathing and the attack search as they were before M3a, the yardstick the new code is compared with), `plan_lints.gd` (the lints' rules as functions), the harness's own test |
+| `tests/fixtures/`, `tests/baselines/` | the kingdom, `first_encounter`, the harness fixtures and the v2 save; the plan's tables as data (`plan_room_table.gd`, `plan_encounter_table.gd`); the six deterministic room dumps |
 
 The canonical runner is `python3 tools/run_all_tests.py --strict`: it runs the editor import
-pass first, then every suite as its own process with a 60 s timeout (a script error in a
+pass first, then every suite as its own process with a 60 s timeout (120 s for the whole-route test, `SUITE_TIMEOUT_OVERRIDES`; a script error in a
 test's `_init` otherwise hangs Godot), fails on any `SCRIPT ERROR`, `Parse Error` or `FAIL`,
 and checks that every label in `tests/baseline_labels.txt` still prints PASS (or is renamed in
 `tests/label_renames.txt`). `python3 tools/run_all_tests.py --self-test` tests the runner
@@ -1035,7 +1128,10 @@ cleared-room rules of D-16 and D-17 (step 3), and, from M4 step 3, the settings 
 state machine, the persistent fade, the title, the credits (data in `content/story/credits.tres`, licences generated
 from `THIRD_PARTY_NOTICES.md`), the autosave tick and the corrupt-save notice. The ECS contract is kept as it was.
 and, from M4 step 4, the HUD as widgets in two strips with its safe-zone test, the control hints from the `InputMap`, the F3 debug
-readout and the camera's integer-pixel snap, which closes M4's Tier A. Still to come, in plan order: the first-run card (Tier B), story, skills, bosses
+readout and the camera's integer-pixel snap, which closes M4's Tier A, and, from M5 step 1, the room builder (`tools/build_room.gd`), the world as one graph of rooms, doors, map slots and locks
+(`content/world/world.tres`, with the kingdom out of it), the room meta on `RoomEncounter`, the two data-only marker schemas and `tools/print_world_map.gd`, from M5 step 2 the 34 rooms, the bosses' flags, the hub's locks and the ending, and from M5
+step 3 the encounter meta, the seven lints against the plan's table and the route bot with `docs/route_times.md`.
+Still to come, in plan order: the first-run card (Tier B), story, skills, bosses
 and the other five districts. The
 owner-facing "how do I change X" table, with real paths for what exists today, is
 `docs/OWNER_GUIDE.md`.

@@ -1,0 +1,41 @@
+; The proof layout of M5 step 1: the hand-made Stage 1 room t4_broken_rule_yard, drawn the way tools/build_room.gd reads
+; a room. tests/tools/test_build_room.gd builds it into a scratch folder (never over the real scene) and requires
+; the booted grid, the doors, the entries, the enemies and the pickup of the result to equal the hand-made room's.
+; It lives under tests/fixtures/ and not in tools/layouts/, which holds the sources of rooms that ship.
+
+[room]
+id = t4_broken_rule_yard
+size = 16x9
+act = 1
+district = chess_rug
+archetype = yard
+recipe = twist
+status = greybox
+time_of_night = dusk
+threat = 5
+shapes = 2
+intensity = 6
+tileset = kingdom
+name = Broken Rule Yard
+start = They broke the rules first. Armed pawns reach farther than chess allows.
+
+[grid]
+################
+#............FX#
+#......#.R...P.#
+#......#.......#
+#...........A..#
+#TE....#.......#
+#......#..K....#
+#..............#
+################
+
+[objects]
+E = entry id=west_entry
+F = entry id=from_b1
+T = exit to=t3_first_pawn_clash:from_t4 name=Exit_To_T3
+X = exit to=b1_black_pawn_captain:west_entry name=Exit_To_B1 clear locked="The black pawns still hold the yard. Break the black line first."
+R = enemy def=pawn_recruit
+A = enemy def=pawn_armed
+K = enemy def=backstep_pawn
+P = pickup weapon=pencil_spear

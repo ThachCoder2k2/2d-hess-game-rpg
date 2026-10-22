@@ -1,0 +1,34 @@
+; dh4_seal_stair: Act 5, Shortcut: a stair of wall steps, no enemy. Door Y is the one-way shortcut home to the hub.
+; A STUB made at M5 step 2 by tools/build_room.gd from this layout (docs/game-base-plan.md 15 M5). The scene is the truth once it exists;
+; this file is its source until somebody edits the scene in the editor. Read the legend with: tools/build_room.gd -- --legend
+
+[room]
+id = dh4_seal_stair
+size = 16x9
+act = 5
+district = dollhouse
+archetype = stair
+recipe = shortcut
+status = stub
+time_of_night = small_hours
+objective = reach
+intensity = 3
+tileset = greybox
+name = Seal Stair
+start = The seal is open. The stair goes down to the rug.
+
+[grid]
+################
+#..............#
+#...#..........#
+#...##.........#
+#XA.###......Y.#
+#...##.........#
+#...#..........#
+#..............#
+################
+
+[objects]
+A = entry id=from_dhb
+X = exit to=dhb_queen_of_tricks:from_dh4
+Y = exit to=h1_chess_rug_hub:from_dollhouse

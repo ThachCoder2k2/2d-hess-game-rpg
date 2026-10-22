@@ -144,6 +144,21 @@ func kingdom_fixture_tileset() -> String:
 	return _existing_resource("res://tests/fixtures/the_kingdom/tileset.tres")
 
 
+## Every room the world graph lists plus the 72x40 kingdom fixture, as id -> scene (the kingdom's id is `kingdom`):
+## what a suite walks when its claim must hold for every kind of board the engine boots, 16x9 rooms and the scrolling
+## 72x40 one alike. The kingdom left the graph at M5 (plan D-02), so it is added here by its fixture path.
+func shipped_rooms_and_kingdom() -> Dictionary[StringName, PackedScene]:
+	var scenes: Dictionary[StringName, PackedScene] = {}
+	var graph := ContentDb.world()
+	if _suite.require(graph != null, "the world graph loads"):
+		for room_id in graph.room_ids():
+			scenes[room_id] = graph.get_zone_scene(room_id)
+	var kingdom := load_scene(kingdom_scene())
+	if kingdom != null:
+		scenes[&"kingdom"] = kingdom
+	return scenes
+
+
 ## The first-encounter demo room: a test fixture, not game content (plan D-02).
 func first_encounter_scene() -> String:
 	return _existing_resource("res://tests/fixtures/first_encounter.tscn")

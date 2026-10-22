@@ -32,11 +32,9 @@ const ALLOWED_TARGET_PREFIXES: Array[String] = [
 	"res://assets/",
 ]
 ## "<content file> -> <target>" pairs the table does not allow but the plan keeps on purpose.
-const DOCUMENTED_EXCEPTIONS: Array[String] = [
-	# The H1 exit to the kingdom must keep resolving, so the graph still names the 72x40
-	# fixture. M5 ports the world-graph assertions and drops the kingdom from the graph.
-	"res://content/world/world.tres -> res://tests/fixtures/the_kingdom.tscn",
-]
+## Empty since M5: the one exception it held, content/world/world.tres naming the 72x40 kingdom fixture, ended
+## when the kingdom left the world graph (plan D-02).
+const DOCUMENTED_EXCEPTIONS: Array[String] = []
 ## "<content file> -> <target>" pairs nobody has decided. Report-only.
 const UNDECIDED_REFERENCES: Array[String] = [
 	# Every Stage 1 room carries a GridLinesOverlay node whose script lives in

@@ -58,6 +58,7 @@ var save_bridge := SaveBridge.new()
 var despawn_bridge := DespawnBridge.new()
 var outcome_bridge := RoomOutcomeBridge.new()
 var zone_travel_bridge := ZoneTravelBridge.new()
+var ending_bridge := EndingBridge.new()
 var book_bridge := BookBridge.new()
 var settings_bridge := SettingsBridge.new()
 
@@ -77,7 +78,7 @@ func _ready() -> void:
 	audio_bridge.attach(self)
 	game_flow.attach(self)
 	shell_keys.attach(self)
-	for bridge: ShellBridge in [save_bridge, despawn_bridge, outcome_bridge, zone_travel_bridge, book_bridge, settings_bridge]:
+	for bridge: ShellBridge in [save_bridge, despawn_bridge, outcome_bridge, zone_travel_bridge, ending_bridge, book_bridge, settings_bridge]:
 		bridge.attach(self)
 	for bridge in _bridges():
 		bridge.register(router)
@@ -110,6 +111,7 @@ func boot_zone(entry_id: StringName, entered_by_door := false) -> void:
 	boot_options.entry_id = entry_id
 	boot_options.entered_by_door = entered_by_door
 	boot_options.player_snapshot = zone_travel_bridge.take_carried_snapshot()
+	input_poller.require_fresh_press()
 	save_bridge.fill_boot_options(boot_options, current_room)
 	cast = EcsBoot.boot(ecs, boot_options)
 	player_id = int(cast.get("player", 0))
@@ -179,7 +181,7 @@ func save_service() -> SaveServiceScript:
 ## plays and its view goes, a defeat clears the board before the room counts it, the status line speaks last.
 func _bridges() -> Array[EventBridge]:
 	return [board_bridge, camera_bridge, hud_bridge, save_bridge, audio_bridge, despawn_bridge, outcome_bridge,
-		message_bridge, zone_travel_bridge, book_bridge, settings_bridge]
+		message_bridge, zone_travel_bridge, ending_bridge, book_bridge, settings_bridge]
 
 
 ## The hero's view and the camera rig that is its child: the camera bridge follows a replaced view.

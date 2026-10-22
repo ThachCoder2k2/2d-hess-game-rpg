@@ -1,0 +1,37 @@
+; bt4_ruler_gate_shortcut: Act 4, Shortcut: a gate wall of rulers with one opening. Door Y is the one-way shortcut home. The plan forces an Eraser Guard rub of a Rule
+; Mark here (free): that skill lock arrives in M7c (needs_eraser_guard on the doors Y and Z); the opening is whole today.
+; A STUB made at M5 step 2 by tools/build_room.gd from this layout (docs/game-base-plan.md 15 M5). The scene is the truth once it exists;
+; this file is its source until somebody edits the scene in the editor. Read the legend with: tools/build_room.gd -- --legend
+
+[room]
+id = bt4_ruler_gate_shortcut
+size = 16x9
+act = 4
+district = block_tower
+archetype = gate
+recipe = shortcut
+status = stub
+time_of_night = night
+objective = reach
+intensity = 4
+tileset = greybox
+name = Ruler Gate
+start = A gate of rulers. A rule mark glows on the way home.
+
+[grid]
+################
+#.......#......#
+#.......#......#
+#.......#......#
+#XA...........Y#
+#.......#......#
+#.......#....BZ#
+#.......#......#
+################
+
+[objects]
+A = entry id=from_btb
+B = entry id=from_bto
+X = exit to=btb_rook_warden:from_bt4
+Y = exit to=h1_chess_rug_hub:from_block_tower
+Z = exit to=bto_rubble_nook:from_bt4

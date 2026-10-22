@@ -25,6 +25,10 @@ extends RefCounted
 ##   - Hold or toggle (the accessibility setting of 5.8). An action in `toggled_actions` is published
 ##     as a switch: each fresh press flips it on or off, instead of being down only while the
 ##     key is. The SettingsBridge sets it from the player's choice for Guard, Focus and turn mode.
+##   - A fresh press for a new room. A walking key that was down when a room began (the pawn came through a door
+##     with it held, or it died holding it) is published released until the control is let go: the new room
+##     starts with the hands off, and the held key does not carry the pawn straight back out of the door it
+##     arrived beside. See require_fresh_press().
 
 ## InputMap actions with this prefix are the engine's own menu navigation (ui_accept, ui_cancel...):
 ## the Control nodes handle them, and the simulation has no use for them.
@@ -54,6 +58,9 @@ var _switch_on_by_action: Dictionary[StringName, bool] = {}
 var _control_was_down_by_action: Dictionary[StringName, bool] = {}
 ## move action -> true while the stick's dominant axis was holding it back at the previous poll.
 var _held_back_by_move_action: Dictionary[StringName, bool] = {}
+## move action -> true from the moment a room began with that control already down until the control is let go
+## (require_fresh_press): the action is published released all that time, so a press has to be a fresh one.
+var _awaiting_release_by_move_action: Dictionary[StringName, bool] = {}
 
 
 ## Reads the controls once and writes the result into `snapshot`. `delta` is the seconds since the
@@ -68,10 +75,18 @@ func poll(delta: float, snapshot: InputSnapshot) -> void:
 		var just_pressed := Input.is_action_just_pressed(action)
 		var just_released := Input.is_action_just_released(action)
 		if action in MOVE_ACTIONS:
+			var control_is_down := pressed
 			var edges := _apply_dominant_axis(action, state, pressed, just_pressed, just_released, strongest_move)
 			pressed = edges[0]
 			just_pressed = edges[1]
 			just_released = edges[2]
+			if _awaiting_release_by_move_action.has(action):
+				if control_is_down:
+					pressed = false
+					just_pressed = false
+					just_released = false
+				else:
+					_awaiting_release_by_move_action.erase(action)
 		if toggled_actions.has(action):
 			var switched := _apply_toggle(action, pressed)
 			pressed = switched[0]
@@ -93,6 +108,17 @@ func set_toggle_mode(action: StringName, enabled: bool) -> void:
 	toggled_actions.erase(action)
 	_switch_on_by_action.erase(action)
 	_control_was_down_by_action.erase(action)
+
+
+## A new room begins (a door was walked through, the pawn respawned): every walking control that is down right now is
+## published released until it is let go, and only the next press of it counts. Without this a key held through a
+## door goes on walking in the new room, and the entry cell that stands one step from the door it arrived by carries
+## the pawn straight back out (a bounce between two rooms). A control pressed AFTER this call is a fresh press and
+## works at once. GameRoot calls it each time it builds a room's world.
+func require_fresh_press() -> void:
+	for action in MOVE_ACTIONS:
+		if Input.is_action_pressed(action):
+			_awaiting_release_by_move_action[action] = true
 
 
 ## Reads the InputMap again: the actions the project defines, without the engine's own ui_ ones.

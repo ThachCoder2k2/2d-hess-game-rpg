@@ -1,0 +1,35 @@
+; e1_morning_desk: The Ending (docs/game-base-plan.md 7.4, 8.8): a quiet desk and one door, the cell at the far end of the board, which ends the run: the ending cards, then
+; the credits, then the title with the completed mark. The playable Desk (the four promotion tokens, the walk off the board's edge, the 10 s hold)
+; is M13. There is no door back: the way in (ubb) is a one-way edge.
+; A STUB made at M5 step 2 by tools/build_room.gd from this layout (docs/game-base-plan.md 15 M5). The scene is the truth once it exists;
+; this file is its source until somebody edits the scene in the editor. Read the legend with: tools/build_room.gd -- --legend
+
+[room]
+id = e1_morning_desk
+size = 16x9
+act = 7
+district = desk
+archetype = desk
+recipe = ending
+status = stub
+time_of_night = morning
+objective = none
+intensity = 6
+tileset = greybox
+name = The Morning Desk
+start = Morning. The board is quiet. Walk to the door at the far end.
+
+[grid]
+################
+#..............#
+#.++........++.#
+#..............#
+#A............Z#
+#..............#
+#.++........++.#
+#..............#
+################
+
+[objects]
+A = entry id=from_ubb
+Z = ending_exit

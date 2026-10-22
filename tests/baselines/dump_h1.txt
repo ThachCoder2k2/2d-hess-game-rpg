@@ -11,22 +11,26 @@ cell_size: 32
 grid_origin: (64.00,36.00)
 blocked_cells: 50
   (0,0) (1,0) (2,0) (3,0) (4,0) (5,0) (6,0) (7,0) (8,0) (9,0) (10,0) (11,0) (12,0) (13,0) (14,0) (15,0) (0,1) (15,1) (0,2) (7,2) (15,2) (0,3) (7,3) (15,3) (0,4) (15,4) (0,5) (7,5) (15,5) (0,6) (7,6) (15,6) (0,7) (15,7) (0,8) (1,8) (2,8) (3,8) (4,8) (5,8) (6,8) (7,8) (8,8) (9,8) (10,8) (11,8) (12,8) (13,8) (14,8) (15,8)
-exits: 2
-  (2,1) {"entry": &"start", "locked_message": "", "requires_room_clear": false, "zone": &"kingdom"}
+exits: 6
+  (2,1) {"entry": &"from_h1", "locked_message": "ROOM_H1_CHESS_RUG_HUB_LOCKED_TOYBOX", "requires_flag": &"boss.black_pawn_captain", "requires_room_clear": false, "zone": &"tb1_toybox_gate"}
+  (13,1) {"entry": &"from_h1", "locked_message": "ROOM_H1_CHESS_RUG_HUB_LOCKED_BOOKSHELF", "requires_flag": &"boss.knight_captain", "requires_room_clear": false, "zone": &"bs1_book_spine_steps"}
   (1,5) {"entry": &"from_hub", "locked_message": "", "requires_room_clear": false, "zone": &"b1_black_pawn_captain"}
+  (14,5) {"entry": &"from_h1", "locked_message": "ROOM_H1_CHESS_RUG_HUB_LOCKED_DOLLHOUSE", "requires_flag": &"boss.rook_warden", "requires_room_clear": false, "zone": &"dh1_foyer"}
+  (1,7) {"entry": &"from_h1", "locked_message": "ROOM_H1_CHESS_RUG_HUB_LOCKED_BLOCK_TOWER", "requires_flag": &"boss.bishop_oracle", "requires_room_clear": false, "zone": &"bt1_block_yard"}
+  (8,7) {"entry": &"from_h1", "locked_message": "ROOM_H1_CHESS_RUG_HUB_LOCKED_UNDER_BED", "requires_flag": &"boss.queen_of_tricks", "requires_room_clear": false, "zone": &"ub1_castle_gate"}
 gates: 0
 player_unlocks: 0
 items: 0
 
 [board] P player, e enemy, i item, X exit, G gate, U unlock, # wall, . floor
 ################
-#.X............#
+#.X..........X.#
 #......#.......#
 #......#.......#
 #..............#
-#XP....#.......#
+#XP....#......X#
 #......#.......#
-#..............#
+#X......X......#
 ################
 
 [entities at boot]
@@ -46,12 +50,20 @@ entity 1 player cell=(2,5)
 entity 1 player cell=(2,5) facing=(0,1) moving=false health=3/3
 events drained: 0
 
-[nodes] 30
+[nodes] 38
 CurrentZone Node2D script=res://authoring/room_encounter.gd position=(0.00,0.00)
+CurrentZone/Entry_FromBlockTower Marker2D script=res://authoring/markers/zone_entry_marker.gd position=(144.00,276.00)
+CurrentZone/Entry_FromBookshelf Marker2D script=res://authoring/markers/zone_entry_marker.gd position=(496.00,116.00)
 CurrentZone/Entry_FromBoss Marker2D script=res://authoring/markers/zone_entry_marker.gd position=(144.00,212.00)
+CurrentZone/Entry_FromDollhouse Marker2D script=res://authoring/markers/zone_entry_marker.gd position=(496.00,212.00)
 CurrentZone/Entry_FromToybox Marker2D script=res://authoring/markers/zone_entry_marker.gd position=(144.00,116.00)
+CurrentZone/Entry_FromUnderBed Marker2D script=res://authoring/markers/zone_entry_marker.gd position=(336.00,244.00)
 CurrentZone/Exit_To_Act2Toybox Marker2D script=res://authoring/markers/zone_exit_marker.gd position=(144.00,84.00)
+CurrentZone/Exit_To_BlockTower Marker2D script=res://authoring/markers/zone_exit_marker.gd position=(112.00,276.00)
+CurrentZone/Exit_To_Bookshelf Marker2D script=res://authoring/markers/zone_exit_marker.gd position=(496.00,84.00)
 CurrentZone/Exit_To_Boss Marker2D script=res://authoring/markers/zone_exit_marker.gd position=(112.00,212.00)
+CurrentZone/Exit_To_Dollhouse Marker2D script=res://authoring/markers/zone_exit_marker.gd position=(528.00,212.00)
+CurrentZone/Exit_To_UnderBed Marker2D script=res://authoring/markers/zone_exit_marker.gd position=(336.00,276.00)
 CurrentZone/RoomArt Node2D position=(0.00,0.00) z_index=-20
 CurrentZone/RoomArt/Frame Polygon2D position=(52.00,24.00)
 CurrentZone/RoomArt/GridLines Node2D script=res://presentation/board/grid_lines_overlay.gd position=(0.00,0.00)

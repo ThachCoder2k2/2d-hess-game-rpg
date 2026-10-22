@@ -1,0 +1,146 @@
+{
+	"about": "Written by tools/build_room.gd. A row says: this scene was built from that layout and has not been edited since (its sha256 still equals scene_sha256). --force may rebuild only such a scene. Do not edit a hash by hand.",
+	"format": 1,
+	"scenes": {
+		"res://content/rooms/bs1_book_spine_steps/room.tscn": {
+			"layout_sha256": "1d61202d88cb673ebf83c8d21a31c6768dab349e35023111655b64751215527f",
+			"room_id": "bs1_book_spine_steps",
+			"scene_sha256": "1b2624f1d0a3e167f94b4d77135f8a321822c459c790d03a365364450c13f2ba"
+		},
+		"res://content/rooms/bs2_diagonal_chapel/room.tscn": {
+			"layout_sha256": "cb21225bec3049e91ef61ec0805e95719e2de422ce9b04ecea5f82787d0479d9",
+			"room_id": "bs2_diagonal_chapel",
+			"scene_sha256": "eb988047275b14f9cfa0e50b658a91c13d85d42a0dd1faf7220e1019342badaa"
+		},
+		"res://content/rooms/bs3_torn_page_bridge/room.tscn": {
+			"layout_sha256": "82272a687652112710143f0fb54c381748ea2768f754eb4571c9c4c0c988c388",
+			"room_id": "bs3_torn_page_bridge",
+			"scene_sha256": "ba865a439600886773fae01b188a06909794778658b6cc7ddea0e76c2aaddcac"
+		},
+		"res://content/rooms/bs4_page_tear_shortcut/room.tscn": {
+			"layout_sha256": "196ce8c4bbf3a94d58d670f12e5d5887032482bceba0af01f2ffd3812406baa2",
+			"room_id": "bs4_page_tear_shortcut",
+			"scene_sha256": "f324220214e2d18c903a30b02a98b7e56435b936b1d968ad7e2d1c865b241025"
+		},
+		"res://content/rooms/bsb_bishop_oracle/room.tscn": {
+			"layout_sha256": "201a2293241bc2c834246e78a8b666cb77cf2d82057165ff0cb1c62fd5131c27",
+			"room_id": "bsb_bishop_oracle",
+			"scene_sha256": "9366a8891ef49cad9c1901703f8a04ba58ca2eae9283b936e1a9af6651cc99c1"
+		},
+		"res://content/rooms/bso_margin_nook/room.tscn": {
+			"layout_sha256": "1ce1d171a3d7020c2894158a69e2446d84c7568908f89665c3386bbf3c144b4e",
+			"room_id": "bso_margin_nook",
+			"scene_sha256": "64723d156afaeddb04204edc1ea8c45dd4a286d3b6ee291bff2c8c8a06b46990"
+		},
+		"res://content/rooms/bt1_block_yard/room.tscn": {
+			"layout_sha256": "fe0080bfc0eb905be40d37825297b93cdf99b75d490bbbde5306772d7018364f",
+			"room_id": "bt1_block_yard",
+			"scene_sha256": "792f2682a07e0505e27559e8794bb82ec7eb588f27309fbc9e2d3a93dc9ddc60"
+		},
+		"res://content/rooms/bt2_ruler_bridge/room.tscn": {
+			"layout_sha256": "9e689d866dd3598184de60cae04af0d2a6da7a25a88f697b5b4c1747cf05341f",
+			"room_id": "bt2_ruler_bridge",
+			"scene_sha256": "6d249d6953ca73072aabab4d36de68dd2ea65d46f6d3a6224f6aa3a306730723"
+		},
+		"res://content/rooms/bt3_breakable_wall_test/room.tscn": {
+			"layout_sha256": "b3ae22a400db214c63ff1d11fd3eadcc92c95644fdc65fb432d4fc532e8c2173",
+			"room_id": "bt3_breakable_wall_test",
+			"scene_sha256": "bdcfb865783b39fbd4aef8194b42ff20bb8db697a828fc241ab621a6f4df7605"
+		},
+		"res://content/rooms/bt4_ruler_gate_shortcut/room.tscn": {
+			"layout_sha256": "673b11ed6811a23c7a1d910f70fb3244ab877f918b19f47a7810a4e118d91f87",
+			"room_id": "bt4_ruler_gate_shortcut",
+			"scene_sha256": "a9033482a8860f146b882d4a50c506522bdeb713300121db95ed98dbc93e826a"
+		},
+		"res://content/rooms/btb_rook_warden/room.tscn": {
+			"layout_sha256": "a9a7901bbb48440d5be2a7a4137b465ed181b42adfa33a0e2ab797b8fb3e00aa",
+			"room_id": "btb_rook_warden",
+			"scene_sha256": "8e5c2141cab89b8bdcc6a03fc868a13ae5697faaea8410942734c7c2dc4babcf"
+		},
+		"res://content/rooms/bto_rubble_nook/room.tscn": {
+			"layout_sha256": "81029b43a3527dd18d3015429cda6a7068f8e6e38ef33f60b03a3fde7e5c7266",
+			"room_id": "bto_rubble_nook",
+			"scene_sha256": "86ea84da5d8d13597452a2e6f35d2a0b15d25b15d21f4512a07c63871e9cb3b5"
+		},
+		"res://content/rooms/dh1_foyer/room.tscn": {
+			"layout_sha256": "7538570f71d216014ee1a780a980cb693c236abdb4505be57a15619e8f6214e0",
+			"room_id": "dh1_foyer",
+			"scene_sha256": "f961ececeda7926b35d38c68e4e444cea4ae2ed6d99877fd052e999e6b822489"
+		},
+		"res://content/rooms/dh2_mixed_court/room.tscn": {
+			"layout_sha256": "20be809f5b40e6ba69f3ee1a0332dd91cdae8aed045c850890ae7d4e3501e213",
+			"room_id": "dh2_mixed_court",
+			"scene_sha256": "4c071a897575f7a3fd529ba0880a038134058eaaa0b07e4352c3424c534c93f2"
+		},
+		"res://content/rooms/dh3_royal_stage/room.tscn": {
+			"layout_sha256": "5796e34d28958b1e60cb2b4e7a59421dbbce3b305d85fd552d8c9352f959c73d",
+			"room_id": "dh3_royal_stage",
+			"scene_sha256": "c57e9f54e43ad1f536848cce51b58020b361abcb842f0a58b65651be326c0aa4"
+		},
+		"res://content/rooms/dh4_seal_stair/room.tscn": {
+			"layout_sha256": "595f9d9bd16721996da0fcf93d6ca25fea4446831ea7f054f94bc7f910f1ee6b",
+			"room_id": "dh4_seal_stair",
+			"scene_sha256": "401a07ac2f4443a64aaee33b99ddb1a4b6f94680fd9e326c949abe9201a97167"
+		},
+		"res://content/rooms/dhb_queen_of_tricks/room.tscn": {
+			"layout_sha256": "040fe70b37f76390b794e6f861676dc2b383c2f7897e3a877fcfaf3ac1dd20f9",
+			"room_id": "dhb_queen_of_tricks",
+			"scene_sha256": "f3e8d9dca0e4f76e72dd73814a936ce857e7af2e25d62d612452c5d30f429084"
+		},
+		"res://content/rooms/e1_morning_desk/room.tscn": {
+			"layout_sha256": "ea0432bd6810195dcbc4442cf93c716b0547a464753450326804755ae623c783",
+			"room_id": "e1_morning_desk",
+			"scene_sha256": "3c9601335637db0fd56717c36325f7f5c28d58a6782a268b4af0a9f6151c69cd"
+		},
+		"res://content/rooms/tb1_toybox_gate/room.tscn": {
+			"layout_sha256": "bb86ed50cf7baba6fd49a69a1825e32f51e000c77d51f158450266956ce105ac",
+			"room_id": "tb1_toybox_gate",
+			"scene_sha256": "dcba6b675960205907e14d034687c0c7d46bcf534e7910af7675726a74aa6d7a"
+		},
+		"res://content/rooms/tb2_l_jump_lanes/room.tscn": {
+			"layout_sha256": "a932550068b611d79916a9372c603dbcfd0df5dbd520892c87feb2f91008923e",
+			"room_id": "tb2_l_jump_lanes",
+			"scene_sha256": "7dcfb3e30922dd62ab46165e5b3d103732e97f5694bd56fc484e8bf1dab0c469"
+		},
+		"res://content/rooms/tb3_toy_track_ambush/room.tscn": {
+			"layout_sha256": "944f635e8f1fa3af0c84da8bbb22d78915fb08ebebc436fcd448931e1e21395f",
+			"room_id": "tb3_toy_track_ambush",
+			"scene_sha256": "15cd5f9f825aa417bf82e95a9670c538a6083eab2704e8e7e3c3122b6b1040b4"
+		},
+		"res://content/rooms/tb4_lid_path/room.tscn": {
+			"layout_sha256": "799d2f2d00b79fb5526b65df76d36925cddc0589595f0874c2808cc5e0134c79",
+			"room_id": "tb4_lid_path",
+			"scene_sha256": "3d2f19006e14e6f294f5f6b8b0fa72c46176ca5d39950a61c4140757333fbfd8"
+		},
+		"res://content/rooms/tbb_knight_captain/room.tscn": {
+			"layout_sha256": "040f7f2fcc9b3ead67a067d4ec53c873b62fff7521d43ccd3b5713fcb352bdcd",
+			"room_id": "tbb_knight_captain",
+			"scene_sha256": "f2f98a81622b25cacd3007c280a492befb9b5761a1b775045626acd7379efd95"
+		},
+		"res://content/rooms/tbo_crayon_cache/room.tscn": {
+			"layout_sha256": "19b34baf23b47a16f2d1860a15a0bb112bd54d1a0109b95eb4d0e9deb17b0a3a",
+			"room_id": "tbo_crayon_cache",
+			"scene_sha256": "68dd00d8193211aaf0f5130a60b866c9fc7b853a5f268dca5ed93849bea01114"
+		},
+		"res://content/rooms/ub1_castle_gate/room.tscn": {
+			"layout_sha256": "52ea11ebd587ceda5f4f88ea5d31814792eab947c9af7a862626095c4e160cca",
+			"room_id": "ub1_castle_gate",
+			"scene_sha256": "4013219c4b113302835d04a6af2eda9c42d497d6c99b0655a7fce27e6043d7a9"
+		},
+		"res://content/rooms/ub2_last_board/room.tscn": {
+			"layout_sha256": "c0756747d2a4c3f03d21bf298fe987e9d6ad1eac878373f87bea9fae1a5c6765",
+			"room_id": "ub2_last_board",
+			"scene_sha256": "5060a0fef413ec4b9dedf70a5a956d17b4de747c55dfef497994cf30673b7239"
+		},
+		"res://content/rooms/ub3_rule_engine/room.tscn": {
+			"layout_sha256": "a8ad936829cc3710cc2e1ee7ba8e3b2924c62c877b4527f492052d61c904dd64",
+			"room_id": "ub3_rule_engine",
+			"scene_sha256": "d69d48f892579df597fa1147cc87aa75dcd1ebd0a16a5682b6a535afbc6ab0d0"
+		},
+		"res://content/rooms/ubb_black_king/room.tscn": {
+			"layout_sha256": "67f4b23ae97f283f3693bbe93fc9c40968b40c2b6be649046d717ed2b9f1b442",
+			"room_id": "ubb_black_king",
+			"scene_sha256": "1b1e03f5188add7fd79acc3cadbc49fe16cff39ef9d841dbf85c631374eceeaa"
+		}
+	}
+}

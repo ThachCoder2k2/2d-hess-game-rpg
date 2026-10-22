@@ -409,30 +409,41 @@ func _check_the_shipped_tilesets() -> void:
 		_expect(tile_count >= 7 and problems.is_empty(), "%s: all %d tiles name a kind that exists or none, and none is solid while walkable (%s)" % [label, tile_count, "; ".join(problems)])
 
 
-## The promise of the milestone. For every room the world graph lists (the six Stage 1 rooms and the 72x40
-## fixture): the cells the booted grid blocks are exactly the cells whose painted tile has solid = true,
-## which is what the grid blocked before kinds existed, and each of them is a wall. Read straight from the
-## tilemap here, not through CellKinds, so it can disagree.
+## The promise of the milestone. For every room that predates the kinds (the six Stage 1 rooms, whose tiles
+## say `solid` and nothing else, and the 72x40 fixture): the cells the booted grid blocks are exactly the cells
+## whose painted tile has solid = true, which is what the grid blocked before kinds existed, and each of them is a
+## wall. Read straight from the tilemap here, not through CellKinds, so it can disagree. A room painted with a kit
+## whose tiles name their own kind (the greybox kit of M5, tools/build_room.gd) is not a room of that promise: its
+## cells are checked against its layout by tests/tools/test_build_room.gd, and it is counted here.
 func _check_every_shipped_room_keeps_its_walls() -> void:
-	var world_graph := ContentDb.world()
-	if not _expect(world_graph != null and world_graph.zone_scene_by_id.size() >= 6, "setup: the world graph lists at least the six Stage 1 rooms"):
+	var scene_by_zone := TestPaths.new(self).shipped_rooms_and_kingdom()
+	if not _expect(scene_by_zone.size() >= 7, "setup: the world graph lists at least the six Stage 1 rooms, and the kingdom fixture is added"):
 		return
 	var rooms_checked := 0
+	var rooms_with_their_own_kinds := 0
 	var walls_in_all_rooms := 0
 	var every_room_equal := true
 	var only_walls := true
-	for zone_id: StringName in world_graph.zone_scene_by_id:
-		var room := world_graph.get_zone_scene(zone_id).instantiate()
+	for zone_id: StringName in scene_by_zone:
+		var room := scene_by_zone[zone_id].instantiate()
 		var world := EcsWorld.new()
 		EcsBoot.shape_grid(world, room)
 		EcsBoot.apply_tile_kinds(world, room)
 		var tilemap := room.get_node_or_null("RoomArt/TileMap") as TileMapLayer
 		var solid_cells: Dictionary = {}
+		var names_its_own_kinds := false
 		if tilemap != null:
 			for cell in tilemap.get_used_cells():
 				var tile_data := tilemap.get_cell_tile_data(cell)
+				if tile_data != null and not String(tile_data.get_custom_data("kind")).strip_edges().is_empty():
+					names_its_own_kinds = true
 				if tile_data != null and bool(tile_data.get_custom_data("solid")) and world.grid.is_inside(cell):
 					solid_cells[cell] = true
+		if names_its_own_kinds:
+			rooms_with_their_own_kinds += 1
+			room.free()
+			world.free()
+			continue
 		if solid_cells != world.grid.blocked_cells:
 			every_room_equal = false
 			printerr("  room %s: %d solid tiles, %d blocked cells" % [zone_id, solid_cells.size(), world.grid.blocked_cells.size()])
@@ -443,7 +454,7 @@ func _check_every_shipped_room_keeps_its_walls() -> void:
 		rooms_checked += 1
 		room.free()
 		world.free()
-	_expect(rooms_checked >= 6 and walls_in_all_rooms >= 300, "setup: %d rooms were booted and hold %d walls between them" % [rooms_checked, walls_in_all_rooms])
+	_expect(rooms_checked >= 7 and walls_in_all_rooms >= 300, "setup: %d rooms were booted and hold %d walls between them (%d more are painted with a kit that names its own kinds)" % [rooms_checked, walls_in_all_rooms, rooms_with_their_own_kinds])
 	_expect(every_room_equal, "in every room the blocked cells are exactly the cells a solid tile was painted on: identical walkability")
 	_expect(only_walls, "and every one of them is a wall: no shipped tile uses another kind yet")
 

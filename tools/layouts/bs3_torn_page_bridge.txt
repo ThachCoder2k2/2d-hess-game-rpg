@@ -1,0 +1,40 @@
+; bs3_torn_page_bridge: Act 3, Twist, objective REACH: a Bishop and a Charging Pawn wait across a tear in the page; the bridge is the one row that is whole.
+; The page slide and the scripted chalk demo arrive with M10; the Slant rescue is M6. The exit is open.
+; A STUB made at M5 step 2 by tools/build_room.gd from this layout (docs/game-base-plan.md 15 M5). The scene is the truth once it exists;
+; this file is its source until somebody edits the scene in the editor. Read the legend with: tools/build_room.gd -- --legend
+
+[room]
+id = bs3_torn_page_bridge
+size = 16x9
+act = 3
+district = bookshelf
+archetype = bridge
+recipe = twist
+status = stub
+time_of_night = night
+objective = reach
+threat = 5
+shapes = 2
+intensity = 6
+tileset = greybox
+name = Torn Page Bridge
+start = A page has torn. The bridge is narrow, and a bishop waits at the far end.
+
+[grid]
+################
+#......oo......#
+#......oo...S..#
+#......oo......#
+#XA..........EY#
+#......oo......#
+#......oo...C..#
+#......oo......#
+################
+
+[objects]
+A = entry id=from_bs2
+E = entry id=from_bsb
+X = exit to=bs2_diagonal_chapel:from_bs3
+Y = exit to=bsb_bishop_oracle:from_bs3
+S = enemy def=bishop_zoner
+C = enemy def=charging_pawn

@@ -18,6 +18,7 @@ func _init() -> void:
 	_check_enemy_briefs_and_telegraph_progress()
 	_check_the_token_owner()
 	_check_the_room_enemy_counts()
+	_check_the_door_briefs()
 	_check_it_is_rebuilt_in_place_counted_and_not_while_frozen()
 	_check_it_only_reads()
 	_check_presentation_names_no_component()
@@ -174,6 +175,55 @@ func _check_the_room_enemy_counts() -> void:
 	state.enemies_remaining = 0
 	HudSnapshotSystem.build(world)
 	_expect(world.hud_snapshot.room_enemies_total == 4 and world.hud_snapshot.room_enemies_remaining == 0, "and follows it")
+	world.queue_free()
+
+
+## The doors of the room (M5 fix: a door cell was plain floor, so the board drew nothing there): one brief per door
+## cell, shut by the same rule MovementSystem uses (DoorRules), made once and followed in place.
+func _check_the_door_briefs() -> void:
+	var world := _make_world()
+	Schedule.populate(world)
+	var snapshot := world.hud_snapshot
+	HudSnapshotSystem.build(world)
+	_expect(snapshot.door_brief_by_cell.is_empty(), "a room with no door has no door brief")
+
+	var clear_door := Vector2i(14, 4)
+	var flag_door := Vector2i(1, 4)
+	var open_door := Vector2i(1, 6)
+	var ending_door := Vector2i(14, 6)
+	world.grid.exit_by_cell[clear_door] = {"zone": &"next", "entry": &"start", "requires_room_clear": true}
+	world.grid.exit_by_cell[flag_door] = {"zone": &"hub", "entry": &"start", "requires_room_clear": false, "requires_flag": &"boss.knight_captain"}
+	world.grid.exit_by_cell[open_door] = {"zone": &"back", "entry": &"start", "requires_room_clear": false}
+	world.grid.exit_by_cell[ending_door] = {"ends_run": true, "requires_room_clear": false}
+	var pawn := _spawn_pawn(world, Vector2i(8, 4))
+	HudSnapshotSystem.build(world)
+	_expect(snapshot.door_brief_by_cell.size() == 4, "one brief per door cell (4)")
+	var briefs := snapshot.door_brief_by_cell
+	_expect(briefs[clear_door].is_shut, "a door that waits for a clear is shut while a piece stands")
+	_expect(briefs[flag_door].is_shut, "a door that waits for a boss's flag is shut while the flag is not set")
+	_expect(not briefs[open_door].is_shut and not briefs[open_door].ends_run, "a plain door is open")
+	_expect(not briefs[ending_door].is_shut and briefs[ending_door].ends_run, "the door that ends the run is open and says so")
+	var clear_brief: HudSnapshot.DoorBrief = briefs[clear_door]
+
+	var ai: EcsComponents.EnemyAI = world.get_component(pawn, EcsComponents.ENEMY_AI)
+	ai.state = EcsComponents.EnemyAI.STATE_DEFEATED
+	HudSnapshotSystem.build(world)
+	_expect(not briefs[clear_door].is_shut and briefs[flag_door].is_shut, "the last piece falls: the clear door opens and the flag door does not")
+	_expect(briefs[clear_door] == clear_brief, "the brief is the same object, followed in place")
+	world.flags.set_flag(&"boss.knight_captain", true)
+	HudSnapshotSystem.build(world)
+	_expect(not briefs[flag_door].is_shut, "the boss's flag is set: the flag door opens")
+
+	# The snapshot's reading and the door's own behaviour are one rule: stepping on a door says shut exactly when the brief does.
+	world.flags.set_flag(&"boss.knight_captain", false)
+	ai.state = EcsComponents.EnemyAI.STATE_OBSERVE
+	HudSnapshotSystem.build(world)
+	for cell: Vector2i in world.grid.exit_by_cell:
+		_expect(briefs[cell].is_shut == DoorRules.is_shut(world, world.grid.exit_by_cell[cell]), "%s: the brief and DoorRules agree" % cell)
+
+	world.grid.exit_by_cell.erase(open_door)
+	HudSnapshotSystem.build(world)
+	_expect(snapshot.door_brief_by_cell.size() == 3 and not snapshot.door_brief_by_cell.has(open_door), "a door that is gone loses its brief")
 	world.queue_free()
 
 

@@ -40,13 +40,15 @@ func _init() -> void:
 			strays.append(stray_path)
 	_expect(strays.is_empty(), "no fixture scene is filed under content/ (found: %s)" % ", ".join(strays))
 
-	# The H1 exit that targets the kingdom keeps resolving: the graph still names the
-	# fixture scene until M5 ports the world-graph assertions (plan 7.1).
+	# M5 took the kingdom out of the world graph (plan D-02, 7.1): it is a fixture the tests load by path, and no
+	# door of the game leads into it. The graph names neither the zone nor the scene.
 	var world_graph := paths.load_resource(WORLD_GRAPH_PATH) as WorldGraph
-	_expect(world_graph != null and world_graph.has_zone(KINGDOM_ZONE_ID), "the world graph still lists the kingdom zone, so the H1 exit to it resolves")
-	if world_graph != null and world_graph.has_zone(KINGDOM_ZONE_ID):
-		var graph_scene := world_graph.get_zone_scene(KINGDOM_ZONE_ID)
-		_expect(graph_scene != null and graph_scene.resource_path == kingdom_path, "the kingdom zone in the world graph is the fixture scene (%s)" % kingdom_path)
+	_expect(world_graph != null and not world_graph.has_zone(KINGDOM_ZONE_ID), "the world graph does not list the kingdom: it is a test fixture, not a room of the game")
+	if world_graph != null:
+		var graph_scene_paths := PackedStringArray()
+		for room in world_graph.rooms:
+			graph_scene_paths.append(room.scene.resource_path)
+		_expect(not graph_scene_paths.has(kingdom_path), "and none of its rooms is the fixture scene (%s)" % kingdom_path)
 	finish()
 
 
