@@ -4,8 +4,8 @@ extends UnboundTest
 ## the right family, and is passable by the rules it will have (M5 step 2). The plan's table is data in tests/fixtures/plan_room_table.gd
 ## and the shipped scenes are held to it, one row at a time, so a room that drifts from the plan (a renamed id, a 16x9 arena, a
 ## boss with no Recruit beside it) is named. The row counts are asserted in the open so a walk that looked at nothing shows.
-## Also here: the monotony guard of D-02 (no two rooms in a row of the critical path share an archetype), and the proof that no stub
-## asks for a crossing that nobody can make yet.
+## Also here: the proof that no stub asks for a crossing that nobody can make yet. (The monotony guard of D-02, no two rooms in a row of the
+## critical path sharing an archetype, is test_layout_archetypes; its loops are test_district_loops.)
 
 const PlanRoomTable := preload("res://tests/fixtures/plan_room_table.gd")
 
@@ -19,7 +19,6 @@ func _init() -> void:
 	_check_the_pieces_of_every_room(scan_by_room)
 	_check_the_doors_that_wait_for_a_clear(graph, scan_by_room)
 	_check_the_bosses()
-	_check_the_monotony_guard(scan_by_room)
 	_check_no_stub_has_a_crossing()
 	finish()
 
@@ -150,16 +149,6 @@ func _check_the_bosses() -> void:
 				bosses_in_room += 1
 		room.free()
 		_expect(bosses_in_room == 1, "%s holds exactly one %s" % [room_id, boss_id])
-
-
-func _check_the_monotony_guard(scan_by_room: Dictionary[StringName, RoomScan]) -> void:
-	var repeats: Array[String] = []
-	for index in range(1, PlanRoomTable.CRITICAL_PATH.size()):
-		var before: StringName = PlanRoomTable.CRITICAL_PATH[index - 1]
-		var after: StringName = PlanRoomTable.CRITICAL_PATH[index]
-		if before != after and scan_by_room[before].layout_archetype == scan_by_room[after].layout_archetype:
-			repeats.append("%s, %s (%s)" % [before, after, scan_by_room[after].layout_archetype])
-	_expect(repeats.is_empty(), "no two rooms in a row of the critical path share a layout archetype (D-02; found: %s)" % "; ".join(PackedStringArray(repeats)))
 
 
 ## A gap cell is allowed in a stub only beside the walk (a tear, a pit): no door or entry may be cut off from another by gaps, which
