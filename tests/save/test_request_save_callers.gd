@@ -22,8 +22,9 @@ const SaveServiceScript := preload("res://shell/save/save_service.gd")
 ##   unlock_gained       a verb was unlocked (the player_unlock event)
 ##   rule_page_unlocked  a piece was met for the first time and its Book page written
 ##   checkpoint_reached  the pawn came through the door of a hub or a boss room (the checkpoint_set event, D-16)
+##   boss_defeated       a boss fell (the boss_defeated event, M5: BossDefeatSystem)
 const EXPECTED_CALLERS := {
-	"res://shell/bridges/save_bridge.gd": [&"checkpoint_reached", &"pickup_taken", &"room_cleared", &"rule_page_unlocked", &"shortcut_opened", &"unlock_gained"],
+	"res://shell/bridges/save_bridge.gd": [&"boss_defeated", &"checkpoint_reached", &"pickup_taken", &"room_cleared", &"rule_page_unlocked", &"shortcut_opened", &"unlock_gained"],
 }
 
 ## The success events docs/game-base-plan.md 5.2 lists for autosave, each with the reason that carries it.

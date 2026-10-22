@@ -171,12 +171,18 @@ static func _bake_zone_exits(world: EcsWorld, room_root: Node) -> void:
 		if exit_marker == null:
 			continue
 		var cell := world.grid.world_to_cell(exit_marker.position)
-		world.grid.exit_by_cell[cell] = {
+		var door := {
 			"zone": exit_marker.target_zone,
 			"entry": exit_marker.target_entry,
 			"requires_room_clear": exit_marker.requires_room_clear,
 			"locked_message": exit_marker.locked_message,
 		}
+		# Only a door that uses them carries these two keys, so every other door is baked exactly as it always was.
+		if exit_marker.requires_flag != &"":
+			door["requires_flag"] = exit_marker.requires_flag
+		if exit_marker.ends_run:
+			door["ends_run"] = true
+		world.grid.exit_by_cell[cell] = door
 
 
 static func _bake_player_unlocks(world: EcsWorld, room_root: Node) -> void:

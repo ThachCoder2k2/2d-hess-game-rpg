@@ -223,7 +223,10 @@ func _check_the_same_cell_is_chosen() -> void:
 				world.destroy_entity(hero)
 		world.free()
 	_expect(differences.is_empty(), "%d searches on 10 random boards, for every enemy unarmed and every weapon shape, choose the same cell as the whole-board search (%s)" % [comparisons, "; ".join(differences.slice(0, 3))])
-	_expect(comparisons > 1500 and found_a_cell > 1000 and fell_back_to_the_hero >= 5, "setup: the comparison was not trivial: %d searches, %d found a cell to attack from and %d fell back to the hero's own cell" % [comparisons, found_a_cell, fell_back_to_the_hero])
+	# The draw is seeded, and every enemy definition adds variants to it, so how many searches land on the fall-back
+	# answer moves when content is added (M5 step 2 added seven stand-in pieces and it went from 5 or more to 2). What the
+	# comparison needs is that the branch is exercised at all.
+	_expect(comparisons > 1500 and found_a_cell > 1000 and fell_back_to_the_hero >= 1, "setup: the comparison was not trivial: %d searches, %d found a cell to attack from and %d fell back to the hero's own cell" % [comparisons, found_a_cell, fell_back_to_the_hero])
 
 
 # --------------------------------------------------------------------------- whole runs
