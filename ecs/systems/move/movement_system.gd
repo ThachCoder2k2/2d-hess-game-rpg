@@ -76,10 +76,7 @@ func _check_zone_exit(entity_id: int, cell: Vector2i) -> void:
 	var exit: Dictionary = world.grid.exit_by_cell.get(cell, {})
 	if exit.is_empty():
 		return
-	var waits_for_clear := bool(exit.get("requires_room_clear", false)) and not _room_is_clear()
-	var required_flag := StringName(exit.get("requires_flag", &""))
-	var waits_for_flag := required_flag != &"" and not bool(world.flags.get_flag(required_flag, false))
-	if waits_for_clear or waits_for_flag:
+	if DoorRules.is_shut(world, exit):
 		world.emit_event({
 			"type": Events.ZONE_EXIT_LOCKED,
 			"entity": entity_id,
@@ -112,12 +109,3 @@ func _check_player_unlock(entity_id: int, cell: Vector2i) -> void:
 		"id": unlock.get("id", &""),
 		"message": unlock.get("message", ""),
 	})
-
-
-func _room_is_clear() -> bool:
-	for enemy_id in world.query([EcsComponents.ENEMY_AI, EcsComponents.HEALTH]):
-		var health: EcsComponents.Health = world.get_component(enemy_id, EcsComponents.HEALTH)
-		var ai: EcsComponents.EnemyAI = world.get_component(enemy_id, EcsComponents.ENEMY_AI)
-		if health != null and health.current > 0 and ai != null and ai.state != EcsComponents.EnemyAI.STATE_DEFEATED:
-			return false
-	return true

@@ -698,12 +698,21 @@ Mỗi phòng có một **trạng thái** (`content_status`) trên node gốc: `S
 
 1. Mở game (F5) → **New Game**. Bạn bắt đầu ở **T1**. (Muốn chơi lại từ đầu: New Game; save cũ thành `.bak`, mục 7.)
 2. **Stage 1** như cũ: T1 → T2 (nhặt kiếm ở giữa phòng) → T3 → T4 → **B1** (Black Pawn Captain) → **H1**, cái hub. Cửa phía đông của T3, T4, B1 chỉ mở khi bạn dọn hết địch.
-3. **H1 có năm cửa vào năm quận.** Chỉ cửa **Toybox** (cửa trên) mở sau B1. Bốn cửa kia **đứng yên và nói vì sao** (dòng trạng thái ở đáy): mỗi cửa chờ **boss của quận trước** ngã xuống (D-21). Đứng trước cửa đóng là cách thử câu chữ.
+3. **H1 có năm cửa vào năm quận.** Chỉ cửa **Toybox** (cửa trên) mở sau B1. Bốn cửa kia **đứng yên và nói vì sao** (dòng trạng thái ở đáy): mỗi cửa chờ **boss của quận trước** ngã xuống (D-21). **Bước lên** một cửa đóng (ô khung đỏ gạch chéo, xem ngay dưới) là cách đọc lý do và thử câu chữ.
 4. Đi **từng quận theo thứ tự**, mỗi quận có 4 phòng và một boss:
    `Toybox` (tb1, tb2, tb3, **tbb** Knight Captain, tb4) → về H1 qua **lối tắt một chiều** ở cuối quận → `Bookshelf` (bs1 tới bs4, boss Bishop Oracle) → `Block Tower` (bt1 tới bt4, boss Rook Warden) → `Dollhouse` (dh1 tới dh4, boss Queen of Tricks) → `Under-Bed` (ub1, ub2, ub3, **ubb** Black King).
    Mỗi quận: phòng dạy (một họ quân mới, có quân đứng sẵn), phòng thử, phòng lạ (đổi nhịp), phòng boss (checkpoint: vào cửa là hồi đầy Courage), rồi lối tắt. Ba phòng ngách tuỳ chọn (`tbo`, `bso`, `bto`) nằm ngoài tuyến, đi từ lối tắt của quận.
 5. **Boss giả**: một quân một ô, nhiều Courage. Đánh bằng kiếm tới khi ngã: cờ `boss.<id>` được đặt, game tự lưu (`boss_defeated`), và cửa hub của quận sau mở.
 6. Hết **ubb**, cửa phòng boss dẫn sang **bàn học (Desk, `e1`)**: đi tới **cửa ở cuối bàn** (cửa kết thúc, không dẫn đi đâu). Bốn thẻ chữ hiện lần lượt (Enter bỏ qua từng thẻ), rồi **credits**, rồi về **title**, nơi một ô của bàn cờ để trống (bạn đã chơi xong).
+
+**Cửa nhìn thế nào** (thêm sau review M5: trước đó cửa chỉ là ô sàn thường, không ai thấy chỗ đi tiếp). Mỗi cửa là **một ô có khung vẽ đè lên sàn**, và hình dáng khác nhau chứ không chỉ khác màu:
+- **Khung vàng hai lớp, viền tối = cửa mở**: bước lên là đi sang phòng kia.
+- **Khung nâu đỏ trên nền tối, gạch chéo = cửa đóng**: chờ dọn hết địch trong phòng, hoặc chờ boss của quận trước (cửa hub). Bước lên thì cửa không mở và dòng trạng thái nói vì sao; **khi điều kiện đủ, khung tự đổi sang cửa mở** (ví dụ ngay khi quân cuối ngã).
+- **Khung xanh lá có hình thoi ở giữa = cửa cuối của Desk (`e1`)**: bước lên là kết thúc game, qua bốn thẻ chữ và credits.
+
+Cửa **tiến lên** thường ở mép **đông** (hay đông-bắc) của phòng, cửa **quay lại** ở mép **tây**. Hub **H1**: cửa tây (hàng giữa, bên trái) về B1; năm cửa quận rải quanh tấm thảm đỏ: **Toybox** góc trên bên trái, **Bookshelf** góc trên bên phải, **Block Tower** góc dưới bên trái, **Dollhouse** mép phải hàng thứ sáu, **Under-Bed** ở đáy, ngay dưới tấm thảm. `tools/print_world_map.gd` (bên dưới) liệt kê mọi cửa dẫn đâu.
+
+**Giữ phím đi xuyên cửa:** khi một phòng mới bắt đầu (qua cửa, hay sau khi ngã), phím bước đang giữ coi như **đã thả**: con tốt đứng yên ở ô vào cho tới khi bạn **thả ra rồi bấm lại** (cần ghi nhận vì điểm vào nhiều phòng nằm sát cửa quay lại; trước đây giữ phím là bị đẩy ngược ra, qua lại giữa hai phòng).
 
 Chết không mất gì ngoài phòng vừa ngã (mục 7); **Esc** → Restart Room chơi lại phòng. Phòng đã dọn giữ sạch cả lượt chơi (D-17).
 
