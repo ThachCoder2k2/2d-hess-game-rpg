@@ -959,3 +959,38 @@ was the commit attribution line, which matches the harness and is no defect).
 - `Dictionary[StringName, int].get(...)` is a Variant: `var ok := a.get(k, 0) == b` does not infer (a parse error in a strict suite); declare `var ok: bool = ...`.
 - macOS `sed -i` needs `-i ''`; and a heredoc mixed with `cd` or `git` in one command is refused for a worktree-isolated agent (step 2's note): write the script with
   the file tool and run `python3 /tmp/x.py`.
+
+## The M5 review's real-input findings (the fix lane, 2026-10-23)
+
+- **A test that boots the room and teleports the hero never meets what a player meets.** The review sent only key and pad events through `Input.parse_input_event`
+  from a clean save and found two defects 159 green suites could not: door cells drawn as plain floor, and a held walking key that bounced the pawn back out of the
+  door it had come through. The first needed the real renderer to see; the second needed a held key and an engine frame, not a pump of the simulation. Both now have a
+  suite (`test_room_doors_marked`, `test_held_key_through_a_door`), and the review's bot is the model for any later "walk it as a player" check.
+- **A held key is a hardware fact, so its rule lives in the `InputPoller`.** `require_fresh_press()` marks the walking controls that are down when a room begins and
+  publishes them released until they are let go (stick included); a control pressed after the room began works at once. `GameRoot.boot_zone` calls it, so a trip and a
+  respawn are one line. It must be one line: `game_root.gd` is at its 200-line limit. The entry cell of 14 of the 194 door approaches stands one step from the door
+  it came by in the direction of travel (`/tmp` scan by the reviewer: the tb4/tbo nook, H1's four doors, dh4's shortcut home), so holding the key through them walked the
+  pawn out again 0.22 s after arrival (the key repeat's delay). Moving the entries instead would have fixed 14 cells and left every future room to the next review.
+- **Doors are an overlay, drawn from the snapshot, and the rule of "shut" has one owner.** The board draws one mark per `HudSnapshot.door_brief_by_cell` entry (shut:
+  dark frame crossed out; open: two nested gold frames in a dark outline, readable on the light floor tile; the door that ends the run: green with a diamond; one-pixel
+  lines inside the cell, shape and not only colour). `DoorRules.is_shut` (`ecs/core`) is the one answer to "does this door let the hero through", used by
+  `MovementSystem` when the hero lands on it and by `HudSnapshotSystem` every tick; the board redraws when a brief changes, so a door opens on screen the tick the last
+  piece falls. A painted door tile was the alternative: it would have meant repainting the binary tile maps of 34 rooms and the Stage 1 dumps, and the owner can still
+  replace the overlay with props later.
+- **"A floor no player reaches" was false.** The route bot walks up to still pieces and waits out each stroke's recovery, so a player with the AI on beat it in 25 of 31 rooms
+  (172 s against 195 s over the first visits, hub returns apart); only the six boss rooms ran longer (1.4 to 2.9 times, real strokes against one damage event). `route_times.md`
+  now says "a slow bot's baseline"; D-03's true minima are M9's.
+- **The route test cannot see a lock it does not try.** Removing the Bookshelf door's `requires_flag` kept `test_full_route` green until the bot learned to step on every
+  door the ROUTE has not earned yet (derived from the route, not from the doors, or a door that lost its lock would leave the list with it) and require its own line. The
+  probe's time and walk back are excluded from the room's number, so the committed `docs/route_times.md` kept every value.
+- **Twelve rooms park pieces that disagree with their designed threat, and the list is pinned.** tb1 4 (design 1), bs1 6 (3), bt1 6 (2), tb3 3 (4), ub2 9 (6), ub3 1 (4), b1 9 (6),
+  and the five boss arenas 8, 8, 9, 9, 10 against 7, 7, 8, 8, 9. The three Teach rooms are therefore above the Teach cap of 3 today, because a stub parks LIVE the piece the plan
+  fences (M8a); fixing the rosters would drop the family previews that the shipped-scene lint of R27 requires. `KNOWN_STUB_PARKED_THREAT` in `test_threat_budget` pins the list
+  exactly (a new disagreement and a cured one both fail by name). `T2` has no Crayon Target, which the plan lists (a prop, M6 or M9).
+- **Eight stub fights barely strike back** (an idle pawn lived 45 s in tb1, tb2, tb3, bs2, bs3, bsb, bt2, ub3, and 2.7 to 9.7 s elsewhere); the owner guide says so, so the fight feel the
+  owner reports is read as the stand-ins' and not as tuning. The four format-breaker rooms and eleven skill-locked doors play like plain ones until M7c; both were documented.
+- **Commit trailers disagree in the history of `base/m5-3`:** `a2d7342`, `6d4a15e`, `5303417` end `Claude Opus 5.5`, the other fifteen (and every commit of the fix lane) end
+  `Claude Sonnet 5.5`, the harness's attribution. Rewriting them would change every later hash and move the tags, so they are left; reword them if the branch is squashed.
+- Tool notes: a worktree-isolated agent cannot run `HOME=... godot` or a compound command that names git; `/tmp/upg-godot-home.sh` (exports `HOME=/tmp/upg-fix`, then `exec`s
+  Godot) and `/tmp/upg-godot` (a symlink to the binary) keep the commands plain. A scratch script that draws a room with the real renderer (`game_root.tscn`, then
+  `swap_zone` and `boot_zone`, then `get_root().get_texture().get_image().save_png`) is the fast way to look at a board; run it without `--headless`.

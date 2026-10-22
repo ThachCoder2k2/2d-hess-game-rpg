@@ -2117,3 +2117,34 @@ owner's gate OG1 is waiting.
   `human_review`), this entry and `findings.md`.
 - **Not done, and why.** The fenced Queen preview in `dh3` (the only Queen is the boss, and her defeat flag must stay hers: step 2's note); the optional nooks
   (`tbo`, `bso`, `bto`) are not walked by the bot (off the critical path, each waits for a verb of M7c); `dev_sandbox` is M6's.
+
+
+## M5 fix lane - the review's real-input findings - 2026-10-23
+
+Branch `base/m5-fix` (from `base/m5-3`, tag `m5-done` moved to its last commit), the strict runner green (161 suites, 235 of 235 baseline labels). The M5 review
+(`accept_with_fixes`) passed every acceptance item as written, played the route from a clean save by real input from title to credits (35 steps, 69 of 69 doors), and found
+two defects of how the owner would experience OG1, both major, and a list of minor ones. All are fixed or answered here; nothing in the review's acceptance moved.
+
+- **Major 1: doors were invisible.** The board overlay (`PrototypeBoard`) now draws one mark per door cell from the read-only `HudSnapshot`: `DoorBrief` (is_shut, ends_run)
+  per cell, filled by `HudSnapshotSystem`, and redrawn when a door opens. Shut = a dark frame crossed out; open = two nested gold frames in a dark outline (readable on the
+  light floor tile); the door that ends the run = green with a diamond. One-pixel lines in the cell, colours as exports on the board. "Is this door shut" was `MovementSystem`'s
+  private rule; it moved to `DoorRules` (`ecs/core`) and both systems ask it. Looked at with the real renderer (tb2 shut and cleared, H1 with and without a boss flag, the Desk).
+  `test_room_doors_marked` boots all 34 rooms: one brief and one mark per door (69 in the world), shut as the marker asks, all open once cleared and flagged, and each check able
+  to fail; `test_hud_snapshot` and `test_board_draws_from_snapshot` gained the unit checks. The guide says what the marks mean and where the hub's doors are (section 9).
+- **Major 2: a held walking key bounced the pawn back out.** `InputPoller.require_fresh_press()` (called by `GameRoot.boot_zone`, so for a trip and a respawn) publishes a
+  walking control that was down when the room began as released until it is let go; the stick has to return to the centre. 14 of the 194 door approaches arrive one step
+  from the door they came by (tb4/tbo, H1's four doors, dh4's shortcut home...). `test_held_key_through_a_door` holds the key on the real `Input` through the tb4 nook door and
+  through a respawn (fails without the call: the hero walks back out), `test_input_poller_rules` has the unit checks. The reviewer's real-input bot, run against this branch
+  unchanged: 0 problems, 69 of 69 doors, by taps and by held keys.
+- **Minor, fixed:** the Desk's arrival line no longer promises a blue line that is not drawn (row and layout changed); `docs/route_times.md` and the guide call the numbers a slow bot's
+  baseline and not a minimum (the review beat the bot in 25 of 31 rooms); the route bot steps on every shut hub door before its boss and requires the door's own line (ten probes:
+  4+3+2+1, excluded from the times; removing the Bookshelf door's flag turns `test_full_route` red); the twelve rooms that park other pieces than their design are an exact pinned list in
+  `test_threat_budget` (`KNOWN_STUB_PARKED_THREAT`); the guide says the Under-Bed has three rooms, a boss arena takes 10 to 20 strokes with its escort, and lists what is known before
+  playing (live previews in the three Teach rooms, escorts, ub2 at once, tb3 without a train, ub3 without pulses, no Crayon Target in T2, eight fights that barely strike, the
+  format-breakers and eleven skill-locked doors playing like plain rooms).
+- **Not changed, and why.** (1) The parked rosters themselves: the three Teach rooms keep their live Knight, Bishop and Rook because the shipped-scene lint of R27 requires each family to
+  enter where the plan introduces it and the fenced mode is M8a's; the answer is the pin and the guide, not a quiet roster change. (2) The commit trailers of `base/m5-3`: the first three
+  commits say `Claude Opus 5.5` and the rest (and this lane) `Claude Sonnet 5.5`; rewriting would change every later hash and the tags, so reword them on any squash. (3) The eleven
+  skill-locked doors and the format-breaker rooms are M7c's and M9's (documented, per the review). (4) `T2`'s Crayon Target (a prop) and `dev_sandbox` (M6's).
+- **Verification.** Both self-tests 0 failures; the strict runner 161 suites, 0 failed, GREEN, 235/235 labels; the import pass clean; `stamp_uids --check` CLEAN; `git diff --check` clean.
+  Mutations shown red and restored: the `require_fresh_press` call removed (held-key suite), the Bookshelf door's `requires_flag` removed (route test), each new check's own fail case.
