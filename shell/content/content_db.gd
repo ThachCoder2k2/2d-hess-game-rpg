@@ -12,6 +12,7 @@ extends RefCounted
 ##   ContentDb.player()                           -> content/player/player.tres
 ##   ContentDb.piece_sizes()                      -> content/feel/piece_sizes.tres
 ##   ContentDb.credits()                          -> content/story/credits.tres
+##   ContentDb.ending()                           -> content/story/endings/ending.tres
 ##
 ## The id of a thing is its folder name (or its file name for flat kinds), spelled in
 ## one place; ids are found by listing the folders, once per kind, on first use.
@@ -125,6 +126,11 @@ static func credits() -> CreditsDefinition:
 	return fetch(&"credits", &"credits") as CreditsDefinition
 
 
+## content/story/endings/ending.tres: the cards between the last boss and the credits (plan 8.8).
+static func ending() -> Ending:
+	return fetch(&"ending", &"ending") as Ending
+
+
 ## Points the registry at another content folder (a throwaway tree under user:// in a
 ## test) and forgets everything it listed. Pass DEFAULT_CONTENT_ROOT to go back.
 static func configure_root(content_root: String) -> void:
@@ -177,6 +183,7 @@ static func validate_cross_refs() -> PackedStringArray:
 	_check_player_references(problems)
 	_check_visual_references(problems)
 	_check_world_and_rooms(problems)
+	_check_ending_references(problems)
 	return problems
 
 
@@ -188,6 +195,7 @@ static func _ensure_kinds() -> void:
 	_add_kind(ContentKind.new(&"world", ContentKind.IdSource.KIND_ITSELF, "world.tres", WorldGraph))
 	_add_kind(ContentKind.new(&"piece_sizes", ContentKind.IdSource.KIND_ITSELF, "piece_sizes.tres", PieceSizeTable, &"feel"))
 	_add_kind(ContentKind.new(&"credits", ContentKind.IdSource.KIND_ITSELF, "credits.tres", CreditsDefinition, &"story"))
+	_add_kind(ContentKind.new(&"ending", ContentKind.IdSource.KIND_ITSELF, "ending.tres", Ending, &"story/endings"))
 	_add_kind(ContentKind.new(&"enemies", ContentKind.IdSource.FOLDER_NAME, "{id}/enemy.tres", EnemyDefinition))
 	_add_kind(ContentKind.new(&"rooms", ContentKind.IdSource.FOLDER_NAME, "{id}/room.tscn", PackedScene))
 	_add_kind(ContentKind.new(&"rules", ContentKind.IdSource.FOLDER_NAME, "{id}/page.tres", RuleEntry))
@@ -396,6 +404,19 @@ static func _check_world_and_rooms(problems: PackedStringArray) -> void:
 		for enemy in (scan_by_room[room_id] as RoomScan).enemy_definitions:
 			_expect_registered(problems, "rooms/%s" % room_id, "an enemy parked here", enemy, &"enemies")
 
+
+
+## The ending's cards say words that exist, and the room Continue loads after the ending is a room of the world.
+static func _check_ending_references(problems: PackedStringArray) -> void:
+	var ending_definition := ending()
+	if ending_definition == null:
+		return
+	for card in ending_definition.cards:
+		if card != null and not TextService.has_key(card.text_key):
+			problems.append("ending/ending: the card '%s' has no row in the English files." % card.text_key)
+	var graph := world()
+	if graph != null and not graph.has_zone(ending_definition.post_game_zone):
+		problems.append("ending/ending: post_game_zone '%s' is not a room of content/world/world.tres." % ending_definition.post_game_zone)
 
 
 ## Adds a problem unless `resource` is null (validate() reports a missing required

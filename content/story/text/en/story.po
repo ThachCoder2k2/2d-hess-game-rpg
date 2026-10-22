@@ -5,7 +5,7 @@
 # (content/rules/<id>/page.tres), the pieces (content/enemies/<id>/enemy.tres) and the credits
 # (content/story/credits.tres) look the words up by. {name} is filled in by the game: keep it as it is.
 # Prefixes in this file: BOOK_ (the Book's own labels), PAGE_ (a Book page), ENEMY_ and CHAR_ (a piece's names),
-# CREDIT_ (the credits roll); dialogue (DLG_), ambient lines (AMB_) and the rest of the story arrive with the story.
+# CREDIT_ (the credits roll), END_ (the ending cards); dialogue (DLG_), ambient lines (AMB_) and the rest of the story arrive with the story.
 #
 # Cách sửa một dòng: đổi chữ sau "msgstr", đừng đổi "msgid" (đó là mã mà game và các scene dùng để tìm chữ).
 # Lưu tệp rồi chạy game (F5). Giữ nguyên mọi phần trong ngoặc nhọn, ví dụ {room}.
@@ -276,3 +276,19 @@ msgstr "Licenses"
 #. surface=credits roll, the last line
 msgid "CREDIT_CLOSING_LINE"
 msgstr "Thank you for playing."
+
+#. surface=ending card 1; purpose=the Ending opens on the light after the one night; placeholder until the Desk is built (M13)
+msgid "END_CARD_MORNING"
+msgstr "Morning."
+
+#. surface=ending card 2; purpose=the pieces are back in the box that the child opens; placeholder until the Desk is built (M13)
+msgid "END_CARD_BOARD"
+msgstr "The board is quiet. The pieces stand on their squares."
+
+#. surface=ending card 3; purpose=the refusal of the promotion, D-33: a loving no the child must accept; placeholder until the Desk is built (M13)
+msgid "END_CARD_CROWN"
+msgstr "A small hand offers a crown. The pawn walks past it."
+
+#. surface=ending card 4; purpose=the held image before the credits, the crayon line the pawn follows off the board; placeholder until the Desk is built (M13)
+msgid "END_CARD_LINE"
+msgstr "There is a blue line on the desk. It goes on past the edge."

@@ -142,6 +142,10 @@ msgstr "none yet"
 msgid "UI_CREDITS_SKIP_HINT"
 msgstr "Hold Confirm to skip"
 
+#. surface=ending cards, bottom of the screen; purpose=tell the player how to go on to the next card
+msgid "UI_ENDING_SKIP_HINT"
+msgstr "Confirm to go on"
+
 #. surface=HUD top strip, beside the Courage pips; purpose=name the row of marks that shows how much Courage the pawn has left
 msgid "UI_HUD_COURAGE"
 msgstr "COURAGE"

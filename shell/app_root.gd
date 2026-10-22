@@ -8,6 +8,7 @@ extends Node
 ##
 ##   title   (shell/title)     New Game, Continue, Settings, Credits, Quit
 ##   game    (shell/game_root) the room; GameRoot builds the world and ticks it, and stays testable alone
+##   ending  (shell/ending)    the cards between the last boss and the credits
 ##   credits (shell/credits)   the roll
 ##
 ## AppRoot shows; GameFlow decides. A button on the title calls a GameFlow request (New Game and Continue go through
@@ -48,6 +49,7 @@ signal quit_requested
 @export var title_scene: PackedScene
 @export var game_scene: PackedScene
 @export var credits_scene: PackedScene
+@export var ending_scene: PackedScene
 ## The node the current screen is a child of.
 @export var screen_host: Node
 @export var transition: TransitionLayer
@@ -63,7 +65,7 @@ signal quit_requested
 @export var quits_the_tree := true
 
 var game_flow := GameFlow.new()
-## The screen on show (a TitleScreen, a GameRoot or a CreditsScreen), null between two screens.
+## The screen on show (a TitleScreen, a GameRoot, an EndingScreen or a CreditsScreen), null between two screens.
 var screen: Node = null
 var save_service: SaveServiceScript = null
 ## What the player chose in the settings screen: one object for the whole app, handed to the game scene.
@@ -168,6 +170,8 @@ func _on_state_changed(previous: GameFlow.State, current: GameFlow.State) -> voi
 		GameFlow.State.PLAYING:
 			if previous == GameFlow.State.TITLE:
 				_queue_step(_show_game)
+		GameFlow.State.ENDING:
+			_queue_step(_show_ending)
 		GameFlow.State.CREDITS:
 			_queue_step(_show_credits)
 
@@ -213,6 +217,17 @@ func _show_game() -> void:
 	var notice_text_key := String(TitleSummary.NOTICE_TEXT_KEY_BY_KEY.get(game_flow.load_notice_key, ""))
 	if not notice_text_key.is_empty():
 		game.message_bridge.say(notice_text_key)
+	await transition.fade_in()
+
+
+## The ending cards replace the game screen (the room was left by the door that ends the run); when the last card has
+## faded out the flow goes on to the credits.
+func _show_ending() -> void:
+	await transition.fade_out()
+	_free_screen()
+	var ending := ending_scene.instantiate() as EndingScreen
+	ending.finished.connect(game_flow.finish_ending)
+	_put_screen(ending)
 	await transition.fade_in()
 
 
