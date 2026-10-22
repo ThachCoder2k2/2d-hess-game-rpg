@@ -118,7 +118,24 @@ func _check_every_mistake_is_named(good_text: String) -> void:
 	_expect_problem(good_text.replace("T = exit to=t3_first_pawn_clash:from_t4", "T = exit to=t3_first_pawn_clash"), "to=t3_first_pawn_clash must read <room_id>:<entry_id>", "an exit target that is not room:entry")
 	_expect_problem(good_text.replace("T = exit to=t3_first_pawn_clash:from_t4", "T = exit to=t4_broken_rule_yard:west_entry"), "leads to its own room", "a door to its own room")
 	_expect_problem(good_text.replace(" clear locked=\"The black pawns still hold the yard. Break the black line first.\"", " clear"), "waits for a clear but gives no reason", "a shut door that does not say why")
-	_expect_problem(good_text.replace("name=Exit_To_T3", "name=Exit_To_T3 locked=\"words\""), "only a door that waits for a clear can say why it is shut", "a locked line on a door that is not shut")
+	_expect_problem(good_text.replace("name=Exit_To_T3", "name=Exit_To_T3 locked=\"words\""), "only a door that waits for a clear (`clear`) or a flag (needs_flag=...) can say why it is shut", "a locked line on a door that is not shut")
+	# A door that waits for a world flag (a boss fallen) is shut like a clear and must say why.
+	var flag_door := good_text.replace("name=Exit_To_T3", "name=Exit_To_T3 needs_flag=boss.black_pawn_captain")
+	_expect_problem(flag_door, "waits for a flag but gives no reason", "a door that waits for a flag and does not say why")
+	_expect_problem(flag_door.replace("needs_flag=boss.black_pawn_captain", "needs_flag=Boss.Captain locked_key=ROOM_T4_BROKEN_RULE_YARD_LOCKED_T3"), "needs_flag=Boss.Captain is not a flag id", "a door that waits for something that is not a flag id")
+	_expect_problem(flag_door.replace("name=Exit_To_T3", "name=Exit_To_T3 clear locked_key=ROOM_T4_BROKEN_RULE_YARD_LOCKED_T3"), "waits for a clear AND a flag", "a door that waits for a clear and a flag at once")
+	_expect_problem(flag_door.replace("needs_flag=boss.black_pawn_captain", "needs_flag=boss.black_pawn_captain locked=\"Not yet.\""), "both use the line ROOM_T4_BROKEN_RULE_YARD_LOCKED: give the second its own locked_key=KEY", "a flag door and a clear door that say the same line")
+	var good_flag_door: RefCounted = RoomLayout.parse(flag_door.replace("needs_flag=boss.black_pawn_captain", "needs_flag=boss.black_pawn_captain locked_key=ROOM_T4_BROKEN_RULE_YARD_LOCKED_T3 locked=\"The captain still stands.\""), "t4_broken_rule_yard")
+	_expect((good_flag_door.problems as PackedStringArray).is_empty(), "control: a door that waits for a flag and says why is accepted")
+	# The door that ends the run belongs to the Ending's room only.
+	var ending_door := good_text.replace("#......#.......#", "#......#...Z...#").replace("[objects]\n", "[objects]\nZ = ending_exit\n")
+	_expect_problem(ending_door, "only a room whose recipe is `ending` may hold the door that ends the run", "the door that ends the run in a room that is not the Ending")
+	var good_ending: RefCounted = RoomLayout.parse(ending_door.replace("recipe = twist", "recipe = ending"), "t4_broken_rule_yard")
+	var ending_names := PackedStringArray()
+	for placement in good_ending.placements():
+		if placement["kind"] == "ending_exit":
+			ending_names.append(String(placement["name"]))
+	_expect((good_ending.problems as PackedStringArray).is_empty() and ending_names == PackedStringArray(["Exit_Beyond_Board"]), "control: in an ending room the door that ends the run is accepted and named Exit_Beyond_Board")
 	_expect_problem(good_text.replace("name=Exit_To_T3", "name=Exit_To_T3 clear locked=\"Not yet.\""), "both use the line ROOM_T4_BROKEN_RULE_YARD_LOCKED: give the second its own locked_key=KEY", "two doors that both wait for a clear and say the same line")
 	_expect_problem(good_text.replace("F = entry id=from_b1", "F = entry id=west_entry"), "repeats the entry id 'west_entry'", "two entries with one id")
 	_expect_problem(good_text.replace("#TE....#.......#", "#TEE...#.......#"), "stands on 2 cells, but an object of kind entry may stand on one only", "an entry on two cells")

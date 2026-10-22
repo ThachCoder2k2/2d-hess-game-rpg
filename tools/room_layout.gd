@@ -38,10 +38,13 @@ extends RefCounted
 ## floor, except under a `traversal` (a gap). In [objects] each character is defined once:
 ##
 ##   A = entry id=<entry_id>                       where the pawn arrives (ZoneEntryMarker). At least one per room.
-##   B = exit to=<room_id>:<entry_id> [clear] [locked="<English>"] [locked_key=<KEY>] [name=<Node>]
+##   B = exit to=<room_id>:<entry_id> [clear] [needs_flag=<flag>] [locked="<English>"] [locked_key=<KEY>] [name=<Node>]
 ##                                                 a door (ZoneExitMarker). `clear` shuts it until the room is
-##                                                 cleared; `locked` is the English words of its line
-##                                                 ROOM_<ID>_LOCKED (or `locked_key` for a second shut door).
+##                                                 cleared; `needs_flag` shuts it until that world flag is set (a
+##                                                 boss fallen: boss.knight_captain); `locked` is the English words
+##                                                 of its line ROOM_<ID>_LOCKED (or `locked_key` for a second shut
+##                                                 door). A shut door must say why; `clear` and `needs_flag` do not
+##                                                 combine.
 ##   C = enemy def=<enemy_id> [name=<Node>]        a parked enemy (ActorView + the definition). May repeat.
 ##   D = pickup weapon=<pickup_id> [persistent] [name=<Node>]
 ##                                                 a floor weapon (PickupSpawnPoint); `persistent` = taken once
@@ -58,6 +61,9 @@ extends RefCounted
 ##                                                 are ONE crossing. `costly` = the cast costs Believe even when calm.
 ##   H = variant id=<variant_id> [requires=a.b,c] [forbids=d] [name=<Node>]
 ##                                                 a prop that shows only in a state (StateVariantMarker)
+##   Z = ending_exit [name=<Node>]                 the door that ENDS THE RUN (ZoneExitMarker.ends_run): it leads
+##                                                 nowhere, stepping on it shows the ending cards and the credits.
+##                                                 Only the Ending's room (e1) has one.
 ## The checkpoint flag is a room key, not a cell: `checkpoint_on_entry = true`.
 ##
 ## The legend above is what `tools/build_room.gd --legend` prints. A problem is a sentence; `problems` is empty
@@ -84,13 +90,14 @@ const OBJECT_CHARACTERS := "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
 ## `repeatable` = the character may stand on several cells, `terrain` = the kind of the cell under it.
 const OBJECT_KINDS := {
 	"entry": {"required": ["id"], "optional": ["name"], "flags": [], "repeatable": false, "terrain": CellKinds.FLOOR},
-	"exit": {"required": ["to"], "optional": ["name", "locked", "locked_key"], "flags": ["clear"], "repeatable": false, "terrain": CellKinds.FLOOR},
+	"exit": {"required": ["to"], "optional": ["name", "locked", "locked_key", "needs_flag"], "flags": ["clear"], "repeatable": false, "terrain": CellKinds.FLOOR},
 	"enemy": {"required": ["def"], "optional": ["name"], "flags": [], "repeatable": true, "terrain": CellKinds.FLOOR},
 	"pickup": {"required": ["weapon"], "optional": ["name"], "flags": ["persistent"], "repeatable": true, "terrain": CellKinds.FLOOR},
 	"unlock": {"required": ["id"], "optional": ["name", "text"], "flags": [], "repeatable": false, "terrain": CellKinds.FLOOR},
 	"gate": {"required": ["id"], "optional": ["name", "opens"], "flags": [], "repeatable": false, "terrain": CellKinds.FLOOR},
 	"traversal": {"required": ["verb"], "optional": ["name"], "flags": ["costly"], "repeatable": true, "terrain": CellKinds.GAP},
 	"variant": {"required": ["id"], "optional": ["name", "requires", "forbids"], "flags": [], "repeatable": false, "terrain": CellKinds.FLOOR},
+	"ending_exit": {"required": [], "optional": ["name"], "flags": [], "repeatable": false, "terrain": CellKinds.FLOOR},
 }
 const OPENS_DIRECTIONS := {"left": Vector2i.LEFT, "right": Vector2i.RIGHT, "up": Vector2i.UP, "down": Vector2i.DOWN}
 ## The keys of [room] and whether each is required.
@@ -182,7 +189,7 @@ func cells_of(character: String) -> Array[Vector2i]:
 
 
 ## Every placement the scene gets, in the order the writer emits the nodes: entries, exits, enemies, pickups,
-## unlocks, gates, traversal crossings, variants; within a kind by object character (A before B), then row by row. Each is
+## unlocks, gates, traversal crossings, variants, the ending exit; within a kind by object character (A before B), then row by row. Each is
 ## { "kind", "name" (the node name), "cell" (the first cell), "cells" (all cells of one crossing), "params", "flags", "character" }.
 ## A crossing is merged from neighbouring cells of one traversal character. Valid only when `problems` is empty.
 func placements() -> Array[Dictionary]:
@@ -213,7 +220,7 @@ func text_key(suffix: String) -> String:
 	return "ROOM_%s_%s" % [room_id.to_upper(), suffix]
 
 
-## The key of the line of an exit that waits for a clear: its `locked_key`, else ROOM_<ID>_LOCKED.
+## The key of the line of an exit that waits for a clear or a flag: its `locked_key`, else ROOM_<ID>_LOCKED.
 func locked_key_of(placement: Dictionary) -> String:
 	var explicit_key := String(placement["params"].get("locked_key", ""))
 	return explicit_key if not explicit_key.is_empty() else text_key("LOCKED")
@@ -472,12 +479,18 @@ func _check_objects() -> void:
 					_whole_file_problem("%s: to=%s must read <room_id>:<entry_id>." % [label, target])
 				elif target_parts[0] == room_id:
 					_whole_file_problem("%s leads to its own room." % label)
-				if object["flags"].has("clear"):
+				var waits_for_flag := params.has("needs_flag")
+				if waits_for_flag:
+					if not FlagId.is_valid(StringName(String(params["needs_flag"]))):
+						_whole_file_problem("%s: needs_flag=%s is not a flag id (boss.knight_captain)." % [label, params["needs_flag"]])
+					if object["flags"].has("clear"):
+						_whole_file_problem("%s waits for a clear AND a flag: a door has one lock, give it `clear` or needs_flag=..., not both." % label)
+				if object["flags"].has("clear") or waits_for_flag:
 					shut_exit_count += 1
 					if String(params.get("locked", "")).is_empty() and String(params.get("locked_key", "")).is_empty():
-						_whole_file_problem("%s waits for a clear but gives no reason: add locked=\"...\" (the English words) or locked_key=KEY." % label)
+						_whole_file_problem("%s waits for a %s but gives no reason: add locked=\"...\" (the English words) or locked_key=KEY." % [label, "flag" if waits_for_flag else "clear"])
 				elif params.has("locked") or params.has("locked_key"):
-					_whole_file_problem("%s has a locked line but is not `clear`: only a door that waits for a clear can say why it is shut." % label)
+					_whole_file_problem("%s has a locked line but is not shut: only a door that waits for a clear (`clear`) or a flag (needs_flag=...) can say why it is shut." % label)
 			"enemy":
 				if not ContentDb.has_id(&"enemies", StringName(String(params.get("def", "")))):
 					_whole_file_problem("%s: def=%s is not an enemy (content/enemies/ has: %s)." % [label, params.get("def", ""), ", ".join(PackedStringArray(ContentDb.ids(&"enemies")))])
@@ -507,11 +520,13 @@ func _check_objects() -> void:
 					_whole_file_problem("%s has no condition: give requires=... or forbids=..." % label)
 	if not _has_kind("entry"):
 		_whole_file_problem("the room has no entry: add an `entry` object, or the pawn can never arrive in it.")
+	if recipe != RoomEncounter.Recipe.ENDING and _has_kind("ending_exit"):
+		_whole_file_problem("only a room whose recipe is `ending` may hold the door that ends the run (an `ending_exit` object).")
 	if shut_exit_count > 1:
 		var keys: Dictionary = {}
 		for character: String in object_by_character:
 			var object: Dictionary = object_by_character[character]
-			if object["kind"] == "exit" and object["flags"].has("clear"):
+			if object["kind"] == "exit" and (object["flags"].has("clear") or object["params"].has("needs_flag")):
 				var key := String(object["params"].get("locked_key", text_key("LOCKED")))
 				if keys.has(key):
 					_whole_file_problem("two doors that wait for a clear both use the line %s: give the second its own locked_key=KEY." % key)
@@ -545,7 +560,7 @@ func _check_reachability() -> void:
 					frontier.append(next_cell)
 		reachable_from_each_entry.append({"entry": placement["name"], "reached": reached})
 	for placement in placements():
-		if placement["kind"] not in ["exit", "pickup", "unlock"]:
+		if placement["kind"] not in ["exit", "pickup", "unlock", "ending_exit"]:
 			continue
 		for reach in reachable_from_each_entry:
 			if not (reach["reached"] as Dictionary).has(placement["cell"]):
@@ -628,6 +643,8 @@ func _unique_node_name(kind: String, object: Dictionary, used_names: Dictionary)
 				base = "TraversalGap"
 			"variant":
 				base = "Variant_" + _pascal_case(String(params["id"]), "")
+			"ending_exit":
+				base = "Exit_Beyond_Board"
 	var candidate := base
 	var number := 2
 	while used_names.has(candidate):

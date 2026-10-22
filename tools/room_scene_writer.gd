@@ -177,12 +177,22 @@ static func _placement_block(layout: RefCounted, placement: Dictionary, board_or
 			lines.append("script = ExtResource(\"%s\")" % script_id)
 			lines.append("target_zone = &\"%s\"" % target_parts[0])
 			lines.append("target_entry = &\"%s\"" % target_parts[1])
-			if flags.has("clear"):
+			if flags.has("clear") or params.has("needs_flag"):
 				var key: String = layout.locked_key_of(placement)
-				lines.append("requires_room_clear = true")
+				if flags.has("clear"):
+					lines.append("requires_room_clear = true")
+				if params.has("needs_flag"):
+					lines.append("requires_flag = &\"%s\"" % params["needs_flag"])
 				lines.append("locked_message = \"%s\"" % key)
 				if params.has("locked"):
 					text_rows.append({"key": key, "text": String(params["locked"]), "purpose": "say what holds this door"})
+		"ending_exit":
+			var script_id: String = resources.add("Script", EXIT_MARKER_SCRIPT, "exit")
+			lines.append("[node name=\"%s\" type=\"Marker2D\" parent=\".\"]" % node_name)
+			lines.append(position_text)
+			lines.append("script = ExtResource(\"%s\")" % script_id)
+			lines.append("target_zone = &\"\"")
+			lines.append("ends_run = true")
 		"enemy":
 			var enemy_path := ContentDb.path_of(&"enemies", StringName(String(params["def"])))
 			var base_id: String = resources.add("PackedScene", ACTOR_BASE_SCENE, "actor")
@@ -345,8 +355,12 @@ static func verify_scene(scene_path: String, layout: RefCounted) -> PackedString
 			"exit":
 				var baked: Dictionary = grid.exit_by_cell.get(cell, {})
 				var target_parts := String(placement["params"]["to"]).split(":")
-				if baked.is_empty() or String(baked["zone"]) != target_parts[0] or String(baked["entry"]) != target_parts[1] or bool(baked["requires_room_clear"]) != placement["flags"].has("clear"):
+				if baked.is_empty() or String(baked["zone"]) != target_parts[0] or String(baked["entry"]) != target_parts[1] or bool(baked["requires_room_clear"]) != placement["flags"].has("clear") \
+						or String(baked.get("requires_flag", "")) != String(placement["params"].get("needs_flag", "")):
 					problems.append("the door %s is not baked on %s as the layout says (%s)" % [placement["name"], cell, baked])
+			"ending_exit":
+				if not bool(grid.exit_by_cell.get(cell, {}).get("ends_run", false)):
+					problems.append("the door that ends the run (%s) is not baked on %s" % [placement["name"], cell])
 			"enemy":
 				if cell not in enemy_cells or (node as ActorView).definition == null or (node as ActorView).definition.resource_path != ContentDb.path_of(&"enemies", StringName(String(placement["params"]["def"]))):
 					problems.append("the enemy %s is not on %s with the definition %s" % [placement["name"], cell, placement["params"]["def"]])
