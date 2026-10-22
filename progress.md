@@ -2028,3 +2028,48 @@ commits; this run re-checked them against the step's list, found them complete, 
   `test_content_db_detects_problems`, the room-walking suites (they take the kingdom from `TestPaths`), `dump_h1.txt` (H1's top door).
 - **Not done here, on purpose.** Everything else of M5: stub rooms for every id of 7.4, boss stubs, the H1 flag locks (a `WorldLock` of kind `flag`
   is data that nothing enforces yet), `e1` and the credits, the `tools/list_placeholders.gd` rows for the new rooms, the full-route bot and the lints.
+
+## M5 step 2 - every room, the boss stubs, the hub's locks and the ending - 2026-10-22
+
+Branch `base/m5-2` (from `base/m5-1`), the strict runner green. The second of M5's three steps; the route bot, `docs/route_times.md` and the lints that
+run against the 7.4 table are step 3.
+
+- **Every room of plan 7.4 exists.** 27 new rooms and `tb1` rebuilt (its layout extended and the scene rebuilt with `--force`, which the manifest
+  allowed because nobody had edited it) = 28 stubs, from layouts in `tools/layouts/` made by `tools/build_room.gd`; with the six hand-made Stage 1
+  rooms that is the plan's 34 (`print_world_map` shows 34 nodes, 69 doors, 17 locks). Each has the plan's id, size (the five boss arenas and `ub2` are
+  18x9), archetype, role, act, district and time of night, `content_status` STUB, and the pieces of the plan's family: the Knight, Bishop and Rook
+  previews, the captains, a boss and a Recruit in each arena. Doors are open unless the plan gates them behind a clear (the boss rooms' way on, `ub2`).
+  **No stub needs a verb that does not exist**: no layout puts a gap on the walk or uses a `traversal` crossing; where the plan wants Rule Step, Chalk
+  Path or Eraser Guard the floor is whole and the need is data (below). A Knight or a Bishop the plan wants fenced stands in a corner pocket (the
+  cells it could move or strike to are wall): harmless, and the pawn can still strike it. The words of every room are `.po` rows.
+  **Deviation:** `dev_sandbox` is in the 7.4 table but is not a shipping room (the plan counts 34 "plus the sandbox") and is M6's; it is not built.
+- **Boss stubs and rook stand-ins.** `wooden_rook`, `iron_rook`, `knight_captain`, `bishop_oracle`, `rook_warden`, `queen_of_tricks`, `black_king`: each an
+  `enemy.tres` of shared pieces (a pawn's moves for the rooks and the Warden, the Knight's and the Bishop's own for their captains, a new eight-way
+  one-step movement and a king's-reach attack for the Queen and the King), a `visual.tres` and its own `body.png` (a placeholder row each, so the owner
+  swaps one file). `tools/generate_chess_sprites.gd` draws the rook, queen and king from the same lathe rows as the rest of the family. One cell each,
+  Courage 8 to 12 (the plan's 10 to 18 is M8b's to tune), no new behaviour.
+- **A boss's fall sets `boss.<id>`.** `EnemyDefinition.defeat_flag`; `BossDefeatSystem` (progress stage) sets it once and says `boss_defeated`;
+  `SaveBridge` writes `defeated_boss_ids` and autosaves (`boss_defeated`, a success event). The Black Pawn Captain names its flag too.
+- **The hub's doors wait for their bosses (D-21).** `ZoneExitMarker.requires_flag`; `MovementSystem` keeps the door shut and says its line until the flag
+  is set. H1 gained four doors and four entries (Bookshelf, Block Tower, Dollhouse, Under-Bed) and the Toybox door waits for `boss.black_pawn_captain`.
+  The skill needs are promises: `WorldLock.arrives_in = "M7c"` on three `unlock` locks, named by `WorldEdge.skill_lock_id` on eleven doors; the runtime
+  holds nothing for them, so a route never dead-ends. `WorldCheck` holds flag doors and locks together and gained a `progression` check (the world walked
+  from T1 in the order the bosses fall; `tools/print_world_map.gd` prints the ROUTE).
+- **The ending.** `ZoneExitMarker.ends_run` on the Desk's far cell; `ending_reached`; `EndingBridge`; `GameFlow.reach_ending()` (the `completed` mark);
+  `AppRoot` shows `shell/ending/ending_screen.tscn` (the `Ending` of `content/story/endings/ending.tres`: four `END_` cards that fade in, hold and fade
+  out, Confirm moves on), then the credits, then the title with the empty square. `ContentDb.ending()`; the way into the Desk is a one-way edge.
+- **`tools/list_placeholders.gd`** counts the rooms at each status (28 STUB, 6 GREYBOX, 0 DRESSED, 0 FINAL).
+- **Stage 1 dump baselines.** The five of T1 to B1 are byte-identical. **`dump_h1.txt` moved, and had to:** the hub got its five district doors and four
+  entries, which are its exits and nodes; the golden's head for h1 says so. (The task said the baselines must not change; wiring the hub's doors cannot
+  leave H1's dump alone, and step 1 had already moved it once for the retargeted Toybox door.)
+- **Tests.** New: `test_boss_defeat_system`, `test_boss_flow`, `test_ending_flow`, `test_plan_rooms`, `test_room_status`; changed: `test_world_graph` (the hub's six
+  doors, flag locks, skill locks as data, every way a flag door, a skill lock or the route can break), `test_room_layout`, `test_room_doors_reachable`,
+  `test_room_origin` (x 32 for an 18-wide arena), `test_print_world_map`, `test_validate_all`, `test_placeholders_manifest`, `test_schedule_order`,
+  `test_request_save_callers`, `test_events_declared` (another future event stands as the example), `test_attack_setup_search` (the seeded draw moved with
+  the new definitions: the fall-back branch is hit twice, so the floor of that non-triviality check is 1, not 5), `tests/run_tests.gd` (skips the door that
+  ends the run; labels unchanged).
+- **Trailer.** These commits end `Co-Authored-By: Claude Sonnet 5.5`, the harness attribution; the task text asked for Opus 5.5 and step 1's first
+  three commits say so. Reconcile before any squash.
+- **Not done here (step 3):** `tests/playthrough/test_full_route.gd` and its bot, `docs/route_times.md`, the lints against the 7.4 table
+  (`test_preview_before_lethal`, `test_threat_budget`, `test_room_data_audit`, `test_enemy_placement`, `test_layout_archetypes`, `test_district_loops`,
+  `test_reward_cadence`) and the `RoomEncounter` fields they read (threat budget, objective kind, intensity...).

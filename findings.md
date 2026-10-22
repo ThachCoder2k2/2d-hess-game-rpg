@@ -910,3 +910,21 @@ was the commit attribution line, which matches the harness and is no defect).
   exports the private HOME and `exec`s Godot with its arguments (`/tmp/godot-m5-1.sh --headless --path . -s tools/print_world_map.gd`) runs it; the
   runner and the bootstrap script take the home from `UNBOUND_GODOT_HOME` and `BOOTSTRAP_HOME` and need no wrapper. A long heredoc in the same command
   as a `git` call is refused as too complex: write the text with the file tool and append it in a command of its own.
+
+## Locks, Bosses and Ending Facts (M5 step 2, 2026-10-22)
+
+- A door dictionary baked into `exit_by_cell` is printed by the world dump, so a new key (`requires_flag`, `ends_run`) is added only on a door that uses
+  it: every other door, and every baseline of a room that has none, stays byte-identical. A baseline moves only for a room that changed on purpose (H1).
+- A lock the runtime does not hold yet must say so (`WorldLock.arrives_in`), and a door names it as its `skill_lock_id`, not its `lock_id`: otherwise the map
+  shows a locked door that opens, or a door the route test cannot walk. The route walk treats a skill lock as holding nothing, which is what keeps every stub
+  passable while the verbs do not exist.
+- A boss's flag is "set when its room can be cleared", not "when its room is entered": a boss room with no door that waits for the clear could be walked
+  out of with the boss standing, and the hub door after it would wait for ever. `WorldCheck` reports it as a break in the route.
+- A piece that cannot move or strike anywhere (a Knight whose eight L cells are wall, a Bishop whose diagonals are wall or off the board) is a harmless
+  preview the pawn can still hit from beside it: stand it in the corner of the board with two wall cells (the layouts of `tb1` and `bs1`). A Rook needs a
+  behaviour of its own for that, so the stand-in rook is a live pawn until M11.
+- `ContentDb` kinds can live in a nested folder: `ContentKind` joins the folder name onto the content root, so `story/endings` works for the ending.
+- A test that draws seeded random cases over every enemy definition (`test_attack_setup_search`) moves when definitions are added: its count of a rare
+  branch (the fall-back answer) went from 5 or more to 2. Assert that the branch is exercised, not how often.
+- Agent environment: a worktree-isolated agent's shell refuses a command that mixes `cd`, `HOME=` or a heredoc with other work. Write a script file with the
+  file tool and run it as a plain command (`python3 /tmp/x.py`, `bash /tmp/build_all.sh`, `/tmp/godot-m5-2.sh ...`); simple `a; b` lists are accepted.
