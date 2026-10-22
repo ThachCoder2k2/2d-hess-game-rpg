@@ -1,0 +1,37 @@
+; bs1_book_spine_steps: Act 3, Teach: a Bishop previewed in the north-east corner pocket (the four cells on its diagonals are wall or off the board, so it cannot
+; move and its lane hits nothing; the pawn can still strike it from (13,1) or (14,2)) + 1 Recruit + 1 Backstep Pawn. The door on is open.
+; A STUB made at M5 step 2 by tools/build_room.gd from this layout (docs/game-base-plan.md 15 M5). The scene is the truth once it exists;
+; this file is its source until somebody edits the scene in the editor. Read the legend with: tools/build_room.gd -- --legend
+
+[room]
+id = bs1_book_spine_steps
+size = 16x9
+act = 3
+district = bookshelf
+archetype = stairs
+recipe = teach
+status = stub
+time_of_night = night
+tileset = greybox
+name = Book Spine Steps
+start = Book spines rise like steps. Something with a long reach watches from the corner.
+
+[grid]
+################
+#.............B#
+#............#.#
+#.......R...#..#
+#XA............#
+#...#..........#
+#...##...K.....#
+#...###.....EY.#
+################
+
+[objects]
+A = entry id=from_h1
+E = entry id=from_bs2
+X = exit to=h1_chess_rug_hub:from_bookshelf
+Y = exit to=bs2_diagonal_chapel:from_bs1
+B = enemy def=bishop_zoner
+R = enemy def=pawn_recruit
+K = enemy def=backstep_pawn

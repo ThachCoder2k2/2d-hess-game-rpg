@@ -1,0 +1,36 @@
+; bs2_diagonal_chapel: Act 3, Test: 2 Bishops (threat 6). The plan puts the exit beyond an island gap that only Rule Step crosses: that skill lock arrives in
+; M7c (world.tres: needs_rule_step on the door on to bs3); until then the floor is whole and the door is open.
+; A STUB made at M5 step 2 by tools/build_room.gd from this layout (docs/game-base-plan.md 15 M5). The scene is the truth once it exists;
+; this file is its source until somebody edits the scene in the editor. Read the legend with: tools/build_room.gd -- --legend
+
+[room]
+id = bs2_diagonal_chapel
+size = 16x9
+act = 3
+district = bookshelf
+archetype = chapel
+recipe = test
+status = stub
+time_of_night = night
+tileset = greybox
+name = Diagonal Chapel
+start = The pews line up on the diagonals. Cross a lane between its bands.
+
+[grid]
+################
+#......S.......#
+#..##......##..#
+#..............#
+#XA..........EY#
+#..............#
+#..##......##..#
+#.......T......#
+################
+
+[objects]
+A = entry id=from_bs1
+E = entry id=from_bs3
+X = exit to=bs1_book_spine_steps:from_bs2
+Y = exit to=bs3_torn_page_bridge:from_bs2
+S = enemy def=bishop_zoner
+T = enemy def=bishop_zoner

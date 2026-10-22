@@ -1,0 +1,31 @@
+; bso_margin_nook: Act 3, optional nook: nothing here yet (shard 3 arrives with M10). Reached from bs4; its Chalk Path gap is a skill lock that arrives in M7c.
+; A STUB made at M5 step 2 by tools/build_room.gd from this layout (docs/game-base-plan.md 15 M5). The scene is the truth once it exists;
+; this file is its source until somebody edits the scene in the editor. Read the legend with: tools/build_room.gd -- --legend
+
+[room]
+id = bso_margin_nook
+size = 16x9
+act = 3
+district = bookshelf
+archetype = nook
+recipe = optional
+status = stub
+time_of_night = night
+tileset = greybox
+name = Margin Nook
+start = A quiet margin, and a note in the corner.
+
+[grid]
+################
+################
+###..........###
+###.+......+.###
+###XA........###
+###.+......+.###
+###..........###
+################
+################
+
+[objects]
+A = entry id=from_bs4
+X = exit to=bs4_page_tear_shortcut:from_bso

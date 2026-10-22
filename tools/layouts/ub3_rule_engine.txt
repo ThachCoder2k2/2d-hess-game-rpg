@@ -1,0 +1,35 @@
+; ub3_rule_engine: Act 6, Twist: corrupted tiles and 1 Recruit. The corruption pulse and the tile rewrite hazards arrive with M13; today the tiles are floor to
+; walk on (the grid's `corruption` kind is walkable).
+; A STUB made at M5 step 2 by tools/build_room.gd from this layout (docs/game-base-plan.md 15 M5). The scene is the truth once it exists;
+; this file is its source until somebody edits the scene in the editor. Read the legend with: tools/build_room.gd -- --legend
+
+[room]
+id = ub3_rule_engine
+size = 16x9
+act = 6
+district = under_bed
+archetype = engine
+recipe = twist
+status = stub
+time_of_night = small_hours
+tileset = greybox
+name = Rule Engine
+start = The floor is being rewritten. Do not trust a tile.
+
+[grid]
+################
+#.......R......#
+#..~~~....~~~..#
+#..~~~....~~~..#
+#XA..........EY#
+#..~~~....~~~..#
+#..~~~....~~~..#
+#..............#
+################
+
+[objects]
+A = entry id=from_ub2
+E = entry id=from_ubb
+X = exit to=ub2_last_board:from_ub3
+Y = exit to=ubb_black_king:from_ub3
+R = enemy def=pawn_recruit

@@ -1,0 +1,38 @@
+; tbb_knight_captain: Act 2, Boss (18x9 arena): the Knight Captain, a STAND-IN with the Knight Tracker's moves and a boss's Courage, on one cell
+; (multi-cell footprints are M8b), and one Recruit. Defeating him sets the flag boss.knight_captain, which opens the Bookshelf
+; door of the hub. The two gap cells are the island of the plan (P3: Rule Step the dominant answer); the floor around them is open.
+; A STUB made at M5 step 2 by tools/build_room.gd from this layout (docs/game-base-plan.md 15 M5). The scene is the truth once it exists;
+; this file is its source until somebody edits the scene in the editor. Read the legend with: tools/build_room.gd -- --legend
+
+[room]
+id = tbb_knight_captain
+size = 18x9
+act = 2
+district = toybox
+archetype = arena
+recipe = boss
+status = stub
+time_of_night = evening
+checkpoint_on_entry = true
+tileset = greybox
+name = The Knight Captain
+start = The Knight Captain rears up among the toys. He may move twice.
+
+[grid]
+##################
+#................#
+#..+..........+..#
+#..........oo....#
+#XA........K...BY#
+#...+..........+.#
+#...........R....#
+#................#
+##################
+
+[objects]
+A = entry id=from_tb3
+B = entry id=from_tb4
+X = exit to=tb3_toy_track_ambush:from_tbb
+Y = exit to=tb4_lid_path:from_tbb clear locked="The Knight Captain still guards the toybox lid. Bring him down."
+K = enemy def=knight_captain
+R = enemy def=pawn_recruit

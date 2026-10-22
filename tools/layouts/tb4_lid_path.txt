@@ -1,0 +1,36 @@
+; tb4_lid_path: Act 2, Shortcut: a short winding path with no enemy. The door Y is the one-way shortcut home to the hub (its edge is one_way);
+; the door Z leads to the optional nook tbo. The plan forces the first Rule Step here over a one-cell gap: that skill lock arrives in
+; M7c (world.tres: needs_rule_step on the doors Y and Z); until then the path is open.
+; A STUB made at M5 step 2 by tools/build_room.gd from this layout (docs/game-base-plan.md 15 M5). The scene is the truth once it exists;
+; this file is its source until somebody edits the scene in the editor. Read the legend with: tools/build_room.gd -- --legend
+
+[room]
+id = tb4_lid_path
+size = 16x9
+act = 2
+district = toybox
+archetype = path
+recipe = shortcut
+status = stub
+time_of_night = evening
+tileset = greybox
+name = Lid Path
+start = The toybox lid is open. The way home is short.
+
+[grid]
+################
+#XA............#
+############.###
+#..............#
+###.############
+#ZB...........Y#
+################
+################
+################
+
+[objects]
+A = entry id=from_tbb
+B = entry id=from_tbo
+X = exit to=tbb_knight_captain:from_tb4
+Y = exit to=h1_chess_rug_hub:from_toybox
+Z = exit to=tbo_crayon_cache:from_tb4

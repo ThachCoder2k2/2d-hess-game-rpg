@@ -1,0 +1,35 @@
+; tb3_toy_track_ambush: Act 2, Twist, objective REACH: a Knight and a loop of toy track around the block (the train chase). The toy train hazard,
+; the Rule Step alcove and the first scripted block arrive with M9 and M7c; the exit is open, you only have to get there.
+; A STUB made at M5 step 2 by tools/build_room.gd from this layout (docs/game-base-plan.md 15 M5). The scene is the truth once it exists;
+; this file is its source until somebody edits the scene in the editor. Read the legend with: tools/build_room.gd -- --legend
+
+[room]
+id = tb3_toy_track_ambush
+size = 16x9
+act = 2
+district = toybox
+archetype = track
+recipe = twist
+status = stub
+time_of_night = evening
+tileset = greybox
+name = Toy Track Ambush
+start = Toy track runs around the block. Something rattles behind you. Keep moving.
+
+[grid]
+################
+#XA..........K.#
+#..............#
+#...########...#
+#...########...#
+#...########...#
+#..............#
+#...........BY.#
+################
+
+[objects]
+A = entry id=from_tb2
+B = entry id=from_tbb
+X = exit to=tb2_l_jump_lanes:from_tb3
+Y = exit to=tbb_knight_captain:from_tb3
+K = enemy def=knight_tracker

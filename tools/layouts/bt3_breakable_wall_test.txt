@@ -1,0 +1,36 @@
+; bt3_breakable_wall_test: Act 4, Test: an Iron Rook (a STAND-IN, pawn behaviour until M11) + 1 Recruit (threat 5). The wall of blocks has one opening in the
+; middle row. The exam of the plan (a Rook line across a gap, Chalk Path) arrives with M11.
+; A STUB made at M5 step 2 by tools/build_room.gd from this layout (docs/game-base-plan.md 15 M5). The scene is the truth once it exists;
+; this file is its source until somebody edits the scene in the editor. Read the legend with: tools/build_room.gd -- --legend
+
+[room]
+id = bt3_breakable_wall_test
+size = 16x9
+act = 4
+district = block_tower
+archetype = wall
+recipe = test
+status = stub
+time_of_night = night
+tileset = greybox
+name = Breakable Wall
+start = The wall will not hold forever. Neither will the rook.
+
+[grid]
+################
+#.......+......#
+#.......+..I...#
+#.......+......#
+#XA..........EY#
+#.......+......#
+#...R...+......#
+#.......+......#
+################
+
+[objects]
+A = entry id=from_bt2
+E = entry id=from_btb
+X = exit to=bt2_ruler_bridge:from_bt3
+Y = exit to=btb_rook_warden:from_bt3
+I = enemy def=iron_rook
+R = enemy def=pawn_recruit

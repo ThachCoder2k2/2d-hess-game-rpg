@@ -1,0 +1,37 @@
+; btb_rook_warden: Act 4, Boss (18x9 arena): the Rook Warden, a STAND-IN with a pawn's moves and a boss's Courage, on ONE cell (the owner decided it is 2x2 in
+; phases 1-2: multi-cell footprints are M8b), and one Recruit. Defeating it sets the flag boss.rook_warden, which opens the Dollhouse door.
+; A STUB made at M5 step 2 by tools/build_room.gd from this layout (docs/game-base-plan.md 15 M5). The scene is the truth once it exists;
+; this file is its source until somebody edits the scene in the editor. Read the legend with: tools/build_room.gd -- --legend
+
+[room]
+id = btb_rook_warden
+size = 18x9
+act = 4
+district = block_tower
+archetype = arena
+recipe = boss
+status = stub
+time_of_night = night
+checkpoint_on_entry = true
+tileset = greybox
+name = The Rook Warden
+start = The Rook Warden will not turn. Make it charge the throne.
+
+[grid]
+##################
+#................#
+#..##........##..#
+#........O.......#
+#XA............BY#
+#................#
+#..##........##..#
+#........R.......#
+##################
+
+[objects]
+A = entry id=from_bt3
+B = entry id=from_bt4
+X = exit to=bt3_breakable_wall_test:from_btb
+Y = exit to=bt4_ruler_gate_shortcut:from_btb clear locked="The Warden still holds the gate. Make it fall."
+O = enemy def=rook_warden
+R = enemy def=pawn_recruit

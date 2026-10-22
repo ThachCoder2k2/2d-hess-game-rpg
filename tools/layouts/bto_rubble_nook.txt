@@ -1,0 +1,31 @@
+; bto_rubble_nook: Act 4, optional nook: nothing here yet (shard 4 arrives with M11). Reached from bt4; the Rule Mark rub is a skill lock that arrives in M7c.
+; A STUB made at M5 step 2 by tools/build_room.gd from this layout (docs/game-base-plan.md 15 M5). The scene is the truth once it exists;
+; this file is its source until somebody edits the scene in the editor. Read the legend with: tools/build_room.gd -- --legend
+
+[room]
+id = bto_rubble_nook
+size = 16x9
+act = 4
+district = block_tower
+archetype = nook
+recipe = optional
+status = stub
+time_of_night = night
+tileset = greybox
+name = Rubble Nook
+start = Rubble, and a mark that wants rubbing out.
+
+[grid]
+################
+################
+###..........###
+###.+......+.###
+###XA........###
+###.+......+.###
+###..........###
+################
+################
+
+[objects]
+A = entry id=from_bt4
+X = exit to=bt4_ruler_gate_shortcut:from_bto

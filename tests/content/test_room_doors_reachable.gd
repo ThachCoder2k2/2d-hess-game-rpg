@@ -20,9 +20,9 @@ extends UnboundTest
 ## the suite proves the check can fail: a door put back on the ring, a typo in an entry name and a wall across
 ## the room, and a shut door with no line, each produce a sentence.
 
-const MINIMUM_ZONES := 7
-const MINIMUM_EXITS := 11
-const MINIMUM_ENTRIES := 12
+const MINIMUM_ZONES := 34
+const MINIMUM_EXITS := 69
+const MINIMUM_ENTRIES := 60
 const MINIMUM_SHUT_DOORS := 3
 
 ## The zone whose west door was on the ring before the fix: the case the check exists for.
@@ -31,11 +31,14 @@ const RETURN_DOOR_NAME := "Exit_To_T1"
 ## A door that is shut until its room is cleared (T3's east door): the case the locked-door check exists for.
 const ZONE_WITH_SHUT_DOOR := &"t3_first_pawn_clash"
 const SHUT_DOOR_NAME := "Exit_To_T4"
+## The hub's district doors: Toybox, Bookshelf, Block Tower, Dollhouse, Under-Bed.
+const MINIMUM_FLAG_DOORS := 5
 ## Cell (0, 5) of the 16x9 board: the wall column, where the return doors used to be.
 const RING_CELL := Vector2i(0, 5)
 
 var exits_checked := 0
 var shut_doors_checked := 0
+var flag_doors_checked := 0
 var entries_checked := 0
 var zones_checked := 0
 
@@ -52,6 +55,7 @@ func _init() -> void:
 	_expect(exits_checked >= MINIMUM_EXITS, "%d doors were checked (at least %d)" % [exits_checked, MINIMUM_EXITS])
 	_expect(entries_checked >= MINIMUM_ENTRIES, "%d entries were checked (at least %d)" % [entries_checked, MINIMUM_ENTRIES])
 	_expect(shut_doors_checked >= MINIMUM_SHUT_DOORS, "%d doors that wait for a clear were checked (at least %d: T3, T4 and B1)" % [shut_doors_checked, MINIMUM_SHUT_DOORS])
+	_expect(flag_doors_checked >= MINIMUM_FLAG_DOORS, "%d doors that wait for a boss's flag were checked (at least %d: the hub's five district doors)" % [flag_doors_checked, MINIMUM_FLAG_DOORS])
 	_check_the_scan_can_fail(graph)
 	finish()
 
@@ -119,7 +123,15 @@ func _problems_in(graph: WorldGraph, zone_id: StringName, room: Node, world: Ecs
 			for entry_id: StringName in entry_cell_by_id:
 				if not _walkable_cells_reached_from(grid, entry_cell_by_id[entry_id]).has(door_cell):
 					problems.append("door %s at %s cannot be reached on foot from entry '%s'" % [door_name, door_cell, entry_id])
-		problems.append_array(_problems_with_target(graph, door_name, exit_marker))
+		if exit_marker.ends_run:
+			if exit_marker.target_zone != &"":
+				problems.append("door %s ends the run, so it must lead to no zone (it names '%s')" % [door_name, exit_marker.target_zone])
+		else:
+			problems.append_array(_problems_with_target(graph, door_name, exit_marker))
+		if exit_marker.requires_flag != &"":
+			flag_doors_checked += 1
+			if exit_marker.locked_message.strip_edges().is_empty():
+				problems.append("door %s waits for the flag %s but gives no reason: its locked_message is empty" % [door_name, exit_marker.requires_flag])
 		if exit_marker.requires_room_clear:
 			shut_doors_checked += 1
 			if exit_marker.locked_message.strip_edges().is_empty():

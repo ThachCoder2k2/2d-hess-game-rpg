@@ -232,6 +232,10 @@ func _init() -> void:
 		for child in zone_roots[zone_id].get_children():
 			if child is ZoneExitMarker:
 				var exit_label := "%s/%s" % [zone_id, child.name]
+				if child.ends_run:
+					# The one door that ends the run (the Desk, M5 step 2) leads nowhere on purpose.
+					_expect(child.target_zone == &"", "door %s ends the run, so it names no zone" % exit_label)
+					continue
 				_expect(world_graph.has_zone(child.target_zone), "door %s targets a zone in the graph" % exit_label)
 				_expect(child.target_entry in entry_ids_by_zone.get(child.target_zone, []), "door %s lands on a real entry marker" % exit_label)
 				if zone_id == &"t3_first_pawn_clash" and child.name == "Exit_To_T4":

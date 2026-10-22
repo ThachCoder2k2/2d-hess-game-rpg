@@ -1,0 +1,32 @@
+; tbo_crayon_cache: Act 2, optional nook: nothing here yet (the shard and the Lead Tip arrive with M9). Reached from tb4; the Rule Step gap in front of it
+; is a skill lock that arrives in M7c, so today the door is open.
+; A STUB made at M5 step 2 by tools/build_room.gd from this layout (docs/game-base-plan.md 15 M5). The scene is the truth once it exists;
+; this file is its source until somebody edits the scene in the editor. Read the legend with: tools/build_room.gd -- --legend
+
+[room]
+id = tbo_crayon_cache
+size = 16x9
+act = 2
+district = toybox
+archetype = nook
+recipe = optional
+status = stub
+time_of_night = evening
+tileset = greybox
+name = Crayon Cache
+start = Crayon stubs and a quiet corner.
+
+[grid]
+################
+################
+###..........###
+###.+......+.###
+###XA........###
+###.+......+.###
+###..........###
+################
+################
+
+[objects]
+A = entry id=from_tb4
+X = exit to=tb4_lid_path:from_tbo

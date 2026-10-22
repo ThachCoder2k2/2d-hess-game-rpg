@@ -74,3 +74,57 @@ position = Vector2(144, 84)
 script = ExtResource("5_exit")
 target_zone = &"tb1_toybox_gate"
 target_entry = &"from_h1"
+requires_flag = &"boss.black_pawn_captain"
+locked_message = "ROOM_H1_CHESS_RUG_HUB_LOCKED_TOYBOX"
+
+[node name="Entry_FromBookshelf" type="Marker2D" parent="."]
+position = Vector2(496, 116)
+script = ExtResource("4_entry")
+entry_id = &"from_bookshelf"
+
+[node name="Exit_To_Bookshelf" type="Marker2D" parent="."]
+position = Vector2(496, 84)
+script = ExtResource("5_exit")
+target_zone = &"bs1_book_spine_steps"
+target_entry = &"from_h1"
+requires_flag = &"boss.knight_captain"
+locked_message = "ROOM_H1_CHESS_RUG_HUB_LOCKED_BOOKSHELF"
+
+[node name="Entry_FromBlockTower" type="Marker2D" parent="."]
+position = Vector2(144, 276)
+script = ExtResource("4_entry")
+entry_id = &"from_block_tower"
+
+[node name="Exit_To_BlockTower" type="Marker2D" parent="."]
+position = Vector2(112, 276)
+script = ExtResource("5_exit")
+target_zone = &"bt1_block_yard"
+target_entry = &"from_h1"
+requires_flag = &"boss.bishop_oracle"
+locked_message = "ROOM_H1_CHESS_RUG_HUB_LOCKED_BLOCK_TOWER"
+
+[node name="Entry_FromDollhouse" type="Marker2D" parent="."]
+position = Vector2(496, 212)
+script = ExtResource("4_entry")
+entry_id = &"from_dollhouse"
+
+[node name="Exit_To_Dollhouse" type="Marker2D" parent="."]
+position = Vector2(528, 212)
+script = ExtResource("5_exit")
+target_zone = &"dh1_foyer"
+target_entry = &"from_h1"
+requires_flag = &"boss.rook_warden"
+locked_message = "ROOM_H1_CHESS_RUG_HUB_LOCKED_DOLLHOUSE"
+
+[node name="Entry_FromUnderBed" type="Marker2D" parent="."]
+position = Vector2(336, 244)
+script = ExtResource("4_entry")
+entry_id = &"from_under_bed"
+
+[node name="Exit_To_UnderBed" type="Marker2D" parent="."]
+position = Vector2(336, 276)
+script = ExtResource("5_exit")
+target_zone = &"ub1_castle_gate"
+target_entry = &"from_h1"
+requires_flag = &"boss.queen_of_tricks"
+locked_message = "ROOM_H1_CHESS_RUG_HUB_LOCKED_UNDER_BED"

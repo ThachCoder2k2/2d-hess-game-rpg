@@ -1,0 +1,35 @@
+; dh2_mixed_court: Act 5, Test: a Knight and a Bishop (threat 6) among pillars. The plan says diagonals and leaps ignore the guard (the guard arrives with M11).
+; A STUB made at M5 step 2 by tools/build_room.gd from this layout (docs/game-base-plan.md 15 M5). The scene is the truth once it exists;
+; this file is its source until somebody edits the scene in the editor. Read the legend with: tools/build_room.gd -- --legend
+
+[room]
+id = dh2_mixed_court
+size = 16x9
+act = 5
+district = dollhouse
+archetype = court
+recipe = test
+status = stub
+time_of_night = small_hours
+tileset = greybox
+name = Mixed Court
+start = Knights jump, bishops slide. The court keeps both.
+
+[grid]
+################
+#.........K....#
+#...#...#...#..#
+#..............#
+#XA..........EY#
+#..............#
+#...#...#...#..#
+#....S.........#
+################
+
+[objects]
+A = entry id=from_dh1
+E = entry id=from_dh3
+X = exit to=dh1_foyer:from_dh2
+Y = exit to=dh3_royal_stage:from_dh2
+K = enemy def=knight_tracker
+S = enemy def=bishop_zoner

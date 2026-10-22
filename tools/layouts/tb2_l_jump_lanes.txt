@@ -1,0 +1,35 @@
+; tb2_l_jump_lanes: Act 2, Test: 1 Knight + 1 Charging Pawn (threat 5). The middle lane is the straight lane, which is also the Pencil lane.
+; A STUB made at M5 step 2 by tools/build_room.gd from this layout (docs/game-base-plan.md 15 M5). The scene is the truth once it exists;
+; this file is its source until somebody edits the scene in the editor. Read the legend with: tools/build_room.gd -- --legend
+
+[room]
+id = tb2_l_jump_lanes
+size = 16x9
+act = 2
+district = toybox
+archetype = lanes
+recipe = test
+status = stub
+time_of_night = evening
+tileset = greybox
+name = L-Jump Lanes
+start = Lanes of toy track. Knights jump between them; pawns charge down them.
+
+[grid]
+################
+#........K.....#
+#..............#
+#.+++++++++++..#
+#XA..........BY#
+#.+++++++++++..#
+#..............#
+#.....C........#
+################
+
+[objects]
+A = entry id=from_tb1
+B = entry id=from_tb3
+X = exit to=tb1_toybox_gate:from_tb2
+Y = exit to=tb3_toy_track_ambush:from_tb2
+K = enemy def=knight_tracker
+C = enemy def=charging_pawn

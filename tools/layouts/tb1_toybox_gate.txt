@@ -1,8 +1,9 @@
-; tb1_toybox_gate: Act 2, the first room of the Toybox (docs/game-base-plan.md 7.4: 16x9 fence, Teach).
-; A STUB made at M5 step 1 so the hub's top door has a real room to lead to now that the 72x40 kingdom has left the
-; world graph. The plan's version has a fenced Knight preview and a door on to tb2_l_jump_lanes; both arrive with M5
-; step 2, which edits this layout and rebuilds the scene with --force (the scene is the tool's own, unedited).
-; Read the legend with: tools/build_room.gd -- --legend
+; tb1_toybox_gate: Act 2, the first room of the Toybox (docs/game-base-plan.md 7.4: 16x9 fence, Teach, fenced Knight preview + 1 Recruit).
+; The Knight stands in the north-east corner pocket: the two wall cells beside it (12,2) and (13,3) are the only
+; cells it could leap to, so it cannot move and its leap lands on a wall. It is a preview the pawn can still reach and
+; strike from (13,1) or (14,2). The door on to tb2 is open (Teach rooms have no gate).
+; A STUB made at M5 step 2 by tools/build_room.gd from this layout (docs/game-base-plan.md 15 M5). The scene is the truth once it exists;
+; this file is its source until somebody edits the scene in the editor. Read the legend with: tools/build_room.gd -- --legend
 
 [room]
 id = tb1_toybox_gate
@@ -12,23 +13,26 @@ district = toybox
 archetype = fence
 recipe = teach
 status = stub
-time_of_night = dusk
+time_of_night = evening
 tileset = greybox
 name = Toybox Gate
 start = A fence of toy blocks. Something small waits on the far side.
 
 [grid]
 ################
-#..............#
+#.......+.....K#
+#.......+...#..#
+#XA.....+....#.#
+#..........R...#
+#.......+....BY#
 #.......+......#
 #.......+......#
-#.E.....+...R..#
-#X......+......#
-#.......+......#
-#..............#
 ################
 
 [objects]
-E = entry id=from_h1
-X = exit to=h1_chess_rug_hub:from_toybox name=Exit_To_H1
+A = entry id=from_h1
+B = entry id=from_tb2
+X = exit to=h1_chess_rug_hub:from_toybox
+Y = exit to=tb2_l_jump_lanes:from_tb1
+K = enemy def=knight_tracker
 R = enemy def=pawn_recruit
