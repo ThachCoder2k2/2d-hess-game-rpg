@@ -8,8 +8,9 @@ extends UnboundTest
 ##
 ## It asserts what only a whole walk can show: the rooms were met in the plan's order; each ordinary piece fell to the sword and each of the six bosses set its flag,
 ## which opened the hub's door to the next district (D-21); the six boss falls are six autosaves; the run reached the ending, wrote the completed mark and came
-## back to the title which shows it. And it writes the measured minimum clear time of every room to docs/route_times.md (D-03), which the plan's M9 replaces the
-## plan's estimates with. The file is rewritten only when its text changed, so a run that changed nothing leaves the working tree as it was; the same visits always
+## back to the title which shows it. Before it leaves a room it also steps onto every door the route has not earned yet and requires it to stay shut and say its
+## line. And it writes the slow bot's clear time of every room to docs/route_times.md (D-03: a baseline, not a minimum, since a player beats the bot in most rooms;
+## the plan's M9 measures the true minima). The file is rewritten only when its text changed, so a run that changed nothing leaves the working tree as it was; the same visits always
 ## give the same text (the clock is the game's own, advanced by hand), which the report's own checks hold.
 
 const Support := preload("res://tests/bridge/bridge_support.gd")
@@ -58,6 +59,7 @@ func _run() -> void:
 		rooms_walked.append(visit["room"])
 	_expect(rooms_walked == route.slice(0, route.size() - 1), "the rooms were met in the order of the plan's route (7.2): t1 to b1, the hub, tb1 to tb4, the hub, bs1 to bs4, the hub, bt1 to bt4, the hub, dh1 to dh4, the hub, ub1 to ubb (%d visits before the Desk)" % rooms_walked.size())
 	_check_the_pieces_and_the_bosses(bot, save_service)
+	_check_the_shut_doors(bot)
 
 	bot.flags_at_the_end = Support.ecs_of(bot.game).flags.to_dictionary()
 	var ended := await bot.play_the_ending()
@@ -70,6 +72,26 @@ func _run() -> void:
 	_expect(elapsed_seconds < ROUTE_BUDGET_SECONDS, "boot to credits took %.1f s of real time, under the plan's %.0f s" % [elapsed_seconds, ROUTE_BUDGET_SECONDS])
 	_check_the_measurements(bot)
 	Support.end_suite(self, save_service)
+
+
+## The hub's doors the route has not earned (M5 review: a hub door that lost its flag lock kept this suite green, only test_world_graph noticed). Before it left
+## the hub each time, the bot stepped onto every district door whose district the route had not reached yet, and none took it anywhere and each said its own line:
+## four doors after the first boss, then three, two and one (ten probes), and each of the five district doors was probed at least once.
+func _check_the_shut_doors(bot: RouteBot) -> void:
+	var probes := bot.shut_door_probes
+	_expect(probes.size() == 10, "the bot tried ten doors the route had not earned yet: 4 + 3 + 2 + 1 of the hub's district doors (%d)" % probes.size())
+	var every_probe_says_its_line := true
+	var doors_probed: Array[StringName] = []
+	var lines_heard: Array[String] = []
+	for probe in probes:
+		every_probe_says_its_line = every_probe_says_its_line and not String(probe["expected"]).is_empty() and probe["line"] == probe["expected"] and probe["room"] == &"h1_chess_rug_hub"
+		if probe["door_to"] not in doors_probed:
+			doors_probed.append(probe["door_to"])
+		if probe["line"] not in lines_heard:
+			lines_heard.append(probe["line"])
+	_expect(every_probe_says_its_line, "every shut door stayed shut and said its own line, a real sentence, never the generic one")
+	_expect(doors_probed.size() == 4, "the doors probed are the four districts after the Toybox (%d): %s" % [doors_probed.size(), doors_probed])
+	_expect(lines_heard.size() == 4, "each of the four doors has a line of its own (%d different lines were heard)" % lines_heard.size())
 
 
 ## The room-by-room facts of the walk: every piece fell, every boss set its flag and was saved.
@@ -148,7 +170,7 @@ func _check_the_measurements(bot: RouteBot) -> void:
 		every_room_has_a_time = every_room_has_a_time and shortest > 0.0
 		no_estimate_is_beaten_by_a_minimum_that_is_longer = no_estimate_is_beaten_by_a_minimum_that_is_longer and shortest / 60.0 <= float(PlanEncounterTable.row_of(room_id)["minutes"])
 	_expect(every_room_has_a_time, "every room took game time to clear (a room with no time was not walked)")
-	_expect(no_estimate_is_beaten_by_a_minimum_that_is_longer, "no room's bot minimum is longer than the plan's first-play estimate: a floor stays under its estimate")
+	_expect(no_estimate_is_beaten_by_a_minimum_that_is_longer, "no room's bot time is longer than the plan's first-play estimate: the baseline stays under the estimate")
 	_expect(bot.total_seconds() > 60.0 and bot.total_seconds() / 60.0 < 134.0, "the whole walk took %.1f game seconds, far under the plan's 134 minutes: the skeleton is short (stub rooms, no fights), and the file says so" % bot.total_seconds())
 
 	var text := RouteBot.report_text(bot.visits, route)
