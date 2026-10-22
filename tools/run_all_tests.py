@@ -14,7 +14,8 @@ vacuously:
        tests/*_test.gd
        tests/**/test_*.gd
    Anything under tests/fixtures/ or tests/baselines/ is data, never a suite.
-3. It runs each suite as its own Godot subprocess with a hard timeout (60 s) and
+3. It runs each suite as its own Godot subprocess with a hard timeout (60 s, longer for the
+   suites named in SUITE_TIMEOUT_OVERRIDES: the whole-route test) and
    fails the suite on a timeout, a non-zero exit, a SCRIPT ERROR or Parse Error
    anywhere in its output, a FAIL line, a missing verdict line, or no PASS line.
 4. It checks the baseline-label manifest: every `PASS:` label recorded in
@@ -64,6 +65,14 @@ GODOT_RELATIVE_TO_REPO = Path("..") / "Godot.app" / "Contents" / "MacOS" / "Godo
 
 SUITE_TIMEOUT_SECONDS = 60
 IMPORT_TIMEOUT_SECONDS = 300
+
+# Suites that legitimately run longer than SUITE_TIMEOUT_SECONDS: repository path -> their own timeout in seconds. A suite named here gets
+# max(its entry, the timeout asked for), so --suite-timeout can still raise it and never lowers it. The whole-route test walks the game from the
+# title to the credits under the plan's budget of 90 s (docs/game-base-plan.md 15 M5), so the runner must wait longer than the 60 s that
+# would otherwise cut it off before the suite could tell a broken budget from a hang (its own watchdog is 100 s).
+SUITE_TIMEOUT_OVERRIDES = {
+    "tests/playthrough/test_full_route.gd": 120,
+}
 
 BASELINE_LABELS_FILE = REPO_ROOT / "tests" / "baseline_labels.txt"
 LABEL_RENAMES_FILE = REPO_ROOT / "tests" / "label_renames.txt"
@@ -381,6 +390,11 @@ def check_baseline(discovered: list[str], results: dict[str, SuiteResult], filte
     return report
 
 
+def timeout_for_suite(suite: str, requested_seconds: int) -> int:
+    """The timeout a suite gets: the one asked for, or its own entry in SUITE_TIMEOUT_OVERRIDES when that is longer."""
+    return max(requested_seconds, SUITE_TIMEOUT_OVERRIDES.get(suite, 0))
+
+
 def print_header(title: str) -> None:
     print("\n== %s %s" % (title, "=" * max(3, 74 - len(title))))
 
@@ -420,6 +434,13 @@ def self_test() -> int:
         return evaluate_suite("tests/example_test.gd", canned(output, **outcome_fields), strict)
 
     clean = "PASS: first check\nPASS: second check\nEXAMPLE TEST: PASS\n"
+
+    # --- the timeout a suite gets ---
+    expect(timeout_for_suite("tests/content/test_example.gd", SUITE_TIMEOUT_SECONDS) == SUITE_TIMEOUT_SECONDS, "an ordinary suite gets the default timeout")
+    expect(timeout_for_suite("tests/playthrough/test_full_route.gd", SUITE_TIMEOUT_SECONDS) == 120, "the whole-route test gets its own longer timeout (its plan budget is 90 s)")
+    expect(timeout_for_suite("tests/playthrough/test_full_route.gd", 300) == 300 and timeout_for_suite("tests/content/test_example.gd", 300) == 300, "--suite-timeout can still raise any suite, the whole-route test included")
+    expect(timeout_for_suite("tests/playthrough/test_full_route.gd", 30) == 120, "--suite-timeout never lowers an override")
+    expect(all(path.startswith("tests/") and path.endswith(".gd") for path in SUITE_TIMEOUT_OVERRIDES) and all(seconds > SUITE_TIMEOUT_SECONDS for seconds in SUITE_TIMEOUT_OVERRIDES.values()), "every override names a suite file and asks for more than the default")
 
     # --- evaluate_suite: what makes a suite red ---
     result = judged(clean)
@@ -607,7 +628,7 @@ def main() -> int:
     print("  %-5s %-58s %5s %5s %7s" % ("", "suite", "PASS", "WARN", "time"))
     results: dict[str, SuiteResult] = {}
     for suite in selected:
-        outcome = run_godot(godot, ["--headless", "--path", str(REPO_ROOT), "-s", suite], home, suite_timeout)
+        outcome = run_godot(godot, ["--headless", "--path", str(REPO_ROOT), "-s", suite], home, timeout_for_suite(suite, suite_timeout))
         result = evaluate_suite(suite, outcome, arguments.strict)
         results[suite] = result
         warning_total += len(result.warnings)

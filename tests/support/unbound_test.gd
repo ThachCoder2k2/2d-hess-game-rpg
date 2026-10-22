@@ -40,7 +40,8 @@ const DEFAULT_WATCHDOG_SECONDS := 30.0
 
 ## The watchdog limit armed once `_init()` has returned. A suite that legitimately
 ## needs longer sets it at the top of `_init()`, keeping the runner's 60 s process
-## timeout in mind.
+## timeout in mind (a suite that must run longer than that is also named in
+## SUITE_TIMEOUT_OVERRIDES of tools/run_all_tests.py: tests/playthrough/test_full_route.gd).
 var watchdog_seconds := DEFAULT_WATCHDOG_SECONDS
 
 ## Heading of the verdict line (`<heading>: PASS`). Leave it empty to use the
